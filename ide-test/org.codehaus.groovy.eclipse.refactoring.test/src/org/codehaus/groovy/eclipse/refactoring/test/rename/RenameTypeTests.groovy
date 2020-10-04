@@ -73,11 +73,10 @@ final class RenameTypeTests extends RefactoringTestSuite {
     }
 
     private RenameJavaElementDescriptor createRefactoringDescriptor(IType type, String name) {
-        RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_TYPE).with {
+        RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_TYPE).tap {
             updateReferences = true
             javaElement = type
             newName = name
-            return it
         }
     }
 

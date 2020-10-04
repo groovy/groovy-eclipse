@@ -2511,7 +2511,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (tempTypes != null && !tempTypes.isEmpty()) {
                 List<ClassNode> types = new ArrayList<ClassNode>(tempTypes.size() + 1);
                 if (expressionType != null && !expressionType.equals(ClassHelper.OBJECT_TYPE) // GROOVY-7333
-                        /*&& tempTypes.stream().noneMatch(t -> implementsInterfaceOrIsSubclassOf(t, expressionType))*/) {
+                        && tempTypes.stream().noneMatch(t -> implementsInterfaceOrIsSubclassOf(t, expressionType))) {
                     types.add(expressionType);
                 }
                 types.addAll(tempTypes);

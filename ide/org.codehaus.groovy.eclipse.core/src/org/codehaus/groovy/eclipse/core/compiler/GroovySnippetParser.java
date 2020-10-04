@@ -94,7 +94,7 @@ public class GroovySnippetParser {
     private GroovyCompilationUnitDeclaration dietParse(final CharSequence source) {
         Map<String, String> options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
+        options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
 
         CompilerOptions compilerOptions = new CompilerOptions(options);
         ProblemReporter problemReporter = new ProblemReporter(proceedWithAllProblems(), compilerOptions, new DefaultProblemFactory());

@@ -23,7 +23,6 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.SearchMatch
 import org.eclipse.jdt.core.search.SearchParticipant
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -35,11 +34,11 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     void setUp() {
         def gUnit = addGroovySource '''\
             |class G {
-            |  boolean proper
-            |  public def field
-            |  def getExplicit() { }
-            |  boolean isExplicit() { }
-            |  void setExplicit(def value) { }
+            |  boolean xxxx
+            |  public boolean yyyy
+            |  boolean isZzzz() {}
+            |  boolean getZzzz() {}
+            |  void setZzzz(boolean value) {}
             |}
             |'''.stripMargin(), 'G', 'p'
 
@@ -49,204 +48,205 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     @Test // references to property itself and synthetic accessors
     void testSearchInGroovy1() {
         String contents = '''\
-            |new p.G().proper
-            |new p.G().isProper()
-            |new p.G().getProper()
-            |new p.G().setProper(true)
+            |new p.G().xxxx
+            |new p.G().isXxxx()
+            |new p.G().getXxxx()
+            |new p.G().setXxxx(true)
             |'''.stripMargin()
         addGroovySource(contents, nextUnitName())
-        List<SearchMatch> matches = performSearch('proper')
+        List<SearchMatch> matches = performSearch('xxxx')
 
         assertCount(3, matches)
-        assertNoMatch('run', 'proper', contents, matches)
-        assertMatch('run', 'isProper', contents, matches)
-        assertMatch('run', 'getProper', contents, matches)
-        assertMatch('run', 'setProper', contents, matches)
+        assertNoMatch('run', 'xxxx', contents, matches)
+        assertMatch('run', 'isXxxx', contents, matches)
+        assertMatch('run', 'getXxxx', contents, matches)
+        assertMatch('run', 'setXxxx', contents, matches)
     }
 
     @Test // references to pseudo-property and non-synthetic accessors
     void testSearchInGroovy2() {
         String contents = '''\
-            |new p.G().explicit
-            |new p.G().isExplicit()
-            |new p.G().getExplicit()
-            |new p.G().setExplicit()
+            |new p.G().zzzz
+            |new p.G().isZzzz()
+            |new p.G().getZzzz()
+            |new p.G().setZzzz()
             |'''.stripMargin()
         addGroovySource(contents, nextUnitName())
-        List<SearchMatch> matches = performSearch('getExplicit')
+        List<SearchMatch> matches = performSearch('getZzzz')
 
         assertCount(0, matches)
-        assertNoMatch('run', 'explicit', contents, matches)
-        assertNoMatch('run', 'isExplicit', contents, matches)
-        assertNoMatch('run', 'getExplicit', contents, matches)
-        assertNoMatch('run', 'setExplicit', contents, matches)
+        assertNoMatch('run', 'zzzz', contents, matches)
+        assertNoMatch('run', 'isZzzz', contents, matches)
+        assertNoMatch('run', 'getZzzz', contents, matches)
+        assertNoMatch('run', 'setZzzz', contents, matches)
     }
 
     @Test // references to pseudo-property and non-synthetic accessors
     void testSearchInGroovy3() {
         String contents = '''\
-            |new p.G().explicit
-            |new p.G().isExplicit()
-            |new p.G().getExplicit()
-            |new p.G().setExplicit()
+            |new p.G().zzzz
+            |new p.G().isZzzz()
+            |new p.G().getZzzz()
+            |new p.G().setZzzz()
             |'''.stripMargin()
         addGroovySource(contents, nextUnitName())
-        List<SearchMatch> matches = performSearch('setExplicit')
+        List<SearchMatch> matches = performSearch('setZzzz')
 
         assertCount(0, matches)
-        assertNoMatch('run', 'explicit', contents, matches)
-        assertNoMatch('run', 'isExplicit', contents, matches)
-        assertNoMatch('run', 'getExplicit', contents, matches)
-        assertNoMatch('run', 'setExplicit', contents, matches)
+        assertNoMatch('run', 'zzzz', contents, matches)
+        assertNoMatch('run', 'isZzzz', contents, matches)
+        assertNoMatch('run', 'getZzzz', contents, matches)
+        assertNoMatch('run', 'setZzzz', contents, matches)
     }
 
     @Test // references to pseudo-property and non-synthetic accessors
     void testSearchInGroovy4() {
         String contents = '''\
-            |new p.G().explicit
-            |new p.G().isExplicit()
-            |new p.G().getExplicit()
-            |new p.G().setExplicit()
+            |new p.G().zzzz
+            |new p.G().isZzzz()
+            |new p.G().getZzzz()
+            |new p.G().setZzzz()
             |'''.stripMargin()
         addGroovySource(contents, nextUnitName())
-        List<SearchMatch> matches = performSearch('isExplicit')
+        List<SearchMatch> matches = performSearch('isZzzz')
 
         assertCount(0, matches)
-        assertNoMatch('run', 'explicit', contents, matches)
-        assertNoMatch('run', 'isExplicit', contents, matches)
-        assertNoMatch('run', 'getExplicit', contents, matches)
-        assertNoMatch('run', 'setExplicit', contents, matches)
+        assertNoMatch('run', 'zzzz', contents, matches)
+        assertNoMatch('run', 'isZzzz', contents, matches)
+        assertNoMatch('run', 'getZzzz', contents, matches)
+        assertNoMatch('run', 'setZzzz', contents, matches)
     }
 
     @Test // GRECLIPSE-1369
     void testSearchInJava0() {
         String contents = '''\
-            |class ClassA {
-            |  int hhh;
-            |  public int getHhh() {
-            |    return hhh;
+            |class J {
+            |  int nnn;
+            |  public int getNnn() {
+            |    return this.nnn;
             |  }
-            |  public void setHhh(int other) {
-            |    this.hhh = other;
-            |    this.getHhh();
-            |    this.setHhh(0);
+            |  public void setNnn(int nnn) {
+            |    this.nnn = nnn;
+            |    this.getNnn();
+            |    this.setNnn(0);
             |  }
             |}
             |'''.stripMargin()
-        IType jType = addJavaSource(contents, 'ClassA').getType('ClassA')
-        List<SearchMatch> matches = performSearch('hhh', jType)
+        IType jType = addJavaSource(contents, 'J').getType('J')
+        List<SearchMatch> matches = performSearch('nnn', jType)
 
         // should not match the reference to the getter or the setter
-        // the actual references are found by the real search engine
+        // the actual references are found by the usual search engine
         assertCount(0, matches)
     }
 
     @Test
     void testSearchInJava1() {
         String contents = '''\
-            |class ClassB {
+            |class C {
             |  void run() {
-            |    new p.G().proper = null;
-            |    new p.G().isProper();
-            |    new p.G().getProper();
-            |    new p.G().setProper(null);
+            |    new p.G().xxxx = false;
+            |    new p.G().isXxxx();
+            |    new p.G().getXxxx();
+            |    new p.G().setXxxx(true);
             |  }
             |}
             |'''.stripMargin()
-        addJavaSource(contents, 'ClassB')
-        List<SearchMatch> matches = performSearch('proper')
+        addJavaSource(contents, 'C')
+        List<SearchMatch> matches = performSearch('xxxx')
 
         assertCount(3, matches)
-        assertNoMatch('run', 'proper', contents, matches)
-        assertMatch('run', 'isProper()', contents, matches)
-        assertMatch('run', 'getProper()', contents, matches)
-        assertMatch('run', 'setProper(null)', contents, matches)
+        assertNoMatch('run', 'xxxx', contents, matches)
+        assertMatch('run', 'isXxxx()', contents, matches)
+        assertMatch('run', 'getXxxx()', contents, matches)
+        assertMatch('run', 'setXxxx(true)', contents, matches)
     }
 
     @Test // has a compile error, but still informative for searching
     void testSearchInJava2() {
         String contents = '''\
-            |class ClassC {
+            |class C {
             |  void run() {
-            |    new p.G().explicit = null;
-            |    new p.G().isExplicit();
-            |    new p.G().getExplicit();
-            |    new p.G().setExplicit(null);
+            |    new p.G().zzzz = false;
+            |    new p.G().isZzzz();
+            |    new p.G().getZzzz();
+            |    new p.G().setZzzz(null);
             |  }
             |}
             |'''.stripMargin()
-        addJavaSource(contents, 'ClassC')
-        List<SearchMatch> matches = performSearch('getExplicit')
+        addJavaSource(contents, 'C')
+        List<SearchMatch> matches = performSearch('getZzzz')
 
         assertCount(1, matches)
-        assertMatch('run', 'explicit', contents, matches)
-        assertNoMatch('run', 'isExplicit', contents, matches)
-        assertNoMatch('run', 'getExplicit', contents, matches)
-        assertNoMatch('run', 'setExplicit', contents, matches)
+        assertMatch('run', 'zzzz', contents, matches)
+        assertNoMatch('run', 'isZzzz', contents, matches)
+        assertNoMatch('run', 'getZzzz', contents, matches)
+        assertNoMatch('run', 'setZzzz', contents, matches)
     }
 
     @Test // has a compile error, but still informative for searching
     void testSearchInJava3() {
         String contents = '''\
-            |class ClassD {
+            |class C {
             |  void run() {
-            |    new p.G().explicit = null;
-            |    new p.G().isExplicit();
-            |    new p.G().getExplicit();
-            |    new p.G().setExplicit(null);
+            |    new p.G().zzzz = false;
+            |    new p.G().isZzzz();
+            |    new p.G().getZzzz();
+            |    new p.G().setZzzz(null);
             |  }
             |}
             |'''.stripMargin()
-        addJavaSource(contents, 'ClassD')
-        List<SearchMatch> matches = performSearch('setExplicit')
+        addJavaSource(contents, 'C')
+        List<SearchMatch> matches = performSearch('setZzzz')
 
         assertCount(1, matches)
-        assertMatch('run', 'explicit', contents, matches)
-        assertNoMatch('run', 'isExplicit', contents, matches)
-        assertNoMatch('run', 'getExplicit', contents, matches)
-        assertNoMatch('run', 'setExplicit', contents, matches)
+        assertMatch('run', 'zzzz', contents, matches)
+        assertNoMatch('run', 'isZzzz', contents, matches)
+        assertNoMatch('run', 'getZzzz', contents, matches)
+        assertNoMatch('run', 'setZzzz', contents, matches)
     }
 
     @Test // has a compile error, but still informative for searching
     void testSearchInJava4() {
         String contents = '''\
-            |class ClassE {
+            |class C {
             |  void run() {
-            |    new p.G().explicit = true;
-            |    new p.G().isExplicit();
-            |    new p.G().getExplicit();
-            |    new p.G().setExplicit(null);
+            |    new p.G().zzzz = false;
+            |    new p.G().isZzzz();
+            |    new p.G().getZzzz();
+            |    new p.G().setZzzz(null);
             |  }
             |}
             |'''.stripMargin()
-        addJavaSource(contents, 'ClassE')
-        List<SearchMatch> matches = performSearch('isExplicit')
+        addJavaSource(contents, 'C')
+        List<SearchMatch> matches = performSearch('isZzzz')
 
         assertCount(1, matches)
-        assertMatch('run', 'explicit', contents, matches)
-        assertNoMatch('run', 'isExplicit', contents, matches)
-        assertNoMatch('run', 'getExplicit', contents, matches)
-        assertNoMatch('run', 'setExplicit', contents, matches)
+        assertMatch('run', 'zzzz', contents, matches)
+        assertNoMatch('run', 'isZzzz', contents, matches)
+        assertNoMatch('run', 'getZzzz', contents, matches)
+        assertNoMatch('run', 'setZzzz', contents, matches)
     }
 
     @Test
     void testSearchInJava5() {
         addJavaSource '''\
-            |class J {
-            |  public boolean isProper() {
+            |package p;
+            |class C {
+            |  public boolean isXxxx() {
             |    return false;
             |  }
             |  void test(G g) {
-            |    g.proper = null;
-            |    g.isProper();
-            |    g.getProper();
-            |    g.setProper(null);
+            |    g.xxxx = false;
+            |    g.isXxxx();
+            |    g.getXxxx();
+            |    g.setXxxx(true);
             |  }
             |}
             |'''.stripMargin(), 'C', 'p'
 
         List<SearchMatch> matches = []
-        new SyntheticAccessorSearchRequestor().findSyntheticMatches(gType.children.find { it.elementName == 'proper' },
+        new SyntheticAccessorSearchRequestor().findSyntheticMatches(gType.children.find { it.elementName == 'xxxx' },
             IJavaSearchConstants.DECLARATIONS | IJavaSearchConstants.IGNORE_DECLARING_TYPE | IJavaSearchConstants.IGNORE_RETURN_TYPE,
             [SearchEngine.defaultSearchParticipant] as SearchParticipant[],
             SearchEngine.createWorkspaceScope(),
@@ -260,16 +260,15 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
 
     private List<SearchMatch> performSearch(String searchName, IType type = gType) {
         IJavaElement target = type.children.find { it.elementName == searchName }
-        Assert.assertNotNull("child not found: $searchName", target)
+        assert target != null : "child not found: $searchName"
 
-        List<SearchMatch> matches = []
-        new SyntheticAccessorSearchRequestor().findSyntheticMatches(
-            target, { match -> if (match.offset < 200) matches << match }, null)
-        return matches
+        new LinkedList<SearchMatch>().tap {
+            new SyntheticAccessorSearchRequestor().findSyntheticMatches(target, it.&add, null)
+        }
     }
 
     private void assertCount(int expected, List<SearchMatch> matches) {
-        Assert.assertEquals("Wrong number of matches found in:\n${ -> matches.join('\n')}", expected, matches.size())
+        assert matches.size() == expected : "Wrong number of matches found in:\n${ -> matches.join('\n')}"
     }
 
     /**
@@ -288,11 +287,9 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             }
             matchIndex += 1
         }
-        if (!matchFound) {
-            Assert.fail("Match name $matchName not found in\n${matches.join('\n')}")
-        }
+        assert matchFound : "Match name $matchName not found in\n${matches.join('\n')}"
         SearchMatch match = matches.remove(matchIndex)
-        Assert.assertTrue('Match enclosing element does not exist', (match.element as IJavaElement).exists())
+        assert match.element.exists() : 'Match enclosing element does not exist'
     }
 
     private void assertNoMatch(String enclosingName, String matchName, String contents, List<SearchMatch> matches) {
@@ -301,8 +298,6 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             contents.indexOf(matchName) == match.offset &&
             matchName.length() == match.length
         }
-        if (matchFound) {
-            Assert.fail("Match name $matchName was found, but should not have been.\n${matches.join('\n')}")
-        }
+        assert !matchFound : "Match name $matchName was found, but should not have been.\n${matches.join('\n')}"
     }
 }

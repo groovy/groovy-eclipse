@@ -1791,7 +1791,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testAbstractCovariance_GROOVY9059() {
         //@formatter:off
         String[] sources = {
-            "Face.Java",
+            "Face.java",
             "interface Face<T> {\n" +
             "  <O extends T> O process(O o);\n" +
             "}\n",
@@ -1811,7 +1811,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testAbstractCovariance_GROOVY9059a() {
         //@formatter:off
         String[] sources = {
-            "Face.Java",
+            "Face.java",
             "interface Face<T> {\n" +
             "  <O extends T> O process(O o);\n" +
             "}\n",
@@ -1831,7 +1831,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testAbstractCovariance_GROOVY9059b() {
         //@formatter:off
         String[] sources = {
-            "Face.Java",
+            "Face.java",
             "interface Face<T> {\n" +
             "  <O extends T> O process(O o);\n" +
             "}\n",
@@ -1851,7 +1851,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testAbstractCovariance_GROOVY9059c() {
         //@formatter:off
         String[] sources = {
-            "Face.Java",
+            "Face.java",
             "interface Face<T> {\n" +
             "  <O extends T> O process(O o);\n" +
             "}\n",

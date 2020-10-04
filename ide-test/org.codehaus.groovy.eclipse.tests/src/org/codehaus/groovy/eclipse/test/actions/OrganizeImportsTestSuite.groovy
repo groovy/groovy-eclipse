@@ -84,9 +84,8 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
             Util.delete(project.getFile('config.groovy'))
         }
 
-        JavaCore.options = JavaCore.options.with {
+        JavaCore.options = JavaCore.options.tap {
             remove(OPTIONG_GroovyCompilerConfigScript)
-            return it
         }
     }
 

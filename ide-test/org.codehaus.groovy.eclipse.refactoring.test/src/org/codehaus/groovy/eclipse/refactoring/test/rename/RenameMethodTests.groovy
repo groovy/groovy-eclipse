@@ -251,11 +251,10 @@ final class RenameMethodTests extends RefactoringTestSuite {
 
     @Test
     void testOverload4() {
-        project.options = project.getOptions(true).with {
+        project.options = project.getOptions(true).tap {
             put(COMPILER_CODEGEN_TARGET_PLATFORM, '1.8')
             put(COMPILER_COMPLIANCE, '1.8')
             put(COMPILER_SOURCE, '1.8')
-            return it
         }
 
         def java = getInputTestFileName('B').replace('.groovy', '.java')
