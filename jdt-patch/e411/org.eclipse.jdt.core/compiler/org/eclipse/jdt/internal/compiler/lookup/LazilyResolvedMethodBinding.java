@@ -49,7 +49,7 @@ public class LazilyResolvedMethodBinding extends MethodBinding {
 		if (field != null && !(field.type instanceof MissingTypeBinding)) {
 			return field.type;
 		}
-		return null;
+		return TypeBinding.NULL;
 	}
 
 	TypeBinding getParameterTypeBinding() {

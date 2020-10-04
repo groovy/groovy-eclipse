@@ -263,6 +263,10 @@ class JDTClassNodeBuilder {
             return ClassHelper.long_TYPE;
         case TypeIds.T_short:
             return ClassHelper.short_TYPE;
+        case TypeIds.T_void:
+            return ClassHelper.VOID_TYPE;
+        case TypeIds.T_null:
+            return ClassHelper.DYNAMIC_TYPE;
         default:
             throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + tb + "(type.id=" + tb.id + ")");
         }
@@ -286,9 +290,6 @@ class JDTClassNodeBuilder {
             return ClassHelper.Long_TYPE;
         case TypeIds.T_JavaLangShort:
             return ClassHelper.Short_TYPE;
-
-        case TypeIds.T_void:
-            return ClassHelper.VOID_TYPE;
         case TypeIds.T_JavaLangVoid:
             return ClassHelper.void_WRAPPER_TYPE;
 
