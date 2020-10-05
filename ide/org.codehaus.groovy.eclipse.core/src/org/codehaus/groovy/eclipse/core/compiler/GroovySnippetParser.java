@@ -15,27 +15,22 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import static java.util.UUID.randomUUID;
+
 import static org.eclipse.jdt.groovy.core.util.GroovyUtils.isSynthetic;
 import static org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies.proceedWithAllProblems;
 
 import java.util.Iterator;
 import java.util.Map;
 
-import org.codehaus.groovy.antlr.AntlrParserPlugin;
-import org.codehaus.groovy.antlr.GroovySourceAST;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.control.ParserPlugin;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
-import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -60,7 +55,20 @@ public class GroovySnippetParser {
      * @param source the groovy source code to compile
      */
     public ModuleNode parse(final CharSequence source) {
-        ModuleNode node = dietParse(source).getModuleNode();
+        char[] contents = source.toString().toCharArray();
+        String fileName = "Snippet" + randomUUID().toString().replaceAll("-", "") + ".groovy";
+
+        Map<String, String> options = JavaCore.getOptions();
+        options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+        options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
+
+        CompilerOptions compilerOptions = new CompilerOptions(options);
+        ProblemReporter problemReporter = new ProblemReporter(proceedWithAllProblems(), compilerOptions, new DefaultProblemFactory());
+        CompilationResult compilationResult = new CompilationResult(fileName.toCharArray(), 0, 0, compilerOptions.maxProblemsPerUnit);
+        GroovyCompilationUnitDeclaration gcud = new GroovyParser(compilerOptions, problemReporter, false, true).dietParse(contents, fileName, compilationResult);
+
+        problems = compilationResult.getProblems();
+        ModuleNode node = gcud.getModuleNode();
         if (node == null) {
             return null;
         }
@@ -76,70 +84,5 @@ public class GroovySnippetParser {
         }
 
         return node;
-    }
-
-    @Deprecated
-    public GroovySourceAST parseForCST(final CharSequence source) {
-        SourceUnit sourceUnit = dietParse(source).getSourceUnit();
-        ParserPlugin parserPlugin = ReflectionUtils.getPrivateField(SourceUnit.class, "parserPlugin", sourceUnit);
-        if (parserPlugin instanceof AntlrParserPlugin) {
-            // TODO: This field is nulled out at the end of AntlrParserPlugin.buildAST
-            return ReflectionUtils.getPrivateField(AntlrParserPlugin.class, "ast", parserPlugin);
-        }
-        return null;
-    }
-
-    //--------------------------------------------------------------------------
-
-    private GroovyCompilationUnitDeclaration dietParse(final CharSequence source) {
-        Map<String, String> options = JavaCore.getOptions();
-        options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
-
-        CompilerOptions compilerOptions = new CompilerOptions(options);
-        ProblemReporter problemReporter = new ProblemReporter(proceedWithAllProblems(), compilerOptions, new DefaultProblemFactory());
-        GroovyParser parser = new GroovyParser(compilerOptions, problemReporter, false, true);
-
-        ICompilationUnit unit = new MockCompilationUnit(source.toString().toCharArray(), "Snippet.groovy".toCharArray());
-        CompilationResult compilationResult = new CompilationResult(unit, 0, 0, compilerOptions.maxProblemsPerUnit);
-        GroovyCompilationUnitDeclaration gcud = parser.dietParse(unit, compilationResult);
-        problems = compilationResult.getProblems();
-        return gcud;
-    }
-
-    private static class MockCompilationUnit implements ICompilationUnit {
-
-        private char[] contents;
-        private char[] fileName;
-
-        MockCompilationUnit(char[] contents, char[] fileName) {
-            this.contents = contents;
-            this.fileName = fileName;
-        }
-
-        @Override
-        public char[] getContents() {
-            return contents;
-        }
-
-        @Override
-        public char[] getFileName() {
-            return fileName;
-        }
-
-        @Override
-        public char[] getMainTypeName() {
-            return CharOperation.NO_CHAR;
-        }
-
-        @Override
-        public char[][] getPackageName() {
-            return CharOperation.NO_CHAR_CHAR;
-        }
-
-        @Override
-        public boolean ignoreOptionalProblems() {
-            return false;
-        }
     }
 }

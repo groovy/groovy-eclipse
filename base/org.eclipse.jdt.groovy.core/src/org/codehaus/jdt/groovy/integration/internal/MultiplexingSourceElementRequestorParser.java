@@ -21,7 +21,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
@@ -76,36 +76,40 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 
     @Override
     public CompilationUnitDeclaration parseCompilationUnit(final ICompilationUnit compilationUnit, final boolean fullParse, final IProgressMonitor progressMonitor) {
-        if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
+        if (GroovyParser.isGroovyParserEligible(compilationUnit, readManager)) {
+            char[] contents = GroovyParser.getContents(compilationUnit, readManager);
+            String fileName = CharOperation.charToString(compilationUnit.getFileName());
+
             // ASSUMPTIONS:
-            // 1) parsing is for the entire CU (ie- from character 0, to compilationUnit.getContents().length)
-            // 2) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
+            // 1) parsing is for the entire CU (ie- from character 0 to compilationUnit.getContents().length)
+            // 2) nodesToCategories map is not necessary. I think it has something to do with Javadoc, but not sure
 
             boolean disableGlobalXforms = !fullParse || optimizeStringLiterals;
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one.
             // FIXASC ought to reuse to ensure types end up in same groovy CU
             GroovyParser groovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, !disableGlobalXforms, true);
             CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 0, options.maxProblemsPerUnit);
-            GroovyCompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(compilationUnit, compilationResult);
+            GroovyCompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(contents, fileName, compilationResult);
 
-            assert scanner.source == null;
-            scanner.source = compilationUnit.getContents();
+            scanner.setSource(contents);
+
             SourceElementNotifier notifier = ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
             notifier.notifySourceElementRequestor(compUnitDecl, 0, scanner.source.length, false, compUnitDecl.sourceEnds, Collections.EMPTY_MAP);
 
             return compUnitDecl;
-        } else {
-            return super.parseCompilationUnit(compilationUnit, fullParse, progressMonitor);
         }
+        return super.parseCompilationUnit(compilationUnit, fullParse, progressMonitor);
     }
 
     @Override
     public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
-        if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
-            return groovyParser.dietParse(compilationUnit, compilationResult);
-        } else {
-            return super.dietParse(compilationUnit, compilationResult);
+        if (GroovyParser.isGroovyParserEligible(compilationUnit, readManager)) {
+            char[] contents = GroovyParser.getContents(compilationUnit, readManager);
+            String fileName = CharOperation.charToString(compilationUnit.getFileName());
+
+            return groovyParser.dietParse(contents, fileName, compilationResult);
         }
+        return super.dietParse(compilationUnit, compilationResult);
     }
 
     @Override

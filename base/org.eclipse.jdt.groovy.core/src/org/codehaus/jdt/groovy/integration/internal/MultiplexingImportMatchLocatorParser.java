@@ -16,14 +16,13 @@
 package org.codehaus.jdt.groovy.integration.internal;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.search.matching.ImportMatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
-import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
 class MultiplexingImportMatchLocatorParser extends ImportMatchLocatorParser {
 
@@ -36,13 +35,14 @@ class MultiplexingImportMatchLocatorParser extends ImportMatchLocatorParser {
 
     @Override
     public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
-        if (compilationUnit instanceof PossibleMatch
-                ? ((PossibleMatch) compilationUnit).isInterestingSourceFile()
-                : ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
-            return groovyParser.dietParse(compilationUnit, compilationResult);
-        } else {
-            return super.dietParse(compilationUnit, compilationResult);
+        if (GroovyParser.isGroovyParserEligible(compilationUnit, readManager)) {
+            char[] contents = GroovyParser.getContents(compilationUnit, readManager);
+            String fileName = CharOperation.charToString(compilationUnit.getFileName());
+
+            // TODO: if (scanner != null) scanner.setSource(contents);
+            return groovyParser.dietParse(contents, fileName, compilationResult);
         }
+        return super.dietParse(compilationUnit, compilationResult);
     }
 
     @Override

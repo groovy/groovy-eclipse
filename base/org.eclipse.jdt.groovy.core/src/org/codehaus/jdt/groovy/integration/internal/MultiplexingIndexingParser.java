@@ -21,7 +21,7 @@ import java.util.Optional;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
@@ -55,18 +55,16 @@ class MultiplexingIndexingParser extends IndexingParser {
 
     @Override
     public CompilationUnitDeclaration parseCompilationUnit(final ICompilationUnit compilationUnit, final boolean fullParse, final IProgressMonitor pm) {
-        if (!ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
-            return super.parseCompilationUnit(compilationUnit, fullParse, pm);
-        } else {
+        if (GroovyParser.isGroovyParserEligible(compilationUnit, readManager)) {
             // ASSUMPTIONS:
-            // 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
-            // 2) parsing is for the entire CU (ie- from character 0, to unit.getContents().length)
-            // 3) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
+            // 1) parsing is for the entire CU (ie- from character 0 to compilationUnit.getContents().length)
+            // 2) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
+            // 3) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
 
+            char[] contents = GroovyParser.getContents(compilationUnit, readManager);
+            String fileName = CharOperation.charToString(compilationUnit.getFileName());
             CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 0, options.maxProblemsPerUnit);
-
-            // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-            GroovyCompilationUnitDeclaration gcud = new GroovyParser(options, problemReporter, false, true).dietParse(compilationUnit, compilationResult);
+            GroovyCompilationUnitDeclaration gcud = new GroovyParser(options, problemReporter, false, true).dietParse(contents, fileName, compilationResult);
 
             Optional.ofNullable(gcud.getModuleNode()).ifPresent(module -> {
                 try {
@@ -76,8 +74,10 @@ class MultiplexingIndexingParser extends IndexingParser {
                 }
             });
 
-            notifier.notifySourceElementRequestor(gcud, 0, compilationUnit.getContents().length, reportReferenceInfo, gcud.sourceEnds, Collections.EMPTY_MAP);
+            notifier.notifySourceElementRequestor(gcud, 0, contents.length, reportReferenceInfo, gcud.sourceEnds, Collections.EMPTY_MAP);
+
             return gcud;
         }
+        return super.parseCompilationUnit(compilationUnit, fullParse, pm);
     }
 }

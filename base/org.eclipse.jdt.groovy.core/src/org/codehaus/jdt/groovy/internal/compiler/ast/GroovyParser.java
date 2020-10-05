@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -42,11 +43,14 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.CharArraySequence;
+import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;
+import org.eclipse.jdt.internal.compiler.ReadManager;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.BatchCompilerRequestor;
@@ -62,6 +66,7 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
 import org.eclipse.jdt.internal.core.builder.SourceFile;
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates
@@ -88,6 +93,32 @@ public class GroovyParser {
         scriptFolderSelectorCache.remove(projectName);
         GroovyClassLoaderFactory.clearCache(projectName);
     }
+
+    public static char[] getContents(ICompilationUnit compilationUnit, /*@Nullable*/ ReadManager readManager) {
+        return (readManager != null ? readManager.getContents(compilationUnit) : compilationUnit.getContents());
+    }
+
+    public static boolean isGroovyParserEligible(ICompilationUnit compilationUnit, /*@Nullable*/ ReadManager readManager) {
+        if (compilationUnit instanceof PossibleMatch) {
+            return ((PossibleMatch) compilationUnit).isInterestingSourceFile();
+        }
+
+        String fileName = CharOperation.charToString(compilationUnit.getFileName());
+        if (ContentTypeUtils.isGroovyLikeFileName(fileName)) {
+            return true;
+        }
+
+        if (!ContentTypeUtils.isJavaLikeButNotGroovyLikeFileName(fileName)) {
+            final char[] contents = getContents(compilationUnit, readManager);
+            if (GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(contents)).find()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static final Pattern GROOVY_SOURCE_DISCRIMINATOR = Pattern.compile("\\A(/\\*.*?\\*/\\s*)?package\\s+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*(?:\\s*\\.\\s*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)*\\s++(?!;)", Pattern.DOTALL);
 
     //--------------------------------------------------------------------------
 
@@ -148,8 +179,9 @@ public class GroovyParser {
         resolver = null;
     }
 
-    public GroovyCompilationUnitDeclaration dietParse(final ICompilationUnit iCompilationUnit, final CompilationResult compilationResult) {
-        String fileName = String.valueOf(iCompilationUnit.getFileName());
+    //--------------------------------------------------------------------------
+
+    public GroovyCompilationUnitDeclaration dietParse(final char[] contents, String fileName, final CompilationResult compilationResult) {
         boolean isInJar = fileName.indexOf(JAR_FILE_ENTRY_SEPARATOR) > 0;
         boolean isScript = false;
         IFile eclipseFile = null;
@@ -181,8 +213,7 @@ public class GroovyParser {
             compilationUnit = unitFactory.get();
         }
 
-        char[] sourceCode = Optional.ofNullable(iCompilationUnit.getContents()).orElse(CharOperation.NO_CHAR);
-        SourceUnit sourceUnit = new EclipseSourceUnit(eclipseFile, fileName, sourceCode,
+        SourceUnit sourceUnit = new EclipseSourceUnit(eclipseFile, fileName, contents,
             compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver);
 
         compilationUnit.addSource(sourceUnit);
@@ -208,10 +239,10 @@ public class GroovyParser {
             }
         }
 
-        compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode); // TODO: Get from Antlr
+        compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(contents); // TODO: Get from Antlr
 
         GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(
-            problemReporter, compilationResult, sourceCode.length, compilationUnit, sourceUnit, compilerOptions);
+            problemReporter, compilationResult, contents.length, compilationUnit, sourceUnit, compilerOptions);
 
         gcuDeclaration.processToPhase(Phases.CONVERSION);
 
@@ -267,7 +298,7 @@ public class GroovyParser {
         };
     }
 
-    //
+    //--------------------------------------------------------------------------
 
     private static class ReferenceContextImpl implements ReferenceContext {
 

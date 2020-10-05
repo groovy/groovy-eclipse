@@ -18,7 +18,7 @@ package org.codehaus.jdt.groovy.integration.internal;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionParser;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
@@ -43,11 +43,14 @@ class MultiplexingCompletionParser extends CompletionParser {
 
     @Override
     public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
-        if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
-            return groovyParser.dietParse(compilationUnit, compilationResult);
-        } else {
-            return super.dietParse(compilationUnit, compilationResult);
+        if (GroovyParser.isGroovyParserEligible(compilationUnit, readManager)) {
+            char[] contents = GroovyParser.getContents(compilationUnit, readManager);
+            String fileName = CharOperation.charToString(compilationUnit.getFileName());
+
+            // TODO: if (scanner != null) scanner.setSource(contents);
+            return groovyParser.dietParse(contents, fileName, compilationResult);
         }
+        return super.dietParse(compilationUnit, compilationResult);
     }
 
     @Override

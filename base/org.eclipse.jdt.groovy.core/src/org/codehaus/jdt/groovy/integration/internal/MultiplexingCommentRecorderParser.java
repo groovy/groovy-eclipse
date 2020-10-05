@@ -15,20 +15,14 @@
  */
 package org.codehaus.jdt.groovy.integration.internal;
 
-import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isGroovyLikeFileName;
-import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isJavaLikeButNotGroovyLikeFileName;
-
-import java.util.regex.Pattern;
-
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
-import org.eclipse.jdt.groovy.core.util.CharArraySequence;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * The multiplexing parser can delegate file parsing to multiple parsers. In this scenario it subtypes 'Parser' (which is the Java
@@ -49,27 +43,15 @@ class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 
     @Override
     public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
-        if (isGroovyLikeFileName(compilationUnit.getFileName()) || isGroovySource(compilationUnit)) {
-            if (scanner != null) {
-                scanner.setSource(compilationUnit.getContents());
-            }
-            return groovyParser.dietParse(compilationUnit, compilationResult);
+        if (GroovyParser.isGroovyParserEligible(compilationUnit, readManager)) {
+            char[] contents = GroovyParser.getContents(compilationUnit, readManager);
+            String fileName = CharOperation.charToString(compilationUnit.getFileName());
+
+            if (scanner != null) scanner.setSource(contents);
+            return groovyParser.dietParse(contents, fileName, compilationResult);
         }
         return super.dietParse(compilationUnit, compilationResult);
     }
-
-    private static boolean isGroovySource(final ICompilationUnit compilationUnit) {
-        if (compilationUnit.getFileName() == null || !isJavaLikeButNotGroovyLikeFileName(new CharArraySequence(compilationUnit.getFileName()))) {
-            if (GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(compilationUnit.getContents())).find()) {
-                Util.log(1, "Identified a Groovy source unit through inspection of its contents: " +
-                    String.valueOf(compilationUnit.getContents(), 0, Math.min(250, compilationUnit.getContents().length)));
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static final Pattern GROOVY_SOURCE_DISCRIMINATOR = Pattern.compile("\\A(/\\*.*?\\*/\\s*)?package\\s+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*(?:\\s*\\.\\s*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)*\\s++(?!;)", Pattern.DOTALL);
 
     @Override
     public void reset() {
