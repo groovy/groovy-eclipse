@@ -5119,4 +5119,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testCompileStatic9762() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "static <T> List<T> list(T item) {\n" +
+            "  return [item]\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Optional<Integer> opt = Optional.ofNullable(123)\n" +
+            "  List<Integer> result = opt.map(this::list).get()\n" +
+            "  print result\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[123]");
+    }
 }
