@@ -143,12 +143,18 @@ public abstract class TraitComposer {
                 Parameter[] origParams = new Parameter[helperMethodParams.length - 1];
                 Parameter[] params = new Parameter[helperMethodParams.length - 1];
                 System.arraycopy(methodNode.getParameters(), 1, params, 0, params.length);
+                /* GRECLIPSE edit -- GROOVY-9763
                 Map<String,ClassNode> methodGenericsSpec = new LinkedHashMap<String, ClassNode>(genericsSpec);
                 MethodNode originalMethod = trait.getMethod(name, params);
                 // Original method may be null for the case of private or static methods
                 if (originalMethod!=null) {
                     methodGenericsSpec = GenericsUtils.addMethodGenerics(originalMethod, methodGenericsSpec);
                 }
+                */
+                MethodNode originalMethod = trait.getMethod(name, params);
+                Map<String, ClassNode> methodGenericsSpec = GenericsUtils.addMethodGenerics(
+                        originalMethod != null ? originalMethod : methodNode, genericsSpec);
+                // GRECLIPSE end
                 for (int i = 1; i < helperMethodParams.length; i++) {
                     Parameter parameter = helperMethodParams[i];
                     ClassNode originType = parameter.getOriginType();

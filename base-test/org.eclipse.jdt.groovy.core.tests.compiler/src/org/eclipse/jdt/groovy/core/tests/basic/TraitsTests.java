@@ -2674,4 +2674,29 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testTraits9763() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  C.m({ -> print 'works'; return 0 })\n" +
+            "}\n" +
+            "test()\n",
+
+            "C.groovy",
+            "class C implements T {\n" +
+            "}\n",
+
+            "T.groovy",
+            "trait T {\n" +
+            "  static <U> U m(Closure<U> callable) { callable.call() }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
