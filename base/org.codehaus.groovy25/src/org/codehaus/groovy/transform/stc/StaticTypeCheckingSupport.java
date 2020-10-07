@@ -2334,6 +2334,9 @@ public abstract class StaticTypeCheckingSupport {
         ReturnStatement code = new ReturnStatement(expr);
         addGeneratedMethod(node, "eval", Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC, OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, code);
         CompilerConfiguration copyConf = new CompilerConfiguration(config);
+        // GRECLIPSE add
+        copyConf.setPreviewFeatures(false);
+        // GRECLIPSE end
         CompilationUnit cu = new CompilationUnit(copyConf);
         cu.addClassNode(node);
         cu.compile(Phases.CLASS_GENERATION);
