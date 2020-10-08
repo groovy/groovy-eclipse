@@ -650,7 +650,10 @@ class ASTConverter {
 			end = retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd);
 			// GROOVY add
 			else end = (methodDeclaration.scope != null ? methodDeclaration.getCompilationUnitDeclaration().sourceEnds.get(methodDeclaration) : -1);
-			if (start > 0)
+
+			if (end == start && "run".equals(methodName.getIdentifier())) //$NON-NLS-1$
+				end -= 1; // script run method has zero-length identifier
+			else if (start > 0)
 			// GROOVY end
 			if (end < start)
 				end = start + methodDeclaration.selector.length - 1; // naive recovery with method name
