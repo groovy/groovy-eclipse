@@ -199,6 +199,10 @@ public class GroovyUtils {
      * @see org.eclipse.jdt.core.Signature
      */
     public static String getTypeSignature(ClassNode node, boolean qualified, boolean resolved) {
+        if (getBaseType(node).getName().startsWith("<UnionType:")) {
+            return getUnionTypeSignature(node, type -> getTypeSignature(type, qualified, resolved));
+        }
+
         String signature = getTypeSignatureWithoutGenerics(node, qualified, resolved);
 
         if (getBaseType(node).getGenericsTypes() != null && !getBaseType(node).isGenericsPlaceHolder()) {
@@ -229,6 +233,10 @@ public class GroovyUtils {
     }
 
     public static String getTypeSignatureWithoutGenerics(ClassNode node, boolean qualified, boolean resolved) {
+        if (getBaseType(node).getName().startsWith("<UnionType:")) {
+            return getUnionTypeSignature(node, type -> getTypeSignatureWithoutGenerics(type, qualified, resolved));
+        }
+
         StringBuilder builder = new StringBuilder();
         while (node.isArray()) {
             builder.append('[');
@@ -261,6 +269,19 @@ public class GroovyUtils {
             builder.setCharAt(pos, Signature.C_TYPE_VARIABLE);
 
         return builder.toString();
+    }
+
+    private static String getUnionTypeSignature(ClassNode node, java.util.function.Function<ClassNode, String> signer) {
+        StringBuilder builder = new StringBuilder();
+        while (node.isArray()) {
+            builder.append('[');
+            node = node.getComponentType();
+        }
+
+        ClassNode[] types = ReflectionUtils.executePrivateMethod(node.getClass(), "getDelegates", node);
+        String signature = Signature.createUnionTypeSignature(Stream.of(types).map(signer).toArray(String[]::new));
+
+        return builder.append(signature).toString();
     }
 
     public static ClassNode getWrapperTypeIfPrimitive(ClassNode type) {

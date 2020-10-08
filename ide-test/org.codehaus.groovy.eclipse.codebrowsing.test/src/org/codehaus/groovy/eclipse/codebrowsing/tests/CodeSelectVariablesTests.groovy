@@ -49,6 +49,19 @@ final class CodeSelectVariablesTests extends BrowsingTestSuite {
         assert elem.typeSignature =~ 'domain.Calendar'
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1170
+    void testSelectParameter() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |void test(CharSequence xxx) {
+            |  if (xxx instanceof Serializable) {
+            |    xxx
+            |  }
+            |}
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'xxx')
+    }
+
     @Test // GRECLIPSE-1330
     void testSelectLocalVarInGString1() {
         String contents = 'def i\n"$i"'
