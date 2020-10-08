@@ -63,6 +63,7 @@ import org.eclipse.jdt.internal.compiler.problem.AbortMethod;
 import org.eclipse.jdt.internal.compiler.problem.AbortType;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
+import org.eclipse.jdt.internal.core.BasicCompilationUnit;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
 import org.eclipse.jdt.internal.core.builder.SourceFile;
@@ -99,7 +100,12 @@ public class GroovyParser {
     }
 
     public static boolean isGroovyParserEligible(ICompilationUnit compilationUnit, /*@Nullable*/ ReadManager readManager) {
-        if (compilationUnit instanceof PossibleMatch) {
+        if (compilationUnit instanceof BasicCompilationUnit) {
+            if (ContentTypeUtils.isGroovyLikeFileName(
+                    ((BasicCompilationUnit) compilationUnit).sourceName)) {
+                return true;
+            }
+        } else if (compilationUnit instanceof PossibleMatch) {
             return ((PossibleMatch) compilationUnit).isInterestingSourceFile();
         }
 

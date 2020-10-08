@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2017 IBM Corporation and others.
  *
@@ -19,12 +20,14 @@ import java.io.IOException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IModularClassFile;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -45,6 +48,7 @@ public class BasicCompilationUnit implements ICompilationUnit {
 	protected char[][] packageName;
 	protected char[] mainTypeName;
 	protected char[] moduleName;
+	public    String sourceName;
 	protected String encoding;
 
 private BasicCompilationUnit(char[] contents, char[][] packageName, String fileName) {
@@ -78,47 +82,57 @@ public BasicCompilationUnit(char[] contents, char[][] packageName, String fileNa
 private void initAttributes(IJavaElement javaElement) {
 	if (javaElement != null) {
 		try {
-				IModuleDescription module = null;
+			// GROOVY add
+			IClassFile classFile = (IClassFile) javaElement.getAncestor(IJavaElement.CLASS_FILE);
+			if (classFile != null) {
+				BinaryType primaryType = (BinaryType) classFile.findPrimaryType();
+				if (primaryType != null) {
+					IBinaryType elementInfo = (IBinaryType) primaryType.getElementInfo();
+					this.sourceName = CharOperation.charToString(elementInfo.sourceFileName());
+				}
+			}
+			// GROOVY end
+			IModuleDescription module = null;
 
-				search: while (javaElement != null) {
-					switch (javaElement.getElementType()) {
-						case IJavaElement.JAVA_PROJECT:
-							module = ((IJavaProject) javaElement).getModuleDescription();
+			search: while (javaElement != null) {
+				switch (javaElement.getElementType()) {
+					case IJavaElement.JAVA_PROJECT:
+						module = ((IJavaProject) javaElement).getModuleDescription();
+						break search;
+					case IJavaElement.PACKAGE_FRAGMENT_ROOT:
+						module = ((IPackageFragmentRoot) javaElement).getModuleDescription();
+						break search;
+					case IJavaElement.CLASS_FILE:
+						if (javaElement instanceof IModularClassFile) {
+							module = ((IModularClassFile) javaElement).getModule();
 							break search;
-						case IJavaElement.PACKAGE_FRAGMENT_ROOT:
-							module = ((IPackageFragmentRoot) javaElement).getModuleDescription();
+						}
+						break;
+					case IJavaElement.COMPILATION_UNIT:
+						IFile file = (IFile) javaElement.getResource();
+						if (file != null) {
+							this.encoding = file.getCharset();
+						}
+						module = ((org.eclipse.jdt.core.ICompilationUnit) javaElement).getModule();
+						if (module != null)
 							break search;
-						case IJavaElement.CLASS_FILE:
-							if (javaElement instanceof IModularClassFile) {
-								module = ((IModularClassFile) javaElement).getModule();
-								break search;
-							}
-							break;
-						case IJavaElement.COMPILATION_UNIT:
-							IFile file = (IFile) javaElement.getResource();
-							if (file != null) {
-								this.encoding = file.getCharset();
-							}
-							module = ((org.eclipse.jdt.core.ICompilationUnit) javaElement).getModule();
-							if (module != null)
-								break search;
-							break;
-						default:
-							break;
-					}
-					javaElement = javaElement.getParent();
+						break;
+					default:
+						break;
 				}
+				javaElement = javaElement.getParent();
+			}
 
-				if (module != null) {
-					this.moduleName = module.getElementName().toCharArray();
+			if (module != null) {
+				this.moduleName = module.getElementName().toCharArray();
+			}
+			if (this.encoding == null) {
+				IProject project = javaElement.getJavaProject().getProject();
+				if (project != null) {
+					this.encoding = project.getDefaultCharset();
 				}
-				if (this.encoding == null) {
-					IProject project = javaElement.getJavaProject().getProject();
-					if (project != null) {
-						this.encoding = project.getDefaultCharset();
-					}
-				}
-		} catch (CoreException e1) {
+			}
+		} catch (CoreException e) {
 			this.encoding = null;
 		}
 	} else  {
@@ -168,6 +182,10 @@ public char[] getMainTypeName() {
 	return this.mainTypeName;
 }
 @Override
+public char[] getModuleName() {
+	return this.moduleName;
+}
+@Override
 public char[][] getPackageName() {
 	return this.packageName;
 }
@@ -178,10 +196,5 @@ public boolean ignoreOptionalProblems() {
 @Override
 public String toString(){
 	return "CompilationUnit: "+new String(this.fileName); //$NON-NLS-1$
-}
-
-@Override
-public char[] getModuleName() {
-	return this.moduleName;
 }
 }

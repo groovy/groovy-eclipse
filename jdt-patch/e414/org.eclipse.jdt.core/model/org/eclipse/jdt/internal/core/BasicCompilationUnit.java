@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2017 IBM Corporation and others.
  *
@@ -19,12 +20,14 @@ import java.io.IOException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IModularClassFile;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -45,6 +48,7 @@ public class BasicCompilationUnit implements ICompilationUnit {
 	protected char[][] packageName;
 	protected char[] mainTypeName;
 	protected char[] moduleName;
+	public    String sourceName;
 	protected String encoding;
 
 private BasicCompilationUnit(char[] contents, char[][] packageName, String fileName) {
@@ -78,6 +82,16 @@ public BasicCompilationUnit(char[] contents, char[][] packageName, String fileNa
 private void initAttributes(IJavaElement javaElement) {
 	if (javaElement != null) {
 		try {
+				// GROOVY add
+				IClassFile classFile = (IClassFile) javaElement.getAncestor(IJavaElement.CLASS_FILE);
+				if (classFile != null) {
+					BinaryType primaryType = (BinaryType) classFile.findPrimaryType();
+					if (primaryType != null) {
+						IBinaryType elementInfo = (IBinaryType) primaryType.getElementInfo();
+						this.sourceName = CharOperation.charToString(elementInfo.sourceFileName());
+					}
+				}
+				// GROOVY end
 				IModuleDescription module = null;
 
 				search: while (javaElement != null) {
