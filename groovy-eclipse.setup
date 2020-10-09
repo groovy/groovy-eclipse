@@ -73,6 +73,9 @@
       storageURI="scope://Workspace"
       label="Target Platform">
     <choice
+        value="2020-12"
+        label="Eclipse 4.18 (2020-12)"/>
+    <choice
         value="2020-09"
         label="Eclipse 4.17 (2020-09)"/>
     <choice
@@ -87,9 +90,6 @@
     <choice
         value="2019-09"
         label="Eclipse 4.13 (2019-09)"/>
-    <choice
-        value="2019-06"
-        label="Eclipse 4.12 (2019-06)"/>
     <description>Choose the compatibility level of the target platform</description>
   </setupTask>
   <setupTask
@@ -126,7 +126,15 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2020-09) (scope.product.version.name=latest) (scope.product.version.name=latest.released))">
+      filter="(| (scope.product.version.name=2020-12) (scope.product.version.name=latest))">
+    <requirement
+        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
+    <repository
+        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.18"/>
+  </setupTask>
+  <setupTask
+      xsi:type="setup.p2:P2Task"
+      filter="(| (scope.product.version.name=2020-09) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -163,14 +171,6 @@
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
         url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.13"/>
-  </setupTask>
-  <setupTask
-      xsi:type="setup.p2:P2Task"
-      filter="(scope.product.version.name=2019-06)">
-    <requirement
-        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
-    <repository
-        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.12"/>
   </setupTask>
   <setupTask
       xsi:type="git:GitCloneTask"
@@ -227,6 +227,13 @@
   </setupTask>
   <setupTask
       xsi:type="projects:ProjectsImportTask"
+      filter="(eclipse.target.platform=2020-12)">
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e418"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
+      xsi:type="projects:ProjectsImportTask"
       filter="(eclipse.target.platform=2020-09)">
     <sourceLocator
         rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e417"
@@ -261,13 +268,6 @@
         locateNestedProjects="true"/>
   </setupTask>
   <setupTask
-      xsi:type="projects:ProjectsImportTask"
-      filter="(eclipse.target.platform=2019-06)">
-    <sourceLocator
-        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e412"
-        locateNestedProjects="true"/>
-  </setupTask>
-  <setupTask
       xsi:type="setup.targlets:TargletTask">
     <targlet
         name="Eclipse ${eclipse.target.platform}"
@@ -286,6 +286,13 @@
           name="org.eclipse.buildship.feature.group"/>
       <requirement
           name="org.eclipse.test.feature.group"/>
+      <repositoryList
+          name="2020-12">
+        <repository
+            url="https://download.eclipse.org/releases/2020-12"/>
+        <repository
+            url="https://download.eclipse.org/eclipse/updates/4.18milestones"/>
+      </repositoryList>
       <repositoryList
           name="2020-09">
         <repository
@@ -320,13 +327,6 @@
             url="https://download.eclipse.org/releases/2019-09"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.13"/>
-      </repositoryList>
-      <repositoryList
-          name="2019-06">
-        <repository
-            url="https://download.eclipse.org/releases/2019-06"/>
-        <repository
-            url="https://download.eclipse.org/eclipse/updates/4.12"/>
       </repositoryList>
     </targlet>
   </setupTask>

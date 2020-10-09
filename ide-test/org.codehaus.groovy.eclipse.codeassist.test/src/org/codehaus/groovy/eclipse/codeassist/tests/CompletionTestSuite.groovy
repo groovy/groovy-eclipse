@@ -56,17 +56,15 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     @Before
     final void setUpCompletionTestCase() {
         SynchronizationUtils.waitForDSLDProcessingToComplete()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
     }
 
     @After
     final void tearDownCompletionTestCase() {
-        try {
-            setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, '')
-            setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'true')
-            setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
-            setJavaPreference(PreferenceConstants.CODEASSIST_NONUITHREAD_COMPUTATION, 'true')
-        } catch (MissingPropertyException ignore) {
-        }
+        setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, '')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
     }
 
     @AfterClass

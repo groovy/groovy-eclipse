@@ -23,22 +23,27 @@ public abstract class JavaConstants {
     public static int AST_LEVEL = AST.JLS10;
     static {
         try {
-            AST.class.getDeclaredField("JLS14");
-            AST_LEVEL = 13;
-        } catch (NoSuchFieldException ignore14) {
+            AST.class.getDeclaredField("JLS15");
+            AST_LEVEL = 15;
+        } catch (NoSuchFieldException ignore15) {
             try {
-                AST.class.getDeclaredField("JLS13");
-                AST_LEVEL = 13;
-            } catch (NoSuchFieldException ignore13) {
+                AST.class.getDeclaredField("JLS14");
+                AST_LEVEL = 14;
+            } catch (NoSuchFieldException ignore14) {
                 try {
-                    AST.class.getDeclaredField("JLS12");
-                    AST_LEVEL = 12;
-                } catch (NoSuchFieldException ignore12) {
+                    AST.class.getDeclaredField("JLS13");
+                    AST_LEVEL = 13;
+                } catch (NoSuchFieldException ignore13) {
                     try {
-                        AST.class.getDeclaredField("JLS11");
-                        AST_LEVEL = 11;
-                    } catch (NoSuchFieldException ignore11) {
-                        // AST_LEVEL is JLS10
+                        AST.class.getDeclaredField("JLS12");
+                        AST_LEVEL = 12;
+                    } catch (NoSuchFieldException ignore12) {
+                        try {
+                            AST.class.getDeclaredField("JLS11");
+                            AST_LEVEL = 11;
+                        } catch (NoSuchFieldException ignore11) {
+                            // AST_LEVEL is JLS10
+                        }
                     }
                 }
             }

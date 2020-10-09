@@ -1,0 +1,2 @@
+# To force a version qualifier update, add the bug here
+Bug 534597 - Unanticipated comparator errors in I20180511-2000
