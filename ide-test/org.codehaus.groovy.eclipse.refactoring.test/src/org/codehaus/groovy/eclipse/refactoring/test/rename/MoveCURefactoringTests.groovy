@@ -47,9 +47,9 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
 
         MoveDescriptor descriptor = RefactoringSignatureDescriptorFactory.createMoveDescriptor()
         descriptor.setMoveResources(new IFile[0], new IFolder[0], units[0])
-        descriptor.setDestination(getPackageFragment(newPackageName))
-        descriptor.setUpdateQualifiedNames(true)
-        descriptor.setUpdateReferences(true)
+        descriptor.destination = getPackageFragment(newPackageName)
+        descriptor.updateQualifiedNames = true
+        descriptor.updateReferences = true
 
         Refactoring refactoring = createRefactoring(descriptor)
         RefactoringStatus result = performRefactoring(refactoring, true)

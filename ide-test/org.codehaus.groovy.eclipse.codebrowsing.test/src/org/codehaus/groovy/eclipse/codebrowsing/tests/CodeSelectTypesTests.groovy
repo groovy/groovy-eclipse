@@ -141,13 +141,13 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectAnnotationClass5() {
-        String contents = 'import groovy.transform.*; @AnnotationCollector([EqualsAndHashCode]) public @interface Custom { }'
+        String contents = 'import groovy.transform.*; @AnnotationCollector(EqualsAndHashCode) @interface Custom { }'
         assertCodeSelect([contents], 'EqualsAndHashCode')
     }
 
     @Test
     void testSelectAnnotationClass5a() {
-        String contents = 'import groovy.transform.*; @EqualsAndHashCode @AnnotationCollector public @interface Custom { }'
+        String contents = 'import groovy.transform.*; @EqualsAndHashCode @AnnotationCollector @interface Custom { }'
         assertCodeSelect([contents], 'EqualsAndHashCode')
     }
 

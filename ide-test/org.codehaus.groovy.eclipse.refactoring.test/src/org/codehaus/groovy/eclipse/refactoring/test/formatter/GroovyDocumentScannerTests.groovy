@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@ package org.codehaus.groovy.eclipse.refactoring.test.formatter
 
 import static org.junit.Assert.*
 
+import groovy.transform.CompileStatic
+
 import groovyjarjarantlr.Token
 import org.codehaus.groovy.antlr.GroovyTokenTypeBridge
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyDocumentScanner
@@ -24,6 +26,7 @@ import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.junit.Test
 
+@CompileStatic
 final class GroovyDocumentScannerTests {
 
     private int caret
@@ -34,11 +37,11 @@ final class GroovyDocumentScannerTests {
     }
 
     private void makeEditor(String string) {
-        caret = string.indexOf("<***>")
+        caret = string.indexOf('<***>')
         if (caret < 0) {
             caret = 0
         } else {
-            string = string.substring(0, caret) + string.substring(caret + "<***>".length())
+            string = string.substring(0, caret) + string.substring(caret + '<***>'.length())
         }
         editDoc = new Document(string)
     }
@@ -58,7 +61,7 @@ final class GroovyDocumentScannerTests {
     private void assertTokens(Collection<String> expected, Collection<Token> tokens) {
         assertEquals(expected.size(), tokens.size())
         for (int i = 0; i < expected.size(); i++) {
-            assertEquals(expected[i], tokens[i].getText())
+            assertEquals(expected[i], tokens[i].text)
         }
     }
 
@@ -66,22 +69,22 @@ final class GroovyDocumentScannerTests {
 
     @Test
     void testGetTokenBefore() {
-        makeEditor("a b c" + "\n" + "d e f")
+        makeEditor('a b c' + '\n' + 'd e f')
 
         IDocument doc = getDocument()
         GroovyDocumentScanner scanner = new GroovyDocumentScanner(doc)
 
         //See if we can fetch tokens in reverse order...
-        String[] expected = [ "", // EOF token has no text
-                "f", "e", "d", "<newline>", "c", "b", "a"
+        String[] expected = [ '', // EOF token has no text
+                'f', 'e', 'd', '<newline>', 'c', 'b', 'a'
         ]
 
         int expect = 0
-        Token token = scanner.getLastToken()
-        assertEquals(GroovyTokenTypeBridge.EOF, token.getType())
+        Token token = scanner.lastToken
+        assertEquals(GroovyTokenTypeBridge.EOF, token.type)
 
         while (token != null) {
-            assertEquals(expected[expect++], token.getText())
+            assertEquals(expected[expect++], token.text)
             token = scanner.getLastTokenBefore(token)
         }
 
@@ -91,34 +94,34 @@ final class GroovyDocumentScannerTests {
 
     @Test
     void testGetLineTokens() {
-        String text = "a b c\n" + "d e f"
+        String text = 'a b c\n' + 'd e f'
         makeEditor(text)
 
         IDocument doc = getDocument()
         GroovyDocumentScanner scanner = new GroovyDocumentScanner(doc)
 
-        List<Token> tokens = scanner.getLineTokensUpto(text.indexOf("c"))
-        assertTokens(["a", "b"], tokens)
+        List<Token> tokens = scanner.getLineTokensUpto(text.indexOf('c'))
+        assertTokens(['a', 'b'], tokens)
 
-        tokens = scanner.getLineTokensUpto(text.indexOf("f"))
-        assertTokens(["d", "e"], tokens)
+        tokens = scanner.getLineTokensUpto(text.indexOf('f'))
+        assertTokens(['d', 'e'], tokens)
         scanner.dispose()
     }
 
     @Test
     void testGetEmptyLineTokens() {
         String text =
-            "class Foo {\n" +
-            "   \n" +
-            "   \n" +
-            "}"
+            'class Foo {\n' +
+            '   \n' +
+            '   \n' +
+            '}'
         makeEditor(text)
 
         IDocument doc = getDocument()
         GroovyDocumentScanner scanner = new GroovyDocumentScanner(doc)
 
         List<Token> tokens = scanner.getLineTokens(0)
-        assertTokens(["class", "Foo", "{", "<newline>"], tokens)
+        assertTokens(['class', 'Foo', '{', '<newline>'], tokens)
 
         tokens = scanner.getLineTokens(1)
         assertTokens([], tokens)
@@ -127,27 +130,27 @@ final class GroovyDocumentScannerTests {
         assertTokens([], tokens)
 
         tokens = scanner.getLineTokens(3)
-        assertTokens(["}"], tokens)
+        assertTokens(['}'], tokens)
         scanner.dispose()
     }
 
     @Test
     void testDocumentEdits() {
         String text =
-            "class Foo {\n" +
-            "    def a = <***>\n" +
-            "}\n"
+            'class Foo {\n' +
+            '    def a = <***>\n' +
+            '}\n'
         makeEditor(text)
 
         IDocument doc = getDocument()
         GroovyDocumentScanner scanner = new GroovyDocumentScanner(doc)
 
         List<Token> tokens = scanner.getLineTokens(1)
-        assertTokens(["def", "a", "=", "<newline>"], tokens)
+        assertTokens(['def', 'a', '=', '<newline>'], tokens)
 
-        send("3+4")
+        send('3+4')
         tokens = scanner.getLineTokens(1)
-        assertTokens(["def", "a", "=", "3", "+", "4", "<newline>"], tokens)
+        assertTokens(['def', 'a', '=', '3', '+', '4', '<newline>'], tokens)
         scanner.dispose()
     }
 }

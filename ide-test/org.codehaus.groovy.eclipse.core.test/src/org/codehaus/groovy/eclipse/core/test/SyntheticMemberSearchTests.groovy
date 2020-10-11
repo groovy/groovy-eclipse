@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.core.test
 
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.core.search.SyntheticAccessorSearchRequestor
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.core.IJavaElement
@@ -26,6 +28,7 @@ import org.eclipse.jdt.core.search.SearchParticipant
 import org.junit.Before
 import org.junit.Test
 
+@CompileStatic
 final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
 
     private IType gType
@@ -43,6 +46,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             |'''.stripMargin(), 'G', 'p'
 
         gType = gUnit.getType('G')
+        assert gType?.exists()
     }
 
     @Test // references to property itself and synthetic accessors
@@ -272,32 +276,33 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     }
 
     /**
-     * asserts that the given match exists at least once in the list
+     * Ensures that the given match exists at least once in the list.
      */
     private void assertMatch(String enclosingName, String matchName, String contents, List<SearchMatch> matches) {
-        int matchStart = 0
         int matchIndex = 0
+        int matchStart = 0
         boolean matchFound = false
         for (match in matches) {
-            if ((match.element as IJavaElement).elementName == enclosingName &&
-                    contents.indexOf(matchName, matchStart) == match.offset &&
-                    matchName.length() == match.length) {
+            if (isMatchOf(enclosingName, matchName, matchStart, contents, match)) {
                 matchFound = true
                 break
             }
             matchIndex += 1
         }
-        assert matchFound : "Match name $matchName not found in\n${matches.join('\n')}"
+        assert matchFound : "Match name $matchName not found in\n${ -> matches.join('\n')}"
+
         SearchMatch match = matches.remove(matchIndex)
-        assert match.element.exists() : 'Match enclosing element does not exist'
+        assert (match.element as IJavaElement).exists()
     }
 
     private void assertNoMatch(String enclosingName, String matchName, String contents, List<SearchMatch> matches) {
-        boolean matchFound = matches.any { SearchMatch match ->
-            (match.element as IJavaElement).elementName == enclosingName &&
-            contents.indexOf(matchName) == match.offset &&
-            matchName.length() == match.length
-        }
-        assert !matchFound : "Match name $matchName was found, but should not have been.\n${matches.join('\n')}"
+        boolean matchFound = matches.any(this.&isMatchOf.curry(enclosingName, matchName, contents))
+        assert !matchFound : "Match name $matchName was found, but should not have been.\n${ -> matches.join('\n')}"
+    }
+
+    private static boolean isMatchOf(String enclosingName, String matchName, int matchStart = 0, String contents, SearchMatch match) {
+        (match.element as IJavaElement).elementName == enclosingName &&
+        contents.indexOf(matchName, matchStart) == match.offset &&
+        matchName.length() == match.length
     }
 }

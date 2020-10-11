@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
+
+import groovy.transform.CompileStatic
 
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameRefactoringTestSuite.TestSource
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -26,6 +28,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Test
 
+@CompileStatic
 final class RenamePackageTests extends RenameRefactoringTestSuite {
 
     /**
@@ -54,9 +57,11 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
         assertContents(units, sources*.finalContents)
 
         // undo
-        assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '!anythingToRedo'
-        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
+        RefactoringCore.undoManager.with {
+            assert anythingToUndo() : 'anythingToUndo'
+            assert !anythingToRedo() : '!anythingToRedo'
+            performUndo(null, new NullProgressMonitor())
+        }
 
         for (i in 0..<sources.length) {
             if (sources[i].pack == 'p') {
@@ -66,9 +71,11 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
         assertContents(units, sources*.contents)
 
         // redo
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '!anythingToUndo'
-        assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
-        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
+        RefactoringCore.undoManager.with {
+            assert !anythingToUndo() : '!anythingToUndo'
+            assert anythingToRedo() : 'anythingToRedo'
+            performRedo(null, new NullProgressMonitor())
+        }
 
         for (i in 0..<sources.length) {
             if (sources[i].pack == 'p') {
@@ -109,21 +116,21 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
         ), new TestSource(
             pack: 'p', name: 'E.groovy',
             contents: '''\
-                package p
-                class E {
-                  p.D foo
-                  private p.D bar
-                  p.D baz() { new p.D() }
-                }
-                '''.stripIndent(),
+                |package p
+                |class E {
+                |  p.D foo
+                |  private p.D bar
+                |  p.D baz() { new p.D() }
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package q
-                class E {
-                  q.D foo
-                  private q.D bar
-                  q.D baz() { new q.D() }
-                }
-                '''.stripIndent()
+                |package q
+                |class E {
+                |  q.D foo
+                |  private q.D bar
+                |  q.D baz() { new q.D() }
+                |}
+                |'''.stripMargin()
         ))
     }
 
@@ -136,19 +143,19 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
         ), new TestSource(
             pack: 'x', name: 'G.groovy',
             contents: '''\
-                package x
-                import p.F
-                class C {
-                  def foo = F.CONST
-                }
-                '''.stripIndent(),
+                |package x
+                |import p.F
+                |class C {
+                |  def foo = F.CONST
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package x
-                import q.F
-                class C {
-                  def foo = F.CONST
-                }
-                '''.stripIndent()
+                |package x
+                |import q.F
+                |class C {
+                |  def foo = F.CONST
+                |}
+                |'''.stripMargin()
         ))
     }
 
@@ -161,19 +168,19 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
         ), new TestSource(
             pack: 'x', name: 'I.groovy',
             contents: '''\
-                package x
-                import static p.H.*
-                class C {
-                  def foo = CONST
-                }
-                '''.stripIndent(),
+                |package x
+                |import static p.H.*
+                |class C {
+                |  def foo = CONST
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package x
-                import static q.H.*
-                class C {
-                  def foo = CONST
-                }
-                '''.stripIndent()
+                |package x
+                |import static q.H.*
+                |class C {
+                |  def foo = CONST
+                |}
+                |'''.stripMargin()
         ))
     }
 }

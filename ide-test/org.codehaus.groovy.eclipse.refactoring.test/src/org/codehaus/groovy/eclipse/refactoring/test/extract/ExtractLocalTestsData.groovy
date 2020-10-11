@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,263 +15,274 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
-class ExtractLocalTestsData {
-    
+final class ExtractLocalTestsData {
+
     static int findLocation(toFind, test) {
-        String contents = ExtractLocalTestsData."${test}In" as String
+        String contents = this."${test}In" as String
         contents.indexOf(toFind)
     }
-    
-    static String test1In =
-    """
-package p
 
-def foo
-def bar
-foo(foo+bar)
+    static final String test1In = '''\
+        |package p
+        |
+        |def foo
+        |def bar
+        |foo(foo+bar)
+        |
+        |foo + bar + foo(foo+bar, foo+ bar + baz) + foo + bar
+        |foo + bar
+        |
+        |def x() {
+        |\tfoo + bar
+        |}
+        |def x = {
+        |\tfoo + bar
+        |}
+        |'''.stripMargin()
 
-foo + bar + foo(foo+bar, foo+ bar + baz) + foo + bar   
-foo + bar
+    static final String test1Out = '''\
+        |package p
+        |
+        |def foo
+        |def bar
+        |def fooBar = foo + bar
+        |foo(fooBar)
+        |
+        |fooBar + foo(fooBar, fooBar + baz) + fooBar
+        |fooBar
+        |
+        |def x() {
+        |\tfoo + bar
+        |}
+        |def x = {
+        |\tfooBar
+        |}
+        |'''.stripMargin()
 
-def x() {
-	foo + bar
-}
-def x = {
-	foo + bar
-}
-"""
-    
-    static String test1Out =
-    """
-package p
+    static final String test2In = '''\
+        |package p
+        |
+        |foo.bar.foo.bar(foo.bar.foo.bar)
+        |'''.stripMargin()
 
-def foo
-def bar
-def fooBar = foo + bar
-foo(fooBar)
+    static final String test2Out = '''\
+        |package p
+        |
+        |def fooBar = foo.bar
+        |fooBar.foo.bar(fooBar.foo.bar)
+        |'''.stripMargin()
 
-fooBar + foo(fooBar, fooBar + baz) + fooBar   
-fooBar
+    static final String test3In = '''\
+        |package p
+        |
+        |baz.foo.&bar
+        |'''.stripMargin()
 
-def x() {
-	foo + bar
-}
-def x = {
-	fooBar
-}
-""" 
-    
-    static String test2In = """
-package p
+    static final String test3Out = '''\
+        |package p
+        |
+        |def bazFooBar = baz.foo.&bar
+        |bazFooBar
+        |'''.stripMargin()
 
-foo.bar.foo.bar(foo.bar.foo.bar)
-"""
-    static String test2Out = """
-package p
+    static final String test4In = '''\
+        |package p
+        |
+        |first + 1
+        |first+1
+        |'''.stripMargin()
 
-def fooBar = foo.bar
-fooBar.foo.bar(fooBar.foo.bar)
-"""
-    
-    static String test3In = """
-package p
+    static final String test4Out = '''\
+        |package p
+        |
+        |def first1 = first + 1
+        |first1
+        |first+1
+        |'''.stripMargin()
 
-baz.foo.&bar
-"""
-    static String test3Out = """
-package p
+    static final String test5In = '''\
+        |package p
+        |
+        |foo + bar
+        |foo + // fdsafhds
+        |\tbar
+        |'''.stripMargin()
 
-def bazFooBar = baz.foo.&bar
-bazFooBar
-""" 
-    static String test4In = """
-package p
+    static final String test5Out = '''\
+        |package p
+        |
+        |def fooBar = foo + bar
+        |fooBar
+        |fooBar
+        |'''.stripMargin()
 
-first + 1
-first+1
-"""
-    static String test4Out = """
-package p
+    static final String test6In = '''\
+        |package p
+        |
+        |class Outer {
+        |\tdef x() {
+        |\t\tfoo + bar
+        |\t}
+        |}
+        |'''.stripMargin()
 
-def first1 = first + 1
-first1
-first+1
-""" 
-    
-    static String test5In = """
-package p
+    static final String test6Out = '''\
+        |package p
+        |
+        |class Outer {
+        |\tdef x() {
+        |\t\tdef fooBar = foo + bar
+        |\t\tfooBar
+        |\t}
+        |}
+        |'''.stripMargin()
 
-foo + bar
-foo + // fdsafhds
-	bar
-"""
-    static String test5Out = """
-package p
+    static final String test7In = '''\
+        |package p
+        |
+        |class Outer {
+        |\tclass Inner {
+        |\t\tdef x() {
+        |\t\t\tfoo + bar
+        |\t\t}
+        |\t}
+        |}
+        |'''.stripMargin()
 
-def fooBar = foo + bar
-fooBar
-fooBar
-""" 
-    
-    static String test6In = """
-package p
+    static final String test7Out = '''\
+        |package p
+        |
+        |class Outer {
+        |\tclass Inner {
+        |\t\tdef x() {
+        |\t\t\tdef fooBar = foo + bar
+        |\t\t\tfooBar
+        |\t\t}
+        |\t}
+        |}
+        |'''.stripMargin()
 
-class Outer {
-	def x() {
-		foo + bar
-	}
-}
-""" 
-    static String test6Out = """
-package p
+    static final String test8In = '''\
+        |package p
+        |
+        |foo + bar
+        |if (foo+bar) {
+        |\twhile (foo+bar) {
+        |\t\tfoo+  bar
+        |\t}
+        |\tfoo+bar
+        |}
+        |'''.stripMargin()
 
-class Outer {
-	def x() {
-		def fooBar = foo + bar
-		fooBar
-	}
-}
-""" 
-    
-    static String test7In = """
-package p
+    static final String test8Out = '''\
+        |package p
+        |
+        |def fooBar = foo+  bar
+        |fooBar
+        |if (fooBar) {
+        |\twhile (fooBar) {
+        |\t\tfooBar
+        |\t}
+        |\tfooBar
+        |}
+        |'''.stripMargin()
 
-class Outer {
-	class Inner {
-		def x() {
-			foo + bar
-		}
-	}
-}
-""" 
-    static String test7Out = """
-package p
+    static final String test9In = '''\
+        |class Simple {
+        |     def test() {
+        |          def map
+        |          def foo = {
+        |               println map.one
+        |               println map.one
+        |               println map.one
+        |               println map.one
+        |          }
+        |     }
+        |}
+        |'''.stripMargin()
 
-class Outer {
-	class Inner {
-		def x() {
-			def fooBar = foo + bar
-			fooBar
-		}
-	}
-}
-"""
-    
-    static String test8In = """
-package p
+    static final String test9Out = '''\
+        |class Simple {
+        |     def test() {
+        |          def map
+        |          def foo = {
+        |               def mapOne = map.one
+        |               println mapOne
+        |               println mapOne
+        |               println mapOne
+        |               println mapOne
+        |          }
+        |     }
+        |}
+        |'''.stripMargin()
 
-foo + bar
-if (foo+bar) {
-	while (foo+bar) {
-		foo+  bar
-	}
-	foo+bar
-}
-"""
-    static String test8Out = """
-package p
+    static final String test10In = '''\
+        |class Simple {
+        |     def test() {
+        |          model.farInstance()\u0020\u0020
+        |     }
+        |}
+        |'''.stripMargin()
 
-def fooBar = foo+  bar
-fooBar
-if (fooBar) {
-	while (fooBar) {
-		fooBar
-	}
-	fooBar
-}
-"""
-    static String test9In = """
-class Simple {
-     def test() {
-          def map
-          def foo = {
-               println map.one
-               println map.one
-               println map.one
-               println map.one
-          }
-     }
-}
-"""
-    static String test9Out = """
-class Simple {
-     def test() {
-          def map
-          def foo = {
-               def mapOne = map.one
-               println mapOne
-               println mapOne
-               println mapOne
-               println mapOne
-          }
-     }
-}
-"""    
+    static final String test10Out = '''\
+        |class Simple {
+        |     def test() {
+        |          def modelFarInstance = model.farInstance()
+        |          modelFarInstance
+        |     }
+        |}
+        |'''.stripMargin()
 
-static String test10In = """
-class Simple {
-     def test() {
-          model.farInstance()  
-     }
-}
-"""
-static String test10Out = """
-class Simple {
-     def test() {
-          def modelFarInstance = model.farInstance()
-          modelFarInstance
-     }
-}
-"""
+    static final String test11In = '''\
+        |class Simple {
+        |     def test() {
+        |          println "here"
+        |     }
+        |}
+        |'''.stripMargin()
 
-static String test11In = """
-class Simple {
-     def test() {
-          println "here"
-     }
-}
-"""
-static String test11Out = """
-class Simple {
-     def test() {
-          def println = println "here"
-          println
-     }
-}
-"""
+    static final String test11Out = '''\
+        |class Simple {
+        |     def test() {
+        |          def println = println "here"
+        |          println
+        |     }
+        |}
+        |'''.stripMargin()
 
-static String test12In = """
-class Simple {
-     def test() {
-          println "here"  
-     }
-}
-"""
-static String test12Out = """
-class Simple {
-     def test() {
-          def println = println "here"
-          println
-     }
-}
-"""
+    static final String test12In = '''\
+        |class Simple {
+        |     def test() {
+        |          println "here"
+        |     }
+        |}
+        |'''.stripMargin()
 
-static String test13In = """
-class Foo {
-	int bar(int a, int b) {
-		def aB
-		a + b
-	}
-}
-"""
-static String test13Out = """
-class Foo {
-	int bar(int a, int b) {
-		def aB
-		def aB2 = a + b
-		aB2
-	}
-}
-"""
+    static final String test12Out = '''\
+        |class Simple {
+        |     def test() {
+        |          def println = println "here"
+        |          println
+        |     }
+        |}
+        |'''.stripMargin()
 
+    static final String test13In = '''\
+        |class Foo {
+        |\tint bar(int a, int b) {
+        |\t\tdef aB
+        |\t\ta + b
+        |\t}
+        |}
+        |'''.stripMargin()
+
+    static final String test13Out = '''\
+        |class Foo {
+        |\tint bar(int a, int b) {
+        |\t\tdef aB
+        |\t\tdef aB2 = a + b
+        |\t\taB2
+        |\t}
+        |}
+        |'''.stripMargin()
 }

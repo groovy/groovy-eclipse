@@ -720,25 +720,25 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''()'' should be removed" />
-        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*\)" />
+        <property name="format" value="(?&lt;!\|\s{0,99}|\.)@(?:\w+\.)*\w+\(\s*\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:EmptyParens" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''[]'' should be removed" />
-        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*(?:\w+\s*=\s*)?\[\s*(?:[^,\]]*|([&apos;&quot;])[^&apos;&quot;]*\1)\]\s*\)" />
+        <property name="format" value="(?&lt;!\|\s{0,99}|\.)@(?:\w+\.)*\w+\(\s*(?:\w+\s*=\s*)?\[\s*(?:[^,\]]*|([&apos;&quot;])[^&apos;&quot;]*\1)\]\s*\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:SingleValue" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''value='' should be removed" />
-        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*value\s*=\s*(?:(?:\w+\.)*\w+|\[[^\]]*\]|([&apos;&quot;])[^&apos;&quot;]*\1)\)" />
+        <property name="format" value="(?&lt;!\|\s{0,99}|\.)@(?:\w+\.)*\w+\(\s*value\s*=\s*(?:(?:\w+\.)*\w+|\[[^\]]*\]|([&apos;&quot;])[^&apos;&quot;]*\1)\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:ValueLiteral" />
     </module>
-    <module name="RegexpMultiline">
+    <module name="RegexpSingleline">
         <property name="message" value="Groovy property notation should be used instead of accessors" />
-        <property name="format" value="(?&lt;!\b\p{Upper}\w{0,99}\s{0,99})\.(get\p{Upper}\p{Alnum}*\(\s*\)|set\p{Upper}\p{Alnum}*\([^,]+\))" />
+        <property name="format" value="^(?!\s*\|(?!\|)).*(?&lt;!\b\p{Upper}\w{0,99}\s{0,99})\.(get\p{Upper}\p{Alnum}*\(\s*\)|set\p{Upper}\p{Alnum}*\([^,]+\))(?!;?[&apos;&quot;](?:,|$))" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyPropertyAccess" />
     </module>
@@ -787,13 +787,13 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Statement ''for (x in y)'' should be used instead of ''for (T x : y)''" />
-        <property name="format" value="\bfor\s*\(.+?\s+\w+\s*:" />
+        <property name="format" value="(?&lt;!\|\s{0,99})\bfor\s*\(.+?\s+\w+\s*:" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyForInStatement" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Statement ''for (x in y)'' should be used instead of ''for (x in y.entrySet())''" />
-        <property name="format" value="\bfor\s*\(.+?\s+in\s+.+?\.entrySet\(\)\)" />
+        <property name="format" value="(?&lt;!\|\s{0,99})\bfor\s*\(.+?\s+in\s+.+?\.entrySet\(\)\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyForInStatement:MapEntrySet" />
     </module>

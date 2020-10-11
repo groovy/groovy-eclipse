@@ -119,6 +119,8 @@ undoer.flush()
     }
 
     protected void executePerformOperation(PerformChangeOperation perform, IWorkspace workspace) {
+        buildProject()
+        waitForIndex()
         workspace.run(perform, new NullProgressMonitor())
     }
 }

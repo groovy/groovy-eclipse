@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@ package org.codehaus.groovy.eclipse.refactoring.test.extract
 
 import static org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractConstantTestsData.*
 
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyConstantRefactoring
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
@@ -26,42 +28,44 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Test
 
+@CompileStatic
 final class ExtractConstantTests extends RefactoringTestSuite {
 
     private static final String FOO_BAR = 'Foo + Bar'
     private static final String FOO_BAR_FRAX = 'Foo+Bar+A.frax()'
 
-    @Override
-    protected String getRefactoringPath() {
-        null
-    }
+    final String refactoringPath = null
 
     private void helper(String before, String expected, int offset, int length, boolean replaceAllOccurrences, boolean useQualifiedReplace, boolean makeFail) {
         GroovyCompilationUnit cu = (GroovyCompilationUnit) createCU(packageP, 'A.groovy', before)
+
         ExtractGroovyConstantRefactoring refactoring = new ExtractGroovyConstantRefactoring(cu, offset, length)
-        refactoring.setVisibility(JdtFlags.VISIBILITY_STRING_PACKAGE)
-        refactoring.setReplaceAllOccurrences(replaceAllOccurrences)
-        refactoring.setQualifyReferencesWithDeclaringClassName(useQualifiedReplace)
-        refactoring.setConstantName(refactoring.guessConstantName())
+        refactoring.constantName = refactoring.guessConstantName()
+        refactoring.qualifyReferencesWithDeclaringClassName = useQualifiedReplace
+        refactoring.replaceAllOccurrences = replaceAllOccurrences
+        refactoring.visibility = JdtFlags.VISIBILITY_STRING_PACKAGE
+
         RefactoringStatus result = performRefactoring(refactoring, makeFail)
         if (makeFail) {
             assert result.hasError() : 'Refactoring should NOT have been performed'
             return
         }
         assert result == null || result.isOK() : 'was supposed to pass'
-        assertEqualLines('invalid extraction', expected, cu.getSource())
+        assertEqualLines('invalid extraction', expected, cu.source)
 
-        assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '! anythingToRedo'
+        RefactoringCore.getUndoManager().with {
+            assert anythingToUndo()
+            assert !anythingToRedo()
 
-        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertEqualLines('invalid undo', before, cu.getSource())
+            performUndo(null, new NullProgressMonitor())
+            assertEqualLines('invalid undo', before, cu.source)
 
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '! anythingToUndo'
-        assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
+            assert !anythingToUndo()
+            assert anythingToRedo()
 
-        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertEqualLines('invalid redo', expected, cu.getSource())
+            performRedo(null, new NullProgressMonitor())
+            assertEqualLines('invalid redo', expected, cu.source)
+        }
     }
 
     @Test
@@ -105,12 +109,14 @@ final class ExtractConstantTests extends RefactoringTestSuite {
     }
 
     @Test
-    void testNoReplaceOccurrences1() {
-        helper(getTestNoReplaceOccurrences1In(), getTestNoReplaceOccurrences1Out(), findLocation(FOO_BAR_FRAX, 'testNoReplaceOccurrences1'), FOO_BAR_FRAX.length(), false, false, false)
+    void testQualifiedReplace1() {
+        helper(getTestQualifiedReplace1In(), getTestQualifiedReplace1Out(),
+            findLocation(FOO_BAR_FRAX, 'testQualifiedReplace1'), FOO_BAR_FRAX.length(), true, true, false)
     }
 
     @Test
-    void testQualifiedReplace1() {
-        helper(getTestQualifiedReplace1In(), getTestQualifiedReplace1Out(), findLocation(FOO_BAR_FRAX, 'testQualifiedReplace1'), FOO_BAR_FRAX.length(), true, true, false)
+    void testNoReplaceOccurrences1() {
+        helper(getTestNoReplaceOccurrences1In(), getTestNoReplaceOccurrences1Out(),
+            findLocation(FOO_BAR_FRAX, 'testNoReplaceOccurrences1'), FOO_BAR_FRAX.length(), false, false, false)
     }
 }

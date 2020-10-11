@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -96,8 +96,8 @@ final class RenameTypeTests extends RefactoringTestSuite {
             renameHandles = ParticipantTesting.createHandles(classA)
         }
         RenameJavaElementDescriptor descriptor = createRefactoringDescriptor(classA, newName)
-        descriptor.setUpdateReferences(updateReferences)
-        descriptor.setUpdateTextualOccurrences(updateTextualMatches)
+        descriptor.updateReferences = updateReferences
+        descriptor.updateTextualOccurrences = updateTextualMatches
         Refactoring refactoring = createRefactoring(descriptor)
         RefactoringStatus result = performRefactoring(refactoring, false)
         assert result == null || result.isOK() : 'was supposed to pass'
@@ -116,16 +116,16 @@ final class RenameTypeTests extends RefactoringTestSuite {
 
         ICompilationUnit newUnit = rtp.getRefactoredJavaElement(type.compilationUnit)
         assert newUnit.exists()
-        assert newUnit.getElementName() == newCUName
+        assert newUnit.elementName == newCUName
 
         IFile newFile = rtp.getRefactoredResource(type.resource)
         assert newFile.exists()
         assert newFile.name == newCUName
 
         if ((type.parent.elementType == IJavaElement.COMPILATION_UNIT) &&
-                type.compilationUnit.elementName.equals(type.elementName + '.groovy')) {
-            assert !type.getCompilationUnit().exists()
-            assert !type.getResource().exists()
+                type.compilationUnit.elementName == type.elementName + '.groovy') {
+            assert !type.compilationUnit.exists()
+            assert !type.resource.exists()
         }
 
         IPackageFragment oldPackage = type.compilationUnit.parent
@@ -138,7 +138,7 @@ final class RenameTypeTests extends RefactoringTestSuite {
                 continue // constructor
             assert refactoredMember.exists()
             assert refactoredMember.elementName == member.elementName
-            assert !refactoredMember.equals(member)
+            assert refactoredMember != member
         }
     }
 

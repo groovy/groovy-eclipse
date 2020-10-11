@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.refactoring.test
 
 import org.codehaus.groovy.eclipse.refactoring.test.internal.JavaProjectHelper
-import org.codehaus.groovy.eclipse.refactoring.test.internal.TestOptions
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantShared
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantSingle
 import org.eclipse.core.resources.IResource
@@ -37,6 +36,8 @@ import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor
 import org.eclipse.jdt.internal.corext.util.Strings
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.util.CoreUtility
+import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ltk.core.refactoring.ChangeDescriptor
 import org.eclipse.ltk.core.refactoring.CheckConditionsOperation
@@ -70,16 +71,34 @@ abstract class RefactoringTestSuite {
     static final void setUpTestSuite() {
         fWasAutobuild = CoreUtility.setAutoBuilding(false)
         fWasOptions = JavaCore.getOptions()
-        TestOptions.getDefaultOptions().with {
+        JavaCore.getDefaultOptions().with {
+            JavaCore.setComplianceOptions('1.8', it)
+            put(JavaCore.COMPILER_PB_DEAD_CODE,             JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_FIELD_HIDING,          JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_LOCAL_VARIABLE_HIDING, JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_RAW_TYPE_REFERENCE,    JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_UNUSED_LOCAL,          JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_UNUSED_PRIVATE_MEMBER, JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_UNUSED_WARNING_TOKEN,  JavaCore.IGNORE)
+
             put(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
             put(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB)
             put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT, String.valueOf(9999))
             put(DefaultCodeFormatterConstants.FORMATTER_NUMBER_OF_EMPTY_LINES_TO_PRESERVE, '0')
+
             JavaCore.setOptions(it)
         }
-        TestOptions.initializeCodeGenerationOptions()
-        JavaPlugin.getDefault().codeTemplateStore.load()
-
+        JavaPlugin.getDefault().with {
+            getCodeTemplateStore().load()
+            IPreferenceStore store = getPreferenceStore()
+            store.setValue(PreferenceConstants.CODEGEN_ADD_COMMENTS, true)
+            store.setValue(PreferenceConstants.CODEGEN_KEYWORD_THIS, false)
+            store.setValue(PreferenceConstants.CODEGEN_IS_FOR_GETTERS, true)
+            store.setValue(PreferenceConstants.CODEGEN_EXCEPTION_VAR_NAME, 'e')
+            store.setValue(PreferenceConstants.ORGIMPORTS_ONDEMANDTHRESHOLD, 99)
+            store.setValue(PreferenceConstants.ORGIMPORTS_IGNORELOWERCASE, true)
+            store.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, 'java;javax;org;com')
+        }
         fgJavaTestProject = JavaProjectHelper.createGroovyProject('TestProject', 'bin')
         fgRoot = JavaProjectHelper.addSourceContainer(fgJavaTestProject, 'src')
         fgPackageP = fgRoot.createPackageFragment('p', true, null)

@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
+import groovy.transform.CompileStatic
 import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ConvertGroovyLocalToFieldRefactoring
@@ -25,12 +26,10 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Test
 
+@CompileStatic
 final class ConvertLocalToFieldTests extends RefactoringTestSuite {
 
-    @Override
-    protected String getRefactoringPath() {
-        null
-    }
+    final String refactoringPath = null
 
     private void runTest(String testName = test.methodName) {
         ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get(testName)
@@ -61,17 +60,19 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
             assertEqualLines('invalid conversion', testCase.expected, cu.source)
         }
 
-        assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '! anythingToRedo'
+        RefactoringCore.getUndoManager().with {
+            assert anythingToUndo()
+            assert !anythingToRedo()
 
-        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertEqualLines('invalid undo', testCase.input, cu.source)
+            performUndo(null, new NullProgressMonitor())
+            assertEqualLines('invalid undo', testCase.input, cu.source)
 
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '! anythingToUndo'
-        assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
+            assert !anythingToUndo()
+            assert anythingToRedo()
 
-        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertEqualLines('invalid redo', testCase.expected, cu.source)
+            performRedo(null, new NullProgressMonitor())
+            assertEqualLines('invalid redo', testCase.expected, cu.source)
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -206,14 +207,14 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
         def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
             |class Pogo {
             |  private Object field = { ->
-            |    def target/**/ = null
+            |    def xxx/**/ = null
             |  }
             |}
             |'''.stripMargin(), '''\
             |class Pogo {
-            |\tprivate def target
+            |\tprivate def xxx
             |  private Object field = { ->
-            |    target/**/ = null
+            |    xxx/**/ = null
             |  }
             |}
             |'''.stripMargin())
@@ -225,13 +226,13 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
         def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
             |@groovy.transform.Field
             |Object field = { ->
-            |  def target/**/ = null
+            |  def xxx/**/ = null
             |}
             |'''.stripMargin(), '''\
-            |@groovy.transform.Field def target
+            |@groovy.transform.Field def xxx
             |@groovy.transform.Field
             |Object field = { ->
-            |  target/**/ = null
+            |  xxx/**/ = null
             |}
             |'''.stripMargin())
         runTest(testCase)
@@ -242,14 +243,14 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
         def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
             |class Pogo {
             |  {
-            |    def target/**/ = null
+            |    def xxx/**/ = null
             |  }
             |}
             |'''.stripMargin(), '''\
             |class Pogo {
-            |\tprivate def target
+            |\tprivate def xxx
             |  {
-            |    target/**/ = null
+            |    xxx/**/ = null
             |  }
             |}
             |'''.stripMargin())
@@ -261,14 +262,14 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
         def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
             |class Pogo {
             |  static {
-            |    def target/**/ = null
+            |    def xxx/**/ = null
             |  }
             |}
             |'''.stripMargin(), '''\
             |class Pogo {
-            |\tprivate static def target
+            |\tprivate static def xxx
             |  static {
-            |    target/**/ = null
+            |    xxx/**/ = null
             |  }
             |}
             |'''.stripMargin())
@@ -280,16 +281,16 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
         createCU(packageP, 'Tag.groovy', '@interface Tag { Class value() }')
         def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
             |@Tag(value = { ->
-            |  def target/**/ = null
+            |  def xxx/**/ = null
             |})
             |class Pogo {
             |}
             |'''.stripMargin(), '''\
             |@Tag(value = { ->
-            |  Pogo.target/**/ = null
+            |  Pogo.xxx/**/ = null
             |})
             |class Pogo {
-            |\tprivate static def target
+            |\tprivate static def xxx
             |}
             |'''.stripMargin())
         runTest(testCase)

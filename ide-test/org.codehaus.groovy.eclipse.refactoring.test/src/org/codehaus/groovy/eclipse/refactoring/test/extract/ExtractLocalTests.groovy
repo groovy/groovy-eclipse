@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,8 @@ package org.codehaus.groovy.eclipse.refactoring.test.extract
 import static org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractLocalTestsData.*
 import static org.junit.Assert.assertEquals
 
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyLocalRefactoring
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
@@ -26,33 +28,35 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Test
 
+@CompileStatic
 final class ExtractLocalTests extends RefactoringTestSuite {
 
-    @Override
-    protected String getRefactoringPath() {
-        null
-    }
+    final String refactoringPath = null
 
     private void helper(String before, String expected, int offset, int length, boolean replaceAllOccurrences) {
         GroovyCompilationUnit cu = (GroovyCompilationUnit) createCU(packageP, 'A.groovy', before)
+
         ExtractGroovyLocalRefactoring refactoring = new ExtractGroovyLocalRefactoring(cu, offset, length)
-        refactoring.setReplaceAllOccurrences(replaceAllOccurrences)
-        refactoring.setLocalName(refactoring.guessLocalNames()[0])
+        refactoring.localName = refactoring.guessLocalNames()[0]
+        refactoring.replaceAllOccurrences = replaceAllOccurrences
+
         RefactoringStatus result = performRefactoring(refactoring, false)
         assert result == null || result.isOK() : 'was supposed to pass'
-        assertEquals('invalid extraction', expected, cu.getSource())
+        assertEquals('invalid extraction', expected, cu.source)
 
-        assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '!anythingToRedo'
+        RefactoringCore.getUndoManager().with {
+            assert anythingToUndo()
+            assert !anythingToRedo()
 
-        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertEquals('invalid undo', before, cu.getSource())
+            performUndo(null, new NullProgressMonitor())
+            assertEquals('invalid undo', before, cu.source)
 
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '!anythingToUndo'
-        assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
+            assert !anythingToUndo()
+            assert anythingToRedo()
 
-        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertEquals('invalid redo', expected, cu.getSource())
+            performRedo(null, new NullProgressMonitor())
+            assertEquals('invalid redo', expected, cu.source)
+        }
     }
 
     @Test
@@ -135,20 +139,20 @@ final class ExtractLocalTests extends RefactoringTestSuite {
         String constant = '"value"'
 
         String contents = """\
-            class Foo {
-              void bar() {
-                String local = ${constant};
-              }
-            }
-            """.stripIndent().replaceAll('\n', '\r\n')
+            |class Foo {
+            |  void bar() {
+            |    String local = ${constant};
+            |  }
+            |}
+            |""".stripMargin().replaceAll('\n', '\r\n')
         String expected = """\
-            class Foo {
-              void bar() {
-                def value = ${constant}
-                String local = value;
-              }
-            }
-            """.stripIndent().replaceAll('\n', '\r\n')
+            |class Foo {
+            |  void bar() {
+            |    def value = ${constant}
+            |    String local = value;
+            |  }
+            |}
+            |""".stripMargin().replaceAll('\n', '\r\n')
 
         helper(contents, expected, contents.indexOf(constant), constant.length(), false)
     }
@@ -158,20 +162,20 @@ final class ExtractLocalTests extends RefactoringTestSuite {
         String expression = 'System.out'
 
         String contents = """\
-            class Foo {
-              def bar() {
-                return ${expression}
-              }
-            }
-            """.stripIndent()
+            |class Foo {
+            |  def bar() {
+            |    return ${expression}
+            |  }
+            |}
+            |""".stripMargin()
         String expected = """\
-            class Foo {
-              def bar() {
-                def out = ${expression}
-                return out
-              }
-            }
-            """.stripIndent()
+            |class Foo {
+            |  def bar() {
+            |    def out = ${expression}
+            |    return out
+            |  }
+            |}
+            |""".stripMargin()
 
         helper(contents, expected, contents.indexOf(expression), expression.length(), false)
     }

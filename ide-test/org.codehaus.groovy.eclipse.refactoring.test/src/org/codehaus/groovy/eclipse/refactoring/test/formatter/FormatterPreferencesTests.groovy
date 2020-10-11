@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,7 +58,7 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
             }
         }
         new FormatterPreferenceInitializer().initializeDefaultPreferences()
-        JavaCore.setOptions(JavaCore.getDefaultOptions());
+        JavaCore.setOptions(JavaCore.getDefaultOptions())
     }
 
     /**
@@ -67,25 +67,25 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
     @Test
     void testBracesPrefs() {
         FormatterPreferencesPage preferencesPage = new FormatterPreferencesPage()
-        IPreferenceStore groovyPrefs = preferencesPage.getPreferenceStore()
+        IPreferenceStore groovyPrefs = preferencesPage.preferenceStore
         assert groovyPrefs.contains(GROOVY_FORMATTER_BRACES_START) : 'Using the wrong preferences store?'
         assert groovyPrefs.contains(GROOVY_FORMATTER_BRACES_END) : 'Using the wrong preferences store?'
 
         groovyPrefs.setValue(GROOVY_FORMATTER_BRACES_START, PreferenceConstants.NEXT)
         FormatterPreferences formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getBracesStart() == PreferenceConstants.NEXT_LINE
+        assert formatPrefs.bracesStart == PreferenceConstants.NEXT_LINE
 
         groovyPrefs.setValue(GROOVY_FORMATTER_BRACES_START, PreferenceConstants.SAME)
         formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getBracesStart() == PreferenceConstants.SAME_LINE
+        assert formatPrefs.bracesStart == PreferenceConstants.SAME_LINE
 
         groovyPrefs.setValue(GROOVY_FORMATTER_BRACES_END, PreferenceConstants.NEXT)
         formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getBracesEnd() == PreferenceConstants.NEXT_LINE
+        assert formatPrefs.bracesEnd == PreferenceConstants.NEXT_LINE
 
         groovyPrefs.setValue(GROOVY_FORMATTER_BRACES_END, PreferenceConstants.SAME)
         formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getBracesEnd() == PreferenceConstants.SAME_LINE
+        assert formatPrefs.bracesEnd == PreferenceConstants.SAME_LINE
     }
 
     /**
@@ -107,21 +107,21 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
 
         projectPrefs.setValue(FORMATTER_TAB_SIZE, 13)
         formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getTabSize() == 13
+        assert formatPrefs.tabSize == 13
 
         projectPrefs.setValue(FORMATTER_TAB_CHAR, JavaCore.TAB)
         projectPrefs.setValue(FORMATTER_TAB_SIZE, 11)
         projectPrefs.setValue(FORMATTER_INDENTATION_SIZE, 5)
         formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getIndentationSize() == 11
-        assert formatPrefs.getTabSize() == 11
+        assert formatPrefs.indentationSize == 11
+        assert formatPrefs.tabSize == 11
 
         projectPrefs.setValue(FORMATTER_TAB_CHAR, MIXED)
         projectPrefs.setValue(FORMATTER_TAB_SIZE, 11)
         projectPrefs.setValue(FORMATTER_INDENTATION_SIZE, 5)
         formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getIndentationSize() == 5
-        assert formatPrefs.getTabSize() == 11
+        assert formatPrefs.indentationSize == 5
+        assert formatPrefs.tabSize == 11
     }
 
     /**
@@ -160,7 +160,7 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
     void testTabRelatedPrefsFromCore() {
         setJavaPreference(FORMATTER_TAB_SIZE, 13.toString())
         IFormatterPreferences formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getTabSize() == 13
+        assert formatPrefs.tabSize == 13
     }
 
     /**
@@ -172,11 +172,11 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
     void testRefreshPrefsFromCore() {
         setJavaPreference(FORMATTER_TAB_SIZE, 13.toString())
         FormatterPreferences formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getTabSize() == 13
+        assert formatPrefs.tabSize == 13
 
         setJavaPreference(FORMATTER_TAB_SIZE, 7.toString())
         formatPrefs = new FormatterPreferences(gunit)
-        assert formatPrefs.getTabSize() == 7
+        assert formatPrefs.tabSize == 7
     }
 
     /**
@@ -184,7 +184,7 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
      */
     @Test
     void testSmartPaste() {
-        def uiprefs = JavaPlugin.getDefault().getPreferenceStore()
+        def uiprefs = JavaPlugin.default.preferenceStore
         boolean orig = uiprefs.getBoolean(EDITOR_SMART_PASTE)
         try {
             assert new FormatterPreferences(gunit).isSmartPaste() == orig
@@ -205,7 +205,7 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
     @Test
     void testSemicolonPrefs() {
         FormatterPreferencesPage preferencesPage = new FormatterPreferencesPage()
-        IPreferenceStore groovyPrefs = preferencesPage.getPreferenceStore()
+        IPreferenceStore groovyPrefs = preferencesPage.preferenceStore
         assert groovyPrefs.contains(GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS) : 'Using the wrong preferences store?'
 
         groovyPrefs.setValue(GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS, true)

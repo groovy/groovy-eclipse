@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -26,6 +28,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring
 import org.junit.Test
 
+@CompileStatic
 final class RenameLocalTests extends RefactoringTestSuite {
 
     @Override
@@ -37,25 +40,25 @@ final class RenameLocalTests extends RefactoringTestSuite {
         ICompilationUnit cu = createCU(packageP, 'A.groovy', initial)
         ILocalVariable toRename = (ILocalVariable) cu.codeSelect(refactorLocation, 1)[0]
         JavaRefactoringDispatcher dispatcher = new JavaRefactoringDispatcher(toRename)
-        dispatcher.setNewName(newVariableName)
+        dispatcher.newName = newVariableName
         RenameJavaElementDescriptor descriptor = dispatcher.createDescriptorForLocalVariable()
         RenameRefactoring refactoring = (RenameRefactoring) createRefactoring(descriptor)
 
         RefactoringStatus result = performRefactoring(refactoring, !expectingWarning)
         assert result == null || result.isOK() || result.hasWarning() : 'was supposed to pass'
-        assertEqualLines('invalid renaming', expected, cu.getSource())
+        assertEqualLines('invalid renaming', expected, cu.source)
 
         assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
         assert !RefactoringCore.getUndoManager().anythingToRedo() : '! anythingToRedo'
 
         RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertEqualLines('invalid undo', initial, cu.getSource())
+        assertEqualLines('invalid undo', initial, cu.source)
 
         assert !RefactoringCore.getUndoManager().anythingToUndo() : '! anythingToUndo'
         assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
 
         RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertEqualLines('invalid redo', expected, cu.getSource())
+        assertEqualLines('invalid redo', expected, cu.source)
 
         return result != null ? result : new RefactoringStatus()
     }
@@ -133,25 +136,25 @@ final class RenameLocalTests extends RefactoringTestSuite {
     @Test // the two blocks should remain independent
     void testRenameLocal13() {
         String source = '''\
-            def method(List list) {
-              for (XXX in list) {
-                XXX
-              }
-              def out = list.collect { XXX ->
-                XXX
-              }
-            }
-            '''.stripIndent()
+            |def method(List list) {
+            |  for (XXX in list) {
+            |    XXX
+            |  }
+            |  def out = list.collect { XXX ->
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin()
         String expect = '''\
-            def method(List list) {
-              for (NEW in list) {
-                NEW
-              }
-              def out = list.collect { XXX ->
-                XXX
-              }
-            }
-            '''.stripIndent()
+            |def method(List list) {
+            |  for (NEW in list) {
+            |    NEW
+            |  }
+            |  def out = list.collect { XXX ->
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin()
 
         helper(source, expect)
     }
@@ -159,21 +162,21 @@ final class RenameLocalTests extends RefactoringTestSuite {
     @Test
     void testRenameLocalWithConflict1() {
         String source = '''\
-            def XXX
-            while(XXX) {
-              XXX
-              def NEW
-              NEW
-            }
-            '''.stripIndent()
+            |def XXX
+            |while(XXX) {
+            |  XXX
+            |  def NEW
+            |  NEW
+            |}
+            |'''.stripMargin()
         String expect = '''\
-            def NEW
-            while(NEW) {
-              NEW
-              def NEW
-              NEW
-            }
-            '''.stripIndent()
+            |def NEW
+            |while(NEW) {
+            |  NEW
+            |  def NEW
+            |  NEW
+            |}
+            |'''.stripMargin()
 
         helperExpectWarning(source, expect)
     }
@@ -181,23 +184,23 @@ final class RenameLocalTests extends RefactoringTestSuite {
     @Test
     void testRenameLocalWithConflict2() {
         String source = '''\
-            class A {
-              def NEW
-              def x(XXX) {
-                XXX
-                this.XXX
-              }
-            }
-            '''.stripIndent()
+            |class A {
+            |  def NEW
+            |  def x(XXX) {
+            |    XXX
+            |    this.XXX
+            |  }
+            |}
+            |'''.stripMargin()
         String expect = '''\
-            class A {
-              def NEW
-              def x(NEW) {
-                NEW
-                this.XXX
-              }
-            }
-            '''.stripIndent()
+            |class A {
+            |  def NEW
+            |  def x(NEW) {
+            |    NEW
+            |    this.XXX
+            |  }
+            |}
+            |'''.stripMargin()
 
         helperExpectWarning(source, expect)
     }
@@ -205,13 +208,13 @@ final class RenameLocalTests extends RefactoringTestSuite {
     @Test
     void testRenameLocalWithConflict3() {
         String source = '''\
-            def XXX
-            def y = { NEW -> XXX }
-            '''.stripIndent()
+            |def XXX
+            |def y = { NEW -> XXX }
+            |'''.stripMargin()
         String expect = '''\
-            def NEW
-            def y = { NEW -> NEW }
-            '''.stripIndent()
+            |def NEW
+            |def y = { NEW -> NEW }
+            |'''.stripMargin()
 
         helperExpectWarning(source, expect)
     }
@@ -219,23 +222,23 @@ final class RenameLocalTests extends RefactoringTestSuite {
     @Test
     void testRenameLocalWithConflict4() {
         String source = '''\
-            def NEW
-            while(NEW) {
-              NEW
-              def XXX
-              XXX
-              NEW
-            }
-            '''.stripIndent()
+            |def NEW
+            |while(NEW) {
+            |  NEW
+            |  def XXX
+            |  XXX
+            |  NEW
+            |}
+            |'''.stripMargin()
         String expect = '''\
-            def NEW
-            while(NEW) {
-              NEW
-              def NEW
-              NEW
-              NEW
-            }
-            '''.stripIndent()
+            |def NEW
+            |while(NEW) {
+            |  NEW
+            |  def NEW
+            |  NEW
+            |  NEW
+            |}
+            |'''.stripMargin()
 
         helperExpectWarning(source, expect)
     }
