@@ -377,6 +377,7 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 			},
 			null,
 			"");
+		this.verifier.shutDown();
 	}
 	public void testBug536037b() {
 		// tests combination of declaration null-annotations & 'var':

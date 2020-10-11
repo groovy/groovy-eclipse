@@ -136,26 +136,27 @@ public class SourceTypeBinding extends ReferenceBinding {
 	private SourceTypeBinding nestHost;
 	public HashSet<SourceTypeBinding> nestMembers;
 
-	private boolean isRecordDeclaration = false;
-	private RecordComponentBinding[] components; // for Java 14 record declaration - preview
+	private boolean isRecordDeclaration;
+	private RecordComponentBinding[] components;
 	private FieldBinding[] implicitComponentFields; // cache
-	private MethodBinding[] recordComponentAccessors = null; // hash maybe an overkill
+	private MethodBinding[] recordComponentAccessors; // hash maybe an overkill
 
 public SourceTypeBinding(char[][] compoundName, PackageBinding fPackage, ClassScope scope) {
 	this.compoundName = compoundName;
 	this.fPackage = fPackage;
+	this.scope = scope;
+
 	this.fileName = scope.referenceCompilationUnit().getFileName();
 	this.modifiers = scope.referenceContext.modifiers;
 	this.sourceName = scope.referenceContext.name;
-	this.scope = scope;
 	this.environment = scope.environment();
 
 	// expect the fields & methods to be initialized correctly later
 	this.fields = Binding.UNINITIALIZED_FIELDS;
 	this.methods = Binding.UNINITIALIZED_METHODS;
 	this.components = Binding.UNINITIALIZED_COMPONENTS;
-	this.prototype = this;
 	this.isRecordDeclaration = scope.referenceContext.isRecord();
+	this.prototype = this;
 	computeId();
 }
 
@@ -896,7 +897,6 @@ public SyntheticMethodBinding addSyntheticBridgeMethod(MethodBinding inheritedMe
 	return accessMethod;
 }
 
-/* JLS 14 Record - Preview - begin */
 public MethodBinding[] checkAndAddSyntheticRecordMethods(MethodBinding[] methodBindings, int count) {
 	if (!this.isRecordDeclaration)
 		return methodBindings;
@@ -976,6 +976,7 @@ public List<MethodBinding> checkAndAddSyntheticRecordComponentAccessors(MethodBi
 */
 public SyntheticMethodBinding addSyntheticRecordComponentAccessor(RecordComponentBinding rcb, int index) {
 	if (!isPrototype()) throw new IllegalStateException();
+
 	if (this.synthetics == null)
 		this.synthetics = new HashMap[MAX_SYNTHETICS];
 	if (this.synthetics[SourceTypeBinding.METHOD_EMUL] == null)
@@ -1038,7 +1039,6 @@ boolean areComponentsInitialized() {
 		return this.prototype.areComponentsInitialized();
 	return this.components != Binding.UNINITIALIZED_COMPONENTS;
 }
-/* JLS 14 Record - Preview - end */
 
 boolean areFieldsInitialized() {
 	if (!isPrototype())
@@ -1315,7 +1315,6 @@ private boolean checkPermitsAndAdd(ReferenceBinding superType, List<SourceTypeBi
 }
 
 public RecordComponentBinding[] components() {
-
 	if (!this.isRecordDeclaration)
 		return null;
 	if (!isPrototype()) {
@@ -2479,7 +2478,6 @@ private void checkCanonicalConstructorParameterNames(MethodBinding explicitCanon
 
 private void checkRecordCanonicalConstructor(MethodBinding explicitCanonicalConstructor) {
 	AbstractMethodDeclaration methodDecl = explicitCanonicalConstructor.sourceMethod();
-
 	if (!SourceTypeBinding.isAtleastAsAccessibleAsRecord(explicitCanonicalConstructor))
 		this.scope.problemReporter().recordCanonicalConstructorVisibilityReduced(methodDecl);
 	TypeParameter[] typeParameters = methodDecl.typeParameters();
@@ -2930,6 +2928,7 @@ private void checkAndFlagHeapPollution(MethodBinding method, AbstractMethodDecla
 		}
 	}
 }
+
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=391108
 private static void rejectTypeAnnotatedVoidMethod(AbstractMethodDeclaration methodDecl) {
 	Annotation[] annotations = methodDecl.annotations;
@@ -3112,7 +3111,7 @@ public RecordComponentBinding[] setComponents(RecordComponentBinding[] comps) {
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public FieldBinding [] setFields(FieldBinding[] fields) {
+public FieldBinding[] setFields(FieldBinding[] fields) {
 	if (!isPrototype())
 		return this.prototype.setFields(fields);
 
@@ -3127,7 +3126,7 @@ public FieldBinding [] setFields(FieldBinding[] fields) {
 }
 
 // We need to specialize member types, can't just propagate. Can't specialize here, clones could created post setMemberTypes()
-public ReferenceBinding [] setMemberTypes(ReferenceBinding[] memberTypes) {
+public ReferenceBinding[] setMemberTypes(ReferenceBinding[] memberTypes) {
 	if (!isPrototype())
 		return this.prototype.setMemberTypes(memberTypes);
 
@@ -3147,7 +3146,7 @@ public ReferenceBinding [] setMemberTypes(ReferenceBinding[] memberTypes) {
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public MethodBinding [] setMethods(MethodBinding[] methods) {
+public MethodBinding[] setMethods(MethodBinding[] methods) {
 	if (!isPrototype())
 		return this.prototype.setMethods(methods);
 
@@ -3164,7 +3163,7 @@ public MethodBinding [] setMethods(MethodBinding[] methods) {
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public ReferenceBinding [] setPermittedTypes(ReferenceBinding [] permittedTypes) {
+public ReferenceBinding[] setPermittedTypes(ReferenceBinding [] permittedTypes) {
 	if (!isPrototype())
 		return this.prototype.setPermittedTypes(permittedTypes);
 
@@ -3198,7 +3197,7 @@ public ReferenceBinding setSuperClass(ReferenceBinding superClass) {
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public ReferenceBinding [] setSuperInterfaces(ReferenceBinding [] superInterfaces) {
+public ReferenceBinding[] setSuperInterfaces(ReferenceBinding [] superInterfaces) {
 	if (!isPrototype())
 		return this.prototype.setSuperInterfaces(superInterfaces);
 
@@ -3215,7 +3214,7 @@ public ReferenceBinding [] setSuperInterfaces(ReferenceBinding [] superInterface
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public TypeVariableBinding [] setTypeVariables(TypeVariableBinding [] typeVariables) {
+public TypeVariableBinding[] setTypeVariables(TypeVariableBinding [] typeVariables) {
 	if (!isPrototype())
 		return this.prototype.setTypeVariables(typeVariables);
 

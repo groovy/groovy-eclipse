@@ -132,26 +132,27 @@ public class SourceTypeBinding extends ReferenceBinding {
 	private SourceTypeBinding nestHost;
 	public HashSet<SourceTypeBinding> nestMembers;
 
-	private boolean isRecordDeclaration = false;
+	private boolean isRecordDeclaration;
 	private RecordComponentBinding[] components; // for Java 14 record declaration - preview
 	private FieldBinding[] implicitComponentFields; // cache
-	private MethodBinding[] recordComponentAccessors = null; // hash maybe an overkill
+	private MethodBinding[] recordComponentAccessors; // hash maybe an overkill
 
 public SourceTypeBinding(char[][] compoundName, PackageBinding fPackage, ClassScope scope) {
 	this.compoundName = compoundName;
 	this.fPackage = fPackage;
+	this.scope = scope;
+
 	this.fileName = scope.referenceCompilationUnit().getFileName();
 	this.modifiers = scope.referenceContext.modifiers;
 	this.sourceName = scope.referenceContext.name;
-	this.scope = scope;
 	this.environment = scope.environment();
 
 	// expect the fields & methods to be initialized correctly later
 	this.fields = Binding.UNINITIALIZED_FIELDS;
 	this.methods = Binding.UNINITIALIZED_METHODS;
 	this.components = Binding.UNINITIALIZED_COMPONENTS;
-	this.prototype = this;
 	this.isRecordDeclaration = scope.referenceContext.isRecord();
+	this.prototype = this;
 	computeId();
 }
 
@@ -959,8 +960,8 @@ public List<MethodBinding> checkAndAddSyntheticRecordComponentAccessors(MethodBi
 	int missingCount = filteredComponents.size();
 	for (int i = 0; i < missingCount; ++i) {
 		RecordComponentBinding rcb = this.getRecordComponent(filteredComponents.get(i).toCharArray());
-		assert rcb != null;
-		implicitMethods.add(addSyntheticRecordComponentAccessor(rcb, i));
+		if (rcb != null)
+			implicitMethods.add(addSyntheticRecordComponentAccessor(rcb, i));
 	}
 	accessors.addAll(implicitMethods);
 	this.recordComponentAccessors = accessors.toArray(new MethodBinding[0]);
@@ -972,6 +973,7 @@ public List<MethodBinding> checkAndAddSyntheticRecordComponentAccessors(MethodBi
 */
 public SyntheticMethodBinding addSyntheticRecordComponentAccessor(RecordComponentBinding rcb, int index) {
 	if (!isPrototype()) throw new IllegalStateException();
+
 	if (this.synthetics == null)
 		this.synthetics = new HashMap[MAX_SYNTHETICS];
 	if (this.synthetics[SourceTypeBinding.METHOD_EMUL] == null)
@@ -1126,7 +1128,6 @@ void faultInTypesForFieldsAndMethods() {
 }
 
 public RecordComponentBinding[] components() {
-
 	if (!this.isRecordDeclaration)
 		return null;
 	if (!isPrototype()) {
@@ -2036,9 +2037,12 @@ public MethodBinding[] methods() {
 		// find & report collision cases
 		boolean complyTo15OrAbove = this.scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
 		boolean compliance16 = this.scope.compilerOptions().complianceLevel == ClassFileConstants.JDK1_6;
-		int recordCanonIndex = getImplicitCanonicalConstructor();
-		computeRecordComponents();
-		checkAndGetExplicitCanonicalConstructors();
+		int recordCanonIndex = -1;
+		if (this.isRecordDeclaration) {
+			recordCanonIndex = getImplicitCanonicalConstructor();
+			computeRecordComponents();
+			checkAndGetExplicitCanonicalConstructors();
+		}
 		int recordEqualsIndex = getImplicitMethod(TypeConstants.EQUALS);
 
 		for (int i = 0, length = this.methods.length; i < length; i++) {
@@ -2377,9 +2381,9 @@ public FieldBinding resolveTypeFor(FieldBinding field) {
 				// copy annotations from record component if applicable
 				if (field.isRecordComponent()) {
 					RecordComponentBinding rcb = getRecordComponent(field.name);
-					assert rcb != null;
-					relevantRecordComponentAnnotations = ASTNode.copyRecordComponentAnnotations(initializationScope,
-							field, rcb.sourceRecordComponent().annotations);
+					if (rcb != null)
+						relevantRecordComponentAnnotations = ASTNode.copyRecordComponentAnnotations(initializationScope,
+								field, rcb.sourceRecordComponent().annotations);
 				}
 			}
 			if (sourceLevel >= ClassFileConstants.JDK1_8) {
@@ -2870,7 +2874,7 @@ public RecordComponentBinding[] setComponents(RecordComponentBinding[] comps) {
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public FieldBinding [] setFields(FieldBinding[] fields) {
+public FieldBinding[] setFields(FieldBinding[] fields) {
 	if (!isPrototype())
 		return this.prototype.setFields(fields);
 
@@ -2885,7 +2889,7 @@ public FieldBinding [] setFields(FieldBinding[] fields) {
 }
 
 // We need to specialize member types, can't just propagate. Can't specialize here, clones could created post setMemberTypes()
-public ReferenceBinding [] setMemberTypes(ReferenceBinding[] memberTypes) {
+public ReferenceBinding[] setMemberTypes(ReferenceBinding[] memberTypes) {
 	if (!isPrototype())
 		return this.prototype.setMemberTypes(memberTypes);
 
@@ -2905,7 +2909,7 @@ public ReferenceBinding [] setMemberTypes(ReferenceBinding[] memberTypes) {
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public MethodBinding [] setMethods(MethodBinding[] methods) {
+public MethodBinding[] setMethods(MethodBinding[] methods) {
 	if (!isPrototype())
 		return this.prototype.setMethods(methods);
 
@@ -2939,7 +2943,7 @@ public ReferenceBinding setSuperClass(ReferenceBinding superClass) {
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public ReferenceBinding [] setSuperInterfaces(ReferenceBinding [] superInterfaces) {
+public ReferenceBinding[] setSuperInterfaces(ReferenceBinding [] superInterfaces) {
 	if (!isPrototype())
 		return this.prototype.setSuperInterfaces(superInterfaces);
 
@@ -2956,7 +2960,7 @@ public ReferenceBinding [] setSuperInterfaces(ReferenceBinding [] superInterface
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
-public TypeVariableBinding [] setTypeVariables(TypeVariableBinding [] typeVariables) {
+public TypeVariableBinding[] setTypeVariables(TypeVariableBinding [] typeVariables) {
 	if (!isPrototype())
 		return this.prototype.setTypeVariables(typeVariables);
 
