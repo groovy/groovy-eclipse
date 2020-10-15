@@ -340,7 +340,11 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        return Optional.of(new LazilyResolvedMethodBinding(true, propertyNode.getName(), modifiers, nameAsCharArray, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        if (ClassHelper.isPrimitiveType(propertyNode.getType())) {
+            TypeBinding returnType = Scope.getBaseType(propertyNode.getType().getName().toCharArray());
+            return Optional.of(new MethodBinding(modifiers | 0x4000000, nameAsCharArray, returnType, Binding.NO_PARAMETERS, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        }
+        return Optional.of(new LazilyResolvedMethodBinding(true, propertyNode.getName(), modifiers | 0x4000000, nameAsCharArray, Binding.NO_EXCEPTIONS, referenceContext.binding));
     }
 
     private Optional<MethodBinding> createSetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] existingMethods) {
@@ -363,7 +367,11 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        return Optional.of(new LazilyResolvedMethodBinding(false, propertyNode.getName(), modifiers, nameAsCharArray, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        if (ClassHelper.isPrimitiveType(propertyNode.getType())) {
+            TypeBinding[] parameterTypes = {Scope.getBaseType(propertyNode.getType().getName().toCharArray())};
+            return Optional.of(new MethodBinding(modifiers | 0x4000000, nameAsCharArray, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        }
+        return Optional.of(new LazilyResolvedMethodBinding(false, propertyNode.getName(), modifiers | 0x4000000, nameAsCharArray, Binding.NO_EXCEPTIONS, referenceContext.binding));
     }
 
     @Override
