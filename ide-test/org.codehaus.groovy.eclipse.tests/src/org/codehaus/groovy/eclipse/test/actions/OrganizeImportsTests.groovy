@@ -946,6 +946,37 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1184
+    void testInnerClass11() {
+        createGroovyType 'p', 'A', '''\
+            |abstract class A {
+            |  protected static class B {
+            |  }
+            |}
+            |'''
+        String contents = '''\
+            |import p.A
+            |import p.A.B
+            |class C extends A {
+            |  def m(B b) {
+            |  }
+            |}
+            |'''
+        doContentsCompareTest(contents, contents - ~/\|import p.A.B\s+/)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1184
+    void testInnerClass12() {
+        String contents = '''\
+            |import java.util.Map.Entry
+            |class C implements Map {
+            |  def m(Entry e) {
+            |  }
+            |}
+            |'''
+        doContentsCompareTest(contents, contents - ~/\|import java.util.Map.Entry\s+/)
+    }
+
     @Test
     void testStaticImport1() {
         String contents = '''\
