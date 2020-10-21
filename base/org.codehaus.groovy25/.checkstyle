@@ -41,6 +41,7 @@
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/InnerClassVisitorHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/BinaryExpressionHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/BytecodeHelper.java" include-pattern="false" />

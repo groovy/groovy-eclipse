@@ -61,13 +61,6 @@ public class DelegatingCleanUpPostSaveListener extends org.eclipse.jdt.internal.
                 ReflectionUtils.setPrivateField(SaveParticipantDescriptor.class, "fPostSaveListener", descriptor, delegatingCleanUp);
             }
         } catch (Exception e) {
-            // a ClassCastException can be thrown when changing compilers, so ignore it
-            if (e instanceof ClassCastException) {
-                if (e.getStackTrace()[0].getLineNumber() == 55) {
-                    return;
-                }
-            }
-
             // if an exception is thrown, then the groovy post save listener will not be used.
             GroovyCore.logException("Exception thrown while trying to install GroovyCleanUpPostSaveListener", e);
         }

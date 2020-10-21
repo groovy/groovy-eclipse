@@ -611,6 +611,9 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 		}
 
 		ASTParser parser= CleanUpRefactoring.createCleanUpASTParser();
+		// GROOVY add -- stop after semantic analysis
+		parser.setIgnoreMethodBodies(true);
+		// GROOVY end
 		parser.setSource(unit);
 
 		Map<String, String> compilerOptions= RefactoringASTParser.getCompilerOptions(unit.getJavaProject());

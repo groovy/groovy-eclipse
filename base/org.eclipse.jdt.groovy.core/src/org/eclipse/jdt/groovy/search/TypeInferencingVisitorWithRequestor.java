@@ -104,7 +104,6 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
-import org.codehaus.groovy.transform.ASTTestTransformation;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
@@ -685,7 +684,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             // visit attribute values
             super.visitAnnotation(node);
 
-            ClosureExpression test = node.getNodeMetaData(ASTTestTransformation.class);
+            ClosureExpression test = node.getNodeMetaData(org.codehaus.groovy.transform.ASTTestTransformation.class);
             if (test != null) {
                 Deque<VariableScope> saved = new java.util.ArrayDeque<>(scopes);
 
