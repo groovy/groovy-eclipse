@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.core.CompilationUnit;
@@ -52,12 +51,11 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
      * Returns the AST.
      */
     @Override
-    public org.eclipse.jdt.core.dom.CompilationUnit makeConsistent(CompilationUnit workingCopy)
-            throws JavaModelException {
+    public org.eclipse.jdt.core.dom.CompilationUnit makeConsistent(CompilationUnit workingCopy) throws JavaModelException {
         if (!workingCopy.isConsistent()) {
             // make working copy consistent
             if (this.problems == null)
-                this.problems = new HashMap<String, CategorizedProblem[]>();
+                this.problems = new HashMap<>();
             this.resolveBindings = this.requestorIsActive;
             this.ast = workingCopy.makeConsistent(this.astLevel, this.resolveBindings, this.reconcileFlags, this.problems, this.progressMonitor);
             this.deltaBuilder.buildDeltas();
@@ -77,7 +75,7 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
                     && (this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0) {
                 this.resolveBindings = this.requestorIsActive;
                 if (this.problems == null)
-                    this.problems = new HashMap<String, CategorizedProblem[]>();
+                    this.problems = new HashMap<>();
                 unit =
                     CompilationUnitProblemFinder.process(
                         source,
@@ -86,7 +84,7 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
                         this.astLevel != ICompilationUnit.NO_AST, // creating AST if level is not NO_AST
                         this.reconcileFlags,
                         this.progressMonitor);
-                // GROOVY cache the ModuleNode in the ModuleNodeMapper
+                // GROOVY add -- cache the ModuleNode in the ModuleNodeMapper
                 if (unit instanceof GroovyCompilationUnitDeclaration && !(workingCopy instanceof GroovyClassFileWorkingCopy)) {
                     ModuleNodeMapper.getInstance().maybeCacheModuleNode(workingCopy.getPerWorkingCopyInfo(), (GroovyCompilationUnitDeclaration) unit);
                 }

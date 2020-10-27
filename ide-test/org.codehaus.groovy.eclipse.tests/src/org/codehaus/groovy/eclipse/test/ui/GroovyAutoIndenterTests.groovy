@@ -19,7 +19,6 @@ import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.*
 import static org.eclipse.jdt.ui.PreferenceConstants.EDITOR_CLOSE_BRACES
 
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jface.preference.IPreferenceStore
 import org.junit.Before
 import org.junit.Test
 
@@ -27,9 +26,9 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
 
     @Before
     void setUp() {
-        setJavaPreference(EDITOR_CLOSE_BRACES, IPreferenceStore.TRUE)
+        setJavaPreference(EDITOR_CLOSE_BRACES, true)
         setJavaPreference(FORMATTER_TAB_CHAR, JavaCore.TAB)
-        setJavaPreference(FORMATTER_TAB_SIZE, '4')
+        setJavaPreference(FORMATTER_TAB_SIZE, 4)
     }
 
     /**
@@ -196,9 +195,9 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
             }
             """.stripIndent()
 
-        setJavaPreference(FORMATTER_INDENTATION_SIZE, '4')
+        setJavaPreference(FORMATTER_INDENTATION_SIZE, 4)
         setJavaPreference(FORMATTER_TAB_CHAR, MIXED)
-        setJavaPreference(FORMATTER_TAB_SIZE, '8')
+        setJavaPreference(FORMATTER_TAB_SIZE, 8)
         send('\n')
 
         assertEditorContents """\
@@ -226,9 +225,9 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
             }
             """.stripIndent()
 
-        setJavaPreference(FORMATTER_INDENTATION_SIZE, '4')
+        setJavaPreference(FORMATTER_INDENTATION_SIZE, 4)
         setJavaPreference(FORMATTER_TAB_CHAR, MIXED)
-        setJavaPreference(FORMATTER_TAB_SIZE, '8')
+        setJavaPreference(FORMATTER_TAB_SIZE, 8)
         send('\n')
 
         assertEditorContents """\

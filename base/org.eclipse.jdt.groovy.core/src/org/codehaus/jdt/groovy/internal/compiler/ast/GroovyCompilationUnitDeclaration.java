@@ -94,6 +94,7 @@ import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.Flags;
@@ -251,7 +252,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getBugText());
             }
 
-            if (e.getCause() instanceof AbortCompilation) {
+            if (e.getCause() instanceof OperationCanceledException) {
+                throw (OperationCanceledException) e.getCause();
+            } else if (e.getCause() instanceof AbortCompilation) {
                 AbortCompilation abort = (AbortCompilation) e.getCause();
                 if (!abort.isSilent) {
                     if (abort.problem != null) {

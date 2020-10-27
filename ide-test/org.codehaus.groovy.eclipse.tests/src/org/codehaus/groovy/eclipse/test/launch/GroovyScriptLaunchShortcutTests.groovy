@@ -74,25 +74,16 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
             def classpath = buildScriptClasspath(p1.javaProject)
 
-            def entries = [
-                ['P1', 'bin' ],
-                ['P1', 'src' ],
-                ['P2', 'bin' ],
-                ['P2', 'src' ],
-                ['P3', 'bin' ],
-                ['P3', 'src' ],
-                ['P3', 'bin2'],
-                ['P3', 'src2'],
-                ['P4', 'bin' ],
-                ['P4', 'src' ],
-                ['P4', 'bin2'],
-                ['P4', 'src2'],
-            ]
-            String expected_classpath = entries.collect { String proj, String path ->
-                '${workspace_loc:' + proj + '}' + File.separator + path
-            }.join(File.pathSeparator)
+            ['P1', 'P2', 'P3', 'P4'].each {
+                def entries = [[it], ['bin', 'src']].combinations()
 
-            assert classpath.endsWith(expected_classpath)
+                String expected_classpath = entries.collect { String proj, String path ->
+                    '${workspace_loc:' + proj + '}' + File.separator + path
+                }.join(File.pathSeparator)
+
+                assert classpath.contains(expected_classpath)
+            }
+
             assert classpath.contains(CompilerUtils.exportedGroovyAllJar.toOSString())
         } finally {
             p1.dispose()
@@ -120,14 +111,16 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
             String classpath = buildScriptClasspath(p1.javaProject)
 
-            String expected_classpath = [
+            assert classpath.contains([
                 '${workspace_loc:' + 'P1a}' + File.separator + 'bin',
                 '${workspace_loc:' + 'P1a}' + File.separator + 'src',
+            ].join(File.pathSeparator))
+
+            assert classpath.endsWith([
                 '${workspace_loc:' + 'P1a}' + File.separator + 'empty.jar',
                 '${workspace_loc:' + 'P2a}' + File.separator + 'empty2.jar'
-            ].join(File.pathSeparator)
+            ].join(File.pathSeparator))
 
-            assert classpath.endsWith(expected_classpath)
             assert classpath.contains(CompilerUtils.exportedGroovyAllJar.toOSString())
         } finally {
             p1.dispose()

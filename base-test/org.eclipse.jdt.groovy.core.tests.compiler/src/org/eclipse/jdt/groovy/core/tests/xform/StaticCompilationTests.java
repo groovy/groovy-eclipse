@@ -5150,16 +5150,16 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Main {\n" +
-            "    private final Map<String, Boolean> map = [:]\n" +
-            "    void test() {\n" +
-            "        { ->\n" +
-            "            map['key'] = true\n" +
-            "        }.call()\n" +
-            "        print map\n" +
-            "    }\n" +
-            "    static main(args) {\n" +
-            "        newInstance().test()\n" +
-            "    }\n" +
+            "  private final Map<String, Boolean> map = [:]\n" +
+            "  void test() {\n" +
+            "    { ->\n" +
+            "      map['key'] = true\n" +
+            "    }.call()\n" +
+            "    print map\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    newInstance().test()\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on

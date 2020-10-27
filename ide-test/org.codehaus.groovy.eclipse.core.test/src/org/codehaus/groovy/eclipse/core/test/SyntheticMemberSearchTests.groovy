@@ -21,6 +21,7 @@ import org.codehaus.groovy.eclipse.core.search.SyntheticAccessorSearchRequestor
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.SearchMatch
@@ -235,7 +236,6 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     @Test
     void testSearchInJava5() {
         addJavaSource '''\
-            |package p;
             |class C {
             |  public boolean isXxxx() {
             |    return false;
@@ -252,7 +252,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         List<SearchMatch> matches = []
         new SyntheticAccessorSearchRequestor().findSyntheticMatches(gType.children.find { it.elementName == 'xxxx' },
             IJavaSearchConstants.DECLARATIONS | IJavaSearchConstants.IGNORE_DECLARING_TYPE | IJavaSearchConstants.IGNORE_RETURN_TYPE,
-            [SearchEngine.defaultSearchParticipant] as SearchParticipant[],
+            [SearchEngine.getDefaultSearchParticipant()] as SearchParticipant[],
             SearchEngine.createWorkspaceScope(),
             matches.&add,
             null)
@@ -264,7 +264,8 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
 
     private List<SearchMatch> performSearch(String searchName, IType type = gType) {
         IJavaElement target = type.children.find { it.elementName == searchName }
-        assert target != null : "child not found: $searchName"
+        assert target?.exists() : "child not found: $searchName"
+        SearchTestSuite.waitUntilReady(type.javaProject)
 
         new LinkedList<SearchMatch>().tap {
             new SyntheticAccessorSearchRequestor().findSyntheticMatches(target, it.&add, null)
@@ -275,34 +276,20 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         assert matches.size() == expected : "Wrong number of matches found in:\n${ -> matches.join('\n')}"
     }
 
-    /**
-     * Ensures that the given match exists at least once in the list.
-     */
     private void assertMatch(String enclosingName, String matchName, String contents, List<SearchMatch> matches) {
-        int matchIndex = 0
-        int matchStart = 0
-        boolean matchFound = false
-        for (match in matches) {
-            if (isMatchOf(enclosingName, matchName, matchStart, contents, match)) {
-                matchFound = true
-                break
-            }
-            matchIndex += 1
-        }
-        assert matchFound : "Match name $matchName not found in\n${ -> matches.join('\n')}"
-
-        SearchMatch match = matches.remove(matchIndex)
+        SearchMatch match = matches.find(this.&isMatchOf.curry(enclosingName, matchName, contents))
+        assert match : "Match for '$matchName' not found in:\n${ -> matches.join('\n')}"
         assert (match.element as IJavaElement).exists()
     }
 
     private void assertNoMatch(String enclosingName, String matchName, String contents, List<SearchMatch> matches) {
         boolean matchFound = matches.any(this.&isMatchOf.curry(enclosingName, matchName, contents))
-        assert !matchFound : "Match name $matchName was found, but should not have been.\n${ -> matches.join('\n')}"
+        assert !matchFound : "Match for '$matchName' was found in:\n${ -> matches.join('\n')}"
     }
 
-    private static boolean isMatchOf(String enclosingName, String matchName, int matchStart = 0, String contents, SearchMatch match) {
+    private static boolean isMatchOf(String enclosingName, String matchName, String contents, SearchMatch match) {
         (match.element as IJavaElement).elementName == enclosingName &&
-        contents.indexOf(matchName, matchStart) == match.offset &&
+        contents.indexOf(matchName) == match.offset &&
         matchName.length() == match.length
     }
 }

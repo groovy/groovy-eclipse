@@ -64,7 +64,6 @@ abstract class QuickFixTestSuite extends GroovyEclipseTestSuite {
 
     protected IMarker[] getJavaProblemMarkers(IResource resource) {
         buildProject()
-        waitForIndex()
         return resource.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
     }
 }

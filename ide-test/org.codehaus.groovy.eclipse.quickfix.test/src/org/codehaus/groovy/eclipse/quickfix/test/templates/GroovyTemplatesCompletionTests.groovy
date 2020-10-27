@@ -32,7 +32,7 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     @Before
     void setUp() {
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
-        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '2')
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, 2)
     }
 
     /**

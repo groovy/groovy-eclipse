@@ -344,7 +344,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().getString()
+            |    new Pogo().getString();
             |  }
             |}
             |'''.stripMargin())
@@ -373,7 +373,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().getString()
+            |    new Pogo().getString();
             |  }
             |}
             |'''.stripMargin())
@@ -400,7 +400,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().getValue()
+            |    new Pogo().getValue();
             |  }
             |}
             |'''.stripMargin())
@@ -427,7 +427,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().setString("")
+            |    new Pogo().setString("");
             |  }
             |}
             |'''.stripMargin())
@@ -467,7 +467,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().isValue()
+            |    new Pogo().isValue();
             |  }
             |}
             |'''.stripMargin())
@@ -545,13 +545,12 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1113
-    void testCodeSelectTraitProperty() {
-        addGroovySource('''\
-            |trait T {
-            |  String p
-            |}
-            |'''.stripMargin())
+    void testCodeSelectTraitProperty1() {
         def elem = assertCodeSelect(['''\
+            |trait T {
+            |  def p
+            |}
+            |'''.stripMargin(), '''\
             |class C implements T {
             |  def m() {
             |    p
@@ -559,7 +558,24 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()], 'p')
         assert elem.declaringType.fullyQualifiedName == 'T'
-        assert elem.elementInfo.nameSourceStart == 19
+        assert elem.elementInfo.nameSourceStart == 16
+    }
+
+    @Test
+    void testCodeSelectTraitProperty2() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  int p
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 16
     }
 
     // TODO: unknown properties

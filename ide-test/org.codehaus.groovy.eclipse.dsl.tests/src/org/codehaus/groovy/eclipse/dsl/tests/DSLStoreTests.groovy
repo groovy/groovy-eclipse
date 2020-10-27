@@ -32,8 +32,6 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
-import org.eclipse.jdt.internal.core.JavaModelManager
 import org.junit.Test
 
 final class DSLStoreTests extends DSLInferencingTestSuite {
@@ -43,22 +41,12 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
      * @param allExpectedPointcuts map: dsl file name -> all pointcuts in that file
      * @param expectedContributionCounts map: pointcut name -> all contribution group associated with
      */
-    private void assertDSLStore(int expectedNumDslFiles, Map<String, List<String>> allExpectedPointcuts, Map<String, Integer> expectedContributionCounts) {
-        // ensure DSLDs are refreshed
-        // don't schedule. instead run in the same thread.
-        println 'About to run RefreshDSLDJob'
-
-        SimpleProgressMonitor spm = new SimpleProgressMonitor('clean build')
-        project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
-        spm.waitForCompletion()
-
-        JavaModelManager.indexManager.removeIndex(project.location)
-        JavaModelManager.indexManager.cleanUpIndexes()
-        SynchronizationUtils.waitForIndexingToComplete(javaProject)
+    private void runTest(int expectedNumDslFiles, Map<String, List<String>> allExpectedPointcuts, Map<String, Integer> expectedContributionCounts) {
+        project.build(IncrementalProjectBuilder.CLEAN_BUILD, null)
+        SynchronizationUtils.waitForDSLDProcessingToComplete()
 
         DSLDStoreManager manager = GroovyDSLCoreActivator.default.contextStoreManager
         manager.initialize(project, true)
-        println 'Finished RefreshDSLDJob'
 
         DSLDStore store = manager.getDSLDStore(project)
         Set<String> disabledScripts = DSLPreferences.disabledScriptsAsSet
@@ -131,14 +119,14 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
 
     @Test
     void testNothing() {
-        assertDSLStore(0, [:], [:])
+        runTest(0, [:], [:])
     }
 
     @Test
     void testSingleSimple() {
         createDsls('currentType().accept { }')
 
-        assertDSLStore(1,
+        runTest(1,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ]),
@@ -156,7 +144,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
                 'g.accept { }\n' +
                 'g.accept { }')
 
-        assertDSLStore(1,
+        runTest(1,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ]),
@@ -172,7 +160,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
     void testTwoPointcuts() {
         createDsls('currentType().accept { }\nfields().accept { }')
 
-        assertDSLStore(1,
+        runTest(1,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0),
                 createSemiUniqueName(FindFieldPointcut, 0)
@@ -190,7 +178,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
     void testTwoPointcutsTwoFiles() {
         createDsls('currentType().accept { }', 'fields().accept { }')
 
-        assertDSLStore(2,
+        runTest(2,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ], [
@@ -209,7 +197,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
     void testTwoFilesEachWith2Pointcuts() {
         createDsls('currentType().accept { }\nfields().accept { }', 'currentType().accept { }\nfields().accept { }')
 
-        assertDSLStore(2,
+        runTest(2,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0),
                 createSemiUniqueName(FindFieldPointcut, 0)
@@ -233,7 +221,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
         createDsls('def a = currentType()\ndef b = fields()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }',
                    'def a = currentType()\ndef b = fields()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }')
 
-        assertDSLStore(2,
+        runTest(2,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0),
                 createSemiUniqueName(FindFieldPointcut, 0)
@@ -259,7 +247,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
                    'def a = currentType()\na.accept { }\na.accept { }\na.accept { }\na.accept { }\na.accept { }',
                    '') // not in store
 
-        assertDSLStore(3,
+        runTest(3,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0),
                 createSemiUniqueName(FindFieldPointcut, 0)
@@ -284,11 +272,11 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
 
     @Test
     void testAddAndRemove() {
-        assertDSLStore(0, [:], [:])
+        runTest(0, [:], [:])
 
         // add one
         createDsls('currentType().accept { }')
-        assertDSLStore(1,
+        runTest(1,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ]),
@@ -302,7 +290,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
         // add another
         createDsls('currentType().accept { }')
 
-        assertDSLStore(2,
+        runTest(2,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ], [
@@ -318,7 +306,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
 
         // remove second
         deleteDslFile(1)
-        assertDSLStore(1,
+        runTest(1,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ]),
@@ -331,13 +319,13 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
 
         // remove first
         deleteDslFile(0)
-        assertDSLStore(0, [:], [:])
+        runTest(0, [:], [:])
     }
 
     @Test
     void testChange() {
         createDsls('currentType().accept { }')
-        assertDSLStore(1,
+        runTest(1,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ]),
@@ -351,7 +339,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
         // overwrite the original
         deleteDslFile(0); index = 0
         createDsls('currentType().accept { }\nfields().accept { }')
-        assertDSLStore(1,
+        runTest(1,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0),
                 createSemiUniqueName(FindFieldPointcut, 0)
@@ -368,7 +356,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
     @Test
     void testDisabledOfFile() {
         createDsls('currentType().accept { }', 'fields().accept { }')
-        assertDSLStore(2,
+        runTest(2,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ], [
@@ -385,7 +373,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
         // disable script
         setDisabledScripts(DSLDStore.toUniqueString(project.getFile('dsl0.dsld')))
 
-        assertDSLStore(2,
+        runTest(2,
             createExpectedPointcuts([], [
                 createSemiUniqueName(FindFieldPointcut, 1)
             ]),
@@ -402,7 +390,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
         deleteDslFile(0); deleteDslFile(1); index = 0
         createDsls('currentType().accept { }', 'fields().accept { }')
 
-        assertDSLStore(2,
+        runTest(2,
             createExpectedPointcuts([
                 createSemiUniqueName(CurrentTypePointcut, 0)
             ], [
@@ -428,21 +416,21 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
         IStorage storage = javaProject.getPackageFragmentRoot(jarPath).getPackageFragment('dsld').nonJavaResources[0]
         String dsld = DSLDStore.toUniqueString(storage), pcut = createSemiUniqueName(CurrentTypePointcut, storage)
 
-        assertDSLStore(1, [(dsld): [pcut]], [(pcut): 1])
+        runTest(1, [(dsld): [pcut]], [(pcut): 1])
 
         // disable script
         setDisabledScripts(dsld)
-        assertDSLStore(1, [:], [:])
+        runTest(1, [:], [:])
 
         // re-enable
         setDisabledScripts()
-        assertDSLStore(1, [(dsld): [pcut]], [(pcut): 1])
+        runTest(1, [(dsld): [pcut]], [(pcut): 1])
 
         // remove from classpath
         GroovyRuntime.removeClasspathEntry(javaProject, cpEntry)
         project.refreshLocal(IResource.DEPTH_INFINITE, null)
         buildProject()
 
-        assertDSLStore(0, [:], [:])
+        runTest(0, [:], [:])
     }
 }

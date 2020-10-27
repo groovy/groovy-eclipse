@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.astviews
 
 import static org.eclipse.jdt.core.JavaCore.addElementChangedListener
 import static org.eclipse.jdt.core.JavaCore.removeElementChangedListener
+import static org.eclipse.swt.widgets.Display.getDefault as getDisplay
 
 import groovy.transform.*
 
@@ -38,7 +39,6 @@ import org.eclipse.jface.viewers.LabelProvider
 import org.eclipse.jface.viewers.TreeViewer
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Composite
-import org.eclipse.swt.widgets.Display
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
@@ -84,7 +84,7 @@ class ASTView extends ViewPart {
             if (editor != null) {
                 def unit = Adapters.adapt(editor.editorInput, GroovyCompilationUnit)
                 if (isUnitInDelta(event.delta, unit)) {
-                    Display.default.asyncExec { ->
+                    display.asyncExec { ->
                         def treePaths =
                             viewer.expandedElements
                         viewer.input = unit.moduleNode
@@ -146,7 +146,7 @@ class ASTView extends ViewPart {
         site.page.with {
             addPartListener(partListener)
             if (activeEditor instanceof GroovyEditor) {
-                Display.default.asyncExec { ->
+                display.asyncExec { ->
                     partListener.partBroughtToTop(activeEditor)
                 }
             }

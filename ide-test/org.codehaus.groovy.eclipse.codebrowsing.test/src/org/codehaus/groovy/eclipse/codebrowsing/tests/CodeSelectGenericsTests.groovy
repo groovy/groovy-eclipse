@@ -142,7 +142,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         String contents = '[a: Number].collect { k,v -> "" }'
         IJavaElement elem = assertCodeSelect([contents], 'collect')
         MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
-        assert method.returnType.toString(false) == 'java.util.List <java.lang.Object>'
+        assert method.returnType.toString(false) == 'java.util.List <java.lang.String>'
     }
 
     @Test

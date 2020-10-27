@@ -15,7 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
+import static org.codehaus.groovy.eclipse.GroovyPlugin.getDefault as getGroovyPlugin
+
 import org.codehaus.groovy.eclipse.editor.GroovyTagScanner
 import org.codehaus.groovy.eclipse.preferences.PreferenceConstants
 import org.eclipse.jface.preference.PreferenceConverter
@@ -29,8 +30,8 @@ import org.junit.Test
 
 final class GroovyTagScannerTests {
 
-    private final GroovyTagScanner scanner = new GroovyTagScanner(GroovyPlugin.default.textTools.colorManager,
-                Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST)
+    private final GroovyTagScanner scanner = new GroovyTagScanner(groovyPlugin.textTools.colorManager,
+            Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST)
 
     @Test
     void testNoColor() {
@@ -109,6 +110,6 @@ final class GroovyTagScannerTests {
         if (foregroundColorPreference == 'black') {
             return new RGB(0, 0, 0)
         }
-        return PreferenceConverter.getColor(GroovyPlugin.default.preferenceStore, foregroundColorPreference)
+        return PreferenceConverter.getColor(groovyPlugin.preferenceStore, foregroundColorPreference)
     }
 }

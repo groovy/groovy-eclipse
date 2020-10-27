@@ -980,7 +980,7 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             |  static class Nested {}
             |}
             |'''.stripMargin()
-        setJavaPreference(CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(CODEASSIST_ADDIMPORT, false)
         checkProposalApplication(contents, expected, getIndexOf(contents, '(Nes'), 'Nested - C', true)
     }
 

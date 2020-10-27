@@ -68,32 +68,6 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 public class GroovyCompilationUnit extends CompilationUnit {
 
-    private class GroovyErrorHandlingPolicy implements IErrorHandlingPolicy {
-
-        final boolean stopOnFirst;
-
-        GroovyErrorHandlingPolicy(boolean stopOnFirst) {
-            this.stopOnFirst = stopOnFirst;
-        }
-
-        @Override
-        public boolean proceedOnErrors() {
-            return !stopOnFirst;
-        }
-
-        @Override
-        public boolean stopOnFirstError() {
-            return stopOnFirst;
-        }
-
-        @Override
-        public boolean ignoreAllErrors() {
-            // TODO is this the right decision here? New method with java8 support
-            return false;
-        }
-
-    }
-
     public GroovyCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
         super(parent, name, owner);
     }
@@ -183,28 +157,13 @@ public class GroovyCompilationUnit extends CompilationUnit {
      * working copy info is about to be discared if useCount <= 1
      */
     private boolean workingCopyInfoWillBeDiscarded(JavaModelManager.PerWorkingCopyInfo info) {
-        return info != null && ((Integer) ReflectionUtils.getPrivateField(JavaModelManager.PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1;
+        return (info != null && ((Integer) ReflectionUtils.getPrivateField(JavaModelManager.PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1);
     }
 
     /**
      * Tracks how deep we are in recursive calls to {@link #buildStructure}.
      */
     private static final ThreadLocalAtomicInteger depth = new ThreadLocalAtomicInteger();
-    private static class ThreadLocalAtomicInteger extends ThreadLocal<AtomicInteger> {
-        @Override
-        protected AtomicInteger initialValue() {
-            return new AtomicInteger();
-        }
-        int intValue() {
-            return get().get();
-        }
-        void increment() {
-            get().incrementAndGet();
-        }
-        void decrement() {
-            get().decrementAndGet();
-        }
-    }
 
     @Override
     protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource)
@@ -405,26 +364,24 @@ public class GroovyCompilationUnit extends CompilationUnit {
         ModuleNodeMapper.getInstance().maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
     }
 
-    /*
-     * Copied from super class, but changed so that a custom ReconcileWorkingCopyOperation can be run
-     */
     @Override
     public org.eclipse.jdt.core.dom.CompilationUnit reconcile(int astLevel, int reconcileFlags, WorkingCopyOwner workingCopyOwner, IProgressMonitor monitor)
             throws JavaModelException {
-        if (!isWorkingCopy())
+        if (!isWorkingCopy() || isCanceled(monitor))
             return null; // reconciling is not supported on non-working copies
-        if (workingCopyOwner == null)
-            workingCopyOwner = DefaultWorkingCopyOwner.PRIMARY;
+
         PerformanceStats stats = null;
         if (ReconcileWorkingCopyOperation.PERF) {
             stats = PerformanceStats.getStats(JavaModelManager.RECONCILE_PERF, this);
             stats.startRun(String.valueOf(getFileName()));
         }
-        ReconcileWorkingCopyOperation op = new GroovyReconcileWorkingCopyOperation(this, astLevel, reconcileFlags, workingCopyOwner);
+        ReconcileWorkingCopyOperation op = new GroovyReconcileWorkingCopyOperation(this, astLevel,
+            reconcileFlags, workingCopyOwner != null ? workingCopyOwner : DefaultWorkingCopyOwner.PRIMARY);
         JavaModelManager manager = JavaModelManager.getJavaModelManager();
         try {
             manager.cacheZipFiles(this); // cache zip files for performance (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
-            op.runOperation(monitor);
+            if (!isCanceled(monitor))
+                op.runOperation(monitor);
         } finally {
             manager.flushZipFiles(this);
         }
@@ -434,7 +391,12 @@ public class GroovyCompilationUnit extends CompilationUnit {
         return op.ast;
     }
 
-    @Override @SuppressWarnings("unchecked")
+    private boolean isCanceled(IProgressMonitor monitor) {
+        return (monitor != null && monitor.isCanceled());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> T getAdapter(Class<T> adapter) {
         if (GroovyCompilationUnit.class.equals(adapter)) {
             return (T) this;
@@ -443,36 +405,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
             return (T) getModuleNode();
         }
         return super.getAdapter(adapter);
-    }
-
-    class CompilationUnitClone extends GroovyCompilationUnit {
-        private char[] cachedContents;
-
-        CompilationUnitClone(char[] cachedContents) {
-            this();
-            this.cachedContents = cachedContents;
-        }
-
-        CompilationUnitClone() {
-            super((PackageFragment) GroovyCompilationUnit.this.parent, GroovyCompilationUnit.this.name, GroovyCompilationUnit.this.owner);
-        }
-
-        @Override
-        public char[] getContents() {
-            if (this.cachedContents == null)
-                this.cachedContents = GroovyCompilationUnit.this.getContents();
-            return this.cachedContents;
-        }
-
-        @Override
-        public CompilationUnit originalFromClone() {
-            return GroovyCompilationUnit.this;
-        }
-
-        @Override
-        public char[] getFileName() {
-            return GroovyCompilationUnit.this.getFileName();
-        }
     }
 
     public GroovyCompilationUnit cloneCachingContents(char[] newContents) {
@@ -591,6 +523,83 @@ public class GroovyCompilationUnit extends CompilationUnit {
             delegate.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
         } else {
             super.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+
+    private class CompilationUnitClone extends GroovyCompilationUnit {
+
+        private char[] cachedContents;
+
+        CompilationUnitClone(char[] cachedContents) {
+            this();
+            this.cachedContents = cachedContents;
+        }
+
+        CompilationUnitClone() {
+            super((PackageFragment) GroovyCompilationUnit.this.parent, GroovyCompilationUnit.this.name, GroovyCompilationUnit.this.owner);
+        }
+
+        @Override
+        public char[] getContents() {
+            if (this.cachedContents == null)
+                this.cachedContents = GroovyCompilationUnit.this.getContents();
+            return this.cachedContents;
+        }
+
+        @Override
+        public CompilationUnit originalFromClone() {
+            return GroovyCompilationUnit.this;
+        }
+
+        @Override
+        public char[] getFileName() {
+            return GroovyCompilationUnit.this.getFileName();
+        }
+    }
+
+    private static class GroovyErrorHandlingPolicy implements IErrorHandlingPolicy {
+
+        private final boolean stopOnFirst;
+
+        GroovyErrorHandlingPolicy(final boolean stopOnFirst) {
+            this.stopOnFirst = stopOnFirst;
+        }
+
+        @Override
+        public boolean stopOnFirstError() {
+            return stopOnFirst;
+        }
+
+        @Override
+        public boolean proceedOnErrors() {
+            return !stopOnFirst;
+        }
+
+        @Override
+        public boolean ignoreAllErrors() {
+            return false;
+        }
+    }
+
+    private static class ThreadLocalAtomicInteger extends ThreadLocal<AtomicInteger> {
+
+        @Override
+        protected AtomicInteger initialValue() {
+            return new AtomicInteger();
+        }
+
+        int intValue() {
+            return get().get();
+        }
+
+        void increment() {
+            get().incrementAndGet();
+        }
+
+        void decrement() {
+            get().decrementAndGet();
         }
     }
 }

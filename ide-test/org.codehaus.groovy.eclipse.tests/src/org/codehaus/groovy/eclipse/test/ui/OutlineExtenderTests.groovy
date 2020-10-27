@@ -15,9 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
+import static org.codehaus.groovy.eclipse.GroovyPlugin.getDefault as getGroovyPlugin
+
 import groovy.transform.NotYetImplemented
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.groovy.eclipse.editor.outline.GroovyOutlinePage
 import org.codehaus.groovy.eclipse.editor.outline.OField
@@ -41,7 +42,7 @@ import org.junit.Test
 
 final class OutlineExtenderTests extends GroovyEclipseTestSuite {
 
-    private final OutlineExtenderRegistry registry = GroovyPlugin.default.outlineTools.outlineExtenderRegistry
+    private final OutlineExtenderRegistry registry = groovyPlugin.outlineTools.outlineExtenderRegistry
 
     @Before
     void setUp() {
@@ -174,7 +175,6 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         viewer.textWidget.selection = 0
         viewer.textWidget.insert('Long field3 = 100 \n')
         buildProject()
-        waitForIndex()
         tu.refresh()
 
         // check consistency

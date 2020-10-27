@@ -25,9 +25,9 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'true')
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, true)
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, true)
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, true)
         GroovyContentAssist.getDefault().preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
         GroovyContentAssist.getDefault().preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
     }
@@ -110,7 +110,7 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Test
     void testParamGuessing5() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
 
         addGroovySource '''\
             |import java.util.concurrent.TimeUnit
@@ -147,8 +147,8 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Test
     void testParamGuessing5a() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
-        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, false)
 
         addGroovySource '''\
             |import java.util.concurrent.TimeUnit

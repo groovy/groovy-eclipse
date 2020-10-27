@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.eclipse.jdt.internal.ui.JavaPlugin.getDefault as getJavaPlugin
 import static org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal.MODIFIER_TOGGLE_COMPLETION_MODE
 
 import groovy.transform.NotYetImplemented
@@ -26,7 +25,6 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -40,8 +38,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         // filter some legacy packages
         setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, 'sun.*;com.sun.*;org.omg.*')
 
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, true)
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, true)
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
     }
 
@@ -66,7 +64,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion2() {
         String contents = 'class YYY { YYY() {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -74,7 +72,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion3() {
         String contents = 'class YYY { YYY(x) {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x) {} }\nnew YYY(x)\nkkk'
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -82,7 +80,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion4() {
         String contents = 'class YYY { YYY(x, y) {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x, y) {} }\nnew YYY(x, y)\nkkk'
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -90,8 +88,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion5() {
         String contents = 'class YYY { YYY() {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
-        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'false')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, false)
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -99,8 +97,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion6() {
         String contents = 'class YYY { YYY() {} }\nnew YY()\nkkk'
         String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
-        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'false')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, false)
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'new YY'))
         applyProposalAndCheck(findFirstProposal(proposals, 'YYY', false), expected) // completion overwrites
     }
@@ -109,7 +107,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion7() {
         String contents = 'class YYY { YYY() {} }\nnew YY()\nkkk'
         String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'new YY'))
         applyProposalAndCheck(findFirstProposal(proposals, 'YYY', false), expected, 0 as char, MODIFIER_TOGGLE_COMPLETION_MODE)
     }
@@ -130,7 +128,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Test
     void testContructorCompletionWithClosure2() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
 
         String contents = '''\
             |class Foo {
@@ -146,7 +144,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Test
     void testContructorCompletionWithClosure3() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         String contents = '''\
@@ -173,7 +171,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletionWithGenerics1() {
         String contents = 'List<String> list = new ArrayL'
         String expected = 'List<String> list = new ArrayList()'
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new ArrayL'), 'ArrayList()')
     }
 
@@ -192,7 +190,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         String expected = contents.replace('new YY', 'new YYY()')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -211,7 +209,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         String expected = contents.replace('new YY', 'new YYY()')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -264,7 +262,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |new Outer.Inn
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
         applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - c.Outer.Inner', '()'), '''\
             |new c.Outer.Inner()
             |'''.stripMargin())
@@ -303,7 +301,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |new XyzInn
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
         applyProposalAndCheck(checkUniqueProposal(contents, 'XyzInn', 'XyzInner() - e.Outer.XyzInner', '()'), '''\
             |new e.Outer.XyzInner()
             |'''.stripMargin())
@@ -343,7 +341,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |import g.Outer
             |new Outer.Inn
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
         applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - g.Outer.Inner', '()'), '''\
             |import g.Outer
             |new Outer.Inner()
@@ -384,7 +382,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |import i.*
             |new Outer.Inn
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
         applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - i.Outer.Inner', '()'), '''\
             |import i.*
             |new Outer.Inner()
@@ -404,8 +402,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |new j.Outer.Inn
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         applyProposalAndCheck(checkUniqueProposal(
             contents, 'Inn', 'Inner(Number number, String string) - j.Outer.Inner', '(number, string)'
         ), contents.replace('Inn', 'Inner(number, string)'))
@@ -424,8 +422,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |new k.Outer.Inner()
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') // TODO: Should not need to remove the qualifier
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false) // TODO: Should not need to remove the qualifier
         applyProposalAndCheck(checkUniqueProposal(
             contents, '(', 'Inner(Number number, String string) - k.Outer.Inner' - ~/k.Outer./, ''
         ), contents) // context display
@@ -451,7 +449,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         String expected = '''\
             |def a = new java.text.Annotation(value)
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'Anno'), 'Annotation')
     }
 
@@ -465,7 +463,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |
             |def a = new Annotation(value)
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new Anno'), 'Annotation')
     }
 
@@ -1239,7 +1237,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         applyProposalAndCheck(findFirstProposal(proposals, 'number : __'), 'new Foo(number: __,)', ',' as char)
     }
 
-    @Test @Ignore
+    @Test @NotYetImplemented
     void testNamedArgumentTrigger2() {
         addGroovySource '''\
             |class Foo {
@@ -1249,7 +1247,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |'''.stripMargin()
 
         String contents = 'new Foo()'
-        javaPlugin.preferenceStore.setValue(PreferenceConstants.EDITOR_SMART_SEMICOLON, true)
+        setJavaPreference(PreferenceConstants.EDITOR_SMART_SEMICOLON, true)
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         applyProposalAndCheck(findFirstProposal(proposals, 'number : __'), 'new Foo(number: __);', ';' as char)
     }

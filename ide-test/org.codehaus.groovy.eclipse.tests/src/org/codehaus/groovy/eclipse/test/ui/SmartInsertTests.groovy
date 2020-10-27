@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
-import static org.eclipse.jdt.internal.ui.JavaPlugin.getDefault as getJavaPlugin
 import static org.eclipse.jdt.ui.PreferenceConstants.*
 
 import org.junit.Before
@@ -25,8 +24,8 @@ final class SmartInsertTests extends GroovyEditorTestSuite {
 
     @Before
     void setUp() {
-        javaPlugin.preferenceStore.setValue(EDITOR_SMART_OPENING_BRACE, true)
-        javaPlugin.preferenceStore.setValue(EDITOR_SMART_SEMICOLON, true)
+        setJavaPreference(EDITOR_SMART_OPENING_BRACE, true)
+        setJavaPreference(EDITOR_SMART_SEMICOLON, true)
     }
 
     @Test

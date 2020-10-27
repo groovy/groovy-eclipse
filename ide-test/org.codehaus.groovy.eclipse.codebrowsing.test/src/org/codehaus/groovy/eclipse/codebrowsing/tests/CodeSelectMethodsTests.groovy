@@ -356,26 +356,45 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1113
     void testCodeSelectStaticMethodFromTrait7() {
-        addGroovySource'''\
+        String contents1 = '''\
             |trait T {
-            |  String foo
+            |  def p
             |}
             |'''.stripMargin()
-        String contents = '''\
+        String contents2 = '''\
             |class C implements T {
             |  def m() {
-            |    getFoo()
+            |    getP()
             |  }
             |}
             |'''.stripMargin()
-        IJavaElement element = assertCodeSelect([contents], 'getFoo')
+        IJavaElement element = assertCodeSelect([contents1, contents2], 'getP')
         assert element.declaringType.fullyQualifiedName == 'T'
-        assert element.elementInfo.nameSourceStart == 19
+        assert element.elementInfo.nameSourceStart == 16
+    }
+
+    @Test
+    void testCodeSelectStaticMethodFromTrait8() {
+        String contents1 = '''\
+            |trait T {
+            |  int p
+            |}
+            |'''.stripMargin()
+        String contents2 = '''\
+            |class C implements T {
+            |  def m() {
+            |    getP()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents1, contents2], 'getP')
+        assert element.declaringType.fullyQualifiedName == 'T'
+        assert element.elementInfo.nameSourceStart == 16
     }
 
     @Test
     void testCodeSelectStaticMethodInOtherClass() {
-        String contents = '''\
+        String contents1 = '''\
             |class PlantController {
             |  static def redirect(Map args) {
             |  }
@@ -391,7 +410,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        assertCodeSelect([contents, contents2], 'redirect')
+        assertCodeSelect([contents1, contents2], 'redirect')
     }
 
     @Test
@@ -410,7 +429,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectStaticMethodInSuperClass() {
-        String contents = '''\
+        String contents1 = '''\
             |class PlantController {
             |  static def redirect(controller, action) {
             |  }
@@ -426,7 +445,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        assertCodeSelect([contents, contents2], 'redirect')
+        assertCodeSelect([contents1, contents2], 'redirect')
     }
 
     @Test
@@ -587,7 +606,6 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-
         IJavaElement element = assertCodeSelect([contents], 'compute')
         assert element.sourceRange.offset > 0
     }
@@ -602,63 +620,63 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectNamedArguments1() {
         String contents = '''\
-            void meth(Map agrs) {}
-            meth(one: null, two: Date)
-            '''.stripIndent()
+            |void meth(Map agrs) {}
+            |meth(one: null, two: Date)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
     void testCodeSelectNamedArguments2() {
         String contents = '''\
-            void meth(Map agrs, int three) {}
-            meth(one: null, two: Date, 3)
-            '''.stripIndent()
+            |void meth(Map agrs, int three) {}
+            |meth(one: null, two: Date, 3)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
     void testCodeSelectNamedArguments2a() {
         String contents = '''\
-            void meth(Map agrs, int three) {}
-            meth(one: null, 3, two: Date)
-            '''.stripIndent()
+            |void meth(Map agrs, int three) {}
+            |meth(one: null, 3, two: Date)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
     void testCodeSelectNamedArguments2b() {
         String contents = '''\
-            void meth(Map agrs, int three) {}
-            meth(3, two: Date, one: null)
-            '''.stripIndent()
+            |void meth(Map agrs, int three) {}
+            |meth(3, two: Date, one: null)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/827
     void testCodeSelectNamedArguments3() {
         String contents = '''\
-            void meth(Map agrs, Class type) {}
-            meth(one: null, two: null, Date)
-            '''.stripIndent()
+            |void meth(Map agrs, Class type) {}
+            |meth(one: null, two: null, Date)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/827
     void testCodeSelectNamedArguments3a() {
         String contents = '''\
-            void meth(Map agrs, Class type) {}
-            meth(one: null, Date, two: null)
-            '''.stripIndent()
+            |void meth(Map agrs, Class type) {}
+            |meth(one: null, Date, two: null)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/827
     void testCodeSelectNamedArguments3b() {
         String contents = '''\
-            void meth(Map agrs, Class type) {}
-            meth(Date, one: null, two: null)
-            '''.stripIndent()
+            |void meth(Map agrs, Class type) {}
+            |meth(Date, one: null, two: null)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 

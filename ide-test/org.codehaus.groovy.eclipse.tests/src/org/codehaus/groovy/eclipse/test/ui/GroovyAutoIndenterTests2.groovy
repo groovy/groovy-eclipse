@@ -19,7 +19,6 @@ import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.*
 import static org.eclipse.jdt.ui.PreferenceConstants.*
 
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jface.preference.IPreferenceStore
 import org.junit.Before
 import org.junit.Test
 
@@ -27,9 +26,9 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTestSuite {
 
     @Before
     void setUp() {
-        setJavaPreference(EDITOR_CLOSE_BRACES, IPreferenceStore.TRUE)
+        setJavaPreference(EDITOR_CLOSE_BRACES, true)
         setJavaPreference(FORMATTER_TAB_CHAR, JavaCore.SPACE)
-        setJavaPreference(FORMATTER_TAB_SIZE, '4')
+        setJavaPreference(FORMATTER_TAB_SIZE, 4)
     }
 
     @Test // GRECLIPSE-786
@@ -1030,7 +1029,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTestSuite {
 
     @Test
     void testAutoIndentCurly5() {
-        setJavaPreference(EDITOR_CLOSE_BRACES, IPreferenceStore.FALSE)
+        setJavaPreference(EDITOR_CLOSE_BRACES, false)
 
         makeEditor("""\
             |if (something)${CARET}

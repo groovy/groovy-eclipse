@@ -41,10 +41,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.util.CoreUtility;
 import org.eclipse.jdt.launching.JavaRuntime;
-import org.eclipse.swt.widgets.Display;
 import org.osgi.framework.Bundle;
 
 /**
@@ -124,31 +122,10 @@ public class JavaProjectHelper {
             }
             delete(element.getResource());
         }, null);
-
-        Display display = Display.getCurrent();
-        if (display != null) {
-            while (display.readAndDispatch()) {
-                // continue
-            }
-        }
     }
 
     public static void delete(final IResource resource) throws CoreException {
-        for (int i = 0; i < MAX_RETRY; i += 1) {
-            try {
-                resource.delete(true, null);
-                i = MAX_RETRY;
-            } catch (CoreException e) {
-                if (i == MAX_RETRY - 1) {
-                    JavaPlugin.log(e);
-                    throw e;
-                }
-                try {
-                    Thread.sleep(1000); // sleep a second
-                } catch (InterruptedException ignore) {
-                }
-            }
-        }
+        org.eclipse.jdt.core.tests.util.Util.delete(resource);
     }
 
     /**

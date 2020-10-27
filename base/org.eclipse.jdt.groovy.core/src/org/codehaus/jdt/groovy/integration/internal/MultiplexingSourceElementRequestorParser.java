@@ -88,7 +88,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one.
             // FIXASC ought to reuse to ensure types end up in same groovy CU
             GroovyParser groovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, !disableGlobalXforms, true);
-            CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 0, options.maxProblemsPerUnit);
+            CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 1, options.maxProblemsPerUnit);
             GroovyCompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(contents, fileName, compilationResult);
 
             scanner.setSource(contents);

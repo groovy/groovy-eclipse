@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
+import static org.codehaus.groovy.eclipse.GroovyPlugin.getDefault as getGroovyPlugin
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.GROOVY_CALL as GSTRING
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
@@ -22,7 +23,6 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeTrue
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
 import org.codehaus.groovy.eclipse.preferences.PreferenceConstants
@@ -39,7 +39,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
-        GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true)
+        groovyPlugin.preferenceStore.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true)
     }
 
     @Test

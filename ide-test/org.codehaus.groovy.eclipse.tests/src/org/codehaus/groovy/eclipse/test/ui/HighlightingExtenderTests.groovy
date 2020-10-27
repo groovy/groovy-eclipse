@@ -15,7 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
+import static org.codehaus.groovy.eclipse.GroovyPlugin.getDefault as getGroovyPlugin
+
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.junit.Before
@@ -23,7 +24,7 @@ import org.junit.Test
 
 final class HighlightingExtenderTests extends GroovyEclipseTestSuite {
 
-    private final HighlightingExtenderRegistry registry = GroovyPlugin.default.textTools.highlightingExtenderRegistry
+    private final HighlightingExtenderRegistry registry = groovyPlugin.textTools.highlightingExtenderRegistry
 
     @Before
     void setUp() {

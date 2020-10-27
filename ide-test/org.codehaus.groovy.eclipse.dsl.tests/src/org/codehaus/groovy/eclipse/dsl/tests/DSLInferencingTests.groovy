@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import static org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD
+
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.codehaus.groovy.eclipse.test.TestProject
 import org.eclipse.jdt.groovy.core.util.GroovyUtils
@@ -1800,7 +1802,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
                 |  property name:'other', type:Integer
                 |}
                 |'''.stripMargin())
-            otherProject.fullBuild()
+            otherProject.project.build(FULL_BUILD, null)
 
             addProjectReference(otherProject.javaProject)
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)

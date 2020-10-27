@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
+import groovy.transform.AutoFinal
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite
 import org.eclipse.ltk.core.refactoring.CheckConditionsOperation
 import org.eclipse.ltk.core.refactoring.CreateChangeOperation
 import org.eclipse.ltk.core.refactoring.PerformChangeOperation
@@ -29,6 +32,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringDescriptor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Assert
 
+@AutoFinal @CompileStatic
 abstract class RenameRefactoringTestSuite extends GroovyEclipseTestSuite {
 
     protected static final class TestSource {
@@ -36,45 +40,36 @@ abstract class RenameRefactoringTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected final ICompilationUnit[] createUnits(TestSource... sources) {
-        sources.collect {
-            ICompilationUnit unit
+        return sources.findResults {
             if (it.name.endsWith('.groovy')) {
-                unit = addGroovySource(it.contents, it.name - ~/.groovy$/, it.pack)
+                addGroovySource(it.contents, it.name - ~/.groovy$/, it.pack).tap {
+                    discardWorkingCopy()
+                }
             } else if (it.name.endsWith('.java')) {
-                unit = addJavaSource(it.contents, it.name - ~/.java$/, it.pack)
+                addJavaSource(it.contents, it.name - ~/.java$/, it.pack).tap {
+                    discardWorkingCopy()
+                }
             }
-            unit.discardWorkingCopy()
-            return unit
         }.toArray(new ICompilationUnit[0])
     }
 
-    protected void assertContents(ICompilationUnit[] existingUnits, List<String> expectedContents) {
-        def sb = new StringBuilder()
-        existingUnits.eachWithIndex { existingUnit, i ->
-            if (expectedContents[i] != null) {
-                assertContents(existingUnit, expectedContents[i])
-            } else if (existingUnits[i].exists()) { // unit should have been deleted
-                sb.append('\nUnit ' + existingUnit.elementName + ' should have been deleted.\n')
-                sb.append('Instead had the following contents:\n').append(existingUnit.contents)
-                Assert.fail('Refactoring produced unexpected results:' + sb)
-            }
+    @CompileDynamic
+    protected Refactoring createRefactoring(RefactoringDescriptor descriptor) {
+        RefactoringStatus status = new RefactoringStatus()
+        return descriptor.createRefactoring(status).tap {
+            assert processor.isApplicable()
+            assert status.isOK()
         }
     }
 
-    protected void assertContents(ICompilationUnit existingUnit, String expectedContents) {
-        String actualContents = String.valueOf(existingUnit.contents)
-        Assert.assertEquals('Refactoring produced unexpected results:', expectedContents, actualContents)
-    }
-
-    protected RefactoringStatus performRefactoring(Refactoring refactor, boolean providesUndo) {
-        def create = new CreateChangeOperation(new CheckConditionsOperation(
-            refactor, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
+    protected RefactoringStatus performRefactoring(Refactoring refactor, boolean providesUndo = true) {
+        def create = new CreateChangeOperation(new CheckConditionsOperation(refactor, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
         def change = new PerformChangeOperation(create)
         def undoer = RefactoringCore.getUndoManager()
         change.setUndoManager(undoer, refactor.name)
-undoer.flush()
-        executePerformOperation(change, ResourcesPlugin.getWorkspace())
-        RefactoringStatus status = create.conditionCheckingStatus
+
+        RefactoringStatus status = executeOperation(change)
+
         assert change.changeExecuted() || !change.changeExecutionFailed() : 'Change was not executed'
         if (providesUndo) {
             assert change.undoChange != null : 'Undo does not exist'
@@ -85,42 +80,43 @@ undoer.flush()
         return status
     }
 
-    /**
-     * Can ignore all errors that don't have anything to do with us.
-     */
-    protected RefactoringStatus ignoreKnownErrors(RefactoringStatus result) {
-        if (result.severity != RefactoringStatus.ERROR) {
-            return result
+    protected RefactoringStatus executeOperation(PerformChangeOperation operation) {
+        SearchTestSuite.waitUntilReady(packageFragmentRoot.javaProject)
+        ResourcesPlugin.getWorkspace().run(operation, null)
+        return operation.conditionCheckingStatus
+    }
+
+    protected RefactoringStatus ignoreKnownErrors(RefactoringStatus status) {
+        if (status.severity != RefactoringStatus.ERROR) {
+            return status
         }
-        for (entry in result.entries) {
-            // if this entries is known or it isn't an error,
-            // then it can be ignored; otherwise not OK
-            if (!checkStringForKnownErrors(entry.message) && entry.isError()) {
-                return result
+        def knownErrors = [
+            'Found potential matches',
+            'Watchpoint participant',
+            'Breakpoint participant',
+            'Method breakpoint participant',
+            'Launch configuration participant'
+        ]
+        for (entry in status.entries) {
+            // if entry isn't an error or is a known error, then it can be ignored
+            if (entry.isError() && !knownErrors.any { entry.message.contains(it) }) {
+                return status
             }
         }
         return new RefactoringStatus()
     }
 
-    private boolean checkStringForKnownErrors(String resultString) {
-        return resultString.contains('Found potential matches') ||
-            resultString.contains('Method breakpoint participant') ||
-            resultString.contains('Watchpoint participant') ||
-            resultString.contains('Breakpoint participant') ||
-            resultString.contains('Launch configuration participant')
+    protected void assertContents(ICompilationUnit existingUnit, String expectedContents) {
+        Assert.assertEquals('Refactoring produced unexpected results:', expectedContents, existingUnit.source)
     }
 
-    protected Refactoring createRefactoring(RefactoringDescriptor descriptor) {
-        RefactoringStatus status = new RefactoringStatus()
-        Refactoring refactoring = descriptor.createRefactoring(status)
-        assert refactoring != null : 'refactoring should not be null'
-        assert status.isOK() : 'status should be ok, but was: ' + status
-        return refactoring
-    }
-
-    protected void executePerformOperation(PerformChangeOperation perform, IWorkspace workspace) {
-        buildProject()
-        waitForIndex()
-        workspace.run(perform, new NullProgressMonitor())
+    protected void assertContents(ICompilationUnit[] existingUnits, List<String> expectedContents) {
+        for (int i = 0; i < existingUnits.length; i += 1) {
+            if (expectedContents[i] != null) {
+                assertContents(existingUnits[i], expectedContents[i])
+            } else if (existingUnits[i].exists()) {
+                Assert.fail("Unit ${existingUnits[i].elementName} should have been deleted.")
+            }
+        }
     }
 }

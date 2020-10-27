@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite.waitUntilReady
 import static org.junit.Assert.*
 
 import java.util.regex.Pattern
@@ -25,7 +26,6 @@ import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompleti
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
@@ -55,10 +55,9 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     @Before
     final void setUpCompletionTestCase() {
-        SynchronizationUtils.waitForDSLDProcessingToComplete()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'true')
-        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'true')
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, true)
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, true)
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
     }
 
     @After
@@ -91,8 +90,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     /** Use {@link #createProposalsAtOffset} if testing {@link GroovyCompletionProposalComputer}. */
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) {
-        JavaEditor editor = openInEditor(unit)
-        SynchronizationUtils.waitForIndexingToComplete(unit)
+        JavaEditor editor = openInEditor(unit); waitUntilReady(unit.javaProject)
         JavaSourceViewer viewer = editor.viewer
         viewer.setSelectedRange(offset, 0)
 

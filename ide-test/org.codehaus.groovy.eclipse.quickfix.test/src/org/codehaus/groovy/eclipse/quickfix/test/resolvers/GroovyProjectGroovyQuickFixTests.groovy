@@ -225,7 +225,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixTestSuite {
 
         def proposals = getGroovyQuickFixes(unit)
 
-        assert proposals*.displayString == ['Import \'Target\' (java.lang.annotation)', 'Import \'Target\' (groovy.lang.DelegatesTo)']
+        assert proposals*.displayString == ['Import \'Target\' (groovy.lang.DelegatesTo)', 'Import \'Target\' (java.lang.annotation)']
     }
 
     @Test

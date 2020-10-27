@@ -1236,7 +1236,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     @Test
     void testFavoriteStaticField3() {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.DOTALL')
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
 
         String contents = '''\
             |DOT
@@ -1268,7 +1268,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion2() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
         String contents = '''\
             |def range = 0.
             |'''.stripMargin()
@@ -1286,7 +1286,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion3() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
         String contents = '''\
             |def other = 0.b
             |'''.stripMargin()

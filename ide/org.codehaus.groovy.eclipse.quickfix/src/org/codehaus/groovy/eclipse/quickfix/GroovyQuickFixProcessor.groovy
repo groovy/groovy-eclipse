@@ -26,6 +26,7 @@ import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.Adapters
 import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.SourceRange
 import org.eclipse.jdt.core.compiler.IProblem
@@ -79,7 +80,7 @@ class GroovyQuickFixProcessor implements IQuickFixProcessor {
                     boolean isAnnotation = (locations.any { IProblemLocation it -> it.problemArguments && it.problemArguments[0] =~ / (an|for) annotation/ })
                     def typeData = new TypeSearch.UnresolvedTypeData(typeName, isAnnotation, new SourceRange(location.offset, location.length))
 
-                    new TypeSearch().searchForTypes(unit, Collections.singletonMap(typeName, typeData), null)
+                    new TypeSearch().searchForTypes(unit, Collections.singletonMap(typeName, typeData), new NullProgressMonitor())
 
                     typeData.foundInfos.findResults { it.type }.each { type ->
                         if (types.add(type.fullyQualifiedName)) proposals << new ImportResolvedTypeProposal(unit: unit, type: type)

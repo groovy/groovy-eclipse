@@ -15,20 +15,15 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
-import groovy.transform.CompileStatic
+import static org.eclipse.jdt.core.refactoring.IJavaRefactorings.RENAME_PACKAGE
+import static org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor
 
-import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameRefactoringTestSuite.TestSource
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.refactoring.IJavaRefactorings
-import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
-import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory
 import org.eclipse.ltk.core.refactoring.Refactoring
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Test
 
-@CompileStatic
 final class RenamePackageTests extends RenameRefactoringTestSuite {
 
     /**
@@ -37,17 +32,14 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
     private RefactoringStatus renamePackage(TestSource... sources) {
         ICompilationUnit[] units = createUnits(sources)
 
-        RenameJavaElementDescriptor descriptor = RefactoringSignatureDescriptorFactory.
-            createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_PACKAGE)
-        descriptor.updateTextualOccurrences = true
-        descriptor.updateReferences = true
-        descriptor.javaElement = packageFragmentRoot.getPackageFragment('p')
-        descriptor.newName = 'q'
+        Refactoring refactoring = createRefactoring(createRenameJavaElementDescriptor(RENAME_PACKAGE).tap {
+            javaElement = packageFragmentRoot.getPackageFragment('p'); newName = 'q'
+            updateReferences = true
+        })
 
-        Refactoring refactoring = createRefactoring(descriptor)
-        RefactoringStatus result = performRefactoring(refactoring, true)
-        result = ignoreKnownErrors(result)
-        assert result.isOK()
+        RefactoringStatus status = performRefactoring(refactoring)
+        status = ignoreKnownErrors(status)
+        assert status.isOK()
 
         for (i in 0..<sources.length) {
             if (sources[i].pack == 'p') {
@@ -58,9 +50,9 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
 
         // undo
         RefactoringCore.undoManager.with {
-            assert anythingToUndo() : 'anythingToUndo'
-            assert !anythingToRedo() : '!anythingToRedo'
-            performUndo(null, new NullProgressMonitor())
+            assert  anythingToUndo()
+            assert !anythingToRedo()
+            performUndo(null, null)
         }
 
         for (i in 0..<sources.length) {
@@ -72,9 +64,9 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
 
         // redo
         RefactoringCore.undoManager.with {
-            assert !anythingToUndo() : '!anythingToUndo'
-            assert anythingToRedo() : 'anythingToRedo'
-            performRedo(null, new NullProgressMonitor())
+            assert !anythingToUndo()
+            assert  anythingToRedo()
+            performRedo(null, null)
         }
 
         for (i in 0..<sources.length) {

@@ -188,9 +188,9 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |abc = 123
             |xyz = 789
-            |println _
+            |println #
             |'''.stripMargin()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('_', ''), contents.indexOf('_'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
         proposalExists(proposals, 'abc', 1)
         proposalExists(proposals, 'xyz', 1)
     }

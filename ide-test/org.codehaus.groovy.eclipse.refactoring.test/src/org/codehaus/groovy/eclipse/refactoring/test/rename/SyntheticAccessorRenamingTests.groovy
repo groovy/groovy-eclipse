@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,56 +15,58 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
-import groovy.transform.CompileStatic
+import static org.eclipse.jdt.core.refactoring.IJavaRefactorings.RENAME_FIELD
+import static org.eclipse.jdt.core.refactoring.IJavaRefactorings.RENAME_METHOD
+import static org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor
+
 import groovy.transform.NotYetImplemented
 
-import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameRefactoringTestSuite.TestSource
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IField
-import org.eclipse.jdt.core.refactoring.IJavaRefactorings
-import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
-import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.ltk.core.refactoring.Refactoring
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
-import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring
 import org.junit.Test
 
 /**
  * Test cases for the {@link SyntheticAccessorsRenameParticipant}.
  */
-@CompileStatic
 final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
 
     protected boolean renameGetters, renameSetters, updateReferences = true
 
     // assume we are renaming the first memebr of the first type to the new name
-    private void performRefactoringAndUndo(String newName, TestSource... sources) {
+    private void performRefactoringAndUndo(String name, TestSource... sources) {
         def units = createUnits(sources)
-        def toRename = units[0].types[0].children[0]
-        String kind = (toRename instanceof IField ? IJavaRefactorings.RENAME_FIELD : IJavaRefactorings.RENAME_METHOD)
-        RenameJavaElementDescriptor descriptor = RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(kind)
+        IJavaElement element = units[0].types[0].children[0]
+        String kind = (element instanceof IField ? RENAME_FIELD : RENAME_METHOD)
 
-        descriptor.newName = newName
-        descriptor.javaElement = toRename
-        descriptor.renameGetters = renameGetters
-        descriptor.renameSetters = renameSetters
-        descriptor.updateReferences = updateReferences
+        Refactoring refactoring = createRefactoring(createRenameJavaElementDescriptor(kind).tap {
+            newName = name
+            javaElement = element
+            renameGetters = this.renameGetters
+            renameSetters = this.renameSetters
+            updateReferences = this.updateReferences
+        })
 
-        RenameRefactoring refactoring = (RenameRefactoring) createRefactoring(descriptor)
-        RefactoringStatus result = performRefactoring(refactoring, true)
+        RefactoringStatus status = performRefactoring(refactoring)
         assertContents(units, sources*.finalContents)
 
+        // undo
         RefactoringCore.undoManager.with {
-            // undo
-            performUndo(null, new NullProgressMonitor())
-            assertContents(units, sources*.contents)
-
-            // redo
-            assert anythingToRedo() : 'anythingToRedo'
-            assert !anythingToUndo() : '!anythingToUndo'
-            performRedo(null, new NullProgressMonitor())
-            assertContents(units, sources*.finalContents)
+            assert  anythingToUndo()
+            assert !anythingToRedo()
+            performUndo(null, null)
         }
+        assertContents(units, sources*.contents)
+
+        // redo
+        RefactoringCore.undoManager.with {
+            assert  anythingToRedo()
+            assert !anythingToUndo()
+            performRedo(null, null)
+        }
+        assertContents(units, sources*.finalContents)
     }
 
     @Test

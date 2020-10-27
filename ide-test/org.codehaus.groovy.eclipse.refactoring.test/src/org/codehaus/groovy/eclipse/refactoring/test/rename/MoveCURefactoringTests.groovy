@@ -15,19 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
-import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BETWEEN_IMPORT_GROUPS
-import static org.eclipse.jdt.ui.PreferenceConstants.ORGIMPORTS_IMPORTORDER
-import static org.eclipse.ltk.core.refactoring.RefactoringCore.getUndoManager
+import static org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory.createMoveDescriptor
 
 import groovy.transform.NotYetImplemented
 
-import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameRefactoringTestSuite.TestSource
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.refactoring.descriptors.MoveDescriptor
-import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.ltk.core.refactoring.Refactoring
+import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Before
 import org.junit.Test
@@ -45,18 +42,15 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     private void performRefactoringAndUndo(String newPackageName, TestSource... sources) {
         ICompilationUnit[] units = createUnits(sources)
 
-        MoveDescriptor descriptor = RefactoringSignatureDescriptorFactory.createMoveDescriptor()
-        descriptor.setMoveResources(new IFile[0], new IFolder[0], units[0])
-        descriptor.destination = getPackageFragment(newPackageName)
-        descriptor.updateQualifiedNames = true
-        descriptor.updateReferences = true
+        Refactoring refactoring = createRefactoring(createMoveDescriptor().tap {
+            setMoveResources(new IFile[0], new IFolder[0], units[0])
+            destination = getPackageFragment(newPackageName)
+            updateReferences = true
+        })
 
-        Refactoring refactoring = createRefactoring(descriptor)
-        RefactoringStatus result = performRefactoring(refactoring, true)
-
+        RefactoringStatus result = performRefactoring(refactoring)
         result = ignoreKnownErrors(result)
-
-        assert result.isOK() : 'Refactoring produced an error: ' + result
+        assert result.isOK()
 
         String typeName = sources[0].name.substring(0, sources[0].name.indexOf('.'))
         String qualName = newPackageName.length() > 0 ? newPackageName + '.' + typeName : typeName
@@ -67,17 +61,21 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
         assertContents(units, sources*.finalContents)
 
         // undo
-        assert  undoManager.anythingToUndo()
-        assert !undoManager.anythingToRedo()
-        undoManager.performUndo(null, null)
+        RefactoringCore.undoManager.with {
+            assert  anythingToUndo()
+            assert !anythingToRedo()
+            performUndo(null, null)
+        }
 
         units[0] = oldUnit
         assertContents(units, sources*.contents)
 
         // redo
-        assert !undoManager.anythingToUndo()
-        assert  undoManager.anythingToRedo()
-        undoManager.performRedo(null, null)
+        RefactoringCore.undoManager.with {
+            assert !anythingToUndo()
+            assert  anythingToRedo()
+            performRedo(null, null)
+        }
 
         units[0] = newUnit
         assertContents(units, sources*.finalContents)
@@ -85,8 +83,7 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
 
     @Before
     void setUp() {
-        setJavaPreference(ORGIMPORTS_IMPORTORDER, '\\#;;')
-        setJavaPreference(FORMATTER_BLANK_LINES_BETWEEN_IMPORT_GROUPS, '0')
+        setJavaPreference(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;;')
     }
 
     //--------------------------------------------------------------------------
@@ -184,6 +181,7 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
                 |package g1
                 |
                 |import static j1.Java.*
+                |
                 |import j1.Java
                 |
                 |class Groovy {
@@ -199,6 +197,7 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
                 |package g1
                 |
                 |import static j2.Java.*
+                |
                 |import j2.Java
                 |
                 |class Groovy {

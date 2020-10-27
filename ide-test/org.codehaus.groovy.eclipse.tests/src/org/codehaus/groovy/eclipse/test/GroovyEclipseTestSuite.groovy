@@ -15,13 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.test
 
+import static org.codehaus.groovy.eclipse.GroovyPlugin.getDefault as getGroovyPlugin
+import static org.eclipse.jdt.internal.ui.JavaPlugin.getDefault as getJavaPlugin
 import static org.eclipse.jdt.ui.PreferenceConstants.EDITOR_MARK_OCCURRENCES
+import static org.eclipse.ltk.core.refactoring.RefactoringCore.getUndoManager
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.codehaus.jdt.groovy.model.GroovyNature
 import org.eclipse.core.internal.utils.UniversalUniqueIdentifier
@@ -39,7 +42,6 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.core.CompilationUnit
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.junit.After
@@ -55,7 +57,7 @@ abstract class GroovyEclipseTestSuite {
 
     @BeforeClass
     static final void setUpTestSuite() {
-        testProject = new TestProject(autoBuilding: false)
+        testProject = new TestProject()
         def projectScope = new ProjectScope(testProject.project)
         projectScope.getNode(Platform.PI_RUNTIME).put(Platform.PREF_LINE_SEPARATOR, '\n')
         projectScope.getNode('org.eclipse.jdt.launching').put('org.eclipse.jdt.launching.PREF_COMPILER_COMPLIANCE_DOES_NOT_MATCH_JRE', JavaCore.IGNORE)
@@ -72,8 +74,8 @@ abstract class GroovyEclipseTestSuite {
             }
         }
 
-        GroovyPlugin.default.preferenceStore.with(defaults)
-        JavaPlugin.default.preferenceStore.with(defaults)
+        groovyPlugin.preferenceStore.with(defaults)
+        javaPlugin.preferenceStore.with(defaults)
         JavaCore.options = JavaCore.defaultOptions
 
         testProject?.dispose()
@@ -91,9 +93,10 @@ abstract class GroovyEclipseTestSuite {
 
     @After
     final void tearDownTestCase() {
-        GroovyPlugin.default.activeWorkbenchWindow?.activePage?.closeAllEditors(false)
-        testProject.deleteWorkingCopies()
+        groovyPlugin.activeWorkbenchWindow?.activePage?.closeAllEditors(false)
+        undoManager?.flush()
 
+        testProject.discardWorkingCopies()
         testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, null)
 
         // for some reason the source folder is not always present in getPackageFragmentRoots():
@@ -129,14 +132,11 @@ abstract class GroovyEclipseTestSuite {
         "TestUnit_${new UniversalUniqueIdentifier()}"
     }
 
-    protected final void setJavaPreference(String key, String val) {
+    protected final void setJavaPreference(String key, Object val) {
         if (key.startsWith(JavaCore.PLUGIN_ID)) {
-            def options = JavaCore.options
-            options.put(key, val)
-            JavaCore.options = options
-        } else if (key.startsWith(JavaPlugin.pluginId) || JavaPlugin.default.preferenceStore.contains(key)) {
-            def prefs = JavaPlugin.default.preferenceStore
-            prefs.setValue(key, val)
+            testProject.javaProject.setOption(key, val as String)
+        } else if (key.startsWith(javaPlugin.pluginId) || javaPlugin.preferenceStore.contains(key) || key == 'smart_semicolon') {
+            javaPlugin.preferenceStore.setValue(key, val as String)
         } else {
             System.err.println("Unexpected preference: $key")
         }
@@ -185,7 +185,7 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final boolean hasGroovyLibraries() {
-        testProject.hasGroovyLibraries()
+        GroovyRuntime.hasGroovyClasspathContainer(testProject.javaProject)
     }
 
     protected final GroovySnippetCompiler getGroovySnippetCompiler() {
@@ -201,23 +201,36 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final JavaEditor openInEditor(ICompilationUnit unit) {
-        setJavaPreference(EDITOR_MARK_OCCURRENCES, 'false')
-        try {
-            EditorUtility.openInEditor(unit)
-        } finally {
-            SynchronizationUtils.runEventQueue()
+        setJavaPreference(EDITOR_MARK_OCCURRENCES, false)
+        EditorUtility.openInEditor(unit).tap {
+            final reconcile = new java.util.concurrent.CountDownLatch(1)
+            addReconcileListener(reconcile.&countDown as ReconcileListener)
+            reconcile.await(1500, java.util.concurrent.TimeUnit.MILLISECONDS)
+
+            SynchronizationUtils.joinBackgroundActivities()
         }
     }
 
     protected final void buildProject() {
-        testProject.fullBuild()
-    }
-
-    protected final void waitForIndex() {
-        testProject.waitForIndexer()
+        testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
     }
 
     protected final void withProject(@ClosureParams(value=SimpleType, options='org.eclipse.core.resources.IProject') Closure closure) {
         closure(testProject.project)
+    }
+
+    //--------------------------------------------------------------------------
+
+    abstract static class ReconcileListener implements org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener {
+        @Override
+        void aboutToBeReconciled() {
+        }
+
+        @Override
+        void reconciled(org.eclipse.jdt.core.dom.CompilationUnit ast, boolean forced, org.eclipse.core.runtime.IProgressMonitor monitor) {
+            reconcile()
+        }
+
+        abstract reconcile()
     }
 }

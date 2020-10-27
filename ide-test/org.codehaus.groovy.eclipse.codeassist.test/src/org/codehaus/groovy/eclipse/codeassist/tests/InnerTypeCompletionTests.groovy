@@ -129,7 +129,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testInnerClass5() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
         testInnerClass4() // no difference; no qualifier should be inserted
     }
 
@@ -261,7 +261,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |Outer.Inn
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - m.Outer'), '''\
             |m.Outer.Inner
             |'''.stripMargin())
@@ -315,7 +315,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |Inn
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - p.Outer'), '''\
             |p.Outer.Inner
             |'''.stripMargin())
@@ -352,7 +352,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |new Outer.Inn
             |'''.stripMargin()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - r.Outer'), '''\
             |new r.Outer.Inner
             |'''.stripMargin())

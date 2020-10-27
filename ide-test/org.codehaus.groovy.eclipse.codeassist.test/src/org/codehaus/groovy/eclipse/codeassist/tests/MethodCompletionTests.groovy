@@ -28,7 +28,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, true)
     }
 
     @Test
@@ -712,7 +712,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testFavoriteStaticMethod3() {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.compile')
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
 
         String contents = '''\
             |comp
@@ -902,7 +902,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTrailingClosure1() {
         String contents = 'def foo(Closure block) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Closure block)')
 
@@ -913,7 +913,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTrailingClosure1a() {
         String contents = 'def foo(Collection items, Closure block) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Collection items, Closure block)')
 
@@ -924,7 +924,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/633
     void testTrailingClosure2() {
         String contents = 'def foo(Closure block) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Closure block)')
 
@@ -939,7 +939,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTrailingClosure2a() {
         String contents = 'def foo(Collection items, Closure block) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Collection items, Closure block)')
 
@@ -954,7 +954,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTrailingFunctionalInterface() {
         String contents = 'def foo(Comparator c) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Comparator c)')
 
@@ -983,7 +983,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion2() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
         String contents = '''\
             |def range = 0.
             |'''.stripMargin()
@@ -1001,7 +1001,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion3() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
         String contents = '''\
             |def other = 0.h
             |'''.stripMargin()
@@ -1019,7 +1019,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion4() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
         String contents = '''\
             |def other = 0.
             |'''.stripMargin()

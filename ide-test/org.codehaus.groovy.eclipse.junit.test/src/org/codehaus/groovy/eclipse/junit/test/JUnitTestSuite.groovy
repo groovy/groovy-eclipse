@@ -31,6 +31,7 @@
 package org.codehaus.groovy.eclipse.junit.test
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.junit.Before
 
@@ -44,7 +45,7 @@ abstract class JUnitTestSuite extends GroovyEclipseTestSuite {
     @Override
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = nextUnitName(), String pack = 'p') {
         GroovyCompilationUnit unit = super.addGroovySource(contents, name, pack)
-        waitForIndex()
+        SynchronizationUtils.waitForIndexingToComplete()
         return unit
     }
 }

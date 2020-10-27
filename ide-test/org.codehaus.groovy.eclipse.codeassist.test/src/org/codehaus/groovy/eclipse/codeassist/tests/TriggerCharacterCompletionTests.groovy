@@ -80,7 +80,7 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
     void testTriggerForMethodProposals() {
         String contents = '[].sort'; int offset = contents.length()
         try {
-            setJavaPreference(AssistOptions.OPTION_SubstringMatch, 'disabled')
+            setJavaPreference(AssistOptions.OPTION_SubstringMatch, AssistOptions.DISABLED)
         } catch (MissingPropertyException e) {
             System.setProperty(AssistOptions.PROPERTY_SubstringMatch, 'false')
         }
