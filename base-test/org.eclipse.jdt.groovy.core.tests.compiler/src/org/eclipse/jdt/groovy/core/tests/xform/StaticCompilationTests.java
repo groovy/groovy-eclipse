@@ -5166,4 +5166,37 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[key:true]");
     }
+
+    @Test
+    public void testCompileStatic9786() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I {\n" +
+            "  void m()\n" +
+            "}\n" +
+            "class A implements I {\n" +
+            "  void m() { print 'A' }\n" +
+            "}\n" +
+            "class B implements I {\n" +
+            "  void m() { print 'B' }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  I x\n" +
+            "  def y = false\n" +
+            "  def z = true \n" +
+            "  if (y) {\n" +
+            "    x = new A()\n" +
+            "  } else if (z) {\n" +
+            "    x = new B()\n" +
+            "  }\n" +
+            "  x.m()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "B");
+    }
 }

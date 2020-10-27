@@ -985,6 +985,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         accessedVariable = new ParameterVariableExpression((Parameter) accessedVariable);
                     }
                     if (accessedVariable instanceof VariableExpression) {
+                        /* GRECLIPSE edit -- GROOVY-9786
                         VariableExpression var = (VariableExpression) accessedVariable;
                         List<ClassNode> types = typeCheckingContext.ifElseForWhileAssignmentTracker.get(var);
                         if (types == null) {
@@ -994,6 +995,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             typeCheckingContext.ifElseForWhileAssignmentTracker.put(var, types);
                         }
                         types.add(resultType);
+                        */
+                        recordAssignment((VariableExpression) accessedVariable, resultType);
+                        // GRECLIPSE end
                     }
                 }
                 storeType(leftExpression, resultType);
@@ -4105,7 +4109,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     @Override
     public void visitIfElse(final IfStatement ifElse) {
         Map<VariableExpression, List<ClassNode>> oldTracker = pushAssignmentTracking();
-
         try {
             // create a new temporary element in the if-then-else type info
             typeCheckingContext.pushTemporaryTypeInfo();
@@ -4126,19 +4129,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 visitEmptyStatement((EmptyStatement) elseBlock);
             } else {
                 elseBlock.visit(this);
+                // GRECLIPSE add -- GROOVY-9786
+                Map<VariableExpression, ClassNode> updates =
+                    elseBlock.getNodeMetaData("assignments");
+                if (updates != null) {
+                    updates.forEach(this::recordAssignment);
+                }
+                // GRECLIPSE end
             }
         } finally {
-            popAssignmentTracking(oldTracker);
+            // GRECLIPSE add -- GROOVY-9786
+            ifElse.putNodeMetaData("assignments",
+            // GRECLIPSE end
+            popAssignmentTracking(oldTracker));
         }
-        BinaryExpression instanceOfExpression = findInstanceOfNotReturnExpression(ifElse);
-        if (instanceOfExpression == null) {
-        } else {
-            if (typeCheckingContext.enclosingBlocks.size() > 0) {
-                visitInstanceofNot(instanceOfExpression);
-            }
+
+        if (!typeCheckingContext.enclosingBlocks.isEmpty()) {
+            Optional.ofNullable(findInstanceOfNotReturnExpression(ifElse)).ifPresent(this::visitInstanceofNot);
         }
     }
-
 
     public void visitInstanceofNot(BinaryExpression be) {
         final BlockStatement currentBlock = typeCheckingContext.enclosingBlocks.getFirst();
@@ -4236,6 +4245,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         super.visitCaseStatement(statement);
         restoreTypeBeforeConditional();
     }
+
+    // GRECLIPSE add -- GROOVY-9786
+    private void recordAssignment(final VariableExpression lhsExpr, final ClassNode rhsType) {
+        typeCheckingContext.ifElseForWhileAssignmentTracker.computeIfAbsent(lhsExpr, lhs -> {
+            ClassNode lhsType = lhs.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+            List<ClassNode> types = new ArrayList<>(2);
+            types.add(lhsType);
+            return types;
+        }).add(rhsType);
+    }
+    // GRECLIPSE end
 
     private void restoreTypeBeforeConditional() {
         Set<Map.Entry<VariableExpression, List<ClassNode>>> entries = typeCheckingContext.ifElseForWhileAssignmentTracker.entrySet();
