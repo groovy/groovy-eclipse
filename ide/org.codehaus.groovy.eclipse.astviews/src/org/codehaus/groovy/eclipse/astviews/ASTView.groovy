@@ -15,14 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.astviews
 
+import static java.beans.Introspector.decapitalize
+
 import static org.eclipse.jdt.core.JavaCore.addElementChangedListener
 import static org.eclipse.jdt.core.JavaCore.removeElementChangedListener
 import static org.eclipse.swt.widgets.Display.getDefault as getDisplay
 
 import groovy.transform.*
 
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ModuleNode
+import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.control.*
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.Adapters
@@ -31,12 +33,15 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IElementChangedListener
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaElementDelta
+import org.eclipse.jdt.groovy.core.util.GroovyUtils
+import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.text.TextSelection
-import org.eclipse.jface.viewers.IStructuredContentProvider
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.viewers.ITreeContentProvider
 import org.eclipse.jface.viewers.LabelProvider
 import org.eclipse.jface.viewers.TreeViewer
+import org.eclipse.jface.viewers.Viewer
+import org.eclipse.jface.viewers.ViewerFilter
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.IEditorPart
@@ -47,7 +52,8 @@ import org.eclipse.ui.part.ViewPart
 import org.eclipse.ui.texteditor.ITextEditor
 
 /**
- * A view into the Groovy AST. Anyone who needs to manipulate the AST will find this useful for exploring various nodes.
+ * A view into the Groovy AST. Anyone who needs to manipulate the AST will find
+ * this useful for exploring various nodes.
  */
 @AutoFinal @CompileStatic
 class ASTView extends ViewPart {
@@ -58,43 +64,60 @@ class ASTView extends ViewPart {
 
     private IPartListener partListener
 
-    private IElementChangedListener listener
+    private IElementChangedListener reconcileListener
 
     @Override
     void createPartControl(Composite parent) {
-        viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL)
-        DrillDownAdapter drillDownAdapter = new DrillDownAdapter(viewer)
-        viewer.contentProvider = new ViewContentProvider()
-        viewer.labelProvider = new ViewLabelProvider()
-        viewer.comparator = null
-        viewer.input = null
+        viewer = new TreeViewer(parent, SWT.H_SCROLL | SWT.V_SCROLL)
+        viewer.contentProvider = new TreeContentProvider()
+        viewer.labelProvider = new TreeLabelProvider()
+        viewer.addFilter(new TreeNodeFilter())
 
         viewer.addDoubleClickListener { event ->
-            def obj = ((IStructuredSelection) viewer.selection).firstElement
-            def val = ((ITreeNode) obj)?.value
-            if (val instanceof ASTNode) {
-                ASTNode node = (ASTNode) val
-                if (node.lineNumber > 0 && editor instanceof ITextEditor) {
-                    ((ITextEditor) editor).selectionProvider.selection = new TextSelection(node.start, node.length)
+            def element = ((IStructuredSelection) viewer.selection).firstElement
+            if (((TreeNode) element).value instanceof ASTNode) {
+                def astNode = (ASTNode) ((TreeNode) element).value
+                if (astNode.lineNumber > 0 && editor instanceof ITextEditor) {
+                    ((ITextEditor) editor).selectionProvider.selection = new TextSelection(astNode.start, astNode.length)
                 }
             }
         }
 
-        listener = { ElementChangedEvent event ->
-            if (editor != null) {
-                def unit = Adapters.adapt(editor.editorInput, GroovyCompilationUnit)
-                if (isUnitInDelta(event.delta, unit)) {
-                    display.asyncExec { ->
-                        def treePaths =
-                            viewer.expandedElements
-                        viewer.input = unit.moduleNode
-                        viewer.expandedElements = treePaths
-                    }
+        // add tree navigation actions to toolbar
+        def downer = new DrillDownAdapter(viewer)
+        viewSite.actionBars.toolBarManager.with {
+            downer.addNavigationActions(it)
+            update(true)
+        }
+
+        // add tree navigation actions to context menu
+        viewer.tree.menu = new MenuManager('#PopupMenu').with {
+            viewSite.registerContextMenu(it, viewer)
+            downer.addNavigationActions(it)
+            createContextMenu(viewer.tree)
+        }
+
+        def resetTreeView = { root ->
+            viewer.input = root
+            downer.reset()
+        }
+
+        //
+
+        reconcileListener = { ElementChangedEvent event ->
+            def unit = Adapters.adapt(editor, GroovyCompilationUnit)
+            if (unit != null && isUnitInDelta(event.delta, unit)) {
+                display.asyncExec { ->
+                    def ee = viewer.expandedElements
+                    resetTreeView(unit.moduleNode)
+                    viewer.setExpandedElements(ee)
                 }
             }
         }
 
-        addElementChangedListener(listener, ElementChangedEvent.POST_RECONCILE)
+        addElementChangedListener(reconcileListener, ElementChangedEvent.POST_RECONCILE)
+
+        //
 
         partListener = new IPartListener() {
             @Override
@@ -103,35 +126,28 @@ class ASTView extends ViewPart {
 
             @Override
             void partBroughtToTop(IWorkbenchPart part) {
-                try {
-                    if (part instanceof IEditorPart) {
-                        def unit = Adapters.adapt(part.editorInput, GroovyCompilationUnit)
-                        if (unit != null) {
-                            if (editor != part) {
-                                editor = part
-                                def treePaths =
-                                    viewer.expandedElements
-                                viewer.input = unit.moduleNode
-                                viewer.expandedElements = treePaths
-                            }
+                if (part != editor && part instanceof IEditorPart) {
+                    try {
+                        def node = Adapters.adapt(part, ModuleNode)
+                        if (node != null) {
+                            resetTreeView(node)
+                            editor = part
                             return
                         }
+                    } catch (Throwable t) {
+                        Activator.warn('Error updating AST Viewer', t)
                     }
-                } catch (err) {
-                    Activator.warn('Error updating AST Viewer', err)
+                    resetTreeView(null)
+                    editor = null
                 }
-                partClosed(part)
             }
 
             @Override
             void partClosed(IWorkbenchPart part) {
-                // This is a guard - the content provider should not be null, but sometimes this happens when the
-                // part is disposed of for various reasons (unhandled exceptions AFAIK). Without this guard,
-                // error message popups continue until Eclipse if forcefully killed.
-                if (viewer.contentProvider != null) {
-                    viewer.input = null
+                if (part != null && part == editor) {
+                    resetTreeView(null)
+                    editor = null
                 }
-                editor = null
             }
 
             @Override
@@ -156,11 +172,11 @@ class ASTView extends ViewPart {
     @Override
     void dispose() {
         try {
+            removeElementChangedListener(reconcileListener)
             site.page.removePartListener(partListener)
-            removeElementChangedListener(listener)
         } finally {
+            reconcileListener = null
             partListener = null
-            listener = null
             super.dispose()
         }
     }
@@ -184,47 +200,191 @@ class ASTView extends ViewPart {
         }
     }
 
-    @AutoImplement
-    private static class ViewContentProvider implements IStructuredContentProvider, ITreeContentProvider {
-        private ITreeNode root
+    private static class TreeContentProvider implements ITreeContentProvider {
+        @Override
+        Object[] getElements(Object input) {
+            getChildren(input instanceof ModuleNode ? new TreeNode(value: input) : input)
+        }
 
         @Override
-        Object getParent(Object child) {
-            if (child instanceof ITreeNode) {
-                child.parent
+        Object[] getChildren(Object node) {
+            def treeNode = (TreeNode) node
+            def nodeValue = treeNode.value
+
+            if (nodeValue instanceof ASTNode || nodeValue instanceof DynamicVariable || nodeValue instanceof VariableScope ||
+                    nodeValue instanceof SourceUnit || nodeValue instanceof CompileUnit || nodeValue instanceof CompilerConfiguration) {
+                def methods = nodeValue.class.methods.findAll { method ->
+                    method.parameterCount == 0 && method.name =~ /^(is|has(?!hCode$)|get(?!(Type)?Class$|(Static)?(Star)?Imports$)|redirect$)/
+                }
+                def results = methods.findResults { method ->
+                    String name = method.name
+                    if (name.startsWith('get')) {
+                        name = decapitalize(name.substring(3))
+                    }
+                    try {
+                        def value = method.invoke(nodeValue)
+                        if ((name != 'text' && !nodeValue.is(value)) ||
+                                (name == 'text' && !(value =~ /^<not implemented /))) {
+                            return new TreeNode(label: name, value: value, parent: treeNode)
+                        }
+                    } catch (AssertionError | ClassCastException | NullPointerException | ReflectiveOperationException ignore) {
+                    }
+                    return null
+                }
+                if (nodeValue instanceof ModuleNode) {
+                    results << new TreeNode(label: 'imports', value: GroovyUtils.getAllImportNodes(nodeValue), parent: treeNode)
+                }
+                return results.toArray().sort(true) { ((TreeNode) it).label }
+            }
+
+            if (nodeValue instanceof Iterable || nodeValue instanceof Object[]) {
+                def list = []
+                nodeValue.eachWithIndex { e, i ->
+                    list << new TreeNode(label: "[$i]", value: e, parent: treeNode)
+                }
+                return list.toArray()
+            }
+
+            if (nodeValue instanceof Map) {
+                def list = ((Map) nodeValue).collect { k, v ->
+                    new TreeNode(label: k instanceof String ? /"$k"/ : "[$k]", value: v, parent: treeNode)
+                }
+                return list.toArray()
             }
         }
 
         @Override
-        Object[] getElements(Object inputElement) {
-            if (inputElement instanceof ModuleNode) {
-                root = TreeNodeFactory.createTreeNode(null, inputElement, 'Module Nodes')
-                return root.children
+        boolean hasChildren(Object node) {
+            def value = ((TreeNode) node).value
+
+            if (value instanceof Map || value instanceof Iterable || value instanceof Object[]) {
+                return value // false if empty
             }
-            return new Object[0]
+
+            (value instanceof ASTNode || value instanceof DynamicVariable || value instanceof VariableScope ||
+                value instanceof SourceUnit || value instanceof CompileUnit || value instanceof CompilerConfiguration)
         }
 
         @Override
-        Object[] getChildren(Object parent) {
-            if (parent instanceof ITreeNode) {
-                parent.children
-            }
+        Object getParent(Object node) {
+            ((TreeNode) node).parent
         }
+    }
 
+    private static class TreeLabelProvider extends LabelProvider {
         @Override
-        boolean hasChildren(Object parent) {
-            if (parent instanceof ITreeNode) {
-                !parent.isLeaf()
+        String getText(Object node) {
+            def label = ((TreeNode) node).label
+            def value = ((TreeNode) node).value
+
+            switch (value) {
+            case Map:
+            case Iterable:
+            case Object[]:
+                return label
+            case Character:
+                return "$label : '$value'"
+            case CharSequence:
+                return "$label : \"$value\""
+            case stmt.Statement:
+            case expr.Expression:
+                def valueType = value.class.simpleName
+                return "$label : ${valueType - ~/(Expression|Statement)$/}"
+            case ClassNode:
+                def clazz = (ClassNode) value
+                return "$label : ${clazz.toString(false).replace(' ', '')}"
+            case MethodNode:
+                def descriptor = ((MethodNode) value).typeDescriptor.replace(
+                    '<init>', ((MethodNode) value).declaringClass.nameWithoutPackage)
+                return "$label : ${descriptor.substring(descriptor.indexOf(' ') + 1)}"
+            case Variable:
+                return "$label : ${value['name']}"
+            case ImportNode:
+                return "$label : ${value['text']}"
+            case ASTNode:
+            case SourceUnit:
+            case CompileUnit:
+            case VariableScope:
+            case CompilerConfiguration:
+                if (label.charAt(0) != '[') return label
+            default:
+                return "$label : $value"
             }
         }
     }
 
-    private static class ViewLabelProvider extends LabelProvider {
+    private static class TreeNodeFilter extends ViewerFilter {
         @Override
-        String getText(Object obj) {
-            if (obj instanceof ITreeNode) {
-                obj.displayName
+        boolean select(Viewer viewer, Object parent, Object node) {
+            def label = ((TreeNode) node).label
+            def value = ((TreeNode) node).value
+            def outer = parent instanceof TreeNode ? parent.value : parent
+
+            // filter redundant properties
+            if (outer instanceof ClassNode) {
+                if (label ==~ /abstractMethods|allDeclaredMethods|allInterfaces|declaredMethodsMap|fieldIndex|(hasP|p)ackageName|/ +
+                        /isDerivedFromGroovyObject|isRedirectNode|module|name(WithoutPackage)?|outer(Most)?Class|plainNodeReference|text/) {
+                    return false
+                }
+            } else if (outer instanceof Variable) { // FieldNode, PropertyNode, etc.
+                if (label ==~ /name|hasInitialExpression|initialValueExpression|is(Enum|Final|Private|Protected|Public|Static|Volatile)/) {
+                    return false
+                }
+            } else if (outer instanceof MethodNode) {
+                if (label ==~ /firstStatement|is(Abstract|Default|Final|PackageScope|Private|Protected|Public|Static|VoidMethod)|name|typeDescriptor/) {
+                    return false
+                }
+            } else if (outer instanceof ModuleNode) {
+                if (label ==~ /isEmpty|packageName|hasPackage(Name)?|scriptClassDummy/) {
+                    return false
+                }
+            } else if (outer instanceof CompileUnit) {
+                if (label ==~ /(c|generatedInnerC|sortedC)lasses|hasClassNodeToCompile/) {
+                    return false
+                }
+            } else if (outer instanceof ProcessingUnit) {
+                if (label ==~ /AST|CST|source/) {
+                    return false
+                }
+            } else if (outer instanceof stmt.Statement) {
+                if (label ==~ /isEmpty|statementLabel/) {
+                    return false
+                }
+            } else if (outer instanceof ImportNode || outer instanceof PackageNode) {
+                if (label == 'text') {
+                    return false
+                }
             }
+            if (outer instanceof ASTNode) {
+                if (label ==~ /instance|metaDataMap/) {
+                    return false
+                }
+                if (label == 'groovydoc') {
+                    return value['present']
+                }
+            }
+
+            if (value instanceof ClassNode && value['outerClass'] != null &&
+                    parent['label'] == 'classes' && parent['parent']['value'] instanceof ModuleNode) {
+                return false
+            }
+
+            if (value instanceof Map || value instanceof Iterable || value instanceof Object[]) {
+                return value // false if empty
+            }
+
+            return true
+        }
+    }
+
+    @EqualsAndHashCode(includes='label,parent')
+    private static class TreeNode {
+        String label
+        Object value
+        TreeNode parent
+
+        void setValue(value) {
+            this.value = value instanceof Iterator ? value.collect() : value
         }
     }
 }
