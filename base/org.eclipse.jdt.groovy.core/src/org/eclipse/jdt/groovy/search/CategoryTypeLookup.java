@@ -92,7 +92,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                     ClassNode resolvedType = method.getReturnType();
                     // getAt(Object,String):Object supersedes getAt(Map<K,V>,Object):V when first param is String or GString; restore return type V for user experience
                     if ("getAt".equals(simpleName) && VariableScope.OBJECT_CLASS_NODE.equals(resolvedType) && isOrImplements(selfType, VariableScope.MAP_CLASS_NODE)) {
-                        for (ClassNode face : selfType.getAllInterfaces()) {
+                        for (ClassNode face : GroovyUtils.getAllInterfaces(selfType)) {
                             if (face.equals(VariableScope.MAP_CLASS_NODE)) { // Map<K,V>
                                 GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
                                 if (generics.length == 2) resolvedType = generics[1].getType();

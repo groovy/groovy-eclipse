@@ -665,14 +665,60 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testTypeExtendsMap() {
+    public void testTypeExtendsMap1() {
         String contents =
-            "interface Config extends Map<String, Number> {}\n" +
-            "void meth(Config config) {\n" +
+            "interface I extends Map<String, Number> {}\n" +
+            "void m(I config) {\n" +
             "  def xxx = config.whatever\n" +
+            "  def yyy = config['whatever']\n" +
             "}\n";
 
         assertType(contents, "xxx", "java.lang.Number");
+        assertType(contents, "yyy", "java.lang.Number");
+    }
+
+    @Test
+    public void testTypeExtendsMap2() {
+        String contents =
+            "interface I extends Map<String, Number> {}\n" +
+            "abstract class A implements I {}\n" +
+            "void m(A config) {\n" +
+            "  def xxx = config.whatever\n" +
+            "  def yyy = config['whatever']\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.lang.Number");
+        assertType(contents, "yyy", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1189
+    public void testTypeExtendsMap3() {
+        String contents =
+            "interface I extends Map<String, Number> {}\n" +
+            "abstract class A implements I {}\n" +
+            "class C extends A {}\n" +
+            "void m(C config) {\n" +
+            "  def xxx = config.whatever\n" +
+            "  def yyy = config['whatever']\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.lang.Number");
+        assertType(contents, "yyy", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1189
+    public void testTypeExtendsMap4() {
+        String contents =
+            "interface I<T> extends Map<String, T> {}\n" +
+            "abstract class A<U> implements I<U> {}\n" +
+            "class C extends A<Number> {}\n" +
+            "void m(C config) {\n" +
+            "  def xxx = config.whatever\n" +
+            "  def yyy = config['whatever']\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.lang.Number");
+        assertType(contents, "yyy", "java.lang.Number");
     }
 
     @Test

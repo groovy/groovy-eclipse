@@ -633,7 +633,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 resolvedType = VariableScope.VOID_CLASS_NODE;
             } else {
                 resolvedType = VariableScope.OBJECT_CLASS_NODE;
-                for (ClassNode face : declaringType.getAllInterfaces()) {
+                for (ClassNode face : GroovyUtils.getAllInterfaces(declaringType)) {
                     if (face.equals(VariableScope.MAP_CLASS_NODE)) { // Map<K,V>
                         GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
                         if (generics.length == 2) resolvedType = generics[1].getType();

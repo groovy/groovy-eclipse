@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,7 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.transform.ASTTransformation;
@@ -129,6 +131,24 @@ public class GroovyUtils {
         int index = name.lastIndexOf('$');
         if (index == -1) index = name.lastIndexOf('.');
         return new String[] {name.substring(0, Math.max(0, index)), name.substring(index + 1)};
+    }
+
+    public static Set<ClassNode> getAllInterfaces(ClassNode node) {
+        Set<ClassNode> result = new LinkedHashSet<>();
+        if (node.isInterface()) result.add(node);
+        addAllInterfaces(result, node);
+        return result;
+    }
+
+    private static void addAllInterfaces(Set<ClassNode> result, ClassNode source) {
+        for (ClassNode face : source.getInterfaces()) {
+            face = GenericsUtils.parameterizeType(source, face);
+            if (result.add(face)) addAllInterfaces(result, face);
+        }
+        ClassNode sc = source.redirect().getUnresolvedSuperClass(false);
+        if (sc != null && !sc.equals(ClassHelper.OBJECT_TYPE)) {
+            addAllInterfaces(result, GenericsUtils.parameterizeType(source, sc));
+        }
     }
 
     public static Stream<AnnotationNode> getAnnotations(AnnotatedNode node, String name) {
