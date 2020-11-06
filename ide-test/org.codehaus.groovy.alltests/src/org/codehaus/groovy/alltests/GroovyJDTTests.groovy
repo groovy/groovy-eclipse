@@ -89,6 +89,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.search.GenericsMappingTests,
     org.eclipse.jdt.core.groovy.tests.search.Groovy20InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.Groovy21InferencingTests,
+    org.eclipse.jdt.core.groovy.tests.search.Groovy22InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.Groovy25InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.JDTPropertyNodeInferencingTests,

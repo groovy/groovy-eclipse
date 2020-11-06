@@ -394,7 +394,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                 // visit relocated @Memoized method bodies
                 for (MethodNode method : node.getMethods()) {
-                    if (method.getName().startsWith("memoizedMethodPriv$")) {
+                    if (method.getName().startsWith("memoizedMethodPriv$") || isCustomScriptBody(method)) {
                         scopes.add(new VariableScope(scopes.getLast(), method, method.isStatic()));
                         enclosingDeclarationNode = method;
                         try {
@@ -3098,6 +3098,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         default:
             return false;
         }
+    }
+
+    private static boolean isCustomScriptBody(final MethodNode node) {
+        return node.getDeclaringClass().isScript() && !node.isScriptBody() &&
+            Boolean.TRUE.equals(node.getNodeMetaData("org.codehaus.groovy.ast.MethodNode.isScriptBody"));
     }
 
     private static boolean isEnumInit(final MethodCallExpression node) {
