@@ -72,4 +72,49 @@ public final class Groovy22InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.Number");
         assertType(contents, "y", "java.lang.Number");
     }
+
+    @Test
+    public void testDelegatesToGenericTypeIndex1() {
+        //@formatter:off
+        String contents =
+            "def foo(@DelegatesTo.Target List<Number> list, @DelegatesTo(genericTypeIndex=0) Closure c) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def bar = [1,2,3]\n" +
+            "  foo(bar) { delegate }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "delegate", "java.lang.Number");
+    }
+
+    @Test
+    public void testDelegatesToGenericTypeIndex2() {
+        //@formatter:off
+        String contents =
+            "def foo(@DelegatesTo.Target Map<String, Number> map, @DelegatesTo(genericTypeIndex=1) Closure c) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def bar = [a:1,b:2]\n" +
+            "  foo(bar) { delegate }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "delegate", "java.lang.Number");
+    }
+
+    @Test
+    public void testDelegatesToGenericTypeIndex3() {
+        //@formatter:off
+        String contents =
+            "def foo(@DelegatesTo.Target Map<String, Number> map, @DelegatesTo(genericTypeIndex=10) Closure c) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def bar = [a:1,b:2]\n" +
+            "  foo(bar) { delegate }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "delegate", "java.lang.Object");
+    }
 }

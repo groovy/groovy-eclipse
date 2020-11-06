@@ -1294,8 +1294,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                                     Expression target = arguments.get(j);
                                                     ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
                                                     if (!targetType.isDerivedFrom(parameters[j].getType())) targetType = parameters[j].getType();
-                                                    if (generics != null && generics >= 0 && targetType.getGenericsTypes() != null) {
-                                                        targetType.getGenericsTypes()[generics].getType();
+                                                    if (generics != null && generics >= 0) { // -1 is the default value
+                                                        targetType = Optional.ofNullable(targetType.getGenericsTypes())
+                                                            .filter(targetGenerics -> generics < targetGenerics.length)
+                                                            .map(targetGenerics -> targetGenerics[generics].getType()).orElse(OBJECT_CLASS_NODE);
                                                     }
                                                     addDelegatesToClosure(closure, targetType, strategy);
                                                 }
