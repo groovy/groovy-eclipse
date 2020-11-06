@@ -2355,6 +2355,9 @@ void setSourceStart(int sourceStart);
 	/** @since 3.24
 	 * @noreference preview feature error */
 	int RecordIllegalStaticModifierForLocalClassOrInterface = PreviewRelated + 1761;
+	/** @since 3.24
+	 * @noreference preview feature error */
+	int RecordIllegalModifierForLocalRecord = PreviewRelated + 1762;
 
 	/** @since 3.24
 	 * @noreference preview feature error */

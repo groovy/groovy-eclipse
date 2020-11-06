@@ -802,19 +802,18 @@ public class ClassScope extends Scope {
 					modifiers |= ExtraCompilerModifiers.AccSealed;
 			}
 		} else if (sourceType.isRecord()) {
+			int UNEXPECTED_MODIFIERS = ExtraCompilerModifiers.AccNonSealed | ExtraCompilerModifiers.AccSealed;
 			if (isMemberType) {
-				final int UNEXPECTED_MODIFIERS = ~(ClassFileConstants.AccPublic | ClassFileConstants.AccPrivate | ClassFileConstants.AccProtected | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal | ClassFileConstants.AccStrictfp);
-				if ((realModifiers & UNEXPECTED_MODIFIERS) != 0)
+				final int EXPECTED_MODIFIERS = (ClassFileConstants.AccPublic | ClassFileConstants.AccPrivate | ClassFileConstants.AccProtected | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal | ClassFileConstants.AccStrictfp);
+				if ((realModifiers & ~EXPECTED_MODIFIERS) != 0 || (modifiers & UNEXPECTED_MODIFIERS) != 0)
 					problemReporter().illegalModifierForInnerRecord(sourceType);
 			} else if (sourceType.isLocalType()) {
-				final int UNEXPECTED_MODIFIERS = ~(ClassFileConstants.AccAbstract | ClassFileConstants.AccFinal | ClassFileConstants.AccStrictfp | ClassFileConstants.AccStatic);
-				if ((realModifiers & UNEXPECTED_MODIFIERS) != 0)
-					problemReporter().illegalModifierForLocalClass(sourceType);
+				final int EXPECTED_MODIFIERS = (ClassFileConstants.AccFinal | ClassFileConstants.AccStrictfp | ClassFileConstants.AccStatic);
+				if ((realModifiers & ~EXPECTED_MODIFIERS) != 0 || (modifiers & UNEXPECTED_MODIFIERS) != 0)
+					problemReporter().illegalModifierForLocalRecord(sourceType);
 			} else {
-				final int UNEXPECTED_MODIFIERS = ~(ClassFileConstants.AccPublic |  ClassFileConstants.AccFinal | ClassFileConstants.AccStrictfp);
-				if ((realModifiers & UNEXPECTED_MODIFIERS) != 0
-						|| (modifiers & ExtraCompilerModifiers.AccNonSealed) != 0
-						|| (modifiers & ExtraCompilerModifiers.AccSealed) != 0)
+				final int EXPECTED_MODIFIERS = (ClassFileConstants.AccPublic |  ClassFileConstants.AccFinal | ClassFileConstants.AccStrictfp);
+				if ((realModifiers & ~EXPECTED_MODIFIERS) != 0 || (modifiers & UNEXPECTED_MODIFIERS) != 0)
 					problemReporter().illegalModifierForRecord(sourceType);
 			}
 			// JLS 14 8.10 : It is a compile-time error if a record declaration has the modifier abstract.

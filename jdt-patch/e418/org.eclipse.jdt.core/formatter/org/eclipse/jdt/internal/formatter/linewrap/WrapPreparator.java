@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2019 Mateusz Matela and others.
+ * Copyright (c) 2014, 2020 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -345,6 +345,8 @@ public class WrapPreparator extends ASTVisitor {
 
 	@Override
 	public boolean visit(RecordDeclaration node) {
+		handleAnnotations(node.modifiers(), this.options.alignment_for_annotations_on_type);
+
 		int lParen = this.tm.firstIndexAfter(node.getName(), TokenNameLPAREN);
 		List<SingleVariableDeclaration> components = node.recordComponents();
 		int rParen = this.tm.firstIndexAfter(

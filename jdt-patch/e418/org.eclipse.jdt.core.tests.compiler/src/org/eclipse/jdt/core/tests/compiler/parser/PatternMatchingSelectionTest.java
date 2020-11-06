@@ -133,4 +133,34 @@ public void test003() throws JavaModelException {
 	checkMethodParse(string.toCharArray(), selectionStart, selectionEnd, expectedSelection, expectedUnitDisplayString,
 			selectionIdentifier, expectedReplacedSource, testName);
 }
+public void test004() throws JavaModelException {
+	String string =  "public class X {\n"
+			+ "    @SuppressWarnings(\"preview\")\n"
+			+ "	   public void f(Object obj, boolean b) {\n"
+			+ "        b = (x_ instanceof String y_) && (y_.length() > 0);\n"
+			+ "    }\n"
+			+ "}";
+
+	String selection = "y_";
+	String selectKey = "<SelectionOnLocalName:final String ";
+	String expectedSelection = selectKey + selection + ">;";
+
+	String selectionIdentifier = "y_";
+	String expectedUnitDisplayString =
+			"public class X {\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public @SuppressWarnings(\"preview\") void f(Object obj, boolean b) {\n" +
+					"    <SelectionOnLocalName:final String y_>;\n" +
+					"  }\n" +
+					"}\n";
+	String expectedReplacedSource = "y_";
+	String testName = "X.java";
+
+	int selectionStart = string.indexOf(selection);
+	int selectionEnd = string.indexOf(selection) + selection.length() - 1;
+
+	checkMethodParse(string.toCharArray(), selectionStart, selectionEnd, expectedSelection, expectedUnitDisplayString,
+			selectionIdentifier, expectedReplacedSource, testName);
+}
 }

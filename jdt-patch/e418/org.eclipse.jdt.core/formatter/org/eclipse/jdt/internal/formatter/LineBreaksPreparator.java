@@ -274,6 +274,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 
 	@Override
 	public boolean visit(RecordDeclaration node) {
+		handleAnnotations(node.modifiers(), this.options.insert_new_line_after_annotation_on_type);
 		handleBracedCode(node, node.getName(), this.options.brace_position_for_record_declaration,
 				this.options.indent_body_declarations_compare_to_record_header);
 		handleBodyDeclarations(node.bodyDeclarations());

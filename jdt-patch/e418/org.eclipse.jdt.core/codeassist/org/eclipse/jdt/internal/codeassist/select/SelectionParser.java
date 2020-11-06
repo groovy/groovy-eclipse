@@ -810,8 +810,12 @@ protected void consumeInstanceOfExpressionWithName() {
 			// Push only when the selection node is not the expression of this
 			// pattern matching instanceof expression
 			pushOnAstStack(typeDecl);
-		}
-		if (indexOfAssistIdentifier() >= 0) {
+			if ((this.selectionStart >= typeDecl.sourceStart)
+					&&  (this.selectionEnd <= typeDecl.sourceEnd)) {
+				this.restartRecovery	= true;
+				this.lastIgnoredToken = -1;
+			}
+		} else if (indexOfAssistIdentifier() >= 0) {
 			this.isOrphanCompletionNode = true;
 			this.restartRecovery = true;
 			this.lastIgnoredToken = -1;

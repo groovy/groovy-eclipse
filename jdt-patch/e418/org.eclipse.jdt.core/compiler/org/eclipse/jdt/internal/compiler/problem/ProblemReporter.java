@@ -11661,6 +11661,17 @@ public void switchExpressionsReturnWithinSwitchExpression(ASTNode statement) {
 		statement.sourceStart,
 		statement.sourceEnd);
 }
+public void illegalModifierForLocalRecord(SourceTypeBinding type) {
+	if (!this.options.enablePreviewFeatures)
+		return;
+	String[] arguments = new String[] {new String(type.sourceName())};
+	this.handle(
+		IProblem.RecordIllegalModifierForLocalRecord,
+		arguments,
+		arguments,
+		type.sourceStart(),
+		type.sourceEnd());
+}
 public void illegalModifierForInnerRecord(SourceTypeBinding type) {
 	if (!this.options.enablePreviewFeatures)
 		return;

@@ -7878,4 +7878,52 @@ public void testBug566554_04() {
 		"Type mismatch: cannot convert from Margin to int\n" +
 		"----------\n");
 }
+public void testBug567731_001() {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"  non-sealed record R() {}\n" +
+			"  public static void main(String[] args) {\n" +
+			"	  sealed record B() { }  \n" +
+			"  }" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 2)\n" +
+		"	non-sealed record R() {}\n" +
+		"	                  ^\n" +
+		"Illegal modifier for the record R; only public, private, protected, static, final and strictfp are permitted\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 4)\n" +
+		"	sealed record B() { }  \n" +
+		"	              ^\n" +
+		"Illegal modifier for the local record B; only final and strictfp are permitted\n" +
+		"----------\n"
+	);
+}
+public void testBug567731_002() {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"  sealed record R1() {}\n" +
+			"  public static void main(String[] args) {\n" +
+			"	  non-sealed record R2() { }  \n" +
+			"  }" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 2)\n" +
+		"	sealed record R1() {}\n" +
+		"	              ^^\n" +
+		"Illegal modifier for the record R1; only public, private, protected, static, final and strictfp are permitted\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 4)\n" +
+		"	non-sealed record R2() { }  \n" +
+		"	                  ^^\n" +
+		"Illegal modifier for the local record R2; only final and strictfp are permitted\n" +
+		"----------\n"
+	);
+}
 }
