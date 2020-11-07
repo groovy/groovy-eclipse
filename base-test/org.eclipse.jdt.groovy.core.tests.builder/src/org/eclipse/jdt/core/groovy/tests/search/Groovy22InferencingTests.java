@@ -117,4 +117,64 @@ public final class Groovy22InferencingTests extends InferencingTestSuite {
         //@formatter:on
         assertType(contents, "delegate", "java.lang.Object");
     }
+
+    @Test
+    public void testMemoized1() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  private static final int n = 42\n" +
+            "  @groovy.transform.Memoized\n" +
+            "  int f() {\n" +
+            "    n * 2\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "n", "java.lang.Integer");
+    }
+
+    @Test
+    public void testMemoized2() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  private static final int n = 42\n" +
+            "  @groovy.transform.Memoized\n" +
+            "  int f(int p) {\n" +
+            "    n * p\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "n", "java.lang.Integer");
+        assertType(contents, "p", "java.lang.Integer");
+    }
+
+    @Test
+    public void testMemoized3() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  @groovy.transform.Memoized\n" +
+            "  static int f(int p) {\n" +
+            "    42 * p\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "p", "java.lang.Integer");
+    }
+
+    @Test
+    public void testMemoized4() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  private static final int n = 42\n" +
+            "  @groovy.transform.Memoized\n" +
+            "  void f() {\n" + // no effect
+            "    print n * 2\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "n", "java.lang.Integer");
+    }
 }
