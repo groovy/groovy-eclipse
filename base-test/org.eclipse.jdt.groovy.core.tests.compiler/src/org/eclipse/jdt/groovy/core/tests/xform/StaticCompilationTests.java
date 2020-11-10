@@ -5199,4 +5199,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "B");
     }
+
+    @Test
+    public void testCompileStatic9799() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  String x\n" +
+            "}\n" +
+            "class D {\n" +
+            "  String x\n" +
+            "  static D from(C c) {\n" +
+            "    new D(x: c.x)\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(C c) {\n" +
+            "  print Optional.of(c).map(D::from).map(D::getX).get()\n" +
+            "}\n" +
+            "test(new C(x: 'works'))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }

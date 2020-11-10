@@ -439,7 +439,8 @@ public abstract class StaticTypeCheckingSupport {
      *
      * @return true if the class node is assignable to the other class node, false otherwise
      */
-    static boolean isAssignableTo(ClassNode type, ClassNode toBeAssignedTo) {
+    // GRECLIPSE package->public
+    public static boolean isAssignableTo(ClassNode type, ClassNode toBeAssignedTo) {
         if (type == toBeAssignedTo || type == UNKNOWN_PARAMETER_TYPE) return true;
         if (isPrimitiveType(type)) type = getWrapper(type);
         if (isPrimitiveType(toBeAssignedTo)) toBeAssignedTo = getWrapper(toBeAssignedTo);
