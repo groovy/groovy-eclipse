@@ -1033,7 +1033,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static boolean isStaticReferenceToInstanceMethod(final VariableScope scope) {
         if (scope.getEnclosingNode() instanceof MethodPointerExpression && scope.getCurrentNode() instanceof ConstantExpression) {
             // "Type.&instanceMethod" and "Type::instanceMethod" are supported starting in Groovy 3
-            int majorVersion = Integer.parseInt(GroovySystem.getVersion().split("\\.")[0], 10);
+            int majorVersion = Integer.parseInt(GroovySystem.getVersion().split("\\.")[0]);
             return (majorVersion >= 3);
         }
         return false;

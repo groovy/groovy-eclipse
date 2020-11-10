@@ -968,14 +968,25 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             : "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1192
     public void testDGMDeclaring6() {
+        String contents = "String.&size";
+        if (!isAtLeastGroovy(30)) {
+            int offset = contents.indexOf("size");
+            assertUnknownConfidence(contents, offset, offset + "size".length());
+        } else {
+            assertDeclType(contents, "size", "org.codehaus.groovy.runtime.StringGroovyMethods");
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    public void testDGMDeclaring7() {
         String contents = "['x','y','z'].stream().toList()";
         assertDeclType(contents, "toList", "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
-    public void testDGMDeclaring7() {
+    public void testDGMDeclaring8() {
         String contents = "Thread.State.NEW.next().name()";
         String vmplugin = isAtLeastGroovy(30) ? "8" : "5";
         assertDeclType(contents, "next", "org.codehaus.groovy.vmplugin.v" + vmplugin + ".PluginDefaultGroovyMethods");
@@ -983,33 +994,69 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGSMDeclaring1() {
-        String contents = "Date.sleep(42)";
+        String contents = "sleep(42L)";
         assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
-    public void testDGSMDeclaring2() {
-        String contents = "sleep 42";
+    public void testDGSMDeclaring2() { // int argument vs. long parameter
+        String contents = "void test(boolean flag) {\n  sleep(flag ? 42 : 1000)\n}";
         assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
     public void testDGSMDeclaring3() {
-        String contents = "void test(flag) {\n  sleep(flag ? 42 : 1000)\n}";
+        String contents = "Object.sleep(42)";
         assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
     public void testDGSMDeclaring4() {
-        String contents = "Date.getLastMatcher()";
-        int start = contents.lastIndexOf("getLastMatcher"), until = start + "getLastMatcher".length();
-        assertUnknownConfidence(contents, start, until);
+        String contents = "Date.sleep(42)"; // odd but works
+        assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
     public void testDGSMDeclaring5() {
+        String contents = "Date.getLastMatcher()";
+        int offset = contents.lastIndexOf("getLastMatcher");
+        assertUnknownConfidence(contents, offset, offset + "getLastMatcher".length());
+    }
+
+    @Test
+    public void testDGSMDeclaring6() {
         String contents = "java.util.regex.Matcher.getLastMatcher()";
         assertDeclType(contents, "getLastMatcher", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test
+    public void testDGSMDeclaring7() {
+        String contents = "java.util.regex.Matcher.lastMatcher";
+        assertDeclType(contents, "lastMatcher", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1192
+    public void testDGSMDeclaring8() {
+        String contents = "String.&sleep"; // odd but works
+        if (!isAtLeastGroovy(30)) {
+            int offset = contents.indexOf("sleep");
+            assertUnknownConfidence(contents, offset, offset + "sleep".length());
+        } else {
+            assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1192
+    public void testDGSMDeclaring9() {
+        String contents = "Thread.&sleep"; // Thread#sleep(long) supersedes sleep(Object,long) but not sleep(Object,long,Closure)
+        assertDeclType(contents, "sleep", !isAtLeastGroovy(30) ? "java.lang.Thread" : "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test
+    public void testDGSMDeclaring10() {
+        String contents = "Thread.&mixin"; // throws MissingMethodException
+        int offset = contents.indexOf("mixin");
+        assertUnknownConfidence(contents, offset, offset + "mixin".length());
     }
 
     @Test

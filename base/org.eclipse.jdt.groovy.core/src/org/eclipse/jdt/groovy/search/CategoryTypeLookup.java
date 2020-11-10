@@ -18,11 +18,16 @@ package org.eclipse.jdt.groovy.search;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.first;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.tail;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isClassClassNodeWrappingConcreteType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import groovy.lang.GroovySystem;
+
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
@@ -93,7 +98,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                     // getAt(Object,String):Object supersedes getAt(Map<K,V>,Object):V when first param is String or GString; restore return type V for user experience
                     if ("getAt".equals(simpleName) && VariableScope.OBJECT_CLASS_NODE.equals(resolvedType) && isOrImplements(selfType, VariableScope.MAP_CLASS_NODE)) {
                         for (ClassNode face : GroovyUtils.getAllInterfaces(selfType)) {
-                            if (face.equals(VariableScope.MAP_CLASS_NODE)) { // Map<K,V>
+                            if (VariableScope.MAP_CLASS_NODE.equals(face)) { // Map<K,V>
                                 GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
                                 if (generics.length == 2) resolvedType = generics[1].getType();
                                 break;
@@ -119,9 +124,10 @@ public class CategoryTypeLookup implements ITypeLookup {
 
     private static boolean isCompatibleConstantExpression(final Expression node, final VariableScope scope, final ClassNode selfType) {
         if (node instanceof ConstantExpression && !scope.isTopLevel() && !VariableScope.VOID_CLASS_NODE.equals(selfType)) {
-            org.codehaus.groovy.ast.ASTNode enclosingNode = scope.getEnclosingNode();
+            ASTNode enclosingNode = scope.getEnclosingNode();
             if (!(enclosingNode instanceof AttributeExpression || (enclosingNode instanceof MethodPointerExpression &&
-                                                                    VariableScope.CLASS_CLASS_NODE.equals(selfType)))) {
+                                                                    VariableScope.CLASS_CLASS_NODE.equals(selfType) &&
+                                                                    Integer.parseInt(GroovySystem.getVersion().split("\\.")[0]) < 3))) {
                 return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
             }
         }
@@ -130,14 +136,31 @@ public class CategoryTypeLookup implements ITypeLookup {
 
     private static boolean isCompatibleCategoryMethod(final MethodNode method, final ClassNode firstArgumentType, final VariableScope scope) {
         if (method.isStatic()) {
-            Parameter[] paramters = method.getParameters();
-            if (paramters != null && paramters.length > 0) {
-                ClassNode parameterType = paramters[0].getType();
-                if (VariableScope.CLASS_CLASS_NODE.equals(firstArgumentType) && isDefaultGroovyStaticMethod(method, scope)) {
+            Parameter[] parameters = method.getParameters();
+            if (parameters != null && parameters.length > 0) {
+                ClassNode parameterType = parameters[0].getType();
+                if (VariableScope.CLASS_CLASS_NODE.equals(firstArgumentType) &&
+                        // references like "this.name" (in static scope), "Type.name" or "Type::name" match with "Class<SelfType>"
+                        (isDefaultGroovyStaticMethod(method, scope) || SimpleTypeLookup.isStaticReferenceToInstanceMethod(scope))) {
                     parameterType = VariableScope.newClassClassNode(parameterType);
                 }
+
                 if (isSelfTypeCompatible(firstArgumentType, parameterType)) {
-                    return !isDefaultGroovyMethod(method, scope) || !GroovyUtils.isDeprecated(method);
+                    if (isDefaultGroovyMethod(method, scope)) {
+                        if (GroovyUtils.isDeprecated(method)) {
+                            return false;
+                        }
+                        // with unknown arguments, method cannot be overruled by others
+                        if (scope.getEnclosingNode() instanceof MethodPointerExpression) {
+                            ClassNode selfType = isClassClassNodeWrappingConcreteType(firstArgumentType)
+                                ? firstArgumentType.getGenericsTypes()[0].getType() : firstArgumentType;
+                            // check for exact match of category method, in which case the self-type method takes precedence
+                            if (selfType.hasMethod(method.getName(), Arrays.copyOfRange(parameters, 1, parameters.length))) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
                 }
             }
         }
@@ -145,16 +168,16 @@ public class CategoryTypeLookup implements ITypeLookup {
     }
 
     private static boolean isSelfTypeCompatible(final ClassNode source, final ClassNode target) {
-        if (SimpleTypeLookup.isTypeCompatible(source, target) != Boolean.FALSE) {
+        if (!Boolean.FALSE.equals(SimpleTypeLookup.isTypeCompatible(source, target))) {
             if (!(VariableScope.CLASS_CLASS_NODE.equals(source) && source.isUsingGenerics()) ||
                     VariableScope.OBJECT_CLASS_NODE.equals(target) || !target.isUsingGenerics()) {
                 return true;
-            } else {
-                ClassNode sourceGT = source.getGenericsTypes()[0].getType();
-                ClassNode targetGT = target.getGenericsTypes()[0].getType();
-                if (SimpleTypeLookup.isTypeCompatible(sourceGT, targetGT) != Boolean.FALSE) {
-                    return true;
-                }
+            }
+            // check compatibility of "X" and "Y" in "A<X>" and "B<Y>"
+            ClassNode sourceGT = source.getGenericsTypes()[0].getType();
+            ClassNode targetGT = target.getGenericsTypes()[0].getType();
+            if (sourceGT.equals(targetGT) || GroovyUtils.isAssignable(sourceGT, targetGT)) {
+                return true;
             }
         }
         return false;

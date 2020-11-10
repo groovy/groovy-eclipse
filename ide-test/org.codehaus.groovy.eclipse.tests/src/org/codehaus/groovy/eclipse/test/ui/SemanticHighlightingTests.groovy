@@ -1984,7 +1984,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |    @groovy.transform.ASTTest(phase=CONVERSION, value={
             |      assert node.text
             |    })
-            |    def var
+            |    def var = null
             |
             |    @groovy.transform.ASTTest(phase=CompilePhase.CONVERSION, value={
             |      sourceUnit.comments
@@ -3047,17 +3047,31 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL))
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/878
     void testMethodPointer3() {
-        String contents = 'String.&toLowerCase'
+        String contents = 'String.&length'
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), isAtLeastGroovy(30) ? METHOD_CALL : UNKNOWN))
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, isAtLeastGroovy(30) ? METHOD_CALL : UNKNOWN))
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1192
     void testMethodPointer4() {
+        String contents = '''\
+            |String.&size
+            |Object.&sleep
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('size'  ), 4, isAtLeastGroovy(30) ? GROOVY_CALL : UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('sleep' ), 5, isAtLeastGroovy(30) ? GROOVY_CALL : UNKNOWN))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1048
+    void testMethodPointer5() {
         String contents = 'String[].&new'
 
         if (isAtLeastGroovy(30)) {
@@ -3066,11 +3080,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         } else {
             assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-                new HighlightedTypedPosition(contents.indexOf('new'), 'new'.length(), UNKNOWN))
+                new HighlightedTypedPosition(contents.indexOf('new'   ), 3, UNKNOWN))
         }
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1048
     void testMethodReference1() {
         assumeTrue(isParrotParser())
 
@@ -3080,20 +3094,36 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/878
     void testMethodReference2() {
         assumeTrue(isParrotParser())
 
         String contents = '''\
-            |String::toLowerCase
-            |Integer::toHexString
+            |String::length
+            |Thread::yield
             |'''.stripMargin()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('Integer'), 7, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('toHexString'), 'toHexString'.length(), STATIC_CALL))
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Thread'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('yield' ), 5, STATIC_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1192
+    void testMethodReference3() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            |String::size
+            |Object::sleep
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('size'  ), 4, isAtLeastGroovy(30) ? GROOVY_CALL : UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('sleep' ), 5, isAtLeastGroovy(30) ? GROOVY_CALL : UNKNOWN))
     }
 
     @Test

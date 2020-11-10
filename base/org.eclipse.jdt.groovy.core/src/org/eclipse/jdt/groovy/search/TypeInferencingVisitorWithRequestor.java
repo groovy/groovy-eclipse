@@ -3249,7 +3249,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private static void resetType(final GenericsType gt, final ClassNode t) {
-        ClassNode type = GroovyUtils.getWrapperTypeIfPrimitive(t);
+        ClassNode type = ClassHelper.isPrimitiveType(t) ? ClassHelper.getWrapper(t) : t;
         gt.setName(type.getName());
         gt.setType(type);
     }

@@ -227,12 +227,18 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/525
     public void testStaticReference4() {
         // name clashes with methods available from java.lang.Class and org.codehaus.groovy.runtime.DefaultGroovyMethods
-        String contents = "def stringify = Arrays.&toString";
+        String contents = "Arrays.&toString";
         assertKnown(contents, "toString", "java.util.Arrays", "java.lang.String");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/595
+    @Test
     public void testStaticReference5() {
+        String contents = "Arrays.&binarySearch";
+        assertKnown(contents, "binarySearch", "java.util.Arrays", "java.lang.Integer");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/595
+    public void testStaticReference6() {
         String contents =
             "class Chars {\n" +
             "  static boolean equals(char[] a, char[] b) {\n" +
@@ -245,20 +251,8 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         assertKnown(contents, "equals", "Chars", "java.lang.Boolean");
     }
 
-    @Test
-    public void testStaticReference6() {
-        String contents = "def search = Arrays.&binarySearch";
-        assertKnown(contents, "binarySearch", "java.util.Arrays", "java.lang.Integer");
-    }
-
-    @Test
-    public void testStaticReference7() {
-        String contents = "Arrays.&mixin";
-        assertUnknown(contents, "mixin");
-    }
-
     @Test // https://github.com/groovy/groovy-eclipse/issues/646
-    public void testStaticReference8() {
+    public void testStaticReference7() {
         String contents =
             "class Unit {}\n" +
             "class Assert {\n" +
@@ -273,7 +267,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference9() {
+    public void testStaticReference8() {
         String contents =
             "class Static {\n" +
             "  static def foo\n" +
@@ -286,7 +280,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference9a() {
+    public void testStaticReference9() {
         String contents =
             "class Static {\n" +
             "  static def foo\n" +
@@ -313,7 +307,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference10a() {
+    public void testStaticReference11() {
         String contents =
             "class Static {\n" +
             "  static def foo\n" +
