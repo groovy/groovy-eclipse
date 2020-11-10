@@ -320,7 +320,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic12() {
         //@formatter:off
         String[] sources = {
-            "Generics.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
             "  def list = new LinkedList<String>([1,2,3])\n" +
@@ -330,7 +330,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Generics.groovy (at line 3)\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
             "\tdef list = new LinkedList<String>([1,2,3])\n" +
             "\t           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot call java.util.LinkedList <String>#<init>(java.util.Collection <? extends java.lang.String>) with arguments [java.util.List <java.lang.Integer>] \n" +
@@ -341,7 +341,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic13() {
         //@formatter:off
         String[] sources = {
-            "Generics.groovy",
+            "Main.groovy",
             "void meth(Class<?> c) {\n" +
             "  print c.simpleName\n" +
             "}\n" +
@@ -360,7 +360,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic14() {
         //@formatter:off
         String[] sources = {
-            "Generics.groovy",
+            "Main.groovy",
             "void meth(Class<? extends CharSequence> c) {\n" +
             "  print c.simpleName\n" +
             "}\n" +
@@ -484,7 +484,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic19() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
             "  def x = 'xyz';\n" +
@@ -496,7 +496,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 5)\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
             "\tx.charAt(0)\n" +
             "\t^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.io.Serializable or java.lang.Comparable#charAt(int)." +
@@ -508,7 +508,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic20() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "import groovy.transform.*\n" +
             "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
             "\n" +
@@ -550,7 +550,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic21() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class C {\n" +
             "  int which\n" +
@@ -594,8 +594,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "import groovy.transform.CompileStatic\n" +
             "@CompileStatic\n" +
             "class DynamicQuery {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    new DynamicQuery().foo(null);\n" +
+            "  static main(args) {\n" +
+            "    new DynamicQuery().foo(null)\n" +
             "  }\n" +
             "  private foo(Map sumpin) {\n" +
             "    Map foo = [:]\n" +
@@ -613,7 +613,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic1511() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def meth() {\n" +
             "   List<String> one = []\n" +
@@ -682,10 +682,35 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic1191() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(java.util.function.Function<String, Integer> f) {\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  m(Object::sleep)\n" + // NPE while processing Main.groovy
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tm(Object::sleep)\n" +
+            "\t  ^^^^^^^^^^^^^\n" +
+            "Groovy:Failed to find the expected method[sleep(java.lang.String)] in the type[java.lang.Object]\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testCompileStatic6095() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "Map<String, ? extends Number> numbers() {\n" +
             "  [a: 1, b: 2, c: 3d]\n" +
@@ -707,7 +732,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic6904() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "interface I {\n" +
             "  def m()\n" +
             "}\n" +
@@ -736,7 +761,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic6921() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def test(List<List<?>> list) {\n" +
             "  list.collectMany { pair ->\n" +
@@ -759,7 +784,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7300() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private String field = 'value'\n" +
@@ -783,7 +808,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7300a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private String field = 'value'\n" +
@@ -809,7 +834,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7300b() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private String field = 'value'\n" +
@@ -830,7 +855,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 11)\n" +
+            "1. ERROR in Main.groovy (at line 11)\n" +
             "\tsuper.@field = 'reset'\n" +
             "\t       ^^^^^\n" +
             "Groovy:[Static type checking] - The field A.field is not accessible\n" +
@@ -841,7 +866,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7300c() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private String field = 'value'\n" +
@@ -867,7 +892,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7304() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class A {\n" +
             "  private int i = 1\n" +
             "  @groovy.transform.CompileStatic\n" +
@@ -890,7 +915,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7304a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private int i = 1\n" +
@@ -913,7 +938,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7304b() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private int i = 1\n" +
@@ -936,7 +961,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7361() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private final Map<Long, String> map = [1L:'x', 2L:'y']\n" +
@@ -961,7 +986,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7361a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private final Map map = [:]\n" +
@@ -1135,7 +1160,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7691() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "abstract class A<N extends Number> {\n" +
             "  protected final N number\n" +
@@ -1163,7 +1188,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7691a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "abstract class A<N extends Number> {\n" +
             "  protected final N number\n" +
@@ -1193,7 +1218,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7691b() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "abstract class A<N extends Number> {\n" +
             "  final N number\n" +
@@ -1221,7 +1246,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7691c() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "abstract class A<N extends Number> {\n" +
             "  final N number\n" +
@@ -1249,7 +1274,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7701() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Foo {\n" +
             "  List type\n" +
             "}\n" +
@@ -1281,7 +1306,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7848() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def test() {\n" +
             "  def pairs = [[1,2], [3,4]]\n" +
@@ -1298,7 +1323,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7848a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def test() {\n" +
             "  List<List<Integer>> pairs = [[1,3], [1,2]].transpose()\n" +
@@ -1315,7 +1340,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7970() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Foo {\n" +
             "  @groovy.transform.CompileStatic\n" +
             "  String renderTemplate(String arg) { print \":$arg\" }\n" +
@@ -1340,7 +1365,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic7985() {
         //@formatter:off
         String[] sources = {
-            "Pairs.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Pair<L, R> implements Serializable {\n" +
             "  public final L left\n" +
@@ -1554,7 +1579,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8051() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Outer {\n" +
             "  def foo = 1\n" +
@@ -1578,7 +1603,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8176() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "static <M extends Map> M merge(M to, Map from) {\n" +
             "  !from ? to : to.with {\n" +
@@ -1601,7 +1626,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8310() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "def bar(Closure<Collection<Integer>> block) {\n" +
             "  block()\n" +
             "}\n" +
@@ -1616,10 +1641,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 6)\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
             "\tbar {\n" +
             "\t^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method Script#bar(groovy.lang.Closure <java.util.List>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Main#bar(groovy.lang.Closure <java.util.List>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -1665,7 +1690,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8389() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "import static Foo.bar\n" +
             "class Foo {\n" +
             "  static bar = 'property'\n" +
@@ -1688,7 +1713,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8389a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "import static Foo.bar\n" +
             "import static Foo.baz\n" +
             "class Foo {\n" +
@@ -1714,7 +1739,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         for (char t : new char[] {'R', 'S', 'T', 'U'}) { // BiFunction uses R, T and U
             //@formatter:off
             String[] sources = {
-                "Script.groovy",
+                "Main.groovy",
                 "@groovy.transform.CompileStatic\n" +
                 "static <" + t + "> " + t + " meth(java.util.function.BiFunction<Date, URL, " + t + "> func) {\n" +
                 "  " + t + " result = func.apply(new Date(), new URL('http://www.example.com'))\n" +
@@ -1756,7 +1781,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8562() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class C {\n" +
             "  void test() {\n" +
@@ -1976,7 +2001,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8686() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
             "def meth(obj) {\n" +
             "  boolean isA = (obj instanceof String && obj.equalsIgnoreCase('a'))\n" +
@@ -1986,7 +2011,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Script.groovy (at line 4)\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
@@ -1997,7 +2022,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8686a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
             "def meth(obj) {\n" +
             "  def str = obj instanceof String ? obj : obj.toString()\n" +
@@ -2007,7 +2032,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Script.groovy (at line 4)\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
@@ -2018,7 +2043,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8686b() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
             "def meth(obj) {\n" +
             "  def str\n" +
@@ -2034,7 +2059,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 9)\n" +
+            "1. ERROR in Main.groovy (at line 9)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
@@ -2045,7 +2070,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8816() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
             "  [0].each { -> }\n" +
@@ -2054,7 +2079,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Script$_test_closure1.doCall()" +
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Main$_test_closure1.doCall()" +
             " is applicable for argument types: (Integer) values: [0]");
     }
 
@@ -2088,7 +2113,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8840() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def test() {\n" +
             "  def list = [0, 1, 2, 3]\n" +
@@ -2108,7 +2133,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8840a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def test() {\n" +
             "  def list = [0, 1, 2, 3]\n" +
@@ -2129,7 +2154,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8840b() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def test() {\n" +
             "  def list = [0, 1, 2, 3]\n" +
@@ -2148,7 +2173,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8840c() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def test() {\n" +
             "  def list = [0, 1, 2, 3]\n" +
@@ -2167,7 +2192,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8873() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Foo {\n" +
             "  String foo = 'foo'\n" +
             "  String foom() { 'foom' }\n" +
@@ -2217,7 +2242,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8946() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@GrabResolver(name='grails', root='https://repo.grails.org/grails/core')\n" +
             "@Grapes([\n" +
             "  @Grab('javax.servlet:javax.servlet-api:3.0.1'),\n" +
@@ -2248,7 +2273,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8955() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Property {\n" +
             "  String generator\n" +
             "}\n" +
@@ -2294,7 +2319,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8961() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "void setM(List<String> strings) {}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
@@ -2311,7 +2336,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic8978() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class DelegatesToMap {\n" +
             "  @Delegate protected Map<String, Object> target = new HashMap<>()\n" +
@@ -3377,7 +3402,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9086() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m1() {\n" +
             "    print 'outer delegate'\n" +
@@ -3417,7 +3442,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9086a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m1() {\n" +
             "    print 'outer delegate'\n" +
@@ -3457,7 +3482,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9086b() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m1() {\n" +
             "    print 'outer delegate'\n" +
@@ -3497,7 +3522,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9086c() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m1() {\n" +
             "    print 'outer delegate'\n" +
@@ -3537,7 +3562,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9086d() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m() {\n" +
             "    print 'outer delegate'\n" +
@@ -3577,7 +3602,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9086e() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m() {\n" +
             "    print 'outer delegate'\n" +
@@ -3617,7 +3642,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9086f() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m() {\n" +
             "    print 'outer delegate'\n" +
@@ -3657,7 +3682,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9089() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m() {\n" +
             "    print 'outer delegate'\n" +
@@ -3697,7 +3722,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9089a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C1 {\n" +
             "  void m() {\n" +
             "    print 'outer delegate'\n" +
@@ -3737,7 +3762,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9127() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  protected String field = 'foo'\n" +
@@ -3769,7 +3794,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9136() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Foo {\n" +
             "  public String field = 'foo'\n" +
             "}\n" +
@@ -3795,7 +3820,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9136a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Foo {\n" +
             "  public String field = 'foo'\n" +
             "}\n" +
@@ -3819,7 +3844,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9136b() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Foo {\n" +
             "  private String field = 'foo'\n" +
             "}\n" +
@@ -3844,7 +3869,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9136c() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Foo {\n" +
             "  private String field = 'foo'\n" +
             "}\n" +
@@ -3869,7 +3894,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9151() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void greet(Object o = 'world', String s = o.toString()) {\n" +
             "  print \"hello $s\"\n" +
@@ -3885,7 +3910,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9151a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Thing {\n" +
             "  Thing(Object o = 'foo', String s = o.toString()) {\n" +
@@ -3904,7 +3929,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9153() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
             "  File temp = File.createTempDir()\n" +
@@ -3919,11 +3944,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9204() {
         //@formatter:off
         String[] sources = {
-            "G.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "class G extends Three {\n" +
+            "class Main extends Three {\n" +
             "  static main(args) {\n" +
-            "    print new G().test()\n" +
+            "    print newInstance().test()\n" +
             "  }\n" +
             "  def test() {\n" +
             "    field.meth() // typeof(field) should be A\n" +
@@ -3957,7 +3982,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9265() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Outer {\n" +
             "  static class Inner {\n" +
             "    public String field = 'works'\n" +
@@ -3981,8 +4006,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9283() {
         //@formatter:off
         String[] sources = {
-            "Groovy9283.groovy",
-            "class Groovy9283 {\n" +
+            "Main.groovy",
+            "class Main {\n" +
             "  @groovy.transform.CompileStatic\n" +
             "  static main(args) {\n" +
             "    this.newInstance().enter {\n" +
@@ -4030,7 +4055,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9327() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
             "  def runner = new Runnable() {\n" +
@@ -4044,7 +4069,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 5)\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
             "\tunknown\n" +
             "\t^^^^^^^\n" +
             "Groovy:[Static type checking] - The variable [unknown] is undeclared.\n" +
@@ -4055,7 +4080,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9327a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
             "  def runner = new Runnable() {\n" +
@@ -4069,7 +4094,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 5)\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
             "\tunknown\n" +
             "\t^^^^^^^\n" +
             "Groovy:[Static type checking] - The variable [unknown] is undeclared.\n" +
@@ -4200,7 +4225,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "import java.util.function.*\n" +
             "\n" +
             "class C {\n" +
@@ -4228,7 +4253,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9333a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C {\n" +
             "  public String field = 'f'\n" +
             "  \n" +
@@ -4256,7 +4281,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "import java.util.function.*\n" +
             "\n" +
             "class C {\n" +
@@ -4288,7 +4313,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9333c() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class C {\n" +
             "  public String field = 'f'\n" +
             "  \n" +
@@ -4318,7 +4343,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9338() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "void meth(Class<? extends CharSequence> c) {\n" +
             "  print c.simpleName\n" +
             "}\n" +
@@ -4333,10 +4358,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 7)\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Script#meth(java.lang.Class <? extends java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class <? extends java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
             "----------\n");
     }
 
@@ -4344,7 +4369,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9338a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "void meth(Class<? super CharSequence> c) {\n" +
             "  print c.simpleName\n" +
             "}\n" +
@@ -4359,10 +4384,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 7)\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Script#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
             "----------\n");
     }
 
@@ -4416,7 +4441,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9344() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class A {}\n" +
             "class B {}\n" +
             "@groovy.transform.CompileStatic\n" +
@@ -4440,7 +4465,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9344a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class A {}\n" +
             "class B {}\n" +
             "@groovy.transform.CompileStatic\n" +
@@ -4657,7 +4682,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9422() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  List<String> test() {\n" +
@@ -4848,7 +4873,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9597() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "import groovy.transform.stc.*\n" +
             "class A {\n" +
             "  def <T> void proc(Collection<T> values, @ClosureParams(FirstParam.FirstGenericType) Closure<String> block) {\n" +
@@ -4876,7 +4901,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9603() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test(Map<String, Object> map) {\n" +
             "  map.put('proper', [key: 'abc'])\n" +
@@ -4897,7 +4922,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9604() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class C {\n" +
             "  void m() {\n" +
@@ -4918,7 +4943,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9607() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "void helper(Runnable runner) {}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test(item, MetaProperty prop) {\n" +
@@ -4941,7 +4966,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9607a() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "void helper(Runnable runner) {}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test(item, name, MetaProperty prop) {\n" +
@@ -4967,7 +4992,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "import java.util.function.Function\n" +
             "@groovy.transform.CompileStatic\n" +
             "class C<R extends Number> {\n" +
@@ -4992,7 +5017,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9652() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "class Node {\n" +
             "  String name, text\n" +
             "}\n" +
@@ -5015,7 +5040,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  root[1].with {\n" +
             "    assert name == 'dash'\n" +
-            "    assert text == '-'\n" + // GroovyCastException: Cannot cast object 'Script@b91d8c4' with class 'Script' to class 'Node'
+            "    assert text == '-'\n" + // GroovyCastException: Cannot cast object 'Main@b91d8c4' with class 'Main' to class 'Node'
             "  }\n" +
             "}\n" +
             "test()\n",
@@ -5029,7 +5054,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9653() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class C {\n" +
             "  C() {\n" +
@@ -5055,7 +5080,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9699() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private static final java.util.regex.Pattern PATTERN = ~/.*/\n" +
@@ -5090,7 +5115,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9704() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def test() {\n" +
             "  long x = 42L\n" +
@@ -5107,7 +5132,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9734() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "void m(List<String> strings) {}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
@@ -5126,7 +5151,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "static <T> List<T> list(T item) {\n" +
             "  return [item]\n" +
             "}\n" +

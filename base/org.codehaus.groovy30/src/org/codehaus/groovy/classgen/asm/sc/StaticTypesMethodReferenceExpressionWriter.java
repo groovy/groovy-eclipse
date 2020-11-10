@@ -296,6 +296,9 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
 
     private void addFatalError(final String msg, final ASTNode node) {
         controller.getSourceUnit().addFatalError(msg, node);
+        // GRECLIPSE add -- addFatalError won't throw for quick parse
+        throw new org.codehaus.groovy.control.MultipleCompilationErrorsException(controller.getSourceUnit().getErrorCollector());
+        // GRECLIPSE end
     }
 
     //--------------------------------------------------------------------------
