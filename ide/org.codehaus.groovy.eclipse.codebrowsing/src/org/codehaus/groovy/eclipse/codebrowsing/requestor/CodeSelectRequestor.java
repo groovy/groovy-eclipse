@@ -19,7 +19,6 @@ import static java.beans.Introspector.decapitalize;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -654,7 +653,24 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private static String createUniqueKey(final AnnotatedNode declaration, final IJavaElement maybeRequested, final TypeLookupResult result) {
         ClassNode resolvedDeclaringType = result.declaringType;
         if (resolvedDeclaringType == null) {
-            resolvedDeclaringType = Optional.ofNullable(declaration.getDeclaringClass()).orElse(VariableScope.OBJECT_CLASS_NODE);
+            resolvedDeclaringType = declaration.getDeclaringClass();
+            if (resolvedDeclaringType == null) {
+                resolvedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
+            }
+        }
+        if (resolvedDeclaringType.getGenericsTypes() != null) {
+            boolean isStatic = false;
+            if (declaration instanceof ClassNode) {
+                isStatic = Flags.isStatic(
+                    ((ClassNode) declaration).getModifiers());
+            } else if (declaration instanceof FieldNode) {
+                isStatic = ((FieldNode) declaration).isStatic();
+            } else if (declaration instanceof MethodNode) {
+                isStatic = ((MethodNode) declaration).isStatic();
+            }
+            if (isStatic) {
+                resolvedDeclaringType = resolvedDeclaringType.getPlainNodeReference();
+            }
         }
 
         StringBuilder sb = new StringBuilder();

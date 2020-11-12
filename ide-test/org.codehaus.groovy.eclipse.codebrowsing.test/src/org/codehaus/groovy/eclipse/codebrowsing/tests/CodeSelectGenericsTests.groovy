@@ -226,6 +226,17 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
     }
 
+    @Test
+    void testCodeSelectGenericTypeAndMethod6() {
+        String contents = '''\
+            |class C<T> {
+            |  static <U> C<U> of(U item) {}
+            |}
+            |def c = C.of(123)
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'of')
+    }
+
     @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam0() {
         String name = 'SomeInterface'
