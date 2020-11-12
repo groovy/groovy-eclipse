@@ -430,4 +430,66 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
     }
+
+    @Test
+    public void testTypeChecked9762() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "static <T> List<T> list(T item) {\n" +
+            "  Collections.singletonList(item)\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Optional<Integer> opt = Optional.ofNullable(123)\n" +
+            "  List<Integer> result = opt.map(this.&list).get()\n" +
+            "  print result\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[123]");
+    }
+
+    @Test
+    public void testTypeChecked9803() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def c = C.of(123)\n" +
+            "  def d = c.map(D.&wrap)\n" +
+            "  def e = d.map{x -> x.first().intValue()}\n" +
+            "  print e.t\n" +
+            "}\n" +
+            "test()\n",
+
+            "Types.groovy",
+            "class C<T> {\n" +
+            "  private T t\n" +
+            "  C(T item) {\n" +
+            "    t = item\n" +
+            "  }\n" +
+            "  static <U> C<U> of(U item) {\n" +
+            "    new C<U>(item)\n" +
+            "  }\n" +
+            "  def <V> C<V> map(F<? super T, ? super V> func) {\n" +
+            "    new C<V>(func.apply(t))\n" +
+            "  }\n" +
+            "}\n" +
+            "class D {\n" +
+            "  static <W> Set<W> wrap(W o) {\n" +
+            "    Collections.singleton(o)\n" +
+            "  }\n" +
+            "}\n" +
+            "interface F<X,Y> {\n" +
+            "  Y apply(X x)\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "123");
+    }
 }

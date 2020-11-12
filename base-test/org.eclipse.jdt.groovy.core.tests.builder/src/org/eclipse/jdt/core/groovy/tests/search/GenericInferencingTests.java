@@ -873,6 +873,29 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "array", "java.lang.String[]");
     }
 
+    @Test // GROOVY-9803
+    public void testClosure7() {
+        String contents =
+            "class C<T> {\n" +
+            "  static <U> C<U> of(U item) {}\n" +
+            "  def <V> C<V> map(F<? super T, ? super V> func) {}\n" +
+            "}\n" +
+            "class D {\n" +
+            "  static <W> Set<W> wrap(W o) {}\n" +
+            "}\n" +
+            "interface F<X,Y> {\n" +
+            "  Y apply(X x)\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def c = C.of(123)\n" +
+            "  def d = c.map(D.&wrap)\n" +
+            "  def e = d.map{x -> x.first()}\n" +
+            "}\n";
+        assertType(contents, "e", "C<java.lang.Integer>");
+        assertType(contents, "x", "java.util.Set<java.lang.Integer>");
+    }
+
     @Test
     public void testArrayDGM() {
         String contents =

@@ -1803,10 +1803,17 @@ public abstract class StaticTypeCheckingSupport {
         GenericsType[] gts = parameterUsage.getGenericsTypes();
         if (gts == null) return Collections.emptyMap();
 
-        GenericsType[] newGTs = applyGenericsContext(spec, gts);
         ClassNode newTarget = parameterUsage.redirect().getPlainNodeReference();
-        newTarget.setGenericsTypes(newGTs);
+        newTarget.setGenericsTypes(applyGenericsContext(spec, gts));
+        /* GRECLIPSE edit -- GROOVY-9762, GROOVY-9803
         return GenericsUtils.extractPlaceholders(newTarget);
+        */
+        Map<GenericsTypeName, GenericsType> newSpec = GenericsUtils.extractPlaceholders(newTarget);
+        newSpec.replaceAll((xx, gt) ->
+            Optional.ofNullable(gt.getLowerBound()).map(GenericsType::new).orElse(gt)
+        );
+        return newSpec;
+        // GRECLIPSE end
     }
 
     private static GenericsType[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final GenericsType[] gts) {
@@ -1864,7 +1871,8 @@ public abstract class StaticTypeCheckingSupport {
         return false;
     }
 
-    private static ClassNode[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode[] bounds) {
+    // GRECLIPSE private->package
+    static ClassNode[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode[] bounds) {
         if (bounds == null) return null;
         ClassNode[] newBounds = new ClassNode[bounds.length];
         for (int i = 0, n = bounds.length; i < n; i += 1) {
