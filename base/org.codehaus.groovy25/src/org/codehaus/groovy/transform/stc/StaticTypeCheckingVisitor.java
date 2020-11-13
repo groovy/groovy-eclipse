@@ -2635,7 +2635,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         .reduce(WideningCategories::lowestUpperBound)
                         .filter(returnType -> !returnType.equals(OBJECT_TYPE))
                         .ifPresent(returnType -> storeType(expression, wrapClosureType(returnType)));
-                expression.setNodeMetaData(MethodNode.class, candidates); // GROOVY-9803
+                expression.putNodeMetaData(MethodNode.class, candidates); // GROOVY-9803
             }
         }
     }
