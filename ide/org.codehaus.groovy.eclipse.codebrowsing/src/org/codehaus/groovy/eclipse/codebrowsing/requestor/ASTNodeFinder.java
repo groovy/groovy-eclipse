@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -521,12 +521,9 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     //--------------------------------------------------------------------------
 
     private String readClassDeclaration(ClassNode node) {
-        String code = node.getNodeMetaData("groovy.source");
-        if (code == null) {
-            code = String.valueOf(module.getContext().readSourceRange(node.getStart(), node.getLength()));
-            node.putNodeMetaData("groovy.source", code);
-        }
-        return code.substring(0, code.indexOf('{'));
+        String code = node.getNodeMetaData("groovy.source", x -> String.valueOf(module.getContext().readSourceRange(node.getStart(), node.getLength())));
+        int end = code.indexOf('{', node.getAnnotations().stream().mapToInt(an -> an.getEnd() - node.getStart()).filter(off -> off > 0).max().orElse(0));
+        return code.substring(0, end);
     }
 
     private static int endIndexOf(String s, Pattern p) {

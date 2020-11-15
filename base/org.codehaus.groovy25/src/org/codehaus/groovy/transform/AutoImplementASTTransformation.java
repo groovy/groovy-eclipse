@@ -30,8 +30,8 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import groovyjarjarasm.asm.Opcodes;
@@ -45,9 +45,9 @@ import java.util.Map;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.methodDescriptorWithoutReturnType;
 import static org.codehaus.groovy.antlr.AntlrParserPlugin.getDefaultValueForPrimitive;
-import static org.codehaus.groovy.ast.expr.ArgumentListExpression.EMPTY_ARGUMENTS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.throwS;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpec;
@@ -190,7 +190,9 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
         return null;
     }
 
-    private BlockStatement methodBody(ClassNode exception, String message, ClosureExpression code, ClassNode returnType) {
+    // GRECLIPSE edit
+    private /*Block*/Statement methodBody(ClassNode exception, String message, ClosureExpression code, ClassNode returnType) {
+        /* GRECLIPSE edit
         BlockStatement body = new BlockStatement();
         if (code != null) {
             body.addStatement(code.getCode());
@@ -203,5 +205,18 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
             }
         }
         return body;
+        */
+        if (code != null) {
+            return code.getCode();
+        }
+        if (exception != null) {
+            if (message == null) {
+                return throwS(ctorX(exception));
+            }
+            return throwS(ctorX(exception, constX(message)));
+        }
+        Expression value = getDefaultValueForPrimitive(returnType);
+        return (value != null ? returnS(value) : returnS(nullX()));
+        // GRECLIPSE end
     }
 }

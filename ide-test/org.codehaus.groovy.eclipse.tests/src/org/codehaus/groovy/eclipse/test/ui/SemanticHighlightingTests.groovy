@@ -2014,6 +2014,25 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1197
+    void testAnnoElems11() {
+        String contents = '''\
+            |@groovy.transform.AutoImplement(code={
+            |  throw new UnsupportedOperationException()
+            |})
+            |class C implements Iterator {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('code'), 4, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('UnsupportedOperationException'), 29, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('UnsupportedOperationException'), 29, CTOR_CALL),
+            //
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Iterator'), 8, INTERFACE))
+    }
+
     @Test
     void testGString1() {
         String contents = '''\

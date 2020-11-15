@@ -1652,7 +1652,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             } else if (expr instanceof ClosureExpression) {
                 // annotation is something like "@Tag(value = { -> ... })" return "Closure.class" to appease JDT
-                return new ClassLiteralAccess(expr.getEnd() - 1, new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1)));
+                return new ClassLiteralAccess(expr.getStart() - 1, new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getStart() - 1)));
 
             } else if (expr instanceof BinaryExpression) {
                 // annotation may be something like "@Tag(value = List<String)" (incomplete generics specification)
