@@ -1468,16 +1468,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         } finally {
             completeExpressionStack.removeLast();
         }
-        ClassNode returnType = dependentTypeStack.removeLast();
 
-        // the inferred declaring type of this method
-        Tuple t = dependentDeclarationStack.removeLast();
-        VariableScope.CallAndType cat = new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule);
+        ClassNode returnType = dependentTypeStack.removeLast();
+        Tuple inferred = dependentDeclarationStack.removeLast();
+        VariableScope.CallAndType cat = new VariableScope.CallAndType(node, inferred.declaration, inferred.declaringType, enclosingModule);
 
         ClassNode catNode = isCategoryDeclaration(node, scope);
-        if (catNode != null) {
-            scope.setCategoryBeingDeclared(catNode);
-        }
+        if (catNode != null) scope.setCategoryBeingDeclared(catNode);
 
         // remember that we are inside a method call while analyzing the arguments
         scope.addEnclosingMethodCall(cat);
@@ -1489,11 +1486,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitEnumConstBody(type);
         }
 
-        if (t.declaration instanceof MethodNode) {
-            MethodNode meth = (MethodNode) t.declaration;
+        if (inferred.declaration instanceof MethodNode) {
+            MethodNode meth = (MethodNode) inferred.declaration;
             // if return type depends on any Closure argument return types, deal with that
-            if (meth.getGenericsTypes() != null && Stream.of(meth.getParameters()).map(Parameter::getType)
-                    .anyMatch(pt -> pt.equals(VariableScope.CLOSURE_CLASS_NODE) || ClassHelper.isSAMType(pt))) {
+            if (GroovyUtils.isUsingGenerics(meth) && GroovyUtils.getParameterTypes(meth.getParameters()).stream()
+                        .anyMatch(t -> t.equals(VariableScope.CLOSURE_CLASS_NODE) || ClassHelper.isSAMType(t))) {
                 scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
                 scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
                 try {
@@ -1503,7 +1500,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     scope.setMethodCallArgumentTypes(null);
                     scope.setMethodCallGenericsTypes(null);
                 }
-            } else if (t.declaringType.getName().equals("org.spockframework.runtime.ValueRecorder")) {
+            } else if (inferred.declaringType.getName().equals("org.spockframework.runtime.ValueRecorder")) {
                 switch (meth.getName()) {
                 case "record":
                 case "realizeNas":
@@ -1520,9 +1517,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         Expression expr = GroovyUtils.getTraitFieldExpression(node);
         if (expr != null) {
             handleSimpleExpression(expr);
-            postVisit(node, returnType, t.declaringType, node);
+            postVisit(node, returnType, inferred.declaringType, node);
         } else {
-            handleCompleteExpression(node, returnType, t.declaringType);
+            handleCompleteExpression(node, returnType, inferred.declaringType);
         }
         scope.forgetCurrentNode();
     }

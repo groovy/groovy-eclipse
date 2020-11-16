@@ -133,8 +133,9 @@ public class GenericsMapper {
                             // ubt could be "Foo<K, V>" and rbt could be "Foo<String, Object>" or "Closure<Object>"
                             GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
 ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
-                                ClassNode ubt_gt_t = GroovyUtils.getBaseType(ubt_gts[j].getType()); // ubt_gt_t is "T" from "Foo<T>" or "Foo<T[]>"
-                                if (ubt_gt_t.isGenericsPlaceHolder() && ubt_gt_t.getUnresolvedName().equals(ugt.getName()) && ubt.redirect().isUsingGenerics()) {
+                                if (StaticTypeCheckingSupport.isUnboundedWildcard(ubt_gts[j])) continue;
+                                ClassNode ubt_gt_t = GroovyUtils.getBaseType(ubt_gts[j].isWildcard() ? Optional.ofNullable(ubt_gts[j].getUpperBounds()).map(arr -> arr[0]).orElse(ubt_gts[j].getLowerBound()) : ubt_gts[j].getType());
+                                if (ubt_gt_t.isGenericsPlaceHolder() && ubt_gt_t.getUnresolvedName().equals(ugt.getName()) && ubt.redirect().isUsingGenerics()) { // ubt_gt_t is "T" from "Foo<T>" or "Foo<T[]>" or "Foo<? super T>"
                                     if (rbt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.isGenericsPlaceHolder()) {
                                         if (!rbt.isUsingGenerics()) continue;
                                         MethodNode sam = ClassHelper.findSAM(ubt);
@@ -173,7 +174,7 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
                                     }
                                 }
                             }
-                            // TODO: What about "Foo<Bar<T>>", "Foo<? extends T>", or "Foo<? super T>"?
+                            // TODO: What about "Foo<Bar<T>>"?
                         }
                     }
                 }

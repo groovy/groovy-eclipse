@@ -901,12 +901,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testClosure8() {
         String contents = "Optional.of(1).map(Arrays.&asList).map{x -> x.first()}\n";
         assertType(contents, "asList", "java.util.List<java.lang.Integer>");
+        assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1194
     public void testClosure9() {
         String contents = "Optional.of(1).map(Collections.&singletonList).map{x -> x.first()}\n";
         assertType(contents, "singletonList", "java.util.List<java.lang.Integer>");
+        assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
     @Test
