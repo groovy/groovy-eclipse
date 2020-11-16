@@ -892,8 +892,21 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  def d = c.map(D.&wrap)\n" +
             "  def e = d.map{x -> x.first()}\n" +
             "}\n";
-        assertType(contents, "e", "C<java.lang.Integer>");
+        assertType(contents, "wrap", "java.util.Set<java.lang.Integer>");
         assertType(contents, "x", "java.util.Set<java.lang.Integer>");
+        assertType(contents, "e", "C<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1194
+    public void testClosure8() {
+        String contents = "Optional.of(1).map(Arrays.&asList).map{x -> x.first()}\n";
+        assertType(contents, "asList", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1194
+    public void testClosure9() {
+        String contents = "Optional.of(1).map(Collections.&singletonList).map{x -> x.first()}\n";
+        assertType(contents, "singletonList", "java.util.List<java.lang.Integer>");
     }
 
     @Test
@@ -1224,8 +1237,9 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String toFind = "removeAll";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
-        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<java.lang.String>", toFind, DeclarationKind.METHOD);
-        assertEquals("Parameter type should be resolved", "java.util.Collection<?>", printTypeName(m.getParameters()[0].getType()));
+        // Is there any reason to fully resolve the declaring type in this case?
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<E extends java.lang.Object>", toFind, DeclarationKind.METHOD);
+        assertEquals("java.util.Collection<?>", printTypeName(m.getParameters()[0].getType()));
     }
 
     @Test

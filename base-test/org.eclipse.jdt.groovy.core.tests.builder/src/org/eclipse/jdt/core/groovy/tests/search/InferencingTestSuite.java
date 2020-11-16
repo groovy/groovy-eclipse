@@ -114,9 +114,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         if (!expectedDeclType.equals(requestor.getDeclaringTypeName())) {
             StringBuilder sb = new StringBuilder();
             sb.append("Expected declaring type not found.\n");
-            sb.append("\tExpected: ").append(expectedDeclType).append("\n");
-            sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
-            sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+            sb.append("\tExpect: ").append(expectedDeclType).append("\n");
+            sb.append("\tActual: ").append(printTypeName(requestor.result.declaringType)).append("\n");
             sb.append("\tASTNode: ").append(requestor.node);
             fail(sb.toString());
         }
@@ -124,8 +123,6 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Confidence: ").append(requestor.result.confidence).append(" (but expecting UNKNOWN)\n");
-                sb.append("\tExpected: ").append(expectedDeclType).append("\n");
-                sb.append("\tFound: ").append(printTypeName(requestor.result.type)).append("\n");
                 sb.append("\tDeclaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
                 sb.append("\tASTNode: ").append(requestor.node);
                 fail(sb.toString());
@@ -134,9 +131,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Confidence should *not* have been UNKNOWN.\n");
-                sb.append("\tExpected declaring type: ").append(expectedDeclType).append("\n");
-                sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
-                sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+                sb.append("\tExpect: ").append(expectedDeclType).append("\n");
+                sb.append("\tActual: ").append(printTypeName(requestor.result.declaringType)).append("\n");
                 sb.append("\tASTNode: ").append(requestor.node);
                 fail(sb.toString());
             }

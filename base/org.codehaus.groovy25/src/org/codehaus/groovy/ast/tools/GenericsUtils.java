@@ -806,19 +806,6 @@ public class GenericsUtils {
         return parameterizedType;
     }
 
-    /**
-     * Check whether the ClassNode has non generics placeholders, aka not placeholder
-     * <p>
-     * Backported from 3.0.0
-     *
-     * @param parameterizedType the class node
-     * @return the result
-     * @since 2.5.9
-     */
-    private static boolean hasNonPlaceHolders(ClassNode parameterizedType) {
-        return checkPlaceHolders(parameterizedType, genericsType -> !genericsType.isPlaceholder());
-    }
-
     private static boolean isGenericsTypeArraysLengthEqual(GenericsType[] declaringGenericsTypes, GenericsType[] actualGenericsTypes) {
         return null != actualGenericsTypes && declaringGenericsTypes.length == actualGenericsTypes.length;
     }
@@ -946,11 +933,7 @@ public class GenericsUtils {
         return result;
     }
 
-    public static boolean hasPlaceHolders(ClassNode parameterizedType) {
-        return checkPlaceHolders(parameterizedType, genericsType -> genericsType.isPlaceholder());
-    }
-
-    private static boolean checkPlaceHolders(ClassNode parameterizedType, java.util.function.Predicate<GenericsType> p) {
+    private static boolean checkPlaceHolders(final ClassNode parameterizedType, final java.util.function.Predicate<GenericsType> p) {
         if (parameterizedType == null) return false;
 
         GenericsType[] genericsTypes = parameterizedType.getGenericsTypes();
@@ -965,6 +948,53 @@ public class GenericsUtils {
 
         return false;
     }
+
+    public static boolean hasPlaceHolders(final ClassNode parameterizedType) {
+        return checkPlaceHolders(parameterizedType, genericsType -> genericsType.isPlaceholder());
+    }
+
+    /**
+     * Check whether the ClassNode has non generics placeholders, aka not placeholder
+     * <p>
+     * Backported from 3.0.0
+     *
+     * @param parameterizedType the class node
+     * @return the result
+     * @since 2.5.9
+     */
+    private static boolean hasNonPlaceHolders(final ClassNode parameterizedType) {
+        return checkPlaceHolders(parameterizedType, genericsType -> !genericsType.isPlaceholder());
+    }
+
+    // GRECLIPSE add
+    /**
+     * Checks for any placeholder (aka unresolved) generics.
+     */
+    public static boolean hasUnresolvedGenerics(final ClassNode type) {
+        if (type.isGenericsPlaceHolder()) return true;
+        if (type.isArray()) {
+            return hasUnresolvedGenerics(type.getComponentType());
+        }
+        GenericsType[] genericsTypes = type.getGenericsTypes();
+        if (genericsTypes != null) {
+            for (GenericsType genericsType : genericsTypes) {
+                if (genericsType.isPlaceholder()) return true;
+                ClassNode lowerBound = genericsType.getLowerBound();
+                ClassNode[] upperBounds = genericsType.getUpperBounds();
+                if (lowerBound != null) {
+                    if (hasUnresolvedGenerics(lowerBound)) return true;
+                } else if (upperBounds != null) {
+                    for (ClassNode upperBound : upperBounds) {
+                        if (hasUnresolvedGenerics(upperBound)) return true;
+                    }
+                } else {
+                    if (hasUnresolvedGenerics(genericsType.getType())) return true;
+                }
+            }
+        }
+        return false;
+    }
+    // GRECLIPSE end
 
     private static Map<GenericsType, GenericsType> makePlaceholderAndParameterizedTypeMap(ClassNode declaringClass) {
         if (declaringClass == null) {
