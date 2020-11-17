@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.reflection.ParameterTypes;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -107,8 +108,8 @@ public class CategoryTypeLookup implements ITypeLookup {
                     }
 
                     // must resolve generics here because TypeLookupResult uses declaring class (instead of self type)
-                    if (org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.missesGenericsTypes(resolvedType)) {
-                        GenericsMapper mapper = GenericsMapper.gatherGenerics(selfType, selfType.redirect());
+                    if (GenericsUtils.hasUnresolvedGenerics(resolvedType)) {
+                        GenericsMapper mapper = GenericsMapper.gatherGenerics(selfType);
                         resolvedType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(resolvedType));
                     }
 

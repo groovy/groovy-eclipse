@@ -924,7 +924,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             // if enclosing closure, owner type is 'Closure', otherwise it's 'typeof(this)'
             if (parent.getEnclosingClosure() != null) {
-                ClassNode closureType = GenericsUtils.nonGeneric(VariableScope.CLOSURE_CLASS_NODE);
+                ClassNode closureType = VariableScope.CLOSURE_CLASS_NODE.getPlainNodeReference();
                 closureType.putNodeMetaData("outer.scope", parent.getEnclosingClosureScope());
 
                 scope.addVariable("owner", closureType, VariableScope.CLOSURE_CLASS_NODE);
@@ -2333,6 +2333,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         types.add(VariableScope.MATCHER_CLASS_NODE);
                     } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isOneOf(new int[] {Types.COMPARISON_OPERATOR, Types.LOGICAL_OPERATOR, Types.MATCH_REGEX, Types.KEYWORD_IN, Types.KEYWORD_INSTANCEOF, 129, 130})) {
                         types.add(VariableScope.BOOLEAN_CLASS_NODE);
+                    } else if (expression instanceof MethodPointerExpression && ((MethodPointerExpression) expression).getExpression() instanceof ClassExpression && "new".equals(((MethodPointerExpression) expression).getMethodName().getText())/* && isGroovy3+()*/) {
+                        types.add(createParameterizedClosure(((MethodPointerExpression) expression).getExpression().getType()));
                     } else {
                         VariableScope scope = scopes.getLast();
                         scope.setMethodCallArgumentTypes(null);
@@ -2471,7 +2473,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             MethodNode sam;
             // check for SAM-type coercion of closure/lambda expression
             if (primaryType != null && (sam = ClassHelper.findSAM(primaryType)) != null) {
-                GenericsMapper m = GenericsMapper.gatherGenerics(primaryType, primaryType.redirect());
+                GenericsMapper m = GenericsMapper.gatherGenerics(primaryType);
                 for (ClassNode t : GroovyUtils.getParameterTypes(sam.getParameters())) {
                     if (i == inferredTypes.length) break;
                     inferredTypes[i++] = VariableScope.resolveTypeParameterization(m, t);

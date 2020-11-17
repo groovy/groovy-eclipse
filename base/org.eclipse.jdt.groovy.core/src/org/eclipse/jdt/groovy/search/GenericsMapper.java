@@ -44,11 +44,24 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class GenericsMapper {
 
     /**
-     * Creates a mapper for a particular resolved type tracing up the type hierarchy until the declaring type is reached.
+     * Creates a mapper for a resolved type.
+     * <p>
      * This is the public entry point for this class.
      *
-     * @param resolvedType unredirected type that has generic types already parameterized
-     * @param declaringType a type that is somewhere in resolvedType's hierarchy used to find the target of the mapping
+     * @param resolvedType type that has type parameters already resolved
+     */
+    public static GenericsMapper gatherGenerics(final ClassNode resolvedType) {
+        return gatherGenerics(resolvedType, resolvedType);
+    }
+
+    /**
+     * Creates a mapper for a resolved type by tracing up the type hierarchy
+     * until the declaring type is reached.
+     * <p>
+     * This is the public entry point for this class.
+     *
+     * @param resolvedType type that has type parameters already resolved
+     * @param declaringType a type that is somewhere in {@code resolvedType}'s hierarchy used to find the target of the mapping
      */
     public static GenericsMapper gatherGenerics(final ClassNode resolvedType, final ClassNode declaringType) {
         GenericsMapper mapper = new GenericsMapper();
@@ -141,7 +154,7 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
                                         MethodNode sam = ClassHelper.findSAM(ubt);
                                         if (sam != null) {
                                             // read "T: A[]"
-                                            GenericsMapper um = gatherGenerics(ubt, ubt.redirect());
+                                            GenericsMapper um = gatherGenerics(ubt);
                                             // read "T: String[]"
                                             Map<String, ClassNode> rm = new HashMap<>();
                                             readGenericsLinks(rm, rbt.getGenericsTypes()[0].getType(), sam.getReturnType());
@@ -164,7 +177,7 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
                                     } else {
                                         // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
                                         String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
-                                        GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
+                                        GenericsMapper map = gatherGenerics(rbt, ubt);
                                         ClassNode rt = map.findParameter(key, null);
 
                                         if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {

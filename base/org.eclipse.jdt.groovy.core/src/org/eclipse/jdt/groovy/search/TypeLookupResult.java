@@ -15,8 +15,13 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static java.util.Collections.singletonList;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -27,7 +32,9 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
@@ -144,12 +151,11 @@ public class TypeLookupResult {
             }
 
             if (!(declaration instanceof MethodNode)) {
-                GenericsMapper mapper = GenericsMapper.gatherGenerics(objectType, declaringType.redirect());
+                GenericsMapper mapper = GenericsMapper.gatherGenerics(objectType, declaringType);
                 ClassNode maybe = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(type));
                 if (!maybe.toString(false).equals(type.toString(false))) {
                     TypeLookupResult result = new TypeLookupResult(maybe, declaringType, declaration, confidence, scope, extraDoc);
                     result.enclosingAnnotation = enclosingAnnotation;
-                    result.enclosingAssignment = enclosingAssignment;
                     result.isGroovy = isGroovy;
                     return result;
                 }
@@ -190,9 +196,26 @@ public class TypeLookupResult {
                                 mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(sam.getParameters()), declaringType, method);
                                 method = VariableScope.resolveTypeParameterization(mapper, method);
 
-                                mapper = GenericsMapper.gatherGenerics(targetType, targetType.redirect());
+                                mapper = GenericsMapper.gatherGenerics(targetType);
                                 method = VariableScope.resolveTypeParameterization(mapper, method);
                             }
+                        }
+                    } else if (testEnclosingAssignment(scope, rhs -> rhs == scope.getEnclosingNode())) {
+                        // maybe the assign target type can help resolve type parameters of method pointer
+                        ClassNode targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
+
+                        ClassNode returnType; // aligned with referenced method
+                        if (targetType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
+                            returnType = Optional.of(targetType).map(ClassNode::getGenericsTypes)
+                                .filter(Objects::nonNull).map(gts -> gts[0].getType()).orElse(VariableScope.OBJECT_CLASS_NODE);
+                        } else {
+                            returnType = Optional.ofNullable(ClassHelper.findSAM(targetType)).map(sam ->
+                                VariableScope.resolveTypeParameterization(GenericsMapper.gatherGenerics(targetType), VariableScope.clone(sam.getReturnType()))
+                            ).orElse(null);
+                        }
+                        if (returnType != null) {
+                            mapper = GenericsMapper.gatherGenerics(singletonList(returnType), declaringType, returnTypeStub(method));
+                            method = VariableScope.resolveTypeParameterization(mapper, method);
                         }
                     }
                 } else {
@@ -203,12 +226,27 @@ public class TypeLookupResult {
                 if (method != declaration) {
                     TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope, extraDoc);
                     result.enclosingAnnotation = enclosingAnnotation;
-                    result.enclosingAssignment = enclosingAssignment;
                     result.isGroovy = isGroovy;
                     return result;
                 }
             }
         }
         return this;
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static MethodNode returnTypeStub(final MethodNode node) {
+        MethodNode stub = new MethodNode("", 0, VariableScope.VOID_CLASS_NODE, new Parameter[] {new Parameter(node.getReturnType(), "")}, null, null);
+        stub.setDeclaringClass(node.getDeclaringClass());
+        stub.setGenericsTypes(node.getGenericsTypes());
+        return stub;
+    }
+
+    private static boolean testEnclosingAssignment(final VariableScope scope, final Predicate<Expression> rhsTest) {
+        return Optional.ofNullable(scope.getEnclosingAssignment())
+            .filter(bexp -> bexp instanceof DeclarationExpression)
+            .map(BinaryExpression::getRightExpression).filter(rhsTest)
+            .isPresent();
     }
 }

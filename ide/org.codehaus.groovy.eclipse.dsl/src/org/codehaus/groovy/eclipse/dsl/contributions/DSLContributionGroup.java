@@ -213,7 +213,7 @@ public class DSLContributionGroup extends ContributionGroup {
         }
         if (!VariableScope.OBJECT_CLASS_NODE.equals(type)) {
             // use this to resolve parameterized types
-            GenericsMapper mapper = GenericsMapper.gatherGenerics(type, type.redirect());
+            GenericsMapper mapper = GenericsMapper.gatherGenerics(type);
 
             // naked variants of getter and setter methods must be added at the end
             // FIXADE why???

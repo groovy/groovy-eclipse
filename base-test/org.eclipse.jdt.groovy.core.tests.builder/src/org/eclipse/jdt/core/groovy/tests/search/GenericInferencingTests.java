@@ -855,22 +855,34 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure6a() {
-        assumeTrue(isAtLeastGroovy(30));
-        String contents =
-            "void test(List<String> list) {\n" +
-            "  def array = list.stream().toArray(String[].&new)\n" +
-            "}\n";
-        assertType(contents, "array", "java.lang.String[]");
-    }
-
-    @Test
-    public void testClosure6b() {
         assumeTrue(isParrotParser());
         String contents =
             "void test(List<String> list) {\n" +
             "  def array = list.stream().toArray(String[]::new)\n" +
             "}\n";
+        assertType(contents, "toArray", "java.lang.String[]");
         assertType(contents, "array", "java.lang.String[]");
+    }
+
+    @Test
+    public void testClosure6b() {
+        assumeTrue(isAtLeastGroovy(30));
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  def array = list.stream().toArray(String[].&new)\n" +
+            "}\n";
+        assertType(contents, "toArray", "java.lang.String[]");
+        assertType(contents, "array", "java.lang.String[]");
+    }
+
+    @Test // incorrect LHS type should not alter RHS type
+    public void testClosure6c() {
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  Number[] array = list.stream().toArray(String[].&new)\n" +
+            "}\n";
+        assertType(contents, "toArray", "java.lang.String[]");
+        assertType(contents, "array", "java.lang.Number[]");
     }
 
     @Test // GROOVY-9803
@@ -917,6 +929,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents = "Optional.of(21).map(num -> num * 2).get()\n";
         assertType(contents, "get", "java.lang.Integer");
         assertDeclaringType(contents, "get", "java.util.Optional<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testClosure11() {
+        String contents = "java.util.function.Function<Integer, List<Integer>> f = Arrays.&asList\n";
+        assertType(contents, "asList", "java.util.List<java.lang.Integer>");
     }
 
     @Test
@@ -1212,7 +1230,15 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethod7() {
+    public void testStaticMethod9() {
+        // Collections: public static final <T> List<T> emptyList()
+        String contents = "def list = Collections.<String>emptyList()";
+        assertType(contents, "list", "java.util.List<java.lang.String>");
+        assertType(contents, "emptyList", "java.util.List<java.lang.String>");
+    }
+
+    @Test
+    public void testStaticMethod10() {
         // Collections: public static final <T> List<T> singletonList(T)
         String contents = "List<String> list = Collections.singletonList('')";
         String toFind = "singletonList";
@@ -1222,26 +1248,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertEquals("Parameter type should be resolved", "java.lang.String", printTypeName(m.getParameters()[0].getType()));
     }
 
-    @Test @Ignore
-    public void testStaticMethod8() { // no help from parameters
-        // Collections: public static final <T> List<T> emptyList()
-        String contents = "List<String> list = Collections.emptyList()";
-        String toFind = "emptyList";
-        int start = contents.indexOf(toFind), end = start + toFind.length();
-        assertType(contents, start, end, "java.util.List<java.lang.String>");
-    }
-
     @Test
-    public void testStaticMethod9() {
-        // Collections: public static final <T> List<T> emptyList()
-        String contents = "def list = Collections.<String>emptyList()";
-        String toFind = "list";
-        int start = contents.indexOf(toFind), end = start + toFind.length();
-        assertType(contents, start, end, "java.util.List<java.lang.String>");
-    }
-
-    @Test
-    public void testStaticMethod10() {
+    public void testStaticMethod11() {
         // Collection: public boolean removeAll(Collection<?>)
         String contents = "List<String> list = ['1','2']; list.removeAll(['1'])";
         String toFind = "removeAll";
@@ -1253,7 +1261,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethod11() {
+    public void testStaticMethod12() {
         // Collection: public boolean addAll(Collection<? extends E>)
         String contents = "List<String> list = ['1','2']; list.addAll(['3'])";
         String toFind = "addAll";
