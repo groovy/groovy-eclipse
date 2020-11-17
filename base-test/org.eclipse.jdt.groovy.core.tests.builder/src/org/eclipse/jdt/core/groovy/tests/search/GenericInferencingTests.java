@@ -911,6 +911,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1198
+    public void testClosure10() {
+        assumeTrue(isParrotParser());
+        String contents = "Optional.of(21).map(num -> num * 2).get()\n";
+        assertType(contents, "get", "java.lang.Integer");
+        assertDeclaringType(contents, "get", "java.util.Optional<java.lang.Integer>");
+    }
+
     @Test
     public void testArrayDGM() {
         String contents =

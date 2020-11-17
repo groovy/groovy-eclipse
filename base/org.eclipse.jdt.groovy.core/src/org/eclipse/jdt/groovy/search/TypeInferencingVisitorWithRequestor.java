@@ -1134,6 +1134,23 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     @Override
+    public void visitExpressionStatement(final ExpressionStatement node) {
+        ClosureExpression closure = scopes.getLast().getEnclosingClosure();
+        if (closure == null || closure.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE) != null ||
+                !closure.getClass().getSimpleName().startsWith("Lambda") || closure.getCode() != node) {
+            super.visitExpressionStatement(node);
+        } else {
+            completeExpressionStack.add(node);
+            try {
+                super.visitExpressionStatement(node);
+            } finally {
+                completeExpressionStack.removeLast();
+            }
+            closure.putNodeMetaData("returnType", primaryTypeStack.removeLast());
+        }
+    }
+
+    @Override
     public void visitFieldExpression(final FieldExpression node) {
         handleSimpleExpression(node, () -> {
             super.visitFieldExpression(node);
@@ -2639,7 +2656,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
 
                 @Override public void visitReturnStatement(final ReturnStatement statement) {
-                    // used to capture the return type of a closure expression
+                    // used to capture the return type of a closure or statement lambda
+                    result[0] = (expr == statement.getExpression());
+                }
+
+                @Override public void visitExpressionStatement(final ExpressionStatement statement) {
+                    // used to capture the return type of an expression lambda
                     result[0] = (expr == statement.getExpression());
                 }
             });
