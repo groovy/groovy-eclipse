@@ -1229,6 +1229,27 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "col", "B");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testStaticMethod7() {
+        // Arrays: public static final <T> List<T> asList(T...)
+        String contents = "List<String> list = Arrays.asList()";
+        assertType(contents, "asList", "java.util.List<java.lang.String>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testStaticMethod8() {
+        // Collections: public static final <T> List<T> emptyList()
+        String contents = "List<String> list = Collections.emptyList()";
+        assertType(contents, "emptyList", "java.util.List<java.lang.String>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testStaticMethod8a() {
+        // Collections: public static final <T> List<T> emptyList()
+        String contents = "import static java.util.Collections.*; List<String> list = emptyList()";
+        assertType(contents, "emptyList", "java.util.List<java.lang.String>");
+    }
+
     @Test
     public void testStaticMethod9() {
         // Collections: public static final <T> List<T> emptyList()

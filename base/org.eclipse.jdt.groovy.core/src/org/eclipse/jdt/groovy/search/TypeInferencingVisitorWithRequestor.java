@@ -1681,6 +1681,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitStaticMethodCallExpression(final StaticMethodCallExpression node) {
+        scopes.getLast().setCurrentNode(node);
         handleSimpleExpression(node, () -> {
             Tuple t = dependentDeclarationStack.removeLast();
             VariableScope.CallAndType cat = new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule);
@@ -1694,6 +1695,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 visitEnumConstBody(node.getOwnerType());
             }
         });
+        scopes.getLast().forgetCurrentNode();
     }
 
     @Override
@@ -2354,6 +2356,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         } else if (expression instanceof StaticMethodCallExpression) {
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
                             tlr = lookupExpressionType(expression, null, true, scope);
+
+//                        } else if (expression instanceof MethodPointerExpression) {
+//                            MethodPointerExpression ref = (MethodPointerExpression) expression;
+//                            scope.setCurrentNode(ref);
+//                            tlr = lookupExpressionType(ref.getExpression(), null, false, scope);
+//                            scope.setCurrentNode(ref.getMethodName());
+//                            tlr = lookupExpressionType(ref.getMethodName(), tlr.type, ref.getExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scope);
+//                            if (tlr.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED))
+//                                types.add(createParameterizedClosure(tlr.type));
+//                            else types.add(exprType);
+//                            scope.forgetCurrentNode();
+//                            scope.forgetCurrentNode();
+//                            continue;
 
                         } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
                             tlr = lookupExpressionType(((BinaryExpression) expression).getLeftExpression(), null, false, scope);

@@ -35,7 +35,9 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -222,6 +224,19 @@ public class TypeLookupResult {
                     if (scope.getMethodCallArgumentTypes() != null) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
                     mapper = GenericsMapper.gatherGenerics(argumentTypes, objectType, method, scope.getMethodCallGenericsTypes());
                     method = VariableScope.resolveTypeParameterization(mapper, method);
+
+                    if (scope.getMethodCallGenericsTypes() == null && GenericsUtils.hasUnresolvedGenerics(method.getReturnType()) &&
+                            (argumentTypes.size() == (isGroovy ? 1 : 0) || false/*return type placeholder(s) not in parameters*/) &&
+                            testEnclosingAssignment(scope, rhs ->
+                                (rhs instanceof StaticMethodCallExpression && rhs == scope.getCurrentNode()) ||
+                                (rhs instanceof MethodCallExpression && ((MethodCallExpression) rhs).getMethod() == scope.getCurrentNode())
+                            )) {
+                        // maybe the assign target type can help resolve type parameters of method call
+                        ClassNode targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
+
+                        mapper = GenericsMapper.gatherGenerics(singletonList(targetType), declaringType, returnTypeStub(method));
+                        method = VariableScope.resolveTypeParameterization(mapper, method);
+                    }
                 }
                 if (method != declaration) {
                     TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope, extraDoc);
