@@ -1993,9 +1993,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     // GRECLIPSE private->package
-    static ClassNode[] applyGenericsContext(
-            Map<GenericsTypeName, GenericsType> spec, ClassNode[] bounds
-    ) {
+    static ClassNode[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode[] bounds) {
         if (bounds == null) return null;
         ClassNode[] newBounds = new ClassNode[bounds.length];
         for (int i = 0; i < bounds.length; i++) {
@@ -2004,26 +2002,38 @@ public abstract class StaticTypeCheckingSupport {
         return newBounds;
     }
 
-    static ClassNode applyGenericsContext(
-            Map<GenericsTypeName, GenericsType> spec, ClassNode bound
-    ) {
+    static ClassNode applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode bound) {
+        /* GRECLIPSE edit -- GROOVY-9822
         if (bound == null) return null;
+        */
+        if (bound == null || !isUsingGenericsOrIsArrayUsingGenerics(bound)) {
+            return bound;
+        }
+        // GRECLIPSE end
         if (bound.isArray()) {
             return applyGenericsContext(spec, bound.getComponentType()).makeArray();
         }
+        /* GRECLIPSE edit -- GROOVY-9822
         if (!bound.isUsingGenerics()) return bound;
         ClassNode newBound = bound.getPlainNodeReference();
         newBound.setGenericsTypes(applyGenericsContext(spec, bound.getGenericsTypes()));
+        */
+        ClassNode newBound = bound.getPlainNodeReference();
+        GenericsType[] gt = bound.getGenericsTypes();
+        if (spec != null && !spec.isEmpty()) {
+            gt = applyGenericsContext(spec, gt);
+        }
+        newBound.setGenericsTypes(gt);
+        // GRECLIPSE end
         if (bound.isGenericsPlaceHolder()) {
-            GenericsType[] gt = newBound.getGenericsTypes();
             boolean hasBounds = hasNonTrivialBounds(gt[0]);
             if (hasBounds || !gt[0].isPlaceholder()) return getCombinedBoundType(gt[0]);
-            String placeHolderName = newBound.getGenericsTypes()[0].getName();
+            String placeHolderName = gt[0].getName();
             if (!placeHolderName.equals(newBound.getUnresolvedName())) {
                 // we should produce a clean placeholder ClassNode here
                 ClassNode clean = make(placeHolderName);
-                clean.setGenericsTypes(newBound.getGenericsTypes());
                 clean.setRedirect(newBound);
+                clean.setGenericsTypes(gt);
                 newBound = clean;
             }
             newBound.setGenericsPlaceHolder(true);

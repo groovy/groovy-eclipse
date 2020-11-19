@@ -492,4 +492,57 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "123");
     }
+
+    @Test
+    public void testTypeChecked9822() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "GraphTraversalSource test(Graph graph) {\n" +
+            "  def strategy = ReadOnlyStrategy.instance()\n" +
+            "  graph.traversal().withStrategies(strategy)\n" +
+            "}\n",
+
+            "Types.java", // from org.apache.tinkerpop:gremlin-core:3.4.8
+            "@SuppressWarnings(\"rawtypes\")\n" +
+            "interface TraversalStrategy<S extends TraversalStrategy> extends Comparable<Class<? extends TraversalStrategy>> {\n" +
+            "  interface VerificationStrategy extends TraversalStrategy<VerificationStrategy> {\n" +
+            "  }\n" +
+            "}\n" +
+            "@SuppressWarnings(\"rawtypes\")\n" +
+            "abstract class AbstractTraversalStrategy<S extends TraversalStrategy> implements TraversalStrategy<S> {\n" +
+            "}\n" +
+            "abstract\n" + // don't want to implement Comparable
+            "class ReadOnlyStrategy extends AbstractTraversalStrategy<TraversalStrategy.VerificationStrategy>\n" +
+            "    implements TraversalStrategy.VerificationStrategy {\n" +
+            "  static ReadOnlyStrategy instance() { return null; }\n" +
+            "}\n" +
+            "interface TraversalSource extends Cloneable, AutoCloseable {\n" +
+            "  @SuppressWarnings(\"rawtypes\")\n" +
+            "  default TraversalSource withStrategies(TraversalStrategy... strategies) {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n" +
+            "abstract\n" + // don't want to implement AutoCloseable
+            "class GraphTraversalSource implements TraversalSource {\n" +
+            "  @Override\n" +
+            "  @SuppressWarnings(\"rawtypes\")\n" +
+            "  public GraphTraversalSource withStrategies(TraversalStrategy... strategies) {\n" +
+            "    return (GraphTraversalSource) TraversalSource.super.withStrategies(strategies);\n" +
+            "  }\n" +
+            "}\n" +
+            "class Graph {\n" +
+            "  public <C extends TraversalSource> C traversal(Class<C> c) {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "  public GraphTraversalSource traversal() {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
 }
