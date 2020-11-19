@@ -102,7 +102,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         String spockCorePath;
         if (isAtLeastGroovy(30)) {
             jUnitVersion = 5;
-            spockCorePath = "lib/spock-core-2.0-M3-groovy-3.0.jar";
+            spockCorePath = "lib/spock-core-2.0-M4-groovy-3.0.jar";
         } else {
             spockCorePath = "lib/spock-core-1.3-groovy-2.5.jar";
         }
