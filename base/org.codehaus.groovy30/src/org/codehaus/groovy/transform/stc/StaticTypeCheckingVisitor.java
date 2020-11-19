@@ -246,6 +246,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDG
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findSetters;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findTargetVariable;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.fullyResolveType;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getCombinedBoundType;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getCorrectedClassNode;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getGenericsWithoutArray;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getOperationName;
@@ -1694,8 +1695,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ClassNode callType = getType(mce);
         if (!implementsInterfaceOrIsSubclassOf(callType, Iterator_TYPE)) return null;
         GenericsType[] types = callType.getGenericsTypes();
+        /* GRECLIPSE edit -- GROOVY-9821
         ClassNode contentType = OBJECT_TYPE;
         if (types != null && types.length == 1) contentType = types[0].getType();
+        */
+        ClassNode contentType = (types != null && types.length == 1 ? getCombinedBoundType(types[0]) : OBJECT_TYPE);
+        // GRECLIPSE end
         PropertyExpression subExp = new PropertyExpression(varX("{}", contentType), pexp.getPropertyAsString());
         AtomicReference<ClassNode> result = new AtomicReference<>();
         if (existsProperty(subExp, true, new PropertyLookupVisitor(result))) {
