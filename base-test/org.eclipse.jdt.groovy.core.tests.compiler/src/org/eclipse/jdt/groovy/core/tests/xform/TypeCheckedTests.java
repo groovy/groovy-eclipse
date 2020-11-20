@@ -73,7 +73,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 6)\n" +
             "\tls.add(\'abc\')\n" +
             "\t^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -212,6 +212,40 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked6882() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class B {\n" +
+            "  void m() {\n" +
+            "    print 'B'\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class C extends B {\n" +
+            "  @Override\n" +
+            "  void m() {\n" +
+            "    print 'C'\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def x = new Runnable() {\n" +
+            "      @Override\n" +
+            "      void run() {\n" +
+            "        m()\n" + // Reference to method is ambiguous. Cannot choose between [void C#m(), void B#m()]
+            "      }\n" +
+            "    }\n" +
+            "    x.run()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "CC");
     }
 
     @Test

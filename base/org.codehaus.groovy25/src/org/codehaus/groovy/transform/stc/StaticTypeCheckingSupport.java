@@ -1103,7 +1103,7 @@ public abstract class StaticTypeCheckingSupport {
                 Person p = foo(b)
              */
 
-            Map<GenericsType, GenericsType> declaringAndActualGenericsTypeMap = GenericsUtils.makeDeclaringAndActualGenericsTypeMap(declaringClassForDistance, actualReceiverForDistance);
+            Map<GenericsType, GenericsType> declaringAndActualGenericsTypeMap = GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType(declaringClassForDistance, actualReceiverForDistance);
             Parameter[] params = makeRawTypes(safeNode.getParameters(), declaringAndActualGenericsTypeMap);
             int dist = measureParametersAndArgumentsDistance(params, safeArgs);
             if (dist >= 0) {
@@ -1238,7 +1238,12 @@ public abstract class StaticTypeCheckingSupport {
                 MethodNode two = list.get(j);
                 if (toBeRemoved.contains(two)) continue;
                 if (one.getParameters().length == two.getParameters().length) {
+                    /* GRECLIPSE edit -- GROOVY-6882, GROOVY-6970
                     if (areOverloadMethodsInSameClass(one, two)) {
+                    */
+                    ClassNode oneDC = one.getDeclaringClass(), twoDC = two.getDeclaringClass();
+                    if (oneDC == twoDC) {
+                    // GRECLIPSE end
                         if (ParameterUtils.parametersEqual(one.getParameters(), two.getParameters())) {
                             removeMethodWithSuperReturnType(toBeRemoved, one, two);
                         } else {
@@ -1247,10 +1252,25 @@ public abstract class StaticTypeCheckingSupport {
                             // in that case, Java marks the Object version as synthetic
                             removeSyntheticMethodIfOne(toBeRemoved, one, two);
                         }
+                    /* GRECLIPSE edit -- GROOVY-6882, GROOVY-6970
                     } else if (areEquivalentInterfaceMethods(one, two)) {
                         // GROOVY-6970 choose between equivalent interface methods
                         removeMethodInSuperInterface(toBeRemoved, one, two);
                     }
+                    */
+                    } else if (!oneDC.equals(twoDC)) {
+                        if (ParameterUtils.parametersEqual(one.getParameters(), two.getParameters())) {
+                            // GROOVY-6882, GROOVY-6970: drop overridden or interface equivalent method
+                            if (twoDC.isInterface() ? oneDC.implementsInterface(twoDC)
+                                    : oneDC.isDerivedFrom(twoDC)) {
+                                toBeRemoved.add(two);
+                            } else if (oneDC.isInterface() ? twoDC.isInterface()
+                                    : twoDC.isDerivedFrom(oneDC)) {
+                                toBeRemoved.add(one);
+                            }
+                        }
+                    }
+                    // GRECLIPSE end
                 }
             }
         }
@@ -1260,6 +1280,7 @@ public abstract class StaticTypeCheckingSupport {
         return result;
     }
 
+    /* GRECLIPSE edit
     private static void removeMethodInSuperInterface(List<MethodNode> toBeRemoved, MethodNode one, MethodNode two) {
         ClassNode oneDC = one.getDeclaringClass();
         ClassNode twoDC = two.getDeclaringClass();
@@ -1276,6 +1297,7 @@ public abstract class StaticTypeCheckingSupport {
                 && two.getDeclaringClass().isInterface()
                 && ParameterUtils.parametersEqual(one.getParameters(), two.getParameters());
     }
+    */
 
     private static void removeSyntheticMethodIfOne(List<MethodNode> toBeRemoved, MethodNode one, MethodNode two) {
         if (one.isSynthetic() && !two.isSynthetic()) {
@@ -1302,9 +1324,11 @@ public abstract class StaticTypeCheckingSupport {
         return left.isDerivedFrom(right) || left.implementsInterface(right);
     }
 
+    /* GRECLIPSE edit
     private static boolean areOverloadMethodsInSameClass(MethodNode one, MethodNode two) {
         return one.getName().equals(two.getName()) && one.getDeclaringClass() == two.getDeclaringClass();
     }
+    */
 
     /**
      * Given a receiver and a method node, parameterize the method arguments using
