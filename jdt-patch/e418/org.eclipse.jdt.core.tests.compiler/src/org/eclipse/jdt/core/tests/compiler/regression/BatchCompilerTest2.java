@@ -14,7 +14,10 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
+import java.io.IOException;
 
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 import junit.framework.Test;
@@ -379,4 +382,41 @@ public void testBug562473() {
 					"",
 					true);
 }
+public void testBug568802() {
+	String currentWorkingDirectoryPath = System.getProperty("user.dir");
+	String libPath = currentWorkingDirectoryPath + File.separator + "lib568802.jar";
+	try {
+	Util.createJar(
+		new String[] {
+			"hello/World.java;\n",
+			"package hello;\n"
+					+    "public class World {}\n",
+			"module-info.java;\n",
+			"module HelloModule {}\n"
+		},
+		libPath,
+		JavaCore.VERSION_11,
+		false);
+	this.runConformTest(
+			new String[] {
+					"X.java",
+					"import hello.World;\n"
+					+ "public class X {\n"
+					+ "	 World field = new World();\n"
+					+ "}\n"
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "X.java\"" +
+					" -cp " + libPath + // relative
+					" -source " + CompilerOptions.getLatestVersion() +
+					" -target " + CompilerOptions.getLatestVersion() + " ",
+					"",
+					"",
+					true);
+	} catch (IOException e) {
+		System.err.println("BatchCompilerTest2#testBug568802 could not write to current working directory " + currentWorkingDirectoryPath);
+	} finally {
+		new File(libPath).delete();
+	}
+}
+
 }

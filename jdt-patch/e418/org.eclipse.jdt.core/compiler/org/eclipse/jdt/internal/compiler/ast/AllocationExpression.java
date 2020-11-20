@@ -551,8 +551,12 @@ void checkIllegalNullAnnotation(BlockScope scope, TypeBinding allocationType) {
 // For allocation expressions, boxing compatibility is same as vanilla compatibility, since java.lang's wrapper types are not generic.
 @Override
 public boolean isBoxingCompatibleWith(TypeBinding targetType, Scope scope) {
-	return isPolyExpression() ? false :
-		isBoxingCompatible(this.resolvedType, targetType, this, scope);
+	if (isPolyExpression())
+		return false;
+	if (this.argumentsHaveErrors || this.binding == null ||
+			!this.binding.isValidBinding() || targetType == null || scope == null)
+		return false;
+	return isBoxingCompatible(this.resolvedType, targetType, this, scope);
 }
 
 @Override

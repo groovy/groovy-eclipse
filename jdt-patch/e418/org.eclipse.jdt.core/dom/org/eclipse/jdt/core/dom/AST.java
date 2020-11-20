@@ -2885,8 +2885,7 @@ public final class AST {
 	 * label/identifier/expression and is not implicit.
 	 *
 	 * @return a new unparented yield statement node
-	 * @since 3.20
-	 * @noreference This method is not intended to be referenced by clients.
+	 * @since 3.24
 	 */
 	public TextBlock newTextBlock() {
 		return new TextBlock(this);
@@ -3197,8 +3196,7 @@ public final class AST {
 	 * label/identifier/expression and is not implicit.
 	 *
 	 * @return a new unparented yield statement node
-	 * @since 3.20
-	 * @noreference This method is not intended to be referenced by clients.
+	 * @since 3.24
 	 */
 	public YieldStatement newYieldStatement() {
 		return new YieldStatement(this);

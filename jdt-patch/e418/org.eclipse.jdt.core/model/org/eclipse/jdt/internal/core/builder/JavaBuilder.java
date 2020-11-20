@@ -274,7 +274,7 @@ private void buildAll() {
 	BatchImageBuilder testImageBuilder = new BatchImageBuilder(imageBuilder, true, CompilationGroup.TEST);
 	imageBuilder.build();
 	if (testImageBuilder.sourceLocations.length > 0) {
-		// Note: testImageBuilder *MUST* have a separate output folder, or it will delete the files created by imageBuilder.build() 
+		// Note: testImageBuilder *MUST* have a separate output folder, or it will delete the files created by imageBuilder.build()
 		testImageBuilder.build();
 	} else {
 		testImageBuilder.cleanUp();
@@ -520,7 +520,7 @@ private boolean hasJdtCoreSettingsChange(SimpleLookupTable deltas) {
 }
 
 private boolean hasClasspathChanged() {
-	return hasClasspathChanged(CompilationGroup.MAIN) || hasClasspathChanged(CompilationGroup.TEST);	
+	return hasClasspathChanged(CompilationGroup.MAIN) || hasClasspathChanged(CompilationGroup.TEST);
 }
 
 private boolean hasClasspathChanged(CompilationGroup compilationGroup) {
@@ -580,14 +580,14 @@ private boolean hasClasspathChanged(CompilationGroup compilationGroup) {
 	for (n = o = 0; n < newLength && o < oldLength; n++, o++) {
 		if (newBinaryLocations[n].equals(oldBinaryLocations[o])) continue;
 		if (DEBUG) {
-			System.out.println("JavaBuilder: New location: " + newBinaryLocations[n] + "\n!= old location: " + oldBinaryLocations[o]); //$NON-NLS-1$ //$NON-NLS-2$
+			System.out.println("JavaBuilder: New test location: " + newBinaryLocations[n] + "\n!= old test location: " + oldBinaryLocations[o]); //$NON-NLS-1$ //$NON-NLS-2$
 			printLocations(newBinaryLocations, oldBinaryLocations);
 		}
 		return true;
 	}
 	if (n < newLength || o < oldLength) {
 		if (DEBUG) {
-			System.out.println("JavaBuilder: Number of binary folders/jar files has changed:"); //$NON-NLS-1$
+			System.out.println("JavaBuilder: Number of test binary folders/jar files has changed:"); //$NON-NLS-1$
 			printLocations(newBinaryLocations, oldBinaryLocations);
 		}
 		return true;

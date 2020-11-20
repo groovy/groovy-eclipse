@@ -10185,4 +10185,24 @@ public void testBug508834_comment0() {
 			"The method toList() in the type Collectors is not applicable for the arguments (ArrayList::new)\n" +
 			"----------\n");
 	}
+	public void testBug568259() {
+		runNegativeTest(
+				new String[] {
+						"Main.java",
+						"public final class Main<T extends Object> {\n" +
+						"    public static <T extends Object> Main<T> invoke(Object o) {\n" +
+						"        return null;\n" +
+						"    }\n" +
+						"    public void test() {\n" +
+						"        invoke(new Main.Inner());\n" +
+						"    } \n" +
+						"}"
+					},
+				"----------\n" +
+				"1. ERROR in Main.java (at line 6)\n" +
+				"	invoke(new Main.Inner());\n" +
+				"	           ^^^^^^^^^^\n" +
+				"Main.Inner cannot be resolved to a type\n" +
+				"----------\n");
+	}
 }

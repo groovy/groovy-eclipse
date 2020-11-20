@@ -598,8 +598,7 @@ public void indexAll(IProject project) {
 
 		// check if the same request is not already in the queue
 		IndexRequest request = new IndexAllProject(project, this);
-		if (!isJobWaiting(request))
-			request(request);
+		requestIfNotWaiting(request);
 	} finally {
 		// Enable index manager after adding all new index requests to the queue.
 		enable();
@@ -657,8 +656,7 @@ public void indexLibrary(IPath path, IProject requestingProject, URL indexURL, f
 	}
 
 	// check if the same request is not already in the queue
-	if (!isJobWaiting(request))
-		request(request);
+	requestIfNotWaiting(request);
 }
 
 synchronized boolean addIndex(IPath containerPath, IndexLocation indexFile) {

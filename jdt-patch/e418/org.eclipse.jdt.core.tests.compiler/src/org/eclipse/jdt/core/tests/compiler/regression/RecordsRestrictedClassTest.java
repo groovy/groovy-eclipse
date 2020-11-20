@@ -29,7 +29,7 @@ public class RecordsRestrictedClassTest extends AbstractRegressionTest {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testBug566418_001"};
+//		TESTS_NAMES = new String[] { "testBug564672_037"};
 	}
 
 	public static Class<?> testClass() {
@@ -2399,12 +2399,33 @@ public void testBug558718_002() {
 	"1. ERROR in X.java (at line 1)\n" +
 	"	record R() {}\n" +
 	"	^^^^^^\n" +
-	"The preview feature Records is only available with source level 15 and above\n" +
+	"Syntax error on token \"record\", @ expected\n" +
 	"----------\n" +
 	"2. ERROR in X.java (at line 1)\n" +
 	"	record R() {}\n" +
 	"	         ^\n" +
 	"Syntax error, insert \"enum Identifier\" to complete EnumHeader\n" +
+	"----------\n",
+		null,
+		true,
+		options
+	);
+}
+@SuppressWarnings({ "unchecked", "rawtypes" })
+public void testBug558718_003() {
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_14);
+	options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.DISABLED);
+	this.runNegativeTest(
+	new String[] {
+			"X.java",
+			"record R() {}\n",
+		},
+	"----------\n" +
+	"1. ERROR in X.java (at line 1)\n" +
+	"	record R() {}\n" +
+	"	^^^^^^\n" +
+	"The preview feature Records is only available with source level 15 and above\n" +
 	"----------\n",
 		null,
 		true,
@@ -7663,7 +7684,7 @@ public void testBug566063_002() {
 			"1. ERROR in X.java (at line 3)\n" +
 			"	static enum E {\n" +
 			"	            ^\n" +
-			"A local interface, enum or record E is implicitly static; cannot have explicit static declaration\n" +
+			"Illegal modifier for local enum E; no explicit modifier is permitted\n" +
 			"----------\n");
 }
 public void testBug566063_003() {
@@ -7690,12 +7711,12 @@ public void testBug566063_003() {
 			"1. ERROR in X.java (at line 3)\n" +
 			"	static enum E {\n" +
 			"	            ^\n" +
-			"A local interface, enum or record E is implicitly static; cannot have explicit static declaration\n" +
+			"Illegal modifier for local enum E; no explicit modifier is permitted\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 8)\n" +
 			"	static record Bar(E x) implements I{}\n" +
 			"	              ^^^\n" +
-			"A local interface, enum or record Bar is implicitly static; cannot have explicit static declaration\n" +
+			"A local class or interface Bar is implicitly static; cannot have explicit static declaration\n" +
 			"----------\n");
 }
 public void testBug566063_004() {
@@ -7925,5 +7946,72 @@ public void testBug567731_002() {
 		"Illegal modifier for the local record R2; only final and strictfp are permitted\n" +
 		"----------\n"
 	);
+}
+public void testBug566846_1() {
+	runNegativeTest(
+			new String[] {
+				"X.java",
+				"public record X;\n"
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 1)\n" +
+			"	public record X;\n" +
+			"	       ^^^^^^\n" +
+			"Syntax error on token \"record\", package expected\n" +
+			"----------\n",
+			null,
+			true,
+			new String[] {"--enable-preview"},
+			getCompilerOptions());
+}
+public void testBug566846_2() {
+	runNegativeTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"
+				+ "} \n"
+				+ "record R1;\n"
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	} \n" +
+			"	^\n" +
+			"Syntax error on token \"}\", delete this token\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 3)\n" +
+			"	record R1;\n" +
+			"	^^^^^^\n" +
+			"\'record\' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 15\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 3)\n" +
+			"	record R1;\n" +
+			"	         ^\n" +
+			"Syntax error, insert \"}\" to complete ClassBody\n" +
+			"----------\n",
+			null,
+			true,
+			new String[] {"--enable-preview"},
+			getCompilerOptions());
+}
+public void testBug561199_001() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.ERROR);
+	runNegativeTest(
+			new String[] {
+				"R.java",
+				"record R() implements java.io.Serializable {}\n",
+				"X.java",
+				"class X implements java.io.Serializable {}\n"
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 1)\n" +
+			"	class X implements java.io.Serializable {}\n" +
+			"	      ^\n" +
+			"The serializable class X does not declare a static final serialVersionUID field of type long\n" +
+			"----------\n",
+			null,
+			true,
+			new String[] {"--enable-preview"},
+			options);
 }
 }

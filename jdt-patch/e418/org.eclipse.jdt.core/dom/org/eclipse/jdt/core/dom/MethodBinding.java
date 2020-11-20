@@ -24,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedGenericMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
@@ -606,5 +607,11 @@ class MethodBinding implements IMethodBinding {
 	@Override
 	public IVariableBinding[] getSyntheticOuterLocals() {
 		return NO_VARIABLE_BINDINGS;
+	}
+
+	@Override
+	public boolean isSyntheticRecordMethod() {
+		return ((getDeclaringClass().isRecord()) &&
+				(this.binding instanceof SyntheticMethodBinding));
 	}
 }

@@ -631,8 +631,7 @@ public class CompilationUnitResolver extends Compiler {
 					javaProject != null);
 			resolver.resolve(compilationUnits, bindingKeys, requestor, apiLevel, options, owner, flags);
 			if (NameLookup.VERBOSE) {
-				System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInSourcePackage: " + environment.nameLookup.timeSpentInSeekTypesInSourcePackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-				System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInBinaryPackage: " + environment.nameLookup.timeSpentInSeekTypesInBinaryPackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+				environment.printTimeSpent();
 			}
 		} catch (JavaModelException e) {
 			// project doesn't exist -> simple parse without resolving
@@ -680,8 +679,7 @@ public class CompilationUnitResolver extends Compiler {
 				resolver.resolve(sourceUnits, encodings, bindingKeys, requestor, apiLevel, options, flags);
 				if (NameLookup.VERBOSE && (environment instanceof CancelableNameEnvironment)) {
 					CancelableNameEnvironment cancelableNameEnvironment = (CancelableNameEnvironment) environment;
-					System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInSourcePackage: " + cancelableNameEnvironment.nameLookup.timeSpentInSeekTypesInSourcePackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-					System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInBinaryPackage: " + cancelableNameEnvironment.nameLookup.timeSpentInSeekTypesInBinaryPackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+					cancelableNameEnvironment.printTimeSpent();
 				}
 			} finally {
 				if (environment != null) {
@@ -755,8 +753,7 @@ public class CompilationUnitResolver extends Compiler {
 			}
 			if (NameLookup.VERBOSE && environment instanceof CancelableNameEnvironment) {
 				CancelableNameEnvironment cancelableNameEnvironment = (CancelableNameEnvironment) environment;
-				System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInSourcePackage: " + cancelableNameEnvironment.nameLookup.timeSpentInSeekTypesInSourcePackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-				System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInBinaryPackage: " + cancelableNameEnvironment.nameLookup.timeSpentInSeekTypesInBinaryPackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+				cancelableNameEnvironment.printTimeSpent();
 			}
 			return unit;
 		} finally {

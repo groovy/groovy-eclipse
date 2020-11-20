@@ -632,10 +632,10 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	public boolean visit(InstanceofExpression node) {
 		getChildNode(node, InstanceofExpression.LEFT_OPERAND_PROPERTY).accept(this);
 		this.result.append(" instanceof "); //$NON-NLS-1$
+		getChildNode(node, InstanceofExpression.RIGHT_OPERAND_PROPERTY).accept(this);
 		if (DOMASTUtil.isInstanceofExpressionPatternSupported(node.getAST()) && node.getPatternVariable()!= null) {
+			this.result.append(" "); //$NON-NLS-1$
 			getChildNode(node, InstanceofExpression.PATTERN_VARIABLE_PROPERTY).accept(this);
-		} else {
-			getChildNode(node, InstanceofExpression.RIGHT_OPERAND_PROPERTY).accept(this);
 		}
 		return false;
 	}

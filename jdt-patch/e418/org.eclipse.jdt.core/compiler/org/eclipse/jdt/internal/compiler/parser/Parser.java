@@ -772,9 +772,8 @@ public class Parser implements TerminalTokens, ParserBasicInformation, Conflicte
 	protected static String[] readReadableNameTable(String filename){
 		String[] result = new String[name.length];
 
-		InputStream is = Parser.class.getResourceAsStream(filename);
 		Properties props = new Properties();
-		try {
+		try (InputStream is = Parser.class.getResourceAsStream(filename)) {
 			props.load(is);
 		} catch (IOException e) {
 			result = name;

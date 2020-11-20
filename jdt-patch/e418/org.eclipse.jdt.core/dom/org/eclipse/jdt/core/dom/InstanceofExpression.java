@@ -47,12 +47,13 @@ public class InstanceofExpression extends Expression {
 		new ChildPropertyDescriptor(InstanceofExpression.class, "rightOperand", Type.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * The "patternVariable" structural property of this node type (child type: {@link SingleVariableDeclaration}) (added in JLS14 API).
+	 * The "patternVariable" structural property of this node type (child type: {@link SimpleName}) (added in JLS14 API).
+	 * This contains the name of the instance variable.
 	 * @noreference This property is not intended to be referenced by clients as it is a part of Java preview feature.
 	 * @since 3.22
 	 */
 	public static final ChildPropertyDescriptor PATTERN_VARIABLE_PROPERTY =
-		new ChildPropertyDescriptor(InstanceofExpression.class, "patternVariable", SingleVariableDeclaration.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
+		new ChildPropertyDescriptor(InstanceofExpression.class, "patternVariable", SimpleName.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
 	/**
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
@@ -129,7 +130,7 @@ public class InstanceofExpression extends Expression {
 	/**
 	 * The patternVariable declaration.
 	 */
-	private SingleVariableDeclaration patternVariable = null;
+	private SimpleName patternVariable = null;
 
 	/**
 	 * Creates a new AST node for an instanceof expression owned by the given
@@ -174,7 +175,7 @@ public class InstanceofExpression extends Expression {
 			if (get) {
 				return getPatternVariable();
 			} else {
-				setPatternVariable((SingleVariableDeclaration) child);
+				setPatternVariable((SimpleName) child);
 				return null;
 			}
 		}
@@ -194,9 +195,9 @@ public class InstanceofExpression extends Expression {
 		result.setLeftOperand((Expression) getLeftOperand().clone(target));
 		result.setRightOperand((Type) getRightOperand().clone(target));
 		if (DOMASTUtil.isInstanceofExpressionPatternSupported(target)) {
-			SingleVariableDeclaration pv = getPatternVariable();
+			SimpleName pv = getPatternVariable();
 			if (pv != null) {
-				result.setPatternVariable((SingleVariableDeclaration) pv.clone(target));
+				result.setPatternVariable((SimpleName) pv.clone(target));
 			}
 		}
 		return result;
@@ -311,7 +312,7 @@ public class InstanceofExpression extends Expression {
 	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
 	 * @nooverride This method is not intended to be re-implemented or extended by clients as it is a part of Java preview feature.
 	 */
-	public SingleVariableDeclaration getPatternVariable() {
+	public SimpleName getPatternVariable() {
 		supportedOnlyIn15();
 		unsupportedWithoutPreviewError();
 		return this.patternVariable;
@@ -327,7 +328,7 @@ public class InstanceofExpression extends Expression {
 	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
 	 * @nooverride This method is not intended to be re-implemented or extended by clients as it is a part of Java preview feature.
 	 */
-	public void setPatternVariable(SingleVariableDeclaration referencePatternVariable) {
+	public void setPatternVariable(SimpleName referencePatternVariable) {
 		supportedOnlyIn15();
 		unsupportedWithoutPreviewError();
 		if (referencePatternVariable == null) {

@@ -352,5 +352,123 @@ public void test006() {
 			            new String[] {"module-info.java", moduleInfo  }, errorMsg,
 			            JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
+
+public void test007() {
+	File outputDirectory = new File(OUTPUT_DIR);
+	Util.flushDirectoryContent(outputDirectory);
+
+	String moduleInfo = "" +
+						"/**\n" +
+						" */\n" +
+						"module mod.one { \n" +
+						" exports p;\n" +
+						"}";
+	String I1 = "" +
+				"package p;\n" +
+				"/**\n" +
+				" * interface I1\n" +
+				" * @see mod.one/ abc\n" +
+				" */\n" +
+				"interface I1 {\n" +
+				"	/**\n" +
+				"	 * Method foo\n" +
+				"    * @return int\n" +
+				"    */\n" +
+				"	public int foo();\n" +
+				"}";
+
+	String P1 = "" +
+				"package p;\n" +
+				"/**\n" +
+				" * class P1\n" +
+				" * @see mod.one/p.I1 xyz\n" +
+				" */\n" +
+				"public class P1 implements I1 {\n" +
+				"	@Override\n" +
+				"	public int foo() { return 0; }\n" +
+				"}";
+
+	this.runConformTest(new String[] {"p/I1.java", I1 ,"p/P1.java" , P1 } ,
+			            new String[] {"module-info.java", moduleInfo  }, "" );
+}
+
+public void test008() {
+	File outputDirectory = new File(OUTPUT_DIR);
+	Util.flushDirectoryContent(outputDirectory);
+
+	String moduleInfo = "" +
+						"/**\n" +
+						" */\n" +
+						"module mod.one { \n" +
+						" exports p;\n" +
+						"}";
+	String I1 = "" +
+				"package p;\n" +
+				"/**\n" +
+				" * interface I1\n" +
+				" * {@link mod.one/ abc}\n" +
+				" */\n" +
+				"interface I1 {\n" +
+				"	/**\n" +
+				"	 * Method foo\n" +
+				"    * @return int\n" +
+				"    */\n" +
+				"	public int foo();\n" +
+				"}";
+
+	String P1 = "" +
+				"package p;\n" +
+				"/**\n" +
+				" * class P1\n" +
+				" * {@link mod.one/p.I1 xyz}\n" +
+				" */\n" +
+				"public class P1 implements I1 {\n" +
+				"	@Override\n" +
+				"	public int foo() { return 0; }\n" +
+				"}";
+
+	this.runConformTest(new String[] {"p/I1.java", I1 ,"p/P1.java" , P1 } ,
+			            new String[] {"module-info.java", moduleInfo  }, "" );
+}
+
+public void test009() {
+	File outputDirectory = new File(OUTPUT_DIR);
+	Util.flushDirectoryContent(outputDirectory);
+
+	String moduleInfo = "" +
+						"/**\n" +
+						" */\n" +
+						"module mod.one { \n" +
+						" exports p;\n" +
+						"}";
+	String I1 = "" +
+				"package p;\n" +
+				"/**\n" +
+				" * interface I1\n" +
+				" * {@linkplain mod.one/ abc}\n" +
+				" */\n" +
+				"interface I1 {\n" +
+				"	/**\n" +
+				"	 * Method foo\n" +
+				"    * @return int\n" +
+				"    */\n" +
+				"	public int foo();\n" +
+				"}";
+
+	String P1 = "" +
+				"package p;\n" +
+				"/**\n" +
+				" * class P1\n" +
+				" * {@linkplain mod.one/p.I1 xyz}\n" +
+				" */\n" +
+				"public class P1 implements I1 {\n" +
+				"	@Override\n" +
+				"	public int foo() { return 0; }\n" +
+				"}";
+
+	this.runConformTest(new String[] {"p/I1.java", I1 ,"p/P1.java" , P1 } ,
+			            new String[] {"module-info.java", moduleInfo  }, "" );
+}
+
 }
 

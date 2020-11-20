@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation.
+ * Copyright (c) 2018, 2020 IBM Corporation.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -210,52 +210,55 @@ public class ClasspathJep247 extends ClasspathJrt {
 	}
 	@Override
 	public synchronized char[][] getModulesDeclaringPackage(String qualifiedPackageName, String moduleName) {
-		// Ignore moduleName as this has nothing to do with modules (as of now)
-		if (this.packageCache != null)
-			return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
-
-		this.packageCache = new HashSet<>(41);
-		this.packageCache.add(Util.EMPTY_STRING);
-		List<String> sub = new ArrayList<>();
-		try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(this.releasePath)) {
-			for (final java.nio.file.Path subdir: stream) {
-				String rel = JRTUtil.sanitizedFileName(subdir);
-				if (rel.contains(this.releaseInHex)) {
-					sub.add(rel);
-				} else {
-					continue;
-				}
-				Files.walkFileTree(subdir, new FileVisitor<java.nio.file.Path>() {
-					@Override
-					public FileVisitResult preVisitDirectory(java.nio.file.Path dir, BasicFileAttributes attrs) throws IOException {
-						if (dir.getNameCount() <= 1)
+		if (this.packageCache == null) {
+			this.packageCache = new HashSet<>(41);
+			this.packageCache.add(Util.EMPTY_STRING);
+			List<String> sub = new ArrayList<>();
+			try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(this.releasePath)) {
+				for (final java.nio.file.Path subdir: stream) {
+					String rel = JRTUtil.sanitizedFileName(subdir);
+					if (rel.contains(this.releaseInHex)) {
+						sub.add(rel);
+					} else {
+						continue;
+					}
+					Files.walkFileTree(subdir, new FileVisitor<java.nio.file.Path>() {
+						@Override
+						public FileVisitResult preVisitDirectory(java.nio.file.Path dir, BasicFileAttributes attrs) throws IOException {
+							if (dir.getNameCount() <= 1)
+								return FileVisitResult.CONTINUE;
+							Path relative = dir.subpath(1, dir.getNameCount());
+							addToPackageCache(relative.toString(), false);
 							return FileVisitResult.CONTINUE;
-						Path relative = dir.subpath(1, dir.getNameCount());
-						addToPackageCache(relative.toString(), false);
-						return FileVisitResult.CONTINUE;
-					}
+						}
 
-					@Override
-					public FileVisitResult visitFile(java.nio.file.Path f, BasicFileAttributes attrs) throws IOException {
-						return FileVisitResult.CONTINUE;
-					}
+						@Override
+						public FileVisitResult visitFile(java.nio.file.Path f, BasicFileAttributes attrs) throws IOException {
+							return FileVisitResult.CONTINUE;
+						}
 
-					@Override
-					public FileVisitResult visitFileFailed(java.nio.file.Path f, IOException exc) throws IOException {
-						return FileVisitResult.CONTINUE;
-					}
+						@Override
+						public FileVisitResult visitFileFailed(java.nio.file.Path f, IOException exc) throws IOException {
+							return FileVisitResult.CONTINUE;
+						}
 
-					@Override
-					public FileVisitResult postVisitDirectory(java.nio.file.Path dir, IOException exc) throws IOException {
-						return FileVisitResult.CONTINUE;
-					}
-				});
+						@Override
+						public FileVisitResult postVisitDirectory(java.nio.file.Path dir, IOException exc) throws IOException {
+							return FileVisitResult.CONTINUE;
+						}
+					});
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				// Rethrow
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			// Rethrow
+			this.subReleases = sub.toArray(new String[sub.size()]);
 		}
-		this.subReleases = sub.toArray(new String[sub.size()]);
+		if (moduleName == null) {
+			// Delegate to the boss, even if it means inaccurate error reporting at times
+			List<String> mods = JRTUtil.getModulesDeclaringPackage(this.file, qualifiedPackageName, moduleName);
+			return CharOperation.toCharArrays(mods);
+		}
 		return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
 	}
 	@Override

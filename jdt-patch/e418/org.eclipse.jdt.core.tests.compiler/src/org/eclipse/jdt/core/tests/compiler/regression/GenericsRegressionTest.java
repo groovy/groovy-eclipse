@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -6613,6 +6613,49 @@ public void testBug552388b() {
 			"}\n"
 		},
 		output);
+}
+public void testBug561544() {
+	if (this.complianceLevel < ClassFileConstants.JDK11)
+		return;
+	Map customOptions = getCompilerOptions();
+	customOptions.put(JavaCore.COMPILER_PB_UNAVOIDABLE_GENERIC_TYPE_PROBLEMS, JavaCore.DISABLED);
+	runNegativeTest(false,
+		new String[] {
+			"com/bsbportal/music/C2193c.java",
+			"package com.bsbportal.music;\n"
+			+ "\n"
+			+ "public class C2193c {\n"
+			+ "    java.util.List f6088b;\n"
+			+ "    public void onResponse(p594x.C14183r<java.lang.String> rVar) {\n"
+			+ "        mo12821b((java.util.List<java.lang.String>) this.f6088b);\n"
+			+ "    }\n"
+			+ "}\n"
+		},
+		null,
+		customOptions,
+		"----------\n" +
+		"1. WARNING in com\\bsbportal\\music\\C2193c.java (at line 4)\n" +
+		"	java.util.List f6088b;\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"List is a raw type. References to generic type List<E> should be parameterized\n" +
+		"----------\n" +
+		"2. ERROR in com\\bsbportal\\music\\C2193c.java (at line 5)\n" +
+		"	public void onResponse(p594x.C14183r<java.lang.String> rVar) {\n" +
+		"	                       ^^^^^\n" +
+		"p594x cannot be resolved to a type\n" +
+		"----------\n" +
+		"3. ERROR in com\\bsbportal\\music\\C2193c.java (at line 6)\n" +
+		"	mo12821b((java.util.List<java.lang.String>) this.f6088b);\n" +
+		"	^^^^^^^^\n" +
+		"The method mo12821b(List<String>) is undefined for the type C2193c\n" +
+		"----------\n" +
+		"4. WARNING in com\\bsbportal\\music\\C2193c.java (at line 6)\n" +
+		"	mo12821b((java.util.List<java.lang.String>) this.f6088b);\n" +
+		"	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Type safety: Unchecked cast from List to List<String>\n" +
+		"----------\n",
+		"", "", null
+	);
 }
 }
 

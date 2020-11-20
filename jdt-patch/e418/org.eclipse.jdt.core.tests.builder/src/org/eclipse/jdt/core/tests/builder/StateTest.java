@@ -28,11 +28,16 @@ import java.util.Set;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IClasspathAttribute;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
+import org.eclipse.jdt.internal.core.builder.ClasspathLocation;
 import org.eclipse.jdt.internal.core.builder.JavaBuilder;
 import org.eclipse.jdt.internal.core.builder.ReferenceCollection;
 import org.eclipse.jdt.internal.core.builder.State;
@@ -106,6 +111,56 @@ public class StateTest extends BuilderTests {
 		incrementalBuild();
 
 		writeReadAndCompareReferences(project);
+	}
+
+	public void testBug567532() throws JavaModelException, Exception {
+		IPath project = env.addProject("Bug567532"); //$NON-NLS-1$
+		String[] classLibs = Util.getJavaClassLibs();
+		for (String jar : classLibs) {
+			env.addEntry(project,
+					JavaCore.newLibraryEntry(
+							new Path(jar),
+							null,
+							null,
+							new IAccessRule[0],
+							new IClasspathAttribute[] {
+									JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true"),
+									JavaCore.newClasspathAttribute(IClasspathAttribute.ADD_EXPORTS,
+											"jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED") },
+							false));
+		}
+
+		env.addClass(project, "a", "WithOther", //$NON-NLS-1$ //$NON-NLS-2$
+			"package a;\n" +
+			"class Other {\n" +
+			"}\n" +
+			"public class WithOther {\n" +
+			"}" //$NON-NLS-1$
+		);
+		fullBuild();
+		env.removePackage(project, "a");
+		incrementalBuild();
+
+		writeReadAndCompareTestBinaryLocations(project);
+	}
+
+	private void writeReadAndCompareTestBinaryLocations(IPath projectPath)
+			throws JavaModelException, IOException, CoreException {
+		JavaModelManager javaModelManager = JavaModelManager.getJavaModelManager();
+		IProject project = env.getProject(projectPath);
+		PerProjectInfo info = javaModelManager.getPerProjectInfoCheckExistence(project);
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		State savedState = (State) info.savedState;
+		JavaBuilder.writeState(savedState, new DataOutputStream(outputStream));
+		byte[] bytes = outputStream.toByteArray();
+		State readState = JavaBuilder.readState(project, new DataInputStream(new ByteArrayInputStream(bytes)));
+		assertEqualBinaryLocations(savedState.testBinaryLocations, readState.testBinaryLocations);
+	}
+
+	private void assertEqualBinaryLocations(ClasspathLocation[] a,
+			ClasspathLocation[] b) {
+		assertEquals(a.length, b.length);
+		assertArrayEquals(a, b);
 	}
 
 	private void writeReadAndCompareReferences(IPath projectPath)

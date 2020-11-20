@@ -6588,4 +6588,382 @@ public void testBug560076() {
 		"The type SQLiteDatabase must implement the inherited abstract method Closeable.close()\n" +
 		"----------\n");
 }
+public void testBug499037_001_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.Closeable;\n" +
+			"import java.io.IOException;\n" +
+			"\n" +
+			"class Y implements Closeable {\n" +
+			"        @Override\n" +
+			"        public void close() throws IOException {\n" +
+			"                // nothing\n" +
+			"        }\n" +
+			"}\n" +
+			"public class X {\n" +
+			"\n" +
+			"        public void foo() throws IOException {\n" +
+			"             final Y y1 = new Y();\n" +
+			"             try (y1) { \n" +
+			"            	 //\n" +
+			"             }\n" +
+			"        } \n" +
+			"        public static void main(String[] args) {\n" +
+			"			System.out.println(\"Done\");\n" +
+			"		}\n" +
+			"} \n"
+		},
+		"",
+		options);
+}
+public void testBug499037_002_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.Closeable;\n" +
+			"import java.io.IOException;\n" +
+			"\n" +
+			"class Y implements Closeable {\n" +
+			"        @Override\n" +
+			"        public void close() throws IOException {\n" +
+			"                // nothing\n" +
+			"        }\n" +
+			"}\n" +
+			"public class X {\n" +
+			"\n" +
+			"        public void foo() throws IOException {\n" +
+			"             Y y1 = new Y();\n" +
+			"             try (y1; final Y y2 = new Y()) { \n" +
+			"            	 //\n" +
+			"             }\n" +
+			"        } \n" +
+			"        public static void main(String[] args) {\n" +
+			"			System.out.println(\"Done\");\n" +
+			"		}\n" +
+			"} \n"
+		},
+		"",
+		options);
+}
+public void testBug499037_003_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.Closeable;\n" +
+			"import java.io.IOException;\n" +
+			"\n" +
+			"public class X { \n" +
+			"    public void foo() throws IOException {\n" +
+			"         Y y1 = new Y();\n" +
+			"         try(y1) { \n" +
+			"             return;\n" +
+			"         }\n" +
+			"    } \n" +
+			"}  \n" +
+			"\n" +
+			"class Y implements Closeable {\n" +
+			"		final int x = 10;\n" +
+			"        @Override\n" +
+			"        public void close() throws IOException {\n" +
+			"                // nothing\n" +
+			"        }\n" +
+			"}"
+		},
+		"",
+		options);
+}
+public void testBug499037_004_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.IOException;\n" +
+			"\n" +
+			"class Z {\n" +
+			"	final Y yz = new Y();\n" +
+			"}\n" +
+			"public class X extends Z {\n" +
+			"	final Y y2 = new Y();\n" +
+			"	\n" +
+			"	public void foo() {\n" +
+			"		try (super.yz; y2)  {\n" +
+			"			System.out.println(\"In Try\");\n" +
+			"		} catch (IOException e) {\n" +
+			"			\n" +
+			"		}finally { \n" +
+			"		}\n" +
+			"	}\n" +
+			"	public static void main(String[] args) {\n" +
+			"		new X().foo();\n" +
+			"	}\n" +
+			"}\n" +
+			"class Y implements AutoCloseable {\n" +
+			"	@Override\n" +
+			"	public void close() throws IOException {\n" +
+			"		System.out.println(\"Closed\");\n" +
+			"	} \n" +
+			"}  \n"
+		},
+		"",
+		options);
+}
+public void testBug499037_005_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.IOException;\n"+
+			"\n"+
+			"public class X {\n"+
+			"	void test(boolean b) throws IOException {\n"+
+			"		Y y = new Y();\n"+
+			"		if (b) {\n"+
+			"			try (y) {}\n"+
+			"		}\n"+
+			"	}\n"+
+			"}\n"+
+			"\n"+
+			"class Y implements AutoCloseable {\n"+
+			"	@Override\n"+
+			"	public void close() throws IOException {\n"+
+			"	}\n"+
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	Y y = new Y();\n" +
+		"	  ^\n" +
+		"Potential resource leak: \'y\' may not be closed\n" +
+		"----------\n",
+		options);
+}
+// non-empty finally block - takes a different route
+public void testBug499037_006_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.IOException;\n"+
+			"\n"+
+			"public class X {\n"+
+			"	void test(boolean b) throws IOException {\n"+
+			"		Y y = new Y();\n"+
+			"		if (b) {\n"+
+			"			try (y;Y y2 = new Y();) { \n"+
+			"			} finally {\n"+
+			"			  System.out.println(\"hello\");\n"+
+			"			}\n"+
+			"		}\n"+
+			"	}\n"+
+			"}\n"+
+			"\n"+
+			"class Y implements AutoCloseable {\n"+
+			"	@Override\n"+
+			"	public void close() throws IOException {\n"+
+			"	}\n"+
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	Y y = new Y();\n" +
+		"	  ^\n" +
+		"Potential resource leak: \'y\' may not be closed\n" +
+		"----------\n",
+		options);
+}
+public void testBug499037_007_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.IOException;\n"+
+			"\n"+
+			"public class X {\n"+
+			"	void test(boolean b) throws IOException {\n"+
+			"		Y y = new Y();\n"+
+			"		if (b) {\n"+
+			"			try (y) { \n"+
+			"			    // nothing \n"+
+			"			}\n"+
+			"		}\n"+
+			"		else {\n"+
+			"			y.close();\n"+
+			"		}\n"+
+			"	}\n"+
+			"}\n"+
+			"\n"+
+			"class Y implements AutoCloseable {\n"+
+			"	@Override\n"+
+			"	public void close() throws IOException {\n"+
+			"	}\n"+
+			"}\n"
+		},
+		"",
+		options);
+}
+public void testBug499037_008_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.IOException;\n"+
+			"\n"+
+			"public class X {\n"+
+			"	void test(boolean b, Y yDash) throws IOException {\n"+
+			"		Y y = new Y();\n"+
+			"		if (b) {\n"+
+			"			try (y; yDash) { \n"+
+			"			    // nothing \n"+
+			"			}\n"+
+			"		}\n"+
+			"		else {\n"+
+			"		}\n"+
+			"	}\n"+
+			"}\n"+
+			"\n"+
+			"class Y implements AutoCloseable {\n"+
+			"	@Override\n"+
+			"	public void close() throws IOException {\n"+
+			"	}\n"+
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	Y y = new Y();\n" +
+		"	  ^\n" +
+		"Potential resource leak: \'y\' may not be closed\n" +
+		"----------\n",
+		options);
+}
+public void testBug499037_009_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.IOException;\n"+
+			"\n"+
+			"public class X {\n"+
+			"private void foo(Y y) {}\n" +
+			"	void test(boolean b) throws IOException {\n"+
+			"		Y y = new Y();\n"+
+			"		if (b) {\n"+
+			"			try (y) { \n"+
+			"			    // nothing \n"+
+			"			}\n"+
+			"		}\n"+
+			"		else {\n"+
+			"			foo(y);\n"+
+			"		}\n"+
+			"	}\n"+
+			"}\n"+
+			"\n"+
+			"class Y implements AutoCloseable {\n"+
+			"	@Override\n"+
+			"	public void close() throws IOException {\n"+
+			"	}\n"+
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	Y y = new Y();\n" +
+		"	  ^\n" +
+		"Potential resource leak: \'y\' may not be closed\n" +
+		"----------\n",
+		options);
+}
+public void testBug499037_010_since_9() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"X.java",
+			"import java.io.IOException;\n"+
+			"\n"+
+			"public class X {\n"+
+			"private Y foo(Y y) {return y;}\n" +
+			"	void test(boolean b) throws IOException {\n"+
+			"		Y y = new Y();\n"+
+			"		Y yy = foo(y);\n"+
+			"		if (b) {\n"+
+			"			try (y;yy) { \n"+
+			"			    // do nothing \n"+
+			"			}\n"+
+			"		}\n"+
+			"		else {\n"+
+			"			// do nothing\n"+
+			"		}\n"+
+			"	}\n"+
+			"}\n"+
+			"\n"+
+			"class Y implements AutoCloseable {\n"+
+			"	@Override\n"+
+			"	public void close() throws IOException {\n"+
+			"	}\n"+
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	Y y = new Y();\n" +
+		"	  ^\n" +
+		"Potential resource leak: \'y\' may not be closed\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 7)\n" +
+		"	Y yy = foo(y);\n" +
+		"	  ^^\n" +
+		"Potential resource leak: \'yy\' may not be closed\n" +
+		"----------\n",
+		options);
+}
 }

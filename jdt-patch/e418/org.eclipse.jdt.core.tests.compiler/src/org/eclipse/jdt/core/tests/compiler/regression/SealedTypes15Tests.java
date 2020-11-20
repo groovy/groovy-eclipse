@@ -31,7 +31,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testBug565847_001"};
+//		TESTS_NAMES = new String[] { "testBug568428"};
 	}
 
 	public static Class<?> testClass() {
@@ -245,7 +245,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"2. ERROR in X.java (at line 1)\n" +
 			"	sealed public sealed class X {\n" +
 			"	                           ^\n" +
-			"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares X as its direct superclass\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares X as its direct superclass or superinterface\n" +
 			"----------\n");
 	}
 	public void testBug562715_006() {
@@ -262,7 +262,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"1. ERROR in X.java (at line 1)\n" +
 			"	public sealed class X {\n" +
 			"	                    ^\n" +
-			"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares X as its direct superclass\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares X as its direct superclass or superinterface\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 2)\n" +
 			"	public static sealed void main(String[] args){\n" +
@@ -327,7 +327,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"1. ERROR in X.java (at line 1)\n" +
 			"	public sealed class X permits {\n" +
 			"	                    ^\n" +
-			"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares X as its direct superclass\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares X as its direct superclass or superinterface\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 1)\n" +
 			"	public sealed class X permits {\n" +
@@ -341,7 +341,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"----------\n");
 	}
 	// TODO : Enable after error flag code implemented
-	public void _testBug562715_011() {
+	public void testBug562715_011() {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
@@ -353,13 +353,23 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"}",
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	EXPECTED ERROR IN RECORD\n" +
+			"1. ERROR in X.java (at line 1)\n" +
+			"	sealed enum Natural {ONE, TWO}\n" +
+			"	            ^^^^^^^\n" +
+			"Illegal modifier for the enum Natural; only public is permitted\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 2)\n" +
+			"	public sealed class X {\n" +
+			"	                    ^\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares X as its direct superclass or superinterface\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 3)\n" +
+			"	public static sealed void main(String[] args){\n" +
 			"	              ^^^^^^\n" +
 			"Syntax error on token \"sealed\", static expected\n" +
 			"----------\n");
 	}
-	public void _testBug562715_xxx() {
+	public void testBug562715_xxx() {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
@@ -371,8 +381,18 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"}",
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	EXPECTED ERROR IN RECORD\n" +
+			"1. ERROR in X.java (at line 1)\n" +
+			"	sealed record R() {}\n" +
+			"	              ^\n" +
+			"Illegal modifier for the record R; only public, final and strictfp are permitted\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 2)\n" +
+			"	public sealed class X {\n" +
+			"	                    ^\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares X as its direct superclass or superinterface\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 3)\n" +
+			"	public static sealed void main(String[] args){\n" +
 			"	              ^^^^^^\n" +
 			"Syntax error on token \"sealed\", static expected\n" +
 			"----------\n");
@@ -431,7 +451,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"1. ERROR in p1\\A.java (at line 2)\n" +
 			"	public sealed class A extends X{}\n" +
 			"	                    ^\n" +
-			"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares A as its direct superclass\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares A as its direct superclass or superinterface\n" +
 			"----------\n" +
 			"2. ERROR in p1\\A.java (at line 2)\n" +
 			"	public sealed class A extends X{}\n" +
@@ -631,7 +651,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"1. ERROR in p2\\Y.java (at line 2)\n" +
 			"	public final class Y implements p1.X{}\n" +
 			"	                                ^^^^\n" +
-			"The type Y extending a sealed class X should be a permitted subtype of X\n" +
+			"The type Y that implements a sealed interface X should be a permitted subtype of X\n" +
 			"----------\n");
 	}
 	public void testBug563806_013() {
@@ -676,7 +696,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"2. ERROR in p2\\Y.java (at line 2)\n" +
 			"	public interface Y extends p1.X{}\n" +
 			"	                           ^^^^\n" +
-			"The type Y extending a sealed interface X should be a permitted subtype of X\n" +
+			"The type Y that extends a sealed interface X should be a permitted subtype of X\n" +
 			"----------\n");
 	}
 	public void testBug563806_015() {
@@ -1036,7 +1056,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"1. ERROR in p1\\X.java (at line 2)\n" +
 			"	public sealed non-sealed interface X {\n" +
 			"	                                   ^\n" +
-			"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares X as its direct superclass\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares X as its direct superclass or superinterface\n" +
 			"----------\n" +
 			"2. ERROR in p1\\X.java (at line 2)\n" +
 			"	public sealed non-sealed interface X {\n" +
@@ -1105,11 +1125,6 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"	sealed class Y{}\n" +
 			"	             ^\n" +
 			"Illegal modifier for the local class Y; only abstract or final is permitted\n" +
-			"----------\n" +
-			"2. ERROR in p1\\X.java (at line 4)\n" +
-			"	sealed class Y{}\n" +
-			"	             ^\n" +
-			"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares Y as its direct superclass\n" +
 			"----------\n");
 	}
 	public void testBug563806_037() {
@@ -1146,11 +1161,6 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"	non-sealed sealed class Y{}\n" +
 			"	                        ^\n" +
 			"Illegal modifier for the local class Y; only abstract or final is permitted\n" +
-			"----------\n" +
-			"2. ERROR in p1\\X.java (at line 4)\n" +
-			"	non-sealed sealed class Y{}\n" +
-			"	                        ^\n" +
-			"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares Y as its direct superclass\n" +
 			"----------\n");
 	}
 	public void testBug563806_039() {
@@ -1169,7 +1179,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			"1. ERROR in p1\\X.java (at line 2)\n" +
 			"	sealed class A{}\n" +
 			"	             ^\n" +
-			"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares A as its direct superclass\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares A as its direct superclass or superinterface\n" +
 			"----------\n" +
 			"2. ERROR in p1\\X.java (at line 5)\n" +
 			"	class Y extends A{}\n" +
@@ -1298,7 +1308,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 				"1. ERROR in p1\\X.java (at line 3)\n" +
 				"	sealed class Y extends X {}\n" +
 				"	             ^\n" +
-				"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares Y as its direct superclass\n" +
+				"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares Y as its direct superclass or superinterface\n" +
 				"----------\n");
 	}
 	// Test that implicit permitted member type with explicit permits clause
@@ -1333,7 +1343,7 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 				"1. ERROR in p1\\X.java (at line 2)\n" +
 				"	sealed interface SI {}\n" +
 				"	                 ^^\n" +
-				"Sealed class lacks the permits clause and no top level or nested class from the same compilation unit declares SI as its direct superclass\n" +
+				"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares SI as its direct superclass or superinterface\n" +
 				"----------\n");
 	}
 	public void testBug564450_001() throws IOException, ClassFormatException {
@@ -5304,5 +5314,203 @@ public class SealedTypes15Tests extends AbstractRegressionTest9 {
 			true,
 			options
 		);
+	}
+	@SuppressWarnings({ "rawtypes" })
+	public void testBug566979_001() {
+		Map options = getCompilerOptions();
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public sealed void main(String[] args){ }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	public sealed void main(String[] args){ }\n" +
+			"	       ^^^^^^\n" +
+			"Syntax error on token \"sealed\", static expected\n" +
+			"----------\n",
+			null,
+			true,
+			options
+		);
+	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void testBug566979_002() {
+		Map options = getCompilerOptions();
+		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.DISABLED);
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public sealed void main(String[] args){ }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	public sealed void main(String[] args){ }\n" +
+			"	       ^^^^^^\n" +
+			"Syntax error on token \"sealed\", static expected\n" +
+			"----------\n",
+			null,
+			true,
+			options
+		);
+	}
+	@SuppressWarnings({ "rawtypes" })
+	public void testBug566980_001() {
+		Map options = getCompilerOptions();
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public permits void main(String[] args){ }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	public permits void main(String[] args){ }\n" +
+			"	               ^^^^\n" +
+			"Syntax error on token \"void\", delete this token\n" +
+			"----------\n",
+			null,
+			true,
+			options
+		);
+	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void testBug566980_002() {
+		Map options = getCompilerOptions();
+		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.DISABLED);
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public permits void main(String[] args){ }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	public permits void main(String[] args){ }\n" +
+			"	               ^^^^\n" +
+			"Syntax error on token \"void\", delete this token\n" +
+			"----------\n",
+			null,
+			true,
+			options
+		);
+	}
+	@SuppressWarnings({ "rawtypes" })
+	public void testBug566846_001() {
+		Map options = getCompilerOptions();
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"record X;\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 1)\n" +
+			"	record X;\n" +
+			"	^^^^^^\n" +
+			"Syntax error on token \"record\", package expected\n" +
+			"----------\n",
+			null,
+			true,
+			options
+		);
+	}
+	public void testBug568428_001() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public void foo() {\n" +
+				"        sealed interface I {}\n"+
+				"    }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	sealed interface I {}\n" +
+			"	                 ^\n" +
+			"Illegal modifier for the local interface I; abstract and strictfp are the only modifiers allowed explicitly \n" +
+			"----------\n"
+		);
+	}
+	public void testBug568428_002() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public void foo() {\n" +
+				"        non-sealed interface I {}\n"+
+				"    }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	non-sealed interface I {}\n" +
+			"	                     ^\n" +
+			"Illegal modifier for the local interface I; abstract and strictfp are the only modifiers allowed explicitly \n" +
+			"----------\n"
+		);
+	}
+	public void testBug568514_001() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public void foo() {\n" +
+				"        sealed enum I {}\n"+
+				"    }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	sealed enum I {}\n" +
+			"	            ^\n" +
+			"Illegal modifier for local enum I; no explicit modifier is permitted\n" +
+			"----------\n"
+		);
+	}
+	public void testBug568514_002() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public void foo() {\n" +
+				"        non-sealed enum I {}\n"+
+				"    }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	non-sealed enum I {}\n" +
+			"	                ^\n" +
+			"Illegal modifier for local enum I; no explicit modifier is permitted\n" +
+			"----------\n"
+		);
+	}
+	public void testBug568758_001() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"public sealed interface X{}\n",
+				"Y.java",
+				"public final class Y implements X{}",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 1)\n" +
+			"	public sealed interface X{}\n" +
+			"	                        ^\n" +
+			"Sealed class or interface lacks the permits clause and no class or interface from the same compilation unit declares X as its direct superclass or superinterface\n" +
+			"----------\n" +
+			"----------\n" +
+			"1. ERROR in Y.java (at line 1)\n" +
+			"	public final class Y implements X{}\n" +
+			"	                                ^\n" +
+			"The type Y that implements a sealed interface X should be a permitted subtype of X\n" +
+			"----------\n");
 	}
 }

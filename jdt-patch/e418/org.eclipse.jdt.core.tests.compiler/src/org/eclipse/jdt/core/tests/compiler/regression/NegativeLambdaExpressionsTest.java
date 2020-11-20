@@ -7362,6 +7362,7 @@ public void testIntersectionCast() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=421711, [1.8][compiler] '_' as identifier for a lambda parameter should be rejected.
 public void testUnderScoreParameter() {
 		String level = this.complianceLevel >= ClassFileConstants.JDK9 ? "ERROR" : "WARNING";
+		String errorMessage = this.complianceLevel >= ClassFileConstants.JDK9 ? "\'_\' is a keyword from source level 9 onwards, cannot be used as identifier\n" : "\'_\' should not be used as an identifier, since it is a reserved keyword from source level 1.8 on\n";
 		this.runNegativeTest(
 			new String[] {
 					"X.java",
@@ -7380,17 +7381,17 @@ public void testUnderScoreParameter() {
 			"1. ERROR in X.java (at line 6)\n" +
 			"	F f = (int _) -> {\n" +
 			"	           ^\n" +
-			"\'_\' should not be used as an identifier, since it is a reserved keyword from source level 1.8 on\n" +
+			"\'_\' is a keyword from source level 9 onwards, cannot be used as identifier\n" +
 			"----------\n" +
 			"2. "+ level +" in X.java (at line 8)\n" +
 			"	F f2 = _ -> {};\n" +
 			"	       ^\n" +
-			"\'_\' should not be used as an identifier, since it is a reserved keyword from source level 1.8 on\n" +
+			errorMessage +
 			"----------\n" +
 			"3. ERROR in X.java (at line 8)\n" +
 			"	F f2 = _ -> {};\n" +
 			"	       ^\n" +
-			"\'_\' should not be used as an identifier, since it is a reserved keyword from source level 1.8 on\n" +
+			"\'_\' is a keyword from source level 9 onwards, cannot be used as identifier\n" +
 			"----------\n"
 		);
 }

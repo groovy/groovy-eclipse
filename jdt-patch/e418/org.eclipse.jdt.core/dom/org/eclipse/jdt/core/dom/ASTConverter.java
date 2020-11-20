@@ -2286,7 +2286,7 @@ class ASTConverter {
 		int startPosition = leftExpression.getStartPosition();
 		int sourceEnd = convertType.getStartPosition() + convertType.getLength() - 1;
 		if (DOMASTUtil.isInstanceofExpressionPatternSupported(this.ast) && expression.elementVariable != null) {
-			instanceOfExpression.setPatternVariable(convertToSingleVariableDeclaration(expression.elementVariable));
+			instanceOfExpression.setPatternVariable(convertToSimpleName(expression.elementVariable));
 			sourceEnd= expression.elementVariable.sourceEnd;
 		}
 		instanceOfExpression.setSourceRange(startPosition, sourceEnd - startPosition + 1);
@@ -3895,6 +3895,18 @@ class ASTConverter {
 			variableDecl.resolveBinding();
 		}
 		return variableDecl;
+	}
+
+	protected SimpleName convertToSimpleName(LocalDeclaration localDeclaration) {
+		final SimpleName name = new SimpleName(this.ast);
+		name.internalSetIdentifier(new String(localDeclaration.name));
+		int start = localDeclaration.sourceStart;
+		int nameEnd = localDeclaration.sourceEnd;
+		name.setSourceRange(start, nameEnd - start + 1);
+		if (this.resolveBindings) {
+			recordNodes(name, localDeclaration);
+		}
+		return name;
 	}
 
 	private Dimension convertToDimensions(int start, int end, org.eclipse.jdt.internal.compiler.ast.Annotation[] annotation) {

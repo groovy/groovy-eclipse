@@ -24,10 +24,10 @@ public abstract class JobManager implements Runnable {
 	protected IJob[] awaitingJobs = new IJob[10];
 	protected int jobStart = 0;
 	protected int jobEnd = -1;
-	protected boolean executing = false;
+	protected volatile boolean executing;
 
 	/* background processing */
-	protected Thread processingThread;
+	protected volatile Thread processingThread;
 	protected Job progressJob;
 
 	/* counter indicating whether job execution is enabled or not, disabled if <= 0
@@ -271,6 +271,19 @@ public abstract class JobManager implements Runnable {
 		return status;
 	}
 	public abstract String processName();
+
+	/**
+	 * Schedules given job for execution is there is no equal jobs waiting in the queue already
+	 *
+	 * @see JobManager#isJobWaiting(IJob)
+	 * @param job
+	 *            a job to schedule (or not)
+	 */
+	public synchronized void requestIfNotWaiting(IJob job) {
+		if(!isJobWaiting(job)) {
+			request(job);
+		}
+	}
 
 	public synchronized void request(IJob job) {
 

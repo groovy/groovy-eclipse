@@ -266,6 +266,7 @@ public static TestSuite getTestSuite(boolean addComplianceDiagnoseTest) {
 		tests_15.add(SelectionParserTest12.class);
 		tests_15.add(ModuleDeclarationSyntaxTest.class);
 		tests_15.add(JEP286ReservedWordTest.class);
+		tests_15.add(PatternMatchingSelectionTest.class);
 		// Reset forgotten subsets tests
 		TestCase.TESTS_PREFIX = null;
 		TestCase.TESTS_NAMES = null;

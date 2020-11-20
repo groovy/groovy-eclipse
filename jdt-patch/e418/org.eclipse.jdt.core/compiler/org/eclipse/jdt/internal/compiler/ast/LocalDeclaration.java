@@ -340,6 +340,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 		if (variableType == null) {
 			if (this.initialization != null) {
+				if (this.initialization instanceof CastExpression) {
+					((CastExpression)this.initialization).setVarTypeDeclaration(true);
+				}
 				this.initialization.resolveType(scope); // want to report all possible errors
 				if (isTypeNameVar && this.initialization.resolvedType != null) {
 					if (TypeBinding.equalsEquals(TypeBinding.NULL, this.initialization.resolvedType)) {

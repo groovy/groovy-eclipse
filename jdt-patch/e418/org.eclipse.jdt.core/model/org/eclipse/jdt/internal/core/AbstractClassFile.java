@@ -160,6 +160,35 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 		return elt;
 	}
 
+	/**
+	 * Provide a way for clients (like debugger) to determine if two non-equal {@link AbstractClassFile} objects point
+	 * to the same physical storage. The return value is constructed form the container path (if there is any) and the
+	 * path of the class file itself (that could be either absolute or relative if it is inside container).
+	 *
+	 * @return some kind of unique class file identifier based on path information only. The return value may look like
+	 *         a path in a file system, but is not guaranteed to be a valid path that could be resolved via NIO API.
+	 */
+	public String getPathIdentifier() {
+		JavaElement pkg = (JavaElement) getParent();
+		if (pkg instanceof JarPackageFragment) {
+			JarPackageFragmentRoot root = (JarPackageFragmentRoot) pkg.getParent();
+			String entryName = Util.concatWith(((PackageFragment) pkg).names, getElementName(), '/');
+			entryName = root.getClassFilePath(entryName);
+			String rootPath = root.getPath().toOSString();
+			if (org.eclipse.jdt.internal.compiler.util.Util.isJrt(rootPath)) {
+				// container + module + class
+				return rootPath + '/' + root.getElementName() + '/' +entryName;
+			} else {
+				// container + class
+				return rootPath + '/' + entryName;
+			}
+		} else {
+			IFile file = (IFile) resource();
+			IPath location = file.getLocation();
+			return location == null? file.getFullPath().toPortableString() : location.toOSString();
+		}
+	}
+
 	@Override
 	public byte[] getBytes() throws JavaModelException {
 		JavaElement pkg = (JavaElement) getParent();

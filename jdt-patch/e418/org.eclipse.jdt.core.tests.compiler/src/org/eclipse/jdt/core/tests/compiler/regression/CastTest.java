@@ -3532,6 +3532,44 @@ public void test472466() {
 	runner.runWarningTest();
 }
 
+public void testBug561167() {
+	if (this.complianceLevel < ClassFileConstants.JDK10)
+		return;
+	Map customOptions = getCompilerOptions();
+	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
+	runNegativeTest(
+		// test directory preparation
+		true /* flush output directory */,
+		new String[] { /* test files */
+			"X.java",
+			"public class X {\n" +
+			"	public static void main(String[] args) {\n" +
+			"		var s = (String) null;	// Necessary\n" +
+			"		var t = (String) \"hello\";	// UNnecessary\n" +
+			"		var f = (float) 12;			// Necessary\n" +
+			"		var g = (float)f;			// UNnecessary\n" +
+			"	}\n" +
+			"}\n"
+		},
+		// compiler options
+		null /* no class libraries */,
+		customOptions /* custom options */,
+		// compiler results
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\n" +
+		"	var t = (String) \"hello\";	// UNnecessary\n" +
+		"	        ^^^^^^^^^^^^^^^^\n" +
+		"Unnecessary cast from String to String\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 6)\n" +
+		"	var g = (float)f;			// UNnecessary\n" +
+		"	        ^^^^^^^^\n" +
+		"Unnecessary cast from float to float\n" +
+		"----------\n",
+		// javac options
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
+}
+
 public static Class testClass() {
 	return CastTest.class;
 }

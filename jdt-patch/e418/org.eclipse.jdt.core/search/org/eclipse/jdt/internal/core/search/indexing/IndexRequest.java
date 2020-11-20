@@ -17,7 +17,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.internal.core.search.processing.IJob;
 
 public abstract class IndexRequest implements IJob {
-	protected boolean isCancelled = false;
+	protected volatile boolean isCancelled;
 	protected IPath containerPath;
 	protected IndexManager manager;
 

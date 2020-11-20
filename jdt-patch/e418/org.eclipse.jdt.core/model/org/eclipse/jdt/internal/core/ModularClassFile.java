@@ -36,14 +36,12 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class ModularClassFile extends AbstractClassFile implements IModularClassFile {
 
-	private BinaryModule binaryModule;
-
 	protected ModularClassFile(PackageFragment parent) {
 		super(parent, TypeConstants.MODULE_INFO_NAME_STRING);
 	}
 
 	/**
-	 * Creates the single child element for this class file adding the resulting 
+	 * Creates the single child element for this class file adding the resulting
 	 * new handle (of type {@link IBinaryModule}) and info object to the newElements table.
 	 * Returns true if successful, or false if an error is encountered parsing the class file.
 	 *
@@ -59,15 +57,12 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 			info.setChildren(JavaElement.NO_ELEMENTS);
 			return false;
 		}
-		
-		// Create & link a handle:	
+
+		// Create & link a handle:
 		BinaryModule module = new BinaryModule(this, moduleInfo);
 		newElements.put(module, moduleInfo);
 		info.setChildren(new IJavaElement[] {module});
-		this.binaryModule = module;
-		if (info instanceof ClassFileInfo) {
-			((ClassFileInfo) info).setModule(module);
-		}
+		((ClassFileInfo) info).setModule(module);
 		((PackageFragmentRootInfo) getPackageFragmentRoot().getElementInfo()).setModule(module);
 		return true;
 	}
@@ -103,17 +98,17 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 	public IType findPrimaryType() {
 		return null;
 	}
-	
+
 	@Override
 	public boolean isClass() throws JavaModelException {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isInterface() throws JavaModelException {
 		return false;
 	}
-	
+
 	@Override
 	public IType getType() {
 		throw new UnsupportedOperationException("IClassFile#getType() cannot be used on an IModularClassFile"); //$NON-NLS-1$
@@ -154,10 +149,10 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 			}
 		}
 	}
-	
+
 	private IBinaryModule getJarBinaryModuleInfo() throws CoreException, IOException, ClassFormatException {
 		BinaryModuleDescriptor descriptor = BinaryModuleFactory.createDescriptor(this);
-	
+
 		if (descriptor == null) {
 			return null;
 		}
@@ -294,11 +289,10 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 
 	@Override
 	public IModuleDescription getModule() throws JavaModelException {
-		if (this.binaryModule == null) {
-			openWhenClosed(createElementInfo(), false, null);
-			if (this.binaryModule == null)
-				throw newNotPresentException();
+		BinaryModule module = (BinaryModule) ((ClassFileInfo) getElementInfo()).getModule();
+		if (module == null) {
+			throw newNotPresentException();
 		}
-		return this.binaryModule;
+		return module;
 	}
 }

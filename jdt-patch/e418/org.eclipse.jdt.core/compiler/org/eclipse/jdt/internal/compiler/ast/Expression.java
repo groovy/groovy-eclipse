@@ -1206,7 +1206,10 @@ public boolean forcedToBeRaw(ReferenceContext referenceContext) {
 		if (field.type.isRawType()) {
 			if (referenceContext instanceof AbstractMethodDeclaration) {
 				AbstractMethodDeclaration methodDecl = (AbstractMethodDeclaration) referenceContext;
-				if (TypeBinding.notEquals(field.declaringClass, methodDecl.binding.declaringClass)) { // inherited raw field, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=337962
+				ReferenceBinding declaringClass = methodDecl.binding != null
+						? methodDecl.binding.declaringClass
+						: methodDecl.scope.enclosingReceiverType();
+				if (TypeBinding.notEquals(field.declaringClass, declaringClass)) { // inherited raw field, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=337962
 					return true;
 				}
 			} else if (referenceContext instanceof TypeDeclaration) {

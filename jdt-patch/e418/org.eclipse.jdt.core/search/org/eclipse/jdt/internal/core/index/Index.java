@@ -32,7 +32,7 @@ import org.eclipse.jdt.internal.core.search.indexing.ReadWriteMonitor;
 public class Index {
 
 public String containerPath;
-public ReadWriteMonitor monitor;
+public volatile ReadWriteMonitor monitor;
 
 // Separator to use after the container path
 static final char DEFAULT_SEPARATOR = '/';

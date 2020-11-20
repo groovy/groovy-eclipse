@@ -926,4 +926,83 @@ public class LocalStaticsTest_15 extends AbstractRegressionTest {
 		 	"----------\n"
 			);
 	}
+	public void testBug568514LocalEnums_001() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public void foo() {\n" +
+				"        public enum I {}\n"+
+				"    }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	public enum I {}\n" +
+			"	            ^\n" +
+			"Illegal modifier for local enum I; no explicit modifier is permitted\n" +
+			"----------\n"
+		);
+	}
+	public void testBug568514LocalEnums_002() {
+		Map<String, String> options = getCompilerOptions();
+		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.DISABLED);
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public void foo() {\n" +
+				"        public enum I {}\n"+
+				"    }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	public enum I {}\n" +
+			"	            ^\n" +
+			"The member enum I can only be defined inside a top-level class or interface or in a static context\n" +
+			"----------\n",
+			null,
+			true,
+			options
+		);
+	}
+	public void testBug568514LocalEnums_003() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public void foo() {\n" +
+				"        public enum I {}\n"+
+				"    Zork;\n"+
+				"    }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	Zork;\n" +
+			"	^^^^\n" +
+			"Syntax error, insert \"VariableDeclarators\" to complete LocalVariableDeclaration\n" +
+			"----------\n"
+		);
+	}
+	public void testBug568514LocalEnums_004() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"    public void foo() {\n" +
+				"        public strictfp enum I {}\n"+
+				"    Zork;\n"+
+				"    }\n"+
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	Zork;\n" +
+			"	^^^^\n" +
+			"Syntax error, insert \"VariableDeclarators\" to complete LocalVariableDeclaration\n" +
+			"----------\n"
+		);
+	}
 }

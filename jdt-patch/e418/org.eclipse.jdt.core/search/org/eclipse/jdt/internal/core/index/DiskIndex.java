@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.*;
 import org.eclipse.jdt.internal.core.util.*;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfIntValues;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
@@ -168,7 +169,7 @@ HashtableOfObject addQueryResults(char[][] categories, char[] key, int matchRule
 	if (this.categoryOffsets == null) return null; // file is empty
 
 	HashtableOfObject results = null; // initialized if needed
-	
+
 	// No need to check the results table for duplicates while processing the
 	// first category table or if the first category tables doesn't have any results.
 	boolean prevResults = false;
@@ -753,6 +754,10 @@ private void readChunk(String[] docNames, InputStream stream, int index, int siz
 	for (int i = 1; i < size; i++) {
 		if (stream != null && this.bufferIndex + 2 >= this.bufferEnd)
 			readStreamBuffer(stream);
+		// bug 566262: check if the index file was deleted in parallel, if so throw an IOException instead of risking to run into index OOB exceptions
+		if (this.bufferEnd == -1 && stream.available() == 0) {
+			throw new IOException(NLS.bind("Stream was closed for index location \"{0}\"", this.indexLocation)); //$NON-NLS-1$
+		}
 		int start = this.streamBuffer[this.bufferIndex++] & 0xFF;
 		int end = this.streamBuffer[this.bufferIndex++] & 0xFF;
 		String next  = new String(readStreamChars(stream));

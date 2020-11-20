@@ -48,7 +48,7 @@ public class JRTUtil {
 
 	public static final boolean DISABLE_CACHE = Boolean.getBoolean("org.eclipse.jdt.disable_JRT_cache"); //$NON-NLS-1$
 
-	public static final String JAVA_BASE = "java.base"; //$NON-NLS-1$
+	public static final String JAVA_BASE = "java.base".intern(); //$NON-NLS-1$
 	public static final char[] JAVA_BASE_CHAR = JAVA_BASE.toCharArray();
 	static final String MODULES_SUBDIR = "/modules"; //$NON-NLS-1$
 	static final String[] DEFAULT_MODULE = new String[]{JAVA_BASE};
@@ -160,7 +160,7 @@ public class JRTUtil {
 	 *  /modules/$MODULE/$PATH
 	 *  /packages/$PACKAGE/$MODULE
 	 *  The latter provides quick look up of the module that contains a particular package. However,
-	 *  this method only notifies its clients of the entries within the modules (latter) sub-directory.
+	 *  this method only notifies its clients of the entries within the modules (former) sub-directory.
 	 *  Clients can decide which notifications they want to receive. See {@link JRTUtil#NOTIFY_ALL},
 	 *  {@link JRTUtil#NOTIFY_FILES}, {@link JRTUtil#NOTIFY_PACKAGES} and {@link JRTUtil#NOTIFY_MODULES}.
 	 *
@@ -612,37 +612,44 @@ class JrtFileSystem {
 		});
 	}
 
-	void cachePackage(String packageName, String module) {
-		packageName = packageName.intern();
-		module = module.intern();
+	synchronized void cachePackage(String packageName, String module) {
 		packageName = packageName.replace('.', '/');
-		Object current = this.packageToModule.get(packageName);
-		if (current == null) {
-			this.packageToModule.put(packageName, module);
-		} else if(current == module || current.equals(module)) {
+		String currentModule = this.packageToModule.get(packageName);
+		if (currentModule == null) {
+			// Nothing found? Cache and return
+			this.packageToModule.put(packageName.intern(), module.intern());
 			return;
-		} else if (current == JRTUtil.MULTIPLE) {
+		}
+		if(currentModule.equals(module)) {
+			// Same module found? Just return
+			return;
+		}
+
+		// We observe an additional module containing package
+		if (currentModule == JRTUtil.MULTIPLE) {
+			// We have already a list => update it
 			List<String> list = this.packageToModules.get(packageName);
 			if (!list.contains(module)) {
-				if (JRTUtil.JAVA_BASE == module || JRTUtil.JAVA_BASE.equals(module)) {
+				if (JRTUtil.JAVA_BASE.equals(module)) {
 					list.add(0, JRTUtil.JAVA_BASE);
 				} else {
-					list.add(module);
+					list.add(module.intern());
 				}
 			}
 		} else {
-			String first = (String) current;
-			this.packageToModule.put(packageName, JRTUtil.MULTIPLE);
+			// We found a second module => create a list
 			List<String> list = new ArrayList<String>();
 			// Just do this as comparator might be overkill
-			if (JRTUtil.JAVA_BASE == current || JRTUtil.JAVA_BASE.equals(current)) {
-				list.add(first);
-				list.add(module);
+			if (JRTUtil.JAVA_BASE == currentModule || JRTUtil.JAVA_BASE.equals(currentModule)) {
+				list.add(currentModule.intern());
+				list.add(module.intern());
 			} else {
-				list.add(module);
-				list.add(first);
+				list.add(module.intern());
+				list.add(currentModule.intern());
 			}
+			packageName = packageName.intern();
 			this.packageToModules.put(packageName, list);
+			this.packageToModule.put(packageName, JRTUtil.MULTIPLE);
 		}
 	}
 }

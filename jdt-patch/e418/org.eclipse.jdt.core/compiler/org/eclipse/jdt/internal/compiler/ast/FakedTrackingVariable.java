@@ -82,6 +82,8 @@ public class FakedTrackingVariable extends LocalDeclaration {
 	private static final int REPORTED_DEFINITIVE_LEAK = 64;
 	// a local declarations that acts as the element variable of a foreach loop (should never suggest to use t-w-r):
 	private static final int FOREACH_ELEMENT_VAR = 128;
+	// - passed as an effectively final resource in t-w-r JDK 9 and above
+	private static final int TWR_EFFECTIVELY_FINAL = 256;
 	public MessageSend acquisition;
 
 	public static boolean TEST_372319 = false; // see https://bugs.eclipse.org/372319
@@ -871,6 +873,10 @@ public class FakedTrackingVariable extends LocalDeclaration {
 		this.globalClosingState |= CLOSED_IN_NESTED_METHOD;
 	}
 
+	/** Mark that this resource is closed from a try-with-resource with the tracking variable being effectively final). */
+	public void markClosedEffectivelyFinal() {
+		this.globalClosingState |= TWR_EFFECTIVELY_FINAL;
+	}
 	/**
 	 * Mark that this resource is passed to some outside code
 	 * (as argument to a method/ctor call or as a return value from the current method),
@@ -1143,7 +1149,7 @@ public class FakedTrackingVariable extends LocalDeclaration {
 	}
 
 	public void reportExplicitClosing(ProblemReporter problemReporter) {
-		if ((this.globalClosingState & (OWNED_BY_OUTSIDE|REPORTED_EXPLICIT_CLOSE|FOREACH_ELEMENT_VAR)) == 0) { // can't use t-w-r for OWNED_BY_OUTSIDE
+		if ((this.globalClosingState & (TWR_EFFECTIVELY_FINAL|OWNED_BY_OUTSIDE|REPORTED_EXPLICIT_CLOSE|FOREACH_ELEMENT_VAR)) == 0) { // can't use t-w-r for OWNED_BY_OUTSIDE
 			this.globalClosingState |= REPORTED_EXPLICIT_CLOSE;
 			problemReporter.explicitlyClosedAutoCloseable(this);
 		}

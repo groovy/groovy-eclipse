@@ -65,6 +65,7 @@ public class CastExpression extends Expression {
 	public TypeReference type;
 	public TypeBinding expectedType; // when assignment conversion to a given expected type: String s = (String) t;
 	public TypeBinding instanceofType; // set by InstanceofExpression to ensure we don't flag a necessary cast unnecessary
+	public boolean isVarTypeDeclaration; // set by LocalDeclaration to indicate we are initializing a var type declaration
 
 //expression.implicitConversion holds the cast for baseType casting
 public CastExpression(Expression expression, TypeReference type) {
@@ -646,6 +647,9 @@ public TypeBinding resolveType(BlockScope scope) {
 					&& expressionType.isProvablyDistinct(this.instanceofType)) {
 				this.bits |= ASTNode.DisableUnnecessaryCastCheck;
 			}
+			if (this.isVarTypeDeclaration && TypeBinding.notEquals(expressionType, castType)) {
+				this.bits |= ASTNode.DisableUnnecessaryCastCheck;
+			}
 			boolean isLegal = checkCastTypesCompatibility(scope, castType, expressionType, this.expression, true);
 			if (isLegal) {
 				this.expression.computeConversion(scope, castType, expressionType);
@@ -729,6 +733,10 @@ public void tagAsUnnecessaryCast(Scope scope, TypeBinding castType) {
 
 public void setInstanceofType(TypeBinding instanceofTypeBinding) {
 	this.instanceofType = instanceofTypeBinding;
+}
+
+public void setVarTypeDeclaration(boolean value) {
+	this.isVarTypeDeclaration = value;
 }
 
 @Override

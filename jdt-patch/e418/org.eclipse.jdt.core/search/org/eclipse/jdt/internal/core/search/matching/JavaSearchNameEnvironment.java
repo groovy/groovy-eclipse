@@ -15,20 +15,24 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
+import static java.util.stream.Collectors.joining;
+
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageDeclaration;
+import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -57,11 +61,13 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class JavaSearchNameEnvironment implements IModuleAwareNameEnvironment, SuffixConstants {
 
-	LinkedHashSet<ClasspathLocation> locationSet;
+	protected /* visible for testing only */ LinkedHashSet<ClasspathLocation> locationSet;
 	Map<String, IModuleDescription> modules;
 	private boolean modulesComputed = false;
 	Map<String,ClasspathLocation> moduleLocations;
 	Map<String,LinkedHashSet<ClasspathLocation>> moduleToClassPathLocations;
+	/** an index of qualified package names (separated by / not .) to classpath locations */
+	protected /* visible for testing only */ Map<String,LinkedHashSet<ClasspathLocation>> packageNameToClassPathLocations;
 
 	/*
 	 * A map from the fully qualified slash-separated name of the main type (String) to the working copy
@@ -74,8 +80,54 @@ public JavaSearchNameEnvironment(IJavaProject javaProject, org.eclipse.jdt.core.
 		this.moduleToClassPathLocations = new HashMap<>();
 	}
 	this.modules = new HashMap<>();
+	this.packageNameToClassPathLocations = new HashMap<>();
+
+	long start = 0;
+	if (NameLookup.VERBOSE) {
+		Util.verbose(" BUILDING JavaSearchNameEnvironment");  //$NON-NLS-1$
+		Util.verbose(" -> project: " + javaProject);  //$NON-NLS-1$
+		Util.verbose(" -> working copy size: " + (copies == null ? 0 : copies.length));  //$NON-NLS-1$
+		start = System.currentTimeMillis();
+	}
+
 	this.locationSet = computeClasspathLocations((JavaProject) javaProject);
 	this.workingCopies = getWorkingCopyMap(copies);
+
+	// if there are working copies, we need to index their packages too
+	if(this.workingCopies.size() > 0) {
+		Optional<ClasspathLocation> firstSrcLocation = this.locationSet.stream().filter(cp -> cp instanceof ClasspathSourceDirectory).findFirst();
+		if(!firstSrcLocation.isPresent()) {
+			/*
+			 * Specifying working copies but not providing a project with a source folder is not supported by the current implementation.
+			 * I'm not sure if this is valid use case, though.
+			 *
+			 * However, there is one test that (potentially) relies on this behavior. At lease it expects this constructor to NOT fail.
+			 *
+			 * org.eclipse.jdt.core.tests.model.ClassFileTests.testWorkingCopy11()
+			 */
+			//throw new IllegalArgumentException("Missing source folder for searching working copies: " + javaProject); //$NON-NLS-1$
+		    if (NameLookup.VERBOSE) {
+				Util.verbose(" -> ignoring working copies; no ClasspathSourceDirectory on project classpath ");  //$NON-NLS-1$
+		    }
+		} else {
+			for (String qualifiedMainTypeName : this.workingCopies.keySet()) {
+				int typeNameStart = qualifiedMainTypeName.lastIndexOf('/');
+				if(typeNameStart > 0) {
+					String pkgName = qualifiedMainTypeName.substring(0, typeNameStart);
+					addPackageNameToIndex(firstSrcLocation.get(), pkgName);
+				} else {
+					addPackageNameToIndex(firstSrcLocation.get(), IPackageFragment.DEFAULT_PACKAGE_NAME);
+				}
+			}
+		}
+	}
+
+
+    if (NameLookup.VERBOSE) {
+		Util.verbose(" -> pkg roots size: " + (this.locationSet == null ? 0 : this.locationSet.size()));  //$NON-NLS-1$
+		Util.verbose(" -> pkgs size: " + this.packageNameToClassPathLocations.size());  //$NON-NLS-1$
+        Util.verbose(" -> spent: " + (System.currentTimeMillis() - start) + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }
 
 public static Map<String, org.eclipse.jdt.core.ICompilationUnit> getWorkingCopyMap(
@@ -104,11 +156,25 @@ public static Map<String, org.eclipse.jdt.core.ICompilationUnit> getWorkingCopyM
 @Override
 public void cleanup() {
 	this.locationSet.clear();
+	this.packageNameToClassPathLocations.clear();
 }
 
-void addProjectClassPath(JavaProject javaProject) {
+protected /* visible for testing only */ void addProjectClassPath(JavaProject javaProject) {
+	long start = 0;
+	if (NameLookup.VERBOSE) {
+		Util.verbose(" EXTENDING JavaSearchNameEnvironment");  //$NON-NLS-1$
+		Util.verbose(" -> project: " + javaProject);  //$NON-NLS-1$
+		start = System.currentTimeMillis();
+	}
+
 	LinkedHashSet<ClasspathLocation> locations = computeClasspathLocations(javaProject);
 	if (locations != null) this.locationSet.addAll(locations);
+
+    if (NameLookup.VERBOSE) {
+		Util.verbose(" -> pkg roots size: " + (this.locationSet == null ? 0 : this.locationSet.size()));  //$NON-NLS-1$
+		Util.verbose(" -> pkgs size: " + this.packageNameToClassPathLocations.size());  //$NON-NLS-1$
+        Util.verbose(" -> spent: " + (System.currentTimeMillis() - start) + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }
 
 private LinkedHashSet<ClasspathLocation> computeClasspathLocations(JavaProject javaProject) {
@@ -131,9 +197,45 @@ private LinkedHashSet<ClasspathLocation> computeClasspathLocations(JavaProject j
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 	for (int i = 0; i < length; i++) {
 		ClasspathLocation cp = mapToClassPathLocation(manager, (PackageFragmentRoot) roots[i], imd);
-		if (cp != null) locations.add(cp);
+		if (cp != null) {
+			try {
+				indexPackageNames(cp, roots[i]);
+				locations.add(cp);
+			} catch (JavaModelException e) {
+				Util.log(e, "Error indexing package names!"); //$NON-NLS-1$
+			}
+		}
 	}
 	return locations;
+}
+
+private void indexPackageNames(ClasspathLocation cp, IPackageFragmentRoot root) throws JavaModelException {
+	for (IJavaElement c : root.getChildren()) {
+		String qualifiedPackageName = c.getElementName().replace('.', '/');
+		addPackageNameToIndex(cp, qualifiedPackageName);
+	}
+	/* In theory IPackageFragmentRoot#getChildren should contain all. It always returns
+	 * the default package (no matter what). However, for some reason only JarPackageFragmentRoot#getChildren
+	 * really returns all children. PackageFragmentRoot#getChildren returns ONLY the default package for binary class folders.
+	 *
+	 * We therefore also go through listPackages as well
+	 */
+	char[][] packages = cp.listPackages();
+	if(packages != null) {
+		for (char[] packageName : packages) {
+			String qualifiedPackageName = CharOperation.charToString(packageName).replace('.', '/');
+			addPackageNameToIndex(cp, qualifiedPackageName);
+		}
+	}
+
+}
+
+private void addPackageNameToIndex(ClasspathLocation cp, String qualifiedPackageName) {
+	LinkedHashSet<ClasspathLocation> cpl = this.packageNameToClassPathLocations.get(qualifiedPackageName);
+	if(cpl == null) {
+		this.packageNameToClassPathLocations.put(qualifiedPackageName, cpl = new LinkedHashSet<>());
+	}
+	cpl.add(cp);
 }
 
 private void computeModules() {
@@ -229,12 +331,20 @@ private void addClassPathToModule(String moduleName, ClasspathLocation cp) {
 private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeName, LookupStrategy strategy, /*@Nullable*/String moduleName) {
 	String
 		binaryFileName = null, qBinaryFileName = null,
-		sourceFileName = null, qSourceFileName = null,
-		qPackageName = null;
+		sourceFileName = null, qSourceFileName = null;
+
+	final String qPackageName;
+	final int typeNameStart;
+	if (qualifiedTypeName.length() > typeName.length) {
+		typeNameStart = qualifiedTypeName.length() - typeName.length;
+		qPackageName =  qualifiedTypeName.substring(0, typeNameStart - 1);
+	} else {
+		typeNameStart = 0;
+		qPackageName =  ""; //$NON-NLS-1$
+	}
+
 	NameEnvironmentAnswer suggestedAnswer = null;
-	Iterator<ClasspathLocation> iter = getLocationsFor(moduleName);
-	while (iter.hasNext()) {
-		ClasspathLocation location = iter.next();
+	for (ClasspathLocation location : getLocationsFor(moduleName, qPackageName)) {
 		if (!strategy.matches(location, ClasspathLocation::hasModule))
 			continue;
 		NameEnvironmentAnswer answer;
@@ -242,10 +352,7 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 			if (sourceFileName == null) {
 				qSourceFileName = qualifiedTypeName; // doesn't include the file extension
 				sourceFileName = qSourceFileName;
-				qPackageName =  ""; //$NON-NLS-1$
-				if (qualifiedTypeName.length() > typeName.length) {
-					int typeNameStart = qSourceFileName.length() - typeName.length;
-					qPackageName =  qSourceFileName.substring(0, typeNameStart - 1);
+				if (typeNameStart > 0) {
 					sourceFileName = qSourceFileName.substring(typeNameStart);
 				}
 			}
@@ -265,10 +372,7 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 			if (binaryFileName == null) {
 				qBinaryFileName = qualifiedTypeName + SUFFIX_STRING_class;
 				binaryFileName = qBinaryFileName;
-				qPackageName =  ""; //$NON-NLS-1$
-				if (qualifiedTypeName.length() > typeName.length) {
-					int typeNameStart = qBinaryFileName.length() - typeName.length - 6; // size of ".class"
-					qPackageName =  qBinaryFileName.substring(0, typeNameStart - 1);
+				if (typeNameStart > 0) {
 					binaryFileName = qBinaryFileName.substring(typeNameStart);
 				}
 			}
@@ -283,26 +387,59 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		}
 		if (answer != null) {
 			if (!answer.ignoreIfBetter()) {
-				if (answer.isBetter(suggestedAnswer))
+				if (answer.isBetter(suggestedAnswer)) {
+					if(NameLookup.VERBOSE) {
+						Util.verbose(" Result for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+						Util.verbose(" -> answer: " + answer); //$NON-NLS-1$
+						Util.verbose(" -> location: " + location); //$NON-NLS-1$
+					}
 					return answer;
-			} else if (answer.isBetter(suggestedAnswer))
+				}
+			} else if (answer.isBetter(suggestedAnswer)) {
 				// remember suggestion and keep looking
 				suggestedAnswer = answer;
+				if(NameLookup.VERBOSE) {
+					Util.verbose(" Potential answer for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					Util.verbose(" -> answer: " + answer); //$NON-NLS-1$
+					Util.verbose(" -> location: " + location); //$NON-NLS-1$
+				}
+			}
 		}
 	}
 	if (suggestedAnswer != null)
 		// no better answer was found
 		return suggestedAnswer;
+	if(NameLookup.VERBOSE) {
+		Util.verbose(" NO result for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	}
 	return null;
 }
 
-private Iterator<ClasspathLocation> getLocationsFor(/*@Nullable*/String moduleName) {
+protected /* visible for testing only */ Iterable<ClasspathLocation> getLocationsFor(/*@Nullable*/String moduleName, String qualifiedPackageName) {
 	if (moduleName != null) {
 		LinkedHashSet<ClasspathLocation> l = this.moduleToClassPathLocations.get(moduleName);
-		if (l != null && l.size() > 0)
-			return l.iterator();
+		if (l != null)
+			return l;
+		// FIXME: this seems bogus ... if we are searching with a module name and there is NONE, an empty set should be returned, shouldn't it?
 	}
-	return this.locationSet.iterator();
+	if(qualifiedPackageName != null) {
+		LinkedHashSet<ClasspathLocation> cpls = this.packageNameToClassPathLocations.get(qualifiedPackageName);
+		if(cpls == null) {
+			if(NameLookup.VERBOSE) {
+				Util.verbose(" No result for JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+			return Collections.emptySet();
+		}
+		if(NameLookup.VERBOSE) {
+			Util.verbose(" Result for JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			Util.verbose(" -> " + cpls.stream().map(Object::toString).collect(joining(" | "))); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return cpls;
+	}
+	if(NameLookup.VERBOSE) {
+		Util.verbose(" Potentially expensive search in JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
+	return this.locationSet;
 }
 
 @Override
@@ -335,9 +472,8 @@ public char[][] getModulesDeclaringPackage(char[][] packageName, char[] moduleNa
 		if (this.moduleToClassPathLocations != null) {
 			String moduleNameString = String.valueOf(moduleName);
 			LinkedHashSet<ClasspathLocation> cpl = this.moduleToClassPathLocations.get(moduleNameString);
-			List<ClasspathLocation> l = cpl != null ? cpl.stream().collect(Collectors.toList()): null;
-			if (l != null) {
-				for (ClasspathLocation cp : l) {
+			if (cpl != null) {
+				for (ClasspathLocation cp : cpl) {
 					if (cp.isPackage(qualifiedPackageName, moduleNameString))
 						return new char[][] { moduleName };
 				}
@@ -346,7 +482,7 @@ public char[][] getModulesDeclaringPackage(char[][] packageName, char[] moduleNa
 		return null;
 	}
 	char[][] moduleNames = CharOperation.NO_CHAR_CHAR;
-	for (ClasspathLocation location : this.locationSet) {
+	for (ClasspathLocation location : getLocationsFor(null /* ignore module */, qualifiedPackageName)) {
 		if (strategy.matches(location, ClasspathLocation::hasModule) ) {
 			if (location.isPackage(qualifiedPackageName, null)) {
 				char[][] mNames = location.getModulesDeclaringPackage(qualifiedPackageName, null);
@@ -354,6 +490,10 @@ public char[][] getModulesDeclaringPackage(char[][] packageName, char[] moduleNa
 				moduleNames = CharOperation.arrayConcat(moduleNames, mNames);
 			}
 		}
+	}
+	if(NameLookup.VERBOSE) {
+		Util.verbose(" Result for JavaSearchNameEnvironment#getModulesDeclaringPackage( " + qualifiedPackageName + ", " + CharOperation.charToString(moduleName) + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		Util.verbose(" -> " + CharOperation.toString(moduleNames)); //$NON-NLS-1$
 	}
 	return moduleNames == CharOperation.NO_CHAR_CHAR ? null : moduleNames;
 }
@@ -386,10 +526,15 @@ public boolean hasCompilationUnit(char[][] qualifiedPackageName, char[] moduleNa
 				return location.hasCompilationUnit(qualifiedPackageNameString, moduleNameString);
 		}
 	} else {
-		for (ClasspathLocation location : this.locationSet) {
+		for (ClasspathLocation location : getLocationsFor(null /* ignore module */, qualifiedPackageNameString)) {
 			if (strategy.matches(location, ClasspathLocation::hasModule) )
-				if (location.hasCompilationUnit(qualifiedPackageNameString, moduleNameString))
+				if (location.hasCompilationUnit(qualifiedPackageNameString, moduleNameString)) {
+					if(NameLookup.VERBOSE) {
+						Util.verbose(" Result for JavaSearchNameEnvironment#hasCompilationUnit( " + qualifiedPackageNameString + ", " + moduleNameString + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						Util.verbose(" -> " + location); //$NON-NLS-1$
+					}
 					return true;
+				}
 		}
 	}
 	return false;

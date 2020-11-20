@@ -42,14 +42,13 @@ import org.eclipse.jdt.internal.core.util.Util;
  * that are internal to the project, use <code>JavaProject#getChildren()</code>.
  */
 
-@SuppressWarnings({"rawtypes"})
 /* package */
 class JavaProjectElementInfo extends OpenableElementInfo {
 
 	static final IPackageFragmentRoot[] NO_ROOTS = new IPackageFragmentRoot[0];
 
 	static class ProjectCache {
-		ProjectCache(IPackageFragmentRoot[] allPkgFragmentRootsCache, Map rootToResolvedEntries, Map pkgFragmentsCaches) {
+		ProjectCache(IPackageFragmentRoot[] allPkgFragmentRootsCache, Map<IPackageFragmentRoot, IClasspathEntry> rootToResolvedEntries, Map<IPackageFragmentRoot, HashSetOfArray> pkgFragmentsCaches) {
 			this.allPkgFragmentRootsCache = allPkgFragmentRootsCache;
 			this.rootToResolvedEntries = rootToResolvedEntries;
 			this.pkgFragmentsCaches = pkgFragmentsCaches;
@@ -70,9 +69,13 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		 * A cache of package fragments for each package fragment root of this project
 		 * (a map from IPackageFragmentRoot to a set of String[] (the package name))
 		 */
-		public Map pkgFragmentsCaches;
+		public Map<IPackageFragmentRoot, HashSetOfArray>pkgFragmentsCaches;
 
-		public Map rootToResolvedEntries;
+		/*
+		 * A cache of package fragment roots to corresponding resolved CP entry
+		 * (so as to be able to figure inclusion/exclusion rules)
+		 */
+		public Map<IPackageFragmentRoot, IClasspathEntry> rootToResolvedEntries;
 	}
 
 	ProjectCache projectCache;
@@ -217,7 +220,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		}
 		if (cache == null) {
 			IPackageFragmentRoot[] roots;
-			Map<?, ?> reverseMap = new HashMap<>(3);
+			Map<IPackageFragmentRoot, IClasspathEntry> reverseMap = new HashMap<>(3);
 			try {
 				roots = project.getAllPackageFragmentRoots(reverseMap, excludeTestCode);
 			} catch (JavaModelException e) {
@@ -322,7 +325,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 				HashSetOfArray fragmentsCache;
 				if (rootProject.equals(project)) {
 					// retrieve package fragments cache from this project
-					fragmentsCache = (HashSetOfArray) cache.pkgFragmentsCaches.get(root);
+					fragmentsCache = cache.pkgFragmentsCaches.get(root);
 				} else {
 					// retrieve package fragments  cache from the root's project
 					ProjectCache rootProjectCache;
@@ -332,7 +335,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 						// project doesn't exit
 						continue;
 					}
-					fragmentsCache = (HashSetOfArray) rootProjectCache.pkgFragmentsCaches.get(root);
+					fragmentsCache = rootProjectCache.pkgFragmentsCaches.get(root);
 				}
 				if (fragmentsCache == null) { // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=183833
 					fragmentsCache = new HashSetOfArray();

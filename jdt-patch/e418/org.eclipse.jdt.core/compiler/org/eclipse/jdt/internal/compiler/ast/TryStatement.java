@@ -157,19 +157,20 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			if (resource instanceof LocalDeclaration) {
 				localVariableBinding = ((LocalDeclaration) resource).binding;
 				resolvedType = localVariableBinding.type;
-			} else { //expression
-				if (resource instanceof NameReference && ((NameReference) resource).binding instanceof LocalVariableBinding) {
-					localVariableBinding = (LocalVariableBinding) ((NameReference) resource).binding;
-				}
-				resolvedType = ((Expression) resource).resolvedType;
-			}
-			if (localVariableBinding != null) {
-				localVariableBinding.useFlag = LocalVariableBinding.USED; // Is implicitly used anyways.
 				if (localVariableBinding.closeTracker != null) {
 					// this was false alarm, we don't need to track the resource
 					localVariableBinding.closeTracker.withdraw();
 					localVariableBinding.closeTracker = null;
 				}
+			} else { //expression
+				if (resource instanceof NameReference && ((NameReference) resource).binding instanceof LocalVariableBinding) {
+					localVariableBinding = (LocalVariableBinding) ((NameReference) resource).binding;
+				}
+				resolvedType = ((Expression) resource).resolvedType;
+				recordCallingClose(currentScope, flowContext, tryInfo, (Expression)resource);
+			}
+			if (localVariableBinding != null) {
+				localVariableBinding.useFlag = LocalVariableBinding.USED; // Is implicitly used anyways.
 			}
 			MethodBinding closeMethod = findCloseMethod(resource, resolvedType);
 			if (closeMethod != null && closeMethod.isValidBinding() && closeMethod.returnType.id == TypeIds.T_void) {
@@ -284,19 +285,20 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			if (resource instanceof LocalDeclaration) {
 				localVariableBinding = ((LocalDeclaration) this.resources[i]).binding;
 				resolvedType = localVariableBinding.type;
-			} else { // Expression
-				if (resource instanceof NameReference && ((NameReference) resource).binding instanceof LocalVariableBinding) {
-					localVariableBinding = (LocalVariableBinding)((NameReference) resource).binding;
-				}
-				resolvedType = ((Expression) resource).resolvedType;
-			}
-			if (localVariableBinding != null) {
-				localVariableBinding.useFlag = LocalVariableBinding.USED; // Is implicitly used anyways.
 				if (localVariableBinding.closeTracker != null) {
 					// this was false alarm, we don't need to track the resource
 					localVariableBinding.closeTracker.withdraw();
 					// keep the tracking variable in the resourceBinding in order to prevent creating a new one while analyzing the try block
 				}
+			} else { // Expression
+				if (resource instanceof NameReference && ((NameReference) resource).binding instanceof LocalVariableBinding) {
+					localVariableBinding = (LocalVariableBinding)((NameReference) resource).binding;
+				}
+				recordCallingClose(currentScope, flowContext, tryInfo, (Expression)resource);
+				resolvedType = ((Expression) resource).resolvedType;
+			}
+			if (localVariableBinding != null) {
+				localVariableBinding.useFlag = LocalVariableBinding.USED; // Is implicitly used anyways.
 			}
 			MethodBinding closeMethod = findCloseMethod(resource, resolvedType);
 			if (closeMethod != null && closeMethod.isValidBinding() && closeMethod.returnType.id == TypeIds.T_void) {
@@ -373,6 +375,17 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				currentScope.methodScope().recordInitializationStates(mergedInfo);
 			return mergedInfo;
 		}
+	}
+}
+private void recordCallingClose(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, Expression closeTarget) {
+	FakedTrackingVariable trackingVariable = FakedTrackingVariable.getCloseTrackingVariable(closeTarget, flowInfo, flowContext);
+	if (trackingVariable != null) { // null happens if target is not a local variable or not an AutoCloseable
+		if (trackingVariable.methodScope == currentScope.methodScope()) {
+			trackingVariable.markClose(flowInfo, flowContext);
+		} else {
+			trackingVariable.markClosedInNestedMethod();
+		}
+		trackingVariable.markClosedEffectivelyFinal();
 	}
 }
 private MethodBinding findCloseMethod(final ASTNode resource, TypeBinding type) {

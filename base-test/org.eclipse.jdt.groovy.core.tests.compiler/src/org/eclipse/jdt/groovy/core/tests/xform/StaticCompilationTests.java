@@ -478,28 +478,34 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     /**
-     * Test case for {@link org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#performSecondPass() performSecondPass}.
+     * Test case for {@link org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#performSecondPass() performSecondPass()}.
      */
     @Test
     public void testCompileStatic19() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
+            "class A {\n" +
+            "  void foo() {}\n" +
+            "}\n" +
+            "class B {\n" +
+            "  void bar() {}\n" +
+            "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  def x = 'xyz';\n" +
-            "  { -> x = 1 }\n" +
-            "  x.charAt(0)\n" +
+            "  def x = new A();\n" +
+            "  { -> x = new B() }\n" +
+            "  x.foo()\n" +
             "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Main.groovy (at line 5)\n" +
-            "\tx.charAt(0)\n" +
-            "\t^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.io.Serializable or java.lang.Comparable#charAt(int)." +
+            "1. ERROR in Main.groovy (at line 11)\n" +
+            "\tx.foo()\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#foo()." +
             " Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
