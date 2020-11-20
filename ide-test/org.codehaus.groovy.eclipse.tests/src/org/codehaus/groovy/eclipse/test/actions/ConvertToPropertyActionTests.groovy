@@ -172,6 +172,18 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     }
 
     @Test
+    void testScriptNotOnBuildPath() {
+        def file = addPlainText('new Date().getHours()', "../${nextUnitName()}.groovy")
+        editor = (org.codehaus.groovy.eclipse.editor.GroovyEditor) \
+            openInEditor(file.getAdapter(org.eclipse.jdt.core.ICompilationUnit))
+        editor.setHighlightRange(13, 0, true)
+        editor.setFocus()
+        editor.getAction(ACTION_ID).run()
+
+        assertEditorContents 'new Date().hours'
+    }
+
+    @Test
     void testNoConversion0() {
         convertToProperty "new Da${CARET}te()"
         assertEditorContents 'new Date()'

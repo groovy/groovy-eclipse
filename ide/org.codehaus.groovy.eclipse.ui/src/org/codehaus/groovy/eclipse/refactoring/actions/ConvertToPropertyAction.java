@@ -40,7 +40,6 @@ import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.ui.actions.ActionUtil;
 import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.ITextSelection;
@@ -62,7 +61,7 @@ public class ConvertToPropertyAction extends Action {
 
     @Override
     public void run() {
-        if (!ActionUtil.isEditable(editor))
+        if (!editor.validateEditorInputState())
             return;
         ISelection selection = editor.getSelectionProvider().getSelection();
         if (!(selection instanceof ITextSelection))
