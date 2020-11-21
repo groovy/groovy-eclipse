@@ -27,6 +27,13 @@ final class OtherCompletionTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
     }
 
+    @Test
+    void testNoNullPointerException() {
+        String contents = 'getClass().'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'toGenericString()', 1)
+    }
+
     @Test // GRECLIPSE-414
     void testNoIndexOutOfBoundsException() {
         String contents = '''\

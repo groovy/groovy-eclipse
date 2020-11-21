@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,8 +32,6 @@ import org.codehaus.groovy.eclipse.core.impl.ReverseSourceBuffer;
  */
 public class TokenStream {
 
-    private static final Token TOKEN_EOF = new Token(Token.Type.EOF, -1, -1, null);
-
     private static final Pattern MULTI_LINE_COMMENT = Pattern.compile("(?s)/\\*.*\\*/");
     private static final Pattern SINGLE_LINE_COMMENT = Pattern.compile(".*//");
     private static final Pattern SINGLE_QUOTE1 = Pattern.compile("^\'.*\'");
@@ -41,12 +39,14 @@ public class TokenStream {
     private static final Pattern TRIPLE_QUOTE1 = Pattern.compile("^\'\'\'.*\'\'\'");
     private static final Pattern TRIPLE_QUOTE2 = Pattern.compile("^\"\"\".*\"\"\"");
 
+    private static final Token TOKEN_EOF = new Token(Token.Type.EOF, -1, -1, null);
+
     private final ISourceBuffer buffer;
     private Token last, next;
     private int offset;
     private char ch;
 
-    public TokenStream(ISourceBuffer buffer, int offset) {
+    public TokenStream(final ISourceBuffer buffer, final int offset) {
         this.buffer = buffer;
         this.offset = offset;
         this.ch = buffer.charAt(offset);
@@ -61,22 +61,22 @@ public class TokenStream {
      */
     public Token peek() throws TokenStreamException {
         int offset = this.offset;
-        char ch = this.ch;
         Token last = this.last;
         Token next = this.next;
+        char ch = this.ch;
 
         Token ret = next();
 
         this.offset = offset;
-        this.ch = ch;
         this.last = last;
         this.next = next;
+        this.ch = ch;
 
         return ret;
     }
 
     /**
-     * Returns the last token retrieved using {@link #peek()}
+     * Returns the last token produced by {@link #next()}
      */
     public Token last() {
         return last;
@@ -169,6 +169,8 @@ public class TokenStream {
         return last;
     }
 
+    //--------------------------------------------------------------------------
+
     private Token scanDot() {
         nextChar();
         if (offset == -1) {
@@ -218,7 +220,7 @@ public class TokenStream {
     /**
      * Scans closing and opening pairs, ignoring nested pairs.
      */
-    private Token scanPair(char open, char close, Token.Type type) throws TokenStreamException {
+    private Token scanPair(final char open, final char close, final Token.Type type) throws TokenStreamException {
         int endOffset = offset + 1;
         int pairCount = 1;
         while (pairCount > 0 && offset > 0) {
@@ -250,7 +252,7 @@ public class TokenStream {
         return new Token(Token.Type.IDENT, offset + 1, endOffset, buffer.subSequence(offset + 1, endOffset).toString());
     }
 
-    private Token scanQuote(char quote) throws TokenStreamException {
+    private Token scanQuote(final char quote) throws TokenStreamException {
         Pattern singleQuote;
         Pattern tripleQuote;
         if (quote == '\'') {
@@ -274,7 +276,7 @@ public class TokenStream {
         throw new TokenStreamException("Could not close quoted string, end offset = " + offset);
     }
 
-    private Token matchQuote(Pattern quotePattern) {
+    private Token matchQuote(final Pattern quotePattern) {
         ISourceBuffer matchBuffer = new ReverseSourceBuffer(buffer, offset);
         Matcher matcher = quotePattern.matcher(matchBuffer);
         if (matcher.find()) {
@@ -343,7 +345,7 @@ public class TokenStream {
         return null;
     }
 
-    private boolean isComment(int index) {
+    private boolean isComment(final int index) {
         if (comments == null) {
             CharSequence source = buffer.subSequence(0, buffer.length());
             GroovySnippetParser parser = new GroovySnippetParser();
@@ -367,7 +369,7 @@ public class TokenStream {
     }
     private int[] comments;
 
-    private char la(int index) {
+    private char la(final int index) {
         if (offset - index >= 0) {
             return buffer.charAt(offset - index);
         }
