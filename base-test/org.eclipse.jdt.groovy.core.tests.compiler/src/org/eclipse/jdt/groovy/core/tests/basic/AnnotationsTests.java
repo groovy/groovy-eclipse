@@ -840,6 +840,50 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1201
+    public void testClosureExpressionAttributeValue2() {
+        //@formatter:off
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<? extends Iterable<String>> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(value={ return ['hello'] })\n" +
+            "class Main {\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1201
+    public void testClosureExpressionAttributeValue3() {
+        //@formatter:off
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<? extends Iterable<String>>[] value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(value=[{ return ['hello'] }])\n" +
+            "class Main {\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test // GRECLIPSE-629
     public void testInlinedStaticFinalAttributeValue() {
         //@formatter:off
