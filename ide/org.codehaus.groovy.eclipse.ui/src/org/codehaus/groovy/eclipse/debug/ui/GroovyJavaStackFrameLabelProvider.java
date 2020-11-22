@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.debug.ui;
+
+import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -34,16 +37,16 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
 
     private boolean enabled;
     private String[] filters;
-    private final IPreferenceStore preferenceStore;
+    private final IPreferenceStore preferenceStore = GroovyPlugin.getDefault().getPreferenceStore();
+    private static final Pattern LAMBDA_FILTER = Pattern.compile("\\${2}Lambda\\$\\d+(?:\\.|/0x)[0-9a-f]{8,16}$");
 
     GroovyJavaStackFrameLabelProvider() {
-        preferenceStore = GroovyPlugin.getDefault().getPreferenceStore();
         computeEnabled();
         computeFilters();
     }
 
     @Override
-    public void propertyChange(PropertyChangeEvent event) {
+    public void propertyChange(final PropertyChangeEvent event) {
         switch (event.getProperty()) {
         case PreferenceConstants.GROOVY_DEBUG_FILTER_STACK:
             computeEnabled();
@@ -55,12 +58,12 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
     }
 
     @Override
-    protected void retrieveLabel(ILabelUpdate update) throws CoreException {
+    protected void retrieveLabel(final ILabelUpdate update) throws CoreException {
         super.retrieveLabel(update);
         if (enabled && !update.isCanceled()) {
             Object element = update.getElement();
             if (element instanceof IJavaStackFrame) {
-                if (isFiltered(((IJavaStackFrame) element).getDeclaringTypeName())) {
+                if (isFiltered(((IJavaStackFrame) element).getReceivingTypeName())) {
                     try {
                         RGB mutedColor = JFaceResources.getColorRegistry().getRGB(JFacePreferences.DECORATIONS_COLOR);
                         update.setForeground(mutedColor, 0);
@@ -89,13 +92,8 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
         }
     }
 
-    private boolean isFiltered(String qualifiedName) {
-        for (String filter : filters) {
-            if (qualifiedName.startsWith(filter)) {
-                return true;
-            }
-        }
-        return false;
+    private boolean isFiltered(final String qualifiedName) {
+        return Arrays.stream(filters).anyMatch(qualifiedName::startsWith) || LAMBDA_FILTER.matcher(qualifiedName).find();
     }
 
     void connect() {
