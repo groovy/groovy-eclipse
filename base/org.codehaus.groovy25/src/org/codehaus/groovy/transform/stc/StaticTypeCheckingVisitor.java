@@ -1768,7 +1768,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         AtomicReference<ClassNode> result = new AtomicReference<ClassNode>();
         if (existsProperty(subExp, true, new PropertyLookupVisitor(result))) {
             ClassNode intf = LIST_TYPE.getPlainNodeReference();
-            intf.setGenericsTypes(new GenericsType[]{new GenericsType(getWrapper(result.get()))});
+            intf.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(result.get()))});
             return intf;
         }
         return null;
@@ -1776,16 +1776,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     private ClassNode getTypeForListPropertyExpression(ClassNode testClass, ClassNode objectExpressionType, PropertyExpression pexp) {
         if (!implementsInterfaceOrIsSubclassOf(testClass, LIST_TYPE)) return null;
+        /* GRECLIPSE edit -- GROOVY-9821
         ClassNode intf = GenericsUtils.parameterizeType(objectExpressionType, LIST_TYPE.getPlainNodeReference());
         GenericsType[] types = intf.getGenericsTypes();
         if (types == null || types.length != 1) return OBJECT_TYPE;
 
         PropertyExpression subExp = new PropertyExpression(varX("{}", types[0].getType()), pexp.getPropertyAsString());
+        */
+        GenericsType[] types = (testClass.equals(LIST_TYPE) ? testClass : GenericsUtils.parameterizeType(testClass, LIST_TYPE)).getGenericsTypes();
+        ClassNode itemType = (types != null && types.length == 1 ? getCombinedBoundType(types[0]) : OBJECT_TYPE);
+
+        PropertyExpression subExp = new PropertyExpression(varX("{}", itemType), pexp.getPropertyAsString());
+        // GRECLIPSE end
         AtomicReference<ClassNode> result = new AtomicReference<ClassNode>();
         if (existsProperty(subExp, true, new PropertyLookupVisitor(result))) {
-            intf = LIST_TYPE.getPlainNodeReference();
-            ClassNode itemType = result.get();
-            intf.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(itemType))});
+            ClassNode intf = LIST_TYPE.getPlainNodeReference();
+            intf.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(result.get()))});
             return intf;
         }
         return null;
@@ -1794,11 +1800,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private ClassNode getTypeForMapPropertyExpression(ClassNode testClass, ClassNode objectExpressionType, PropertyExpression pexp) {
         if (!implementsInterfaceOrIsSubclassOf(testClass, MAP_TYPE)) return null;
         ClassNode intf;
+        /* GRECLIPSE edit -- GROOVY-9821
         if (objectExpressionType.getGenericsTypes() != null) {
             intf = GenericsUtils.parameterizeType(objectExpressionType, MAP_TYPE.getPlainNodeReference());
         } else {
             intf = MAP_TYPE.getPlainNodeReference();
         }
+        */
+        intf = testClass.equals(MAP_TYPE) ? testClass : GenericsUtils.parameterizeType(testClass, MAP_TYPE);
+        // GRECLIPSE end
         // 0 is the key, 1 is the value
         GenericsType[] types = intf.getGenericsTypes();
         if (types == null || types.length != 2) return OBJECT_TYPE;
@@ -1818,7 +1828,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 addStaticTypeError("Spread operator on map only allows one of [key,value]", pexp);
             }
         } else {
+            /* GRECLIPSE edit -- GROOVY-9821
             return types[1].getType();
+            */
+            return getCombinedBoundType(types[1]);
+            // GRECLIPSE end
         }
         return null;
     }

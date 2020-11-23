@@ -507,6 +507,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "    x = 3.14\n" +
             "    break\n" +
             "   default:\n" +
+            "    break" +
             "  }\n" +
             "  x\n" +
             "}";
@@ -647,124 +648,168 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testMatcher1() {
-        String contents = "def x = \"\" =~ /pattern/\nx";
+        String contents = "def x = ('' =~ /pattern/)";
         assertType(contents, "x", "java.util.regex.Matcher");
     }
 
     @Test
     public void testMatcher2() {
-        String contents = "(\"\" =~ /pattern/).hasGroup()";
+        String contents = "('' =~ /pattern/).hasGroup()";
         assertType(contents, "hasGroup", "java.lang.Boolean");
     }
 
     @Test
     public void testPattern1() {
-        String contents = "def x = ~/pattern/\nx";
+        String contents = "def x = ~/pattern/";
         assertType(contents, "x", "java.util.regex.Pattern");
     }
 
     @Test
     public void testPattern2() {
-        String contents = "def x = \"\" ==~ /pattern/\nx";
+        String contents = "def x = \"\" ==~ /pattern/";
         assertType(contents, "x", "java.lang.Boolean");
     }
 
     @Test
     public void testSpread1() {
-        String contents = "def z = [1,2]*.value";
-        assertType(contents, "value", "java.lang.Integer");
+        String contents = "def x = ['1','2']*.bytes";
+        assertType(contents, "x", "java.util.List<byte[]>");
     }
 
     @Test
     public void testSpread2() {
-        String contents = "[1,2,3]*.intValue()";
-        assertType(contents, "intValue", "java.lang.Integer");
+        String contents = "def x = [1,2,3]*.intValue()";
+        assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
     @Test
     public void testSpread3() {
-        String contents = "[1,2,3]*.intValue()[0].value";
-        assertType(contents, "value", "java.lang.Integer");
+        String contents = "def x = [1,2,3]*.intValue()[0].intValue()";
+        assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test
     public void testSpread4() {
-        String contents = "[x:1,y:2,z:3]*.getKey()";
-        assertType(contents, "getKey", "java.lang.String");
+        String contents = "def x = [a:1,b:2,c:3]*.getKey()";
+        assertType(contents, "x", "java.util.List<java.lang.String>");
     }
 
     @Test
     public void testSpread5() {
-        String contents = "[x:1,y:2,z:3]*.getValue()";
-        assertType(contents, "getValue", "java.lang.Integer");
+        String contents = "def x = [a:1,b:2,c:3]*.getValue()";
+        assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
     @Test
     public void testSpread6() {
-        String contents = "[x:1,y:2,z:3]*.key";
-        assertType(contents, "key", "java.lang.String");
+        String contents = "def x = [a:1,b:2,c:3]*.key";
+        assertType(contents, "x", "java.util.List<java.lang.String>");
     }
 
     @Test
     public void testSpread7() {
-        String contents = "[x:1,y:2,z:3]*.value";
-        assertType(contents, "value", "java.lang.Integer");
+        String contents = "def x = [a:1,b:2,c:3]*.value";
+        assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
     @Test
     public void testSpread8() {
-        String contents = "[x:1,y:2,z:3]*.key[0].toLowerCase()";
-        assertType(contents, "toLowerCase", "java.lang.String");
+        String contents = "def x = [a:1,b:2,c:3]*.key[0].toLowerCase()";
+        assertType(contents, "x", "java.lang.String");
     }
 
     @Test
     public void testSpread9() {
-        String contents = "[x:1,y:2,z:3]*.value[0].intValue()";
-        assertType(contents, "intValue", "java.lang.Integer");
+        String contents = "def x = [a:1,b:2,c:3]*.value[0].intValue()";
+        assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test
     public void testSpread10() {
-        String contents = "[1,2,3]*.value[0].value";
-        assertType(contents, "value", "java.lang.Integer");
+        String contents = "def x = ['1','2','3']*.bytes[0].length";
+        assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test
     public void testSpread11() {
-        String contents = "Set<String> strings = ['1','2','3'] as Set\n" +
-            "strings*.bytes\n";
-        assertType(contents, "bytes", "byte[]");
+        String contents = "Set<String> strings = ['1','2','3']; def x = strings*.bytes";
+        assertType(contents, "x", "java.util.List<byte[]>");
     }
 
     @Test
     public void testSpread12() {
-        String contents = "Set<String> strings = ['1','2','3'] as Set\n" +
-            "strings*.length()\n";
-        assertType(contents, "length", "java.lang.Integer");
+        String contents = "Set<String> strings = ['1','2','3']; def x = strings*.length()";
+        assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
     @Test
     public void testSpread13() {
-        String contents = "@groovy.transform.TypeChecked\n" +
-            "class Foo {\n" +
-            "  static def meth() {\n" +
-            "    Set<java.beans.BeanInfo> beans = []\n" +
-            "    beans*.additionalBeanInfo\n" +
-            "  }\n" +
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Set<java.beans.BeanInfo> beans) {\n" +
+            "  beans*.additionalBeanInfo\n" +
             "}\n";
         assertType(contents, "beans", "java.util.Set<java.beans.BeanInfo>");
         assertType(contents, "additionalBeanInfo", "java.beans.BeanInfo[]");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/763
+    @Test // GROOVY-9021
     public void testSpread14() {
+        createJavaUnit("Pojo",
+            "interface Pojo {\n" +
+            "  java.util.Collection<? extends java.lang.String> getStrings();\n" +
+            "}\n");
+
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Pojo pojo) {\n" +
+            "  def result = pojo.strings*.bytes\n" + // exercises StaticTypeCheckingVisitor#getTypeForSpreadExpression
+            "}\n";
+        assertType(contents, "strings", "java.util.Collection<? extends java.lang.String>");
+        assertType(contents, "result", "java.util.List<byte[]>");
+    }
+
+    @Test // GROOVY-9021
+    public void testSpread15() {
+        createJavaUnit("Pojo",
+            "interface Pojo {\n" +
+            "  java.util.List<? extends java.lang.String> getStrings();\n" +
+            "}\n");
+
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Pojo pojo) {\n" +
+            "  def result = pojo.strings*.bytes\n" + // exercises StaticTypeCheckingVisitor#getTypeForListExpression
+            "}\n";
+        assertType(contents, "strings", "java.util.List<? extends java.lang.String>");
+        assertType(contents, "result", "java.util.List<byte[]>");
+    }
+
+    @Test
+    public void testSpread16() {
+        createJavaUnit("Pojo",
+            "interface Pojo {\n" +
+            "  java.util.Map<String, ? extends java.lang.String> getStrings();\n" +
+            "}\n");
+
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Pojo pojo) {\n" +
+            "  def result = pojo.strings*.value\n" + // exercises StaticTypeCheckingVisitor#getTypeForMapExpression
+            "}\n";
+        assertType(contents, "strings", "java.util.Map<java.lang.String,? extends java.lang.String>");
+        assertType(contents, "result", "java.util.List<? extends java.lang.String>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/763
+    public void testSpread17() {
         String contents = "def strings = [[['1','2','3']]]\n" +
             "def result = strings*.length()\n";
         assertType(contents, "result", "java.util.List<java.util.List>");
     }
 
     @Test // CommandRegistry.iterator() lacks generics
-    public void testSpread15() {
+    public void testSpread18() {
         String contents =
             "import org.codehaus.groovy.tools.shell.CommandRegistry\n" +
             "def registry = new CommandRegistry()\n" +
@@ -773,7 +818,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSpread16() {
+    public void testSpread19() {
         String contents =
             "import java.util.regex.Matcher\n" +
             "Matcher matcher = ('abc' =~ /./)\n" +
@@ -782,7 +827,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSpread17() {
+    public void testSpread20() {
         String contents =
             "Reader reader = null\n" +
             "def result = reader*.with {it}\n";
@@ -792,6 +837,22 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testMapLiteral() {
         assertType("[:]", "java.util.Map<java.lang.Object,java.lang.Object>");
+    }
+
+    @Test // GROOVY-9021
+    public void testMapProperty() {
+        createJavaUnit("Pojo",
+            "interface Pojo {\n" +
+            "  java.util.Map<String, ? extends java.lang.Number> getMap();\n" +
+            "}\n");
+
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Pojo pojo) {\n" +
+            "  def result = pojo.map.name\n" + // exercises StaticTypeCheckingVisitor#getTypeForMapExpression
+            "}\n";
+        assertType(contents, "map", "java.util.Map<java.lang.String,? extends java.lang.Number>");
+        assertType(contents, "result", "java.lang.Number");
     }
 
     @Test

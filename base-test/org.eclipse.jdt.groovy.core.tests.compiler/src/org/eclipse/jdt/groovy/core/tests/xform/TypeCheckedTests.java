@@ -551,6 +551,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9821a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def test(A a) {\n" +
+            "  a.bees.c\n" +
+            "}\n",
+
+            "Types.java",
+            "interface A {\n" +
+            "  java.util.List<? extends B> getBees();\n" +
+            "}\n" +
+            "interface B {\n" +
+            "  Object getC();\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked9822() {
         //@formatter:off
         String[] sources = {
