@@ -425,7 +425,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testModuleInfo1() {
+    public void testModuleInfo() {
         assumeTrue(isAtLeastJava(JDK9));
 
         //@formatter:off
@@ -742,6 +742,31 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "foo");
+    }
+
+    @Test // GROOVY-9825
+    public void testStaticProperty10() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface A {\n" +
+            "  int X = 1\n" +
+            "}\n" +
+            "interface B extends A {\n" +
+            "  int Y = 2\n" +
+            "}\n" +
+            "class Main {\n" +
+            "  static class C implements B {\n" +
+            "    int getSum() { X + Y }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print new C().sum\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "3");
     }
 
     @Test
