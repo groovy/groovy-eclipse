@@ -5132,6 +5132,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void collectAllInterfaceMethodsByName(final ClassNode receiver, final String name, final List<MethodNode> methods) {
+        /* GRECLIPSE edit -- GROOVY-6882
         ClassNode cNode = receiver;
         while (cNode != null) {
             ClassNode[] interfaces = cNode.getInterfaces();
@@ -5144,6 +5145,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             cNode = cNode.getSuperClass();
         }
+        */
+        Set<ClassNode> done = new LinkedHashSet<>();
+        for (ClassNode next = receiver; next != null; next = next.getSuperClass()) {
+            done.add(next);
+            for (ClassNode face : next.getAllInterfaces()) {
+                if (done.add(face)) {
+                    methods.addAll(face.getDeclaredMethods(name));
+                }
+            }
+        }
+        // GRECLIPSE end
     }
 
     protected ClassNode getType(final ASTNode exp) {
