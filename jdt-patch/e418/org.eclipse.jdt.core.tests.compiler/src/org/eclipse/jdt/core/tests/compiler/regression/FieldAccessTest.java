@@ -794,6 +794,31 @@ public void testBug361039() {
 		"f cannot be resolved or is not a field\n" +
 		"----------\n");
 }
+public void testBug568959_001() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // lambda
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n"+
+			" public void foo(Object o) {\n"+
+			"   I i = () -> {\n"+
+			"     while (o.eq) {\n"+
+			"       // nothing\n"+
+			"     }\n"+
+			"   };\n"+
+			" }\n"+
+			"}\n"+
+			"interface I { \n"+
+			" public abstract void run();\n"+
+			"}"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\n" +
+		"	while (o.eq) {\n" +
+		"	         ^^\n" +
+		"eq cannot be resolved or is not a field\n" +
+		"----------\n");
+}
 public static Class testClass() {
 	return FieldAccessTest.class;
 }

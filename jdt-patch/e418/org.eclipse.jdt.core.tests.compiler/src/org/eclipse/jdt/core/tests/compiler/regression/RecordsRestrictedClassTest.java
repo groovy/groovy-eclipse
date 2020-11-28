@@ -8014,4 +8014,50 @@ public void testBug561199_001() {
 			new String[] {"--enable-preview"},
 			options);
 }
+public void testBug568922_001() {
+	runNegativeTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				" public static void main(String[] args) {\n"+
+				"   @SuppressWarnings(\"preview\")\n"+
+				"   record R() {\n"+
+				"     R  {\n"+
+				"       super();\n"+
+				"       System.out.println(\"helo\");\n"+
+				"     }\n"+
+				"   }\n"+
+				"   new R();\n"+
+				" }\n"+
+				"}"
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 6)\n" +
+			"	super();\n" +
+			"	^^^^^^^^\n" +
+			"The body of a compact constructor must not contain an explicit constructor call\n" +
+			"----------\n",
+			null,
+			true,
+			new String[] {"--enable-preview"},
+			getCompilerOptions());
+}
+public void testBug568922_002() {
+	runConformTest(
+		new String[] {
+			"X.java",
+			"public class X {\n"+
+			" public static void main(String[] args) {\n"+
+			"   @SuppressWarnings(\"preview\")\n"+
+			"   record R() {\n"+
+			"     R  {\n"+
+			"       System.out.println(\"helo\");\n"+
+			"     }\n"+
+			"   }\n"+
+			"   new R();\n"+
+			" }\n"+
+			"}"
+		},
+		"helo");
+}
 }
