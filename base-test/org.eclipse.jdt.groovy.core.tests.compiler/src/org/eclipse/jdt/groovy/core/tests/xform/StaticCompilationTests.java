@@ -4058,6 +4058,92 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9288() {
+        for (String p : new String[] {"a", "b"}) {
+            for (String q : new String[] {"", "this.", "thisObject.", "owner."}) {
+                for (String mod : new String[] {"public", "protected", "@groovy.transform.PackageScope"}) {
+                    //@formatter:off
+                    String[] sources = {
+                        "Main.groovy",
+                        "print new " + p + ".B().m()\n",
+
+                        "a/A.groovy",
+                        "package a\n" +
+                        "@groovy.transform.CompileStatic\n" +
+                        "abstract class A {\n" +
+                        "  " + mod + " String f = 'value'\n" +
+                        "  abstract String m()\n" +
+                        "}\n",
+
+                        p + "/B.groovy",
+                        "package " + p + "\n" +
+                        "@groovy.transform.CompileStatic\n" +
+                        "class B extends a.A {\n" +
+                        "  @Override\n" +
+                        "  String m() {\n" +
+                        "    'whatever'.with {\n" +
+                        "      return " + q + "f\n" + // field from super class
+                        "    }\n" +
+                        "  }\n" +
+                        "}\n",
+                    };
+                    //@formatter:on
+
+                    String stderr = "", stdout = "value";
+                    if ("b".equals(p) && mod.endsWith("PackageScope") && Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
+                        stderr = "groovy.lang.MissingPropertyException: No such property: f for class: " + (!q.isEmpty() ? "b.B" : "java.lang.String");
+                        stdout = "";
+                    }
+                    runConformTest(sources, stdout, stderr);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testCompileStatic9292() {
+        for (String p : new String[] {"a", "b"}) {
+            for (String q : new String[] {"", "it.", "owner.", "delegate."}) {
+                for (String mod : new String[] {"public", "protected", "@groovy.transform.PackageScope"}) {
+                    //@formatter:off
+                    String[] sources = {
+                        "Main.groovy",
+                        "print new " + p + ".B().m()\n",
+
+                        "a/A.groovy",
+                        "package a\n" +
+                        "@groovy.transform.CompileStatic\n" +
+                        "abstract class A {\n" +
+                        "  " + mod + " String f = 'value'\n" +
+                        "  abstract String m()\n" +
+                        "}\n",
+
+                        p + "/B.groovy",
+                        "package " + p + "\n" +
+                        "@groovy.transform.CompileStatic\n" +
+                        "class B extends a.A {\n" +
+                        "  @Override\n" +
+                        "  String m() {\n" +
+                        "    this.with {\n" +
+                        "      return " + q + "f\n" + // field from super class
+                        "    }\n" +
+                        "  }\n" +
+                        "}\n",
+                    };
+                    //@formatter:on
+
+                    String stderr = "", stdout = "value";
+                    if ("b".equals(p) && mod.endsWith("PackageScope") && Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
+                        stderr = "groovy.lang.MissingPropertyException: No such property: f for class: b.B";
+                        stdout = "";
+                    }
+                    runConformTest(sources, stdout, stderr);
+                }
+            }
+        }
+    }
+
+    @Test
     public void testCompileStatic9327() {
         //@formatter:off
         String[] sources = {
