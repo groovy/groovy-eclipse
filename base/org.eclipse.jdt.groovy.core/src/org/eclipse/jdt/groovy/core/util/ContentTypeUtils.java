@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.util;
 
-import static org.eclipse.jdt.internal.core.util.Util.getJavaLikeExtensions;
+import static org.eclipse.jdt.internal.compiler.util.SuffixConstants.EXTENSION_java;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,7 +101,7 @@ public class ContentTypeUtils {
      */
     public static char[][] getJavaButNotGroovyLikeExtensions() {
         if (JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS == null) {
-            char[][] javaLikeExtensions = getJavaLikeExtensions();
+            char[][] javaLikeExtensions = Platform.getContentTypeManager() != null ? Util.getJavaLikeExtensions() : new char[][] {EXTENSION_java.toCharArray()};
             char[][] groovyLikeExtensiosn = getGroovyLikeExtensions();
             List<char[]> interestingExtensions = new ArrayList<>();
             for (char[] javaLike : javaLikeExtensions) {
@@ -119,17 +119,16 @@ public class ContentTypeUtils {
             JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS = interestingExtensions.toArray(new char[interestingExtensions.size()][]);
 
             // ensure "java" is first
-            int javaIndex = 0;
-            char[] javaArr = "java".toCharArray();
+            char[] javaChars = EXTENSION_java.toCharArray(); int javaIndex = 0;
             while (javaIndex < JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS.length) {
-                if (Arrays.equals(javaArr, JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[javaIndex])) {
+                if (Arrays.equals(javaChars, JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[javaIndex])) {
                     break;
                 }
-                javaIndex++;
+                javaIndex += 1;
             }
             if (javaIndex < JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS.length) {
                 JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[javaIndex] = JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[0];
-                JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[0] = javaArr;
+                JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[0] = javaChars;
             } else {
                 Util.log(null, "'java' not registered as a java-like extension");
             }
@@ -221,7 +220,7 @@ public class ContentTypeUtils {
         IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
         if (contentTypeManager != null) {
             contentTypeManager.addContentTypeChangeListener(event -> {
-                // we can be more specific here, but content types change so rarely, that
+                // can be more specific here, but content types change so rarely, that
                 // I am not concerned about being overly eager to invalidate the cache
                 GROOVY_FILE_NAMES = null;
                 GROOVY_LIKE_EXTENSIONS = null;

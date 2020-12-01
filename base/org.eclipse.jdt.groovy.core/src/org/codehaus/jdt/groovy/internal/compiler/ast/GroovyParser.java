@@ -96,7 +96,7 @@ public class GroovyParser {
     }
 
     public static char[] getContents(ICompilationUnit compilationUnit, /*@Nullable*/ ReadManager readManager) {
-        return (readManager != null ? readManager.getContents(compilationUnit) : compilationUnit.getContents());
+        return Optional.ofNullable(readManager != null ? readManager.getContents(compilationUnit) : compilationUnit.getContents()).orElse(CharOperation.NO_CHAR);
     }
 
     public static boolean isGroovyParserEligible(ICompilationUnit compilationUnit, /*@Nullable*/ ReadManager readManager) {
