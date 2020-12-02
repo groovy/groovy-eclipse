@@ -943,6 +943,15 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "asList", "java.util.List<java.lang.Integer>");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testClosure13() {
+        String contents = "def <T> String test(T t) {}\n" + "java.util.function.Function<Integer, String> f = this.&test\n";
+        int offset = contents.lastIndexOf("test");
+        MethodNode m = assertDeclaration(contents, offset, offset + 4, "Search", "test", DeclarationKind.METHOD);
+        assertEquals("java.lang.String", printTypeName(m.getReturnType()));
+        assertEquals("java.lang.Integer", printTypeName(m.getParameters()[0].getType()));
+    }
+
     @Test
     public void testArrayDGM() {
         String contents =

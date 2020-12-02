@@ -175,6 +175,7 @@ public class TypeLookupResult {
 
                 List<ClassNode> argumentTypes = new ArrayList<>();
                 if (isGroovy) argumentTypes.add(objectType);
+                ClassNode targetType = null;
                 GenericsMapper mapper;
 
                 if (scope.getEnclosingNode() instanceof MethodPointerExpression) {
@@ -188,44 +189,33 @@ public class TypeLookupResult {
                         int index = ((TupleExpression) cat.call.getArguments()).getExpressions().indexOf(scope.getEnclosingNode());
                         Parameter[] params = ((MethodNode) cat.declaration).getParameters();
                         if (index != -1 && params.length > 0) {
-                            ClassNode targetType = params[Math.min(index, params.length - 1)].getType();
+                            targetType = params[Math.min(index, params.length - 1)].getType();
                             if (targetType.isArray() && index >= params.length - 1) {
                                 targetType = objectType.getComponentType();
                             }
-                            if (targetType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
-                                ClassNode returnType = Optional.of(targetType).map(ClassNode::getGenericsTypes)
-                                    .filter(Objects::nonNull).map(gts -> gts[0].getType()).orElse(VariableScope.OBJECT_CLASS_NODE);
-
-                                mapper = GenericsMapper.gatherGenerics(singletonList(returnType), declaringType, returnTypeStub(method));
-                                method = VariableScope.resolveTypeParameterization(mapper, method);
-                            } else {
-                                MethodNode sam = ClassHelper.findSAM(targetType);
-                                if (sam != null) {
-                                    // use parameter types of SAM as "argument types" for referenced method to help resolve type parameters
-                                    mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(sam.getParameters()), declaringType, method);
-                                    method = VariableScope.resolveTypeParameterization(mapper, method);
-
-                                    mapper = GenericsMapper.gatherGenerics(targetType);
-                                    method = VariableScope.resolveTypeParameterization(mapper, method);
-                                }
-                            }
                         }
                     } else if (testEnclosingAssignment(scope, rhs -> rhs == scope.getEnclosingNode())) {
-                        // maybe the assign target type can help resolve type parameters of method pointer
-                        ClassNode targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
+                        // maybe the assign target type can help resolve type parameters of method
+                        targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
+                    }
 
-                        ClassNode returnType; // aligned with referenced method
+                    if (targetType != null) {
                         if (targetType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
-                            returnType = Optional.of(targetType).map(ClassNode::getGenericsTypes)
+                            ClassNode returnType = Optional.of(targetType).map(ClassNode::getGenericsTypes)
                                 .filter(Objects::nonNull).map(gts -> gts[0].getType()).orElse(VariableScope.OBJECT_CLASS_NODE);
-                        } else {
-                            returnType = Optional.ofNullable(ClassHelper.findSAM(targetType)).map(sam ->
-                                VariableScope.resolveTypeParameterization(GenericsMapper.gatherGenerics(targetType), VariableScope.clone(sam.getReturnType()))
-                            ).orElse(null);
-                        }
-                        if (returnType != null) {
+
                             mapper = GenericsMapper.gatherGenerics(singletonList(returnType), declaringType, returnTypeStub(method));
                             method = VariableScope.resolveTypeParameterization(mapper, method);
+                        } else {
+                            MethodNode sam = ClassHelper.findSAM(targetType);
+                            if (sam != null) {
+                                // use parameter types of SAM as "argument types" for referenced method to help resolve type parameters
+                                mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(sam.getParameters()), declaringType, method);
+                                method = VariableScope.resolveTypeParameterization(mapper, method);
+
+                                mapper = GenericsMapper.gatherGenerics(targetType);
+                                method = VariableScope.resolveTypeParameterization(mapper, method);
+                            }
                         }
                     }
                 } else {
@@ -239,8 +229,8 @@ public class TypeLookupResult {
                                 (rhs instanceof StaticMethodCallExpression && rhs == scope.getCurrentNode()) ||
                                 (rhs instanceof MethodCallExpression && ((MethodCallExpression) rhs).getMethod() == scope.getCurrentNode())
                             )) {
-                        // maybe the assign target type can help resolve type parameters of method call
-                        ClassNode targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
+                        // maybe the assign target type can help resolve type parameters of method
+                        targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
 
                         mapper = GenericsMapper.gatherGenerics(singletonList(targetType), declaringType, returnTypeStub(method));
                         method = VariableScope.resolveTypeParameterization(mapper, method);
