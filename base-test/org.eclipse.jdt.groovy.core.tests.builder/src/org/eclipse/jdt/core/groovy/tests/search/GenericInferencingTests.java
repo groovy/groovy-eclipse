@@ -739,49 +739,49 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testForLoop2a() {
+    public void testForLoop3() {
         String contents = "for (a in 1..4) {\n}";
         assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
-    public void testForLoop3() {
+    public void testForLoop4() {
         String contents = "for (a in [1, 2].iterator()) {\n a\n}";
         assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
-    public void testForLoop4() {
+    public void testForLoop5() {
         String contents = "for (a in (1..4).iterator()) {\n a\n}";
         assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
-    public void testForLoop5() {
+    public void testForLoop6() {
         String contents = "for (a in [1 : 1]) {\n a.key\n}";
         assertType(contents, "key", "java.lang.Integer");
     }
 
     @Test
-    public void testForLoop6() {
+    public void testForLoop7() {
         String contents = "for (a in [1 : 1]) {\n a.value\n}";
         assertType(contents, "value", "java.lang.Integer");
     }
 
     @Test
-    public void testForLoop7() {
+    public void testForLoop8() {
         String contents = "InputStream x\nfor (a in x) {\n a\n}";
         assertType(contents, "a", "java.lang.Byte");
     }
 
     @Test
-    public void testForLoop8() {
+    public void testForLoop9() {
         String contents = "DataInputStream x\nfor (a in x) {\n a\n}";
         assertType(contents, "a", "java.lang.Byte");
     }
 
     @Test
-    public void testForLoop9() {
+    public void testForLoop10() {
         String contents = "class X {\n" +
             "  List<String> images\n" +
             "}\n" +
@@ -923,8 +923,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1198
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1194
     public void testClosure10() {
+        String contents = "void test(Closure<List<Integer>> cl) {}\n" + "test(Arrays.&asList)\n";
+        assertType(contents, "asList", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1198
+    public void testClosure11() {
         assumeTrue(isParrotParser());
         String contents = "Optional.of(21).map(num -> num * 2).get()\n";
         assertType(contents, "get", "java.lang.Integer");
@@ -932,7 +938,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1199
-    public void testClosure11() {
+    public void testClosure12() {
         String contents = "java.util.function.Function<Integer, List<Integer>> f = Arrays.&asList\n";
         assertType(contents, "asList", "java.util.List<java.lang.Integer>");
     }
