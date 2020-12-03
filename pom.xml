@@ -30,7 +30,7 @@
 		<groovy-eclipse-compiler-version>3.6.0-03</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
-		<groovy-eclipse-batch-version>2.4.20-01</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>2.4.21-01</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -409,6 +409,14 @@
 			</properties>
 		</profile>
 	</profiles>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>groovy-bintray</id>
+			<name>Groovy Bintray</name>
+			<url>https://dl.bintray.com/groovy/maven</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<build>
 		<plugins>
