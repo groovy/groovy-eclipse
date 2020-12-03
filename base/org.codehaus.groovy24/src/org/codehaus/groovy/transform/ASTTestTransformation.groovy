@@ -88,7 +88,7 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
             throw new SyntaxException("Missing test expression", annotationNode.getLineNumber(), annotationNode.getColumnNumber())
         }
         // convert value into node metadata so that the expression doesn't mix up with other AST xforms like type checking
-        annotationNode.setNodeMetaData(ASTTestTransformation, member)
+        annotationNode.putNodeMetaData(ASTTestTransformation, member)
         /* GRECLIPSE edit
         annotationNode.getMembers().remove('value')
         */
