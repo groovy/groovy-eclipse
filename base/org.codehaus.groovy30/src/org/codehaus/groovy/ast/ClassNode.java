@@ -1187,8 +1187,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         boolean booleanReturnOnly = getterName.startsWith("is");
         for (MethodNode method : getDeclaredMethods(getterName)) {
             if (getterName.equals(method.getName())
-                    && method.getParameters().length == 0
-                    && !ClassHelper.VOID_TYPE.equals(method.getReturnType())
+                    && method.getParameters().length == 0 && !method.isVoidMethod()
                     && (!booleanReturnOnly || ClassHelper.Boolean_TYPE.equals(ClassHelper.getWrapper(method.getReturnType())))) {
                 // GROOVY-7363: There can be multiple matches for a getter returning a generic parameter type, due to
                 // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
@@ -1219,7 +1218,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         for (MethodNode method : getDeclaredMethods(setterName)) {
             if (setterName.equals(method.getName())
                     && method.getParameters().length == 1
-                    && (!voidOnly || ClassHelper.VOID_TYPE.equals(method.getReturnType()))) {
+                    && (!voidOnly || method.isVoidMethod())) {
                 return method;
             }
         }

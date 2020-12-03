@@ -551,7 +551,7 @@ public class GenericsUtils {
         return superClass;
     }
 
-    private static void extractSuperClassGenerics(GenericsType[] usage, GenericsType[] declaration, Map<String, ClassNode> spec) {
+    private static void extractSuperClassGenerics(final GenericsType[] usage, final GenericsType[] declaration, final Map<String, ClassNode> spec) {
         // if declaration does not provide generics, there is no connection to make
         if (declaration == null || declaration.length == 0) return;
 
@@ -560,8 +560,10 @@ public class GenericsUtils {
             for (GenericsType dt : declaration) {
                 String name = dt.getName();
                 ClassNode type = spec.get(name);
-                if (type != null && type.isGenericsPlaceHolder() && type.getUnresolvedName().equals(name)) {
-                    spec.put(name, type.asGenericsType().getUpperBounds()[0]);
+                if (type != null && type.isGenericsPlaceHolder()
+                        && type.getUnresolvedName().equals(name)) {
+                    type = type.asGenericsType().getUpperBounds()[0];
+                    spec.put(name, type);
                 }
             }
             return;

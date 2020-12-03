@@ -977,12 +977,8 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     public static List<MethodNode> findDGMMethodsByNameAndArguments(final ClassLoader loader, final ClassNode receiver, final String name, final ClassNode[] args, final List<MethodNode> methods) {
-        final List<MethodNode> chosen;
         methods.addAll(findDGMMethodsForClassNode(loader, receiver, name));
-        if (methods.isEmpty()) return methods;
-
-        chosen = chooseBestMethod(receiver, methods, args);
-        return chosen;
+        return methods.isEmpty() ? methods : chooseBestMethod(receiver, methods, args);
     }
 
     /**
@@ -998,64 +994,64 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     /**
-     * Given a list of candidate methods, returns the one which best matches the argument types
+     * Returns the method(s) which best fit the argument types.
      *
-     * @param receiver
-     * @param methods  candidate methods
-     * @param argumentTypes     argument types
-     * @return the list of methods which best matches the argument types. It is still possible that multiple
-     * methods match the argument types.
+     * @return zero or more results
      */
     public static List<MethodNode> chooseBestMethod(final ClassNode receiver, final Collection<MethodNode> methods, final ClassNode... argumentTypes) {
-        if (methods.isEmpty()) return Collections.emptyList();
-        if (isUsingUncheckedGenerics(receiver)) {
-            ClassNode raw = makeRawType(receiver);
-            return chooseBestMethod(raw, methods, argumentTypes);
+        if (!asBoolean(methods)) {
+            return Collections.emptyList();
         }
-        List<MethodNode> bestChoices = new LinkedList<>();
+        if (isUsingUncheckedGenerics(receiver)) {
+            return chooseBestMethod(makeRawType(receiver), methods, argumentTypes);
+        }
+
         int bestDist = Integer.MAX_VALUE;
-        Collection<MethodNode> choicesLeft = removeCovariantsAndInterfaceEquivalents(methods);
-        for (MethodNode candidateNode : choicesLeft) {
-            ClassNode declaringClassForDistance = candidateNode.getDeclaringClass();
-            ClassNode actualReceiverForDistance = receiver != null ? receiver : candidateNode.getDeclaringClass();
-            MethodNode safeNode = candidateNode;
+        List<MethodNode> bestChoices = new LinkedList<>();
+        boolean noCulling = methods.size() <= 1 || "<init>".equals(methods.iterator().next().getName());
+        Iterable<MethodNode> candidates = noCulling ? methods : removeCovariantsAndInterfaceEquivalents(methods);
+
+        for (MethodNode candidate : candidates) {
+            MethodNode safeNode = candidate;
             ClassNode[] safeArgs = argumentTypes;
-            boolean isExtensionMethodNode = candidateNode instanceof ExtensionMethodNode;
-            if (isExtensionMethodNode) {
-                safeArgs = new ClassNode[argumentTypes.length + 1];
-                System.arraycopy(argumentTypes, 0, safeArgs, 1, argumentTypes.length);
-                safeArgs[0] = receiver;
-                safeNode = ((ExtensionMethodNode) candidateNode).getExtensionMethodNode();
+            boolean isExtensionMethod = candidate instanceof ExtensionMethodNode;
+            if (isExtensionMethod) {
+                int nArgs = argumentTypes.length;
+                safeArgs = new ClassNode[nArgs + 1];
+                System.arraycopy(argumentTypes, 0, safeArgs, 1, nArgs);
+                safeArgs[0] = receiver; // prepend self-type as first argument
+                safeNode = ((ExtensionMethodNode) candidate).getExtensionMethodNode();
             }
 
-            // todo : corner case
-            /*
+            /* TODO: corner case
                 class B extends A {}
+                Animal foo(A a) {}
+                Person foo(B b) {}
 
-                Animal foo(A o) {...}
-                Person foo(B i){...}
-
-                B  a = new B()
+                B b = new B()
                 Person p = foo(b)
-             */
+            */
 
+            ClassNode declaringClassForDistance = candidate.getDeclaringClass();
+            ClassNode actualReceiverForDistance = receiver != null ? receiver : declaringClassForDistance;
             Map<GenericsType, GenericsType> declaringAndActualGenericsTypeMap = GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType(declaringClassForDistance, actualReceiverForDistance);
+
             Parameter[] params = makeRawTypes(safeNode.getParameters(), declaringAndActualGenericsTypeMap);
             int dist = measureParametersAndArgumentsDistance(params, safeArgs);
             if (dist >= 0) {
                 dist += getClassDistance(declaringClassForDistance, actualReceiverForDistance);
-                dist += getExtensionDistance(isExtensionMethodNode);
+                dist += getExtensionDistance(isExtensionMethod);
                 if (dist < bestDist) {
-                    bestChoices.clear();
-                    bestChoices.add(candidateNode);
                     bestDist = dist;
+                    bestChoices.clear();
+                    bestChoices.add(candidate);
                 } else if (dist == bestDist) {
-                    bestChoices.add(candidateNode);
+                    bestChoices.add(candidate);
                 }
             }
         }
         if (bestChoices.size() > 1) {
-            // GROOVY-6849: prefer extension methods in case of ambiguity
+            // GROOVY-6849: prefer extension method in case of ambiguity
             List<MethodNode> onlyExtensionMethods = new LinkedList<>();
             for (MethodNode choice : bestChoices) {
                 if (choice instanceof ExtensionMethodNode) {
@@ -1151,10 +1147,9 @@ public abstract class StaticTypeCheckingSupport {
         return raw;
     }
 
-    private static Collection<MethodNode> removeCovariantsAndInterfaceEquivalents(final Collection<MethodNode> collection) {
-        if (collection.size() <= 1) return collection;
-        List<MethodNode> toBeRemoved = new LinkedList<>();
-        List<MethodNode> list = new LinkedList<>(new LinkedHashSet<>(collection));
+    private static List<MethodNode> removeCovariantsAndInterfaceEquivalents(final Collection<MethodNode> collection) {
+        List<MethodNode> toBeRemoved = new ArrayList<>();
+        List<MethodNode> list = new ArrayList<>(new LinkedHashSet<>(collection));
         for (int i = 0, n = list.size(); i < n - 1; i += 1) {
             MethodNode one = list.get(i);
             if (toBeRemoved.contains(one)) continue;
@@ -1162,26 +1157,26 @@ public abstract class StaticTypeCheckingSupport {
                 MethodNode two = list.get(j);
                 if (toBeRemoved.contains(two)) continue;
                 if (one.getParameters().length == two.getParameters().length) {
-                    /* GRECLIPSE edit -- GROOVY-6882, GROOVY-6970
-                    if (areOverloadMethodsInSameClass(one, two)) {
-                    */
                     ClassNode oneDC = one.getDeclaringClass(), twoDC = two.getDeclaringClass();
                     if (oneDC == twoDC) {
-                    // GRECLIPSE end
                         if (ParameterUtils.parametersEqual(one.getParameters(), two.getParameters())) {
-                            removeMethodWithSuperReturnType(toBeRemoved, one, two);
+                            ClassNode oneRT = one.getReturnType(), twoRT = two.getReturnType();
+                            if (isCovariant(oneRT, twoRT)) {
+                                toBeRemoved.add(two);
+                            } else if (isCovariant(twoRT, oneRT)) {
+                                toBeRemoved.add(one);
+                            }
                         } else {
-                            // this is an imperfect solution to determining if two methods are
-                            // equivalent, for example String#compareTo(Object) and String#compareTo(String)
-                            // in that case, Java marks the Object version as synthetic
-                            removeSyntheticMethodIfOne(toBeRemoved, one, two);
+                            // imperfect solution to determining if two methods are
+                            // equivalent, for example String#compareTo(Object) and
+                            // String#compareTo(String) -- in that case, the Object
+                            // version is marked as synthetic
+                            if (one.isSynthetic() && !two.isSynthetic()) {
+                                toBeRemoved.add(one);
+                            } else if (two.isSynthetic() && !one.isSynthetic()) {
+                                toBeRemoved.add(two);
+                            }
                         }
-                    /* GRECLIPSE edit -- GROOVY-6882, GROOVY-6970
-                    } else if (areEquivalentInterfaceMethods(one, two)) {
-                        // GROOVY-6970: choose between equivalent interface methods
-                        removeMethodInSuperInterface(toBeRemoved, one, two);
-                    }
-                    */
                     } else if (!oneDC.equals(twoDC)) {
                         if (ParameterUtils.parametersEqual(one.getParameters(), two.getParameters())) {
                             // GROOVY-6882, GROOVY-6970: drop overridden or interface equivalent method
@@ -1194,65 +1189,22 @@ public abstract class StaticTypeCheckingSupport {
                             }
                         }
                     }
-                    // GRECLIPSE end
                 }
             }
         }
         if (toBeRemoved.isEmpty()) return list;
+
         List<MethodNode> result = new LinkedList<>(list);
         result.removeAll(toBeRemoved);
         return result;
     }
 
-    /* GRECLIPSE edit
-    private static void removeMethodInSuperInterface(final List<MethodNode> toBeRemoved, final MethodNode one, final MethodNode two) {
-        ClassNode oneDC = one.getDeclaringClass();
-        ClassNode twoDC = two.getDeclaringClass();
-        if (oneDC.implementsInterface(twoDC)) {
-            toBeRemoved.add(two);
-        } else {
-            toBeRemoved.add(one);
+    private static boolean isCovariant(final ClassNode one, final ClassNode two) {
+        if (one.isArray() && two.isArray()) {
+            return isCovariant(one.getComponentType(), two.getComponentType());
         }
+        return (one.isDerivedFrom(two) || one.implementsInterface(two));
     }
-
-    private static boolean areEquivalentInterfaceMethods(final MethodNode one, final MethodNode two) {
-        return (one.getName().equals(two.getName())
-                && one.getDeclaringClass().isInterface()
-                && two.getDeclaringClass().isInterface()
-                && ParameterUtils.parametersEqual(one.getParameters(), two.getParameters()));
-    }
-    */
-
-    private static void removeSyntheticMethodIfOne(final List<MethodNode> toBeRemoved, final MethodNode one, final MethodNode two) {
-        if (one.isSynthetic() && !two.isSynthetic()) {
-            toBeRemoved.add(one);
-        } else if (two.isSynthetic() && !one.isSynthetic()) {
-            toBeRemoved.add(two);
-        }
-    }
-
-    private static void removeMethodWithSuperReturnType(final List<MethodNode> toBeRemoved, final MethodNode one, final MethodNode two) {
-        ClassNode oneRT = one.getReturnType();
-        ClassNode twoRT = two.getReturnType();
-        if (isCovariant(oneRT, twoRT)) {
-            toBeRemoved.add(two);
-        } else if (isCovariant(twoRT, oneRT)) {
-            toBeRemoved.add(one);
-        }
-    }
-
-    private static boolean isCovariant(final ClassNode left, final ClassNode right) {
-        if (left.isArray() && right.isArray()) {
-            return isCovariant(left.getComponentType(), right.getComponentType());
-        }
-        return (left.isDerivedFrom(right) || left.implementsInterface(right));
-    }
-
-    /* GRECLIPSE edit
-    private static boolean areOverloadMethodsInSameClass(final MethodNode one, final MethodNode two) {
-        return (one.getName().equals(two.getName()) && one.getDeclaringClass() == two.getDeclaringClass());
-    }
-    */
 
     /**
      * Given a receiver and a method node, parameterize the method arguments using
@@ -1895,56 +1847,46 @@ public abstract class StaticTypeCheckingSupport {
         return false;
     }
 
-    // GRECLIPSE private->package
-    static ClassNode[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode[] bounds) {
-        if (bounds == null) return null;
-        ClassNode[] newBounds = new ClassNode[bounds.length];
-        for (int i = 0, n = bounds.length; i < n; i += 1) {
-            newBounds[i] = applyGenericsContext(spec, bounds[i]);
+    static ClassNode[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode[] types) {
+        if (types == null) return null;
+        final int nTypes = types.length;
+        ClassNode[] newTypes = new ClassNode[nTypes];
+        for (int i = 0; i < nTypes; i += 1) {
+            newTypes[i] = applyGenericsContext(spec, types[i]);
         }
-        return newBounds;
+        return newTypes;
     }
 
-    static ClassNode applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode bound) {
-        /* GRECLIPSE edit -- GROOVY-9822
-        if (bound == null) return null;
-        */
-        if (bound == null || !isUsingGenericsOrIsArrayUsingGenerics(bound)) {
-            return bound;
+    static ClassNode applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode type) {
+        if (type == null || !isUsingGenericsOrIsArrayUsingGenerics(type)) {
+            return type;
         }
-        // GRECLIPSE end
-        if (bound.isArray()) {
-            return applyGenericsContext(spec, bound.getComponentType()).makeArray();
+        if (type.isArray()) {
+            return applyGenericsContext(spec, type.getComponentType()).makeArray();
         }
-        /* GRECLIPSE edit -- GROOVY-9822
-        if (!bound.isUsingGenerics()) return bound;
-        ClassNode newBound = bound.getPlainNodeReference();
-        newBound.setGenericsTypes(applyGenericsContext(spec, bound.getGenericsTypes()));
-        */
-        ClassNode newBound = bound.getPlainNodeReference();
-        GenericsType[] gt = bound.getGenericsTypes();
+        ClassNode newType = type.getPlainNodeReference();
+        GenericsType[] gt = type.getGenericsTypes();
         if (asBoolean(spec)) {
             gt = applyGenericsContext(spec, gt);
         }
-        newBound.setGenericsTypes(gt);
-        // GRECLIPSE end
-        if (bound.isGenericsPlaceHolder()) {
-            boolean hasBounds = hasNonTrivialBounds(gt[0]);
-            if (hasBounds || !gt[0].isPlaceholder()) return getCombinedBoundType(gt[0]);
-            String placeHolderName = gt[0].getName();
-            if (!placeHolderName.equals(newBound.getUnresolvedName())) {
-                // we should produce a clean placeholder ClassNode here
-                ClassNode clean = make(placeHolderName);
-                clean.setRedirect(newBound);
-                clean.setGenericsTypes(gt);
-                newBound = clean;
+        newType.setGenericsTypes(gt);
+        if (type.isGenericsPlaceHolder()) {
+            boolean nonTrivial = hasNonTrivialBounds(gt[0]);
+            if (nonTrivial || !gt[0].isPlaceholder()) {
+                return getCombinedBoundType(gt[0]);
             }
-            newBound.setGenericsPlaceHolder(true);
+            String placeholderName = gt[0].getName();
+            if (!placeholderName.equals(newType.getUnresolvedName())) {
+                ClassNode clean = make(placeholderName);
+                clean.setGenericsTypes(gt);
+                clean.setRedirect(newType);
+                newType = clean;
+            }
+            newType.setGenericsPlaceHolder(true);
         }
-        return newBound;
+        return newType;
     }
 
-    // GRECLIPSE private->package
     static ClassNode getCombinedBoundType(final GenericsType genericsType) {
         // TODO: this method should really return some kind of meta ClassNode
         // representing the combination of all bounds. The code here, just picks

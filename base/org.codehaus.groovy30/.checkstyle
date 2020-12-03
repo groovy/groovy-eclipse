@@ -37,16 +37,14 @@
         <file-match-pattern match-pattern="groovy/ast/expr/ConstructorCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/RangeExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/ast/tools/(Expression|Generics|Parameter)Utils.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/tools/(Expression|Generics)Utils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/InnerClassVisitorHelper.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/VariableScopeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesBinaryExpressionMultiTypeDispatcher.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesMethodReferenceExpressionWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />

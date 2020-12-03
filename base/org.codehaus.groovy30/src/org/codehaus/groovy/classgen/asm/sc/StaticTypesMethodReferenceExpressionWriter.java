@@ -164,7 +164,7 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
             addFatalError("Failed to find the expected method["
                     + methodRefName + "("
                     + Arrays.stream(parametersWithExactType)
-                            .map(e -> e.getType().getName())
+                            .map(e -> e.getType().getText())
                             .collect(Collectors.joining(","))
                     + ")] in the type[" + typeOrTargetRefType.getText() + "]", methodReferenceExpression);
         } else if (parametersWithExactType.length > 0 && isTypeReferingInstanceMethod(typeOrTargetRef, methodRefMethod)) {

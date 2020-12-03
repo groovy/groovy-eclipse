@@ -34,38 +34,44 @@ import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
-import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
+import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.methodDescriptorWithoutReturnType;
 import static org.apache.groovy.util.BeanUtils.capitalize;
 import static org.codehaus.groovy.antlr.PrimitiveHelper.getDefaultValueForPrimitive;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getGetterName;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.throwS;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpec;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
 import static org.codehaus.groovy.ast.tools.ParameterUtils.parametersEqual;
 
 /**
- * Handles generation of code for the @AutoImplement annotation.
+ * Generates code for the {@code @AutoImplement} annotation.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 public class AutoImplementASTTransformation extends AbstractASTTransformation {
-    static final Class MY_CLASS = AutoImplement.class;
-    static final ClassNode MY_TYPE = ClassHelper.make(MY_CLASS);
-    static final String MY_TYPE_NAME = "@" + MY_TYPE.getNameWithoutPackage();
 
-    public void visit(ASTNode[] nodes, SourceUnit source) {
+    private static final Class<?> MY_CLASS = AutoImplement.class;
+    private static final ClassNode MY_TYPE = ClassHelper.make(MY_CLASS);
+    private static final String MY_TYPE_NAME = "@" + MY_TYPE.getNameWithoutPackage();
+
+    @Override
+    public void visit(final ASTNode[] nodes, final SourceUnit source) {
         init(nodes, source);
         AnnotatedNode parent = (AnnotatedNode) nodes[1];
         AnnotationNode anno = (AnnotationNode) nodes[0];
@@ -74,48 +80,66 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
         if (parent instanceof ClassNode) {
             ClassNode cNode = (ClassNode) parent;
             if (!checkNotInterface(cNode, MY_TYPE_NAME)) return;
+
+            String message = getMemberStringValue(anno, "message");
             ClassNode exception = getMemberClassValue(anno, "exception");
             if (exception != null && Undefined.isUndefinedException(exception)) {
                 exception = null;
             }
-            String message = getMemberStringValue(anno, "message");
+
             Expression code = anno.getMember("code");
             if (code != null && !(code instanceof ClosureExpression)) {
                 addError("Expected closure value for annotation parameter 'code'. Found " + code, cNode);
-                return;
-            }
-            createMethods(cNode, exception, message, (ClosureExpression) code);
-            if (code != null) {
-                anno.setMember("code", new ClosureExpression(Parameter.EMPTY_ARRAY, EmptyStatement.INSTANCE));
+            } else {
+                createMethods(cNode, exception, message, (ClosureExpression) code);
+                if (code != null) {
+                    anno.setMember("code", new ClosureExpression(Parameter.EMPTY_ARRAY, EmptyStatement.INSTANCE));
+                }
             }
         }
     }
 
-    private void createMethods(ClassNode cNode, ClassNode exception, String message, ClosureExpression code) {
+    private void createMethods(final ClassNode cNode, final ClassNode exception, final String message, final ClosureExpression code) {
         for (MethodNode candidate : getAllCorrectedMethodsMap(cNode).values()) {
             if (candidate.isAbstract()) {
-                addGeneratedMethod(cNode, candidate.getName(), Opcodes.ACC_PUBLIC, candidate.getReturnType(),
-                        candidate.getParameters(), candidate.getExceptions(),
-                        methodBody(exception, message, code, candidate.getReturnType()));
+                Statement statement = buildMethodBody(exception, message, code, candidate.getReturnType());
+                String propertyName = getPropertyName(candidate);
+                if (propertyName != null && candidate.getParameters().length == 0) {
+                    String accessorName = candidate.getName().startsWith("is")
+                            ? "get" + capitalize(propertyName) : "is" + capitalize(propertyName);
+                    if (cNode.hasMethod(accessorName, Parameter.EMPTY_ARRAY)) {
+                        // delegate to existing accessor to reduce the surprise
+                        statement = returnS(callX(varX("this"), accessorName));
+                    }
+                }
+
+                addGeneratedMethod(cNode,
+                        candidate.getName(),
+                        candidate.getModifiers() & 0x7, // visibility only
+                        candidate.getReturnType(),
+                        candidate.getParameters(),
+                        candidate.getExceptions(),
+                        statement
+                );
             }
         }
     }
 
     /**
-     * Return all methods including abstract super/interface methods but only if not overridden
-     * by a concrete declared/inherited method.
+     * Returns all methods including abstract super/interface methods but only
+     * if not overridden by a concrete declared/inherited method.
      */
-    private static Map<String, MethodNode> getAllCorrectedMethodsMap(ClassNode cNode) {
-        Map<String, MethodNode> result = new HashMap<String, MethodNode>();
+    private static Map<String, MethodNode> getAllCorrectedMethodsMap(final ClassNode cNode) {
+        Map<String, MethodNode> result = new HashMap<>();
         for (MethodNode mn : cNode.getMethods()) {
             result.put(methodDescriptorWithoutReturnType(mn), mn);
         }
         ClassNode next = cNode;
         while (true) {
             Map<String, ClassNode> genericsSpec = createGenericsSpec(next);
-            for (MethodNode mn : next.getMethods()) {
-                MethodNode correctedMethod = correctToGenericsSpec(genericsSpec, mn);
-                if (next != cNode) {
+            if (next != cNode) {
+                for (MethodNode mn : next.getMethods()) {
+                    MethodNode correctedMethod = correctToGenericsSpec(genericsSpec, mn);
                     ClassNode correctedClass = correctToGenericsSpecRecurse(genericsSpec, next);
                     MethodNode found = getDeclaredMethodCorrected(genericsSpec, correctedMethod, correctedClass);
                     if (found != null) {
@@ -127,8 +151,9 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
                     }
                 }
             }
-            List<ClassNode> interfaces = new ArrayList<ClassNode>(Arrays.asList(next.getInterfaces()));
-            Map<String, ClassNode> updatedGenericsSpec = new HashMap<String, ClassNode>(genericsSpec);
+            List<ClassNode> interfaces = new ArrayList<>();
+            Collections.addAll(interfaces, next.getInterfaces());
+            Map<String, ClassNode> updatedGenericsSpec = new HashMap<>(genericsSpec);
             while (!interfaces.isEmpty()) {
                 ClassNode origInterface = interfaces.remove(0);
                 // ignore java.lang.Object; also methods added by Verifier for GroovyObject are already good enough
@@ -136,7 +161,7 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
                     updatedGenericsSpec = createGenericsSpec(origInterface, updatedGenericsSpec);
                     ClassNode correctedInterface = correctToGenericsSpecRecurse(updatedGenericsSpec, origInterface);
                     for (MethodNode nextMethod : correctedInterface.getMethods()) {
-                        MethodNode correctedMethod = correctToGenericsSpec(updatedGenericsSpec, nextMethod); // GROOVY-8270
+                        MethodNode correctedMethod = correctToGenericsSpec(updatedGenericsSpec, nextMethod);
                         MethodNode found = getDeclaredMethodCorrected(updatedGenericsSpec, correctedMethod, correctedInterface);
                         if (found != null) {
                             String td = methodDescriptorWithoutReturnType(found);
@@ -146,7 +171,7 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
                             result.put(td, found);
                         }
                     }
-                    interfaces.addAll(Arrays.asList(correctedInterface.getInterfaces()));
+                    Collections.addAll(interfaces, correctedInterface.getInterfaces());
                 }
             }
             ClassNode superClass = next.getUnresolvedSuperClass();
@@ -155,18 +180,19 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
             }
             next = correctToGenericsSpecRecurse(updatedGenericsSpec, superClass);
         }
-        // GRECLIPSE add -- remove entries for to-be-generated property access and mutate methods
+
+        // GROOVY-9816: remove entries for to-be-generated property access and mutate methods
         for (ClassNode cn = cNode; cn != null && !cn.equals(ClassHelper.OBJECT_TYPE); cn = cn.getSuperClass()) {
             for (PropertyNode pn : cn.getProperties()) {
-                String name = capitalize(pn.getName());
                 if (!pn.getField().isFinal()) {
-                    result.remove("set" + name + ":" + pn.getType().getText() + ",");
+                    result.remove(getSetterName(pn.getName()) + ":" + pn.getType().getText() + ",");
                 }
                 if (!pn.getType().equals(ClassHelper.boolean_TYPE)) {
-                    result.remove("get" + name + ":");
+                    result.remove(getGetterName(pn) + ":");
                 } else {
                     // getter generated only if no explicit isser and vice versa
-                    String isserName  = "is" + name, getterName = "get" + name;
+                    String isserName  = "is" + capitalize(pn.getName());
+                    String getterName = getGetterName(pn);
                     if (!cNode.hasMethod(isserName, Parameter.EMPTY_ARRAY)) {
                         result.remove(getterName + ":");
                     }
@@ -176,11 +202,11 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
                 }
             }
         }
-        // GRECLIPSE end
+
         return result;
     }
 
-    private static MethodNode getDeclaredMethodCorrected(Map<String, ClassNode> genericsSpec, MethodNode origMethod, ClassNode correctedClass) {
+    private static MethodNode getDeclaredMethodCorrected(final Map<String, ClassNode> genericsSpec, final MethodNode origMethod, final ClassNode correctedClass) {
         for (MethodNode nameMatch : correctedClass.getDeclaredMethods(origMethod.getName())) {
             MethodNode correctedMethod = correctToGenericsSpec(genericsSpec, nameMatch);
             if (parametersEqual(correctedMethod.getParameters(), origMethod.getParameters())) {
@@ -191,7 +217,7 @@ public class AutoImplementASTTransformation extends AbstractASTTransformation {
     }
 
     // GRECLIPSE edit
-    private /*Block*/Statement methodBody(ClassNode exception, String message, ClosureExpression code, ClassNode returnType) {
+    private /*Block*/Statement buildMethodBody(final ClassNode exception, final String message, final ClosureExpression code, final ClassNode returnType) {
         /* GRECLIPSE edit
         BlockStatement body = new BlockStatement();
         if (code != null) {
