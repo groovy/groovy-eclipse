@@ -565,6 +565,11 @@ public class GeneralUtils {
         return sameX(getterThisX(cNode, pNode), getterX(cNode, other, pNode));
     }
 
+    @Deprecated
+    public static Statement ifElseS$$bridge(final Expression cond, final Statement thenStmt, final Statement elseStmt) {
+        return ifElseS(cond, thenStmt, elseStmt);
+    }
+
     public static IfStatement ifElseS(final Expression cond, final Statement thenStmt, final Statement elseStmt) {
         return new IfStatement(
                 cond instanceof BooleanExpression ? (BooleanExpression) cond : new BooleanExpression(cond),
@@ -573,8 +578,18 @@ public class GeneralUtils {
         );
     }
 
+    @Deprecated
+    public static Statement ifS$$bridge(final Expression cond, final Expression trueExpr) {
+        return ifS(cond, trueExpr);
+    }
+
     public static IfStatement ifS(final Expression cond, final Expression trueExpr) {
         return ifS(cond, new ExpressionStatement(trueExpr));
+    }
+
+    @Deprecated
+    public static Statement ifS$$bridge(final Expression cond, final Statement trueStmt) {
+        return ifS(cond, trueStmt);
     }
 
     public static IfStatement ifS(final Expression cond, final Statement trueStmt) {

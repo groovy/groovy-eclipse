@@ -406,7 +406,6 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
             *******/
 
             WriterController controller = getController();
-            StaticTypeCheckingVisitor visitor = new StaticCompilationVisitor(controller.getSourceUnit(), controller.getClassNode());
             // let's replace this assignment to a subscript operator with a
             // method call
             // e.g. x[5] = 10
@@ -418,22 +417,18 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
                 rhsValueLoader.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE,
                         controller.getTypeChooser().resolveType(parent, controller.getClassNode()));
             }
-            MethodCallExpression mce = new MethodCallExpression(
-                    receiver,
-                    "putAt",
-                    ae
-            );
+            MethodCallExpression mce = new MethodCallExpression(receiver, "putAt", ae);
             mce.setSourcePosition(parent);
-            /* GRECLIPSE edit -- GROOVY-9699, GROOVY-9771
-            visitor.visitMethodCallExpression(mce);
-            */
-            receiver.visit(visitor);
+            // GRECLIPSE add -- GROOVY-9699, GROOVY-9771
+            receiver.visit(new StaticCompilationVisitor(controller.getSourceUnit(), controller.getClassNode()));
             // GRECLIPSE end
+
             OperandStack operandStack = controller.getOperandStack();
             int height = operandStack.getStackLength();
             mce.visit(controller.getAcg());
             operandStack.pop();
             operandStack.remove(operandStack.getStackLength()-height);
+
             // return value of assignment
             rhsValueLoader.visit(controller.getAcg());
         }

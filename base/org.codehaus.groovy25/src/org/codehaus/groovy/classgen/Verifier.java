@@ -1758,9 +1758,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private MethodNode getCovariantImplementation(final MethodNode oldMethod, final MethodNode overridingMethod, Map genericsSpec, boolean ignoreError) {
         if (!oldMethod.getName().equals(overridingMethod.getName())) return null;
         if ((overridingMethod.getModifiers() & ACC_BRIDGE) != 0) return null;
-        // GRECLIPSE add -- GROOVY-9654
         if ((oldMethod.getModifiers() & ACC_BRIDGE) != 0) return null;
-        // GRECLIPSE end
         if (oldMethod.isPrivate()) return null;
 
         // GRECLIPSE add -- GROOVY-9059

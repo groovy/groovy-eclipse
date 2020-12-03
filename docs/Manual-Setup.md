@@ -12,7 +12,7 @@ On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Inst
 
 ### Setup Groovy Compiler
 
-If you installed extran Groovy compiler versions, then you must activate Groovy 2.5 compiler for Groovy-Eclipse.  On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.5.13* button, and let Eclipse restart.
+If you installed extran Groovy compiler versions, then you must activate Groovy 2.5 compiler for Groovy-Eclipse.  On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.5.14* button, and let Eclipse restart.
 
 ### Install Execution Environment Descriptions
 
