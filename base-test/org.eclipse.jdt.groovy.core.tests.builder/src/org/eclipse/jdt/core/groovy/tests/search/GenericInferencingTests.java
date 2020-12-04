@@ -929,8 +929,21 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "asList", "java.util.List<java.lang.Integer>");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1198
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1194
     public void testClosure11() {
+        String contents = "import groovy.transform.stc.*\n" +
+            "def m(@ClosureParams(value=SimpleType,options='java.lang.Integer') Closure c) {}\n" +
+            "def <T> String test(T t) {}\n" +
+            "m(this.&test)\n";
+        int offset = contents.lastIndexOf("test");
+
+        MethodNode m = assertDeclaration(contents, offset, offset + 4, "Search", "test", DeclarationKind.METHOD);
+        assertEquals("java.lang.Integer", printTypeName(m.getParameters()[0].getType()));
+        assertEquals("java.lang.String", printTypeName(m.getReturnType()));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1198
+    public void testClosure12() {
         assumeTrue(isParrotParser());
         String contents = "Optional.of(21).map(num -> num * 2).get()\n";
         assertType(contents, "get", "java.lang.Integer");
@@ -938,18 +951,19 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1199
-    public void testClosure12() {
+    public void testClosure13() {
         String contents = "java.util.function.Function<Integer, List<Integer>> f = Arrays.&asList\n";
         assertType(contents, "asList", "java.util.List<java.lang.Integer>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1199
-    public void testClosure13() {
+    public void testClosure14() {
         String contents = "def <T> String test(T t) {}\n" + "java.util.function.Function<Integer, String> f = this.&test\n";
         int offset = contents.lastIndexOf("test");
+
         MethodNode m = assertDeclaration(contents, offset, offset + 4, "Search", "test", DeclarationKind.METHOD);
-        assertEquals("java.lang.String", printTypeName(m.getReturnType()));
         assertEquals("java.lang.Integer", printTypeName(m.getParameters()[0].getType()));
+        assertEquals("java.lang.String", printTypeName(m.getReturnType()));
     }
 
     @Test

@@ -16,12 +16,16 @@
 package org.eclipse.jdt.groovy.search;
 
 import static java.util.Collections.singletonList;
+import static java.util.stream.IntStream.range;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+
+import groovy.transform.stc.ClosureParams;
+import groovy.transform.stc.ClosureSignatureHint;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -32,14 +36,19 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
+import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 public class TypeLookupResult {
@@ -193,6 +202,16 @@ public class TypeLookupResult {
                             if (targetType.isArray() && index >= params.length - 1) {
                                 targetType = objectType.getComponentType();
                             }
+
+                            if (targetType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
+                                MethodNode source = method; // effectively final version
+                                Parameter  target = params[Math.min(index, params.length - 1)];
+                                method = findClosureSignature(target, source, scope.getEnclosingModuleNode().getContext(), cat.call).map(types -> {
+                                    GenericsMapper gm = GenericsMapper.gatherGenerics(java.util.Arrays.asList(types), cat.declaringType, source);
+                                    MethodNode mn = VariableScope.resolveTypeParameterization(gm, source);
+                                    return mn;
+                                }).orElse(method);
+                            }
                         }
                     } else if (testEnclosingAssignment(scope, rhs -> rhs == scope.getEnclosingNode())) {
                         // maybe the assign target type can help resolve type parameters of method
@@ -261,5 +280,28 @@ public class TypeLookupResult {
             .filter(bexp -> bexp instanceof DeclarationExpression)
             .map(BinaryExpression::getRightExpression).filter(rhsTest)
             .isPresent();
+    }
+
+    private static Optional<ClassNode[]> findClosureSignature(final Parameter target, final MethodNode source, final SourceUnit unit, final MethodCall call) {
+        return GroovyUtils.getAnnotations(target, VariableScope.CLOSURE_PARAMS.getName()).findFirst().map(cp -> {
+            try {
+                @SuppressWarnings("unchecked") Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.CLASS_CLASS_NODE, cp.getMember("value")), unit.getConfiguration());
+                String[] opts = (String[]) (cp.getMember("options") == null ? ClosureParams.class.getMethod("options").getDefaultValue() : StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.STRING_CLASS_NODE.makeArray(), cp.getMember("options")), unit.getConfiguration()));
+
+                // determine closure param types from ClosureSignatureHint
+                List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(source, unit, ((EclipseSourceUnit) unit).resolver.compilationUnit, opts, (Expression) call);
+                if (sigs != null) {
+                    List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(source.getParameters());
+                    for (ClassNode[] sig : sigs) {
+                        if (sig.length == parameterTypes.size() && range(0, sig.length).allMatch(i -> GroovyUtils.isAssignable(sig[i], parameterTypes.get(i)))) {
+                            return sig;
+                        }
+                    }
+                }
+            } catch (Exception | LinkageError e) {
+                org.eclipse.jdt.internal.core.util.Util.log(e, "Error processing @ClosureParams of " + call.getMethodAsString());
+            }
+            return null;
+        });
     }
 }
