@@ -86,7 +86,6 @@ import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
-import static org.codehaus.groovy.classgen.AsmClassGenerator.samePackages;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.chooseBestMethod;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
@@ -561,10 +560,15 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
     }
 
     boolean makeGetField(final Expression receiver, final ClassNode receiverType, final String fieldName, final boolean safe, final boolean implicitThis) {
+        /* GRECLIPSE edit -- GROOVY-7039, GROOVY-9791
         FieldNode field = receiverType.getField(fieldName);
         // direct access is allowed if we are in the same class as the declaring class
         // or we are in an inner class
         if (field != null && isDirectAccessAllowed(field, controller.getClassNode())) {
+        */
+        FieldNode field = org.apache.groovy.ast.tools.ClassNodeUtils.getField(receiverType, fieldName);
+        if (field != null && AsmClassGenerator.isValidFieldNodeForByteCodeAccess(field, controller.getClassNode())) {
+        // GRECLIPSE end
             CompileStack compileStack = controller.getCompileStack();
             MethodVisitor mv = controller.getMethodVisitor();
             ClassNode replacementType = field.getOriginType();
@@ -604,7 +608,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             operandStack.replace(replacementType);
             return true;
         }
-
+        /* GRECLIPSE edit
         for (ClassNode intf : receiverType.getInterfaces()) {
             // GROOVY-7039
             if (intf != receiverType && makeGetField(receiver, intf, fieldName, safe, implicitThis)) {
@@ -616,9 +620,11 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         if (superClass != null) {
             return makeGetField(receiver, superClass, fieldName, safe, implicitThis);
         }
+        */
         return false;
     }
 
+    /* GRECLIPSE edit -- GROOVY-9791
     private static boolean isDirectAccessAllowed(FieldNode field, ClassNode receiver) {
         ClassNode declaringClass = field.getDeclaringClass().redirect();
         ClassNode receiverType = receiver.redirect();
@@ -639,6 +645,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         // finally public and visible
         return field.isPublic() || samePackages(receiver.getPackageName(), declaringClass.getPackageName());
     }
+    */
 
     @Override
     public void makeSiteEntry() {
@@ -946,7 +953,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         return true;
     }
 
-    @SuppressWarnings("unused")
+    /* GRECLIPSE edit
     private boolean getField(PropertyExpression expression, Expression receiver, ClassNode receiverType, String name) {
         boolean safe = expression.isSafe();
         boolean implicitThis = expression.isImplicitThis();
@@ -971,6 +978,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         }
         return false;
     }
+    */
 
     private void addPropertyAccessError(final Expression receiver, final String propertyName, final ClassNode receiverType) {
         String receiverName = (receiver instanceof ClassExpression ? receiver.getType() : receiverType).toString(false);

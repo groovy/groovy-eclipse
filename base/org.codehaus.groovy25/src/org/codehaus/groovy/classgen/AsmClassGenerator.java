@@ -936,7 +936,8 @@ public class AsmClassGenerator extends ClassGenerator {
         );
     }
 
-    private static boolean isValidFieldNodeForByteCodeAccess(FieldNode fn, ClassNode accessingNode) {
+    // GRECLIPSE edit -- private->public
+    public static boolean isValidFieldNodeForByteCodeAccess(FieldNode fn, ClassNode accessingNode) {
         if (fn == null) return false;
         ClassNode declaringClass = fn.getDeclaringClass();
         // same class is always allowed access
