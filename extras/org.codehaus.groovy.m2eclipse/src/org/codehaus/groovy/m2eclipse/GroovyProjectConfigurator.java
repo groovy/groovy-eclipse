@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,12 +61,12 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
     }
 
     @Override
-    public void configureClasspath(IMavenProjectFacade facade, IClasspathDescriptor classpath, IProgressMonitor monitor) throws CoreException {
+    public void configureClasspath(IMavenProjectFacade facade, IClasspathDescriptor classpath, IProgressMonitor monitor) {
         // nothing to add to the Maven Dependencies container
     }
 
     @Override
-    public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath, IProgressMonitor monitor) throws CoreException {
+    public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath, IProgressMonitor monitor) {
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
         if (sourceType != null) {
             if (isAbsent(classpath, DSLD_CONTAINER_ID) && isAddDslSupport()) {
