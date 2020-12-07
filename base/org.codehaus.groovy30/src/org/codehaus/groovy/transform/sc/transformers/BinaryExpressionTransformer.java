@@ -150,8 +150,8 @@ public class BinaryExpressionTransformer {
             Expression right = staticCompilationTransformer.transform(rightExpression);
 
             if (operationType == Types.COMPARE_TO
-                    && findType(leftExpression).implementsInterface(ClassHelper.COMPARABLE_TYPE)
-                    && findType(rightExpression).implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
+                    && findType(left/*Expression*/).implementsInterface(ClassHelper.COMPARABLE_TYPE)
+                    && findType(right/*Expression*/).implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
                 call = callX(left, "compareTo", args(right));
                 call.setImplicitThis(false);
                 call.setMethodTarget(COMPARE_TO_METHOD);
@@ -240,7 +240,11 @@ public class BinaryExpressionTransformer {
             MethodNode adapter = StaticCompilationTransformer.BYTECODE_BINARY_ADAPTERS.get(operationType);
             if (adapter != null) {
                 Expression sba = classX(StaticCompilationTransformer.BYTECODE_ADAPTER_CLASS);
+                /* GRECLIPSE edit
                 call = callX(sba, "compareEquals", args(expr, right));
+                */
+                call = callX(sba, adapter.getName(), args(expr, right));
+                // GRECLIPSE end
                 call.setMethodTarget(adapter);
             } else {
                 call = callX(expr, name, args(right));
