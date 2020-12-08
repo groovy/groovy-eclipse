@@ -141,14 +141,11 @@ public abstract class TraitComposer {
                 Parameter[] origParams = new Parameter[nParams - 1];
                 Parameter[] params = new Parameter[nParams - 1];
                 System.arraycopy(methodNode.getParameters(), 1, params, 0, params.length);
+
                 MethodNode originalMethod = trait.getMethod(name, params);
-                /* GRECLIPSE edit -- GROOVY-9763
-                Map<String, ClassNode> methodGenericsSpec = Optional.ofNullable(originalMethod)
-                    .map(m -> GenericsUtils.addMethodGenerics(m, genericsSpec)).orElse(genericsSpec);
-                */
                 Map<String, ClassNode> methodGenericsSpec = GenericsUtils.addMethodGenerics(
                         Optional.ofNullable(originalMethod).orElse(methodNode), genericsSpec);
-                // GRECLIPSE end
+
                 for (int i = 1; i < nParams; i += 1) {
                     Parameter parameter = helperMethodParams[i];
                     ClassNode originType = parameter.getOriginType();
@@ -295,7 +292,10 @@ public abstract class TraitComposer {
                     // but add empty body for setter for legacy compatibility
                     MethodNode impl = new MethodNode(
                             methodNode.getName(),
-                            /*GRECLIPSE add*/Opcodes.ACC_SYNTHETIC | /*GRECLIPSE end*/Opcodes.ACC_PUBLIC | isStatic,
+                            // GRECLIPSE add
+                            Opcodes.ACC_SYNTHETIC |
+                            // GRECLIPSE end
+                            Opcodes.ACC_PUBLIC | isStatic,
                             returnType,
                             newParams,
                             ClassNode.EMPTY_ARRAY,
@@ -333,9 +333,7 @@ public abstract class TraitComposer {
                 helperMethodArgList
         );
         mce.setImplicitThis(false);
-        /* GRECLIPSE edit -- GROOVY-8757
-        genericsSpec = GenericsUtils.addMethodGenerics(helperMethod, genericsSpec);
-        */
+
         ClassNode[] exceptionNodes = correctToGenericsSpecRecurse(genericsSpec, copyExceptions(helperMethod.getExceptions()));
         ClassNode fixedReturnType = correctToGenericsSpecRecurse(genericsSpec, helperMethod.getReturnType());
         boolean noCastRequired = genericsSpec.isEmpty() || fixedReturnType.getName().equals(ClassHelper.VOID_TYPE.getName());

@@ -984,8 +984,10 @@ public class GenericsUtils {
                     for (ClassNode upperBound : upperBounds) {
                         if (hasUnresolvedGenerics(upperBound)) return true;
                     }
+                // GRECLIPSE add
                 } else {
                     if (hasUnresolvedGenerics(genericsType.getType())) return true;
+                // GRECLIPSE end
                 }
             }
         }

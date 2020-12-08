@@ -149,7 +149,8 @@ public abstract class Traits {
             // precompiled trait
             try {
                 final ClassLoader classLoader = trait.getTypeClass().getClassLoader();
-                helperClassNode = ClassHelper.make(Class.forName(Traits.helperClassName(trait), false, classLoader));
+                String helperClassName = Traits.helperClassName(trait);
+                helperClassNode = ClassHelper.make(Class.forName(helperClassName, false, classLoader));
                 // GRECLIPSE add -- link helper methods to trait methods
                 for (MethodNode method : helperClassNode.getMethods()) {
                     Parameter[] params = method.getParameters();
