@@ -1032,7 +1032,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-5961
-    public void testAnonymousInnerClass18() {
+    public void testAnonymousInnerClass17a() {
         //@formatter:off
         String[] sources = {
             "Abstract.groovy",
@@ -1055,6 +1055,28 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-4035
+    public void testAnonymousInnerClass18() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  def m(p) {\n" +
+            "    p\n" +
+            "  }\n" +
+            "}\n" +
+            "def aic = new C() {\n" +
+            "  def m(Object p) {\n" +
+            "    super.m(p)\n" +
+            "  }\n" +
+            "}\n" +
+            "print aic.m('x')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
     }
 
     @Test

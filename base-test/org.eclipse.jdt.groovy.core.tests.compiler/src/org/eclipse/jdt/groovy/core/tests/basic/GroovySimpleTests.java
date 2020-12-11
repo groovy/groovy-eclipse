@@ -4468,6 +4468,21 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[12.31.1999, 01.01.2000, 01.02.2000]");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6045
+    public void testGroovy6045() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) { new Main() }\n" +
+            "  String toString() { super?.toString() }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-8311
     public void testGroovy8311() {
         //@formatter:off

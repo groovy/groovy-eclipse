@@ -1390,6 +1390,18 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('p'), 1, PARAMETER))
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9630
+    void testVarKeyword0() {
+        String contents = '''\
+            |def var
+            |var = null
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('var'), 3, VARIABLE))
+    }
+
     @Test
     void testVarKeyword1() {
         String contents = '''\

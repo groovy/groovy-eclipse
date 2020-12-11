@@ -1009,9 +1009,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (node instanceof PropertyExpression) {
             return ((PropertyExpression) node).getObjectExpression();
         }
-        if (node instanceof AttributeExpression) {
-            return ((AttributeExpression) node).getObjectExpression();
-        }
         if (node instanceof MethodCallExpression) {
             return ((MethodCallExpression) node).getObjectExpression();
         }
