@@ -100,6 +100,9 @@ public class ReturnAdder {
 
     private Statement addReturnsIfNeeded(final Statement statement, final VariableScope scope) {
         if (statement instanceof ReturnStatement || statement instanceof ThrowStatement
+                // GRECLIPSE add -- GROOVY-9373
+                || statement instanceof EmptyStatement
+                // GRECLIPSE end
                 || statement instanceof BytecodeSequence) {
             return statement;
         }

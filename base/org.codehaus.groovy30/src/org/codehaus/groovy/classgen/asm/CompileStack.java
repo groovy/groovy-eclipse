@@ -416,12 +416,15 @@ public class CompileStack implements Opcodes {
      * can be accessed by calling getVariable().
      *
      */
-    public void init(final VariableScope scope, final Parameter[] parameters) {
+    public Label init(final VariableScope scope, final Parameter[] parameters) {
         if (!clear) throw new GroovyBugError("CompileStack#init called without calling clear before");
         clear = false;
         pushVariableScope(scope);
         defineMethodVariables(parameters, scope.isInStaticContext());
-        this.className = BytecodeHelper.getTypeDescription(controller.getClassNode());
+        className = BytecodeHelper.getTypeDescription(controller.getClassNode());
+        // GRECLIPSE add -- GROOVY-9373
+        return thisStartLabel;
+        // GRECLIPSE end
     }
 
     /**

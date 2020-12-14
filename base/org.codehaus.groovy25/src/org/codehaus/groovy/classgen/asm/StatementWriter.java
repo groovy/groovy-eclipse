@@ -287,7 +287,9 @@ public class StatementWriter {
     }
 
     public void writeDoWhileLoop(DoWhileStatement loop) {
+        /* GRECLIPSE edit -- GROOVY-9373
         controller.getAcg().onLineNumber(loop, "visitDoWhileLoop");
+        */
         writeStatementLabel(loop);
 
         MethodVisitor mv = controller.getMethodVisitor();
@@ -344,7 +346,9 @@ public class StatementWriter {
     }
 
     public void writeTryCatchFinally(TryCatchStatement statement) {
+        /* GRECLIPSE edit -- GROOVY-9373
         controller.getAcg().onLineNumber(statement, "visitTryCatchFinally");
+        */
         writeStatementLabel(statement);
 
         MethodVisitor mv = controller.getMethodVisitor();

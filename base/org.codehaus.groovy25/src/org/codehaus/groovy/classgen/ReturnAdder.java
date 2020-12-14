@@ -120,9 +120,13 @@ public class ReturnAdder {
         }
 
         if (statement instanceof EmptyStatement) {
+            /* GRECLIPSE edit -- GROOVY-9373
             final ReturnStatement returnStatement = new ReturnStatement(ConstantExpression.NULL);
             listener.returnStatementAdded(returnStatement);
             return returnStatement;
+            */
+            return statement;
+            // GRECLIPSE end
         }
 
         if (statement instanceof ExpressionStatement) {

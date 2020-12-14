@@ -469,7 +469,7 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private void visitStdMethod(MethodNode node, boolean isConstructor, Parameter[] parameters, Statement code) {
-        controller.getCompileStack().init(node.getVariableScope(), parameters);
+        Label l0 = controller.getCompileStack().init(node.getVariableScope(), parameters);
         controller.getCallSiteWriter().makeSiteEntry();
 
         MethodVisitor mv = controller.getMethodVisitor();
@@ -491,6 +491,15 @@ public class AsmClassGenerator extends ClassGenerator {
                 }
             }
             if (!hasCallToSuper) {
+                // GRECLIPSE add -- GROOVY-9373
+                if (code != null) {
+                    int line = code.getLineNumber();
+                    if (line > 0) {
+                        mv.visitLineNumber(line, l0);
+                        controller.setLineNumber(line);
+                    }
+                }
+                // GRECLIPSE end
                 // add call to "super()"
                 mv.visitVarInsn(ALOAD, 0);
                 ClassNode superClass = controller.getClassNode().getSuperClass();
@@ -505,6 +514,12 @@ public class AsmClassGenerator extends ClassGenerator {
         */
         if (code != null) {
             code.visit(this);
+            // GROOVY-7647, GROOVY-9373
+            int line = code.getLastLineNumber();
+            if (line > controller.getLineNumber()) {
+                Label label = new Label(); mv.visitLabel(label);
+                mv.visitLineNumber(line, label); controller.setLineNumber(line);
+            }
         }
         // GRECLIPSE end
         if (node.isVoidMethod()) {
