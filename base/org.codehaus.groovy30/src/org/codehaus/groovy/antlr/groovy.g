@@ -639,14 +639,13 @@ compilationUnit
         ( sep! (statement[sepToken])? )*
         EOF!
     ;
-// GRECLIPSE add
+    // GRECLIPSE add
     exception
     catch [RecognitionException e] {
-        // report the error but don't throw away what we've successfully parsed
         reportError(e);
-        #compilationUnit = (AST) currentAST.root;
+        #compilationUnit = currentAST.root;
     }
-// GRECLIPSE end
+    // GRECLIPSE end
 
 /** A Groovy script or simple expression.  Can be anything legal inside {...}. */
 snippetUnit
@@ -656,35 +655,32 @@ snippetUnit
 // Package statement: optional annotations followed by "package" then the package identifier
 packageDefinition
         {Token first = LT(1);}
-    /* GRECLIPSE edit -- missing identifier recovery
-    :   an:annotationsOpt! "package"! id:identifier!
-    */
-    :   an:annotationsOpt! "package"! (id:identifier!)?
-    // GRECLIPSE end
+    :   an:annotationsOpt! "package"! (id:identifier!)? // GRECLIPSE edit
         {
             // GRECLIPSE add
-            if (#id == null) {
-               #id = missingIdentifier(LT(0), null);
-               reportError("Invalid package specification", LT(0).getLine(), LT(0).getColumn() - 1);
-            }
+            if (#id == null) throw new NoViableAltException(first, getFilename());
             // GRECLIPSE end
             #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)), an, id);
         }
     ;
+    // GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        if (LA(0) != LITERAL_package) rewind(mark() - 1);
+        reportError("Invalid package statement", LT(1).getLine(), LT(1).getColumn() - 1);
+
+        #id = missingIdentifier(LT(0), null); #id.setText("java.lang");
+        #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(0)), an, id);
+    }
+    // GRECLIPSE end
 
 // Import statement: import followed by a package or class name
 importStatement
         {Token first = LT(1); boolean isStatic = false;}
-    /* GRECLIPSE edit -- missing identifier recovery
-    :   an:annotationsOpt "import"! ("static"! {isStatic = true;})? is:identifierStar!
-    */
-    :   an:annotationsOpt "import"! ("static"! {isStatic = true;})? (is:identifierStar!)?
-    // GRECLIPSE end
+    :   an:annotationsOpt "import"! ("static"! {isStatic = true;})? (is:identifierStar!)? // GRECLIPSE edit
         {
             // GRECLIPSE add
-            if (#is == null) {
-                #is = missingIdentifier(LT(0), null);
-            }
+            if (#is == null) throw new NoViableAltException(first, getFilename());
             // GRECLIPSE end
             if (!isStatic) {
                 #importStatement = #(create(IMPORT,"import",first,LT(1)), an, is);
@@ -693,6 +689,20 @@ importStatement
             }
         }
     ;
+    // GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        if (LA(0) != LITERAL_import && LA(0) != LITERAL_static) rewind(mark() - 1);
+        reportError("Invalid import statement", LT(1).getLine(), LT(1).getColumn() - 1);
+
+        #is = missingIdentifier(LT(1), null); #is.setText("java.lang.Object");
+        if (!isStatic) {
+            #importStatement = #(create(IMPORT,"import",first,LT(1)), an, is);
+        } else {
+            #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)), an, is);
+        }
+    }
+    // GRECLIPSE end
 
 // Protected type definitions production for reuse in other productions
 protected typeDefinitionInternal[AST mods]
@@ -1018,7 +1028,7 @@ identifier {Token first = LT(1);}
         {#identifier = #i1;}
     ;
 
-identifierStar {Token first = LT(1); int start = mark();} // GRECLIPSE add
+identifierStar {Token first = LT(1);}
     :   i1:IDENT!
         (   options { greedy = true; } :
             d1:DOT! nls! i2:IDENT!
@@ -1030,22 +1040,6 @@ identifierStar {Token first = LT(1); int start = mark();} // GRECLIPSE add
             {#i1 = #(create(LITERAL_as,"as",first,LT(1)), i1, alias);}
         )?
         {#identifierStar = #i1;}
-        // GRECLIPSE add
-        /* RECOVERY: notes:
-         * The start of parsing this structure was marked.  If there is a problem an exception
-         * is caught, error logged, fake ast node created (to satisfy the parent rule) and
-         * we jump back to the start of this line and proceed to the end of it, hoping
-         * that parsing can continue on the next.
-         */
-        exception
-        catch [RecognitionException e] {
-            reportError("Invalid import", first);
-            #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
-            // Give up on this line and just go to the next
-            rewind(start);
-            consumeUntil(NLS);
-        }
-        // GRECLIPSE end
     ;
 
 modifiersInternal

@@ -217,7 +217,7 @@ import groovyjarjarantlr.collections.impl.ASTArray;
 public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implements GroovyTokenTypes
  {
 
-    /** This factory is the correct way to wire together a Groovy parser and lexer. */
+        /** This factory is the correct way to wire together a Groovy parser and lexer. */
     public static GroovyRecognizer make(GroovyLexer lexer) {
         GroovyRecognizer parser = new GroovyRecognizer(lexer.plumb());
         // TODO: set up a common error-handling control block, to avoid excessive tangle between these guys
@@ -939,9 +939,8 @@ inputState.guessing--;
         catch (RecognitionException e) {
             if (inputState.guessing==0) {
                 
-                // report the error but don't throw away what we've successfully parsed
                 reportError(e);
-                compilationUnit_AST = (AST) currentAST.root;
+                compilationUnit_AST = currentAST.root;
                 
             } else {
                 throw e;
@@ -1011,44 +1010,58 @@ inputState.guessing--;
         AST id_AST = null;
         Token first = LT(1);
         
-        annotationsOpt();
-        an_AST = (AST)returnAST;
-        match(LITERAL_package);
-        {
-        switch ( LA(1)) {
-        case IDENT:
-        {
-            identifier();
-            id_AST = (AST)returnAST;
-            break;
-        }
-        case EOF:
-        case SEMI:
-        case NLS:
-        {
-            break;
-        }
-        default:
-        {
-            throw new NoViableAltException(LT(1), getFilename());
-        }
-        }
-        }
-        if ( inputState.guessing==0 ) {
-            packageDefinition_AST = (AST)currentAST.root;
-            
-            if (id_AST == null) {
-            id_AST = missingIdentifier(LT(0), null);
-            reportError("Invalid package specification", LT(0).getLine(), LT(0).getColumn()-1);
+        try {      // for error handling
+            annotationsOpt();
+            an_AST = (AST)returnAST;
+            match(LITERAL_package);
+            {
+            switch ( LA(1)) {
+            case IDENT:
+            {
+                identifier();
+                id_AST = (AST)returnAST;
+                break;
             }
-            packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(1))).add(an_AST).add(id_AST));
-            
-            currentAST.root = packageDefinition_AST;
-            currentAST.child = packageDefinition_AST!=null &&packageDefinition_AST.getFirstChild()!=null ?
-                packageDefinition_AST.getFirstChild() : packageDefinition_AST;
-            currentAST.advanceChildToEnd();
+            case EOF:
+            case SEMI:
+            case NLS:
+            {
+                break;
+            }
+            default:
+            {
+                throw new NoViableAltException(LT(1), getFilename());
+            }
+            }
+            }
+            if ( inputState.guessing==0 ) {
+                packageDefinition_AST = (AST)currentAST.root;
+                
+                // GRECLIPSE add
+                if (id_AST == null) throw new NoViableAltException(first, getFilename());
+                // GRECLIPSE end
+                packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(1))).add(an_AST).add(id_AST));
+                
+                currentAST.root = packageDefinition_AST;
+                currentAST.child = packageDefinition_AST!=null &&packageDefinition_AST.getFirstChild()!=null ?
+                    packageDefinition_AST.getFirstChild() : packageDefinition_AST;
+                currentAST.advanceChildToEnd();
+            }
+            packageDefinition_AST = (AST)currentAST.root;
         }
-        packageDefinition_AST = (AST)currentAST.root;
+        catch (RecognitionException e) {
+            if (inputState.guessing==0) {
+                
+                if (LA(0) != LITERAL_package) rewind(mark() - 1);
+                reportError("Invalid package statement", LT(1).getLine(), LT(1).getColumn() - 1);
+                
+                id_AST = missingIdentifier(LT(0), null); id_AST.setText("java.lang");
+                packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(0))).add(an_AST).add(id_AST));
+                
+            } else {
+                throw e;
+            }
+        }
         returnAST = packageDefinition_AST;
     }
     
@@ -1916,81 +1929,100 @@ inputState.guessing--;
         AST importStatement_AST = null;
         AST an_AST = null;
         AST is_AST = null;
-        Token first = LT(1); boolean isStatic = false;
+        Token first = LT(1); boolean isStatic=false;
         
-        annotationsOpt();
-        an_AST = (AST)returnAST;
-        astFactory.addASTChild(currentAST, returnAST);
-        match(LITERAL_import);
-        {
-        switch ( LA(1)) {
-        case LITERAL_static:
-        {
-            match(LITERAL_static);
+        try {      // for error handling
+            annotationsOpt();
+            an_AST = (AST)returnAST;
+            astFactory.addASTChild(currentAST, returnAST);
+            match(LITERAL_import);
+            {
+            switch ( LA(1)) {
+            case LITERAL_static:
+            {
+                match(LITERAL_static);
+                if ( inputState.guessing==0 ) {
+                    isStatic=true;
+                }
+                break;
+            }
+            case EOF:
+            case IDENT:
+            case RCURLY:
+            case SEMI:
+            case LITERAL_default:
+            case LITERAL_else:
+            case LITERAL_case:
+            case NLS:
+            {
+                break;
+            }
+            default:
+            {
+                throw new NoViableAltException(LT(1), getFilename());
+            }
+            }
+            }
+            {
+            switch ( LA(1)) {
+            case IDENT:
+            {
+                identifierStar();
+                is_AST = (AST)returnAST;
+                break;
+            }
+            case EOF:
+            case RCURLY:
+            case SEMI:
+            case LITERAL_default:
+            case LITERAL_else:
+            case LITERAL_case:
+            case NLS:
+            {
+                break;
+            }
+            default:
+            {
+                throw new NoViableAltException(LT(1), getFilename());
+            }
+            }
+            }
             if ( inputState.guessing==0 ) {
-                isStatic=true;
+                importStatement_AST = (AST)currentAST.root;
+                
+                // GRECLIPSE add
+                if (is_AST == null) throw new NoViableAltException(first, getFilename());
+                // GRECLIPSE end
+                if (!isStatic) {
+                importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,LT(1))).add(an_AST).add(is_AST));
+                } else {
+                importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(STATIC_IMPORT,"static_import",first,LT(1))).add(an_AST).add(is_AST));
+                }
+                
+                currentAST.root = importStatement_AST;
+                currentAST.child = importStatement_AST!=null &&importStatement_AST.getFirstChild()!=null ?
+                    importStatement_AST.getFirstChild() : importStatement_AST;
+                currentAST.advanceChildToEnd();
             }
-            break;
-        }
-        case EOF:
-        case IDENT:
-        case RCURLY:
-        case SEMI:
-        case LITERAL_default:
-        case LITERAL_else:
-        case LITERAL_case:
-        case NLS:
-        {
-            break;
-        }
-        default:
-        {
-            throw new NoViableAltException(LT(1), getFilename());
-        }
-        }
-        }
-        {
-        switch ( LA(1)) {
-        case IDENT:
-        {
-            identifierStar();
-            is_AST = (AST)returnAST;
-            break;
-        }
-        case EOF:
-        case RCURLY:
-        case SEMI:
-        case LITERAL_default:
-        case LITERAL_else:
-        case LITERAL_case:
-        case NLS:
-        {
-            break;
-        }
-        default:
-        {
-            throw new NoViableAltException(LT(1), getFilename());
-        }
-        }
-        }
-        if ( inputState.guessing==0 ) {
             importStatement_AST = (AST)currentAST.root;
-            
-            if (is_AST == null) {
-            is_AST = missingIdentifier(LT(0), null);
-            }
-            if (!isStatic) {
-            importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,LT(1))).add(an_AST).add(is_AST));
-            } else {
-            importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(STATIC_IMPORT,"static_import",first,LT(1))).add(an_AST).add(is_AST));
-            }
-            
-            currentAST.root = importStatement_AST;
-            currentAST.child = importStatement_AST!=null &&importStatement_AST.getFirstChild()!=null ?
-                importStatement_AST.getFirstChild() : importStatement_AST;
-            currentAST.advanceChildToEnd();
         }
-        importStatement_AST = (AST)currentAST.root;
+        catch (RecognitionException e) {
+            if (inputState.guessing==0) {
+                
+                if (LA(0) != LITERAL_import && LA(0) != LITERAL_static) rewind(mark() - 1);
+                reportError("Invalid import statement", LT(1).getLine(), LT(1).getColumn() - 1);
+                
+                is_AST = missingIdentifier(LT(1), null); is_AST.setText("java.lang.Object");
+                if (!isStatic) {
+                importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,LT(1))).add(an_AST).add(is_AST));
+                } else {
+                importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(STATIC_IMPORT,"static_import",first,LT(1))).add(an_AST).add(is_AST));
+                }
+                
+            } else {
+                throw e;
+            }
+        }
         returnAST = importStatement_AST;
     }
     
@@ -2011,100 +2043,85 @@ inputState.guessing--;
         AST s_AST = null;
         Token  alias = null;
         AST alias_AST = null;
-        Token first = LT(1); int start = mark();
+        Token first = LT(1);
         
-        try {      // for error handling
-            i1 = LT(1);
-            i1_AST = astFactory.create(i1);
-            match(IDENT);
-            {
-            _loop77:
-            do {
-                if ((LA(1)==DOT) && (LA(2)==IDENT||LA(2)==NLS)) {
-                    d1 = LT(1);
-                    d1_AST = astFactory.create(d1);
-                    match(DOT);
-                    nls();
-                    i2 = LT(1);
-                    i2_AST = astFactory.create(i2);
-                    match(IDENT);
-                    if ( inputState.guessing==0 ) {
-                        i1_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add(i2_AST));
-                    }
-                }
-                else {
-                    break _loop77;
-                }
-                
-            } while (true);
-            }
-            {
-            switch ( LA(1)) {
-            case DOT:
-            {
-                d2 = LT(1);
-                d2_AST = astFactory.create(d2);
+        i1 = LT(1);
+        i1_AST = astFactory.create(i1);
+        match(IDENT);
+        {
+        _loop77:
+        do {
+            if ((LA(1)==DOT) && (LA(2)==IDENT||LA(2)==NLS)) {
+                d1 = LT(1);
+                d1_AST = astFactory.create(d1);
                 match(DOT);
                 nls();
-                s = LT(1);
-                s_AST = astFactory.create(s);
-                match(STAR);
-                if ( inputState.guessing==0 ) {
-                    i1_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add(s_AST));
-                }
-                break;
-            }
-            case LITERAL_as:
-            {
-                match(LITERAL_as);
-                nls();
-                alias = LT(1);
-                alias_AST = astFactory.create(alias);
+                i2 = LT(1);
+                i2_AST = astFactory.create(i2);
                 match(IDENT);
                 if ( inputState.guessing==0 ) {
-                    i1_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_as,"as",first,LT(1))).add(i1_AST).add(alias_AST));
+                    i1_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add(i2_AST));
                 }
-                break;
             }
-            case EOF:
-            case RCURLY:
-            case SEMI:
-            case LITERAL_default:
-            case LITERAL_else:
-            case LITERAL_case:
-            case NLS:
-            {
-                break;
+            else {
+                break _loop77;
             }
-            default:
-            {
-                throw new NoViableAltException(LT(1), getFilename());
-            }
-            }
-            }
+            
+        } while (true);
+        }
+        {
+        switch ( LA(1)) {
+        case DOT:
+        {
+            d2 = LT(1);
+            d2_AST = astFactory.create(d2);
+            match(DOT);
+            nls();
+            s = LT(1);
+            s_AST = astFactory.create(s);
+            match(STAR);
             if ( inputState.guessing==0 ) {
-                identifierStar_AST = (AST)currentAST.root;
-                identifierStar_AST = i1_AST;
-                currentAST.root = identifierStar_AST;
-                currentAST.child = identifierStar_AST!=null &&identifierStar_AST.getFirstChild()!=null ?
-                    identifierStar_AST.getFirstChild() : identifierStar_AST;
-                currentAST.advanceChildToEnd();
+                i1_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add(s_AST));
             }
+            break;
+        }
+        case LITERAL_as:
+        {
+            match(LITERAL_as);
+            nls();
+            alias = LT(1);
+            alias_AST = astFactory.create(alias);
+            match(IDENT);
+            if ( inputState.guessing==0 ) {
+                i1_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_as,"as",first,LT(1))).add(i1_AST).add(alias_AST));
+            }
+            break;
+        }
+        case EOF:
+        case RCURLY:
+        case SEMI:
+        case LITERAL_default:
+        case LITERAL_else:
+        case LITERAL_case:
+        case NLS:
+        {
+            break;
+        }
+        default:
+        {
+            throw new NoViableAltException(LT(1), getFilename());
+        }
+        }
+        }
+        if ( inputState.guessing==0 ) {
             identifierStar_AST = (AST)currentAST.root;
+            identifierStar_AST = i1_AST;
+            currentAST.root = identifierStar_AST;
+            currentAST.child = identifierStar_AST!=null &&identifierStar_AST.getFirstChild()!=null ?
+                identifierStar_AST.getFirstChild() : identifierStar_AST;
+            currentAST.advanceChildToEnd();
         }
-        catch (RecognitionException e) {
-            if (inputState.guessing==0) {
-                
-                reportError("Invalid import", first);
-                identifierStar_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add((AST)astFactory.make( (new ASTArray(1)).add(create(STAR,"*",null)))));
-                // Give up on this line and just go to the next
-                rewind(start);
-                consumeUntil(NLS);
-                
-            } else {
-                throw e;
-            }
-        }
+        identifierStar_AST = (AST)currentAST.root;
         returnAST = identifierStar_AST;
     }
     
