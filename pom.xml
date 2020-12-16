@@ -118,7 +118,7 @@
 				<repository>
 					<id>eclipse</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.18milestones</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.18</url>
 				</repository>
 			</repositories>
 			<modules>
