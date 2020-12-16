@@ -78,6 +78,415 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testParsingRecovery_IncompleteAnnotation1() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@ package p\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@ package p\n" +
+            "\t^^\n" +
+            "Groovy:class ? is not an annotation in @?\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 1)\n" +
+            "\t@ package p\n" +
+            "\t ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "package p;\n" +
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation2() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@ import java.lang.Object\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@ import java.lang.Object\n" +
+            "\t ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "import java.lang.Object;\n" +
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation3() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@ int x",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@ int x\n" +
+            "\t^^\n" +
+            "Groovy:class ? is not an annotation in @?\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 1)\n" +
+            "\t@ int x\n" +
+            "\t ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
+            "    int x;\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation4() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@ class X {}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@ class X {}\n" +
+            "\t^^\n" +
+            "Groovy:class ? is not an annotation in @?\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 1)\n" +
+            "\t@ class X {}\n" +
+            "\t ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public @? class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation5() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@Deprecated @ class X {}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@Deprecated @ class X {}\n" +
+            "\t            ^^\n" +
+            "Groovy:class ? is not an annotation in @?\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 1)\n" +
+            "\t@Deprecated @ class X {}\n" +
+            "\t             ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public @Deprecated @? class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation6() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@ @Deprecated class X {}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@ @Deprecated class X {}\n" +
+            "\t^^\n" +
+            "Groovy:class ? is not an annotation in @?\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 1)\n" +
+            "\t@ @Deprecated class X {}\n" +
+            "\t ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public @? @Deprecated class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation7() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@Deprecated @ @SuppressWarnings('nls') class X {}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@Deprecated @ @SuppressWarnings('nls') class X {}\n" +
+            "\t            ^^\n" +
+            "Groovy:class ? is not an annotation in @?\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 1)\n" +
+            "\t@Deprecated @ @SuppressWarnings('nls') class X {}\n" +
+            "\t             ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public @Deprecated @? @SuppressWarnings(\"nls\") class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation8() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class X {\n" +
+            "  @ def x\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 2)\n" +
+            "\t@ def x\n" +
+            "\t^^\n" +
+            "Groovy:class ? is not an annotation in @?\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 2)\n" +
+            "\t@ def x\n" +
+            "\t ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  private @? java.lang.Object x;\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation9() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class X {\n" +
+            "  @ void x() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 2)\n" +
+            "\t@ void x() {}\n" +
+            "\t^^\n" +
+            "Groovy:class ? is not an annotation in @?\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 2)\n" +
+            "\t@ void x() {}\n" +
+            "\t ^\n" +
+            "Groovy:unable to resolve class ? for annotation\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "  public @? void x() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation10() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@A(foo='1',)\n" +
+            "class X {\n" +
+            "}\n",
+
+            "A.groovy",
+            "@interface A {\n" +
+            "  String foo()\n" +
+            "  String bar()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@A(foo='1',)\n" +
+            "\t^^\n" +
+            "Groovy:No explicit/default value found for annotation attribute 'bar' in @A\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public @A(foo = \"1\") class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation11() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@A(foo=['1','2'],)\n" +
+            "class X {\n" +
+            "}\n",
+
+            "A.groovy",
+            "@interface A {\n" +
+            "  String[] foo()\n" +
+            "  String bar()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\t@A(foo=['1','2'],)\n" +
+            "\t^^\n" +
+            "Groovy:No explicit/default value found for annotation attribute 'bar' in @A\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public @A(foo = {\"1\", \"2\"}) class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation12() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@A(foo='1', b)\n" +
+            "class X {\n" +
+            "}\n",
+
+            "A.groovy",
+            "@interface A {\n" +
+            "  String foo()\n" +
+            "  String bar()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy\n" +
+            "The attribute b is undefined for the annotation type A\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 1)\n" +
+            "\t@A(foo='1', b)\n" +
+            "\t^^\n" +
+            "Groovy:No explicit/default value found for annotation attribute 'bar' in @A\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public @A(foo = \"1\",b = \"ERROR\") class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteAnnotation13() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "@A(foo='1', bar=)\n" +
+            "class X {\n" +
+            "}\n",
+
+            "A.groovy",
+            "@interface A {\n" +
+            "  String foo()\n" +
+            "  String bar()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("X.groovy",
+            "public @A(foo = \"1\",bar = \"ERROR\") class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
     public void testParsingRecovery_IncompleteAssignment1() {
         //@formatter:off
         String[] sources = {
