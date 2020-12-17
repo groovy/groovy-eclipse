@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.ast.tools;
 
+import groovy.lang.MetaProperty;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -70,6 +71,7 @@ import groovyjarjarasm.asm.MethodVisitor;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -77,7 +79,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import static org.codehaus.groovy.runtime.MetaClassHelper.capitalize;
+import static org.apache.groovy.util.BeanUtils.capitalize;
 
 /**
  * Handy methods when working with the Groovy AST
@@ -86,6 +88,7 @@ public class GeneralUtils {
     public static final Token ASSIGN = Token.newSymbol(Types.ASSIGN, -1, -1);
     public static final Token EQ = Token.newSymbol(Types.COMPARE_EQUAL, -1, -1);
     public static final Token NE = Token.newSymbol(Types.COMPARE_NOT_EQUAL, -1, -1);
+    public static final Token NOT_IDENTICAL = Token.newSymbol(Types.COMPARE_NOT_IDENTICAL, -1, -1);
     public static final Token LT = Token.newSymbol(Types.COMPARE_LESS_THAN, -1, -1);
     public static final Token AND = Token.newSymbol(Types.LOGICAL_AND, -1, -1);
     public static final Token OR = Token.newSymbol(Types.LOGICAL_OR, -1, -1);
@@ -95,41 +98,41 @@ public class GeneralUtils {
     private static final Token INDEX = Token.newSymbol("[", -1, -1);
 
     public static BinaryExpression andX(final Expression lhv, final Expression rhv) {
-        return new BinaryExpression(lhv, AND, rhv);
+        return binX(lhv, AND, rhv);
     }
 
     public static ArgumentListExpression args(final Expression... expressions) {
-        List<Expression> args = new ArrayList<Expression>();
-        Collections.addAll(args, expressions);
-        return new ArgumentListExpression(args);
+        List<Expression> list = new ArrayList<>(expressions.length);
+        Collections.addAll(list, expressions);
+        return args(list);
     }
 
     public static ArgumentListExpression args(final List<Expression> expressions) {
         return new ArgumentListExpression(expressions);
     }
 
-    public static ArgumentListExpression args(final Parameter[] parameters) {
+    public static ArgumentListExpression args(final Parameter... parameters) {
         return new ArgumentListExpression(parameters);
     }
 
     public static ArgumentListExpression args(final String... names) {
-        List<Expression> vars = new ArrayList<Expression>();
-        for (String name : names) {
-            vars.add(varX(name));
-        }
-        return new ArgumentListExpression(vars);
+        return args(Arrays.stream(names).map(GeneralUtils::varX).toArray(Expression[]::new));
+    }
+
+    public static CastExpression asX(final ClassNode type, final Expression expression) {
+        return CastExpression.asExpression(type, expression);
+    }
+
+    public static Statement assignS(final Expression target, final Expression value) {
+        return stmt(assignX(target, value));
     }
 
     public static Statement assignNullS(final Expression target) {
         return assignS(target, ConstantExpression.EMPTY_EXPRESSION);
     }
 
-    public static Statement assignS(final Expression target, final Expression value) {
-        return new ExpressionStatement(assignX(target, value));
-    }
-
     public static Expression assignX(final Expression target, final Expression value) {
-        return new BinaryExpression(target, ASSIGN, value);
+        return binX(target, ASSIGN, value);
     }
 
     public static Expression attrX(final Expression oe, final Expression prop) {
@@ -170,7 +173,6 @@ public class GeneralUtils {
         return new BooleanExpression(expr);
     }
 
-    // GRECLIPSE add
     public static BytecodeExpression bytecodeX(final Consumer<MethodVisitor> writer) {
         return new BytecodeExpression() {
             @Override
@@ -185,7 +187,6 @@ public class GeneralUtils {
         expression.setType(type);
         return expression;
     }
-    // GRECLIPSE end
 
     public static MethodCallExpression callSuperX(final String methodName) {
         return callSuperX(methodName, MethodCallExpression.NO_ARGUMENTS);
@@ -239,7 +240,7 @@ public class GeneralUtils {
         return new ClassExpression(clazz);
     }
 
-    public static ClassExpression classX(final Class clazz) {
+    public static ClassExpression classX(final Class<?> clazz) {
         return classX(ClassHelper.make(clazz).getPlainNodeReference());
     }
 
@@ -259,7 +260,7 @@ public class GeneralUtils {
      * @return the expression comparing two values
      */
     public static BinaryExpression cmpX(final Expression lhv, final Expression rhv) {
-        return new BinaryExpression(lhv, CMP, rhv);
+        return binX(lhv, CMP, rhv);
     }
 
     public static ConstantExpression constX(final Object val) {
@@ -275,39 +276,39 @@ public class GeneralUtils {
     }
 
     public static ConstructorCallExpression ctorX(final ClassNode type) {
-        return new ConstructorCallExpression(type, ArgumentListExpression.EMPTY_ARGUMENTS);
-    }
-
-    public static Statement ctorSuperS() {
-        return stmt(ctorSuperX());
+        return ctorX(type, ArgumentListExpression.EMPTY_ARGUMENTS);
     }
 
     public static Statement ctorSuperS(final Expression args) {
         return stmt(ctorSuperX(args));
     }
 
-    public static ConstructorCallExpression ctorSuperX() {
-        return ctorX(ClassNode.SUPER);
-    }
-
-    public static ConstructorCallExpression ctorSuperX(final Expression args) {
+    public static ConstructorCallExpression ctorSuperX(Expression args) {
         return ctorX(ClassNode.SUPER, args);
-    }
-
-    public static Statement ctorThisS() {
-        return stmt(ctorThisX());
     }
 
     public static Statement ctorThisS(final Expression args) {
         return stmt(ctorThisX(args));
     }
 
-    public static ConstructorCallExpression ctorThisX() {
-        return ctorX(ClassNode.THIS);
+    public static ConstructorCallExpression ctorThisX(Expression args) {
+        return ctorX(ClassNode.THIS, args);
     }
 
-    public static ConstructorCallExpression ctorThisX(final Expression args) {
-        return ctorX(ClassNode.THIS, args);
+    public static Statement ctorSuperS() {
+        return stmt(ctorSuperX());
+    }
+
+    public static ConstructorCallExpression ctorSuperX() {
+        return ctorX(ClassNode.SUPER);
+    }
+
+    public static Statement ctorThisS() {
+        return stmt(ctorThisX());
+    }
+
+    public static ConstructorCallExpression ctorThisX() {
+        return ctorX(ClassNode.THIS);
     }
 
     public static Statement declS(final Expression target, final Expression init) {
@@ -323,11 +324,11 @@ public class GeneralUtils {
     }
 
     public static BinaryExpression eqX(final Expression lhv, final Expression rhv) {
-        return new BinaryExpression(lhv, EQ, rhv);
+        return binX(lhv, EQ, rhv);
     }
 
     public static BooleanExpression equalsNullX(final Expression argExpr) {
-        return new BooleanExpression(eqX(argExpr, new ConstantExpression(null)));
+        return boolX(eqX(argExpr, nullX()));
     }
 
     public static FieldExpression fieldX(final FieldNode fieldNode) {
@@ -339,12 +340,12 @@ public class GeneralUtils {
     }
 
     public static Expression findArg(final String argName) {
-        return new PropertyExpression(new VariableExpression("args"), argName);
+        return propX(varX("args"), argName);
     }
 
     public static List<MethodNode> getAllMethods(final ClassNode type) {
         ClassNode node = type;
-        List<MethodNode> result = new ArrayList<MethodNode>();
+        List<MethodNode> result = new ArrayList<>();
         while (node != null) {
             result.addAll(node.getMethods());
             node = node.getSuperClass();
@@ -354,7 +355,7 @@ public class GeneralUtils {
 
     public static List<PropertyNode> getAllProperties(final ClassNode type) {
         ClassNode node = type;
-        List<PropertyNode> result = new ArrayList<PropertyNode>();
+        List<PropertyNode> result = new ArrayList<>();
         while (node != null) {
             result.addAll(node.getProperties());
             node = node.getSuperClass();
@@ -363,7 +364,7 @@ public class GeneralUtils {
     }
 
     public static List<FieldNode> getInstanceNonPropertyFields(final ClassNode cNode) {
-        final List<FieldNode> result = new ArrayList<FieldNode>();
+        List<FieldNode> result = new ArrayList<>();
         for (FieldNode fNode : cNode.getFields()) {
             if (!fNode.isStatic() && cNode.getProperty(fNode.getName()) == null) {
                 result.add(fNode);
@@ -374,7 +375,7 @@ public class GeneralUtils {
 
     public static List<String> getInstanceNonPropertyFieldNames(final ClassNode cNode) {
         List<FieldNode> fList = getInstanceNonPropertyFields(cNode);
-        List<String> result = new ArrayList<String>(fList.size());
+        List<String> result = new ArrayList<>(fList.size());
         for (FieldNode fNode : fList) {
             result.add(fNode.getName());
         }
@@ -382,7 +383,7 @@ public class GeneralUtils {
     }
 
     public static List<PropertyNode> getInstanceProperties(final ClassNode cNode) {
-        final List<PropertyNode> result = new ArrayList<PropertyNode>();
+        List<PropertyNode> result = new ArrayList<>();
         for (PropertyNode pNode : cNode.getProperties()) {
             if (!pNode.isStatic()) {
                 result.add(pNode);
@@ -393,7 +394,7 @@ public class GeneralUtils {
 
     public static List<String> getInstancePropertyNames(final ClassNode cNode) {
         List<PropertyNode> pList = BeanUtils.getAllProperties(cNode, false, false, true);
-        List<String> result = new ArrayList<String>(pList.size());
+        List<String> result = new ArrayList<>(pList.size());
         for (PropertyNode pNode : pList) {
             result.add(pNode.getName());
         }
@@ -401,7 +402,7 @@ public class GeneralUtils {
     }
 
     public static List<FieldNode> getInstancePropertyFields(final ClassNode cNode) {
-        final List<FieldNode> result = new ArrayList<FieldNode>();
+        List<FieldNode> result = new ArrayList<>();
         for (PropertyNode pNode : cNode.getProperties()) {
             if (!pNode.isStatic()) {
                 result.add(pNode.getField());
@@ -411,7 +412,7 @@ public class GeneralUtils {
     }
 
     public static Set<ClassNode> getInterfacesAndSuperInterfaces(final ClassNode type) {
-        Set<ClassNode> res = new LinkedHashSet<ClassNode>();
+        Set<ClassNode> res = new LinkedHashSet<>();
         if (type.isInterface()) {
             res.add(type);
             return res;
@@ -425,9 +426,9 @@ public class GeneralUtils {
     }
 
     public static List<FieldNode> getSuperNonPropertyFields(final ClassNode cNode) {
-        final List<FieldNode> result;
+        List<FieldNode> result;
         if (cNode == ClassHelper.OBJECT_TYPE) {
-            result = new ArrayList<FieldNode>();
+            result = new ArrayList<>();
         } else {
             result = getSuperNonPropertyFields(cNode.getSuperClass());
         }
@@ -440,9 +441,9 @@ public class GeneralUtils {
     }
 
     public static List<FieldNode> getSuperPropertyFields(final ClassNode cNode) {
-        final List<FieldNode> result;
+        List<FieldNode> result;
         if (cNode == ClassHelper.OBJECT_TYPE) {
-            result = new ArrayList<FieldNode>();
+            result = new ArrayList<>();
         } else {
             result = getSuperPropertyFields(cNode.getSuperClass());
         }
@@ -462,8 +463,10 @@ public class GeneralUtils {
         return getAllProperties(names, origType, cNode, includeProperties, includeFields, includePseudoGetters, includePseudoSetters, traverseSuperClasses, skipReadonly, false, false, false);
     }
 
-    public static List<PropertyNode> getAllProperties(final Set<String> names, final ClassNode origType, final ClassNode cNode, final boolean includeProperties, final boolean includeFields, final boolean includePseudoGetters, final boolean includePseudoSetters, final boolean traverseSuperClasses, final boolean skipReadonly, final boolean reverse, final boolean allNames, final boolean includeStatic) {
-        final List<PropertyNode> result = new ArrayList<PropertyNode>();
+    public static List<PropertyNode> getAllProperties(final Set<String> names, final ClassNode origType, final ClassNode cNode, final boolean includeProperties,
+                                                      final boolean includeFields, final boolean includePseudoGetters, final boolean includePseudoSetters,
+                                                      final boolean traverseSuperClasses, final boolean skipReadonly, final boolean reverse, final boolean allNames, final boolean includeStatic) {
+        List<PropertyNode> result = new ArrayList<>();
         if (cNode != ClassHelper.OBJECT_TYPE && traverseSuperClasses && !reverse) {
             result.addAll(getAllProperties(names, origType, cNode.getSuperClass(), includeProperties, includeFields, includePseudoGetters, includePseudoSetters, true, skipReadonly));
         }
@@ -518,7 +521,7 @@ public class GeneralUtils {
         if (annotatedNode.equals(owner)) {
             return callThisX(getterName(annotatedNode, pNode));
         }
-        return propX(new VariableExpression("this"), pNode.getName());
+        return propX(varX("this"), pNode.getName());
     }
 
     /**
@@ -572,7 +575,7 @@ public class GeneralUtils {
 
     public static IfStatement ifElseS(final Expression cond, final Statement thenStmt, final Statement elseStmt) {
         return new IfStatement(
-                cond instanceof BooleanExpression ? (BooleanExpression) cond : new BooleanExpression(cond),
+                cond instanceof BooleanExpression ? (BooleanExpression) cond : boolX(cond),
                 thenStmt,
                 elseStmt
         );
@@ -584,7 +587,7 @@ public class GeneralUtils {
     }
 
     public static IfStatement ifS(final Expression cond, final Expression trueExpr) {
-        return ifS(cond, new ExpressionStatement(trueExpr));
+        return ifElseS(cond, stmt(trueExpr), EmptyStatement.INSTANCE);
     }
 
     @Deprecated
@@ -593,19 +596,15 @@ public class GeneralUtils {
     }
 
     public static IfStatement ifS(final Expression cond, final Statement trueStmt) {
-        return new IfStatement(
-                cond instanceof BooleanExpression ? (BooleanExpression) cond : new BooleanExpression(cond),
-                trueStmt,
-                EmptyStatement.INSTANCE
-        );
+        return ifElseS(cond, trueStmt, EmptyStatement.INSTANCE);
     }
 
     public static Expression indexX(final Expression target, final Expression value) {
-        return new BinaryExpression(target, INDEX, value);
+        return binX(target, INDEX, value);
     }
 
     public static BooleanExpression isInstanceOfX(final Expression objectExpression, final ClassNode cNode) {
-        return new BooleanExpression(new BinaryExpression(objectExpression, INSTANCEOF, classX(cNode)));
+        return boolX(binX(objectExpression, INSTANCEOF, classX(cNode)));
     }
 
     /**
@@ -616,25 +615,25 @@ public class GeneralUtils {
     }
 
     public static BooleanExpression isOneX(final Expression expr) {
-        return new BooleanExpression(new BinaryExpression(expr, EQ, new ConstantExpression(1)));
+        return boolX(binX(expr, EQ, constX(1)));
     }
 
     public static BooleanExpression isTrueX(final Expression argExpr) {
-        return new BooleanExpression(new BinaryExpression(argExpr, EQ, new ConstantExpression(Boolean.TRUE)));
+        return boolX(binX(argExpr, EQ, constX(Boolean.TRUE)));
     }
 
     public static BooleanExpression isZeroX(final Expression expr) {
-        return new BooleanExpression(new BinaryExpression(expr, EQ, new ConstantExpression(0)));
+        return boolX(binX(expr, EQ, constX(0)));
     }
 
     public static ListExpression listX(final List<Expression> args) {
         return new ListExpression(args);
     }
 
-    public static ListExpression list2args(final List args) {
+    public static ListExpression list2args(final List<?> args) {
         ListExpression result = new ListExpression();
         for (Object o : args) {
-            result.addExpression(new ConstantExpression(o));
+            result.addExpression(constX(o));
         }
         return result;
     }
@@ -642,25 +641,25 @@ public class GeneralUtils {
     public static ListExpression classList2args(final List<String> args) {
         ListExpression result = new ListExpression();
         for (Object o : args) {
-            result.addExpression(new ClassExpression(ClassHelper.make(o.toString())));
+            result.addExpression(classX(ClassHelper.make(o.toString())));
         }
         return result;
     }
 
     public static VariableExpression localVarX(final String name) {
-        VariableExpression result = new VariableExpression(name);
+        VariableExpression result = varX(name);
         result.setAccessedVariable(result);
         return result;
     }
 
     public static VariableExpression localVarX(final String name, final ClassNode type) {
-        VariableExpression result = new VariableExpression(name, type);
+        VariableExpression result = varX(name, type);
         result.setAccessedVariable(result);
         return result;
     }
 
     public static BinaryExpression ltX(final Expression lhv, final Expression rhv) {
-        return new BinaryExpression(lhv, LT, rhv);
+        return binX(lhv, LT, rhv);
     }
 
     public static MapExpression mapX(final List<MapEntryExpression> expressions) {
@@ -668,23 +667,27 @@ public class GeneralUtils {
     }
 
     public static BinaryExpression neX(final Expression lhv, final Expression rhv) {
-        return new BinaryExpression(lhv, NE, rhv);
+        return binX(lhv, NE, rhv);
+    }
+
+    public static BinaryExpression notIdenticalX(final Expression lhv, final Expression rhv) {
+        return binX(lhv, NOT_IDENTICAL, rhv);
     }
 
     public static BooleanExpression notNullX(final Expression argExpr) {
-        return new BooleanExpression(new BinaryExpression(argExpr, NE, new ConstantExpression(null)));
+        return boolX(binX(argExpr, NE, nullX()));
     }
 
     public static NotExpression notX(final Expression expr) {
-        return new NotExpression(expr instanceof BooleanExpression ? expr : new BooleanExpression(expr));
+        return new NotExpression(expr instanceof BooleanExpression ? expr : boolX(expr));
     }
 
     public static ConstantExpression nullX() {
-        return new ConstantExpression(null);
+        return constX(null);
     }
 
     public static BinaryExpression orX(final Expression lhv, final Expression rhv) {
-        return new BinaryExpression(lhv, OR, rhv);
+        return binX(lhv, OR, rhv);
     }
 
     public static Parameter param(final ClassNode type, final String name) {
@@ -700,19 +703,29 @@ public class GeneralUtils {
     }
 
     public static Parameter[] params(final Parameter... params) {
-        return params != null ? params : Parameter.EMPTY_ARRAY;
+        return (params != null ? params : Parameter.EMPTY_ARRAY);
     }
 
     public static BinaryExpression plusX(final Expression lhv, final Expression rhv) {
-        return new BinaryExpression(lhv, PLUS, rhv);
+        return binX(lhv, PLUS, rhv);
     }
 
-    public static Expression propX(final Expression owner, final String property) {
+    public static PropertyExpression propX(final Expression owner, final String property) {
         return new PropertyExpression(owner, property);
     }
 
-    public static Expression propX(final Expression owner, final Expression property) {
+    @Deprecated
+    public static Expression propX$$bridge(final Expression owner, final String property) {
+        return propX(owner, property);
+    }
+
+    public static PropertyExpression propX(final Expression owner, final Expression property) {
         return new PropertyExpression(owner, property);
+    }
+
+    @Deprecated
+    public static Expression propX$$bridge(final Expression owner, final Expression property) {
+        return propX(owner, property);
     }
 
     public static PropertyExpression propX(final Expression owner, final Expression property, final boolean safe) {
@@ -724,14 +737,11 @@ public class GeneralUtils {
     }
 
     public static Statement safeExpression(final Expression fieldExpr, final Expression expression) {
-        return new IfStatement(
-                equalsNullX(fieldExpr),
-                new ExpressionStatement(fieldExpr),
-                new ExpressionStatement(expression));
+        return new IfStatement(equalsNullX(fieldExpr), stmt(fieldExpr), stmt(expression));
     }
 
     public static BooleanExpression sameX(final Expression self, final Expression other) {
-        return new BooleanExpression(callX(self, "is", args(other)));
+        return boolX(callX(self, "is", args(other)));
     }
 
     public static Statement stmt(final Expression expr) {
@@ -740,13 +750,13 @@ public class GeneralUtils {
 
     public static TernaryExpression ternaryX(final Expression cond, final Expression trueExpr, final Expression elseExpr) {
         return new TernaryExpression(
-                cond instanceof BooleanExpression ? (BooleanExpression) cond : new BooleanExpression(cond),
+                cond instanceof BooleanExpression ? (BooleanExpression) cond : boolX(cond),
                 trueExpr,
                 elseExpr);
     }
 
     public static PropertyExpression thisPropX(final boolean implicit, final String property) {
-        PropertyExpression pexp = (PropertyExpression) propX(varX("this"), property);
+        PropertyExpression pexp = propX(varX("this"), property);
         pexp.setImplicitThis(implicit);
         return pexp;
     }
@@ -787,14 +797,8 @@ public class GeneralUtils {
 
     //--------------------------------------------------------------------------
 
-    public static Parameter[] cloneParams(final Parameter[] source) {
-        Parameter[] result = new Parameter[source.length];
-        for (int i = 0; i < source.length; i++) {
-            Parameter srcParam = source[i];
-            Parameter dstParam = new Parameter(srcParam.getOriginType(), srcParam.getName());
-            result[i] = dstParam;
-        }
-        return result;
+    public static Parameter[] cloneParams(final Parameter[] parameters) {
+        return Arrays.stream(parameters).map(p -> param(p.getOriginType(), p.getName())).toArray(Parameter[]::new);
     }
 
     /**
@@ -834,13 +838,9 @@ public class GeneralUtils {
             if (!(valueExpression instanceof PropertyExpression)) continue;
 
             PropertyExpression propertyExpression = (PropertyExpression) valueExpression;
-            boolean processAnnotation =
-                    propertyExpression.getProperty() instanceof ConstantExpression &&
-                            (
-                                    "RUNTIME".equals(((ConstantExpression) (propertyExpression.getProperty())).getValue()) ||
-                                            "CLASS".equals(((ConstantExpression) (propertyExpression.getProperty())).getValue())
-                            );
-
+            boolean processAnnotation = propertyExpression.getProperty() instanceof ConstantExpression
+                    && ("RUNTIME".equals(((ConstantExpression) (propertyExpression.getProperty())).getValue())
+                        || "CLASS".equals(((ConstantExpression) (propertyExpression.getProperty())).getValue()));
             if (processAnnotation)  {
                 AnnotationNode newAnnotation = new AnnotationNode(annotation.getClassNode());
                 for (Map.Entry<String, Expression> member : annotation.getMembers().entrySet())  {
@@ -859,7 +859,7 @@ public class GeneralUtils {
         final Expression fieldExpr = propX(varX("this"), name);
         Expression initExpr = fNode.getInitialValueExpression();
         Statement assignInit;
-        if (initExpr == null || (initExpr instanceof ConstantExpression && ((ConstantExpression)initExpr).isNullExpression())) {
+        if (initExpr == null || (initExpr instanceof ConstantExpression && ((ConstantExpression) initExpr).isNullExpression())) {
             if (ClassHelper.isPrimitiveType(fType)) {
                 assignInit = EmptyStatement.INSTANCE;
             } else {
@@ -874,9 +874,9 @@ public class GeneralUtils {
     }
 
     private static String getterName(final ClassNode annotatedNode, final PropertyNode pNode) {
-        String getterName = "get" + capitalize(pNode.getName());
-        boolean existingExplicitGetter = annotatedNode.getMethod(getterName, Parameter.EMPTY_ARRAY) != null;
-        if (ClassHelper.boolean_TYPE.equals(pNode.getOriginType()) && !existingExplicitGetter) {
+        String getterName = getGetterName(pNode);
+        if (ClassHelper.boolean_TYPE.equals(pNode.getOriginType())
+                && annotatedNode.getMethod(getterName, Parameter.EMPTY_ARRAY) == null) {
             getterName = "is" + capitalize(pNode.getName());
         }
         return getterName;
@@ -887,7 +887,7 @@ public class GeneralUtils {
     }
 
     public static String getSetterName(final String name) {
-        return "set" + capitalize(name);
+        return MetaProperty.getSetterName(name);
     }
 
     /**
@@ -904,7 +904,7 @@ public class GeneralUtils {
         if (expression == null) throw new IllegalArgumentException("Null: expression");
 
         StringBuilder result = new StringBuilder();
-        for (int x = expression.getLineNumber(); x <= expression.getLastLineNumber(); x++) {
+        for (int x = expression.getLineNumber(), y = expression.getLastLineNumber(); x <= y; x += 1) {
             String line = readerSource.getLine(x, null);
             if (line == null) {
                 throw new Exception(
@@ -932,7 +932,7 @@ public class GeneralUtils {
         if (preCode instanceof BlockStatement) {
             BlockStatement block = (BlockStatement) preCode;
             List<Statement> statements = block.getStatements();
-            for (int i = 0; i < statements.size(); i++) {
+            for (int i = 0, n = statements.size(); i < n; i += 1) {
                 Statement statement = statements.get(i);
                 // adjust the first statement if it's a super call
                 if (i == 0 && statement instanceof ExpressionStatement) {
@@ -968,10 +968,10 @@ public class GeneralUtils {
     }
 
     public static boolean hasDeclaredMethod(final ClassNode cNode, final String name, final int argsCount) {
-        List<MethodNode> ms = cNode.getDeclaredMethods(name);
-        for (MethodNode m : ms) {
-            Parameter[] paras = m.getParameters();
-            if (paras != null && paras.length == argsCount) {
+        List<MethodNode> methods = cNode.getDeclaredMethods(name);
+        for (MethodNode method : methods) {
+            Parameter[] params = method.getParameters();
+            if (params != null && params.length == argsCount) {
                 return true;
             }
         }
@@ -981,15 +981,15 @@ public class GeneralUtils {
     public static boolean inSamePackage(final ClassNode first, final ClassNode second) {
         PackageNode firstPackage = first.getPackage();
         PackageNode secondPackage = second.getPackage();
-        return ((firstPackage == null && secondPackage == null) ||
-                        firstPackage != null && secondPackage != null && firstPackage.getName().equals(secondPackage.getName()));
+        return ((firstPackage == null && secondPackage == null)
+                || firstPackage != null && secondPackage != null && firstPackage.getName().equals(secondPackage.getName()));
     }
 
-    public static boolean inSamePackage(final Class first, final Class second) {
+    public static boolean inSamePackage(final Class<?> first, final Class<?> second) {
         Package firstPackage = first.getPackage();
         Package secondPackage = second.getPackage();
-        return ((firstPackage == null && secondPackage == null) ||
-                        firstPackage != null && secondPackage != null && firstPackage.getName().equals(secondPackage.getName()));
+        return ((firstPackage == null && secondPackage == null)
+                || firstPackage != null && secondPackage != null && firstPackage.getName().equals(secondPackage.getName()));
     }
 
     public static boolean isDefaultVisibility(final int modifiers) {
