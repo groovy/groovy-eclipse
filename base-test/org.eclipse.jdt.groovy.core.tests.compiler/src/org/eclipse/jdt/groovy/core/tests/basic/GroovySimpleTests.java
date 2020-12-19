@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -5256,24 +5257,28 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testVisibility() {
         //@formatter:off
         String[] sources = {
-            "p/First.groovy",
+            "p/Foo.groovy",
             "package p;\n" +
-            "import q.Second;\n" +
-            "public class First {\n" +
+            "import q.Bar;\n" +
+            "public class Foo {\n" +
             "  public static void main(String[] argv) {\n" +
-            "    new First().getIt();\n" +
+            "    new Foo().getIt();\n" +
             "    print \"success\"\n" +
             "  }\n" +
-            "  public Second getIt() { return null;}\n" +
+            "  public Bar getIt() { return null;}\n" +
             "}\n",
 
-            "q/Second.java",
+            "q/Bar.java",
             "package q;\n" +
-            "class Second {}\n",
+            "class Bar {}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "success");
+        if (!isAtLeastGroovy(40)) {
+            runConformTest(sources, "success");
+        } else {
+            runConformTest(sources, "", "java.lang.IllegalAccessError: failed to access class q.Bar from class p.Foo");
+        }
     }
 
     @Test

@@ -1,0 +1,41 @@
+<project default="build">
+
+    <macrodef name="resolve-dependencies">
+        <attribute name="pathid" />
+        <attribute name="type" default="jar,bundle" />
+        <element name="dependencies" implicit="true" />
+
+        <sequential xmlns:ivy="antlib:org.apache.ivy.ant">
+            <taskdef classpath="../lib/ivy-2.5.0.jar"
+              resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant">
+            </taskdef>
+
+            <ivy:resolve refresh="true" showprogress="false" taskname="ivy">
+                <dependencies/>
+            </ivy:resolve>
+            <ivy:cachepath pathid="@{pathid}" type="@{type}" />
+        </sequential>
+    </macrodef>
+
+    <target name="build" depends="clean">
+        <resolve-dependencies pathid="classpath.antlr4">
+            <dependency org="com.tunnelvisionlabs" name="antlr4" rev="4.7.4">
+                <exclude name="org.abego.treelayout.core" />
+            </dependency>
+        </resolve-dependencies>
+
+        <java classname="org.antlr.v4.Tool" classpathref="classpath.antlr4" dir="${basedir}" fork="true">
+            <arg line="-visitor -no-listener -o org/apache/groovy/parser/antlr4 -package org.apache.groovy.parser.antlr4 GroovyLexer.g4 GroovyParser.g4" />
+        </java>
+        <replaceregexp byline="true" flags="g" match="\borg\.antlr\." replace="groovyjarjarantlr4.">
+            <fileset dir="org/apache/groovy/parser/antlr4" includes="*.java" excludes="AstBuilder.java" />
+        </replaceregexp>
+    </target>
+
+    <target name="clean">
+        <delete quiet="true">
+            <fileset dir="org/apache/groovy/parser/antlr4" excludes="AstBuilder.java" />
+        </delete>
+    </target>
+
+</project>

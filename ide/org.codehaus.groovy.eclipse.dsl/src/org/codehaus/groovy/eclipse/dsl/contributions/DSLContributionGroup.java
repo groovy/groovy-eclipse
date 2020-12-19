@@ -47,7 +47,6 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
-import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
@@ -528,7 +527,7 @@ public class DSLContributionGroup extends ContributionGroup {
 
         String[] names = null;
 
-        if (Java5.ARGS[0].equals(parameters[0].getName())) {
+        if ("arg0".equals(parameters[0].getName())) {
             ClassNode declaringClass = node.getDeclaringClass();
             if (declaringClass instanceof org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode) {
                 try {

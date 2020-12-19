@@ -49,6 +49,6 @@ final class SanityTests {
 
         int major = groovyVersion.major,
             minor = groovyVersion.minor
-        assert "${major}.${minor}" == '3.0'
+        assert "${major}.${minor}" == '4.0'
     }
 }

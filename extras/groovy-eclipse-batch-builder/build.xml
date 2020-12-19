@@ -136,7 +136,7 @@
     </target>
 
 
-    <target name="-init" depends="-fail-if-no-version-specified,-init25,-init30">
+    <target name="-init" depends="-fail-if-no-version-specified,-init25,-init30,-init40">
         <fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
             <include name="org.eclipse.core.contenttype_*.jar"/>
             <include name="org.eclipse.core.filesystem_*.jar"/>
@@ -195,6 +195,13 @@
     </target>
 
 
+    <target name="-init40" if="do-40-build">
+        <echo message="Building Groovy 4.0.x"/>
+        <property name="version" value="${version4.0}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy40"/>
+    </target>
+
+
     <target name="-check-build-version">
         <property file="build.properties"/>
         <condition property="no-version-specified">
@@ -202,6 +209,7 @@
             <or>
                 <isset property="do-25-build"/>
                 <isset property="do-30-build"/>
+                <isset property="do-40-build"/>
             </or>
             </not>
         </condition>

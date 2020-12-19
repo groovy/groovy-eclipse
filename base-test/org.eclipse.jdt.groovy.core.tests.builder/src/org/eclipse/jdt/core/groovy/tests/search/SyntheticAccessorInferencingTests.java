@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import org.junit.Test;
 
 /**
@@ -62,7 +64,11 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  }\n" +
             "}\n";
 
-        assertUnknown(contents, "isBar");
+        if (!isAtLeastGroovy(40)) {
+            assertUnknown(contents, "isBar");
+        } else {
+            assertKnown(contents, "isBar", "Foo");
+        }
         assertKnown(contents, "getBar", "Foo");
         assertKnown(contents, "setBar", "Foo");
     }

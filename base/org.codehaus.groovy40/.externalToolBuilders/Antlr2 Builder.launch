@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+
+<launchConfiguration type="org.eclipse.ant.AntBuilderLaunchConfigurationType">
+    <stringAttribute  key="org.eclipse.ant.ui.ATTR_ANT_CLEAN_TARGETS" value="clean," />
+    <booleanAttribute key="org.eclipse.ant.ui.ATTR_TARGETS_UPDATED" value="true" />
+    <booleanAttribute key="org.eclipse.ant.ui.DEFAULT_VM_INSTALL" value="false" />
+    <stringAttribute  key="org.eclipse.debug.core.ATTR_REFRESH_SCOPE" value="${working_set:&lt;resources&gt;&lt;item path=&quot;/org.codehaus.groovy40&quot; type=&quot;4&quot;/&gt;&lt;/resources&gt;}" />
+    <booleanAttribute key="org.eclipse.debug.core.capture_output" value="false" />
+    <booleanAttribute key="org.eclipse.debug.ui.ATTR_CONSOLE_OUTPUT_ON" value="false" />
+    <booleanAttribute key="org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND" value="false" />
+    <stringAttribute  key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.ant.ui.AntClasspathProvider" />
+    <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="true" />
+    <stringAttribute  key="org.eclipse.jdt.launching.PROJECT_ATTR" value="" />
+    <stringAttribute  key="org.eclipse.ui.externaltools.ATTR_BUILD_SCOPE" value="${working_set:&lt;resources&gt;&lt;item path=&quot;/org.codehaus.groovy40/src/org/codehaus/groovy/antlr/groovy.g&quot; type=&quot;1&quot;/&gt;&lt;/resources&gt;}" />
+    <stringAttribute  key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${build_project:build.antlr2x}" />
+    <stringAttribute  key="org.eclipse.ui.externaltools.ATTR_RUN_BUILD_KINDS" value="incremental,auto,clean" />
+    <booleanAttribute key="org.eclipse.ui.externaltools.ATTR_TRIGGERS_CONFIGURED" value="true" />
+    <stringAttribute  key="org.eclipse.ui.externaltools.ATTR_WORKING_DIRECTORY" value="${build_project:src/org/codehaus/groovy/antlr}" />
+</launchConfiguration>

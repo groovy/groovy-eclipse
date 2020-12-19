@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<fileset-config file-format-version="1.2.0" simple-config="false" sync-formatter="false">
+    <local-check-config name="Greclipse Checks" location=".checkstyleConfig.xml" type="project">
+        <additional-data name="protect-config-file" value="true" />
+    </local-check-config>
+    <fileset name="ours" check-config-name="Greclipse Checks" enabled="true" local="true">
+        <file-match-pattern match-pattern=".(groovy|java|dsld)$" include-pattern="true" />
+        <!-- Exclude files imported from Groovy -->
+        <file-match-pattern match-pattern="grape/GrabAnnotationTransformation.java" include-pattern="false" />
+        <file-match-pattern match-pattern="grape/GrapeIvy.groovy" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/parser/antlr4/AstBuilder.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyLexer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyParser.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyParserBaseVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyParserVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/antlr/AntlrParserPlugin.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/antlr/SourceBuffer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/antlr/UnicodeEscapingReader.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/antlr/parser/\w+\.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/AnnotatedNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/ASTNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/ClassCodeVisitorSupport.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/ClassHelper.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/ClassNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/CompileUnit.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/GenericsType.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/GroovyCodeVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/ImportNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/MethodNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/ModuleNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/Parameter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/expr/ClassExpression.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/expr/ConstantExpression.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/expr/ConstructorCallExpression.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/expr/RangeExpression.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/tools/(Expression|Generics)Utils.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/InnerClassVisitorHelper.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/ReturnAdder.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/CallSiteWriter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/StatementWriter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesMethodReferenceExpressionWriter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/ErrorCollector.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/ProcessingUnit.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/ResolveVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/SourceUnit.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/StaticImportVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/StaticVerifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/tools/GroovyClass.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/AnnotationCollectorTransform.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/ASTTestTransformation.groovy" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/ASTTransformationCollectorCodeVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/ASTTransformationVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/FieldASTTransformation.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/LogASTTransformation.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/NotYetImplemented.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|MethodCall)ExpressionTransformer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/sc/transformers/CompareToNullExpression.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingSupport.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/trait/SuperCallTraitTransformer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/trait/TraitASTTransformation.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/trait/TraitComposer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/trait/TraitReceiverTransformer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/trait/Traits.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/vmplugin/v8/Java8.java" include-pattern="false" />
+    </fileset>
+    <filter name="DerivedFiles" enabled="true" />
+</fileset-config>

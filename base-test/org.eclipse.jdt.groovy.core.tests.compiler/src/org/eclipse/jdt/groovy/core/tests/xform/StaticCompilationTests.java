@@ -2500,16 +2500,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: name for class: E");
-        /* TODO: https://issues.apache.org/jira/browse/GROOVY-9093
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 6)\n" +
-            "\tE.ONE.name\n" +
-            "\t^^^^^\n" +
-            "Groovy:Access to E#name is forbidden @ line 6, column 3.\n" +
-            "----------\n");
-        */
+        if (!isAtLeastGroovy(40)) {
+            runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: name for class: E");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 6)\n" +
+                "\tprint E.ONE.name\n" +
+                "\t      ^^^^^\n" +
+                "Groovy:Access to E#name is forbidden\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -2528,16 +2529,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: ordinal for class: E");
-        /* TODO: https://issues.apache.org/jira/browse/GROOVY-9093
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 6)\n" +
-            "\tE.ONE.ordinal\n" +
-            "\t^^^^^\n" +
-            "Groovy:Access to E#ordinal is forbidden @ line 6, column 3.\n" +
-            "----------\n");
-        */
+        if (!isAtLeastGroovy(40)) {
+            runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: ordinal for class: E");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 6)\n" +
+                "\tprint E.ONE.ordinal\n" +
+                "\t      ^^^^^\n" +
+                "Groovy:Access to E#ordinal is forbidden\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -3054,16 +3056,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
-        /* TODO: https://issues.apache.org/jira/browse/GROOVY-9093
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in q\\More.groovy (at line 5)\n" +
-            "\tprint VALUE\n" +
-            "\t      ^^^^^\n" +
-            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
-            "----------\n");
-        */
+        if (!isAtLeastGroovy(40)) {
+            runConformTest(sources, "");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in q\\More.groovy (at line 5)\n" +
+                "\tprint VALUE\n" +
+                "\t      ^^^^^\n" +
+                "Groovy:Access to q.More#VALUE is forbidden\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -3205,16 +3208,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
-        /* TODO: https://issues.apache.org/jira/browse/GROOVY-9093
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in q\\More.groovy (at line 5)\n" +
-            "\tprint VALUE\n" +
-            "\t      ^^^^^\n" +
-            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
-            "----------\n");
-        */
+        if (!isAtLeastGroovy(40)) {
+            runConformTest(sources, "");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in q\\More.groovy (at line 5)\n" +
+                "\tprint VALUE\n" +
+                "\t      ^^^^^\n" +
+                "Groovy:Access to q.More#VALUE is forbidden\n" +
+                "----------\n");
+        }
     }
 
     @Test

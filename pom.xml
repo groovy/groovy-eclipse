@@ -30,7 +30,7 @@
 		<groovy-eclipse-compiler-version>3.6.0-03</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
-		<groovy-eclipse-batch-version>2.5.14-01</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>2.5.14-02</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -60,6 +60,7 @@
 	<modules>
 		<module>base/org.codehaus.groovy25</module>
 		<module>base/org.codehaus.groovy30</module>
+		<module>base/org.codehaus.groovy40</module>
 
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
 		<module>base/org.eclipse.jdt.groovy.core</module>
@@ -77,6 +78,7 @@
 
 		<module>ide/Feature-org.codehaus.groovy25.feature</module>
 		<module>ide/Feature-org.codehaus.groovy30.feature</module>
+		<module>ide/Feature-org.codehaus.groovy40.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.compilerless.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>

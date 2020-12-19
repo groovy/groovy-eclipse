@@ -1993,12 +1993,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |import org.codehaus.groovy.control.*
             |class C {
             |  void m() {
-            |    @groovy.transform.ASTTest(phase=CONVERSION, value={
+            |    @groovy.transform.ASTTest(phase=CANONICALIZATION, value={
             |      assert node.text
             |    })
             |    def var = null
             |
-            |    @groovy.transform.ASTTest(phase=CompilePhase.CONVERSION, value={
+            |    @groovy.transform.ASTTest(phase=CompilePhase.CANONICALIZATION, value={
             |      sourceUnit.comments
             |    })
             |    final val = null
@@ -2011,7 +2011,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('m()'), 1, METHOD),
             //
             new HighlightedTypedPosition(contents.indexOf('phase'), 5, TAG_KEY),
-            new HighlightedTypedPosition(contents.indexOf('CONVERSION'), 10, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('CANONICALIZATION'), 16, STATIC_VALUE),
             new HighlightedTypedPosition(contents.indexOf('value'), 5, TAG_KEY),
             new HighlightedTypedPosition(contents.indexOf('node'), 4, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('text'), 4, METHOD_CALL),
@@ -2019,7 +2019,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             //
             new HighlightedTypedPosition(contents.lastIndexOf('phase'), 5, TAG_KEY),
             new HighlightedTypedPosition(contents.indexOf('CompilePhase'), 12, ENUMERATION),
-            new HighlightedTypedPosition(contents.lastIndexOf('CONVERSION'), 10, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('CANONICALIZATION'), 16, STATIC_VALUE),
             new HighlightedTypedPosition(contents.lastIndexOf('value'), 5, TAG_KEY),
             new HighlightedTypedPosition(contents.indexOf('sourceUnit'), 10, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('comments'), 8, METHOD_CALL),

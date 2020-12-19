@@ -15,7 +15,7 @@ Export-Package: org.codehaus.jdt.groovy.ast,
  org.eclipse.jdt.groovy.core.util,
  org.eclipse.jdt.groovy.search
 Import-Package: org.eclipse.jdt.launching
-Require-Bundle: org.codehaus.groovy;bundle-version="[2.5.14,4)";visibility:=reexport,
+Require-Bundle: org.codehaus.groovy;bundle-version="[2.5.14,5)";visibility:=reexport,
  org.eclipse.core.expressions;visibility:=reexport,
  org.eclipse.core.filesystem;visibility:=reexport,
  org.eclipse.core.resources;visibility:=reexport,

@@ -51,6 +51,10 @@
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
 
+   <feature id="org.codehaus.groovy40.feature" url="features/org.codehaus.groovy40.feature_4.0.0.qualifier.jar" version="4.0.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
+
    <feature id="org.codehaus.groovy.m2eclipse.feature" url="features/org.codehaus.groovy.m2eclipse.feature_4.0.0.qualifier.jar" version="4.0.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>

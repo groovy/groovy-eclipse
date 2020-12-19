@@ -18,10 +18,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.codehaus.groovy</groupId>
+      <groupId>@org@.groovy</groupId>
       <artifactId>groovy</artifactId>
       <version>@groovy.rt.version@</version>
-      <classifier>indy</classifier>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

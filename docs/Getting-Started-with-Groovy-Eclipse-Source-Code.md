@@ -57,7 +57,7 @@ The installer then downloads the required target platform bundles, imports the G
 
 ![Done](images/oomph/done.png)
 
-Close all org.codehaus.groovyXX projects except org.codehaus.groovy30.  Only one groovyXX project should be open at all times.  Now try to run the GroovyJDTTests/AllGroovyTests suites.
+Close all org.codehaus.groovyXX projects but one -- only one should be open at any time.  Now try to run the GroovyJDTTests/AllGroovyTests suites.
 
 
 ## Eclipse Project Descriptions

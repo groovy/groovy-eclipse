@@ -37,7 +37,6 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.runtime.MetaClassHelper;
-import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -469,10 +468,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 String parameterName;
                 if (i < parameterNames.length) {
                     parameterName = String.valueOf(parameterNames[i]);
-                } else if (i < Java5.ARGS.length) {
-                    parameterName = Java5.ARGS[i];
                 } else {
-                    parameterName = "arg" + i;
+                    parameterName = ("arg" + i).intern();
                 }
                 parameters[i] = makeParameter(parameterTypes[i], parameterName);
                 if (parameterAnnotations != null && parameterAnnotations.length > i) {

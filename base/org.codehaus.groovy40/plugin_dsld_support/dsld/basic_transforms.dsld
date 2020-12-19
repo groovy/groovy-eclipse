@@ -1,0 +1,279 @@
+/*
+ * Copyright 2009-2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package dsld
+
+import groovy.transform.*
+import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.expr.*
+
+import static org.apache.groovy.util.BeanUtils.capitalize
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName
+import static org.codehaus.groovy.transform.NamedVariantASTTransformation.NAMED_PARAM_TYPE
+
+@Field static final ClassNode NAMED_PARAMS_TYPE = ClassHelper.makeWithoutCaching(NamedParams)
+
+// http://groovy-lang.org/metaprogramming.html#_available_ast_transformations
+
+//@groovy.lang.Category
+contribute(currentType(annos: annotatedBy(Category))) {
+    provider = '{@link groovy.lang.Category Category} AST transform'
+    for (AnnotationNode node : annos) {
+        Expression value = node.getMember('value')
+        for (MethodNode meth : currentType.methods.findAll {
+            it.isStatic() && it.parameters.length >= 1 && it.parameters[0].name == '$this' && it.parameters[0].type == value.type
+        }) {
+            Map<String, ClassNode> parms = params(meth)
+            parms = [self: parms['$this'], *: parms.subMap(parms.keySet().tail())]
+            method name: meth.name, type: meth.returnType, params: parms, isStatic: true
+        }
+    }
+}
+
+//@groovy.lang.Delegate
+contribute(currentType(fields: fields(annotatedBy(Delegate)))) {
+    provider = '{@link groovy.lang.Delegate Delegate} AST transform'
+    for (FieldNode field : fields) {
+        delegatesTo type: field.type
+    }
+}
+
+//@groovy.lang.Grab, et al.
+
+//@groovy.lang.Lazy
+
+//@groovy.lang.Mixin
+contribute(currentType(mixins: annotatedBy(Mixin))) {
+    provider = '{@link groovy.lang.Mixin Mixin} AST transform'
+    for (AnnotationNode mixin : mixins) {
+        Expression expr = mixin.getMember('value')
+        if (expr instanceof ClassExpression) {
+            delegatesTo type: expr.type
+        } else if (expr instanceof ListExpression) {
+            for (Expression e : expr.expressions) {
+                delegatesTo type: e.type
+            }
+        }
+    }
+}
+
+//@groovy.lang.Newify
+contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: annotatedBy(Newify)) | enclosingMethod(annos: annotatedBy(Newify)) | assignedVariable(annos: annotatedBy(Newify))) {
+    provider = '{@link groovy.lang.Newify Newify} AST transform'
+
+    def addNewifyMethods = { ClassNode type, String name = type.nameWithoutPackage ->
+        for (ConstructorNode ctor : type.declaredConstructors.findAll { !it.isPrivate() }) {
+            method name: name, params: params(ctor), type: type, declaringType: type, isStatic: true //TODO: doc = ctor javadoc
+        }
+    }
+
+    for (AnnotationNode node : annos) {
+        // check for Ruby style (i.e. auto=true)
+        Boolean auto = node.getMember('auto')?.value
+        if (auto == null) {
+            auto = Newify.getMethod('auto').defaultValue
+        }
+        if (auto && currentNode instanceof PropertyExpression &&
+                currentNode.objectExpression instanceof ClassExpression) {
+            addNewifyMethods(currentType, 'new');
+        }
+
+        // check for Python style (i.e. value=Type(s))
+        Expression expr = node.getMember('value')
+        if (expr instanceof ClassExpression) {
+            addNewifyMethods(expr.type)
+        } else if (expr instanceof ListExpression) {
+            for (Expression e : expr.expressions) {
+                addNewifyMethods(e.type)
+            }
+        }
+
+        // check for Python style (i.e. pattern=/.../)
+        expr = node.getMember('pattern')
+        if (expr) {
+            def resolveNewifyType = { String name ->
+                if (name.split('\\.')[-1].matches(expr.text)) {
+                    ClassNode type = currentType.module.context.resolver.resolve(name)
+                    if (type != ClassHelper.DYNAMIC_TYPE) {
+                        addNewifyMethods(type)
+                    }
+                }
+            }
+
+            // check for method call (i.e. "HashSet(32)")
+            if (currentNode instanceof ConstantExpression && enclosingNode instanceof MethodCallExpression && enclosingNode.method == currentNode && enclosingNode.isImplicitThis()) {
+                resolveNewifyType(currentNode.text)
+            }
+            // check for free variable (i.e. "HashS")
+            else if (currentNode instanceof VariableExpression && currentNode.accessedVariable instanceof DynamicVariable) {
+                // TODO: Should some of this be refactored into a DSL type lookup facility?
+                def env = currentType.module.context.resolver.scope.environment.nameEnvironment
+                String prefix = currentNode.name; boolean findMembers = true, camelCaseMatch = false; int searchFor = org.eclipse.jdt.core.search.IJavaSearchConstants.CLASS
+                env.findTypes(prefix.toCharArray(), findMembers, camelCaseMatch, searchFor, { char[] packageName, char[] typeName, char[][] enclosingTypeNames, int modifiers, accessRestriction ->
+                    if (!org.eclipse.jdt.internal.corext.util.TypeFilter.isFiltered(packageName, org.eclipse.jdt.core.compiler.CharOperation.concatWith(enclosingTypeNames, typeName, '.' as char))) {
+                        resolveNewifyType(org.eclipse.jdt.core.compiler.CharOperation.concat(packageName, org.eclipse.jdt.core.compiler.CharOperation.concatWith(enclosingTypeNames, typeName, '$' as char), '.' as char) as String)
+                    }
+                } as org.eclipse.jdt.internal.codeassist.ISearchRequestor)
+            }
+        }
+    }
+}
+
+//@groovy.lang.Singleton
+contribute(currentType(annos: annotatedBy(Singleton))) {
+    provider = '{@link groovy.lang.Singleton Singleton} AST transform'
+    AnnotationNode node = annos[0]
+    String propertyName = node.getMember('property')?.text ?: 'instance'
+
+    property name: propertyName, type: currentType, isStatic: true, readOnly: true
+    method name: 'get' + capitalize(propertyName), type: currentType, isStatic: true
+}
+
+//------------------------------------------------------------------------------
+
+//@groovy.transform.AnnotationCollector
+
+//@groovy.transform.ASTTest
+
+//@groovy.transform.AutoClone
+contribute(currentType(annotatedBy(AutoClone))) {
+    provider = '{@link groovy.transform.AutoClone AutoClone} AST transform'
+    delegatesTo type: Cloneable
+}
+
+//@groovy.transform.AutoExternalize
+contribute(enclosingClass(annotatedBy(AutoExternalize))) {
+    provider = '{@link groovy.transform.AutoExternalize AutoExternalize} AST transform'
+    delegatesTo type: Externalizable
+}
+
+//@groovy.transform.AutoFinal
+
+//@groovy.transform.AutoImplement
+
+//@groovy.transform.BaseScript
+
+//@groovy.transform.Canonical, et al.
+
+//@groovy.transform.Field
+contribute(isScript() & currentType(subType(Script) & bind(fields: fields(not(isFinal()))))) {
+    provider = '{@link groovy.transform.Field Field} AST transform'
+    for (FieldNode field : fields) {
+        if (field.getEnd() > 0) {
+            method name: getSetterName(field.name), type: void, params: [(field.name): field.type], isStatic: field.isStatic()
+        }
+    }
+}
+
+//@groovy.transform.IndexedProperty
+contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
+    provider = '{@link groovy.transform.IndexedProperty IndexedProperty} AST transform'
+    for (FieldNode field : fields) {
+        String propertyName = capitalize(field.name)
+
+        // field must be an array or collection; get its component type
+        ClassNode type
+        if (type.isArray()) {
+            type = type.componentType
+        } else {
+            GenericsType[] gt = type.genericsTypes
+            if (gt && gt.length > 0) {
+                type = gt[0]?.type
+            } else {
+                type = ClassHelper.OBJECT_TYPE
+            }
+        }
+
+        method name: 'get' + propertyName, type: type, params: [index: int]
+        method name: 'set' + propertyName, type: void, params: [index: int, element: type]
+    }
+}
+
+//@groovy.transform.Immutable
+
+//@groovy.transform.InheritConstructors
+
+//@groovy.transform.MapConstructor
+
+//@groovy.transform.Memoized
+
+//@groovy.transform.NamedVariant, et al.
+contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | hasConstructor(hasArgument(annotatedBy(NamedParam))))) {
+    provider = '{@link groovy.transform.NamedVariant NamedVariant} AST transform'
+    for (MethodNode meth : meths) {
+        Parameter parm = meth.parameters[0]
+        if (!ClassHelper.MAP_TYPE.equals(parm.type)) {
+            continue
+        }
+
+        Map<String, ?> namedParams = [:], optionalParams = [:]
+        for (AnnotationNode anno : parm.getAnnotations(NAMED_PARAM_TYPE) ?:
+                parm.getAnnotations(NAMED_PARAMS_TYPE).collectMany { it.getMember('value').expressions*.value }) {
+            String name = anno.getMember('value').value
+            def type = anno.getMember('type')?.type
+            if (type == null) NamedParam.getMethod('type').defaultValue
+            Boolean r = anno.getMember('required')?.value
+            if (r == null) r = NamedParam.getMethod('required').defaultValue
+
+            (r ? namedParams : optionalParams).put(name, type)
+        }
+
+        method  name: meth.name,
+                params: params(meth),
+                namedParams: namedParams,
+                optionalParams: optionalParams,
+                declaringType: meth.declaringClass,
+                type: meth.returnType, isStatic: meth.isStatic(),
+                // TODO: set public/private/package/protected from meth.modifiers
+                isDeprecated: org.eclipse.jdt.groovy.core.util.GroovyUtils.isDeprecated(meth)
+    }
+}
+
+//@groovy.transform.NotYetImplemented
+
+//@groovy.transform.PackageScope
+
+//@groovy.transform.SelfType
+contribute(bind(clazz: enclosingClass(annos: annotatedBy(SelfType)))) {
+    provider = '{@link groovy.transform.SelfType SelfType} AST transform'
+    if (org.codehaus.groovy.transform.trait.Traits.isTrait(clazz[0])) {
+        for (AnnotationNode node : annos) {
+            Expression expr = node.getMember('value')
+            if (expr instanceof ClassExpression) {
+                delegatesTo type: expr.type
+            } else if (expr instanceof ListExpression) {
+                for (Expression e : expr.expressions) {
+                    delegatesTo type: e.type
+                }
+            }
+        }
+    }
+}
+
+//@groovy.transform.Sortable
+contribute(currentType(annotatedBy(Sortable))) {
+    provider = '{@link groovy.transform.Sortable Sortable} AST transform'
+    delegatesTo type: "java.lang.Comparable<${currentType.name}>"
+    for (MethodNode node : currentType.methods.findAll { MethodNode mn ->
+        mn.isPublic() && mn.isStatic() && mn.name.startsWith('comparatorBy') && !mn.parameters
+    }) {
+        method name: node.name, type: node.returnType, isStatic: true
+            //, doc: "Returns a {@code Comparator} that compares the ${node.name.substring(12).uncapitalize()} properties of {@link ${currentType.name} ${currentType.nameWithoutPackage}} instances"
+    }
+}
+
+//@groovy.transform.Synchronized, et al.
+
+//@groovy.transform.TailRecursive

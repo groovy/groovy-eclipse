@@ -7,10 +7,11 @@
 	<packaging>pom</packaging>
 
 	<properties>
+		<org>org.apache</org>
 		<!-- groovy version to use for tests: -->
-		<groovy.rt.version>3.0.7</groovy.rt.version>
+		<groovy.rt.version>4.0.0-alpha-2</groovy.rt.version>
 		<!-- groovy-batch version to use for tests: -->
-		<groovy.xx.version>3.0.7-02</groovy.xx.version>
+		<groovy.xx.version>4.0.0-01</groovy.xx.version>
 		<!-- maven-compiler version to use for tests: -->
 		<maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
 

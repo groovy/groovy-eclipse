@@ -103,6 +103,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         if (isAtLeastGroovy(30)) {
             jUnitVersion = 5;
             spockCorePath = "lib/spock-core-2.0-M4-groovy-3.0.jar";
+            if (isAtLeastGroovy(40)) {
+                System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
+            }
         } else {
             spockCorePath = "lib/spock-core-1.3-groovy-2.5.jar";
         }
@@ -114,7 +117,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     // check whether these are identical (in everything except name!)
     private static void compareClassNodes(final ClassNode jcn, final ClassNode cn, final int d) {
-        System.out.println("Comparing ClassNodes\njcn=" + jcn.toString() + "\n cn=" + cn.toString());
         assertEquals(cn.isGenericsPlaceHolder(), jcn.isGenericsPlaceHolder());
 
         GenericsType[] cnGenerics = cn.getGenericsTypes();
@@ -129,8 +131,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             }
             assertNotNull(jcnGenerics);
             assertEquals(cnGenerics.length, jcnGenerics.length);
-            for (int i = 0; i < cnGenerics.length; i++) {
-                System.out.println("Comparing generics types information, index #" + i);
+            for (int i = 0, n = cnGenerics.length; i < n; i += 1) {
                 compareGenericsTypes(jcnGenerics[i], cnGenerics[i], d + 1);
             }
         }
@@ -147,12 +148,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     private static void compareType(final ClassNode jcn, final ClassNode cn, final int d) {
-        System.out.println("Compare type of GenericsType: jcn=" + jcn + " cn=" + cn);
         compareClassNodes(jcn, cn, d + 1);
     }
 
     private static void compareLowerBound(final ClassNode jcn, final ClassNode cn, final int d) {
-        System.out.println("Comparing lower bound");
         if (jcn == null) {
             assertNull(cn);
         } else {
@@ -162,7 +161,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     private static void compareUpperBounds(final ClassNode[] jcnlist, final ClassNode[] cnlist, final int d) {
-        System.out.println("Comparing upper bounds: jcn=" + Arrays.toString(jcnlist) + " cn=" + Arrays.toString(cnlist));
         if (cnlist == null) {
             if (jcnlist != null) {
                 fail("Should be null but is " + Arrays.toString(jcnlist));
@@ -2411,9 +2409,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         fullBuild(paths[0]);
 
         Problem[] rootProblems = env.getProblemsFor(pathToA);
-        for (int i = 0; i < rootProblems.length; i += 1) {
-            System.out.println(i + "  " + rootProblems[i] + "[" + rootProblems[i].getMessage() + "]" + rootProblems[i].getEnd());
-        }
         // positions should be from the first character of the tag to the character after the last in the text
         expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR));
     }
@@ -2459,9 +2454,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         fullBuild(paths[0]);
 
         Problem[] rootProblems = env.getProblemsFor(pathToA);
-        for (int i = 0; i < rootProblems.length; i += 1) {
-            System.out.println(i + "  " + rootProblems[i] + "[" + rootProblems[i].getMessage() + "]" + rootProblems[i].getEnd());
-        }
         expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR));
     }
 

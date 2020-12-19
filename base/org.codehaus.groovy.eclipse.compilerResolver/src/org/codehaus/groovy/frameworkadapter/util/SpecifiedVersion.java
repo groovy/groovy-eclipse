@@ -32,6 +32,7 @@ public enum SpecifiedVersion {
     _25(2, 5, "25"),
     _26(2, 6, "26"),
     _30(3, 0, "30"),
+    _40(4, 0, "40"),
     DONT_CARE(0, 0, "-1"),
     UNSPECIFIED(0, 0, "0");
 
@@ -116,6 +117,12 @@ public enum SpecifiedVersion {
                         case 0:
                             return _30;
                         }
+                        break;
+                    case 4:
+                        switch (minor) {
+                        case 0:
+                            return _40;
+                        }
                     }
                 } catch (NumberFormatException ignore) {
                 }
@@ -175,10 +182,14 @@ public enum SpecifiedVersion {
         case "30":
         case "3.0":
             return _30;
+
+        case "40":
+        case "4.0":
+            return _40;
         }
 
         System.out.println("Invalid Groovy compiler level: " + compilerLevel +
-            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26, 2.6, 30 or 3.0");
+            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26, 2.6, 30, 3.0, 40 or 4.0");
 
         return UNSPECIFIED;
     }
@@ -218,6 +229,11 @@ public enum SpecifiedVersion {
             switch (ver.getMinor()) {
             case 0:
                 return _30;
+            }
+        case 4:
+            switch (ver.getMinor()) {
+            case 0:
+                return _40;
             }
         }
         return UNSPECIFIED;

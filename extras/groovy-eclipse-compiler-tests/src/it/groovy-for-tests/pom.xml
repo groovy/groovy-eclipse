@@ -18,13 +18,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.codehaus.groovy</groupId>
+      <groupId>@org@.groovy</groupId>
       <artifactId>groovy</artifactId>
       <version>@groovy.rt.version@</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.groovy</groupId>
+      <groupId>@org@.groovy</groupId>
       <artifactId>groovy-test</artifactId>
       <version>@groovy.rt.version@</version>
       <scope>test</scope>
@@ -85,6 +85,12 @@
             </goals>
             <configuration>
               <compilerId>groovy-eclipse-compiler</compilerId>
+              <systemProperties>
+                <systemProperty>
+                  <name>spock.iKnowWhatImDoing.disableGroovyVersionCheck</name>
+                  <value>true</value>
+                </systemProperty>
+             </systemProperties>
             </configuration>
           </execution>
         </executions>

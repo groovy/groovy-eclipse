@@ -27,7 +27,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked1() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "import groovy.transform.TypeChecked\n"+
             "@TypeChecked\n"+
             "void method(String message) {\n"+
@@ -40,12 +40,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 4)\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
             "\tif (rareCondition) {\n" +
             "\t    ^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - The variable [rareCondition] is undeclared.\n" +
             "----------\n" +
-            "2. ERROR in Foo.groovy (at line 5)\n" +
+            "2. ERROR in Main.groovy (at line 5)\n" +
             "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
             "\t                                          ^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()." +
@@ -57,7 +57,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked2() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "import groovy.transform.TypeChecked\n" +
             "@TypeChecked\n" +
             "void method(String message) {\n" +
@@ -70,7 +70,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 6)\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
             "\tls.add(\'abc\')\n" +
             "\t^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
@@ -81,7 +81,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked3() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "interface I {\n" +
             "}\n" +
             "enum E implements I {\n" +
@@ -103,9 +103,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked4() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
-            "class Foo {" +
+            "class Main {" +
             "  def method() {\n" +
             "    Set<java.beans.BeanInfo> defs = []\n" +
             "    defs*.additionalBeanInfo\n" +
@@ -121,9 +121,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked5() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
-            "class Foo {" +
+            "class Main {" +
             "  static def method() {\n" + // static method alters type checking
             "    Set<java.beans.BeanInfo> defs = []\n" +
             "    defs*.additionalBeanInfo\n" +
@@ -139,9 +139,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked6() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
-            "class Foo {\n" +
+            "class Main {\n" +
             "  private Closure<String> normalizer\n" +
             "  String normalize(String s) {\n" +
             "    normalizer(s)" +
@@ -157,7 +157,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked7() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "class C {\n" +
             "  C(String s, Comparable<List<Integer>> c) {\n" +
             "  }\n" +
@@ -177,7 +177,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked8() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "import groovy.transform.stc.*\n" +
             "class C {\n" +
             "  C(String s, @ClosureParams(value=SimpleType, options='java.util.List') Closure<Integer> c) {\n" +
@@ -198,7 +198,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     public void testTypeChecked9() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "class C {\n" +
             "  static m(String s, Comparable<List<Integer>> c) {\n" +
             "  }\n" +
@@ -486,7 +486,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[123]");
     }
 
-    @Test
+    @Test // see GROOVY-9783 for Groovy 4
     public void testTypeChecked9803() {
         //@formatter:off
         String[] sources = {

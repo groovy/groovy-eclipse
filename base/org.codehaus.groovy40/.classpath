@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<classpath>
+    <classpathentry kind="src" path="src" output="bin" />
+    <classpathentry kind="src" path="src-trace" output="bin-trace" />
+
+    <classpathentry kind="lib" path="groovy-parser2.jar" exported="true" />
+
+    <classpathentry kind="lib" path="lib/ivy-2.5.0.jar" sourcepath="lib/ivy-2.5.0-sources.jar" exported="true">
+        <attributes>
+            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy40/lib/ivy-2.5.0-javadoc.jar!/" />
+        </attributes>
+    </classpathentry>
+    <classpathentry kind="lib" path="lib/groovy-4.0.0.jar" sourcepath="lib/groovy-4.0.0-sources.jar" exported="true">
+        <attributes>
+            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy40/lib/groovy-4.0.0-javadoc.jar!/" />
+        </attributes>
+    </classpathentry>
+    <classpathentry kind="lib" path="lib/groovy-test-4.0.0.jar" sourcepath="lib/groovy-test-4.0.0-sources.jar" exported="true">
+        <attributes>
+            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy40/lib/groovy-test-4.0.0-javadoc.jar!/" />
+        </attributes>
+    </classpathentry>
+
+    <classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins" />
+    <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8" />
+</classpath>
