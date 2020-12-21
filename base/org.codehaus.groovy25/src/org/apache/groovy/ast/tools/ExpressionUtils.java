@@ -350,9 +350,21 @@ public final class ExpressionUtils {
             }
         } else if (exp instanceof BinaryExpression) {
             BinaryExpression be = (BinaryExpression) exp;
+            /* GRECLIPSE edit -- GROOVY-9855: inline string concat sooner
             be.setLeftExpression(transformInlineConstants(be.getLeftExpression()));
             be.setRightExpression(transformInlineConstants(be.getRightExpression()));
             return be;
+            */
+            Expression lhs = transformInlineConstants(be.getLeftExpression());
+            Expression rhs = transformInlineConstants(be.getRightExpression());
+            if (be.getOperation().getType() == PLUS && lhs instanceof ConstantExpression && rhs instanceof ConstantExpression &&
+                    lhs.getType().equals(ClassHelper.STRING_TYPE) && rhs.getType().equals(ClassHelper.STRING_TYPE)) {
+                return configure(be, new ConstantExpression(lhs.getText() + rhs.getText()));
+            }
+            be.setLeftExpression(lhs);
+            be.setRightExpression(rhs);
+            return be;
+            // GRECLIPSE end
         } else if (exp instanceof ListExpression) {
             ListExpression origList = (ListExpression) exp;
             ListExpression newList = new ListExpression();

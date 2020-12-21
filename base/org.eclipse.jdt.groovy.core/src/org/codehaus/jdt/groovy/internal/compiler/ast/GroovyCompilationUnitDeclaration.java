@@ -89,6 +89,7 @@ import org.codehaus.groovy.syntax.CSTNode;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
+import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
@@ -1655,8 +1656,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return new ClassLiteralAccess(expr.getStart() - 1, new Wildcard(Wildcard.UNBOUND));
 
             } else if (expr instanceof BinaryExpression) {
-                // annotation may be something like "@Tag(value = List<String)" (incomplete generics specification)
-
+                BinaryExpression be = (BinaryExpression) expr;
+                if (be.getOperation().getType() == Types.PLUS) {
+                    org.eclipse.jdt.internal.compiler.ast.Expression expression = new org.eclipse.jdt.internal.compiler.ast.BinaryExpression(
+                        createAnnotationMemberExpression(be.getLeftExpression(),  type),
+                        createAnnotationMemberExpression(be.getRightExpression(), type),
+                        org.eclipse.jdt.internal.compiler.ast.OperatorIds.PLUS
+                    );
+                    expression.sourceStart = expr.getStart();
+                    expression.sourceEnd = expr.getEnd() - 1;
+                    return expression;
+                }
+                // or annotation may be something like "@Tag(value = List<String)" (incomplete generics specification)
             } else {
                 org.eclipse.jdt.internal.compiler.ast.Expression expression = createInitializationExpression(expr, type);
                 if (expression != null) {

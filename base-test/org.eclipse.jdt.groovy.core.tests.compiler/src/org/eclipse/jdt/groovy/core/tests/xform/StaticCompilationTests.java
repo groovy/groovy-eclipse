@@ -5345,6 +5345,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9855() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "@SuppressWarnings(C.PREFIX + 'checked')\n" + // not 'un'.plus('checked')
+            "class C {\n" +
+            "  public static final String PREFIX = 'un'\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. WARNING in Main.groovy (at line 2)\n" +
+            "\t@SuppressWarnings(C.PREFIX + 'checked')\n" +
+            "\t                  ^^^^^^^^^^^^^^^^^^^^\n" +
+            "Unnecessary @SuppressWarnings(\"unchecked\")\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testCompileStatic9860() {
         //@formatter:off
         String[] sources = {
