@@ -4504,6 +4504,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (accessedVariable instanceof Parameter) {
                 ((Parameter) accessedVariable).putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, cn);
             }
+            // GRECLIPSE add -- GROOVY-9863
+            else if (accessedVariable instanceof PropertyNode && ((PropertyNode) accessedVariable).getField().isSynthetic()) {
+                ((PropertyNode) accessedVariable).putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, cn);
+            }
+            // GRECLIPSE end
             if (var.isClosureSharedVariable() && cn != null) {
                 List<ClassNode> assignedTypes = typeCheckingContext.closureSharedVariablesAssignmentTypes.get(var);
                 if (assignedTypes == null) {
