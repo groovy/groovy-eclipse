@@ -5345,6 +5345,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9860() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  static <T> void test() {\n" +
+            "    def bind = { T a, T b ->\n" +
+            "      return new Tuple2<T, T>(a, b)\n" +
+            "    }\n" +
+            "    print bind('foo', 'bar')\n" +
+            "  }\n" +
+            "}\n" +
+            "C.test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo, bar]");
+    }
+
+    @Test
     public void testCompileStatic9863() {
         //@formatter:off
         String[] sources = {

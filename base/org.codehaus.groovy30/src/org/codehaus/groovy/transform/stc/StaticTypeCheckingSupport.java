@@ -1131,8 +1131,11 @@ public abstract class StaticTypeCheckingSupport {
             String name = param.getType().getUnresolvedName();
             Optional<GenericsType> value = genericsPlaceholderAndTypeMap.entrySet().stream()
                 .filter(e -> e.getKey().getName().equals(name)).findFirst().map(Map.Entry::getValue);
+            /* GRECLIPSE edit -- GROOVY-9860
             ClassNode type = value.map(GenericsType::getType).orElseGet(() -> makeRawType(param.getType()));
-
+            */
+            ClassNode type = value.map(gt -> !gt.isPlaceholder() ? gt.getType() : makeRawType(gt.getType())).orElseGet(() -> makeRawType(param.getType()));
+            // GRECLIPSE end
             return new Parameter(type, param.getName());
         }).toArray(Parameter[]::new);
     }
