@@ -5408,4 +5408,26 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "1.0");
     }
+
+    @Test
+    public void testCompileStatic9872() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  private Map<String, String> map = [:]\n" +
+            "  void test() {\n" +
+            "    ['kv'].each {\n" +
+            "      map[it] = it\n" +
+            "    }\n" +
+            "    print map\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[kv:kv]");
+    }
 }
