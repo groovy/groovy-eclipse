@@ -71,6 +71,7 @@ import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.SwitchStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
@@ -898,6 +899,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      */
     public boolean containsInThisScope(String name) {
         return nameVariableMap.containsKey(name);
+    }
+
+    /*package*/ boolean isCasePredicate(ClosureExpression closure) {
+        return (parent != null && parent.scopeNode instanceof SwitchStatement &&
+            ((SwitchStatement) parent.scopeNode).getCaseStatements().stream().anyMatch(cs -> cs.getExpression() == closure));
     }
 
     /*package*/ void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {

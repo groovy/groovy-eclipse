@@ -3856,6 +3856,17 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.lang.Object");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9854
+    public void testSwitchClosureCase1() {
+        String contents =
+            "switch (123) {\n" +
+            "  case {it > 10}:\n" +
+            "  break\n" +
+            "}\n";
+
+        assertType(contents, "it", "java.lang.Integer");
+    }
+
     @Test
     public void testThisInInnerClass() {
         String contents =
@@ -3868,6 +3879,29 @@ public final class InferencingTests extends InferencingTestSuite {
 
         assertType(contents, "this", "A");
         assertType(contents, "source", "java.lang.Number");
+    }
+
+    @Test
+    public void testSwitchClosureCase2() {
+        String contents =
+            "switch (123) {\n" +
+            "  case {i -> i > 10}:\n" +
+            "  break\n" +
+            "}\n";
+
+        assertType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test
+    public void testSwitchClosureCase3() {
+        String contents =
+            "switch (123) {\n" +
+            "  case {i,j -> i > 10}:\n" +
+            "  break\n" +
+            "}\n";
+
+        assertType(contents, "i", "java.lang.Integer");
+        assertType(contents, "j", "java.lang.Object");
     }
 
     @Test // GRECLIPSE-1798

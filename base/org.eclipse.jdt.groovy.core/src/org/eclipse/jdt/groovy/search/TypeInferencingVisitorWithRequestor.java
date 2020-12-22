@@ -1700,10 +1700,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitSwitch(final SwitchStatement switchStatement) {
-
-        switchStatement.getExpression().visit(this);
+        try { // capture switch statement's expression type
+            completeExpressionStack.add(switchStatement);
+            switchStatement.getExpression().visit(this);
+        } finally {
+            completeExpressionStack.removeLast();
+        }
 
         scopes.add(new VariableScope(scopes.getLast(), switchStatement, false));
+        scopes.getLast().addVariable("##", primaryTypeStack.removeLast(), null);
         try {
             VariableScope[] caseScopes = switchStatement.getCaseStatements().stream().map(CaseStatement::getCode)
                 .map(statement -> new VariableScope(scopes.getLast(), statement, false)).toArray(VariableScope[]::new);
@@ -2426,12 +2431,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         if (node.getParameters() == null) { // i.e. "{ -> ... }"
             return ClassNode.EMPTY_ARRAY;
         }
-        ClassNode primaryType = null;
 
         ClassNode[] inferredTypes = new ClassNode[node.isParameterSpecified() ? node.getParameters().length : 1];
 
-        VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
-        if (cat != null && cat.declaration instanceof MethodNode) {
+        ClassNode primaryType = null;
+        VariableScope.CallAndType cat;
+
+        if (enclosingAssignment != null && enclosingAssignment.getRightExpression() == node) {
+            primaryType = enclosingAssignment.getLeftExpression().getType();
+
+        } else if (!completeExpressionStack.isEmpty() && completeExpressionStack.getLast() instanceof CastExpression &&
+                          ((CastExpression) completeExpressionStack.getLast()).getExpression() == node) {
+            primaryType = ((CastExpression) completeExpressionStack.getLast()).getType();
+
+        } else if (inferredTypes.length > 0 && scope.isCasePredicate(node)) {
+            inferredTypes[0] = scope.lookupName("##").type; // switch type maps to first param
+            Arrays.fill(inferredTypes, 1, inferredTypes.length, VariableScope.OBJECT_CLASS_NODE);
+
+        } else if ((cat = scope.getEnclosingMethodCallExpression()) != null && cat.declaration instanceof MethodNode) {
             MethodNode methodNode = (MethodNode) cat.declaration;
             Parameter methodParam = findTargetParameter(node, cat.call, methodNode,
                 !methodNode.getDeclaringClass().equals(cat.getPerceivedDeclaringType()));
@@ -2476,11 +2493,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 }
             }
-        } else if (!completeExpressionStack.isEmpty() && completeExpressionStack.getLast() instanceof CastExpression &&
-                          ((CastExpression) completeExpressionStack.getLast()).getExpression() == node) {
-            primaryType = ((CastExpression) completeExpressionStack.getLast()).getType();
-        } else if (enclosingAssignment != null && enclosingAssignment.getRightExpression() == node) {
-            primaryType = enclosingAssignment.getLeftExpression().getType();
         }
 
         if (inferredTypes[0] == null) {
@@ -2566,7 +2578,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * <li>first element of a list expression (the first element is assumed to be representative of all list elements)
      * <li>first element of a range expression (the first element is assumed to be representative of the range components)
      * <li>either the key or the value expression of a {@link MapEntryExpression}
-     * <li>expression of a {@link ReturnStatement}, {@link BooleanExpression}, {@link CastExpression}, {@link PrefixExpression}, {@link PostfixExpression},
+     * <li>expression of a {@link ReturnStatement},{@link SwitchStatement},  {@link BooleanExpression}, {@link CastExpression}, {@link PrefixExpression}, {@link PostfixExpression},
      *     {@link SpreadExpression}, {@link SpreadMapExpression}, {@link UnaryMinusExpression}, {@link UnaryPlusExpression}, {@link BitwiseNegationExpression}
      * <li>collection expression of a for statement
      * </ul>
@@ -2670,6 +2682,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     // used to capture the type of the collection expression
                     // so that it can be assigned to the for loop variable
                     result[0] = (expr == statement.getCollectionExpression());
+                }
+
+                @Override public void visitSwitch(final SwitchStatement statement) {
+                    // used to capture the type for the closure parameter of a case
+                    result[0] = (expr == statement.getExpression());
                 }
 
                 @Override public void visitReturnStatement(final ReturnStatement statement) {
