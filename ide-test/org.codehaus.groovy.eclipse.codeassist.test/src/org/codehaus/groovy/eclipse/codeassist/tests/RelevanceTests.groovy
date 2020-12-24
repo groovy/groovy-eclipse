@@ -46,12 +46,12 @@ final class RelevanceTests extends CompletionTestSuite {
             |class Outer {
             |  def f
             |  def m() {
-            |    def p
+            |    def v
             |  }
             |}
             |'''.stripMargin()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'def p\n')))
-        assertProposalOrdering(proposals, 'p', 'f', 'getF', 'm', 'find')
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'def v\n')))
+        assertProposalOrdering(proposals, 'v', 'f', 'getF', 'm', 'find')
     }
 
     @Test

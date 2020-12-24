@@ -30,7 +30,13 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.SwitchStatement;
 import org.junit.Test;
 
 /**
@@ -515,6 +521,15 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "    int err;\n" +
             "  }\n" +
             "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+
+        ClassNode classNode = moduleNode.getClasses().get(0);
+        MethodNode methodNode = classNode.getMethods("run").get(0);
+        BlockStatement methodBody = (BlockStatement) methodNode.getCode();
+        DeclarationExpression assign = (DeclarationExpression) ((ReturnStatement) methodBody.getStatements().get(0)).getExpression();
+        assertTrue(assign.getLeftExpression() instanceof VariableExpression && assign.getRightExpression() instanceof ClassExpression);
     }
 
     @Test
@@ -547,6 +562,16 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "    int err;\n" +
             "  }\n" +
             "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+
+        ClassNode classNode = moduleNode.getClasses().get(0);
+        MethodNode methodNode = classNode.getMethods("run").get(0);
+        BlockStatement methodBody = (BlockStatement) methodNode.getCode();
+        // methodBody.getStatements().get(0) should be DeclarationExpression
+        BinaryExpression assign = (BinaryExpression) ((ReturnStatement) methodBody.getStatements().get(1)).getExpression();
+        assertTrue(assign.getLeftExpression() instanceof VariableExpression && assign.getRightExpression() instanceof ClassExpression);
     }
 
     @Test
@@ -776,9 +801,171 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "Groovy:unexpected token: \n" +
             "----------\n");
 
-        ModuleNode moduleN = getModuleNode("X.groovy");
-        assertFalse(moduleN.encounteredUnrecoverableError());
-        assertEquals("X", moduleN.getClasses().get(0).getName());
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+        assertEquals("X", moduleNode.getClasses().get(0).getName());
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteCaseCondition1() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "void test(state) {\n" +
+            "  switch (state) {\n" +
+            "    case Thread.State.BLOCKED:\n" +
+            "    case Thread.State.RUNNABLE\n" +
+            "      println 'blah blah'\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 4)\n" +
+            "\tcase Thread.State.RUNNABLE\n" +
+            "      println 'blah blah'\n" +
+            "\t                          ^\n" +
+            "Groovy:expecting ':', found '<newline>'\n" +
+            "----------\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+
+        ClassNode classNode = moduleNode.getClasses().get(0);
+        MethodNode methodNode = classNode.getMethods("test").get(0);
+        BlockStatement methodBody = (BlockStatement) methodNode.getCode();
+        SwitchStatement switchStmt = (SwitchStatement) methodBody.getStatements().get(0);
+        assertEquals("Expected both case statements", 2, switchStmt.getCaseStatements().size());
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteCaseCondition2() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "void test(state) {\n" +
+            "  switch (state) {\n" +
+            "    case Thread.State.BLOCKED:\n" +
+            "    case Thread.State.RUNNABLE\n" +
+            //     no statement(s) here
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 4)\n" +
+            "\tcase Thread.State.RUNNABLE\n" +
+            "  }\n" +
+            "\t                          ^\n" +
+            "Groovy:expecting ':', found '<newline>'\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 5)\n" +
+            "\t}\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: " + "}\n" +
+            "----------\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+
+        ClassNode classNode = moduleNode.getClasses().get(0);
+        MethodNode methodNode = classNode.getMethods("test").get(0);
+        BlockStatement methodBody = (BlockStatement) methodNode.getCode();
+        SwitchStatement switchStmt = (SwitchStatement) methodBody.getStatements().get(0);
+        assertEquals("Expected both case statements", 2, switchStmt.getCaseStatements().size());
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteMultiCatchBlock() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "try {\n" +
+            "} catch (Exception | Error ) {\n" + // no var name
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 2)\n" +
+            "\t} catch (Exception | Error ) {\n" +
+            "\t                           ^\n" +
+            "Groovy:expecting an identifier, found ')'\n" +
+            "----------\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteMethodCallExpr1() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "print(''\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\tprint(''\n" +
+            "\t      ^\n" +
+            "Groovy:expecting ')', found ''\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
+            "  }\n" +
+            "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+    }
+
+    @Test
+    public void testParsingRecovery_IncompleteMethodCallExpr2() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "Arrays.asList('',123,null\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\tArrays.asList('',123,null\n" +
+            "\t                     ^\n" +
+            "Groovy:expecting ')', found 'null'\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
+            "  }\n" +
+            "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test
@@ -1084,6 +1271,40 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testParsingRecovery_IncompleteTernaryExpression() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class X {\n" +
+            "  def y() {\n" +
+            "    def z = true ? null \n" +
+            "  }\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 4)\n" +
+            "\t}\n" +
+            "\t^\n" +
+            "Groovy:expecting ':', found '}'\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
+            "  }\n" +
+            "  public java.lang.Object y() {\n" +
+            "    java.lang.Object z;\n" +
+            "  }\n" +
+            "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+    }
+
+    @Test
     public void testParsingRecovery_GRE941() {
         //@formatter:off
         String[] sources = {
@@ -1167,7 +1388,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
-        assertEquals("X", moduleNode.getClasses().get(0).getName());
     }
 
     @Test
@@ -1201,6 +1421,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void foo() {\n" +
             "  }\n" +
             "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test
@@ -1234,6 +1457,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void foo() {\n" +
             "  }\n" +
             "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test
@@ -1267,6 +1493,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void foo() {\n" +
             "  }\n" +
             "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test
@@ -1300,6 +1529,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public java.lang.Object m() {\n" +
             "  }\n" +
             "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test
@@ -1325,6 +1557,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\t       ^\n" +
             "Groovy:unexpected token: \n" +
             "----------\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test // trickier than above, this is also missing the closing paren
@@ -1345,6 +1580,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\t      ^\n" +
             "Groovy:unexpected token: \n" +
             "----------\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test
@@ -1371,6 +1609,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\t                                   ^\n" +
             "Groovy:expecting \')\', found \'\'\n" +
             "----------\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test
@@ -1397,6 +1638,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\t                                 ^\n" +
             "Groovy:expecting \')\', found \'\'\n" +
             "----------\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
     }
 
     @Test
@@ -2269,12 +2513,76 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testParsingRecovery_SpecialCtorCall1() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class X {\n" +
+            "  X() {\n" +
+            "    super(\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 4)\n" +
+            "\t}\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: " + "}\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+    }
+
+    @Test
+    public void testParsingRecovery_SpecialCtorCall2() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class X {\n" +
+            "  X() {\n" +
+            "    this(\n" +
+            "  }\n" +
+            "  X(p) {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 4)\n" +
+            "\t}\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: " + "}\n" +
+            "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(java.lang.Object p) {\n" +
+            "  }\n" +
+            "}\n");
+
+        ModuleNode moduleNode = getModuleNode("X.groovy");
+        assertFalse(moduleNode.encounteredUnrecoverableError());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/501
     public void testParsingRecovery_InstrusivePathExpr1() {
         //@formatter:off
         String[] sources = {
             "X.groovy",
-            "package a\n" +
-            "\n" +
             "import java.text.NumberFormat\n" +
             "\n" +
             "class X {\n" +
@@ -2289,7 +2597,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in X.groovy (at line 9)\n" +
+            "1. ERROR in X.groovy (at line 7)\n" +
             "\tSet s = []\n" +
             "\t^\n" +
             "Groovy:unexpected token: Set\n" +
@@ -2302,7 +2610,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         assertFalse("Expected at least path expression 'NumberFormat.' in block", ((BlockStatement) main.getCode()).getStatements().isEmpty());
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/501
     public void testParsingRecovery_InstrusivePathExpr2() {
         //@formatter:off
         String[] sources = {

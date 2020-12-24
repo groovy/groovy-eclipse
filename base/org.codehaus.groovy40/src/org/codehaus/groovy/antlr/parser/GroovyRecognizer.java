@@ -5281,110 +5281,93 @@ inputState.guessing--;
         ASTPair currentAST = new ASTPair();
         AST conditionalExpression_AST = null;
         
-        try {      // for error handling
-            logicalOrExpression(lc_stmt);
+        logicalOrExpression(lc_stmt);
+        astFactory.addASTChild(currentAST, returnAST);
+        {
+        boolean synPredMatched471 = false;
+        if (((LA(1)==ELVIS_OPERATOR||LA(1)==NLS) && (_tokenSet_54.member(LA(2))))) {
+            int _m471 = mark();
+            synPredMatched471 = true;
+            inputState.guessing++;
+            try {
+                {
+                nls();
+                match(ELVIS_OPERATOR);
+                }
+            }
+            catch (RecognitionException pe) {
+                synPredMatched471 = false;
+            }
+            rewind(_m471);
+inputState.guessing--;
+        }
+        if ( synPredMatched471 ) {
+            nls();
+            AST tmp151_AST = null;
+            tmp151_AST = astFactory.create(LT(1));
+            astFactory.makeASTRoot(currentAST, tmp151_AST);
+            match(ELVIS_OPERATOR);
+            nls();
+            conditionalExpression(0);
             astFactory.addASTChild(currentAST, returnAST);
-            {
-            boolean synPredMatched471 = false;
-            if (((LA(1)==ELVIS_OPERATOR||LA(1)==NLS) && (_tokenSet_54.member(LA(2))))) {
-                int _m471 = mark();
-                synPredMatched471 = true;
+        }
+        else {
+            boolean synPredMatched473 = false;
+            if (((LA(1)==QUESTION||LA(1)==NLS) && (_tokenSet_55.member(LA(2))))) {
+                int _m473 = mark();
+                synPredMatched473 = true;
                 inputState.guessing++;
                 try {
                     {
                     nls();
-                    match(ELVIS_OPERATOR);
+                    match(QUESTION);
                     }
                 }
                 catch (RecognitionException pe) {
-                    synPredMatched471 = false;
+                    synPredMatched473 = false;
                 }
-                rewind(_m471);
+                rewind(_m473);
 inputState.guessing--;
             }
-            if ( synPredMatched471 ) {
-                nls();
-                AST tmp151_AST = null;
-                tmp151_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp151_AST);
-                match(ELVIS_OPERATOR);
-                nls();
-                conditionalExpression(0);
-                astFactory.addASTChild(currentAST, returnAST);
+            if ( synPredMatched473 ) {
+                try {      // for error handling
+                    nls();
+                    AST tmp152_AST = null;
+                    tmp152_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp152_AST);
+                    match(QUESTION);
+                    nls();
+                    assignmentExpression(0);
+                    astFactory.addASTChild(currentAST, returnAST);
+                    nls();
+                    match(COLON);
+                    nls();
+                    conditionalExpression(0);
+                    astFactory.addASTChild(currentAST, returnAST);
+                }
+                catch (RecognitionException e) {
+                    if (inputState.guessing==0) {
+                        
+                        // keep AST if recognition failed at or after ':'
+                        if (currentAST.root.getNumberOfChildren() > 1) {
+                        reportError(e);
+                        } else {
+                        throw e;
+                        }
+                        
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+            else if ((_tokenSet_56.member(LA(1))) && (_tokenSet_57.member(LA(2)))) {
             }
             else {
-                boolean synPredMatched473 = false;
-                if (((LA(1)==QUESTION||LA(1)==NLS) && (_tokenSet_55.member(LA(2))))) {
-                    int _m473 = mark();
-                    synPredMatched473 = true;
-                    inputState.guessing++;
-                    try {
-                        {
-                        nls();
-                        match(QUESTION);
-                        }
-                    }
-                    catch (RecognitionException pe) {
-                        synPredMatched473 = false;
-                    }
-                    rewind(_m473);
-inputState.guessing--;
-                }
-                if ( synPredMatched473 ) {
-                    try {      // for error handling
-                        nls();
-                        AST tmp152_AST = null;
-                        tmp152_AST = astFactory.create(LT(1));
-                        astFactory.makeASTRoot(currentAST, tmp152_AST);
-                        match(QUESTION);
-                        nls();
-                        assignmentExpression(0);
-                        astFactory.addASTChild(currentAST, returnAST);
-                        nls();
-                        match(COLON);
-                        nls();
-                        conditionalExpression(0);
-                        astFactory.addASTChild(currentAST, returnAST);
-                    }
-                    catch (RecognitionException e) {
-                        if (inputState.guessing==0) {
-                            
-                            // keep AST if recognition failed at or after ':'
-                            if (currentAST.root.getNumberOfChildren() > 1) {
-                            reportError(e);
-                            } else {
-                            throw e;
-                            }
-                            
-                        } else {
-                            throw e;
-                        }
-                    }
-                }
-                else if ((_tokenSet_56.member(LA(1))) && (_tokenSet_57.member(LA(2)))) {
-                }
-                else {
-                    throw new NoViableAltException(LT(1), getFilename());
-                }
-                }
-                }
-                conditionalExpression_AST = (AST)currentAST.root;
+                throw new NoViableAltException(LT(1), getFilename());
             }
-            catch (NoViableAltException e) {
-                if (inputState.guessing==0) {
-                    
-                    if (currentAST != null && currentAST.root != null && currentAST.root.getType() == LT && LT(1).getType() == GT) {
-                    // assume failed recognition of generics in new expression or statement
-                    conditionalExpression_AST = currentAST.root.getFirstChild();
-                    reportError(e); consumeUntil(NLS); // try to move on
-                    } else {
-                    throw e;
-                    }
-                    
-                } else {
-                    throw e;
-                }
             }
+            }
+            conditionalExpression_AST = (AST)currentAST.root;
             returnAST = conditionalExpression_AST;
         }
         
@@ -11750,7 +11733,6 @@ inputState.guessing--;
         catch (RecognitionException e) {
             if (inputState.guessing==0) {
                 
-                // GRECLIPSE-1192
                 // Do we need better recognition of the specific problem here?
                 // (if so, see the label recovery for GRECLIPSE-1048)
                 reportError(e);
@@ -12891,133 +12873,120 @@ inputState.guessing--;
         boolean sce=false;
         
         
-        try {      // for error handling
-            match(LPAREN);
-            if ( inputState.guessing==0 ) {
-                declaration=LT(1);
-            }
-            firstContainsDeclaration=strictContextExpression(true);
-            astFactory.addASTChild(currentAST, returnAST);
-            {
-            _loop550:
-            do {
-                if ((LA(1)==SEMI)) {
-                    match(SEMI);
+        match(LPAREN);
+        if ( inputState.guessing==0 ) {
+            declaration=LT(1);
+        }
+        firstContainsDeclaration=strictContextExpression(true);
+        astFactory.addASTChild(currentAST, returnAST);
+        {
+        _loop550:
+        do {
+            if ((LA(1)==SEMI)) {
+                match(SEMI);
+                if ( inputState.guessing==0 ) {
+                    hasClosureList=true;
+                }
+                {
+                switch ( LA(1)) {
+                case FINAL:
+                case ABSTRACT:
+                case STRICTFP:
+                case LITERAL_static:
+                case LITERAL_def:
+                case LBRACK:
+                case IDENT:
+                case STRING_LITERAL:
+                case LPAREN:
+                case AT:
+                case LITERAL_super:
+                case LITERAL_void:
+                case LITERAL_boolean:
+                case LITERAL_byte:
+                case LITERAL_char:
+                case LITERAL_short:
+                case LITERAL_int:
+                case LITERAL_float:
+                case LITERAL_long:
+                case LITERAL_double:
+                case LITERAL_private:
+                case LITERAL_public:
+                case LITERAL_protected:
+                case LITERAL_transient:
+                case LITERAL_native:
+                case LITERAL_threadsafe:
+                case LITERAL_synchronized:
+                case LITERAL_volatile:
+                case LCURLY:
+                case LITERAL_this:
+                case LITERAL_return:
+                case LITERAL_break:
+                case LITERAL_continue:
+                case LITERAL_throw:
+                case LITERAL_assert:
+                case PLUS:
+                case MINUS:
+                case LITERAL_false:
+                case LITERAL_new:
+                case LITERAL_null:
+                case LITERAL_true:
+                case INC:
+                case DEC:
+                case BNOT:
+                case LNOT:
+                case STRING_CTOR_START:
+                case NUM_INT:
+                case NUM_FLOAT:
+                case NUM_LONG:
+                case NUM_DOUBLE:
+                case NUM_BIG_INT:
+                case NUM_BIG_DECIMAL:
+                {
+                    sce=strictContextExpression(true);
+                    astFactory.addASTChild(currentAST, returnAST);
+                    break;
+                }
+                case RPAREN:
+                case SEMI:
+                {
                     if ( inputState.guessing==0 ) {
-                        hasClosureList=true;
+                        astFactory.addASTChild(currentAST,astFactory.create(EMPTY_STAT, "EMPTY_STAT"));
                     }
-                    {
-                    switch ( LA(1)) {
-                    case FINAL:
-                    case ABSTRACT:
-                    case STRICTFP:
-                    case LITERAL_static:
-                    case LITERAL_def:
-                    case LBRACK:
-                    case IDENT:
-                    case STRING_LITERAL:
-                    case LPAREN:
-                    case AT:
-                    case LITERAL_super:
-                    case LITERAL_void:
-                    case LITERAL_boolean:
-                    case LITERAL_byte:
-                    case LITERAL_char:
-                    case LITERAL_short:
-                    case LITERAL_int:
-                    case LITERAL_float:
-                    case LITERAL_long:
-                    case LITERAL_double:
-                    case LITERAL_private:
-                    case LITERAL_public:
-                    case LITERAL_protected:
-                    case LITERAL_transient:
-                    case LITERAL_native:
-                    case LITERAL_threadsafe:
-                    case LITERAL_synchronized:
-                    case LITERAL_volatile:
-                    case LCURLY:
-                    case LITERAL_this:
-                    case LITERAL_return:
-                    case LITERAL_break:
-                    case LITERAL_continue:
-                    case LITERAL_throw:
-                    case LITERAL_assert:
-                    case PLUS:
-                    case MINUS:
-                    case LITERAL_false:
-                    case LITERAL_new:
-                    case LITERAL_null:
-                    case LITERAL_true:
-                    case INC:
-                    case DEC:
-                    case BNOT:
-                    case LNOT:
-                    case STRING_CTOR_START:
-                    case NUM_INT:
-                    case NUM_FLOAT:
-                    case NUM_LONG:
-                    case NUM_DOUBLE:
-                    case NUM_BIG_INT:
-                    case NUM_BIG_DECIMAL:
-                    {
-                        sce=strictContextExpression(true);
-                        astFactory.addASTChild(currentAST, returnAST);
-                        break;
-                    }
-                    case RPAREN:
-                    case SEMI:
-                    {
-                        if ( inputState.guessing==0 ) {
-                            astFactory.addASTChild(currentAST,astFactory.create(EMPTY_STAT, "EMPTY_STAT"));
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        throw new NoViableAltException(LT(1), getFilename());
-                    }
-                    }
-                    }
+                    break;
                 }
-                else {
-                    break _loop550;
+                default:
+                {
+                    throw new NoViableAltException(LT(1), getFilename());
                 }
-                
-            } while (true);
-            }
-            if ( inputState.guessing==0 ) {
-                
-                if (firstContainsDeclaration && !hasClosureList)
-                throw new NoViableAltException(declaration, getFilename());
-                
-            }
-            match(RPAREN);
-            if ( inputState.guessing==0 ) {
-                parenthesizedExpression_AST = (AST)currentAST.root;
-                
-                if (hasClosureList) {
-                parenthesizedExpression_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1))).add(parenthesizedExpression_AST));
                 }
-                
-                currentAST.root = parenthesizedExpression_AST;
-                currentAST.child = parenthesizedExpression_AST!=null &&parenthesizedExpression_AST.getFirstChild()!=null ?
-                    parenthesizedExpression_AST.getFirstChild() : parenthesizedExpression_AST;
-                currentAST.advanceChildToEnd();
+                }
             }
+            else {
+                break _loop550;
+            }
+            
+        } while (true);
+        }
+        if ( inputState.guessing==0 ) {
+            
+            if (firstContainsDeclaration && !hasClosureList)
+            throw new NoViableAltException(declaration, getFilename());
+            
+        }
+        match(RPAREN);
+        if ( inputState.guessing==0 ) {
             parenthesizedExpression_AST = (AST)currentAST.root;
-        }
-        catch (RecognitionException e) {
-            if (inputState.guessing==0) {
-                
-                // GRECLIPSE-1213 - missing closing paren
-                reportError(e);
-                parenthesizedExpression_AST = (AST) currentAST.root;
-                
-            } else {
-                throw e;
+            
+            if (hasClosureList) {
+            parenthesizedExpression_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1))).add(parenthesizedExpression_AST));
             }
+            
+            currentAST.root = parenthesizedExpression_AST;
+            currentAST.child = parenthesizedExpression_AST!=null &&parenthesizedExpression_AST.getFirstChild()!=null ?
+                parenthesizedExpression_AST.getFirstChild() : parenthesizedExpression_AST;
+            currentAST.advanceChildToEnd();
         }
+        parenthesizedExpression_AST = (AST)currentAST.root;
         returnAST = parenthesizedExpression_AST;
     }
     
