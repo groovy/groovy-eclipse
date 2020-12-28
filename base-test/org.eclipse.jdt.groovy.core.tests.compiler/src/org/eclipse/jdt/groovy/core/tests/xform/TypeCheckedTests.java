@@ -15,7 +15,11 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import java.util.Map;
+
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -486,47 +490,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[123]");
     }
 
-    @Test // see GROOVY-9783 for Groovy 4
-    public void testTypeChecked9803() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
-            "void test() {\n" +
-            "  def c = C.of(123)\n" +
-            "  def d = c.map(D.&wrap)\n" +
-            "  def e = d.map{x -> x.first().intValue()}\n" +
-            "  print e.t\n" +
-            "}\n" +
-            "test()\n",
-
-            "Types.groovy",
-            "class C<T> {\n" +
-            "  private T t\n" +
-            "  C(T item) {\n" +
-            "    t = item\n" +
-            "  }\n" +
-            "  static <U> C<U> of(U item) {\n" +
-            "    new C<U>(item)\n" +
-            "  }\n" +
-            "  def <V> C<V> map(F<? super T, ? super V> func) {\n" +
-            "    new C<V>(func.apply(t))\n" +
-            "  }\n" +
-            "}\n" +
-            "class D {\n" +
-            "  static <W> Set<W> wrap(W o) {\n" +
-            "    Collections.singleton(o)\n" +
-            "  }\n" +
-            "}\n" +
-            "interface F<X,Y> {\n" +
-            "  Y apply(X x)\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "123");
-    }
-
     @Test
     public void testTypeChecked9821() {
         //@formatter:off
@@ -624,5 +587,49 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Ignore @Test
+    public void testTypeChecked9873() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(CompilerOptions.InvokeDynamic));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def c = C.of(123)\n" +
+            "  def d = c.map(D.&wrap)\n" +
+            "  def e = d.map{x -> x.first().intValue()}\n" +
+            "  print e.t\n" +
+            "}\n" +
+            "test()\n",
+
+            "Types.groovy",
+            "class C<T> {\n" +
+            "  private T t\n" +
+            "  C(T item) {\n" +
+            "    t = item\n" +
+            "  }\n" +
+            "  static <U> C<U> of(U item) {\n" +
+            "    new C<U>(item)\n" +
+            "  }\n" +
+            "  def <V> C<V> map(F<? super T, ? super V> func) {\n" +
+            "    new C<V>(func.apply(t))\n" +
+            "  }\n" +
+            "}\n" +
+            "class D {\n" +
+            "  static <W> Set<W> wrap(W o) {\n" +
+            "    Collections.singleton(o)\n" +
+            "  }\n" +
+            "}\n" +
+            "interface F<X,Y> {\n" +
+            "  Y apply(X x)\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "123", options);
     }
 }
