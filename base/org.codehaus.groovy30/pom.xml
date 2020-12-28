@@ -39,6 +39,27 @@
         </dependencies>
       </plugin>
       <plugin>
+        <groupId>org.jboss.bridger</groupId>
+        <artifactId>bridger</artifactId>
+        <version>1.5.Final</version>
+        <executions>
+          <execution>
+            <id>weave</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>transform</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/groovy-eclipse.jar-classes</outputDirectory>
+              <includes>
+                <include>org/codehaus/groovy/ast/tools/GeneralUtils.class</include>
+                <include>org/codehaus/groovy/classgen/Verifier.class</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>
         <configuration>

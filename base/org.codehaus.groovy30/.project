@@ -33,6 +33,15 @@
             <name>org.eclipse.jdt.core.javabuilder</name>
         </buildCommand>
         <buildCommand>
+            <name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
+            <arguments>
+                <dictionary>
+                    <key>LaunchConfigHandle</key>
+                    <value>&lt;project&gt;/.externalToolBuilders/JBoss Bridger.launch</value>
+                </dictionary>
+            </arguments>
+        </buildCommand>
+        <buildCommand>
             <name>org.eclipse.pde.ManifestBuilder</name>
         </buildCommand>
         <buildCommand>

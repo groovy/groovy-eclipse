@@ -1,0 +1,38 @@
+<project default="weave">
+
+    <macrodef name="resolve-dependencies">
+        <attribute name="pathid" />
+        <attribute name="type" default="jar,bundle" />
+        <element name="dependencies" implicit="true" />
+
+        <sequential xmlns:ivy="antlib:org.apache.ivy.ant">
+            <taskdef classpath="../lib/ivy-2.5.0.jar"
+              resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant">
+            </taskdef>
+
+            <ivy:resolve refresh="true" showprogress="false" taskname="ivy">
+                <dependencies/>
+            </ivy:resolve>
+            <ivy:cachepath pathid="@{pathid}" type="@{type}" />
+        </sequential>
+    </macrodef>
+
+    <target name="weave">
+        <resolve-dependencies pathid="classpath.bridger" type="jar,maven-plugin">
+            <dependency org="org.jboss.bridger" name="bridger" rev="1.5.Final">
+                <exclude org="org\.apache\.maven.*" matcher="regexp" />
+                <exclude org="org.codehaus.plexus" />
+                <exclude org="org.sonatype.plexus" />
+            </dependency>
+        </resolve-dependencies>
+
+        <java classname="org.jboss.bridger.Bridger" classpathref="classpath.bridger" dir="${basedir}" fork="true">
+            <arg line="org/codehaus/groovy/ast/tools/GeneralUtils.class org/codehaus/groovy/classgen/Verifier.class" />
+        </java>
+    </target>
+
+    <target name="null">
+      <!-- no-op -->
+    </target>
+
+</project>
