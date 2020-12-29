@@ -5258,14 +5258,14 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "p/Foo.groovy",
-            "package p;\n" +
-            "import q.Bar;\n" +
-            "public class Foo {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new Foo().getIt();\n" +
-            "    print \"success\"\n" +
+            "package p\n" +
+            "import q.Bar\n" +
+            "class Foo {\n" +
+            "  static main(args) {\n" +
+            "    new Foo().getBar()\n" +
+            "    print 'success'\n" +
             "  }\n" +
-            "  public Bar getIt() { return null;}\n" +
+            "  Bar getBar() {new Bar()}\n" +
             "}\n",
 
             "q/Bar.java",
@@ -5274,10 +5274,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastGroovy(40)) {
+        if (!isAtLeastGroovy(40)) { // !indy
             runConformTest(sources, "success");
-        } else {
+        } else if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
             runConformTest(sources, "", "java.lang.IllegalAccessError: failed to access class q.Bar from class p.Foo");
+        } else {
+            runConformTest(sources, "", "java.lang.BootstrapMethodError: java.lang.IllegalAccessError: tried to access class q.Bar from class p.Foo");
         }
     }
 
