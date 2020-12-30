@@ -24,7 +24,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.actions.ActionUtil;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jdt.internal.ui.util.ExceptionHandler;
@@ -56,7 +55,7 @@ public abstract class AddImportOnSelectionAdapter extends org.eclipse.jdt.intern
 
             if (cu == null || editor == null)
                 return;
-            if (!ActionUtil.isEditable(editor))
+            if (!editor.validateEditorInputState())
                 return;
             if (!ElementValidator.checkValidateEdit(cu, shell, "Add Import"))
                 return;

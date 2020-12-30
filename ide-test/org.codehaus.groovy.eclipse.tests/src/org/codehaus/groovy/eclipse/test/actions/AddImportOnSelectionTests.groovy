@@ -1260,4 +1260,20 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
         assertEditorContents 'def x = UnresolvableClassName.WHATEVER'
         assertStatusLineText 'Type \'UnresolvableClassName\' could not be found or is not visible.'
     }
+
+    @Test
+    void testScriptNotOnBuildPath() {
+        def file = addPlainText('java.util.regex.Pattern p = ~/.../\n', "../${nextUnitName()}.groovy")
+        editor = (org.codehaus.groovy.eclipse.editor.GroovyEditor) \
+            openInEditor(file.getAdapter(org.eclipse.jdt.core.ICompilationUnit))
+        editor.setHighlightRange(18, 0, true)
+        editor.setFocus()
+        editor.getAction('AddImport').run()
+
+        assertEditorContents """\
+            |import java.util.regex.Pattern
+            |
+            |Pa${CARET}ttern p = ~/.../
+            |""".stripMargin()
+    }
 }
