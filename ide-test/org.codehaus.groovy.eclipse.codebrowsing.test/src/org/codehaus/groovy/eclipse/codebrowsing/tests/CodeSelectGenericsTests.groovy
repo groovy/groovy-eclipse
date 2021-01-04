@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,29 +43,46 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectGenericField1() {
-        String structureContents = 'class Structure { java.util.List<String> field; }'
-        String javaContents = 'class Java { { new Structure().field = null; } }'
-        String groovyContents = 'new Structure().field'
-        String toFind = 'field'
-        assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
+        String contents = '''\
+            |class Foo {
+            |  List<String> bar
+            |}
+            |new Foo().bar
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'bar')
     }
 
     @Test
     void testCodeSelectGenericField2() {
-        String structureContents = 'class Structure { java.util.Map<String, Integer> field; }'
-        String javaContents = 'class Java { { new Structure().field = null; } }'
-        String groovyContents = 'new Structure().field'
-        String toFind = 'field'
-        assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
+        String contents = '''\
+            |class Foo {
+            |  Map<String, Integer> bar
+            |}
+            |new Foo().bar
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'bar')
     }
 
     @Test
     void testCodeSelectGenericField3() {
-        String structureContents = 'class Structure { java.util.Map<String[], java.util.List<Integer>> field; }'
-        String javaContents = 'class Java { { new Structure().field = null; } }'
-        String groovyContents = 'new Structure().field'
-        String toFind = 'field'
-        assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
+        String contents = '''\
+            |class Foo {
+            |  Map<String[], List<Integer>> bar
+            |}
+            |new Foo().bar
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'bar')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/920
+    void testCodeSelectGenericField4() {
+        String contents = '''\
+            |class Foo {
+            |  List<? extends CharSequence> bar
+            |}
+            |new Foo().bar
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'bar')
     }
 
     @Test
@@ -135,6 +152,15 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         IJavaElement elem = assertCodeSelect([contents], 'entrySet')
         MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
         assert method.returnType.toString(false) == 'java.util.Set <java.util.Map$Entry>'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1213
+    void testCodeSelectGenericMethod9() {
+        String types = 'class Pogo { Date date }'
+        String usage = 'cmp = Comparator.<Pogo,Date>comparing{ it.date }'
+        IJavaElement elem = assertCodeSelect([types, usage], 'comparing')
+        MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
+        assert method.returnType.toString(false) == 'java.util.Comparator <Pogo>'
     }
 
     @Test

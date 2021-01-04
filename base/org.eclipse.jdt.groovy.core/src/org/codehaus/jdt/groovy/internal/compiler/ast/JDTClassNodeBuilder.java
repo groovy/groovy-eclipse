@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -150,16 +147,10 @@ class JDTClassNodeBuilder {
         return result;
     }
 
-    private Map<TypeVariableBinding, ClassNode> typeVariableConfigurationInProgress = new HashMap<>();
-
     /**
      * Based on Java5.configureTypeVariableReference()
      */
     private ClassNode configureTypeVariableReference(TypeVariableBinding tv) {
-        ClassNode node = typeVariableConfigurationInProgress.get(tv);
-        if (node != null) {
-            return node;
-        }
         String name = String.valueOf(tv.sourceName);
         if (name.indexOf('@') >= 0) {
             throw new IllegalStateException("Invalid type variable name: " + name);
@@ -167,17 +158,20 @@ class JDTClassNodeBuilder {
 
         ClassNode cn = ClassHelper.makeWithoutCaching(name);
         cn.setGenericsPlaceHolder(true);
-        ClassNode cn2 = ClassHelper.makeWithoutCaching(name);
-        cn2.setGenericsPlaceHolder(true);
-        cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
 
-        typeVariableConfigurationInProgress.put(tv, cn);
-        if (tv.firstBound != null && tv.firstBound.id != TypeIds.T_JavaLangObject) {
-            setRedirect(cn, configureType(tv.firstBound));
-        } else {
-            cn.setRedirect(ClassHelper.OBJECT_TYPE);
+        if (tv.enterRecursiveFunction()) {
+            ClassNode cn2 = ClassHelper.makeWithoutCaching(name);
+            cn2.setGenericsPlaceHolder(true);
+            cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
+
+            if (tv.firstBound != null && tv.firstBound.id != TypeIds.T_JavaLangObject) {
+                setRedirect(cn, configureType(tv.firstBound));
+            } else {
+                cn.setRedirect(ClassHelper.OBJECT_TYPE);
+            }
+
+            tv.exitRecursiveFunction();
         }
-        typeVariableConfigurationInProgress.remove(tv);
 
         return cn;
     }
@@ -193,8 +187,9 @@ class JDTClassNodeBuilder {
         if (tBounds.length == 0) {
             gt = new GenericsType(cn);
         } else {
-            ClassNode[] cBounds = configureTypes(tBounds);
-            gt = new GenericsType(cn, cBounds, null);
+            tv.enterRecursiveFunction(); // "T extends Foo<? super T>"
+            gt = new GenericsType(cn, configureTypes(tBounds), null);
+            tv.exitRecursiveFunction();
             gt.setName(cn.getName());
             gt.setPlaceholder(true);
         }
@@ -211,13 +206,13 @@ class JDTClassNodeBuilder {
 
         ClassNode[] uppers = configureTypes(getUpperBounds(wildcard));
         ClassNode[] lowers = configureTypes(getLowerBounds(wildcard));
-        GenericsType t = new GenericsType(base, uppers,
+        GenericsType gt = new GenericsType(base, uppers,
             lowers != null && lowers.length > 0 ? lowers[0] : null);
-        t.setWildcard(true);
+        gt.setWildcard(true);
 
-        ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
-        ref.setGenericsTypes(new GenericsType[] {t});
-        return ref;
+        ClassNode cn = ClassHelper.makeWithoutCaching(Object.class, false);
+        cn.setGenericsTypes(new GenericsType[] {gt});
+        return cn;
     }
 
     private ClassNode configureParameterizedType(ParameterizedTypeBinding tb) {

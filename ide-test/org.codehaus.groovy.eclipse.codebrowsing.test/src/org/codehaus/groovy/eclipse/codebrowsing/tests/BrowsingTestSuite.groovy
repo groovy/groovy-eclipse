@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
+import org.eclipse.jdt.core.BindingKey
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.SourceRange
@@ -41,6 +42,8 @@ abstract class BrowsingTestSuite extends GroovyEclipseTestSuite {
 
             assert elements[0].elementName == elementName : "Should have found reference to: $elementName"
             assert elements[0].exists() : 'Element should exist in the model'
+            if (elements[0] instanceof org.eclipse.jdt.core.IMember)
+                new BindingKey(elements[0].key).toSignature()
             return elements[0]
         }
     }
