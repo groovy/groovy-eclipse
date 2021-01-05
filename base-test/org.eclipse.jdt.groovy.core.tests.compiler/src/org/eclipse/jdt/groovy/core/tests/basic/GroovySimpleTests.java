@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -5274,12 +5273,18 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastGroovy(40)) { // !indy
-            runConformTest(sources, "success");
-        } else if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
-            runConformTest(sources, "", "java.lang.IllegalAccessError: failed to access class q.Bar from class p.Foo");
-        } else {
-            runConformTest(sources, "", "java.lang.BootstrapMethodError: java.lang.IllegalAccessError: tried to access class q.Bar from class p.Foo");
+        String old = System.getProperty("groovy.target.indy");
+        try {
+            System.setProperty("groovy.target.indy", "false");
+
+            String fail = Float.parseFloat(System.getProperty("java.specification.version")) > 8 ? "failed" : "tried";
+            runConformTest(sources, "", "java.lang.IllegalAccessError: " + fail + " to access class q.Bar from class p.Foo");
+        } finally {
+            if (old == null) {
+                System.clearProperty("groovy.target.indy");
+            } else {
+                System.setProperty("groovy.target.indy", old);
+            }
         }
     }
 

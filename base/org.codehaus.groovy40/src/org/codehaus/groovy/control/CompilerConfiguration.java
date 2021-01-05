@@ -443,12 +443,23 @@ public class CompilerConfiguration {
         defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
 
         optimizationOptions = new HashMap<>(4);
+        /* GRECLIPSE edit
         handleOptimizationOption(optimizationOptions, INVOKEDYNAMIC, "groovy.target.indy", "true");
         handleOptimizationOption(optimizationOptions, GROOVYDOC, "groovy.attach.groovydoc");
         handleOptimizationOption(optimizationOptions, RUNTIME_GROOVYDOC, "groovy.attach.runtime.groovydoc");
         handleOptimizationOption(optimizationOptions, PARALLEL_PARSE, "groovy.parallel.parse", "true");
+        */
+        java.util.function.BiConsumer<String, String> mapper = (key, val) -> {
+            if (val != null) optimizationOptions.put(key, Boolean.valueOf(val));
+        };
+        mapper.accept(INVOKEDYNAMIC,     getSystemPropertySafe("groovy.target.indy", "true"));
+        mapper.accept(GROOVYDOC,         getSystemPropertySafe("groovy.attach.groovydoc"));
+        mapper.accept(RUNTIME_GROOVYDOC, getSystemPropertySafe("groovy.attach.runtime.groovydoc"));
+        mapper.accept(PARALLEL_PARSE,    getSystemPropertySafe("groovy.parallel.parse"));
+        // GRECLIPSE end
     }
 
+    /*
     private void handleOptimizationOption(final Map<String, Boolean> options, final String optionName, final String sysOptionName) {
         handleOptimizationOption(options, optionName, sysOptionName, null);
     }
@@ -463,6 +474,7 @@ public class CompilerConfiguration {
             options.put(optionName, Boolean.TRUE);
         }
     }
+    */
 
     /**
      * Copy constructor. Use this if you have a mostly correct configuration
@@ -1102,7 +1114,7 @@ public class CompilerConfiguration {
      */
     public boolean isIndyEnabled() {
         Boolean indyEnabled = getOptimizationOptions().get(INVOKEDYNAMIC);
-        return indyEnabled != Boolean.FALSE;
+        return Optional.ofNullable(indyEnabled).orElse(Boolean.TRUE).booleanValue();
     }
 
     /**
@@ -1110,7 +1122,7 @@ public class CompilerConfiguration {
      */
     public boolean isGroovydocEnabled() {
         Boolean groovydocEnabled = getOptimizationOptions().get(GROOVYDOC);
-        return Optional.ofNullable(groovydocEnabled).orElse(Boolean.FALSE);
+        return Optional.ofNullable(groovydocEnabled).orElse(Boolean.FALSE).booleanValue();
     }
 
     /**
@@ -1118,6 +1130,6 @@ public class CompilerConfiguration {
      */
     public boolean isRuntimeGroovydocEnabled() {
         Boolean runtimeGroovydocEnabled = getOptimizationOptions().get(RUNTIME_GROOVYDOC);
-        return Optional.ofNullable(runtimeGroovydocEnabled).orElse(Boolean.FALSE);
+        return Optional.ofNullable(runtimeGroovydocEnabled).orElse(Boolean.FALSE).booleanValue();
     }
 }
