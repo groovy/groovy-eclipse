@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -557,6 +557,16 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         //@formatter:on
         int offset = contents.indexOf("sort");
         assertUnknownConfidence(contents, offset, offset + 4);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1214
+    public void testDGM45d() {
+        //@formatter:off
+        String contents =
+            "String[] array = ['1','22','333']\n" +
+            "array.sort(true, Comparator.<String,Integer>comparing({it.length()}).reversed())\n";
+        //@formatter:on
+        assertDeclType(contents, "sort", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test

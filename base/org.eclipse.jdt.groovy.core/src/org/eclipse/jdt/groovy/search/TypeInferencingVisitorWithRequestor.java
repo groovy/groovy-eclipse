@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2346,17 +2346,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         VariableScope scope = scopes.getLast();
                         scope.setMethodCallArgumentTypes(null);
 
+                        java.util.function.Function<Expression, ClassNode> recursively = (e ->
+                            getMethodCallArgumentTypes(new MethodCallExpression(null, "", e)).stream().findFirst().orElse(e.getType())
+                        );
+
                         TypeLookupResult tlr;
                         if (expression instanceof PropertyExpression) {
                             PropertyExpression path = (PropertyExpression) expression;
-                            tlr = lookupExpressionType(path.getObjectExpression(), null, false, scope);
-                            tlr = lookupExpressionType(path.getProperty(), tlr.type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scope);
+                            ClassNode type = recursively.apply(path.getObjectExpression());
+                            tlr = lookupExpressionType(path.getProperty(), type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
 
                         } else if (expression instanceof MethodCallExpression) {
                             MethodCallExpression call = (MethodCallExpression) expression;
-                            tlr = lookupExpressionType(call.getObjectExpression(), null, false, scope);
+                            ClassNode type = recursively.apply(call.getObjectExpression());
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(call));
-                            tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scope);
+                            tlr = lookupExpressionType(call.getMethod(), type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
 
                         } else if (expression instanceof StaticMethodCallExpression) {
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
@@ -2365,9 +2369,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 //                        } else if (expression instanceof MethodPointerExpression) {
 //                            MethodPointerExpression ref = (MethodPointerExpression) expression;
 //                            scope.setCurrentNode(ref);
-//                            tlr = lookupExpressionType(ref.getExpression(), null, false, scope);
+//                            ClassNode type = recursively.apply(ref.getExpression());
 //                            scope.setCurrentNode(ref.getMethodName());
-//                            tlr = lookupExpressionType(ref.getMethodName(), tlr.type, ref.getExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scope);
+//                            tlr = lookupExpressionType(ref.getMethodName(), type, ref.getExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
 //                            if (tlr.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED))
 //                                types.add(createParameterizedClosure(tlr.type));
 //                            else types.add(exprType);
@@ -2376,14 +2380,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 //                            continue;
 
                         } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
-                            tlr = lookupExpressionType(((BinaryExpression) expression).getLeftExpression(), null, false, scope);
-                            scope.setMethodCallArgumentTypes(Collections.singletonList(
-                                lookupExpressionType(((BinaryExpression) expression).getRightExpression(), null, false, scope).type));
+                            ClassNode type = recursively.apply(((BinaryExpression) expression).getLeftExpression());
+                            scope.setMethodCallArgumentTypes(Collections.singletonList(recursively.apply(((BinaryExpression) expression).getRightExpression())));
 
-                            if (tlr.type.isArray() && ClassHelper.isNumberType(scope.getMethodCallArgumentTypes().get(0))) {
-                                tlr = new TypeLookupResult(tlr.type.getComponentType(), null, null, null, scope);
+                            if (type.isArray() && ClassHelper.isNumberType(scope.getMethodCallArgumentTypes().get(0))) {
+                                tlr = new TypeLookupResult(type.getComponentType(), null, null, null, scope);
                             } else {
-                                tlr = lookupExpressionType(GeneralUtils.constX("getAt"), tlr.type, false, scope);
+                                tlr = lookupExpressionType(GeneralUtils.constX("getAt"), type, false, scope);
                             }
                         } else {
                             tlr = lookupExpressionType(expression, null, false, scope);
