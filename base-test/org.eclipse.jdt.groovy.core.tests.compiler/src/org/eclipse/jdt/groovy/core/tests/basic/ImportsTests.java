@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -242,22 +242,48 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     public void testStarImports3() {
         //@formatter:off
         String[] sources = {
-            "Wibble.groovy",
+            "Main.groovy",
             "import a.b.c.*\n" +
-            "class Wibble {\n" +
-            "  Process process = new Process()\n" +
-            "  static void main(String[] argv) {\n" +
-            "    print new Wibble().process.class\n" +
+            "class Main {\n" +
+            "  def prop = new D()\n" +
+            "  static main(args) {\n" +
+            "    print new Main().prop.class\n" +
             "  }\n" +
             "}\n",
 
-            "a/b/c/Process.java",
+            "a/b/c/D.java",
             "package a.b.c;\n" +
-            "public class Process {}\n",
+            "public class D {}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "class a.b.c.Process");
+        runConformTest(sources, "class a.b.c.D");
+    }
+
+    @Test
+    public void testStarImports4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.lang.DelegatesTo.*\n" +
+            "Target target\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testStarImports5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static groovy.lang.DelegatesTo.*\n" +
+            "Target target\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
     }
 
     @Test // 'import static a.B.FOO'
@@ -574,144 +600,117 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testImportInnerInner01() {
+    public void testImportInnerClass1() {
         //@formatter:off
         String[] sources = {
             "p/C.groovy",
-            "package p;\n" +
-            "public class C {\n" +
-            "  private static Wibble.Inner.Inner2 wibbleInner = new G();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    wibbleInner.run();\n" +
+            "package p\n" +
+            "import x.y.z.Outer.Inner\n" +
+            "class C {\n" +
+            "  private static Inner inner = new Inner()\n" +
+            "  static main(args) {\n" +
+            "    inner.run()\n" +
+            "  }\n" +
+            "}\n",
+
+            "x/y/z/Outer.java",
+            "package x.y.z;\n" +
+            "public class Outer {\n" +
+            "  public static class Inner {\n" +
+            "    public void run() {System.out.print(\"works\");}\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testImportInnerClass2() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "import x.y.z.Outer.Inner as Alias\n" +
+            "class C {\n" +
+            "  private static Alias alias = new Alias()\n" +
+            "  static main(args) {\n" +
+            "    alias.run()\n" +
+            "  }\n" +
+            "}\n",
+
+            "x/y/z/Outer.java",
+            "package x.y.z;\n" +
+            "public class Outer {\n" +
+            "  public static class Inner {\n" +
+            "    public void run() {System.out.print(\"works\");}\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testImportInnerInner1() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "import p.X.Y.Z\n" +
+            "class C {\n" +
+            "  private static X.Y.Z xyz = new D()\n" +
+            "  static main(args) {\n" +
+            "    xyz.run()\n" +
             "  }\n" +
             "}\n" +
-            "class G extends Wibble.Inner.Inner2  {}",
+            "class D extends Z {}\n",
 
-            "p/Wibble.java",
+            "p/X.java",
             "package p;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public static class Inner2 {\n" +
-            "      public static void run() { System.out.print(\"p.Wibble.Inner.Inner2.run \");}\n" +
+            "public class X {\n" +
+            "  public static class Y {\n" +
+            "    public static class Z {\n" +
+            "      public void run() {System.out.print(\"works\");}\n" +
             "    }\n" +
             "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "p.Wibble.Inner.Inner2.run");
+        runConformTest(sources, "works");
     }
 
     @Test
-    public void testImportInnerClass01_JavaCase() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.java",
-            "package p;\n" +
-            "import x.y.z.Wibble.Inner;\n" +
-            "\n" +
-            "public class C {\n" +
-            "  private static Inner wibbleInner = new Inner();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    wibbleInner.run();\n" +
-            "  }\n" +
-            "}\n",
-
-            "x/y/z/Wibble.java",
-            "package x.y.z;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public static void run() { System.out.print(\"q.A.run \");}\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "q.A.run");
-    }
-
-    // FIXASC need to look at all other kinds of import - statics/double nested static classes/etc
-    @Test
-    public void testImportInnerClass01_GroovyCase() {
+    public void testImportInnerInner2() {
         //@formatter:off
         String[] sources = {
             "p/C.groovy",
-            "package p;\n" +
-            "import x.y.z.Wibble.Inner\n" +
-            "\n" +
-            "public class C {\n" +
-            "  private static Inner wibbleInner = new Inner();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    wibbleInner.run();\n" +
+            "package p\n" +
+            "import p.X.Y\n" +
+            "import p.X.Y.*\n" +
+            "class C {\n" +
+            "  private static Y.Z xyz = new Z()\n" +
+            "  static main(args) {\n" +
+            "    xyz.run()\n" +
             "  }\n" +
             "}\n",
 
-            "x/y/z/Wibble.java",
-            "package x.y.z;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public static void run() { System.out.print(\"q.A.run \");}\n" +
+            "p/X.java",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public static class Y {\n" +
+            "    public static class Z {\n" +
+            "      public void run() {System.out.print(\"works\");}\n" +
+            "    }\n" +
             "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "q.A.run");
-    }
-
-    @Test
-    public void testImportInnerClass() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.groovy",
-            "package p;\n" +
-            "import x.y.z.Wibble.Inner /*as WibbleInner*/;\n" +
-            "public class C {\n" +
-            "  private static Inner wibbleInner = new Inner();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    wibbleInner.run();\n" +
-            "  }\n" +
-            //"  public static void callitOne(WibbleInner a) { a.run();}\n" +
-            "}\n",
-
-            "x/y/z/Wibble.java",
-            "package x.y.z;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public void run() { System.out.print(\"run\");}\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "run");
-    }
-
-    @Test
-    public void testImportAliasingInnerClass() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.groovy",
-            "package p;\n" +
-            "import x.y.z.Wibble.Inner as WibbleInner;\n" +
-            "public class C {\n" +
-            "  private static WibbleInner wibbleInner = new WibbleInner();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "   wibbleInner.run();\n" +
-            "  }\n" +
-            "}\n",
-
-            "x/y/z/Wibble.java",
-            "package x.y.z;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public void run() { System.out.print(\"run \");}\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "run");
+        runConformTest(sources, "works");
     }
 
     @Test

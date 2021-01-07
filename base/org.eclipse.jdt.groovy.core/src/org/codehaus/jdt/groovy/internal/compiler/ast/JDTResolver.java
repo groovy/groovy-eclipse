@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -34,7 +35,6 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -411,17 +411,10 @@ public class JDTResolver extends ResolveVisitor {
                 }
             }
 
-            ClassNode node = null;
             if ((jdtBinding instanceof BinaryTypeBinding || jdtBinding instanceof SourceTypeBinding) &&
-                    (CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName) ||
-                        type.getName().contentEquals(new CharArraySequence(jdtBinding.readableName())))) {
-                node = convertToClassNode(jdtBinding);
-            }
-            if (DEBUG) {
-                log("resolveToOuter (jdt)", type, node != null);
-            }
-            if (node != null) {
-                type.setRedirect(node);
+                    CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName)) {
+                if (DEBUG) log("resolveToOuter (jdt)", type, true);
+                type.setRedirect(convertToClassNode(jdtBinding));
                 return true;
             }
         }
@@ -431,19 +424,39 @@ public class JDTResolver extends ResolveVisitor {
             GrapeAwareGroovyClassLoader loader = (GrapeAwareGroovyClassLoader) compilationUnit.getClassLoader();
             if (loader.grabbed) {
                 try {
-                    Class<?> cls = loader.loadClass(type.getName(), false, true);
-                    type.setRedirect(ClassHelper.make(cls));
+                    Class<?> c = loader.loadClass(type.getName(), false, true);
+                    if (DEBUG) log("resolveToOuter (grab)", type, true);
+                    type.setRedirect(ClassHelper.make(c));
                     return true;
                 } catch (ClassNotFoundException | CompilationFailedException ignore) {
                 }
             }
         }
+
+        if (DEBUG) log("resolveToOuter", type, false);
         return false;
     }
 
     @Override
     protected boolean resolveToInner(ClassNode type) {
-        // inner types are resolved by JDT, so if we get here then "type" does not exist
+        ModuleNode module = currentClass.getModule();
+        if (module != null) {
+            String name = type.getName();
+            int i = name.lastIndexOf('.');
+            if (i > 0 && module.hasPackageName()) {
+                type.setName(module.getPackageName() + name.substring(0, i) + '$' + name.substring(i + 1));
+                if (resolve(type, false, false, true)) {
+                    return true;
+                }
+            }
+            for (ImportNode node : module.getStarImports()) { String qual = node.getPackageName();
+                type.setName(qual.substring(0, qual.length() - 1) + '$' + name.replace('.', '$'));
+                if (resolve(type, false, false, true)) {
+                    return true;
+                }
+            }
+            type.setName(name);
+        }
         return false;
     }
 

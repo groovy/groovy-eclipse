@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -577,9 +577,31 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     @Test
     void testRetainImport12() {
         String contents = '''\
-            |import groovy.lang.DelegatesTo.*
-            |
-            |Target target
+            |import java.util.Map.*
+            |Entry entry
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testRetainImport12a() {
+        String contents = '''\
+            |import static java.util.Map.*
+            |Entry entry
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test @NotYetImplemented
+    void testRetainImport13() {
+        createGroovyType '', 'C', '''\
+            |class C {
+            |  static m() {}
+            |}
+            |'''
+        String contents = '''\
+            |import static C.m
+            |m()
             |'''
         doContentsCompareTest(contents)
     }
