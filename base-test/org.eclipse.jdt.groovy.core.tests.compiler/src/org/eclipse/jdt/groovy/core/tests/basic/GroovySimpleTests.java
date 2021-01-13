@@ -2497,10 +2497,112 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testSwitchCases1() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "def foo(p) {\n" +
+            "  switch (p) {\n" +
+            "   case 1:\n" +
+            "    'a'\n" +
+            "    break\n" +
+            "   case 2:\n" +
+            "    if (false) 'b'\n" +
+            "    else 'c'\n" +
+            "    break\n" +
+            "   case 3:\n" +
+            "    'skip'\n" +
+            "   default:\n" +
+            "    'd'\n" +
+            "  }\n" +
+            "}\n" +
+            "print foo(1)\n" +
+            "print foo(2)\n" +
+            "print foo(3)\n" +
+            "print foo(4)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "acdd");
+    }
+
+    @Test // GROOVY-9896
+    public void testSwitchCases2() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "def foo(p) {\n" +
+            "  switch (p) {\n" +
+            "   case 1:\n" +
+            "    'a'\n" +
+            "    break\n" +
+            "   case 2:\n" +
+            "    'b'\n" +
+            "    break\n" +
+            "   case 3:\n" +
+            "    'c'\n" +
+            "  }\n" +
+            "}\n" +
+            "print foo(1)\n" +
+            "print foo(2)\n" +
+            "print foo(3)\n" +
+            "print foo(4)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abcnull");
+    }
+
+    @Test // GROOVY-4727
+    public void testSwitchCases3() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "def foo(x,y) {\n" +
+            "  switch (x) {\n" +
+            "  case 'x1':\n" +
+            "    switch (y) {\n" +
+            "    case 'y1':\n" +
+            "      'r1'\n" +
+            "      break\n" +
+            "    case 'y2':\n" +
+            "      'r2'\n" +
+            "      break\n" +
+            "    }\n" +
+            // no break
+            "  }\n" +
+            "}\n" +
+            "print foo('x1','y1')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "r1");
+    }
+
+    @Test // GROOVY-9880
+    public void testBreakAfterIf() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "switch ('value') {\n" +
+            " case 'value':\n" +
+            "  print 'foo'\n" +
+            "  if (false) print 'X'\n" +
+            "  break\n" +
+            " default:\n" +
+            "  print 'bar'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo"); // not "foobar"
+    }
+
+    @Test
     public void testBreak_GRE290() {
         //@formatter:off
         String[] sources = {
-            "p/X.groovy",
+            "X.groovy",
             "words: [].each { final item ->\n" +
             "  break words\n" +
             "}\n",
@@ -2509,7 +2611,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 2)\n" +
+            "1. ERROR in X.groovy (at line 2)\n" +
             "\tbreak words\n" +
             "\t^^^^^^^^^^^\n" +
             "Groovy:" + (!isParrotParser()

@@ -89,31 +89,16 @@ public class StatementWriter {
             statement.visit(controller.getAcg());
         }
         compileStack.pop();
-        /* GRECLIPSE edit
-        // GROOVY-7647, GROOVY-9126
-        if (block.getLastLineNumber() > 0 && !isMethodOrConstructorNonEmptyBlock(block)) {
+
+        // GROOVY-7647
+        if (block.getLastLineNumber() > 0) {
             MethodVisitor mv = controller.getMethodVisitor();
             Label blockEnd = new Label(); mv.visitLabel(blockEnd);
             mv.visitLineNumber(block.getLastLineNumber(), blockEnd);
         }
-        */
+
         controller.getOperandStack().popDownTo(mark);
     }
-
-    /* GRECLIPSE edit
-    private boolean isMethodOrConstructorNonEmptyBlock(BlockStatement block) {
-        MethodNode methodNode = controller.getMethodNode();
-        if (null == methodNode) {
-            methodNode = controller.getConstructorNode();
-        }
-
-        if (null == methodNode || block != methodNode.getCode()) { // check if the block is method/constructor's code
-            return false;
-        }
-
-        return !block.getStatements().isEmpty();
-    }
-    */
 
     public void writeForStatement(ForStatement loop) {
         Parameter loopVar = loop.getVariable();

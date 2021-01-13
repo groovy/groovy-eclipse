@@ -36,10 +36,12 @@ import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
 /**
  * Utility class to add return statements.
@@ -142,12 +144,26 @@ public class ReturnAdder {
 
         if (statement instanceof SwitchStatement) {
             SwitchStatement switchStatement = (SwitchStatement) statement;
+            /* GRECLIPSE edit -- GROOVY-4727, GROOVY-9880, GROOVY-9896
             for (CaseStatement caseStatement : switchStatement.getCaseStatements()) {
                 Statement code = adjustSwitchCaseCode(caseStatement.getCode(), scope, false);
                 if (doAdd) caseStatement.setCode(code);
             }
             Statement defaultStatement = adjustSwitchCaseCode(switchStatement.getDefaultStatement(), scope, true);
             if (doAdd) switchStatement.setDefaultStatement(defaultStatement);
+            */
+            Statement defaultStatement = switchStatement.getDefaultStatement();
+            List<CaseStatement> caseStatements = switchStatement.getCaseStatements();
+            for (Iterator<CaseStatement> it = caseStatements.iterator(); it.hasNext(); ) {
+                CaseStatement caseStatement = it.next();
+                Statement code = adjustSwitchCaseCode(caseStatement.getCode(), scope,
+                        // GROOVY-9896: return if no default and last case lacks break
+                        defaultStatement == EmptyStatement.INSTANCE && !it.hasNext());
+                if (doAdd) caseStatement.setCode(code);
+            }
+            defaultStatement = adjustSwitchCaseCode(defaultStatement, scope, true);
+            if (doAdd) switchStatement.setDefaultStatement(defaultStatement);
+            // GRECLIPSE end
             return switchStatement;
         }
 
@@ -185,11 +201,13 @@ public class ReturnAdder {
                 int lastIndex = statements.size() - 1;
                 Statement last = addReturnsIfNeeded(statements.get(lastIndex), blockStatement.getVariableScope());
                 if (doAdd) statements.set(lastIndex, last);
+                /* GRECLIPSE edit -- GROOVY-9373
                 if (!returns(last)) {
                     ReturnStatement returnStatement = new ReturnStatement(nullX());
                     listener.returnStatementAdded(returnStatement);
                     if (doAdd) statements.add(returnStatement);
                 }
+                */
                 return blockStatement;
             }
         }
@@ -207,6 +225,7 @@ public class ReturnAdder {
     }
 
     private Statement adjustSwitchCaseCode(final Statement statement, final VariableScope scope, final boolean defaultCase) {
+        /* GRECLIPSE edit
         if (statement instanceof BlockStatement) {
             List<Statement> statements = ((BlockStatement) statement).getStatements();
             if (!statements.isEmpty()) {
@@ -228,9 +247,33 @@ public class ReturnAdder {
                 }
             }
         }
+        */
+        if (!statement.isEmpty() && statement instanceof BlockStatement) {
+            BlockStatement block = (BlockStatement) statement;
+            int breakIndex = block.getStatements().size() - 1;
+            if (block.getStatements().get(breakIndex) instanceof BreakStatement) {
+                if (doAdd) {
+                    Statement breakStatement = block.getStatements().remove(breakIndex);
+                    if (breakIndex == 0) block.addStatement(EmptyStatement.INSTANCE);
+                    addReturnsIfNeeded(block, scope);
+                    // GROOVY-9880: some code structures will fall through
+                    Statement lastStatement = last(block.getStatements());
+                    if (!(lastStatement instanceof ReturnStatement
+                            || lastStatement instanceof ThrowStatement)) {
+                        block.addStatement(breakStatement);
+                    }
+                } else {
+                    addReturnsIfNeeded(new BlockStatement(block.getStatements().subList(0, breakIndex), null), scope);
+                }
+            } else if (defaultCase) {
+                return addReturnsIfNeeded(statement, scope);
+            }
+        }
+        // GRECLIPSE end
         return statement;
     }
 
+    /* GRECLIPSE edit
     private static boolean returns(final Statement statement) {
         return statement instanceof ReturnStatement
             || statement instanceof BlockStatement
@@ -242,4 +285,5 @@ public class ReturnAdder {
             || statement instanceof SynchronizedStatement
             || statement instanceof BytecodeSequence;
     }
+    */
 }

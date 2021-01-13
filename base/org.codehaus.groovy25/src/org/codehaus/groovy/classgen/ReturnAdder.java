@@ -38,6 +38,7 @@ import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -120,13 +121,9 @@ public class ReturnAdder {
         }
 
         if (statement instanceof EmptyStatement) {
-            /* GRECLIPSE edit -- GROOVY-9373
             final ReturnStatement returnStatement = new ReturnStatement(ConstantExpression.NULL);
             listener.returnStatementAdded(returnStatement);
             return returnStatement;
-            */
-            return statement;
-            // GRECLIPSE end
         }
 
         if (statement instanceof ExpressionStatement) {
@@ -159,11 +156,23 @@ public class ReturnAdder {
 
         if (statement instanceof SwitchStatement) {
             SwitchStatement swi = (SwitchStatement) statement;
+            /* GRECLIPSE edit -- GROOVY-4727, GROOVY-9896
             for (CaseStatement caseStatement : swi.getCaseStatements()) {
                 final Statement code = adjustSwitchCaseCode(caseStatement.getCode(), scope, false);
                 if (doAdd) caseStatement.setCode(code);
             }
             final Statement defaultStatement = adjustSwitchCaseCode(swi.getDefaultStatement(), scope, true);
+            */
+            Statement defaultStatement = swi.getDefaultStatement();
+            List<CaseStatement> caseStatements = swi.getCaseStatements();
+            for (Iterator<CaseStatement> it = caseStatements.iterator(); it.hasNext();) {
+                CaseStatement caseStatement = it.next();
+                Statement code = adjustSwitchCaseCode(caseStatement.getCode(), scope,
+                        defaultStatement == EmptyStatement.INSTANCE && !it.hasNext());
+                if (doAdd) caseStatement.setCode(code);
+            }
+            defaultStatement = adjustSwitchCaseCode(defaultStatement, scope, true);
+            // GRECLIPSE end
             if (doAdd) swi.setDefaultStatement(defaultStatement);
             return swi;
         }

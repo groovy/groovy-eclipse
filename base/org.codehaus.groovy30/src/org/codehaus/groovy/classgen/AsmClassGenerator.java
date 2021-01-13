@@ -474,16 +474,13 @@ public class AsmClassGenerator extends ClassGenerator {
         */
         if (code != null) {
             code.visit(this);
-        }
-        if (!checkIfLastStatementIsReturnOrThrow(code)) {
-            if (code != null) {
-                // GROOVY-7647, GROOVY-9373
-                int line = code.getLastLineNumber();
-                if (line > controller.getLineNumber()) {
-                    Label label = new Label(); mv.visitLabel(label);
-                    mv.visitLineNumber(line, label); controller.setLineNumber(line);
-                }
+            // GROOVY-7647, GROOVY-9373
+            int line = code.getLastLineNumber();
+            if (line > controller.getLineNumber()) {
+                Label label = new Label(); mv.visitLabel(label);
+                mv.visitLineNumber(line, label); controller.setLineNumber(line);
             }
+        }
         // GRECLIPSE end
         if (node.isVoidMethod()) {
             mv.visitInsn(RETURN);
@@ -501,25 +498,8 @@ public class AsmClassGenerator extends ClassGenerator {
             }
         }
         // GRECLIPSE add
-        }
         controller.getCompileStack().clear();
         // GRECLIPSE end
-    }
-
-    private boolean checkIfLastStatementIsReturnOrThrow(Statement code) {
-        if (code instanceof BlockStatement) {
-            BlockStatement blockStatement = (BlockStatement) code;
-            List<Statement> statementList = blockStatement.getStatements();
-            int statementCnt = statementList.size();
-            if (statementCnt > 0) {
-                Statement lastStatement = statementList.get(statementCnt - 1);
-                if (lastStatement instanceof ReturnStatement || lastStatement instanceof ThrowStatement) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private void visitAnnotationDefaultExpression(final AnnotationVisitor av, final ClassNode type, final Expression exp) {

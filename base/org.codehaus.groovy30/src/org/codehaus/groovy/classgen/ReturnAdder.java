@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -100,9 +101,6 @@ public class ReturnAdder {
 
     private Statement addReturnsIfNeeded(final Statement statement, final VariableScope scope) {
         if (statement instanceof ReturnStatement || statement instanceof ThrowStatement
-                // GRECLIPSE add -- GROOVY-9373
-                || statement instanceof EmptyStatement
-                // GRECLIPSE end
                 || statement instanceof BytecodeSequence) {
             return statement;
         }
@@ -142,11 +140,23 @@ public class ReturnAdder {
 
         if (statement instanceof SwitchStatement) {
             SwitchStatement switchStatement = (SwitchStatement) statement;
+            /* GRECLIPSE edit -- GROOVY-4727, GROOVY-9896
             for (CaseStatement caseStatement : switchStatement.getCaseStatements()) {
                 Statement code = adjustSwitchCaseCode(caseStatement.getCode(), scope, false);
                 if (doAdd) caseStatement.setCode(code);
             }
             Statement defaultStatement = adjustSwitchCaseCode(switchStatement.getDefaultStatement(), scope, true);
+            */
+            Statement defaultStatement = switchStatement.getDefaultStatement();
+            List<CaseStatement> caseStatements = switchStatement.getCaseStatements();
+            for (Iterator<CaseStatement> it = caseStatements.iterator(); it.hasNext();) {
+                CaseStatement caseStatement = it.next();
+                Statement code = adjustSwitchCaseCode(caseStatement.getCode(), scope,
+                        defaultStatement == EmptyStatement.INSTANCE && !it.hasNext());
+                if (doAdd) caseStatement.setCode(code);
+            }
+            defaultStatement = adjustSwitchCaseCode(defaultStatement, scope, true);
+            // GRECLIPSE end
             if (doAdd) switchStatement.setDefaultStatement(defaultStatement);
             return switchStatement;
         }
