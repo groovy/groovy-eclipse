@@ -5480,4 +5480,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Cannot assign java.util.function.Supplier <java.util.UUID> to: java.util.function.Supplier <String>\n" +
             "----------\n");
     }
+
+    @Test
+    public void testCompileStatic9892() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  int prefix\n" +
+            "  int postfix\n" +
+            "  def test() {\n" +
+            "    { ->\n" +
+            "      print \"X${++prefix}Y${postfix++}\"\n" +
+            "    }.call()\n" +
+            "    true\n" +
+            "  }\n" +
+            "}\n" +
+            "def c = new C()\n" +
+            "assert c.test()\n" +
+            "assert c.prefix == 1\n" +
+            "assert c.postfix == 1\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "X1Y0");
+    }
 }
