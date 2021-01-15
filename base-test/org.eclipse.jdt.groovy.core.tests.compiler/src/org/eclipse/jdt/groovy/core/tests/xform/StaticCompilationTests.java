@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -5433,5 +5433,51 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "[kv:kv]");
+    }
+
+    @Test
+    public void testCompileStatic9882() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Supplier\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  Supplier<String> p = { 'foo' }\n" +
+            "  void test() {\n" +
+            "    Supplier<String> v = { 'bar' }\n" +
+            "    print(p.get() + v.get())\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
+    }
+
+    @Test
+    public void testCompileStatic9883() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  java.util.function.Supplier<String> p = {\n" +
+            "    return java.util.UUID.randomUUID()\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().p.get().class\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tjava.util.function.Supplier<String> p = {\n" +
+            "\t                                        ^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. " +
+            "Cannot assign java.util.function.Supplier <java.util.UUID> to: java.util.function.Supplier <String>\n" +
+            "----------\n");
     }
 }

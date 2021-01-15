@@ -1847,10 +1847,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         init
                 );
                 bexp.setSourcePosition(init);
+                /* GRECLIPSE edit -- GROOVY-9882
                 typeCheckAssignment(bexp, left, node.getOriginType(), init, getType(init));
+                */
+                ClassNode lType = node.getOriginType(), rType = getType(init);
+                typeCheckAssignment(bexp, left, lType, init, getResultType(lType, ASSIGN, rType, bexp));
+                // GRECLIPSE end
                 if (init instanceof ConstructorCallExpression) {
                     inferDiamondType((ConstructorCallExpression) init, node.getOriginType());
                 }
+                // GRECLIPSE add
+                else if (init instanceof ClosureExpression && isFunctionalInterface(lType)) {
+                    inferParameterAndReturnTypesOfClosureOnRHS(lType, (ClosureExpression) init);
+                }
+                // GRECLIPSE end
             }
         } finally {
             currentField = null;
@@ -4465,7 +4475,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         // extract the generics from the return type
         Map<GenericsTypeName, GenericsType> connections = new HashMap<>();
-        extractGenericsConnections(connections, getInferredReturnType(closureExpression), abstractMethod.getReturnType());
+        extractGenericsConnections(connections, getWrapper(getInferredReturnType(closureExpression)), abstractMethod.getReturnType());
 
         // next we get the block parameter types and set the generics
         // information just like before
@@ -4473,7 +4483,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (closureExpression.isParameterSpecified()) {
             Parameter[] closureParams = closureExpression.getParameters();
             Parameter[] methodParams = abstractMethod.getParameters();
-            for (int i = 0, n = closureParams.length; i < n; i += 1) {
+            for (int i = 0, n = Math.min(closureParams.length, methodParams.length); i < n; i += 1) {
                 ClassNode closureParamType = closureParams[i].getType();
                 ClassNode methodParamType = methodParams[i].getType();
                 extractGenericsConnections(connections, closureParamType, methodParamType);
