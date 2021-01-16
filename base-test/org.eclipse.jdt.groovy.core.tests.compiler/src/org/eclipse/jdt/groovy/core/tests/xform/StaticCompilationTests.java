@@ -5482,6 +5482,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9885() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.ToString\n" +
+            "class C {\n" +
+            "  String p\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(String string, whatever) {\n" +
+            "  print new C(p: string.trim() ?: \"$whatever\")\n" +
+            "}\n" +
+            "test('x','y')\n" +
+            "test(' ','y')\n" +
+            "test(' ',123)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "C(x)C(y)C(123)");
+    }
+
+    @Test
     public void testCompileStatic9892() {
         //@formatter:off
         String[] sources = {

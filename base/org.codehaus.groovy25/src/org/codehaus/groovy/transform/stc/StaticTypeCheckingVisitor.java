@@ -1355,7 +1355,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     ClassNode valueType = getType(entryExpression.getValueExpression());
                     MethodNode setter = receiverType.getSetterMethod("set" + MetaClassHelper.capitalize(pexp.getPropertyAsString()), false);
                     ClassNode toBeAssignedTo = setter == null ? lookup.get() : setter.getParameters()[0].getType();
+                    /* GRECLIPSE edit -- GROOVY-9885
                     if (!isAssignableTo(valueType, toBeAssignedTo)
+                    */
+                    Expression valueExpression = entryExpression.getValueExpression();
+                    BinaryExpression assign = new BinaryExpression(keyExpr, GeneralUtils.ASSIGN, valueExpression);
+                    assign.setSourcePosition(entryExpression);
+                    ClassNode resultType = getResultType(toBeAssignedTo, ASSIGN, valueType, assign);
+                    if (!checkCompatibleAssignmentTypes(toBeAssignedTo, resultType, valueExpression)
+                    // GRECLIPSE end
                             && !extension.handleIncompatibleAssignment(toBeAssignedTo, valueType, entryExpression)) {
                         addAssignmentError(toBeAssignedTo, valueType, entryExpression);
                     }

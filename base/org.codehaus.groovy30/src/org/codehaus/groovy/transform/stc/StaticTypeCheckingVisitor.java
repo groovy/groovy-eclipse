@@ -94,6 +94,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.stmt.SwitchStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.ReturnAdder;
@@ -1314,7 +1315,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     ClassNode valueType = getType(entryExpression.getValueExpression());
                     MethodNode setter = receiverType.getSetterMethod(getSetterName(pexp.getPropertyAsString()), false);
                     ClassNode toBeAssignedTo = setter == null ? lookup.get() : setter.getParameters()[0].getType();
+                    /* GRECLIPSE edit -- GROOVY-9885
                     if (!isAssignableTo(valueType, toBeAssignedTo)
+                    */
+                    Expression valueExpression = entryExpression.getValueExpression();
+                    BinaryExpression assign = new BinaryExpression(keyExpr, GeneralUtils.ASSIGN, valueExpression);
+                    assign.setSourcePosition(entryExpression);
+                    ClassNode resultType = getResultType(toBeAssignedTo, ASSIGN, valueType, assign);
+                    if (!checkCompatibleAssignmentTypes(toBeAssignedTo, resultType, valueExpression)
+                    // GRECLIPSE end
                             && !extension.handleIncompatibleAssignment(toBeAssignedTo, valueType, entryExpression)) {
                         addAssignmentError(toBeAssignedTo, valueType, entryExpression);
                     }
