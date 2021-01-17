@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -4319,5 +4319,31 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType("void test(Face face){face.m(1234)}", "m", "java.lang.Float");
         assertType("void test(Face face){face.m(1234, 5678)}", "m", "java.lang.Double");
         assertType("void test(Face face){face.m((Face) null)}", "m", "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1220
+    public void testMethodOverloadsArgumentMatching15() {
+        createJavaUnit("Face",
+            "interface Face {\n" +
+            "  float m(int i) ;\n" +
+            "  default double m(long l) {}\n" +
+            "}\n");
+
+        assertType("void test(Face face){face.m(123)}", "m", "java.lang.Float");
+        assertType("void test(Face face){face.m(45L)}", "m", "java.lang.Double");
+        assertType("class Impl implements Face {\n float m(int i) {}\n}\n" +
+            "void test(Impl impl){impl.m(45L)}", "m", "java.lang.Double");
+    }
+
+    @Test
+    public void testMethodOverloadsArgumentMatching15a() {
+        createJavaUnit("Face",
+            "interface Face {\n" +
+            "  float m(int i) ;\n" +
+            "  default double m(long l) {}\n" +
+            "}\n");
+
+        assertType("interface Next extends Face {\n float m(int i)\n}\n" +
+            "void test(Next next){next.m(45L)}", "m", "java.lang.Double");
     }
 }

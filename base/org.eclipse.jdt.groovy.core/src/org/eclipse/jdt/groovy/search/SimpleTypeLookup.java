@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import groovy.lang.Closure;
@@ -718,27 +717,28 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     /**
-     * Finds a method with the given name in the declaring type. Prioritizes methods
-     * with the same number of arguments, but if multiple methods exist with same name,
-     * then will return an arbitrary one.
+     * Looks for a method with the given name in the declaring type that is
+     * suitable for the given argument types and static/non-static context.
      */
     protected MethodNode findMethodDeclaration(final String name, final ClassNode declaringType, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
-        // concrete types (without mixins/traits) return all declared methods from getMethods(String), except interface default methods
+        Set<ClassNode> interfaces = new LinkedHashSet<>();
+        VariableScope.findAllInterfaces(declaringType, interfaces, true);
+
+        // concrete types (without mixins/traits) return all methods from getMethods(String), except interface default methods
         if (!declaringType.isAbstract() && !declaringType.isInterface() && !implementsTrait(declaringType)) {
             List<MethodNode> candidates = declaringType.getMethods(name);
-            if (candidates.isEmpty()) {
-                candidates = declaringType.getAllDeclaredMethods().stream().filter(meth -> meth.isDefault() && meth.getName().equals(name)).collect(Collectors.toList());
+            for (ClassNode face : interfaces) {
+                for (MethodNode method : face.getDeclaredMethods(name)) {
+                    if (method.isDefault()) candidates.add(method);
+                }
             }
-            if (!candidates.isEmpty()) {
-                return findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
-            }
-            return null;
+            return candidates.isEmpty() ? null
+                : findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
         }
 
-        // abstract types may not return all methods from getMethods(String)
         Set<ClassNode> types = new LinkedHashSet<>();
-        if (!declaringType.isInterface()) types.add(declaringType);
-        VariableScope.findAllInterfaces(declaringType, types, true);
+        types.add(declaringType);
+        types.addAll(interfaces);
         if (!implementsTrait(declaringType))
             types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super type
 
@@ -781,7 +781,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     /** Sentinel value to indicate method pointer/reference expression. */
     private static final List<ClassNode> UNKNOWN_TYPES = new ArrayList<>();
 
-    protected static MethodNode findMethodDeclaration0(final List<? extends MethodNode> candidates, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
+    private static MethodNode findMethodDeclaration0(final List<? extends MethodNode> candidates, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
         if (argumentTypes == null || argumentTypes == UNKNOWN_TYPES) {
             for (MethodNode candidate : candidates) {
                 if (isCompatible(candidate, isStaticExpression)) {
@@ -826,7 +826,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return closestMatch;
     }
 
-    protected static Optional<MethodNode> findPropertyAccessorMethod(final String propertyName, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final List<ClassNode> methodCallArgumentTypes) {
+    private static Optional<MethodNode> findPropertyAccessorMethod(final String propertyName, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final List<ClassNode> methodCallArgumentTypes) {
         Stream<MethodNode> accessors = AccessorSupport.findAccessorMethodsForPropertyName(propertyName, declaringType, false, !isLhsExpression ? READER : WRITER);
         accessors = accessors.filter(accessor -> isCompatible(accessor, isStaticExpression) && !isTraitBridge(accessor));
         if (isLhsExpression) {
