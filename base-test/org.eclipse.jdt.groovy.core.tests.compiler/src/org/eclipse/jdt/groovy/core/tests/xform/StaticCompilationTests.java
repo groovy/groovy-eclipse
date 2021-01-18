@@ -5557,4 +5557,49 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "X1Y0");
     }
+
+    @Test
+    public void testCompileStatic9893() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A {\n" +
+            "  void setX(String s) { print 'String' }\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  void setX(boolean b) { print 'boolean' }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = new C()\n" +
+            "  c.x = 'value'\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "String");
+    }
+
+    @Test
+    public void testCompileStatic9893a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I {\n" +
+            "  void setX(String s)\n" +
+            "}\n" +
+            "abstract class A implements I {\n" +
+            "  void setX(boolean b) { print 'boolean' }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(A a) {\n" +
+            "  a.x = 'value'\n" +
+            "}\n" +
+            "test(new A() { void setX(String s) { print 'String' } })\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "String");
+    }
 }

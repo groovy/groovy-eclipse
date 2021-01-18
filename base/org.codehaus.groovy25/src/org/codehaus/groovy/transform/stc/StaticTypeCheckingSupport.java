@@ -2351,6 +2351,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     public static List<MethodNode> findSetters(ClassNode cn, String setterName, boolean voidOnly) {
+        /* GRECLIPSE edit -- GROOVY-9893
         List<MethodNode> result = null;
         for (MethodNode method : cn.getDeclaredMethods(setterName)) {
             if (setterName.equals(method.getName())
@@ -2369,8 +2370,27 @@ public abstract class StaticTypeCheckingSupport {
             }
             return Collections.emptyList();
         }
+        */
+        List<MethodNode> result = new ArrayList<>();
+        if (!cn.isInterface()) {
+            for (MethodNode method : cn.getMethods(setterName)) {
+                if (isSetter(method, voidOnly)) result.add(method);
+            }
+        }
+        for (ClassNode in : cn.getAllInterfaces()) {
+            for (MethodNode method : in.getDeclaredMethods(setterName)) {
+                if (isSetter(method, voidOnly)) result.add(method);
+            }
+        }
+        // GRECLIPSE end
         return result;
     }
+
+    // GRECLIPSE add
+    private static boolean isSetter(final MethodNode mn, final boolean voidOnly) {
+        return (!voidOnly || mn.isVoidMethod()) && mn.getParameters().length == 1;
+    }
+    // GRECLIPSE end
 
     public static ClassNode isTraitSelf(VariableExpression vexp) {
         if (Traits.THIS_OBJECT.equals(vexp.getName())) {
