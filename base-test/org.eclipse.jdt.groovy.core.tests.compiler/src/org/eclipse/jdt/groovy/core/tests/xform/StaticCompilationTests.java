@@ -5504,6 +5504,35 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9890() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C implements I {\n" +
+            "  void m(String s) {\n" +
+            "    throw new Exception()\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  new C().m(42L)\n" +
+            "}\n" +
+            "test()\n",
+
+            "I.java",
+            "public interface I {\n" +
+            "  default void m(long n) {\n" +
+            "    System.out.print(n);\n" +
+            "  }\n" +
+            "  void m(String s);\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testCompileStatic9892() {
         //@formatter:off
         String[] sources = {

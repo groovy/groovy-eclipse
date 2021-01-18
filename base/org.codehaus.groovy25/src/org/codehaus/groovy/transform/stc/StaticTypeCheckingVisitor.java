@@ -2629,7 +2629,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode receiverType = wrapTypeIfNecessary(currentReceiver.getType());
 
                 candidates = findMethodsWithGenerated(receiverType, nameText);
+                /* GRECLIPSE edit -- GROOVY-9890
                 collectAllInterfaceMethodsByName(receiverType, nameText, candidates);
+                */
                 if (isBeingCompiled(receiverType)) candidates.addAll(GROOVY_OBJECT_TYPE.getMethods(nameText));
                 candidates.addAll(StaticTypeCheckingSupport.findDGMMethodsForClassNode(getTransformLoader(), receiverType, nameText));
                 candidates = filterMethodsByVisibility(candidates);
@@ -4710,7 +4712,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         // extract the generics from the return type
         Map<GenericsTypeName, GenericsType> connections = new HashMap<GenericsTypeName, GenericsType>();
-        extractGenericsConnections(connections, getWrapper(getInferredReturnType(closureExpression)), sam.getReturnType());
+        extractGenericsConnections(connections, wrapTypeIfNecessary(getInferredReturnType(closureExpression)), sam.getReturnType());
 
         // next we get the block parameter types and set the generics
         // information just like before
@@ -4855,6 +4857,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      */
     protected List<MethodNode> findMethodsWithGenerated(ClassNode receiver, String name) {
         List<MethodNode> methods = receiver.getMethods(name);
+        // GRECLIPSE add -- GROOVY-9890
+        if (receiver.isAbstract()) {
+            collectAllInterfaceMethodsByName(receiver, name, methods);
+        } else {
+            List<MethodNode> interfaceMethods = new ArrayList<>();
+            collectAllInterfaceMethodsByName(receiver, name, interfaceMethods);
+            interfaceMethods.stream().filter(MethodNode::isDefault).forEach(methods::add);
+        }
+        if (receiver.isInterface()) {
+            methods.addAll(OBJECT_TYPE.getMethods(name));
+        }
+        // GRECLIPSE end
         if (methods.isEmpty() || receiver.isResolved()) return methods;
         List<MethodNode> result = addGeneratedMethods(receiver, methods);
 
@@ -4917,8 +4931,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return result;
     }
 
-    protected List<MethodNode> findMethod(
-            ClassNode receiver, String name, ClassNode... args) {
+    protected List<MethodNode> findMethod(ClassNode receiver, final String name, final ClassNode... args) {
         if (isPrimitiveType(receiver)) receiver = getWrapper(receiver);
         List<MethodNode> methods;
         if (!receiver.isInterface() && "<init>".equals(name)) {
@@ -4936,10 +4949,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         } else {
             methods = findMethodsWithGenerated(receiver, name);
+            /* GRECLIPSE edit -- GROOVY-9890
             if (receiver.isInterface()) {
                 collectAllInterfaceMethodsByName(receiver, name, methods);
                 methods.addAll(OBJECT_TYPE.getMethods(name));
             }
+            */
             // TODO: investigate the trait exclusion a bit further, needed otherwise
             // CallMethodOfTraitInsideClosureAndClosureParamTypeInference fails saying
             // not static method can't be called from a static context
@@ -5006,13 +5021,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
         }
-
+        /* GRECLIPSE edit -- GROOVY-9890
         if (methods.isEmpty()) {
             // look at the interfaces, there's a chance that a method is not implemented and we should not hide the
             // error from the compiler
             collectAllInterfaceMethodsByName(receiver, name, methods);
         }
-
+        */
         // lookup in DGM methods too
         // GRECLIPSE add
         if (!"<init>".equals(name) && !"<clinit>".equals(name))
