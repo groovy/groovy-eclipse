@@ -5436,6 +5436,81 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9881() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print new Value(123).replace { -> 'foo' }\n" +
+            "  print new Value(123).replace { Integer v -> 'bar' }\n" +
+            "}\n" +
+            "test()\n",
+
+            "Value.groovy",
+            "import java.util.function.*\n" +
+            "class Value<V> {\n" +
+            "  final V val\n" +
+            "  Value(V v) {\n" +
+            "    this.val = v\n" +
+            "  }\n" +
+            "  String toString() {\n" +
+            "    val as String\n" +
+            "  }\n" +
+            "  def <T> Value<T> replace(Supplier<T> supplier) {\n" +
+            "    new Value<>(supplier.get())\n" +
+            "  }\n" +
+            "  def <T> Value<T> replace(Function<? super V, ? extends T> function) {\n" +
+            "    new Value(function.apply(val))\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
+    }
+
+    @Test
+    public void testCompileStatic9881a() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print new Value(123).replace(() -> 'foo')\n" +
+            "  print new Value(123).replace((Integer v) -> 'bar')\n" +
+            "}\n" +
+            "test()\n",
+
+            "Value.groovy",
+            "import java.util.function.*\n" +
+            "class Value<V> {\n" +
+            "  final V val\n" +
+            "  Value(V v) {\n" +
+            "    this.val = v\n" +
+            "  }\n" +
+            "  String toString() {\n" +
+            "    val as String\n" +
+            "  }\n" +
+            "  def <T> Value<T> replace(Supplier<T> supplier) {\n" +
+            "    new Value<>(supplier.get())\n" +
+            "  }\n" +
+            "  def <T> Value<T> replace(Function<? super V, ? extends T> function) {\n" +
+            "    new Value(function.apply(val))\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
+    }
+
+    @Test
     public void testCompileStatic9882() {
         //@formatter:off
         String[] sources = {

@@ -4955,6 +4955,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             return ((Parameter) exp).getOriginType();
         }
         if (exp instanceof ClosureExpression) {
+            /* GRECLIPSE edit -- GROOVY-9881
             ClassNode irt = getInferredReturnType(exp);
             if (irt != null) {
                 irt = wrapTypeIfNecessary(irt);
@@ -4962,6 +4963,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 result.setGenericsTypes(new GenericsType[]{new GenericsType(irt)});
                 return result;
             }
+            */
+            ClassNode type = CLOSURE_TYPE.getPlainNodeReference();
+            ClassNode returnType = getInferredReturnType(exp);
+            if (returnType != null) {
+                type.setGenericsTypes(new GenericsType[]{
+                    new GenericsType(wrapTypeIfNecessary(returnType))
+                });
+            }
+            Parameter[] parameters = ((ClosureExpression) exp).getParameters();
+            int nParameters = parameters == null ? 0
+               : parameters.length == 0 ? -1 : parameters.length;
+            type.putNodeMetaData(CLOSURE_ARGUMENTS, nParameters);
+            return type;
+            // GRECLIPSE end
         } else if (exp instanceof MethodCall) {
             MethodNode target = exp.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
             if (target != null) {

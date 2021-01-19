@@ -20,7 +20,6 @@ package org.codehaus.groovy.transform.stc;
 
 import org.apache.groovy.util.Maps;
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
@@ -93,6 +92,7 @@ import static org.codehaus.groovy.ast.ClassHelper.boolean_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.byte_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.char_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.double_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.findSAM;
 import static org.codehaus.groovy.ast.ClassHelper.float_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.getUnwrapper;
 import static org.codehaus.groovy.ast.ClassHelper.getWrapper;
@@ -912,9 +912,22 @@ public abstract class StaticTypeCheckingSupport {
         if (receiver == UNKNOWN_PARAMETER_TYPE) {
             return dist;
         }
+        // GRECLIPSE add -- GROOVY-9852, GROOVY-9881
+        if (compare.isInterface()) { MethodNode sam;
+            if (receiver.implementsInterface(compare)) {
+                return dist + getMaximumInterfaceDistance(receiver, compare);
+            } else if (receiver.equals(CLOSURE_TYPE) && (sam = findSAM(compare)) != null) {
+                // GROOVY-9881: in case of multiple overloads, give preference to equal parameter count
+                Integer closureParamCount = receiver.getNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS);
+                if (closureParamCount != null && closureParamCount == sam.getParameters().length) dist -= 1;
 
-        ClassNode ref = isPrimitiveType(receiver) && !isPrimitiveType(compare) ? ClassHelper.getWrapper(receiver) : receiver;
+                return dist + 13; // GROOVY-9852: @FunctionalInterface vs Object
+            }
+        }
+        // GRECLIPSE end
+        ClassNode ref = isPrimitiveType(receiver) && !isPrimitiveType(compare) ? getWrapper(receiver) : receiver;
         while (ref != null) {
+            /* GRECLIPSE edit
             if (compare.equals(ref)) {
                 break;
             }
@@ -922,6 +935,7 @@ public abstract class StaticTypeCheckingSupport {
                 dist += getMaximumInterfaceDistance(ref, compare);
                 break;
             }
+            */
             ref = ref.getSuperClass();
             dist += 1;
             if (OBJECT_TYPE.equals(ref))
