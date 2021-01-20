@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -631,5 +631,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "123", options);
+    }
+
+    @Test
+    public void testTypeChecked9903() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def m(@DelegatesTo(strategy=Closure.TO_SELF) Closure<Object> c) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def x() {\n" +
+            "  m {" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\tdef m(@DelegatesTo(strategy=Closure.TO_SELF) Closure<Object> c) {\n" +
+            "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:Not enough arguments found for a @DelegatesTo method call. Please check " +
+            "that you either use an explicit class or @DelegatesTo.Target with a correct id\n" +
+            "----------\n");
     }
 }
