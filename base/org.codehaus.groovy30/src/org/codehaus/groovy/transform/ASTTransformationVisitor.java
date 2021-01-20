@@ -267,6 +267,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             GroovyClassVisitor visitor = new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader());
             visitor.visitClass(classNode);
         }, Phases.SEMANTIC_ANALYSIS);
+
         for (CompilePhase phase : CompilePhase.values()) {
             switch (phase) {
                 case INITIALIZATION:
@@ -286,6 +287,28 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
+
+    // GRECLIPSE add -- GROOVY-7293, GROOVY-9901
+    public static void addNewPhaseOperation(final CompilationUnit compilationUnit, final SourceUnit sourceUnit, final ClassNode classNode) {
+        int phase = compilationUnit.getPhase();
+        if (phase < Phases.SEMANTIC_ANALYSIS) {
+            return;
+        }
+
+        {
+            GroovyClassVisitor visitor = new ASTTransformationCollectorCodeVisitor(sourceUnit, compilationUnit.getTransformLoader());
+            visitor.visitClass(classNode);
+        }
+
+        compilationUnit.addNewPhaseOperation(source -> {
+            if (source == sourceUnit) {
+                ASTTransformationVisitor visitor = new ASTTransformationVisitor(CompilePhase.fromPhaseNumber(phase), compilationUnit.getASTTransformationsContext());
+                visitor.source = source;
+                visitor.visitClass(classNode);
+            }
+        }, phase);
+    }
+    // GRECLIPSE end
 
     public static void addGlobalTransformsAfterGrab(ASTTransformationsContext context) {
         doAddGlobalTransforms(context, false);

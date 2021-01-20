@@ -55,7 +55,7 @@ import org.codehaus.groovy.runtime.InvokerHelper;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
-import org.codehaus.groovy.transform.ASTTransformationCollectorCodeVisitor;
+import org.codehaus.groovy.transform.ASTTransformationVisitor;
 import org.codehaus.groovy.transform.AbstractASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 
@@ -352,10 +352,14 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     }
 
     private void registerASTTransformations(final ClassNode helper) {
+        /* GRECLIPSE edit -- GROOVY-7293, GROOVY-9901
         ASTTransformationCollectorCodeVisitor collector = new ASTTransformationCollectorCodeVisitor(
                 unit, compilationUnit.getTransformLoader()
         );
         collector.visitClass(helper);
+        */
+        ASTTransformationVisitor.addNewPhaseOperation(compilationUnit, unit, helper);
+        // GRECLIPSE end
         // Perform an additional phase which has to be done *after* type checking
         compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
             @Override

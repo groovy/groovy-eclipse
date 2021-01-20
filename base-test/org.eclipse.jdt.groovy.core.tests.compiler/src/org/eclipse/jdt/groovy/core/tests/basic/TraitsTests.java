@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1550,7 +1550,9 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "trait T {\n" +
-            "  @groovy.transform.PackageScope int m() { 42 }\n" +
+            "  @groovy.transform.PackageScope int m() {\n" +
+            "    42\n" +
+            "  }\n" +
             "  def x() { print m() }\n" +
             "}\n" +
             "class C implements T {\n" +
@@ -1559,7 +1561,13 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 2)\n" +
+            "\t@groovy.transform.PackageScope int m() {\n" +
+            "\t^\n" +
+            "Groovy:Can't use @PackageScope for method 'm' which has explicit visibility.\n" +
+            "----------\n");
     }
 
     @Test
@@ -1797,7 +1805,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test @Ignore
+    @Test
     public void testTraits7293() {
         //@formatter:off
         String[] sources = {
@@ -2698,5 +2706,32 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTraits9901() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  @groovy.transform.Memoized\n" +
+            "  double m() { Math.random() }\n" +
+            "}\n" +
+            "class C implements T {}\n" +
+            "class D implements T {}\n" +
+
+            "def c = new C()\n" +
+            "def n = c.m()\n" +
+            "def x = c.m()\n" +
+            "def y = new C().m()\n" +
+            "def z = new D().m()\n" +
+            "assert n == x\n" +
+            "assert n != y\n" +
+            "assert n != z\n" +
+            "assert y != z\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 }

@@ -273,6 +273,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 collector.visitClass(classNode);
             }
         }, Phases.SEMANTIC_ANALYSIS);
+
         for (CompilePhase phase : CompilePhase.values()) {
             final ASTTransformationVisitor visitor = new ASTTransformationVisitor(phase, context);
             switch (phase) {
@@ -294,6 +295,29 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
+
+    // GRECLIPSE add -- GROOVY-7293, GROOVY-9901
+    public static void addNewPhaseOperation(final CompilationUnit compilationUnit, final SourceUnit sourceUnit, final ClassNode classNode) {
+        int phase = compilationUnit.getPhase();
+        if (phase < Phases.SEMANTIC_ANALYSIS) {
+            return;
+        }
+
+        ASTTransformationCollectorCodeVisitor collector = new ASTTransformationCollectorCodeVisitor(sourceUnit, compilationUnit.getTransformLoader());
+        collector.visitClass(classNode);
+
+        compilationUnit.addNewPhaseOperation(new CompilationUnit.SourceUnitOperation() {
+            @Override
+            public void call(final SourceUnit source) {
+                if (source == sourceUnit) {
+                    ASTTransformationVisitor visitor = new ASTTransformationVisitor(CompilePhase.fromPhaseNumber(phase), compilationUnit.getASTTransformationsContext());
+                    visitor.source = source;
+                    visitor.visitClass(classNode);
+                }
+            }
+        }, phase);
+    }
+    // GRECLIPSE end
 
     public static void addGlobalTransformsAfterGrab(ASTTransformationsContext context) {
         doAddGlobalTransforms(context, false);
