@@ -219,6 +219,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked6786() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<X> {\n" +
+            "  Container<X> container\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void refresh() {\n" +
+            "    def items = findAllItems()\n" +
+            "    container.addAll(items)\n" + // Cannot call Container#addAll(java.util.Collection<? extends X>) with arguments [java.util.Collection<X>]
+            "  }\n" +
+            "  Collection<X> findAllItems() {\n" +
+            "  }\n" +
+            "}\n" +
+            "interface Container<Y> {\n" +
+            "  void addAll(Collection<? extends Y> collection)\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked6882() {
         //@formatter:off
         String[] sources = {
@@ -631,6 +656,59 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "123", options);
+    }
+
+    @Test
+    public void testTypeChecked9902() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Holder<Unknown> {\n" +
+            "  TypedProperty<Number, Unknown> numberProperty = prop(Number)\n" +
+            "  TypedProperty<String, Unknown> stringProperty = prop(String)\n" +
+            "  def <T> TypedProperty<T, Unknown> prop(Class<T> clazz) {\n" +
+            "    new TypedProperty<T, Unknown>(clazz: clazz)\n" +
+            "  }\n" +
+            // Note: type argument of Holder cannot be supplied to value attribute of @DelegatesTo
+            "  def <T> T of(@DelegatesTo(value=Holder, strategy=Closure.DELEGATE_FIRST) Closure<T> c) {\n" +
+            "    this.with(c)\n" +
+            "  }\n" +
+            "}\n" +
+            "class TypedProperty<X, Y> {\n" +
+            "  Class<X> clazz\n" +
+            "  void eq(X x) {\n" +
+            "    assert x.class == clazz : \"x.class is ${x.class} not ${clazz}\"\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Holder<Object> h) {\n" +
+            "  h.stringProperty.eq(\"${0}\")\n" + // STC error
+            "  h.of {\n" + // <-- 2nd type parameter discarded
+            "    stringProperty.eq(1234)\n" + // expect STC error
+            "    numberProperty.eq('xx')\n" + // expect STC error
+            "  }\n" +
+            "}\n" +
+            "test(new Holder<Object>())\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 19)\n" +
+            "\th.stringProperty.eq(\"${0}\")\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call TypedProperty <String, Object>#eq(java.lang.String) with arguments [groovy.lang.GString] \n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 21)\n" +
+            "\tstringProperty.eq(1234)\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call TypedProperty <String, Unknown>#eq(java.lang.String) with arguments [int] \n" +
+            "----------\n" +
+            "3. ERROR in Main.groovy (at line 22)\n" +
+            "\tnumberProperty.eq('xx')\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call TypedProperty <Number, Unknown>#eq(java.lang.Number) with arguments [java.lang.String] \n" +
+            "----------\n");
     }
 
     @Test

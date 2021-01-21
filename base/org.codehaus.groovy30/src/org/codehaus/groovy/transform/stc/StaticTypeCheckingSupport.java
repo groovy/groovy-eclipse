@@ -1388,9 +1388,11 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     protected static boolean typeCheckMethodsWithGenerics(final ClassNode receiver, final ClassNode[] argumentTypes, final MethodNode candidateMethod) {
+        /* GRECLIPSE edit -- GROOVY-9902
         if (isUsingUncheckedGenerics(receiver)) {
             return true;
         }
+        */
         if (CLASS_Type.equals(receiver)
                 && receiver.isUsingGenerics()
                 && !candidateMethod.getDeclaringClass().equals(receiver)
