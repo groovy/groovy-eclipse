@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.jdt.groovy.internal.compiler;
 
 import static org.eclipse.jdt.internal.core.ClasspathEntry.NO_ENTRIES;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -52,7 +51,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -73,31 +71,33 @@ public final class GroovyClassLoaderFactory {
      */
     private static Map<String, Map.Entry<IClasspathEntry[], GroovyClassLoader[]>> projectClassLoaderCache = new ConcurrentHashMap<>();
 
-    public static void clearCache() {
-        projectClassLoaderCache.clear(); // TODO: Close class loaders?
-    }
-
-    public static void clearCache(String projectName) {
+    public  static void clearCache(final String projectName) {
         Map.Entry<?, GroovyClassLoader[]> entry = projectClassLoaderCache.remove(projectName);
         if (entry != null) {
             Arrays.stream(entry.getValue()).filter(Objects::nonNull).forEach(GroovyClassLoaderFactory::close);
         }
     }
 
-    private static void close(ClassLoader classLoader) {
-        if (classLoader instanceof Closeable) {
+    private static void close(final ClassLoader classLoader) {
+        if (classLoader instanceof AutoCloseable) {
             try {
-                ((Closeable) classLoader).close();
-            } catch (IOException e) {
+                ((AutoCloseable) classLoader).close();
+            } catch (Exception e) {
                 Util.log(e);
             }
         }
-        if (classLoader instanceof GroovyClassLoader) {
-            // TODO: Groovy 2.5+ close() calls clearCache()
-            ((GroovyClassLoader) classLoader).clearCache();
-            // parent was created by newClassLoader(...)
-            close(classLoader.getParent());
+        ClassLoader parentLoader = getParent(classLoader);
+        if (parentLoader instanceof URLClassLoader) {
+            // created by newClassLoader(...)
+            close(parentLoader);
         }
+    }
+
+    private static ClassLoader getParent(final ClassLoader classLoader) {
+        if (classLoader instanceof org.apache.xbean.classloader.MultiParentClassLoader) {
+            return ((org.apache.xbean.classloader.MultiParentClassLoader) classLoader).getParents()[0];
+        }
+        return classLoader.getParent();
     }
 
     //--------------------------------------------------------------------------
@@ -106,12 +106,14 @@ public final class GroovyClassLoaderFactory {
     private final CompilerOptions compilerOptions;
     private final LookupEnvironment lookupEnvironment;
 
-    public GroovyClassLoaderFactory(CompilerOptions compilerOptions, Object requestor) {
+    public GroovyClassLoaderFactory(final CompilerOptions compilerOptions, final LookupEnvironment lookupEnvironment) {
         this.compilerOptions = compilerOptions;
-        this.lookupEnvironment = (requestor instanceof Compiler ? ((Compiler) requestor).lookupEnvironment : null);
+        this.lookupEnvironment = lookupEnvironment;
     }
 
-    public GroovyClassLoader[] getGroovyClassLoaders(CompilerConfiguration compilerConfiguration) {
+    //--------------------------------------------------------------------------
+
+    public GroovyClassLoader[] getGroovyClassLoaders(final CompilerConfiguration compilerConfiguration) {
         if (compilerOptions.groovyProjectName == null) {
             return getBatchGroovyClassLoaders(compilerConfiguration);
         } else {
@@ -119,15 +121,15 @@ public final class GroovyClassLoaderFactory {
         }
     }
 
-    private GroovyClassLoader[] getBatchGroovyClassLoaders(CompilerConfiguration compilerConfiguration) {
+    private GroovyClassLoader[] getBatchGroovyClassLoaders(final CompilerConfiguration compilerConfiguration) {
         if (batchLoader == null && lookupEnvironment != null) {
             try {
                 INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
-                if (nameEnvironment.getClass().getName().endsWith("tests.compiler.regression.InMemoryNameEnvironment")) {
-                    nameEnvironment = ((INameEnvironment[]) ReflectionUtils.getPrivateField(nameEnvironment.getClass(), "classLibs", nameEnvironment))[0];
+                if (nameEnvironment.getClass().getName().contains(".InMemoryNameEnvironment")) {
+                    nameEnvironment = ((INameEnvironment[]) ReflectionUtils.throwableGetPrivateField(nameEnvironment.getClass(), "classLibs", nameEnvironment))[0];
                 }
                 if (nameEnvironment instanceof FileSystem) {
-                    FileSystem.Classpath[] classpaths = ReflectionUtils.getPrivateField(FileSystem.class, "classpaths", nameEnvironment);
+                    FileSystem.Classpath[] classpaths = ReflectionUtils.throwableGetPrivateField(FileSystem.class, "classpaths", nameEnvironment);
                     if (classpaths != null) {
                         batchLoader = new GroovyClassLoader();
                         for (FileSystem.Classpath classpath : classpaths) {
@@ -142,7 +144,7 @@ public final class GroovyClassLoaderFactory {
         return new GroovyClassLoader[] {new GrapeAwareGroovyClassLoader(batchLoader, compilerConfiguration), batchLoader};
     }
 
-    private GroovyClassLoader[] getProjectGroovyClassLoaders(CompilerConfiguration compilerConfiguration) {
+    private GroovyClassLoader[] getProjectGroovyClassLoaders(final CompilerConfiguration compilerConfiguration) {
         String projectName = compilerOptions.groovyProjectName;
         IProject project = findProject(projectName);
         try {
@@ -150,20 +152,31 @@ public final class GroovyClassLoaderFactory {
                 ? new ExternalJavaProject(JavaCore.create(project).getRawClasspath()) : JavaCore.create(project);
             IClasspathEntry[] classpathEntries = javaProject.exists() ? javaProject.getResolvedClasspath(true) : NO_ENTRIES;
 
-            Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(projectName, key -> {
-                Set<String> classPaths = new LinkedHashSet<>(), xformPaths = new LinkedHashSet<>();
-                if (javaProject.exists()) calculateClasspath(javaProject, classPaths, xformPaths);
+            Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(projectName, x -> {
+                final Set<String> classPaths = new LinkedHashSet<>(), xformPaths = new LinkedHashSet<>();
+                if (javaProject.exists()) calculateClasspath(javaProject, false, classPaths, xformPaths);
 
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,
                         "Transform classpath: " + String.join(File.pathSeparator, xformPaths));
                 }
 
-                ClassLoader parentClassLoader = ClassLoader.getSystemClassLoader();
+                ClassLoader classLoader = getClass().getClassLoader();
+                if (javaProject.exists()) {
+                    Set<String> dontCare = new LinkedHashSet<>();
+                    Set<String> mainOnly = new LinkedHashSet<>();
+                    calculateClasspath(javaProject, true, dontCare, mainOnly);
+
+                    if (!mainOnly.equals(xformPaths)) {
+                        classLoader = newClassLoader(mainOnly, classLoader);
+                        xformPaths.removeAll(mainOnly); // retain test paths
+                    }
+                }
+                classLoader = newClassLoader(xformPaths, classLoader);
 
                 return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, new GroovyClassLoader[] {
-                    new GrapeAwareGroovyClassLoader(project, newClassLoader(classPaths, parentClassLoader), compilerConfiguration),
-                    new EclipseGroovyClassLoader(project, newClassLoader(xformPaths, getClass().getClassLoader())/*, compilerConfiguration*/),
+                    new GrapeAwareGroovyClassLoader(project, newClassLoader(classPaths, ClassLoader.getSystemClassLoader()), compilerConfiguration),
+                    new EclipseGroovyClassLoader(project, classLoader, compilerConfiguration), // "test" and "main" and "eclipse" class loader chain
                 });
             });
 
@@ -171,7 +184,7 @@ public final class GroovyClassLoaderFactory {
                 return entry.getValue();
             } else {
                 // project classpath has changed; remove and reload
-                projectClassLoaderCache.remove(projectName);
+                clearCache(projectName);
                 return getProjectGroovyClassLoaders(compilerConfiguration);
             }
         } catch (Exception e) {
@@ -185,14 +198,13 @@ public final class GroovyClassLoaderFactory {
         return ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
     }
 
-    private static void calculateClasspath(IJavaProject javaProject, Set<String> classPaths, Set<String> xformPaths) {
+    private static void calculateClasspath(IJavaProject javaProject, boolean mainOnly, Set<String> classPaths, Set<String> xformPaths) {
         try {
-            // TODO: Leverage "excludeTestCode" parameter?  http://www.eclipse.org/eclipse/news/4.8/M5/index.html#jdt-test-sources
             IRuntimeClasspathEntry[] entries = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject);
             Arrays.sort(entries, Comparator.comparing(IRuntimeClasspathEntry::getType));
             for (IRuntimeClasspathEntry unresolved : entries) {
                 Set<String> paths = (unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths);
-                for (IRuntimeClasspathEntry resolved : resolveRuntimeClasspathEntry(unresolved)) {
+                for (IRuntimeClasspathEntry resolved : resolveRuntimeClasspathEntry(unresolved, mainOnly)) {
                     paths.add(getAbsoluteLocation(resolved));
                 }
             }
@@ -203,9 +215,9 @@ public final class GroovyClassLoaderFactory {
         }
     }
 
-    private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry) throws ReflectiveOperationException {
-        //return JavaRuntime.resolveRuntimeClasspathEntry(classpathEntry, javaProject); // indirect dependency on org.eclipse.debug.core.ILaunchConfiguration
-        return (IRuntimeClasspathEntry[]) JavaRuntime.class.getDeclaredMethod("resolveRuntimeClasspathEntry", IRuntimeClasspathEntry.class, IJavaProject.class).invoke(JavaRuntime.class, classpathEntry, classpathEntry.getJavaProject());
+    private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry, boolean excludeTestCode) throws ReflectiveOperationException {
+        //return JavaRuntime.resolveRuntimeClasspathEntry(classpathEntry, javaProject, excludeTestCode); // indirect dependency on org.eclipse.debug.core.ILaunchConfiguration
+        return (IRuntimeClasspathEntry[]) JavaRuntime.class.getDeclaredMethod("resolveRuntimeClasspathEntry", IRuntimeClasspathEntry.class, IJavaProject.class, boolean.class).invoke(JavaRuntime.class, classpathEntry, classpathEntry.getJavaProject(), excludeTestCode);
     }
 
     private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,20 +137,7 @@ public class GroovyParser {
         this.compilerOptions = compilerOptions;
         this.problemReporter = problemReporter;
 
-        // 2011-10-18: Status of transforms and reconciling
-        // Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
-        // processing for them was done at all. With 2.6.0 this phase processing is now active during reconciling
-        // but it is currently limited to only allowing the Grab (global) transform to run. (Not sure why Grab
-        // is a global transform... isn't it always annotation driven). Non-global transforms are all off.
-        // This means the transformLoader is setup for the compilation unit but the cu is also told the
-        // allowTransforms setting so it can decide what should be allowed through.
-        // ---
-        // Basic grab support: the design here is that a special classloader is created that will be augmented
-        // with URLs when grab processing is running. This classloader is used as a last resort when resolving
-        // types and is *only* called if a grab has occurred somewhere during compilation.
-        // Currently it is not cached but created each time - we'll have to decide if there is a need to cache
-
-        GroovyClassLoaderFactory loaderFactory = new GroovyClassLoaderFactory(compilerOptions, requestor);
+        GroovyClassLoaderFactory loaderFactory = new GroovyClassLoaderFactory(compilerOptions, requestor instanceof Compiler ? ((Compiler) requestor).lookupEnvironment : null);
 
         this.unitFactory = () -> {
             CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, problemReporter);
