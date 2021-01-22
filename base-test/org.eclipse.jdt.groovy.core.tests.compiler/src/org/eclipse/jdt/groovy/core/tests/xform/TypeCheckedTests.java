@@ -219,6 +219,22 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def str = \"${}\"\n" +
+            "  assert str != 'x'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked6786() {
         //@formatter:off
         String[] sources = {

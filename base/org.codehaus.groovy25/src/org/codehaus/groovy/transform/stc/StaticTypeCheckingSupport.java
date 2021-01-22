@@ -977,7 +977,6 @@ public abstract class StaticTypeCheckingSupport {
         // GRECLIPSE end
         ClassNode ref = isPrimitiveType(receiver) && !isPrimitiveType(compare) ? getWrapper(receiver) : receiver;
         while (ref != null) {
-            /* GRECLIPSE edit
             if (compare.equals(ref)) {
                 break;
             }
@@ -985,7 +984,6 @@ public abstract class StaticTypeCheckingSupport {
                 dist += getMaximumInterfaceDistance(ref, compare);
                 break;
             }
-            */
             ref = ref.getSuperClass();
             dist++;
             if (ref == null) dist++;
