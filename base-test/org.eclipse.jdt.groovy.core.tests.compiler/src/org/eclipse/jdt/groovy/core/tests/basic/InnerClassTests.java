@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2021,5 +2021,32 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "value");
+    }
+
+    @Test // // https://issues.apache.org/jira/browse/GROOVY-9905
+    public void testAccessOuterClassMemberFromInnerClassMethod5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  protected final f = 'x'\n" +
+            "  abstract static class B {}\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  private class D extends A.B {\n" + // B is static inner
+            "    String toString() {\n" +
+            "      println(f)\n" + // No such property: f for class: A
+            "      return 'y'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    new D().toString()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
     }
 }
