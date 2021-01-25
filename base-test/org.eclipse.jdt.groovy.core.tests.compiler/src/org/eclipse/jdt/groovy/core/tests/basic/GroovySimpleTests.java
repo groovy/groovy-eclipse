@@ -4618,6 +4618,27 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "65536.0");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9906
+    public void testGroovy9906() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A {\n" +
+            "  void m(String a, String b, String c) {}\n" +
+            "  void m(String a, String... zeroPlus) {}\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  void test() {\n" +
+            "    m('x', 'y', 'z')\n" + // ArrayIndexOutOfBoundsException: Index 2 out of bounds for length 2
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
     // was worried <clinit> would surface in list of methods used to build the type declaration, but that doesn't appear to be the case
     @Test
     public void testExtendingGroovyObjects_clinit() {
