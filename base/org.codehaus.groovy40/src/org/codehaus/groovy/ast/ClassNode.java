@@ -1333,11 +1333,20 @@ public class ClassNode extends AnnotatedNode {
         }
 
         for (ClassNode cn = this; cn != null; cn = cn.getSuperClass()) {
-            for (MethodNode mn : getDeclaredMethods(name)) {
+            for (MethodNode mn : cn.getDeclaredMethods(name)) { //GROOVY-9737
                 if (!mn.isStatic() && hasCompatibleNumberOfArgs(mn, count)) {
                     return true;
                 }
             }
+            // GRECLIPSE add -- GROOVY-9737
+            for (ClassNode in : cn.getAllInterfaces()) {
+                for (MethodNode mn : in.getDeclaredMethods(name)) {
+                    if (mn.isDefault() && hasCompatibleNumberOfArgs(mn, count)) {
+                        return true;
+                    }
+                }
+            }
+            // GRECLIPSE end
         }
 
         return false;

@@ -5242,6 +5242,85 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9737() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C extends p.A {\n" +
+            "  void test() {\n" +
+            "    m('')\n" + // VerifyError: Bad access to protected data in invokevirtual
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/A.groovy",
+            "package p\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "abstract class A {\n" +
+            "  static void m(Integer i) { print 'int' }\n" +
+            "  protected void m(String s) { print 'str' }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "str");
+    }
+
+    @Test
+    public void testCompileStatic9737a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "abstract class A {\n" +
+            "  static void m(Integer i) { print 'int' }\n" +
+            "  protected void m(String s) { print 'str' }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C extends A {\n" +
+            "  void test() {\n" +
+            "    m('')\n" + // ClassCastException: class java.lang.Class cannot be cast to class A
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "str");
+    }
+
+    @Test @Ignore
+    public void testCompileStatic9737b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C extends p.A {\n" +
+            "  void test() {\n" +
+            "    m('')\n" + // VerifyError: Bad access to protected data in invokevirtual
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/A.groovy",
+            "package p\n" +
+            "abstract class A implements I {\n" +
+            "  static void m(Integer i) { print 'int' }\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "interface I {\n" +
+            "  default void m(String s) { System.out.print(\"str\"); }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "str");
+    }
+
+    @Test
     public void testCompileStatic9762() {
         assumeTrue(isParrotParser());
 
