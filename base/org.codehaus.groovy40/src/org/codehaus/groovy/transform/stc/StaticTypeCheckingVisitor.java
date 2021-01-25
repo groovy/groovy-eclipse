@@ -414,6 +414,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             node.putNodeMetaData(INFERRED_TYPE, node);
+            // GRECLIPSE add -- GROOVY-9707
+            node.putNodeMetaData(StaticTypeCheckingVisitor.class, Boolean.TRUE);
+            // GRECLIPSE end
             // mark all methods as visited. We can't do this in visitMethod because the type checker
             // works in a two pass sequence and we don't want to skip the second pass
             node.getMethods().forEach(n -> n.putNodeMetaData(StaticTypeCheckingVisitor.class, Boolean.TRUE));

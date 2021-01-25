@@ -431,6 +431,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9707() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  ast(groovy.transform.CompileStatic)\n" +
+            "}\n"
+        ).getAbsolutePath());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  def m() {\n" +
+            "    'a' + 'b'\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "ab", options);
+    }
+
+    @Test
     public void testTypeChecked9735() {
         //@formatter:off
         String[] sources = {
