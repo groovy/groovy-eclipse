@@ -776,4 +776,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "that you either use an explicit class or @DelegatesTo.Target with a correct id\n" +
             "----------\n");
     }
+
+    @Test
+    public void testTypeChecked9907() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "Integer foo(x) {\n" +
+            "  if (x instanceof Integer) {\n" +
+            "    def bar = { -> return x }\n" +
+            "    return bar.call()\n" +
+            "  }\n" +
+            "  return 0\n" +
+            "}\n" +
+            "println(foo(1))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
 }

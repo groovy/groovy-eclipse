@@ -334,9 +334,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         @Override
         public void returnStatementAdded(final ReturnStatement returnStatement) {
             if (isNullConstant(returnStatement.getExpression())) return;
+            /* GRECLIPSE edit -- GROOVY-9907
             checkReturnType(returnStatement);
             if (typeCheckingContext.getEnclosingClosure() != null) {
                 addClosureReturnType(getType(returnStatement.getExpression()));
+            */
+            ClassNode returnType = checkReturnType(returnStatement);
+            if (typeCheckingContext.getEnclosingClosure() != null) {
+                addClosureReturnType(returnType);
+            // GRECLIPSE end
             } else if (typeCheckingContext.getEnclosingMethod() == null) {
                 throw new GroovyBugError("Unexpected return statement at " + returnStatement.getLineNumber() + ":" + returnStatement.getColumnNumber() + " " + returnStatement.getText());
             }
@@ -630,7 +636,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
+        /* GRECLIPSE edit -- GROOVY-9907
         } else if (enclosingClosure == null) {
+        */
+        } else {
+        // GRECLIPSE end
             VariableExpression localVariable;
             if (accessedVariable instanceof Parameter) {
                 Parameter parameter = (Parameter) accessedVariable;
@@ -2161,6 +2171,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
+        /* GRECLIPSE edit -- GROOVY-9907
         ClassNode type = getType(expression);
 
         if (typeCheckingContext.getEnclosingClosure() != null) {
@@ -2170,8 +2181,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if ((expression instanceof VariableExpression) && hasInferredReturnType(expression)) {
             type = expression.getNodeMetaData(INFERRED_RETURN_TYPE);
         }
+        */
+        ClassNode type;
+        if (expression instanceof VariableExpression && hasInferredReturnType(expression)) {
+            type = expression.getNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE);
+        } else {
+            type = getType(expression);
+        }
+        if (typeCheckingContext.getEnclosingClosure() != null) {
+            return type;
+        }
+        // GRECLIPSE end
         MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
-        if (enclosingMethod != null && typeCheckingContext.getEnclosingClosure() == null) {
+        if (enclosingMethod != null) {
             if (!enclosingMethod.isVoidMethod()
                     && !type.equals(void_WRAPPER_TYPE)
                     && !type.equals(VOID_TYPE)
