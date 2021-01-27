@@ -2647,8 +2647,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             for (Receiver<String> currentReceiver : receivers) {
                 mn = findMethod(currentReceiver.getType(), name, args);
                 if (!mn.isEmpty()) {
-                    if (mn.size() == 1)
+                    if (mn.size() == 1) {
+                        // GRECLIPSE add -- GROOVY-8961, GROOVY-9734, GROOVY-9915
+                        resolvePlaceholdersFromImplicitTypeHints(args, argumentList, mn.get(0));
+                        // GRECLIPSE end
                         typeCheckMethodsWithGenericsOrFail(currentReceiver.getType(), args, mn.get(0), call);
+                    }
                     chosenReceiver = currentReceiver;
                     break;
                 }

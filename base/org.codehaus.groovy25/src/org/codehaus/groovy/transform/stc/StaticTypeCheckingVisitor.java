@@ -2867,8 +2867,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             for (Receiver<String> currentReceiver : receivers) {
                 mn = findMethod(currentReceiver.getType(), name, args);
                 if (!mn.isEmpty()) {
-                    if (mn.size() == 1)
+                    if (mn.size() == 1) {
+                        // GRECLIPSE add -- GROOVY-8961, GROOVY-9734, GROOVY-9915
+                        resolvePlaceholdersFromImplicitTypeHints(args, argumentList, mn.get(0));
+                        // GRECLIPSE end
                         typeCheckMethodsWithGenericsOrFail(currentReceiver.getType(), args, mn.get(0), call);
+                    }
                     chosenReceiver = currentReceiver;
                     break;
                 }
@@ -3768,36 +3772,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             }
                         }
                         // GRECLIPSE add -- GROOVY-8961, GROOVY-9734
-                        for (int i = 0, n = args.length; i < n; i += 1) {
-                            Expression a = argumentList.getExpression(i); ClassNode at = args[i];
-                            if (a instanceof MethodCallExpression && !((MethodCallExpression) a).isUsingGenerics() && isUsingUncheckedGenerics(at)) {
-                                // try to resolve unresolved placeholders in argument type using parameter type
-
-                                MethodNode aNode = a.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                                if (aNode == null || aNode.getGenericsTypes() == null) continue;
-
-                                int np = directMethodCallCandidate.getParameters().length;
-                                Parameter p = directMethodCallCandidate.getParameters()[Math.min(i, np)];
-                                ClassNode pt = getType(p); if (i >= (np - 1) && pt.isArray() && !at.isArray()) pt = pt.getComponentType();
-
-                                Map<GenericsTypeName, GenericsType> source = extractPlaceholders(at);
-                                Map<GenericsTypeName, GenericsType> target = extractPlaceholders(pt);
-                                Map<GenericsTypeName, GenericsType> linked = new HashMap<>();
-
-                                // connect E:T from source to E:Type from target
-                                for (GenericsType placeholder : aNode.getGenericsTypes()) {
-                                    for (Map.Entry<GenericsTypeName, GenericsType> e : source.entrySet()) {
-                                        if (e.getValue() == placeholder) {
-                                            Optional.ofNullable(target.get(e.getKey()))
-                                                .filter(gt -> isAssignableTo(gt.getType(), placeholder.getType()))
-                                                .ifPresent(gt -> linked.put(new GenericsTypeName(placeholder.getName()), gt));
-                                            break;
-                                        }
-                                    }
-                                }
-                                args[i] = applyGenericsContext(linked, at);
-                            }
-                        }
+                        resolvePlaceholdersFromImplicitTypeHints(args, argumentList, directMethodCallCandidate);
                         // GRECLIPSE end
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, directMethodCallCandidate, call)) {
                             returnType = adjustWithTraits(directMethodCallCandidate, chosenReceiver.getType(), args, returnType);
@@ -5572,6 +5547,53 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     resolvedPlaceholders.put(new GenericsTypeName(methodGenericType.getName()), explicitTypeHint);
                 }
             }
+        }
+    }
+
+    /**
+     * Given method call like "m(Collections.emptyList())", the type of the call
+     * argument is {@code List<T>} without explicit type arguments. Knowning the
+     * method target of "m", {@code T} could be resolved.
+     */
+    private static void resolvePlaceholdersFromImplicitTypeHints(final ClassNode[] actuals, final ArgumentListExpression argumentList, final MethodNode inferredMethod) {
+        for (int i = 0, n = actuals.length; i < n; i += 1) {
+            // check for method call with known target
+            Expression a = argumentList.getExpression(i);
+            if (!(a instanceof MethodCallExpression)) continue;
+            if (((MethodCallExpression) a).isUsingGenerics()) continue;
+            MethodNode aNode = a.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (aNode == null || aNode.getGenericsTypes() == null) continue;
+
+            // and unknown generics
+            ClassNode at = actuals[i];
+            if (!GenericsUtils.hasUnresolvedGenerics(at)) continue;
+
+            int np = inferredMethod.getParameters().length;
+            Parameter p = inferredMethod.getParameters()[Math.min(i, np - 1)];
+
+            ClassNode pt = p.getOriginType();
+            if (i >= (np - 1) && pt.isArray() && !at.isArray()) pt = pt.getComponentType();
+
+            // try to resolve placeholder(s) in argument type using parameter type
+
+            Map<GenericsTypeName, GenericsType> linked = new HashMap<>();
+            Map<GenericsTypeName, GenericsType> source = GenericsUtils.extractPlaceholders(at);
+            Map<GenericsTypeName, GenericsType> target = GenericsUtils.extractPlaceholders(pt);
+
+            // connect E:T from source to E:Type from target
+            for (GenericsType placeholder : aNode.getGenericsTypes()) {
+                for (Map.Entry<GenericsTypeName, GenericsType> e : source.entrySet()) {
+                    if (e.getValue() == placeholder) {
+                        Optional.ofNullable(target.get(e.getKey()))
+                            // skip "f(g())" for "f(T<String>)" and "<U extends Number> U g()"
+                            .filter(gt -> isAssignableTo(gt.getType(), placeholder.getType()))
+                            .ifPresent(gt -> linked.put(new GenericsTypeName(placeholder.getName()), gt));
+                        break;
+                    }
+                }
+            }
+
+            actuals[i] = applyGenericsContext(linked, at);
         }
     }
 

@@ -796,4 +796,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "1");
     }
+
+    @Test
+    public void testTypeChecked9915() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  void m() {\n" +
+            "    init(Collections.emptyList())\n" + // Cannot call C#init(List<String>) with arguments [List<T>]
+            "  }\n" +
+            "  private static void init(List<String> strings) {\n" +
+            "    print strings\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[]");
+    }
 }
