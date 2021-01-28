@@ -281,6 +281,29 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testInnerClass5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  static class Inner {\n" + // TODO: GROOVY-9781
+            "    String p\n" +
+            "  }\n" +
+            "  Inner m() {\n" +
+            "    [p:'x']\n" + // calls ScriptBytecodeAdapter.castToType([p:'x'], Outer$Inner.class)
+            "  }\n" +
+            "  static String q = 'y'\n" +
+            "}\n" +
+            "o = new Outer().m()\n" +
+            "print o.p\n" +
+            "print o.q\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "xy");
+    }
+
+    @Test
     public void testAnonymousInnerClass1() {
         //@formatter:off
         String[] sources = {
