@@ -14,7 +14,7 @@ class EmailCommand {
 }
 ###exp
 class EmailCommand {
-	def foo () {
+	def foo() {
 		return 1
 	}
 }
