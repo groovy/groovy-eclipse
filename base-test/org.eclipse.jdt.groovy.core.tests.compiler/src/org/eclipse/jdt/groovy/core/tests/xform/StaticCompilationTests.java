@@ -5756,4 +5756,22 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "String");
     }
+
+    @Test
+    public void testCompileStatic9918() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def m(one, ... zeroOrMore) {  }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Object[] array = ['a', 'b']\n" +
+            "  m(array)\n" + // ouch!
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
 }

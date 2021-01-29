@@ -65,9 +65,11 @@ import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import static java.util.stream.Collectors.joining;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant;
@@ -422,7 +424,8 @@ public class StaticInvocationWriter extends InvocationWriter {
     }
 
     @Override
-    protected void loadArguments(final List<Expression> argumentList, final Parameter[] para) {
+    protected void loadArguments(final List<Expression> argumentList, final Parameter[] parameters) {
+        /* GRECLIPSE edit -- GROOVY-9918
         if (para.length == 0) return;
         ClassNode lastParaType = para[para.length - 1].getOriginType();
         AsmClassGenerator acg = controller.getAcg();
@@ -492,6 +495,80 @@ public class StaticInvocationWriter extends InvocationWriter {
                 visitArgument(arguments[i], para[i].getType());
             }
         }
+        */
+        final int nArgs = argumentList.size(), nPrms = parameters.length; if (nPrms == 0) return;
+
+        ClassNode classNode = controller.getClassNode();
+        TypeChooser typeChooser = controller.getTypeChooser();
+        ClassNode lastArgType = nArgs == 0 ? null : typeChooser.resolveType(argumentList.get(nArgs - 1), classNode);
+        ClassNode lastPrmType = parameters[nPrms - 1].getOriginType();
+
+        // target is variadic and args are too many or one short or just enough with array compatibility
+        if (lastPrmType.isArray() && (nArgs > nPrms || nArgs == nPrms - 1
+                || (nArgs == nPrms && !lastArgType.isArray()
+                    && (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(lastArgType, lastPrmType.getComponentType())
+                        || ClassHelper.GSTRING_TYPE.equals(lastArgType) && ClassHelper.STRING_TYPE.equals(lastPrmType.getComponentType())))
+        )) {
+            OperandStack operandStack = controller.getOperandStack();
+            int stackLength = operandStack.getStackLength() + nArgs;
+            // first arguments/parameters as usual
+            for (int i = 0; i < nPrms - 1; i += 1) {
+                visitArgument(argumentList.get(i), parameters[i].getType());
+            }
+            // wrap remaining arguments in an array for last parameter
+            List<Expression> lastArgs = new ArrayList<>();
+            for (int i = nPrms - 1; i < nArgs; i += 1) {
+                lastArgs.add(argumentList.get(i));
+            }
+            ArrayExpression array = new ArrayExpression(lastPrmType.getComponentType(), lastArgs);
+            array.visit(controller.getAcg());
+            // adjust stack length
+            while (operandStack.getStackLength() < stackLength) {
+                operandStack.push(ClassHelper.OBJECT_TYPE);
+            }
+            if (nArgs == nPrms - 1) {
+                operandStack.remove(1);
+            }
+        } else if (nArgs == nPrms) {
+            for (int i = 0; i < nArgs; i += 1) {
+                visitArgument(argumentList.get(i), parameters[i].getType());
+            }
+        } else { // call with default arguments
+            Expression[] arguments = new Expression[nPrms];
+            for (int i = 0, j = 0; i < nPrms; i += 1) {
+                Parameter p = parameters[i];
+                ClassNode pType = p.getType();
+                Expression a = (j < nArgs ? argumentList.get(j) : null);
+                ClassNode aType = (a == null ? null : typeChooser.resolveType(a, classNode));
+
+                Expression expression = getInitialExpression(p); // default argument
+                if (expression != null && !compatibleArgumentType(aType, pType)) {
+                    arguments[i] = expression;
+                } else if (a != null) {
+                    arguments[i] = a;
+                    j += 1;
+                } else {
+                    controller.getSourceUnit().addFatalError("Binding failed" +
+                            " for arguments [" + argumentList.stream().map(arg -> typeChooser.resolveType(arg, classNode).toString(false)).collect(joining(", ")) + "]" +
+                            " and parameters [" + Arrays.stream(parameters).map(prm -> prm.getType().toString(false)).collect(joining(", ")) + "]", getCurrentCall());
+                }
+            }
+            for (int i = 0; i < nArgs; i += 1) {
+                visitArgument(arguments[i], parameters[i].getType());
+            }
+        }
+        // GRECLIPSE end
+    }
+
+    private static Expression getInitialExpression(final Parameter parameter) {
+        Expression initialExpression = parameter.getNodeMetaData(StaticTypesMarker.INITIAL_EXPRESSION);
+        if (initialExpression == null && parameter.hasInitialExpression()) {
+            initialExpression = parameter.getInitialExpression();
+        }
+        if (initialExpression == null && parameter.getNodeMetaData(Verifier.INITIAL_EXPRESSION) != null) {
+            initialExpression = parameter.getNodeMetaData(Verifier.INITIAL_EXPRESSION);
+        }
+        return initialExpression;
     }
 
     private void visitArgument(final Expression argumentExpr, final ClassNode parameterType) {

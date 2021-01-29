@@ -448,12 +448,16 @@ public class StaticInvocationWriter extends InvocationWriter {
         ClassNode lastArgType = argumentListSize > 0 ?
                 typeChooser.resolveType(argumentList.get(argumentListSize -1), controller.getClassNode()):null;
         if (lastParaType.isArray()
-                && ((argumentListSize > para.length)
+                && (argumentListSize > para.length
+                /* GRECLIPSE edit -- GROOVY-9918
                 || ((argumentListSize == (para.length - 1)) && !lastParaType.equals(lastArgType))
-                || ((argumentListSize == para.length && lastArgType!=null && !lastArgType.isArray())
-                    && (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(lastArgType,lastParaType.getComponentType())))
-                        || ClassHelper.GSTRING_TYPE.equals(lastArgType) && ClassHelper.STRING_TYPE.equals(lastParaType.getComponentType()))
-                ) {
+                */
+                || argumentListSize == para.length - 1
+                // GRECLIPSE end
+                || (argumentListSize == para.length && lastArgType!=null && !lastArgType.isArray()
+                    && (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(lastArgType,lastParaType.getComponentType())
+                        || ClassHelper.GSTRING_TYPE.equals(lastArgType) && ClassHelper.STRING_TYPE.equals(lastParaType.getComponentType())))
+                )) {
             int stackLen = operandStack.getStackLength() + argumentListSize;
             MethodVisitor mv = controller.getMethodVisitor();
             controller.setMethodVisitor(mv);
