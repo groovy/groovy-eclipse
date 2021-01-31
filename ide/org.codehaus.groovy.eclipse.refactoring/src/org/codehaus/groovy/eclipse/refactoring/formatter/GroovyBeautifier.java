@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.ClosuresInCodePredicate;
@@ -123,96 +122,45 @@ public class GroovyBeautifier {
         ASTScanner scanner = new ASTScanner(formatter.getProgressRootNode(), new ListInCodePredicate(), formatter.getProgressDocument());
         scanner.startASTscan();
         for (ASTNode node : scanner.getMatchedNodes().keySet()) {
-            ListExpression listExpr = ((ListExpression) node);
+            ListExpression listExpr = (ListExpression) node;
             GroovyDocumentScanner tokens = formatter.getTokens();
-            Token lastToken = null;
             try {
-                lastToken = tokens.getLastNonWhitespaceTokenBefore(listExpr.getEnd() - 1);
-                if (lastToken == null || lastToken.getType() == GroovyTokenTypeBridge.STRING_CTOR_START) {
-                    // this means we are inside a GString and we won't apply edits here so skip this
+                int lbrackOffset = listExpr.getStart();
+                int rbrackOffset = listExpr.getEnd() - 1;
+                while (Character.isWhitespace(formatter.getProgressDocument().getChar(rbrackOffset))) {
+                    rbrackOffset -= 1;
+                }
+                assert formatter.getProgressDocument().getChar(lbrackOffset) == '[';
+                assert formatter.getProgressDocument().getChar(rbrackOffset) == ']';
+
+                Token penultimate = tokens.getLastNonWhitespaceTokenBefore(rbrackOffset);
+                if (penultimate.getType() == GroovyTokenTypeBridge.STRING_CTOR_START) {
+                    // this means we are inside a GString and we won't apply edits here
                     continue;
                 }
-            } catch (BadLocationException e) {
+
+                boolean wrap = (rbrackOffset - lbrackOffset > preferences.getLongListLength() ||
+                    (listExpr.getExpressions().size() > 1 && hasClosureElement(listExpr)));
+
+                for (Expression exp : listExpr.getExpressions()) {
+                    Token previous = tokens.getLastTokenBefore(exp.getStart());
+                    while (previous.getType() != GroovyTokenTypeBridge.LBRACK && previous.getType() != GroovyTokenTypeBridge.COMMA) {
+                        previous = tokens.getLastTokenBefore(previous);
+                    }
+                    String prefix = (wrap ? formatter.getNewLine() : previous.getType() == GroovyTokenTypeBridge.LBRACK ? "" : " ");
+                    replaceWhiteSpaceAfter(edits, previous, prefix);
+                }
+                String suffix = (wrap || penultimate.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
+                replaceWhiteSpaceAfter(edits, penultimate, suffix);
+            } catch (Exception e) {
                 Util.log(e);
-                continue;
-            }
-
-            int nodeStart = listExpr.getStart();
-            int nodeEnd = listExpr.getEnd();
-            int nodeLen = nodeEnd - nodeStart;
-            nodeLen = correctNodeLen(nodeLen, tokens.tokens, formatter.getNewLine());
-            boolean isLong = nodeLen > preferences.getLongListLength();
-            List<Expression> exps = listExpr.getExpressions();
-
-            // GRECLIPSE-1427 if the next token is 'as', then don't add a newline or remove whitespace
-            Token maybeAs;
-            try {
-                maybeAs = tokens.getNextToken(lastToken);
-            } catch (BadLocationException e) {
-                GroovyCore.logException("Trouble getting next token", e);
-                maybeAs = null;
-            }
-            boolean nextTokenAs = maybeAs != null && maybeAs.getType() == GroovyTokenTypeBridge.LITERAL_as;
-
-            if (isLong || (hasClosureElement(listExpr) && listExpr.getExpressions().size() > 1)) {
-                // split the list
-                for (int i = 0; i < exps.size(); i += 1) {
-                    Expression exp = exps.get(i);
-                    Token before = tokens.getLastTokenBefore(exp.getStart());
-                    try {
-                        while (before.getType() != GroovyTokenTypeBridge.LBRACK && before.getType() != GroovyTokenTypeBridge.COMMA) {
-                            before = tokens.getLastTokenBefore(before);
-                        }
-                        replaceWhiteSpaceAfter(edits, before, formatter.getNewLine());
-                    } catch (BadLocationException e) {
-                        GroovyCore.logException("Trouble formatting list", e);
-                    }
-                }
-                if (!nextTokenAs) {
-                    replaceWhiteSpaceAfter(edits, lastToken, formatter.getNewLine());
-                }
-            } else {
-                // compact the list
-                for (int i = 0; i < exps.size(); i += 1) {
-                    Expression exp = exps.get(i);
-                    Token before = tokens.getLastTokenBefore(exp.getStart());
-                    try {
-                        while (before.getType() != GroovyTokenTypeBridge.LBRACK && before.getType() != GroovyTokenTypeBridge.COMMA) {
-                            before = tokens.getLastTokenBefore(before);
-                        }
-                        replaceWhiteSpaceAfter(edits, before, before.getType() == GroovyTokenTypeBridge.LBRACK ? "" : " ");
-                    } catch (BadLocationException e) {
-                        Util.log(e);
-                    }
-                }
-                if (!nextTokenAs) {
-                    replaceWhiteSpaceAfter(edits, lastToken, lastToken.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
-                }
             }
         }
     }
 
     /**
-     * Corrects node length in case new line token consists of more than one character.
-     *
-     * @param nodeLen original node length
-     * @param tokens a list of node tokens
-     * @return corrected node length
-     */
-    private int correctNodeLen(int nodeLen, List<Token> tokens, String newLine) {
-        if (newLine.length() > 1) {
-            for (Token token : tokens) {
-                if (token.getType() == GroovyTokenTypeBridge.NLS) {
-                    nodeLen -= (newLine.length() - 1);
-                }
-            }
-        }
-        return nodeLen;
-    }
-
-    /**
-     * Create an edit that replaces whitespace tokens immediately after given
-     * token with a String.
+     * Creates edit that replaces whitespace tokens immediately following given
+     * token with specified string.
      */
     private void replaceWhiteSpaceAfter(MultiTextEdit edits, Token token, String replaceWith) {
         GroovyDocumentScanner tokens = formatter.getTokens();
