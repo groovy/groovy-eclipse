@@ -1,13 +1,14 @@
 ###prop
-setPreferences=true
-indentation=space
 tabsize=4
+indentation=space
 indentendOnly=true
+setPreferences=true
 ###src
 if(true)
 println "true"
 else
 println "false"
+
 if(true) {
 println "true"
 } else {
@@ -21,6 +22,12 @@ println "true true"
 } else if (false)
 println "true false"
 
+if(true)
+print 'true'
+else
+if (false)
+print 'false'
+
 if (true)
 if (true)
 print "XXX"
@@ -33,6 +40,7 @@ if(true)
     println "true"
 else
     println "false"
+
 if(true) {
     println "true"
 } else {
@@ -45,6 +53,12 @@ if(true) {
     println "true true"
 } else if (false)
     println "true false"
+
+if(true)
+    print 'true'
+else
+    if (false)
+        print 'false'
 
 if (true)
     if (true)
