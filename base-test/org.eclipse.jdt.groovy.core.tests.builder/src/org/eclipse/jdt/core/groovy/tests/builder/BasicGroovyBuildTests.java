@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1744,7 +1744,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // Construct 'app' project that uses the annotation
         paths = createSimpleProject("app", true);
 
-        env.addRequiredProject(paths[0], annotationProject);
+        env.addRequiredProjectWithoutTestCode(paths[0], annotationProject);
 
         //@formatter:off
         env.addGroovyClass(paths[1], "com.demo", "Widget",
@@ -2408,7 +2408,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
 
-        Problem[] rootProblems = env.getProblemsFor(pathToA);
         // positions should be from the first character of the tag to the character after the last in the text
         expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR));
     }
@@ -2453,7 +2452,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
 
-        Problem[] rootProblems = env.getProblemsFor(pathToA);
         expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR));
     }
 
@@ -3465,7 +3463,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // Construct ProjectB
         paths = createSimpleProject("ProjectB", true);
         IPath projectB = paths[0];
-        env.addRequiredProject(projectB, projectA, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
+        env.addRequiredProjectWithoutTestCode(projectB, projectA, true);
 
         //@formatter:off
         env.addGroovyClass(paths[1], "b", "Hello",
@@ -3480,7 +3478,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // Construct ProjectC
         paths = createSimpleProject("ProjectC", true);
         IPath projectC = paths[0];
-        env.addRequiredProject(projectC, projectB, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
+        env.addRequiredProjectWithoutTestCode(projectC, projectB, true);
 
         //@formatter:off
         env.addGroovyClass(paths[1], "c", "Hello",
@@ -3495,7 +3493,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // Construct ProjectD
         paths = createSimpleProject("ProjectD", true);
         IPath projectD = paths[0];
-        env.addRequiredProject(projectD, projectC, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
+        env.addRequiredProjectWithoutTestCode(projectD, projectC, true);
 
         //@formatter:off
         env.addGroovyClass(paths[1], "d", "Hello",
@@ -3510,6 +3508,62 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         fullBuild();
         expectingCompiledClasses("a.Hello", "b.Hello", "c.Hello", "d.Hello");
         expectingNoProblems();
+    }
+
+    @Test
+    public void testMultiProjectDependenciesMainAndTest() throws Exception {
+        IPath[] paths = createSimpleProject("ProjectA", true);
+        IPath projectA = paths[0];
+
+        env.addGroovyClass(paths[1], "p", "Main", "package p\nclass Main {}\n");
+        env.addGroovyClass(env.addTestPackageFragmentRoot(projectA, "tst"), "p", "Test", "package p\nclass Test {}\n");
+
+        fullBuild(projectA);
+        expectingCompiledClasses("p.Main", "p.Test");
+
+        //
+
+        paths = createSimpleProject("ProjectB", true);
+        IPath projectB = paths[0];
+
+        env.addRequiredProjectWithoutTestCode(projectB, projectA);
+        env.addGroovyClass(paths[1], "script", "new p.Main()\nnew p.Test()\n");
+
+        fullBuild(projectB);
+        expectingCompiledClasses("script");
+        expectingProblemsFor(projectB, Arrays.asList("Problem : Groovy:unable to resolve class p.Test" +
+            " [ resource : </ProjectB/src/script.groovy> range : <17,23> category : <60> severity : <2>]"));
+    }
+
+    @Test // https://bugs.eclipse.org/bugs/show_bug.cgi?id=551129
+    public void testMultiProjectDependenciesMainAndTest2() throws Exception {
+        IPath[] paths = createSimpleProject("ProjectA", true);
+        env.addTestPackageFragmentRoot(paths[0], "x");
+        IPath projectA = paths[0];
+
+        paths = createSimpleProject("ProjectB", true);
+        env.addTestPackageFragmentRoot(paths[0], "y");
+        IPath projectB = paths[0];
+
+        // ProjectB:main requires ProjectA:main
+        env.addRequiredProjectWithoutTestCode(projectB, projectA);
+        // ProjectA:test requires ProjectB:main
+        env.addRequiredTestProjectWithoutTestCode(projectA, projectB);
+
+        fullBuild();
+        // TODO: expectingNoProblems(); // no cycle error; build order could be ProjectA:main, ProjectB:main, ProjectA:test, ProjectB:test
+        expectingProblemsFor(projectA, Arrays.asList(
+            "Problem : One or more cycles were detected in the build path of project 'ProjectA'. The paths towards the cycle and cycle are:\n" +
+                "->{ProjectA, ProjectB} [ resource : </ProjectA> range : <-1,-1> category : <10> severity : <2>]",
+            "Problem : The project cannot be built until build path errors are resolved" +
+                " [ resource : </ProjectA> range : <-1,-1> category : <10> severity : <2>]"
+        ));
+        expectingProblemsFor(projectB, Arrays.asList(
+            "Problem : One or more cycles were detected in the build path of project 'ProjectB'. The paths towards the cycle and cycle are:\n" +
+                "->{ProjectA, ProjectB} [ resource : </ProjectB> range : <-1,-1> category : <10> severity : <2>]",
+            "Problem : The project cannot be built until build path errors are resolved " +
+                "[ resource : </ProjectB> range : <-1,-1> category : <10> severity : <2>]"
+        ));
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/744
