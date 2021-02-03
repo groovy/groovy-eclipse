@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -255,8 +255,16 @@ public class TypeLookupResult {
                         method = VariableScope.resolveTypeParameterization(mapper, method);
                     }
                 }
-                if (method != declaration) {
-                    TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope, extraDoc);
+
+                ClassNode returnType = method.getReturnType();
+                // do not return method type parameters; "def <T> T m()" returns Object if "T" unknown
+                if (method.getGenericsTypes() != null && scope.getMethodCallGenericsTypes() == null &&
+                        GenericsUtils.hasUnresolvedGenerics(returnType) && (mapper = GenericsMapper.gatherGenerics(returnType)).hasGenerics()) {
+                    returnType = VariableScope.resolveTypeParameterization(mapper.fillPlaceholders(method.getGenericsTypes()), VariableScope.clone(returnType.redirect()));
+                }
+
+                if (method != declaration || returnType != method.getReturnType()) {
+                    TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method, confidence, scope, extraDoc);
                     result.enclosingAnnotation = enclosingAnnotation;
                     result.isGroovy = isGroovy;
                     return result;

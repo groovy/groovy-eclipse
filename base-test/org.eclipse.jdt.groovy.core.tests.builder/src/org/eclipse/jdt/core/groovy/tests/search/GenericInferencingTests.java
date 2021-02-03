@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,6 +68,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def xxx = (x*1)..x\n";
 
         assertType(contents, "xxx", "groovy.lang.Range<java.lang.Integer>");
+    }
+
+    @Test
+    public void testList0() {
+        String contents =
+            "def xxx = Collections.emptyList()\n";
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Object>");
     }
 
     @Test // GRECLIPSE-1040
@@ -177,6 +185,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
+    @Test
+    public void testSet0() {
+        String contents =
+            "def xxx = Collections.emptySet()\n";
+
+        assertType(contents, "xxx", "java.util.Set<java.lang.Object>");
+    }
+
     @Test // GRECLIPSE-1040
     public void testSet1() {
         String contents =
@@ -241,6 +257,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def xxx = ints*.shortValue()\n";
 
         assertType(contents, "xxx", "java.util.List<java.lang.Short>");
+    }
+
+    @Test
+    public void testMap0() {
+        String contents =
+            "def xxx = Collections.emptyMap()\n";
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
 
     @Test // GRECLIPSE-1040
@@ -321,7 +345,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def xxx = [:]\n";
 
-        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
+        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>"); // raw type?
     }
 
     @Test
@@ -382,6 +406,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test
     public void testMap17() {
         String contents =
+            "def xxx = ['item'].collectEntries {str -> /*...*/}\n";
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
+    }
+
+    @Test
+    public void testMap18() {
+        String contents =
             "def map = [key:'val']\n" +
             "map.getAt('key').toUpperCase()\n" +
             "map.get('key').toUpperCase()\n" +
@@ -413,7 +445,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testMap18() {
+    public void testMap19() {
         String contents =
             "import groovy.transform.stc.*\n" +
             "def map = [key:'val']\n" +
@@ -468,7 +500,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // methods and property resolution differs
-    public void testMap19() {
+    public void testMap20() {
         String contents =
             "def map = [foo:'bar']\n" +
             "map.getMetaClass()\n" +
@@ -513,7 +545,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testMap20() {
+    public void testMap21() {
         String contents =
             "LinkedHashMap<String,String> map = [foo:'bar']\n" +
             "def put = map.&put\n" +
@@ -820,7 +852,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test
     public void testClosure3() {
         String contents = "def fn = Collections.&emptyList";
-        assertType(contents, "fn", "groovy.lang.Closure<java.util.List<T>>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.util.List<java.lang.Object>>");
     }
 
     @Test

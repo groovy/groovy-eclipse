@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -252,6 +252,22 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
 
     protected boolean hasGenerics() {
         return !allGenerics.isEmpty() && !allGenerics.getLast().isEmpty();
+    }
+
+    protected GenericsMapper fillPlaceholders(final GenericsType[] typeParameters) {
+        for (Map.Entry<String, ClassNode> name2Type : allGenerics.getLast().entrySet()) {
+            ClassNode type = name2Type.getValue(); if (type.isGenericsPlaceHolder()) {
+                for (GenericsType tp : typeParameters) {
+                    if (type.getUnresolvedName().equals(tp.getName())) {
+                        // replace placeholder "T" with type "Number" or "Object" or whatever
+                        type = type.hasMultiRedirect() ? type.asGenericsType().getUpperBounds()[0] : type.redirect();
+                        name2Type.setValue(type);
+                        break;
+                    }
+                }
+            }
+        }
+        return this;
     }
 
     /**
