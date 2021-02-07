@@ -1651,8 +1651,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             dgmReceivers.add(receiverType);
             if (isPrimitiveType(receiverType)) dgmReceivers.add(getWrapper(receiverType));
             for (ClassNode dgmReceiver : dgmReceivers) {
-                List<MethodNode> methods = findDGMMethodsByNameAndArguments(getTransformLoader(), dgmReceiver, "get" + capName, ClassNode.EMPTY_ARRAY);
-                for (MethodNode m : findDGMMethodsByNameAndArguments(getTransformLoader(), dgmReceiver, "is" + capName, ClassNode.EMPTY_ARRAY)) {
+                List<MethodNode> methods = findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "get" + capName, ClassNode.EMPTY_ARRAY);
+                for (MethodNode m : findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "is" + capName, ClassNode.EMPTY_ARRAY)) {
                     if (Boolean_TYPE.equals(getWrapper(m.getReturnType()))) methods.add(m);
                 }
                 if (!methods.isEmpty()) {
@@ -2651,11 +2651,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode receiverType = wrapTypeIfNecessary(currentReceiver.getType());
 
                 candidates = findMethodsWithGenerated(receiverType, nameText);
-                /* GRECLIPSE edit -- GROOVY-9890
-                collectAllInterfaceMethodsByName(receiverType, nameText, candidates);
-                */
                 if (isBeingCompiled(receiverType)) candidates.addAll(GROOVY_OBJECT_TYPE.getMethods(nameText));
-                candidates.addAll(StaticTypeCheckingSupport.findDGMMethodsForClassNode(getTransformLoader(), receiverType, nameText));
+                candidates.addAll(StaticTypeCheckingSupport.findDGMMethodsForClassNode(getSourceUnit().getClassLoader(), receiverType, nameText));
                 candidates = filterMethodsByVisibility(candidates);
 
                 if (!candidates.isEmpty()) {
@@ -5029,7 +5026,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // GRECLIPSE add
         if (!"<init>".equals(name) && !"<clinit>".equals(name))
         // GRECLIPSE end
-        findDGMMethodsByNameAndArguments(getTransformLoader(), receiver, name, args, methods);
+        findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), receiver, name, args, methods);
         methods = filterMethodsByVisibility(methods);
         List<MethodNode> chosen = chooseBestMethod(receiver, methods, args);
         if (!chosen.isEmpty()) return chosen;
