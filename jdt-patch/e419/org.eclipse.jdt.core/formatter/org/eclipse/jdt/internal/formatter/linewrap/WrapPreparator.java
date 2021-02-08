@@ -992,8 +992,9 @@ public class WrapPreparator extends ASTVisitor {
 			if (!statements.isEmpty()) {
 				int openBraceIndex = this.tm.firstIndexBefore(statements.get(0), TokenNameLBRACE);
 				int closeBraceIndex = this.tm.firstIndexAfter(statements.get(statements.size() - 1), TokenNameRBRACE);
-				boolean areKeptOnOneLine = statements.stream()
-						.allMatch(n -> this.tm.firstTokenIn(n, -1).getLineBreaksBefore() == 0);
+				boolean areKeptOnOneLine = this.tm.stream()
+						.skip(openBraceIndex + 1).limit(closeBraceIndex - openBraceIndex - 1)
+						.allMatch(t -> t.getLineBreaksBefore() == 0 && t.getLineBreaksAfter() == 0);
 				if (areKeptOnOneLine) {
 					for (Statement statement : statements)
 						this.wrapIndexes.add(this.tm.firstIndexIn(statement, -1));

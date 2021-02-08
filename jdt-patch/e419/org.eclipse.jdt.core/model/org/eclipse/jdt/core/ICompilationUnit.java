@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -11,8 +11,12 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     IBM Corporation - added J2SE 1.5 support
+ *     Microsoft Corporation - support custom options at compilation unit level
  *******************************************************************************/
 package org.eclipse.jdt.core;
+
+import java.util.Collections;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -421,7 +425,7 @@ ICompilationUnit getPrimary();
  * Returns <code>null</code> if this <code>ICompilationUnit</code> is the primary
  * working copy, or this <code>ICompilationUnit</code> is not a working copy,
  * otherwise the <code>WorkingCopyOwner</code>
- * 
+ *
  * @return <code>null</code> if this <code>ICompilationUnit</code> is the primary
  * working copy, or this <code>ICompilationUnit</code> is not a working copy,
  * otherwise the <code>WorkingCopyOwner</code>
@@ -556,6 +560,56 @@ public boolean hasResourceChanged();
  */
 @Override
 boolean isWorkingCopy();
+
+/**
+ * Sets the ICompilationUnit custom options. All and only the options explicitly included in the given table
+ * are remembered; all previous option settings are forgotten, including ones not explicitly
+ * mentioned.
+ * <p>
+ * For a complete description of the configurable options, see <code>JavaCore#getDefaultOptions</code>.
+ * </p>
+ *
+ * @param newOptions the new custom options for this compilation unit
+ * @see JavaCore#setOptions(java.util.Hashtable)
+ * @since 3.25
+ */
+default void setOptions(Map<String, String> newOptions) {
+}
+
+/**
+ * Returns the table of the current custom options for this ICompilationUnit. If there is no <code>setOptions</code> called
+ * for the ICompliationUnit, then return an empty table.
+ *
+ * @return the table of the current custom options for this ICompilationUnit
+ * @since 3.25
+ */
+default Map<String, String> getCustomOptions() {
+	return Collections.emptyMap();
+}
+
+/**
+ * Returns the table of the options for this ICompilationUnit, which includes its custom options and options
+ * inherited from its parent JavaProject. The boolean argument <code>inheritJavaCoreOptions</code> allows
+ * to directly merge the global ones from <code>JavaCore</code>.
+ * <p>
+ * For a complete description of the configurable options, see <code>JavaCore#getDefaultOptions</code>.
+ * </p>
+ *
+ * @param inheritJavaCoreOptions - boolean indicating whether the JavaCore options should be inherited as well
+ * @return table of current settings of all options
+ * @see JavaCore#getDefaultOptions()
+ * @since 3.25
+ */
+default Map<String, String> getOptions(boolean inheritJavaCoreOptions) {
+	IJavaProject parentProject = getJavaProject();
+	Map<String, String> options = parentProject == null ? JavaCore.getOptions() : parentProject.getOptions(inheritJavaCoreOptions);
+	Map<String, String> customOptions = getCustomOptions();
+	if (customOptions != null) {
+		options.putAll(customOptions);
+	}
+
+	return options;
+}
 
 /**
  * Reconciles the contents of this working copy, sends out a Java delta

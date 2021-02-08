@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -11,6 +11,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Alex Blewitt - alex_blewitt@yahoo.com https://bugs.eclipse.org/bugs/show_bug.cgi?id=171066
+ *     Microsoft Corporation - read formatting options from the compilation unit
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
@@ -142,7 +143,7 @@ public class SortElementsOperation extends JavaModelOperation {
 			}
 
 			Document document= new Document(content);
-			return rewrite.rewriteAST(document, cu.getJavaProject().getOptions(true));
+			return rewrite.rewriteAST(document, cu.getOptions(true));
 		} finally {
 			done();
 		}

@@ -279,13 +279,22 @@ public class OR_OR_Expression extends BinaryExpression {
 	}
 	@Override
 	public void collectPatternVariablesToScope(LocalVariableBinding[] variables, BlockScope scope) {
+		LocalVariableBinding[] temp = variables;
 		this.left.collectPatternVariablesToScope(variables, scope);
 
 		// Just keep the ones in false scope
 		variables = this.left.getPatternVariablesWhenFalse();
 		this.addPatternVariablesWhenFalse(variables);
 
-		this.right.collectPatternVariablesToScope(variables, scope);
+		int length = (variables == null ? 0 : variables.length) + (temp == null ? 0 : temp.length);
+		LocalVariableBinding[] newArray = new LocalVariableBinding[length];
+		if (variables != null) {
+			System.arraycopy(variables, 0, newArray, 0, variables.length);
+		}
+		if (temp != null) {
+			System.arraycopy(temp, 0, newArray, (variables == null ? 0 : variables.length), temp.length);
+		}
+		this.right.collectPatternVariablesToScope(newArray, scope);
 		variables = this.right.getPatternVariablesWhenFalse();
 		this.addPatternVariablesWhenFalse(variables);
 

@@ -2744,8 +2744,10 @@ protected void consumeEmptyStatement() {
 	   we don't know whether it is the first or subsequent statement in a block to be able to
 	   decide whether to call contactNodeLists. See Parser.consumeBlockStatement(s)
 	*/
-	if (this.shouldStackAssistNode && this.assistNode != null)
-		this.astStack[this.astPtr] = this.assistNodeParent instanceof MessageSend ? this.assistNodeParent : this.assistNode;
+	if (this.shouldStackAssistNode && this.assistNode != null) {
+		this.astStack[this.astPtr] = (this.assistNodeParent instanceof MessageSend)
+				|| (this.assistNodeParent instanceof ParameterizedSingleTypeReference) ? this.assistNodeParent : this.assistNode;
+	}
 	this.shouldStackAssistNode = false;
 }
 @Override

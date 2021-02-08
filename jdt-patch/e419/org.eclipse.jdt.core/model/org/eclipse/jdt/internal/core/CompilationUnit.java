@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -13,11 +13,13 @@
  *     IBM Corporation - initial API and implementation
  *     Alex Smirnoff (alexsmr@sympatico.ca) - part of the changes to support Java-like extension
  *                                                            (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=71460)
+ *     Microsoft Corporation - support custom options at compilation unit level
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
@@ -139,7 +141,7 @@ protected boolean buildStructure(OpenableElementInfo info, final IProgressMonito
 
 	boolean computeProblems = perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() && project != null && JavaProject.hasJavaNature(project.getProject());
 	IProblemFactory problemFactory = new DefaultProblemFactory();
-	Map options = project == null ? JavaCore.getOptions() : project.getOptions(true);
+	Map options = this.getOptions(true);
 	if (!computeProblems) {
 		// disable task tags checking to speed up parsing
 		options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
@@ -1459,5 +1461,31 @@ public char[] getModuleName() {
 		e.printStackTrace();
 	}
 	return null;
+}
+
+@Override
+public void setOptions(Map<String, String> newOptions) {
+	Map<String, String> customOptions = newOptions == null ? null : new ConcurrentHashMap<String, String>(newOptions);
+	try {
+		this.getCompilationUnitElementInfo().setCustomOptions(customOptions);
+	} catch (JavaModelException e) {
+		// do nothing
+	}
+}
+
+@Override
+public Map<String, String> getCustomOptions() {
+	try {
+		Map<String, String> customOptions = this.getCompilationUnitElementInfo().getCustomOptions();
+		return customOptions == null ? Collections.emptyMap() : customOptions;
+	} catch (JavaModelException e) {
+		// do nothing
+	}
+
+	return Collections.emptyMap();
+}
+
+private CompilationUnitElementInfo getCompilationUnitElementInfo() throws JavaModelException {
+	return (CompilationUnitElementInfo) this.getElementInfo();
 }
 }

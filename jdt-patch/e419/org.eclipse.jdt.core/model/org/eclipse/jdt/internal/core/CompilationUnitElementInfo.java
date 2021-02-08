@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,14 +10,17 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Microsoft Corporation - support custom options at compilation unit level
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
+
+import java.util.Map;
 
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.SourceRange;
 
 public class CompilationUnitElementInfo extends OpenableElementInfo {
-	
+
 	/**
 	 * Count that will be used by SourceTypeConverter to decide whether or not to diet parse.
 	 */
@@ -41,6 +44,11 @@ public class CompilationUnitElementInfo extends OpenableElementInfo {
 
 	public boolean hasFunctionalTypes = false;
 
+	/**
+	 * The custom options for this compilation unit
+	 */
+	private Map<String, String> customOptions;
+
 /**
  * Returns the length of the source string.
  */
@@ -55,5 +63,19 @@ protected ISourceRange getSourceRange() {
  */
 public void setSourceLength(int newSourceLength) {
 	this.sourceLength = newSourceLength;
+}
+
+/**
+ * Returns the custom options of this compilation unit element.
+ */
+public synchronized Map<String, String> getCustomOptions() {
+	return this.customOptions;
+}
+
+/**
+ * Sets the custom options of this compilation unit element.
+ */
+public synchronized void setCustomOptions(Map<String, String> customOptions) {
+	this.customOptions = customOptions;
 }
 }

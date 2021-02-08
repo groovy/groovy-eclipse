@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-    Copyright (c) 2007, 2014 IBM Corporation and others.
+    Copyright (c) 2007, 2020 IBM Corporation and others.
 
     This program and the accompanying materials
     are made available under the terms of the Eclipse Public License 2.0
@@ -24,15 +24,38 @@
 			<matches pattern="\d+\.\d+\.\d+.*" string="${bundleVersion}"/>
 		</condition>
 		<fail message="bundleVersion variable had unexpected format. Should be digits.digits.digits,ANY but was ${bundleVersion}" unless="bundleVersionOK"/>
-		<script language="javascript">
-			var bundleVersion = project.getProperty("bundleVersion");
-			var pattern = new RegExp(/^(\d+)\.(\d+)\.(\d+)\.(.*)$/);
-			var sArray = pattern.exec(bundleVersion); // sArray 0 is "whole match"
-			project.setProperty("bundleVersionMajor", sArray[1]);
-			project.setProperty("bundleVersionMinor", sArray[2]);
-			project.setProperty("bundleVersionService", sArray[3]);
-			project.setProperty("bundleVersionQualifer", sArray[4])
-		</script>
+		<loadresource property="bundleVersionMajor">
+			<string value="${bundleVersion}"/>
+			<filterchain>
+				<tokenfilter>
+					<replaceregex pattern="^(\d+)\.(\d+)\.(\d+)\.(.*)$" replace="\1"/>
+				</tokenfilter>
+			</filterchain>
+		</loadresource>
+		<loadresource property="bundleVersionMinor">
+			<string value="${bundleVersion}"/>
+			<filterchain>
+				<tokenfilter>
+					<replaceregex pattern="^(\d+)\.(\d+)\.(\d+)\.(.*)$" replace="\2"/>
+				</tokenfilter>
+			</filterchain>
+		</loadresource>
+		<loadresource property="bundleVersionService">
+			<string value="${bundleVersion}"/>
+			<filterchain>
+				<tokenfilter>
+					<replaceregex pattern="^(\d+)\.(\d+)\.(\d+)\.(.*)$" replace="\3"/>
+				</tokenfilter>
+			</filterchain>
+		</loadresource>
+		<loadresource property="bundleVersionQualifer">
+			<string value="${bundleVersion}"/>
+			<filterchain>
+				<tokenfilter>
+					<replaceregex pattern="^(\d+)\.(\d+)\.(\d+)\.(.*)$" replace="\4"/>
+				</tokenfilter>
+			</filterchain>
+		</loadresource>
 		<property name="ecj-temp-folder" value="${basedir}/ecj-temp-folder" />
 		<property name="ecj-temp-src-folder" value="${basedir}/ecj-temp-src-folder" />
 		<mkdir dir="${ecj-temp-src-folder}" />
