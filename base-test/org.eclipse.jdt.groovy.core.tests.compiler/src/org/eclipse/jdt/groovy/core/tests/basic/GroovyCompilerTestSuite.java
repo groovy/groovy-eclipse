@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import java.beans.Introspector;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -27,6 +28,7 @@ import java.util.Map;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.FileLocator;
@@ -184,8 +186,10 @@ public abstract class GroovyCompilerTestSuite {
     @After
     public void tearDownTestCase() throws Exception {
         ReflectionUtils.throwableExecutePrivateMethod(AbstractRegressionTest.class, "tearDown", new Class[0], testDriver, new Object[0]);
+        GenericsUtils.clearParameterizedTypeCache(); // in case "groovy.enable.parameterized.type.cache" set
         GroovyCompilationUnitDeclaration.defaultCheckGenerics = false;
         GroovyParser.debugRequestor = null;
+        Introspector.flushCaches();
     }
 
     protected final boolean isAtLeastJava(final long level) {

@@ -252,8 +252,8 @@ public abstract class StaticTypeCheckingSupport {
     };
 
     // GRECLIPSE add
-    public static void clearExtensionMethodCache() {
-        EXTENSION_METHOD_CACHE.cache.clearAll();
+    public static void clearExtensionMethodCache(ClassLoader loader) {
+        EXTENSION_METHOD_CACHE.cache.remove(loader);
     }
     // GRECLIPSE end
 

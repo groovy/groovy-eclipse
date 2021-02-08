@@ -15,6 +15,7 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler;
 
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.clearExtensionMethodCache;
 import static org.eclipse.jdt.internal.core.ClasspathEntry.NO_ENTRIES;
 
 import java.io.File;
@@ -282,6 +283,12 @@ public final class GroovyClassLoaderFactory {
         private final IProject project;
 
         //
+
+        @Override
+        public void close() throws IOException {
+            clearExtensionMethodCache(this);
+            super.close();
+        }
 
         @Override
         public Enumeration<URL> getResources(final String name) throws IOException {

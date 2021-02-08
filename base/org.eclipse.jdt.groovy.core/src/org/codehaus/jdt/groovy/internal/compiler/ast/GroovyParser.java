@@ -168,8 +168,17 @@ public class GroovyParser {
     }
 
     public void reset() {
-        compilationUnit = null;
-        resolver = null;
+        try {
+            if (compilationUnit != null && compilerOptions.groovyProjectName == null) {
+                compilationUnit.getTransformLoader().close();
+                compilationUnit.getClassLoader().close();
+            }
+        } catch (Exception ignore) {
+            // e.printStackTrace();
+        } finally {
+            compilationUnit = null;
+            resolver = null;
+        }
     }
 
     //--------------------------------------------------------------------------

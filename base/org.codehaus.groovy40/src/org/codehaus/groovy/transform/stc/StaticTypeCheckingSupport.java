@@ -238,6 +238,12 @@ public abstract class StaticTypeCheckingSupport {
         EXTENSION_METHOD_CACHE.cache.clearAll();
     }
 
+    // GRECLIPSE add
+    public static void clearExtensionMethodCache(final ClassLoader loader) {
+        EXTENSION_METHOD_CACHE.cache.remove(loader);
+    }
+    // GRECLIPSE end
+
     /**
      * Returns true for expressions of the form x[...]
      *

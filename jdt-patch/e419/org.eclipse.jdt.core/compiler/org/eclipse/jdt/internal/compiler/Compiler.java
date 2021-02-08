@@ -1025,7 +1025,6 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 	public void reset() {
 		this.lookupEnvironment.reset();
 		// GROOVY add
-		// give the parser a chance to reset as well
 		this.parser.reset();
 		// GROOVY end
 		this.parser.scanner.source = null;
