@@ -32,6 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -162,6 +163,8 @@ public final class GroovyClassLoaderFactory {
                         "Transform classpath: " + String.join(File.pathSeparator, xformPaths));
                 }
 
+                List<GroovyClassLoader> values = new ArrayList<>(3);
+
                 ClassLoader classLoader = getClass().getClassLoader();
                 if (javaProject.exists()) {
                     Set<String> dontCare = new LinkedHashSet<>();
@@ -171,18 +174,26 @@ public final class GroovyClassLoaderFactory {
                     if (!mainOnly.equals(xformPaths)) {
                         classLoader = newClassLoader(mainOnly, classLoader);
                         xformPaths.removeAll(mainOnly); // retain test paths
+
+                        values.add(0, new EclipseGroovyClassLoader(project, classLoader, compilerConfiguration)); // "main" and "eclipse" loader chain
                     }
                 }
                 classLoader = newClassLoader(xformPaths, classLoader);
 
-                return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, new GroovyClassLoader[] {
-                    new GrapeAwareGroovyClassLoader(project, newClassLoader(classPaths, ClassLoader.getSystemClassLoader()), compilerConfiguration),
-                    new EclipseGroovyClassLoader(project, classLoader, compilerConfiguration), // "test" and "main" and "eclipse" class loader chain
-                });
+                values.add(0, new EclipseGroovyClassLoader(project, classLoader, compilerConfiguration)); // "test" and "main" and "eclipse" loader chain
+
+                values.add(0, new GrapeAwareGroovyClassLoader(project, newClassLoader(classPaths, ClassLoader.getSystemClassLoader()), compilerConfiguration));
+
+                return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, values.toArray(new GroovyClassLoader[0]));
             });
 
             if (Arrays.equals(classpathEntries, entry.getKey())) {
-                return entry.getValue();
+                GroovyClassLoader[] values = entry.getValue();
+                if ("main".equals(getCompilationGroup())) {
+                    // for this compilation group, select the "main" only transform loader
+                    return new GroovyClassLoader[] {values[0], values[values.length - 1]};
+                }
+                return Arrays.copyOf(values, 2);
             } else {
                 // project classpath has changed; remove and reload
                 clearCache(projectName);
@@ -191,6 +202,20 @@ public final class GroovyClassLoaderFactory {
         } catch (Exception e) {
             throw new RuntimeException("Failed to bootstrap GroovyClassLoaders for project '" + projectName + "'", e);
         }
+    }
+
+    private String getCompilationGroup() {
+        if (lookupEnvironment != null) {
+            if (lookupEnvironment.nameEnvironment instanceof org.eclipse.jdt.internal.core.builder.NameEnvironment) {
+                return Optional.ofNullable(ReflectionUtils.getPrivateField(org.eclipse.jdt.internal.core.builder.NameEnvironment.class, "compilationGroup", lookupEnvironment.nameEnvironment))
+                    .map(compilationGroup -> compilationGroup.toString().toLowerCase()).orElse(null);
+            }
+            if (lookupEnvironment.nameEnvironment instanceof org.eclipse.jdt.internal.core.SearchableEnvironment) {
+                Boolean excludeTestCode = ReflectionUtils.getPrivateField(org.eclipse.jdt.internal.core.SearchableEnvironment.class, "excludeTestCode", lookupEnvironment.nameEnvironment);
+                return (Boolean.TRUE.equals(excludeTestCode) ? "main" : "test");
+            }
+        }
+        return null;
     }
 
     //--------------------------------------------------------------------------
@@ -298,7 +323,7 @@ public final class GroovyClassLoaderFactory {
                 String exclude = project.getLocation().toOSString();
                 if (!exclude.startsWith("/")) {
                     try {
-                        // normalize "C:\b\a" to "/C:/b/a" for URL comparison
+                        // normalize "C:\b\a" to "/C:/b/a/" for URL comparison
                         exclude = new File(exclude).toURI().toURL().getPath();
                     } catch (Exception ignore) {
                     }

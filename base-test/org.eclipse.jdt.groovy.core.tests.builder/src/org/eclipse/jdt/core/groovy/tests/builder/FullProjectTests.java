@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,5 +139,42 @@ public final class FullProjectTests extends BuilderTestSuite {
         fullBuild(paths[0]);
         Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));
         assertContainsProblem(problems, "Cannot find matching method Foo#xxx");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/903
+    public void testGlobalTransformationFromTestBuildPathEntry() throws Exception {
+        IPath one = env.addProject("One");
+        env.addGroovyJars(one);
+
+        IPath src = env.getPackageFragmentRootPath(one, "src");
+        env.addGroovyClass(src, "p", "X",
+            "package p\n" +
+            "import org.codehaus.groovy.ast.ASTNode\n" +
+            "import org.codehaus.groovy.control.SourceUnit\n" +
+            "@org.codehaus.groovy.transform.GroovyASTTransformation\n" +
+            "class X implements org.codehaus.groovy.transform.ASTTransformation {\n" +
+            "  void visit(ASTNode[] nodes, SourceUnit source) {\n" +
+            "    throw new IllegalStateException('xform fails')\n" +
+            "  }\n" +
+            "}\n");
+        env.addFile(env.addFolder(src, "META-INF/services"), "org.codehaus.groovy.transform.ASTTransformation", "p.X\n");
+        env.fullBuild(one);
+        expectingNoProblemsFor(one);
+
+        //
+
+        IPath two = env.addProject("Two");
+        env.addGroovyJars(two);
+        env.addRequiredTestProject(two, one);
+        src = env.getPackageFragmentRootPath(two, "src");
+        env.addGroovyClass(src, "foo", "Bar", "package foo\nclass Bar {}\n");
+        IPath tests = env.addGroovyClass(env.addTestPackageFragmentRoot(two, "tests"), "foo", "Baz", "package foo\nclass Baz {}\n");
+
+        // global transform p.X from One should not run for non-test source foo/Bar.groovy
+        env.fullBuild(two);
+        expectingNoProblemsFor(src);
+        expectingProblemsFor(tests, java.util.Arrays.asList(
+            "## exception in phase 'canonicalization' in source unit '##' xform fails" +
+            " [ resource : </Two/tests/foo/Baz.groovy> range : <0,1> category : <60> severity : <2>]"));
     }
 }
