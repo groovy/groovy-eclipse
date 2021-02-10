@@ -2173,6 +2173,9 @@ public abstract class StaticTypeCheckingSupport {
         copyConf.setPreviewFeatures(false);
         // GRECLIPSE end
         CompilationUnit cu = new CompilationUnit(copyConf);
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         cu.addClassNode(node);
         cu.compile(Phases.CLASS_GENERATION);
         List<GroovyClass> classes = cu.getClasses();
@@ -2182,6 +2185,11 @@ public abstract class StaticTypeCheckingSupport {
         } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
         }
+        // GRECLIPSE add
+        } finally {
+            org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport.closeQuietly(cu.getClassLoader());
+        }
+        // GRECLIPSE end
     }
 
     /**
