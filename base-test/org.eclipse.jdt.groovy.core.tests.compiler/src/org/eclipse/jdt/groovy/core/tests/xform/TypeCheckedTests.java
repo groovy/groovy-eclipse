@@ -817,4 +817,23 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[]");
     }
+
+    @Test
+    public void testTypeChecked9935() {
+        for (String type : new String[] {"def", "int", "Integer", "BigInteger", "BigDecimal"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.TypeChecked\n" +
+                "Number f() {\n" +
+                "  " + type + " n = 42\n" +
+                "  return n\n" +
+                "}\n" +
+                "print f()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "42");
+        }
+    }
 }

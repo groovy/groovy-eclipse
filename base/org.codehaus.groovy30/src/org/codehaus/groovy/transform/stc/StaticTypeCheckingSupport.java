@@ -84,6 +84,7 @@ import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.GSTRING_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Long_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Number_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Short_TYPE;
@@ -657,22 +658,22 @@ public abstract class StaticTypeCheckingSupport {
             return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType(), rightExpression, false);
         }
 
-        if (right == VOID_TYPE || right == void_WRAPPER_TYPE) {
-            return left == VOID_TYPE || left == void_WRAPPER_TYPE;
+        if (rightRedirect == VOID_TYPE || rightRedirect == void_WRAPPER_TYPE) {
+            return leftRedirect == VOID_TYPE || leftRedirect == void_WRAPPER_TYPE;
         }
 
-        if ((isNumberType(rightRedirect) || WideningCategories.isNumberCategory(rightRedirect))) {
-            if (BigDecimal_TYPE == leftRedirect) {
+        if (isNumberType(rightRedirect) || WideningCategories.isNumberCategory(rightRedirect)) {
+            if (leftRedirect.equals(BigDecimal_TYPE) || leftRedirect.equals(Number_TYPE)) { // GRECLIPSE add -- GROOVY-9935
                 // any number can be assigned to a big decimal
                 return true;
             }
-            if (BigInteger_TYPE == leftRedirect) {
+            if (leftRedirect.equals(BigInteger_TYPE)) {
                 return WideningCategories.isBigIntCategory(getUnwrapper(rightRedirect)) || rightRedirect.isDerivedFrom(BigInteger_TYPE);
             }
         }
 
         // if rightExpression is null and leftExpression is not a primitive type, it's ok
-        boolean rightExpressionIsNull = (rightExpression instanceof ConstantExpression && ((ConstantExpression) rightExpression).isNullExpression());
+        boolean rightExpressionIsNull = org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant(rightExpression);
         if (rightExpressionIsNull && !isPrimitiveType(left)) {
             return true;
         }
@@ -680,7 +681,7 @@ public abstract class StaticTypeCheckingSupport {
         // on an assignment everything that can be done by a GroovyCast is allowed
 
         // anything can be assigned to an Object, String, Boolean or Class typed variable
-        if (isWildcardLeftHandSide(leftRedirect) && !(boolean_TYPE.equals(left) && rightExpressionIsNull)) return true;
+        if (isWildcardLeftHandSide(leftRedirect) && !(left.equals(boolean_TYPE) && rightExpressionIsNull)) return true;
 
         // char as left expression
         if (leftRedirect == char_TYPE && rightRedirect == STRING_TYPE) {
@@ -694,7 +695,7 @@ public abstract class StaticTypeCheckingSupport {
         }
 
         // if left is Enum and right is String or GString we do valueOf
-        if (leftRedirect.isDerivedFrom(Enum_Type) && (rightRedirect == GSTRING_TYPE || rightRedirect == STRING_TYPE)) {
+        if (leftRedirect.isDerivedFrom(Enum_Type) && (rightRedirect == STRING_TYPE || rightRedirect.equals(GSTRING_TYPE))) {
             return true;
         }
 
@@ -721,7 +722,7 @@ public abstract class StaticTypeCheckingSupport {
             return true;
         }
 
-        if (GROOVY_OBJECT_TYPE.equals(leftRedirect) && isBeingCompiled(right)) {
+        if (leftRedirect.equals(GROOVY_OBJECT_TYPE) && isBeingCompiled(right)) {
             return true;
         }
 
