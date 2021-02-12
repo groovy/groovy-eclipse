@@ -700,6 +700,36 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9891() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Pojo pojo) {\n" +
+            "  Collection<? extends Number> c = pojo.map.values()\n" +
+            "  Iterable<? extends Number> i = pojo.map.values()\n" + // Cannot assign Collection<? extends Number> to Iterable<? extends Number>
+            "  print i.iterator().next()\n" +
+            "}\n" +
+            "test(new Pojo(map: [x:1,y:2,z:3.4]))\n",
+
+            "Pojo.java",
+            "import java.util.Map;\n" +
+            "class Pojo {\n" +
+            "  Map<String, ? extends Number> getMap() {\n" +
+            "    return map;\n" +
+            "  }\n" +
+            "  void setMap(Map<String, ? extends Number> map) {\n" +
+            "    this.map = map;\n" +
+            "  }\n" +
+            "  private Map<String, ? extends Number> map = null;\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
     public void testTypeChecked9902() {
         //@formatter:off
         String[] sources = {

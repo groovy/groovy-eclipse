@@ -421,6 +421,14 @@ public class GenericsUtils {
             String name = type.getName();
             ret = genericsSpec.get(name);
         }
+        // GRECLIPSE add -- GROOVY-9891
+        else if (type.isWildcard()) {
+            ret = type.getLowerBound(); // use lower or upper
+            if (ret == null && type.getUpperBounds() != null) {
+                ret = type.getUpperBounds()[0]; // ? supports 1
+            }
+        }
+        // GRECLIPSE end
         if (ret == null) ret = type.getType();
         return ret;
     }
