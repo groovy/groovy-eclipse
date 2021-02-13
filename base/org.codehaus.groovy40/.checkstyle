@@ -62,6 +62,7 @@
         <file-match-pattern match-pattern="groovy/transform/ASTTestTransformation.groovy" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationCollectorCodeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/DelegateASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/FieldASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/LogASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/NotYetImplemented.java" include-pattern="false" />

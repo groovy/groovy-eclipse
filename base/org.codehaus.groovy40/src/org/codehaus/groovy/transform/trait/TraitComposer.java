@@ -520,7 +520,7 @@ public abstract class TraitComposer {
         superCall.setImplicitThis(false);
         CastExpression proxyReceiver = new CastExpression(Traits.GENERATED_PROXY_CLASSNODE, new VariableExpression("this"));
         MethodCallExpression getProxy = new MethodCallExpression(proxyReceiver, "getProxyTarget", ArgumentListExpression.EMPTY_ARGUMENTS);
-        getProxy.setImplicitThis(true);
+        getProxy.setImplicitThis(false); // GRECLIPSE edit -- GROOVY-9938
         StaticMethodCallExpression proxyCall = new StaticMethodCallExpression(
                 ClassHelper.make(InvokerHelper.class),
                 "invokeMethod",
