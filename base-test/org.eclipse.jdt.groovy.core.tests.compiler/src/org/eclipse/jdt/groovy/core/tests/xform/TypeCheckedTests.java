@@ -866,4 +866,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             runConformTest(sources, "42");
         }
     }
+
+    @Test
+    public void testTypeChecked9945() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I<T> {\n" +
+            "}\n" +
+            "class A<T> implements I<Character> {\n" +
+            "  void m(T t) {\n" +
+            "    print t\n" +
+            "  }\n" +
+            "}\n" +
+            "class B<T> extends A<T> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new B<Integer>().m(42)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
 }

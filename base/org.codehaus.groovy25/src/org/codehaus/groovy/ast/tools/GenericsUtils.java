@@ -783,6 +783,7 @@ public class GenericsUtils {
 
     // Backported from 3.0.0
     private static ClassNode findParameterizedType(ClassNode genericsClass, ClassNode actualType, boolean tryToFindExactType) {
+        /* GRECLIPSE edit -- GROOVY-9945
         ClassNode parameterizedType = null;
 
         if (null == genericsClass.getGenericsTypes()) {
@@ -820,8 +821,48 @@ public class GenericsUtils {
         }
 
         return parameterizedType;
+        */
+        final GenericsType[] genericsTypes = genericsClass.getGenericsTypes();
+        if (genericsTypes == null || genericsClass.isGenericsPlaceHolder()) {
+            return null;
+        }
+
+        if (actualType.equals(genericsClass)) {
+            return actualType;
+        }
+
+        java.util.Set<ClassNode> done = new java.util.HashSet<>();
+        LinkedList<ClassNode> todo = new LinkedList<>();
+        todo.add(actualType);
+        ClassNode type;
+
+        while ((type = todo.poll()) != null) {
+            if (type.equals(genericsClass)) {
+                return type;
+            }
+            if (done.add(type)) {
+                boolean parameterized = (type.getGenericsTypes() != null);
+                for (ClassNode cn : type.getInterfaces()) {
+                    if (parameterized)
+                        cn = parameterizeType(type, cn);
+                    todo.add(cn);
+                }
+                if (!actualType.isInterface()) {
+                    ClassNode cn = type.getUnresolvedSuperClass();
+                    if (cn != null && cn.redirect() != ClassHelper.OBJECT_TYPE) {
+                        if (parameterized)
+                            cn = parameterizeType(type, cn);
+                        todo.add(cn);
+                    }
+                }
+            }
+        }
+
+        return null;
+        // GRECLIPSE end
     }
 
+    /* GRECLIPSE edit
     private static boolean isGenericsTypeArraysLengthEqual(GenericsType[] declaringGenericsTypes, GenericsType[] actualGenericsTypes) {
         return null != actualGenericsTypes && declaringGenericsTypes.length == actualGenericsTypes.length;
     }
@@ -848,6 +889,7 @@ public class GenericsUtils {
 
         return superClassNodeList;
     }
+    */
 
     private static final EvictableCache<ParameterizedTypeCacheKey, SoftReference<ClassNode>> PARAMETERIZED_TYPE_CACHE = new ConcurrentSoftCache<>(64);
 
@@ -969,18 +1011,11 @@ public class GenericsUtils {
         return checkPlaceHolders(parameterizedType, genericsType -> genericsType.isPlaceholder());
     }
 
-    /**
-     * Check whether the ClassNode has non generics placeholders, aka not placeholder
-     * <p>
-     * Backported from 3.0.0
-     *
-     * @param parameterizedType the class node
-     * @return the result
-     * @since 2.5.9
-     */
+    /* GRECLIPSE edit
     private static boolean hasNonPlaceHolders(final ClassNode parameterizedType) {
         return checkPlaceHolders(parameterizedType, genericsType -> !genericsType.isPlaceholder());
     }
+    */
 
     // GRECLIPSE add
     /**
