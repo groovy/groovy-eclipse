@@ -1111,20 +1111,33 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void inferDiamondType(final ConstructorCallExpression cce, final ClassNode lType) {
+        ClassNode cceType = cce.getType(), inferredType = lType;
         // check if constructor call expression makes use of the diamond operator
-        ClassNode node = cce.getType();
-        if (node.isUsingGenerics() && node.getGenericsTypes() != null && node.getGenericsTypes().length == 0) {
+        if (cceType.getGenericsTypes() != null && cceType.getGenericsTypes().length == 0) {
             ArgumentListExpression argumentListExpression = InvocationWriter.makeArgumentList(cce.getArguments());
+            /* GRECLIPSE edit -- GROOVY-9948
             if (argumentListExpression.getExpressions().isEmpty()) {
-                adjustGenerics(lType, node);
+                adjustGenerics(lType, cceType);
             } else {
                 ClassNode type = getType(argumentListExpression.getExpression(0));
                 if (type.isUsingGenerics()) {
-                    adjustGenerics(type, node);
+                    adjustGenerics(type, cceType);
                 }
             }
             // store inferred type on CCE
-            storeType(cce, node);
+            storeType(cce, cceType);
+            */
+            ConstructorNode constructor = cce.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (!argumentListExpression.getExpressions().isEmpty() && constructor != null) {
+                ClassNode type = GenericsUtils.parameterizeType(cceType, cceType);
+                type = inferReturnTypeGenerics(type, constructor, argumentListExpression);
+                if (type.isUsingGenerics()) {
+                    inferredType = type;
+                }
+            }
+            adjustGenerics(inferredType, cceType);
+            storeType(cce, cceType);
+            // GRECLIPSE end
         }
     }
 
@@ -5441,7 +5454,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             MethodNode method,
             Expression arguments,
             GenericsType[] explicitTypeHints) {
-        ClassNode returnType = method.getReturnType();
+        ClassNode returnType = method instanceof ConstructorNode ? method.getDeclaringClass() : method.getReturnType(); // GRECLIPSE edit -- GROOVY-9948
         if (method instanceof ExtensionMethodNode
                 && (isUsingGenericsOrIsArrayUsingGenerics(returnType))) {
             // check if the placeholder corresponds to the placeholder of the first parameter

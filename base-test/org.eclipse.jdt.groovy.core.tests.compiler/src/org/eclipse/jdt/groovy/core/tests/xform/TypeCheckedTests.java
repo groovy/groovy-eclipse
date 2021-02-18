@@ -891,4 +891,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "42");
     }
+
+    @Test
+    public void testTypeChecked9948() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class C<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  C<Integer> c = new C<>(1)\n" +
+            "  print(c.p < 10)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
 }
