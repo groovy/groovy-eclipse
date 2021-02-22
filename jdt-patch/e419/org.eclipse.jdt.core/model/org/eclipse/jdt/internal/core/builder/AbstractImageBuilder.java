@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -67,25 +67,16 @@ protected Set<SourceFile> filesWithAnnotations = null;
 //2000 is best compromise between space used and speed
 public static int MAX_AT_ONCE = Integer.getInteger(JavaModelManager.MAX_COMPILED_UNITS_AT_ONCE, 2000).intValue();
 public final static String[] JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES = {
-	IMarker.MESSAGE,
-	IMarker.SEVERITY,
-	IJavaModelMarker.ID,
-	IMarker.CHAR_START,
-	IMarker.CHAR_END,
-	IMarker.LINE_NUMBER,
-	IJavaModelMarker.ARGUMENTS,
-	IJavaModelMarker.CATEGORY_ID,
-};
-public final static String[] JAVA_TASK_MARKER_ATTRIBUTE_NAMES = {
-	IMarker.MESSAGE,
-	IMarker.PRIORITY,
-	IJavaModelMarker.ID,
-	IMarker.CHAR_START,
-	IMarker.CHAR_END,
-	IMarker.LINE_NUMBER,
-	IMarker.USER_EDITABLE,
-	IMarker.SOURCE_ID,
-};
+		IMarker.MESSAGE,
+		IMarker.SEVERITY,
+		IJavaModelMarker.ID,
+		IMarker.CHAR_START,
+		IMarker.CHAR_END,
+		IMarker.LINE_NUMBER,
+		IJavaModelMarker.ARGUMENTS,
+		IJavaModelMarker.CATEGORY_ID,
+	};
+
 public final static Integer S_ERROR = Integer.valueOf(IMarker.SEVERITY_ERROR);
 public final static Integer S_WARNING = Integer.valueOf(IMarker.SEVERITY_WARNING);
 public final static Integer S_INFO = Integer.valueOf(IMarker.SEVERITY_INFO);
@@ -737,16 +728,14 @@ protected void storeProblemsFor(SourceFile sourceFile, CategorizedProblem[] prob
 				JavaBuilder.removeProblemsAndTasksFor(this.javaBuilder.currentProject); // make this the only problem for this project
 				this.keepStoringProblemMarkers = false;
 			}
-			IMarker marker = this.javaBuilder.currentProject.createMarker(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER);
-			marker.setAttributes(
-				new String[] {IMarker.MESSAGE, IMarker.SEVERITY, IJavaModelMarker.CATEGORY_ID, IMarker.SOURCE_ID},
-				new Object[] {
-					buildPathProblemMessage,
-					Integer.valueOf(isInvalidClasspathError ? IMarker.SEVERITY_ERROR : IMarker.SEVERITY_WARNING),
-					Integer.valueOf(CategorizedProblem.CAT_BUILDPATH),
-					JavaBuilder.SOURCE_ID
-				}
-			);
+
+			Map<String,Object> attributes = new HashMap<>();
+			attributes.put(IMarker.MESSAGE, buildPathProblemMessage);
+			attributes.put(IMarker.SEVERITY, Integer.valueOf(isInvalidClasspathError ? IMarker.SEVERITY_ERROR : IMarker.SEVERITY_WARNING));
+			attributes.put(IJavaModelMarker.CATEGORY_ID, Integer.valueOf(CategorizedProblem.CAT_BUILDPATH));
+			attributes.put(IMarker.SOURCE_ID, JavaBuilder.SOURCE_ID);
+
+			this.javaBuilder.currentProject.createMarker(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, attributes);
 			// even if we're not keeping more markers, still fall through rest of the problem reporting, so that offending
 			// IsClassPathCorrect problem gets recorded since it may help locate the offending reference
 		}
@@ -787,41 +776,42 @@ protected void storeProblemsFor(SourceFile sourceFile, CategorizedProblem[] prob
 					}
 				}
 			}
-			IMarker marker = resource.createMarker(markerType);
 
-			String[] attributeNames = JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES;
-			int standardLength = attributeNames.length;
-			String[] allNames = attributeNames;
-			int managedLength = managedProblem ? 0 : 1;
+			int attributesLength = JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES.length;
+			if (!managedProblem) {
+				attributesLength++;
+			}
+			// optional extra attributes
 			String[] extraAttributeNames = problem.getExtraMarkerAttributeNames();
-			int extraLength = extraAttributeNames == null ? 0 : extraAttributeNames.length;
-			if (managedLength > 0 || extraLength > 0) {
-				allNames = new String[standardLength + managedLength + extraLength];
-				System.arraycopy(attributeNames, 0, allNames, 0, standardLength);
-				if (managedLength > 0)
-					allNames[standardLength] = IMarker.SOURCE_ID;
-				System.arraycopy(extraAttributeNames, 0, allNames, standardLength + managedLength, extraLength);
+			Object[] extraAttributeValues = problem.getExtraMarkerAttributeValues();
+			boolean extraAttributesExist = false;
+			if (extraAttributeNames != null && extraAttributeValues != null
+								&& extraAttributeNames.length == extraAttributeValues.length) {
+				attributesLength += extraAttributeNames.length;
+				extraAttributesExist = true;
 			}
 
-			Object[] allValues = new Object[allNames.length];
-			// standard attributes
-			int index = 0;
-			allValues[index++] = problem.getMessage(); // message
-			allValues[index++] = problem.isError() ? S_ERROR : problem.isWarning() ? S_WARNING : S_INFO; // severity
-			allValues[index++] = Integer.valueOf(id); // ID
-			allValues[index++] = Integer.valueOf(problem.getSourceStart()); // start
-			allValues[index++] = Integer.valueOf(problem.getSourceEnd() + 1); // end
-			allValues[index++] = Integer.valueOf(problem.getSourceLineNumber()); // line
-			allValues[index++] = Util.getProblemArgumentsForMarker(problem.getArguments()); // arguments
-			allValues[index++] = Integer.valueOf(problem.getCategoryID()); // category ID
-			// SOURCE_ID attribute for JDT problems
-			if (managedLength > 0)
-				allValues[index++] = JavaBuilder.SOURCE_ID;
-			// optional extra attributes
-			if (extraLength > 0)
-				System.arraycopy(problem.getExtraMarkerAttributeValues(), 0, allValues, index, extraLength);
+			Map<String, Object> attributes = new HashMap<>(attributesLength, 1.0f);
+			attributes.put(JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES[0], problem.getMessage()); //MESSAGE
+			attributes.put(JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES[1], problem.isError() ? S_ERROR : problem.isWarning() ? S_WARNING : S_INFO);//SEVERITY
+			attributes.put(JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES[2], Integer.valueOf(id));//ID
+			attributes.put(JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES[3], Integer.valueOf(problem.getSourceStart()));//CHAR_START
+			attributes.put(JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES[4], Integer.valueOf(problem.getSourceEnd() + 1));//CHAR_END,
+			attributes.put(JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES[5], Integer.valueOf(problem.getSourceLineNumber()));//LINE_NUMBER
+			attributes.put(JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES[6], Util.getProblemArgumentsForMarker(problem.getArguments()));//ARGUMENTS
+			attributes.put(JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES[7], Integer.valueOf(problem.getCategoryID()));//CATEGORY_ID
 
-			marker.setAttributes(allNames, allValues);
+			// SOURCE_ID attribute for JDT problems
+			if (!managedProblem) {
+				attributes.put(IMarker.SOURCE_ID, JavaBuilder.SOURCE_ID);
+			}
+
+			if (extraAttributesExist) {
+				for (int j = 0; j < extraAttributeNames.length; j++) {
+					attributes.put(extraAttributeNames[j], extraAttributeValues[j]);
+				}
+			}
+			resource.createMarker(markerType, attributes);
 
 			if (!this.keepStoringProblemMarkers) return; // only want the one error recorded on this source file
 		}
@@ -835,7 +825,6 @@ protected void storeTasksFor(SourceFile sourceFile, CategorizedProblem[] tasks) 
 	for (int i = 0, l = tasks.length; i < l; i++) {
 		CategorizedProblem task = tasks[i];
 		if (task.getID() == IProblem.Task) {
-			IMarker marker = resource.createMarker(IJavaModelMarker.TASK_MARKER);
 			Integer priority = P_NORMAL;
 			String compilerPriority = task.getArguments()[2];
 			if (JavaCore.COMPILER_TASK_PRIORITY_HIGH.equals(compilerPriority))
@@ -843,33 +832,29 @@ protected void storeTasksFor(SourceFile sourceFile, CategorizedProblem[] tasks) 
 			else if (JavaCore.COMPILER_TASK_PRIORITY_LOW.equals(compilerPriority))
 				priority = P_LOW;
 
-			String[] attributeNames = JAVA_TASK_MARKER_ATTRIBUTE_NAMES;
-			int standardLength = attributeNames.length;
-			String[] allNames = attributeNames;
+			// standard attributes
+			Map<String, Object> attributes = new HashMap<>();
+
+			attributes.put(IMarker.MESSAGE, task.getMessage());
+			attributes.put(IMarker.PRIORITY, priority);
+			attributes.put(IJavaModelMarker.ID, Integer.valueOf(task.getID()));
+			attributes.put(IMarker.CHAR_START, Integer.valueOf(task.getSourceStart()));
+			attributes.put(IMarker.CHAR_END, Integer.valueOf(task.getSourceEnd() + 1));
+			attributes.put(IMarker.LINE_NUMBER, Integer.valueOf(task.getSourceLineNumber()));
+			attributes.put(IMarker.USER_EDITABLE, Boolean.FALSE);
+			attributes.put(IMarker.SOURCE_ID, JavaBuilder.SOURCE_ID);
+
+			// optional extra attributes
 			String[] extraAttributeNames = task.getExtraMarkerAttributeNames();
-			int extraLength = extraAttributeNames == null ? 0 : extraAttributeNames.length;
-			if (extraLength > 0) {
-				allNames = new String[standardLength + extraLength];
-				System.arraycopy(attributeNames, 0, allNames, 0, standardLength);
-				System.arraycopy(extraAttributeNames, 0, allNames, standardLength, extraLength);
+			Object[] extraAttributeValues = task.getExtraMarkerAttributeValues();
+			if (extraAttributeNames != null && extraAttributeValues != null
+					&& extraAttributeNames.length == extraAttributeValues.length) {
+				for (int j = 0; j < extraAttributeNames.length; j++) {
+					attributes.put(extraAttributeNames[j], extraAttributeValues[j]);
+				}
 			}
 
-			Object[] allValues = new Object[allNames.length];
-			// standard attributes
-			int index = 0;
-			allValues[index++] = task.getMessage();
-			allValues[index++] = priority;
-			allValues[index++] = Integer.valueOf(task.getID());
-			allValues[index++] = Integer.valueOf(task.getSourceStart());
-			allValues[index++] = Integer.valueOf(task.getSourceEnd() + 1);
-			allValues[index++] = Integer.valueOf(task.getSourceLineNumber());
-			allValues[index++] = Boolean.FALSE;
-			allValues[index++] = JavaBuilder.SOURCE_ID;
-			// optional extra attributes
-			if (extraLength > 0)
-				System.arraycopy(task.getExtraMarkerAttributeValues(), 0, allValues, index, extraLength);
-
-			marker.setAttributes(allNames, allValues);
+			resource.createMarker(IJavaModelMarker.TASK_MARKER, attributes);
 		}
 	}
 }

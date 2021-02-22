@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -4940,5 +4940,43 @@ public class JavadocTestForMethod extends JavadocTest {
 			"	                                                    ^^^^^^^^^^^^^^^^\n" +
 			"Javadoc: Invalid parameters declaration\n" +
 			"----------\n");
+	}
+
+	public void test164() {
+		this.runNegativeReferenceTest(
+			new String[] {
+				"X.java",
+				"package test;\n"
+					+ "public class X {\n"
+					+ "	/**\n"
+					+ "	 * Invalid param and throws tags\n"
+					+ "	 * \n"
+					+ "	 * @param\n"
+					+ "	 * @throws\n"
+					+ "	 */\n"
+					+ "	public void s_foo(int a) throws Exception {\n"
+					+ "	}\n"
+					+ "}\n" },
+					"----------\n"
+					+ "1. ERROR in X.java (at line 6)\n"
+					+ "	* @param\n"
+					+ "	   ^^^^^\n"
+					+ "Javadoc: Missing parameter name\n"
+					+ "----------\n"
+					+ "2. ERROR in X.java (at line 7)\n"
+					+ "	* @throws\n"
+					+ "	   ^^^^^^\n"
+					+ "Javadoc: Missing class name\n"
+					+ "----------\n"
+					+ "3. ERROR in X.java (at line 9)\n"
+					+ "	public void s_foo(int a) throws Exception {\n"
+					+ "	                      ^\n"
+					+ "Javadoc: Missing tag for parameter a\n"
+					+ "----------\n"
+					+ "4. ERROR in X.java (at line 9)\n"
+					+ "	public void s_foo(int a) throws Exception {\n"
+					+ "	                                ^^^^^^^^^\n"
+					+ "Javadoc: Missing tag for declared exception Exception\n"
+					+ "----------\n");
 	}
 }

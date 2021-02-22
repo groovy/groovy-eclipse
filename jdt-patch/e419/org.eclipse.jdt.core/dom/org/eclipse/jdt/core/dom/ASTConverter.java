@@ -1613,7 +1613,7 @@ class ASTConverter {
 					String lineDelimiter = Util.findLineSeparator(source);
 					if (lineDelimiter == null) lineDelimiter = System.getProperty("line.separator");//$NON-NLS-1$
 					message.append(lineDelimiter);
-					message.append(bugs.replaceAll("\n", lineDelimiter)); //$NON-NLS-1$
+					message.append(bugs.replace("\n", lineDelimiter)); //$NON-NLS-1$
 					message.append(lineDelimiter);
 					message.append("----------------------------------- SOURCE BEGIN -------------------------------------"); //$NON-NLS-1$
 					message.append(lineDelimiter);

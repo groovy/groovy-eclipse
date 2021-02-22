@@ -119,7 +119,7 @@ public boolean ignoreOptionalProblems() {
 	return this.sourceLocation.ignoreOptionalProblems;
 }
 @Override
-public String getExternalAnnotationPath() {
+public String getExternalAnnotationPath(String qualifiedTypeName) {
 	return this.sourceLocation.externalAnnotationPath;
 }
 String typeLocator() {

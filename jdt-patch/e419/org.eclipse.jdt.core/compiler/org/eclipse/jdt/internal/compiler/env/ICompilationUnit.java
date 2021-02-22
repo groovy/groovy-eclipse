@@ -78,6 +78,6 @@ default String getDestinationPath() {
  * Answers a path for external annotations that has been configured for
  * the providing classpath entry, or <code>null</code>.
  */
-default String getExternalAnnotationPath() { return null; }
+default String getExternalAnnotationPath(String qualifiedTypeName) { return null; }
 
 }

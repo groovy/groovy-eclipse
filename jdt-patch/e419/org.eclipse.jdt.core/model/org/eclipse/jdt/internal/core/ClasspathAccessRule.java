@@ -21,8 +21,12 @@ import org.eclipse.jdt.internal.compiler.env.AccessRule;
 
 public class ClasspathAccessRule extends AccessRule implements IAccessRule {
 
+	private IPath path;
+
 	public ClasspathAccessRule(IPath pattern, int kind) {
 		this(pattern.toString().toCharArray(), toProblemId(kind));
+		// avoid IPath creation (Bug 571159):
+		this.path = pattern;
 	}
 
 	public ClasspathAccessRule(char[] pattern, int problemId) {
@@ -43,7 +47,11 @@ public class ClasspathAccessRule extends AccessRule implements IAccessRule {
 
 	@Override
 	public IPath getPattern() {
-		return new Path(new String(this.pattern));
+		if (this.path == null) {
+			// cache the IPath (Bug 571159):
+			this.path = new Path(new String(this.pattern));
+		}
+		return this.path;
 	}
 
 	@Override

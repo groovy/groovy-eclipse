@@ -2919,15 +2919,14 @@ private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBin
 			}
 		}
 	}
+	if (this.externalAnnotationProvider != null)
+		ExternalAnnotationSuperimposer.annotateMethodBinding(method, arguments, this.externalAnnotationProvider, this.environment);
 	if (compilerOptions.storeAnnotations)
 		createArgumentBindings(method, compilerOptions); // need annotations resolved already at this point
 	if (foundReturnTypeProblem)
 		return method; // but its still unresolved with a null return type & is still connected to its method declaration
 
 	method.modifiers &= ~ExtraCompilerModifiers.AccUnresolved;
-	if (this.externalAnnotationProvider != null) {
-		ExternalAnnotationSuperimposer.annotateMethodBinding(method, arguments, this.externalAnnotationProvider, this.environment);
-	}
 	return method;
 }
 

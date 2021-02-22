@@ -927,24 +927,24 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 		Util.createFile(annots_java_lang + File.separator + "Object.eea",
 				TEST_440687_OBJECT_EEA_CONTENT);
 
-		runTest440687("-annotationpath CLASSPATH -classpath \"" + annots_dir2 + "\"", 
-				File.pathSeparator + annots_dir1, // extra source path 
-				"----------\n" + 
-				"1. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" + 
-				"	Test1 v = map.get(key);\n" + 
-				"	          ^^^^^^^^^^^^\n" + 
-				"Unsafe interpretation of method return type as \'@NonNull\' based on the receiver type \'@NonNull Map<@NonNull String,@NonNull Test1>\'. Type \'Map<K,V>\' doesn\'t seem to be designed with null type annotations in mind\n" + 
-				"----------\n" + 
-				"2. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 11)\n" + 
-				"	throw new RuntimeException(); // should not be reported as dead code, although V is a \'@NonNull Test1\'\n" + 
-				"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"Dead code\n" + 
-				"----------\n" + 
-				"3. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 13)\n" + 
-				"	public boolean equals(@NonNull Object other) { return false; }\n" + 
-				"	                      ^^^^^^^^^^^^^^^\n" + 
-				"Illegal redefinition of parameter other, inherited method from Object declares this parameter as @Nullable\n" + 
-				"----------\n" + 
+		runTest440687("-annotationpath CLASSPATH -classpath \"" + annots_dir2 + "\"",
+				File.pathSeparator + annots_dir1, // extra source path
+				"----------\n" +
+				"1. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" +
+				"	Test1 v = map.get(key);\n" +
+				"	          ^^^^^^^^^^^^\n" +
+				"Unsafe interpretation of method return type as \'@NonNull\' based on the receiver type \'@NonNull Map<@NonNull String,@NonNull Test1>\'. Type \'Map<K,V>\' doesn\'t seem to be designed with null type annotations in mind\n" +
+				"----------\n" +
+				"2. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 11)\n" +
+				"	throw new RuntimeException(); // should not be reported as dead code, although V is a \'@NonNull Test1\'\n" +
+				"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Dead code\n" +
+				"----------\n" +
+				"3. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 13)\n" +
+				"	public boolean equals(@NonNull Object other) { return false; }\n" +
+				"	                      ^^^^^^^^^^^^^^^\n" +
+				"Illegal redefinition of parameter other, inherited method from Object declares this parameter as @Nullable\n" +
+				"----------\n" +
 				"3 problems (3 warnings)\n",
 				true);
 	}
@@ -964,24 +964,24 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 		Util.zip(new File(annots_dir2), zipName);
 		Util.delete(annots_dir2);
 
-		runTest440687("-annotationpath CLASSPATH -classpath \"" + zipName + "\"", 
-				File.pathSeparator + annots_dir1, // extra source path 
-				"----------\n" + 
-				"1. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" + 
-				"	Test1 v = map.get(key);\n" + 
-				"	          ^^^^^^^^^^^^\n" + 
-				"Unsafe interpretation of method return type as \'@NonNull\' based on the receiver type \'@NonNull Map<@NonNull String,@NonNull Test1>\'. Type \'Map<K,V>\' doesn\'t seem to be designed with null type annotations in mind\n" + 
-				"----------\n" + 
-				"2. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 11)\n" + 
-				"	throw new RuntimeException(); // should not be reported as dead code, although V is a \'@NonNull Test1\'\n" + 
-				"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"Dead code\n" + 
-				"----------\n" + 
-				"3. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 13)\n" + 
-				"	public boolean equals(@NonNull Object other) { return false; }\n" + 
-				"	                      ^^^^^^^^^^^^^^^\n" + 
-				"Illegal redefinition of parameter other, inherited method from Object declares this parameter as @Nullable\n" + 
-				"----------\n" + 
+		runTest440687("-annotationpath CLASSPATH -classpath \"" + zipName + "\"",
+				File.pathSeparator + annots_dir1, // extra source path
+				"----------\n" +
+				"1. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" +
+				"	Test1 v = map.get(key);\n" +
+				"	          ^^^^^^^^^^^^\n" +
+				"Unsafe interpretation of method return type as \'@NonNull\' based on the receiver type \'@NonNull Map<@NonNull String,@NonNull Test1>\'. Type \'Map<K,V>\' doesn\'t seem to be designed with null type annotations in mind\n" +
+				"----------\n" +
+				"2. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 11)\n" +
+				"	throw new RuntimeException(); // should not be reported as dead code, although V is a \'@NonNull Test1\'\n" +
+				"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Dead code\n" +
+				"----------\n" +
+				"3. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 13)\n" +
+				"	public boolean equals(@NonNull Object other) { return false; }\n" +
+				"	                      ^^^^^^^^^^^^^^^\n" +
+				"Illegal redefinition of parameter other, inherited method from Object declares this parameter as @Nullable\n" +
+				"----------\n" +
 				"3 problems (3 warnings)\n",
 				true);
 	}
@@ -1001,25 +1001,119 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 		Util.zip(new File(annots_dir2), zipName);
 		Util.delete(annots_dir2);
 
-		runTest440687("-annotationpath \"" + zipName + "\"", 
-				File.pathSeparator + annots_dir1, // extra source path 
-				"----------\n" + 
-				"1. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" + 
-				"	Test1 v = map.get(key);\n" + 
-				"	          ^^^^^^^^^^^^\n" + 
-				"Unsafe interpretation of method return type as \'@NonNull\' based on the receiver type \'@NonNull Map<@NonNull String,@NonNull Test1>\'. Type \'Map<K,V>\' doesn\'t seem to be designed with null type annotations in mind\n" + 
-				"----------\n" + 
-				"2. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 11)\n" + 
-				"	throw new RuntimeException(); // should not be reported as dead code, although V is a \'@NonNull Test1\'\n" + 
-				"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"Dead code\n" + 
-				"----------\n" + 
-				"3. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 13)\n" + 
-				"	public boolean equals(@NonNull Object other) { return false; }\n" + 
-				"	                      ^^^^^^^^^^^^^^^\n" + 
-				"Illegal redefinition of parameter other, inherited method from Object declares this parameter as @Nullable\n" + 
-				"----------\n" + 
+		runTest440687("-annotationpath \"" + zipName + "\"",
+				File.pathSeparator + annots_dir1, // extra source path
+				"----------\n" +
+				"1. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" +
+				"	Test1 v = map.get(key);\n" +
+				"	          ^^^^^^^^^^^^\n" +
+				"Unsafe interpretation of method return type as \'@NonNull\' based on the receiver type \'@NonNull Map<@NonNull String,@NonNull Test1>\'. Type \'Map<K,V>\' doesn\'t seem to be designed with null type annotations in mind\n" +
+				"----------\n" +
+				"2. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 11)\n" +
+				"	throw new RuntimeException(); // should not be reported as dead code, although V is a \'@NonNull Test1\'\n" +
+				"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Dead code\n" +
+				"----------\n" +
+				"3. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 13)\n" +
+				"	public boolean equals(@NonNull Object other) { return false; }\n" +
+				"	                      ^^^^^^^^^^^^^^^\n" +
+				"Illegal redefinition of parameter other, inherited method from Object declares this parameter as @Nullable\n" +
+				"----------\n" +
 				"3 problems (3 warnings)\n",
 				true);
+	}
+	public void testBug571055_explicit() throws IOException {
+		runTestBug571055(false, false);
+	}
+	public void testBug571055_inherit() throws IOException {
+		runTestBug571055(true, false);
+	}
+	public void testBug571055_dedicatedAnnotationPath() throws IOException {
+		runTestBug571055(false, true);
+	}
+	private void runTestBug571055(boolean inheritAnnotations, boolean dedicatedAnnotationPath) throws IOException {
+		String annots_dir = Util.getOutputDirectory() + File.separator + "annots";
+		String annots_api = annots_dir + File.separator + "api";
+		new File(annots_api).mkdirs();
+		Util.createFile(
+				annots_api + File.separator + "Foo.eea",
+				"class api/Foo\n" +
+				"m\n" +
+				" (Ljava/lang/String;)Ljava/lang/String;\n" +
+				" (L1java/lang/String;)L0java/lang/String;\n");
+		if (!inheritAnnotations) {
+			// 'manually' establish consistency:
+			String annots_impl = annots_dir + File.separator + "impl";
+			new File(annots_impl).mkdirs();
+			Util.createFile(
+					annots_impl + File.separator + "FooImpl.eea",
+					"class impl/FooImpl\n" +
+					"m\n" +
+					" (Ljava/lang/String;)Ljava/lang/String;\n" +
+					" (L1java/lang/String;)L0java/lang/String;\n");
+		}
+
+		String[] testFiles = new String[] {
+				"java/lang/annotation/ElementType.java",
+				ELEMENT_TYPE_18_CONTENT,
+				"org/eclipse/jdt/annotation/NonNull.java",
+				NONNULL_ANNOTATION_18_CONTENT,
+				"org/eclipse/jdt/annotation/Nullable.java",
+				NULLABLE_ANNOTATION_18_CONTENT,
+				"org/eclipse/jdt/annotation/DefaultLocation.java",
+				DEFAULT_LOCATION_CONTENT,
+				"api/Foo.java",
+				"package api;\n" +
+				"public interface Foo {\n" +
+				"	String m(String a);\n" +
+				"}\n",
+				"impl/FooImpl.java",
+				"package impl;\n" +
+				"import api.Foo;\n" +
+				"public class FooImpl implements Foo {\n" +
+				"	public String m(String a) { return null; }\n" + // ensure Foo & FooImpl are seen with consistent nullness
+				"}\n",
+				"test1/Test1.java",
+				"package test1;\n" +
+				"\n" +
+				"import api.Foo;\n" +
+				"\n" +
+				"public class Test1 {\n" +
+				"	void test(Foo api) {\n" +
+				"		String result = api.m(null);\n" +
+				"		System.out.println(result.toUpperCase());\n" +
+				"	}\n" +
+				"}\n"
+			};
+
+		String commandLine;
+		if (dedicatedAnnotationPath) {
+			commandLine = "-annotationpath \"" + annots_dir + "\" " +
+				" -1.8 -proc:none  -err:+nullAnnot -warn:+null " +
+				(inheritAnnotations ? " -warn:+inheritNullAnnot ": "") +
+				" \"" + OUTPUT_DIR + "\"";
+		} else {
+			commandLine = "-annotationpath CLASSPATH " +
+				" -1.8 -proc:none  -err:+nullAnnot -warn:+null " +
+				(inheritAnnotations ? " -warn:+inheritNullAnnot ": "") +
+				" -classpath \"" + annots_dir + "\" " +
+				" \"" + OUTPUT_DIR + "\"";
+		}
+
+		// expect eea-motivated problems in Test1 but no in FooImpl:
+		String expectedCompilerMessage =
+				"----------\n" +
+				"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 7)\n" +
+				"	String result = api.m(null);\n" +
+				"	                      ^^^^\n" +
+				"Null type mismatch: required '@NonNull String' but the provided value is null\n" +
+				"----------\n" +
+				"2. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 8)\n" +
+				"	System.out.println(result.toUpperCase());\n" +
+				"	                   ^^^^^^\n" +
+				"Potential null pointer access: The variable result may be null at this location\n" +
+				"----------\n" +
+				"2 problems (1 error, 1 warning)\n";
+		this.runNegativeTest(testFiles, commandLine, "", expectedCompilerMessage, false);
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1443,6 +1443,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 	 */
 	protected boolean parseThrows() {
 		int start = this.scanner.currentPosition;
+		boolean isCompletionParser = (this.kind & COMPLETION_PARSER) != 0;
 		try {
 			Object typeRef = parseQualifiedName(true);
 			if (this.abort) return false; // May be aborted by specialized parser
@@ -1455,6 +1456,11 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 		} catch (InvalidInputException ex) {
 			if (this.reportProblems) this.sourceParser.problemReporter().javadocInvalidThrowsClass(start, getTokenEndPosition());
 		}
+		if (!isCompletionParser) {
+			this.scanner.currentPosition = start;
+			this.index = start;
+		}
+		this.currentTokenType = -1;
 		return false;
 	}
 

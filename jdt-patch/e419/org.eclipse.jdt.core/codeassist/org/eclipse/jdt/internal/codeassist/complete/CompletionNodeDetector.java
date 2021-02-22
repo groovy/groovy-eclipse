@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.complete;
 
+import java.util.stream.Stream;
+
 import org.eclipse.jdt.internal.compiler.*;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
@@ -171,7 +173,7 @@ public class CompletionNodeDetector extends ASTVisitor {
 	}
 	@Override
 	public void endVisit(ReferenceExpression referenceExpression, BlockScope blockScope) {
-		endVisit(referenceExpression);	
+		endVisit(referenceExpression);
 	}
 	@Override
 	public void endVisit(SingleNameReference singleNameReference, BlockScope scope) {
@@ -381,7 +383,19 @@ public class CompletionNodeDetector extends ASTVisitor {
 				&& !(astNode instanceof ConditionalExpression && ((ConditionalExpression) astNode).valueIfTrue == this.searchedNode)
 				&& !(astNode instanceof ConditionalExpression && ((ConditionalExpression) astNode).valueIfFalse == this.searchedNode)) {
 				this.parent = astNode;
+				return;
 			}
+		}
+
+		// when we have recovering node like private Map<String, Function<I,R>> the visitor actually endVisit on I and
+		// R when completions are requested at I. The above logic actually identify R as a parent since the R is visited
+		// and endVisited after founding that I was the searched node. This happens for all type parameters which are at
+		// index where index < n.
+		// Therefore we need to following check to fix the parent by setting the parent to the node which represents
+		// Map<String, Function<Long,$>> when we are invoking endVisit.
+		if(this.result && astNode instanceof ParameterizedSingleTypeReference &&
+				Stream.of(((ParameterizedSingleTypeReference) astNode).typeArguments).anyMatch(n -> n == this.searchedNode)) {
+			this.parent = astNode;
 		}
 	}
 	private boolean visit(ASTNode astNode) {

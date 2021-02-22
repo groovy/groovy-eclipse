@@ -15,6 +15,7 @@ package org.eclipse.jdt.internal.compiler.batch;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Function;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -39,6 +40,11 @@ public class CompilationUnit implements ICompilationUnit {
 		//       be written.
 	private boolean ignoreOptionalProblems;
 	private ModuleBinding moduleBinding;
+	/**
+	 * annotation path can only be retrieved once the qualified type name is known.
+	 * This is the provided function for computing the annotation path from that type name.
+	 */
+	private Function<String,String> annotationPathProvider;
 
 public CompilationUnit(char[] contents, String fileName, String encoding) {
 	this(contents, fileName, encoding, null);
@@ -49,6 +55,12 @@ public CompilationUnit(char[] contents, String fileName, String encoding,
 }
 public CompilationUnit(char[] contents, String fileName, String encoding,
 		String destinationPath, boolean ignoreOptionalProblems, String modName) {
+	this(contents, fileName, encoding, destinationPath, ignoreOptionalProblems, modName, null);
+}
+public CompilationUnit(char[] contents, String fileName, String encoding, String destinationPath,
+		boolean ignoreOptionalProblems, String modName, Function<String,String> annotationPathProvider)
+{
+	this.annotationPathProvider = annotationPathProvider;
 	this.contents = contents;
 	if (modName != null)
 		this.module = modName.toCharArray();
@@ -129,5 +141,11 @@ public ModuleBinding module(LookupEnvironment rootEnvironment) {
 @Override
 public String getDestinationPath() {
 	return this.destinationPath;
+}
+@Override
+public String getExternalAnnotationPath(String qualifiedTypeName) {
+	if (this.annotationPathProvider != null)
+		return this.annotationPathProvider.apply(qualifiedTypeName);
+	return null;
 }
 }

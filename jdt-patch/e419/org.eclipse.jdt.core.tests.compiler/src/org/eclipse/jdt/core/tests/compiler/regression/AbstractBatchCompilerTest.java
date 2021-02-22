@@ -604,6 +604,13 @@ public abstract class AbstractBatchCompilerTest extends AbstractRegressionTest {
 				&& (errCompareOK = semiNormalizedComparison(expectedErrOutputString,
 						errOutputString, outputDirNormalizer));
 		}
+		// test sanity of the test definition: did we forget to use "---OUTPUT_DIR_PLACEHOLDER---" instead of OUTPUT_DIR?
+		if (!outCompareOK) {
+			assertEquals("outputDirNormalizer should not affect expectedOutOutput", expectedOutOutputString, outputDirNormalizer.normalized(expectedOutOutputString));
+		}
+		if (!errCompareOK) {
+			assertEquals("outputDirNormalizer should not affect expectedErrOutput", expectedErrOutputString, outputDirNormalizer.normalized(expectedErrOutputString));
+		}
 		if (compileOK != shouldCompileOK || !compareOK) {
 			System.out.println(getClass().getName() + '#' + getName());
 			if (testFiles != null) {

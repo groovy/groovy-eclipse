@@ -542,7 +542,7 @@ public class ClassScope extends Scope {
 		environment().setAccessRestriction(sourceType, accessRestriction);
 		ICompilationUnit compilationUnit = this.referenceContext.compilationResult.getCompilationUnit();
 		if (compilationUnit != null && compilerOptions().isAnnotationBasedNullAnalysisEnabled) {
-			String externalAnnotationPath = compilationUnit.getExternalAnnotationPath();
+			String externalAnnotationPath = compilationUnit.getExternalAnnotationPath(CharOperation.toString(sourceType.compoundName));
 			if (externalAnnotationPath != null) {
 				ExternalAnnotationSuperimposer.apply(sourceType, externalAnnotationPath);
 			}

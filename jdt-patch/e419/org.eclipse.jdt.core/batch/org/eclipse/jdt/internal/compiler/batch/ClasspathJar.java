@@ -156,7 +156,9 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 }
 @Override
 public boolean hasAnnotationFileFor(String qualifiedTypeName) {
-	return this.zipFile.getEntry(qualifiedTypeName+ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX) != null; 
+	if (this.zipFile == null)
+		return false;
+	return this.zipFile.getEntry(qualifiedTypeName+ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX) != null;
 }
 @Override
 public char[][][] findTypeNames(final String qualifiedPackageName, String moduleName) {
@@ -205,7 +207,7 @@ void acceptModule(ClassFileReader reader) {
 	}
 }
 void acceptModule(byte[] content) {
-	if (content == null) 
+	if (content == null)
 		return;
 	ClassFileReader reader = null;
 	try {
@@ -235,7 +237,7 @@ public synchronized char[][] getModulesDeclaringPackage(String qualifiedPackageN
 
 	this.packageCache = new HashSet<>(41);
 	this.packageCache.add(Util.EMPTY_STRING);
-	
+
 	for (Enumeration e = this.zipFile.entries(); e.hasMoreElements(); ) {
 		String fileName = ((ZipEntry) e.nextElement()).getName();
 		addToPackageCache(fileName, false);
@@ -254,7 +256,7 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 			if (tail.toLowerCase().endsWith(SUFFIX_STRING_class))
 				return true;
 		}
-	}	
+	}
 	return false;
 }
 

@@ -13,6 +13,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.eval;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -57,15 +60,16 @@ public boolean acceptClassFiles(ClassFile[] classFiles, char[] codeSnippetClassN
 @Override
 public void acceptProblem(CategorizedProblem problem, char[] fragmentSource, int fragmentKind) {
 	try {
-		IMarker marker = ResourcesPlugin.getWorkspace().getRoot().createMarker(IJavaModelMarker.TRANSIENT_PROBLEM);
-		marker.setAttribute(IJavaModelMarker.ID, problem.getID());
-		marker.setAttribute(IMarker.CHAR_START, problem.getSourceStart());
-		marker.setAttribute(IMarker.CHAR_END, problem.getSourceEnd() + 1);
-		marker.setAttribute(IMarker.LINE_NUMBER, problem.getSourceLineNumber());
-		//marker.setAttribute(IMarker.LOCATION, "#" + problem.getSourceLineNumber());
-		marker.setAttribute(IMarker.MESSAGE, problem.getMessage());
-		marker.setAttribute(IMarker.SEVERITY, (problem.isError() ? IMarker.SEVERITY_ERROR : problem.isWarning() ? IMarker.SEVERITY_WARNING : IMarker.SEVERITY_INFO));
-		marker.setAttribute(IMarker.SOURCE_ID, JavaBuilder.SOURCE_ID);
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put(IJavaModelMarker.ID, problem.getID());
+		attributes.put(IMarker.CHAR_START, problem.getSourceStart());
+		attributes.put(IMarker.CHAR_END, problem.getSourceEnd() + 1);
+		attributes.put(IMarker.LINE_NUMBER, problem.getSourceLineNumber());
+		attributes.put(IMarker.MESSAGE, problem.getMessage());
+		attributes.put(IMarker.SEVERITY, (problem.isError() ? IMarker.SEVERITY_ERROR : problem.isWarning() ? IMarker.SEVERITY_WARNING : IMarker.SEVERITY_INFO));
+		attributes.put(IMarker.SOURCE_ID, JavaBuilder.SOURCE_ID);
+
+		IMarker marker = ResourcesPlugin.getWorkspace().getRoot().createMarker(IJavaModelMarker.TRANSIENT_PROBLEM, attributes);
 		this.requestor.acceptProblem(marker, new String(fragmentSource), fragmentKind);
 	} catch (CoreException e) {
 		e.printStackTrace();

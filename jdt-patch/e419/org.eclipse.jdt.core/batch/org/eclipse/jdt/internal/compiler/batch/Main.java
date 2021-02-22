@@ -73,6 +73,7 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Function;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -92,6 +93,7 @@ import org.eclipse.jdt.internal.compiler.batch.ModuleFinder.AddExport;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
+import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
@@ -3483,9 +3485,28 @@ public CompilationUnit[] getCompilationUnits() {
 					// if we got exception during canonicalization, fall back to the name that was specified
 					fileName = this.filenames[i];
 				}
+				Function<String,String> annotationPathProvider = null;
+				if (this.annotationsFromClasspath) {
+					annotationPathProvider = (String qualifiedTypeName) -> {
+						for (Classpath classpathEntry : this.checkedClasspaths) {
+							if (classpathEntry.hasAnnotationFileFor(qualifiedTypeName.replace('.', '/')))
+								return classpathEntry.getPath();
+						}
+						return null;
+					};
+				} else if (this.annotationPaths != null) {
+					annotationPathProvider = (String qualifiedTypeName) -> {
+						String eeaFileName = '/'+qualifiedTypeName.replace('.', '/')+ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX;
+						for (String annotationPath : this.annotationPaths) {
+							if (new File(annotationPath+eeaFileName).exists())
+								return annotationPath;
+						}
+						return null;
+					};
+				}
 				units[i] = new CompilationUnit(null, fileName, encoding, this.destinationPaths[i],
 						shouldIgnoreOptionalProblems(this.ignoreOptionalProblemsFromFolders, fileName.toCharArray()),
-						this.modNames[i]);
+						this.modNames[i], annotationPathProvider);
 			}
 		}
 	}
