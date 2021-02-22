@@ -1582,6 +1582,46 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7996e() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "import org.codehaus.groovy.ast.DynamicVariable\n" +
+            "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
+            "import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE\n" +
+            "import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PROPERTY_OWNER\n" +
+
+            "class JSON {\n" +
+            "  def get(String name) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class POGO {\n" +
+            "  Number getAnswer() {\n" +
+            "  }\n" +
+            "  @CompileStatic\n" +
+            "  void usage() {\n" +
+            "    new JSON().with {\n" +
+            "      @ASTTest(phase=CLASS_GENERATION, value={\n" +
+            "        def vexp = node.rightExpression\n" +
+            "        assert vexp instanceof VariableExpression\n" +
+            "        assert vexp.accessedVariable instanceof DynamicVariable\n" +
+            "        assert vexp.getNodeMetaData(INFERRED_TYPE) == OBJECT_TYPE\n" +
+            "        assert vexp.getNodeMetaData(PROPERTY_OWNER).name == 'JSON'\n" +
+            "      })\n" +
+            "      def result = answer\n" + // "answer" accessed from JSON; "getAnswer()" invoked from POGO
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new POGO().usage()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic8051() {
         //@formatter:off
         String[] sources = {

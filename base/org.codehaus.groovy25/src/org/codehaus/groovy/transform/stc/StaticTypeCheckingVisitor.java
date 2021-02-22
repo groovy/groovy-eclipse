@@ -774,8 +774,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             storeType(vexp, type != null ? type: pexp.getType());
 
             String receiver = vexp.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
-            // GROOVY-7701: correct false assumption made by VariableScopeVisitor
-            if (receiver != null && !receiver.endsWith("owner") && !(vexp.getAccessedVariable() instanceof DynamicVariable)) {
+            Boolean dynamic = pexp.getNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION);
+            // GROOVY-7701, GROOVY-7996: correct false assumption made by VariableScopeVisitor
+            if (((receiver != null && !receiver.endsWith("owner")) || Boolean.TRUE.equals(dynamic))
+                    && !(vexp.getAccessedVariable() instanceof DynamicVariable)) {
                 vexp.setAccessedVariable(new DynamicVariable(dynName, false));
             }
             return true;
@@ -1694,10 +1696,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 if (mopMethod == null) mopMethod = receiverType.getMethod("propertyMissing", new Parameter[]{new Parameter(STRING_TYPE, "propertyName")});
 
-                if (mopMethod != null && !mopMethod.isSynthetic()) {
+                if (mopMethod != null && !mopMethod.isStatic() && !mopMethod.isSynthetic()) {
                     pexp.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
                     pexp.removeNodeMetaData(StaticTypesMarker.DECLARATION_INFERRED_TYPE);
                     pexp.removeNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                    visitor.visitMethod(mopMethod);
                     return true;
                 }
             }
