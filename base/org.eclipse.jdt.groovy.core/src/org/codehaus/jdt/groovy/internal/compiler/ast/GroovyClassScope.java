@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class GroovyClassScope extends ClassScope {
@@ -219,15 +220,21 @@ public class GroovyClassScope extends ClassScope {
         return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS, this);
     }
 
-    private int getModifiers(final PropertyNode property) {
-        int modifiers = (property.getModifiers() & 0xF);
+    private ReferenceBinding getGroovyTransformGenerated() {
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_TRANSFORM_GENERATED);
+        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_TRANSFORM_GENERATED, this);
+    }
 
-        if (property.getType().isUsingGenerics()) {
+    private int getModifiers(final PropertyNode propertyNode) {
+        int modifiers = (propertyNode.getModifiers() & 0xF);
+
+        if (propertyNode.getType().isUsingGenerics()) {
             modifiers |= ExtraCompilerModifiers.AccGenericSignature;
         }
 
         // if @PackageScope was detected by GCUD, field's modifiers will show it
-        char[] nameChars = property.getName().toCharArray();
+        char[] nameChars = propertyNode.getName().toCharArray();
         for (FieldDeclaration field : referenceContext.fields) {
             if (CharOperation.equals(field.name, nameChars)) {
                 if (Flags.isPackageDefault(field.modifiers)) {
@@ -237,7 +244,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        if (property.getField().getAnnotations().stream().map(anno -> anno.getClassNode().getName())
+        if (propertyNode.getField().getAnnotations().stream().map(anno -> anno.getClassNode().getName())
                 .anyMatch(name -> name.equals("Deprecated") || name.equals("java.lang.Deprecated"))) {
             modifiers |= Flags.AccDeprecated;
         }
@@ -248,10 +255,10 @@ public class GroovyClassScope extends ClassScope {
     /**
      * @see MethodBinding#readableName()
      */
-    private String getMethodAsString(final MethodBinding method) {
+    private String getMethodAsString(final MethodBinding methodBinding) {
         StringBuilder key = new StringBuilder();
-        key.append(method.selector).append('(');
-        for (TypeBinding tb : method.parameters) {
+        key.append(methodBinding.selector).append('(');
+        for (TypeBinding tb : methodBinding.parameters) {
             if (tb instanceof ReferenceBinding) {
                 key.append(((ReferenceBinding) tb).readableName(false));
             } else if (tb != null) {
@@ -299,10 +306,17 @@ public class GroovyClassScope extends ClassScope {
         return true;
     }
 
+    private Optional<MethodBinding> asGenerated(final MethodBinding methodBinding) {
+        methodBinding.setAnnotations(new AnnotationBinding[] {new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS)}, false);
+        methodBinding.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
+        methodBinding.modifiers |= 0x400000; // see JDTClassNode#methodBindingToMethodNode
+        return Optional.of(methodBinding);
+    }
+
     private Optional<MethodBinding> createMethod(final String methodName, final TypeBinding[] parameterTypes, final TypeBinding returnType, final MethodBinding[] methodBindings) {
-        char[] nameAsCharArray = methodName.toCharArray();
+        final char[] nameChars = methodName.toCharArray();
         for (MethodBinding methodBinding : methodBindings) {
-            if (CharOperation.equals(nameAsCharArray, methodBinding.selector)) {
+            if (CharOperation.equals(nameChars, methodBinding.selector)) {
                 ((SourceTypeBinding) methodBinding.declaringClass).resolveTypesFor(methodBinding);
                 boolean equalParameters = (parameterTypes.length == methodBinding.parameters.length);
                 if (equalParameters) {
@@ -319,13 +333,13 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        return Optional.of(new MethodBinding(Flags.AccPublic, nameAsCharArray, returnType, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        return asGenerated(new MethodBinding(Flags.AccPublic, nameChars, returnType, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
     }
 
     private Optional<MethodBinding> createGetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] methodBindings) {
-        char[] nameAsCharArray = methodName.toCharArray();
+        final char[] nameChars = methodName.toCharArray();
         for (MethodBinding methodBinding : methodBindings) {
-            if (CharOperation.equals(nameAsCharArray, methodBinding.selector)) {
+            if (CharOperation.equals(nameChars, methodBinding.selector)) {
                 if ((methodBinding.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
                     Argument[] arguments = methodBinding.sourceMethod().arguments;
                     if (arguments == null || arguments.length == 0) {
@@ -342,23 +356,23 @@ public class GroovyClassScope extends ClassScope {
 
         if (ClassHelper.isPrimitiveType(propertyNode.getType())) {
             TypeBinding returnType = Scope.getBaseType(propertyNode.getType().getName().toCharArray());
-            return Optional.of(new MethodBinding(modifiers | 0x4000000, nameAsCharArray, returnType, Binding.NO_PARAMETERS, Binding.NO_EXCEPTIONS, referenceContext.binding));
+            return asGenerated(new MethodBinding(modifiers, nameChars, returnType, Binding.NO_PARAMETERS, Binding.NO_EXCEPTIONS, referenceContext.binding));
         }
-        return Optional.of(new LazilyResolvedMethodBinding(true, propertyNode.getName(), modifiers | 0x4000000, nameAsCharArray, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        return asGenerated(new LazilyResolvedMethodBinding(true, propertyNode.getName(), modifiers, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding));
     }
 
-    private Optional<MethodBinding> createSetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] existingMethods) {
-        char[] nameAsCharArray = methodName.toCharArray();
-        for (MethodBinding existingMethod : existingMethods) {
-            if (CharOperation.equals(nameAsCharArray, existingMethod.selector)) {
-                if ((existingMethod.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
-                    Argument[] arguments = existingMethod.sourceMethod().arguments;
+    private Optional<MethodBinding> createSetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] methodBindings) {
+        final char[] nameChars = methodName.toCharArray();
+        for (MethodBinding methodBinding : methodBindings) {
+            if (CharOperation.equals(nameChars, methodBinding.selector)) {
+                if ((methodBinding.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
+                    Argument[] arguments = methodBinding.sourceMethod().arguments;
                     if (arguments != null && arguments.length == 1) {
                         // TODO: Check argument type vs property type?
                         return Optional.empty();
                     }
                 } else {
-                    TypeBinding[] parameters = existingMethod.parameters;
+                    TypeBinding[] parameters = methodBinding.parameters;
                     if (parameters != null && parameters.length == 1) {
                         // TODO: Check parameter type vs property type?
                         return Optional.empty();
@@ -369,9 +383,9 @@ public class GroovyClassScope extends ClassScope {
 
         if (ClassHelper.isPrimitiveType(propertyNode.getType())) {
             TypeBinding[] parameterTypes = {Scope.getBaseType(propertyNode.getType().getName().toCharArray())};
-            return Optional.of(new MethodBinding(modifiers | 0x4000000, nameAsCharArray, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
+            return asGenerated(new MethodBinding(modifiers, nameChars, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
         }
-        return Optional.of(new LazilyResolvedMethodBinding(false, propertyNode.getName(), modifiers | 0x4000000, nameAsCharArray, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        return asGenerated(new LazilyResolvedMethodBinding(false, propertyNode.getName(), modifiers, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding));
     }
 
     @Override

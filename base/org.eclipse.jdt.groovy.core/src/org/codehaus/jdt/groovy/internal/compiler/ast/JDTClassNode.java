@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -363,7 +363,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             MethodNode methodNode = new JDTMethodNode(methodBinding, resolver, String.valueOf(methodBinding.selector), modifiers, returnType, parameters, exceptions, null);
             methodNode.setAnnotationDefault(jdtBinding.isAnnotationType() && methodBinding.getDefaultValue() != null); // TODO: Capture default value?
             methodNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
-            methodNode.setSynthetic((modifiers & 0x4000000) != 0); // see GroovyClassScope
+            methodNode.setSynthetic((modifiers & 0x400000) != 0); // see GroovyClassScope
             return methodNode;
         } catch (AbortCompilation e) {
             throw e;
