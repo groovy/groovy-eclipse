@@ -294,6 +294,47 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked6938() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.ASTTest\n" +
+            "import groovy.transform.TypeChecked\n" +
+            "import org.codehaus.groovy.ast.expr.MethodCallExpression\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE\n" +
+
+            "@TypeChecked\n" +
+            "class G extends J<Integer> {\n" +
+            "  Integer doSomething() {\n" +
+            "    @ASTTest(phase=CLASS_GENERATION, value={\n" +
+            "      def expr = node.rightExpression\n" +
+            "      assert expr instanceof MethodCallExpression\n" +
+            "      assert expr.objectExpression.text == 'super'\n" +
+
+            "      def type = expr.objectExpression.getNodeMetaData(INFERRED_TYPE)\n" +
+            "      assert type.toString(false) == 'J <Integer>'\n" + // was "J<T>"
+            "      type = node.leftExpression.getNodeMetaData(INFERRED_TYPE)\n" +
+            "      assert type.toString(false) == 'java.lang.Integer'\n" +
+            "    })\n" +
+            "    def result = super.doSomething()\n" +
+            "    return result\n" +
+            "  }\n" +
+            "}\n" +
+            "print new G().doSomething()\n",
+
+            "J.java",
+            "public class J <T extends Number> {\n" +
+            "  public T doSomething() {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null");
+    }
+
+    @Test
     public void testTypeChecked7333() {
         //@formatter:off
         String[] sources = {

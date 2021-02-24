@@ -5098,8 +5098,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return selfType;
     }
 
-    private ClassNode makeSuper() {
-        return makeType(typeCheckingContext.getEnclosingClassNode().getSuperClass(), typeCheckingContext.isInStaticContext);
+    private ClassNode makeSuper() { // GRECLIPSE edit -- GROOVY-6938
+        return makeType(typeCheckingContext.getEnclosingClassNode().getUnresolvedSuperClass(), typeCheckingContext.isInStaticContext);
     }
 
     private ClassNode makeThis() {
