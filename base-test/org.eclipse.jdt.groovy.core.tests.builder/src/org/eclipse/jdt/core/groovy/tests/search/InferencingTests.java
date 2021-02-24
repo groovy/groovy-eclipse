@@ -4346,4 +4346,21 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType("interface Next extends Face {\n float m(int i)\n}\n" +
             "void test(Next next){next.m(45L)}", "m", "java.lang.Double");
     }
+
+    @Test
+    public void testMethodOverloadsArgumentMatching16() {
+        String contents =
+            "class C {\n" +
+            "  protected Number x\n" +
+            "  String getX() {'x'}\n" +
+            "  byte m(Number n) {}\n" +
+            "  long m(String s) {}\n" +
+            "}\n" +
+
+            "void test(C c) {\n" +
+            "  def value = c.m(c.@x)\n" +
+            "}\n";
+
+        assertType(contents, "value", "java.lang.Byte");
+    }
 }

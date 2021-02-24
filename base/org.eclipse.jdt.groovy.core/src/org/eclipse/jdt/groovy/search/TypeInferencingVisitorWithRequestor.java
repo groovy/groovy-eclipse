@@ -2351,24 +2351,26 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         );
 
                         TypeLookupResult tlr;
+                        scope.setCurrentNode(expression);
                         if (expression instanceof PropertyExpression) {
                             PropertyExpression path = (PropertyExpression) expression;
                             ClassNode type = recursively.apply(path.getObjectExpression());
+                            scope.setCurrentNode(path.getProperty());
                             tlr = lookupExpressionType(path.getProperty(), type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
-
+                            scope.forgetCurrentNode();
                         } else if (expression instanceof MethodCallExpression) {
                             MethodCallExpression call = (MethodCallExpression) expression;
                             ClassNode type = recursively.apply(call.getObjectExpression());
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(call));
+                            scope.setCurrentNode(call.getMethod());
                             tlr = lookupExpressionType(call.getMethod(), type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
-
+                            scope.forgetCurrentNode();
                         } else if (expression instanceof StaticMethodCallExpression) {
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
                             tlr = lookupExpressionType(expression, null, true, scope);
 
 //                        } else if (expression instanceof MethodPointerExpression) {
 //                            MethodPointerExpression ref = (MethodPointerExpression) expression;
-//                            scope.setCurrentNode(ref);
 //                            ClassNode type = recursively.apply(ref.getExpression());
 //                            scope.setCurrentNode(ref.getMethodName());
 //                            tlr = lookupExpressionType(ref.getMethodName(), type, ref.getExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
@@ -2391,7 +2393,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         } else {
                             tlr = lookupExpressionType(expression, null, false, scope);
                         }
-
+                        scope.forgetCurrentNode();
                         types.add(tlr.type);
                     }
                 }
