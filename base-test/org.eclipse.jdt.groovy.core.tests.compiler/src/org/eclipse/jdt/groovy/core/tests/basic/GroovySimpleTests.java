@@ -547,6 +547,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test
+    public void testStaticProperty2a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    this.@x\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "java.lang.IncompatibleClassChangeError: Class java.lang.Class does not implement the requested interface groovy.lang.GroovyObject");
+    }
+
     @Test // GROOVY-8385
     public void testStaticProperty3() {
         //@formatter:off
