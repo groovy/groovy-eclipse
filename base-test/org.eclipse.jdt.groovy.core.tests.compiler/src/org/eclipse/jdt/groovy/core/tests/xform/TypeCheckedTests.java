@@ -953,4 +953,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "true");
     }
+
+    @Test
+    public void testTypeChecked9953() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "C test(Object x) {\n" +
+            "  if (x instanceof C) {\n" +
+            "    def y = x\n" +
+            "    return y\n" +
+            "  } else {\n" +
+            "    new C()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().with { assert test(it).is(it) }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
 }

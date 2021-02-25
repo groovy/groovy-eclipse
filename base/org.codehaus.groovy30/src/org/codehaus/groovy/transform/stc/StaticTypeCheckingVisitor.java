@@ -786,7 +786,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode rType = (isNullConstant(rightExpression) && !isPrimitiveType(lType)
                     // primitive types should be ignored as they will result in another failure
                     ? UNKNOWN_PARAMETER_TYPE
+                    /* GRECLIPSE edit -- GROOVY-9953
                     : getType(rightExpression)
+                    */
+                    : getInferredTypeFromTempInfo(rightExpression, getType(rightExpression))
+                    // GRECLIPSE end
             );
 
             BinaryExpression reversedBinaryExpression = binX(rightExpression, expression.getOperation(), leftExpression);

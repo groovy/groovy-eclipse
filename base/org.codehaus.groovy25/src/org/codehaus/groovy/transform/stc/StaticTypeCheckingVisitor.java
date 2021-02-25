@@ -872,11 +872,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 rightExpression.visit(this);
             }
             ClassNode lType = getType(leftExpression);
+            /* GRECLIPSE edit -- GROOVY-9953
             ClassNode rType = getType(rightExpression);
             if (isNullConstant(rightExpression)) {
                 if (!isPrimitiveType(lType))
                     rType = UNKNOWN_PARAMETER_TYPE; // primitive types should be ignored as they will result in another failure
             }
+            */
+            ClassNode rType = isNullConstant(rightExpression) && !isPrimitiveType(lType)
+                    ? UNKNOWN_PARAMETER_TYPE
+                    : getInferredTypeFromTempInfo(rightExpression, getType(rightExpression));
+            // GRECLIPSE end
             BinaryExpression reversedBinaryExpression = binX(rightExpression, expression.getOperation(), leftExpression);
             ClassNode resultType = op == KEYWORD_IN
                     ? getResultType(rType, op, lType, reversedBinaryExpression)
