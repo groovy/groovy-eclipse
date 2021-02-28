@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -76,6 +76,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -364,6 +365,12 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 			String path,
 			AccessRestriction access) {
 		// constructors aren't searched
+	}
+	@Override
+	public void accept(ISourceType[] sourceTypes, PackageBinding packageBinding, AccessRestriction accessRestriction) {
+		CompilationUnitDeclaration unit = this.lookupEnvironment.unitBeingCompleted;
+		super.accept(sourceTypes, packageBinding, accessRestriction);
+		this.lookupEnvironment.unitBeingCompleted = unit;
 	}
 
 	@Override

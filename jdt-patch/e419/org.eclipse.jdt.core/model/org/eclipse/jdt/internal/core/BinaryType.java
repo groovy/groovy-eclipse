@@ -29,6 +29,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
@@ -1083,6 +1084,7 @@ public JavadocContents getJavadocContents(IProgressMonitor monitor) throws JavaM
 		typeQualifiedName = getElementName();
 	}
 
+	appendModulePath(pack, pathBuffer);
 	pathBuffer.append(pack.getElementName().replace('.', '/')).append('/').append(typeQualifiedName).append(JavadocConstants.HTML_EXTENSION);
 	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
 	final String contents = getURLContents(baseLocation, String.valueOf(pathBuffer));
@@ -1095,5 +1097,50 @@ public JavadocContents getJavadocContents(IProgressMonitor monitor) throws JavaM
 @Override
 public boolean isLambda() {
 	return false;
+}
+
+private static void appendModulePath(IPackageFragment pack, StringBuffer buf) {
+	IModuleDescription moduleDescription= getModuleDescription(pack);
+	if (moduleDescription != null) {
+		String moduleName= moduleDescription.getElementName();
+		if (moduleName != null && moduleName.length() > 0) {
+			buf.append(moduleName);
+			buf.append('/');
+		}
+	}
+}
+
+private static IModuleDescription getModuleDescription(IPackageFragment pack) {
+	if (pack == null) {
+		return null;
+	}
+	IModuleDescription moduleDescription= null;
+	/*
+	 * The Javadoc tool for Java SE 11 uses module name in the created URL.
+	 * We can't know what format is required, so we just guess by the project's compiler compliance.
+	 */
+	IJavaProject javaProject= pack.getJavaProject();
+	if (javaProject != null && isComplianceJava11OrHigher(javaProject)) {
+		if (pack.isReadOnly()) {
+			IPackageFragmentRoot root= (IPackageFragmentRoot) pack.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+			if (root != null) {
+				moduleDescription= root.getModuleDescription();
+			}
+		} else {
+			try {
+				moduleDescription= javaProject.getModuleDescription();
+			} catch (JavaModelException e) {
+				// do nothing
+			}
+		}
+	}
+	return moduleDescription;
+}
+
+private static boolean isComplianceJava11OrHigher(IJavaProject javaProject) {
+	if (javaProject == null) {
+		return false;
+	}
+	return CompilerOptions.versionToJdkLevel(javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK11;
 }
 }

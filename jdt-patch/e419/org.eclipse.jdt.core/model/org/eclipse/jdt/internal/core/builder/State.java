@@ -790,19 +790,17 @@ private void writeBinaryLocations(DataOutputStream out, ClasspathLocation[] loca
 		if (c.updates != null) {
 			List<Consumer<IUpdatableModule>> pu = c.updates.getList(UpdateKind.PACKAGE, false);
 			if (pu != null) {
-				Map<String, List<Consumer<IUpdatableModule>>> map = pu.stream().
-						collect(Collectors.groupingBy(
-								update -> CharOperation.charToString(((IUpdatableModule.AddExports)update).getName())));
+				Map<String, List<AddExports>> map = pu.stream().filter(AddExports.class::isInstance)
+						.map(AddExports.class::cast)
+						.collect(Collectors.groupingBy(addExport -> CharOperation.charToString(addExport.getName())));
 				out.writeInt(map.size());
 				map.entrySet().stream().forEach(entry -> {
 					String pkgName = entry.getKey();
 					try {
 						writeName(pkgName.toCharArray(), out);
 						char[][] targetModules = entry.getValue().stream()
-								.map(consumer -> ((IUpdatableModule.AddExports) consumer).getTargetModules())
-								.filter(targets -> targets != null)
-								.reduce((f,s) -> CharOperation.arrayConcat(f,s))
-								.orElse(null);
+								.map(addExport -> addExport.getTargetModules()).filter(targets -> targets != null)
+								.reduce((f, s) -> CharOperation.arrayConcat(f, s)).orElse(null);
 						writeNames(targetModules, out);
 					} catch (IOException e) {
 						// ignore
@@ -814,9 +812,10 @@ private void writeBinaryLocations(DataOutputStream out, ClasspathLocation[] loca
 			}
 			List<Consumer<IUpdatableModule>> mu = c.updates.getList(UpdateKind.MODULE, false);
 			if (mu != null) {
-				out.writeInt(mu.size());
-				for (Consumer<IUpdatableModule> cons : mu) {
-					AddReads m = (AddReads) cons;
+				// TODO, here we cannot handle MODULE_MAIN_CLASS nor MODULE_PACKAGES (ModuleUpdater stores a lambda), should we?
+				List<AddReads> allReads = mu.stream().filter(AddReads.class::isInstance).map(AddReads.class::cast).collect(Collectors.toList());
+				out.writeInt(allReads.size());
+				for (AddReads m : allReads) {
 					writeName(m.getTarget(), out);
 				}
 			} else {
