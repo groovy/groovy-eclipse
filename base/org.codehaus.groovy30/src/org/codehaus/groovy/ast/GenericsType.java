@@ -351,8 +351,15 @@ public class GenericsType extends ASTNode {
                         // class node are not parameterized. This means that we must create a
                         // new class node with the parameterized types that the current class node
                         // has defined.
+                        /* GRECLIPSE edit
                         ClassNode node = GenericsUtils.parameterizeType(classNode, face);
                         return compareGenericsWithBound(node, bound);
+                        */
+                        if (face.getGenericsTypes() != null) {
+                            face = GenericsUtils.parameterizeType(classNode, face);
+                        }
+                        return compareGenericsWithBound(face, bound);
+                        // GRECLIPSE end
                     }
                 }
             }
@@ -368,7 +375,20 @@ public class GenericsType extends ASTNode {
                     if (success) return true;
                 }
             }
+            /* GRECLIPSE edit
             return compareGenericsWithBound(getParameterizedSuperClass(classNode), bound);
+            */
+            if (classNode.equals(ClassHelper.OBJECT_TYPE)) {
+                return false;
+            }
+            ClassNode superClass = classNode.getUnresolvedSuperClass();
+            if (superClass == null) {
+                superClass = ClassHelper.OBJECT_TYPE;
+            } else if (superClass.getGenericsTypes() != null) {
+                superClass = GenericsUtils.parameterizeType(classNode, superClass);
+            }
+            return compareGenericsWithBound(superClass, bound);
+            // GRECLIPSE end
         }
 
         GenericsType[] cnTypes = classNode.getGenericsTypes();
@@ -494,6 +514,7 @@ public class GenericsType extends ASTNode {
      * @param classNode the class for which we want to return the parameterized superclass
      * @return the parameterized superclass
      */
+    /* GRECLIPSE edit
     private static ClassNode getParameterizedSuperClass(final ClassNode classNode) {
         if (ClassHelper.OBJECT_TYPE.equals(classNode)) return null;
         ClassNode superClass = classNode.getUnresolvedSuperClass();
@@ -523,6 +544,7 @@ public class GenericsType extends ASTNode {
         }
         return superClass;
     }
+    */
 
     /**
      * Represents GenericsType name

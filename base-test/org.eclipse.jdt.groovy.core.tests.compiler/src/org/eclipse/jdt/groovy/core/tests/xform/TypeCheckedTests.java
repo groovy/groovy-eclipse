@@ -235,6 +235,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked6232() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "  C(T x, T y) {\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  C<Object> c = new C<>('a', new Object())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked6786() {
         //@formatter:off
         String[] sources = {
@@ -975,5 +995,76 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked9956() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class C<Y> {\n" +
+            "  Y p\n" +
+            "}\n" +
+            "interface I { }\n" +
+            "class D implements I { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  C<I> ci = new C<>(new D())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked9956a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A<X> {\n" +
+            "}\n" +
+            "@groovy.transform.TupleConstructor\n" +
+            "class C<Y> extends A<Y> {\n" +
+            "  Y p\n" +
+            "}\n" +
+            "interface I { }\n" +
+            "class D implements I { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  A<I> ai = new C<>(new D())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked9956b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A<X> {\n" +
+            "}\n" +
+            "class C<Y> extends A<Y> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  A<String> ax = new C<Number>()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
+            "\tA<String> ax = new C<Number>()\n" +
+            "\t               ^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign C <Number> to: A <String>\n" +
+            "----------\n");
     }
 }

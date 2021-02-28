@@ -1140,6 +1140,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode type = GenericsUtils.parameterizeType(cceType, cceType);
                 type = inferReturnTypeGenerics(type, constructor, argumentListExpression);
                 if (type.isUsingGenerics()) {
+                    // GROOVY-6232, GROOVY-9956: if cce not assignment compatible, process target as additional type witness
+                    if (checkCompatibleAssignmentTypes(lType, type, cce) && !GenericsUtils.buildWildcardType(lType).isCompatibleWith(type)) {
+                        // allow covariance of each type parameter, but maintain semantics for nested generics
+
+                        ClassNode pType = GenericsUtils.parameterizeType(lType, type);
+                        GenericsType[] lhs = pType.getGenericsTypes(), rhs = type.getGenericsTypes();
+                        if (lhs == null || rhs == null || lhs.length != rhs.length) throw new GroovyBugError(
+                                "Parameterization failed: " + prettyPrintType(pType) + " ~ " + prettyPrintType(type));
+
+                        if (java.util.stream.IntStream.range(0, lhs.length).allMatch(i ->
+                                GenericsUtils.buildWildcardType(getCombinedBoundType(lhs[i])).isCompatibleWith(getCombinedBoundType(rhs[i])))) {
+                            type = pType; // lType proved to be a viable type witness
+                        }
+                    }
                     inferredType = type;
                 }
             }
