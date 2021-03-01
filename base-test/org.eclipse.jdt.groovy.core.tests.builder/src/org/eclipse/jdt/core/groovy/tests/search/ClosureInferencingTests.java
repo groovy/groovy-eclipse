@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1237,6 +1237,50 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("foo");
         assertDeclaringType(contents, offset, offset + 3, "p.B$1");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1230
+    public void testWithAndClosure8() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  Number x\n" +
+            "  def m() {\n" +
+            "    new D().with {\n" +
+            "      x\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class D {\n" +
+            "  def get(String name) {\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+
+        assertDeclaringType(contents, "x", "D");
+        assertType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1230
+    public void testWithAndClosure8a() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  Number x\n" +
+            "  def m() {\n" +
+            "    new D().with {\n" +
+            "      x\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class D {\n" +
+            "  def getProperty(String name) {\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+
+        assertDeclaringType(contents, "x", "D");
+        assertType(contents, "x", "java.lang.Object");
     }
 
     @Test

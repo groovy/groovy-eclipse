@@ -474,6 +474,33 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('something'), 'something'.length(), STATIC_CALL))
     }
 
+    @Test
+    void testStaticMethods6() {
+        addGroovySource '''\
+            |abstract class A {
+            |  static foo() {}
+            |}
+            |'''.stripMargin(), 'A', 'p'
+
+        String contents = '''\
+            |class C extends p.A {
+            |  static bar() {}
+            |  static baz() {
+            |    super.foo()
+            |    this.bar()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL))
+    }
+
     @Test // GRECLIPSE-1138
     void testMultipleStaticMethods() {
         String contents = '''\

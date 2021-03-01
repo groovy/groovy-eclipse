@@ -619,6 +619,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         if (!isLhsExpression && methodCallArgumentTypes != null) {
+            if (!isStaticExpression && declaringType.implementsInterface(ClassHelper.GROOVY_INTERCEPTABLE_TYPE)) {
+                return declaringType.getMethod("invokeMethod", new Parameter[] {new Parameter(VariableScope.STRING_CLASS_NODE, "name"), new Parameter(VariableScope.OBJECT_CLASS_NODE, "args")});
+            }
+
             MethodNode method = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, isStaticExpression);
             if (isCompatible(method, isStaticExpression)) {
                 return method;
@@ -641,15 +645,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }
 
-            FieldNode fn = new FieldNode(name, 0, resolvedType, declaringType, null);
-            fn.setDeclaringClass(declaringType);
-            fn.setHasNoRealSourcePosition(true);
-            fn.setSynthetic(true);
-
-            PropertyNode pn = new PropertyNode(fn, fn.getModifiers(), null, null);
-            pn.setDeclaringClass(declaringType);
-            pn.setSynthetic(true);
-            return pn;
+            return createDynamicProperty(name, resolvedType, declaringType, isStaticExpression);
         }
 
         // look for canonical accessor method
@@ -693,6 +689,24 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 if (field != null && field.isFinal() && field.isStatic()) {
                     return field;
                 }
+            }
+        }
+
+        if (!declaringType.equals(VariableScope.CLASS_CLASS_NODE) && !declaringType.equals(VariableScope.OBJECT_CLASS_NODE) && !declaringType.equals(ClassHelper.SCRIPT_TYPE)) {
+            Optional<MethodNode> mopMethod = findMetaObjectMethods(declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes).filter(mm -> {
+                if (isSynthetic(mm)) return false;
+                Parameter[] p = mm.getParameters();
+                if (mm.getName().startsWith("g")) {
+                    return p.length == 1 && p[0].getType().equals(VariableScope.STRING_CLASS_NODE);
+                } else if (!mm.getName().endsWith("yMissing")) {
+                    return p.length == 2 && p[0].getType().equals(VariableScope.STRING_CLASS_NODE) && p[1].getType().equals(VariableScope.OBJECT_CLASS_NODE);
+                } else {
+                    return p.length == 1; // propertyMissing and $static_propertyMissing have relaxed requirements
+                }
+            }).findFirst();
+            if (mopMethod.isPresent()) {
+                return mopMethod.map(mm -> (isLhsExpression || methodCallArgumentTypes == null)
+                    ? createDynamicProperty(name, VariableScope.OBJECT_CLASS_NODE, declaringType, isStaticExpression) : mm).get();
             }
         }
 
@@ -826,6 +840,30 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return closestMatch;
     }
 
+    private static Stream<MethodNode> findMetaObjectMethods(final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final List<ClassNode> methodCallArgumentTypes) {
+        Stream<String> names;
+        if (isLhsExpression) {
+            if (!isStaticExpression) {
+                names = Stream.of("setProperty", "set");
+            } else {
+                names = Stream.empty();
+            }
+        } else if (methodCallArgumentTypes == null) {
+            if (!isStaticExpression) {
+                names = Stream.of("getProperty", "get", "propertyMissing");
+            } else {
+                names = Stream.of("$static_propertyMissing");
+            }
+        } else {
+            if (!isStaticExpression) {
+                names = Stream.of("methodMissing", "invokeMethod");
+            } else {
+                names = Stream.of("$static_methodMissing");
+            }
+        }
+        return names.flatMap(name -> declaringType.getDeclaredMethods(name).stream()).filter(node -> node.isStatic() == node.getName().startsWith("$static"));
+    }
+
     private static Optional<MethodNode> findPropertyAccessorMethod(final String propertyName, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final List<ClassNode> methodCallArgumentTypes) {
         Stream<MethodNode> accessors = AccessorSupport.findAccessorMethodsForPropertyName(propertyName, declaringType, false, !isLhsExpression ? READER : WRITER);
         accessors = accessors.filter(accessor -> isCompatible(accessor, isStaticExpression) && !isTraitBridge(accessor));
@@ -875,10 +913,23 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
     }
 
+    protected static PropertyNode createDynamicProperty(final String name, final ClassNode type, final ClassNode declaringType, final boolean staticProperty) {
+        FieldNode fn = new FieldNode(name, Flags.AccPublic | (staticProperty ? Flags.AccStatic : 0), type, declaringType, null);
+        fn.setDeclaringClass(declaringType);
+        fn.setHasNoRealSourcePosition(true);
+        fn.setSynthetic(true);
+
+        PropertyNode pn = new PropertyNode(fn, fn.getModifiers(), null, null);
+        pn.setDeclaringClass(declaringType);
+        pn.setSynthetic(true);
+        return pn;
+    }
+
     protected static FieldNode createLengthField(final ClassNode declaringType) {
-        FieldNode lengthField = new FieldNode("length", Flags.AccPublic, VariableScope.INTEGER_CLASS_NODE, declaringType, null);
-        lengthField.setDeclaringClass(declaringType);
-        return lengthField;
+        FieldNode fn = new FieldNode("length", Flags.AccPublic, ClassHelper.int_TYPE, declaringType, null);
+        fn.setDeclaringClass(declaringType);
+        fn.setHasNoRealSourcePosition(true);
+        return fn;
     }
 
     /**
@@ -1073,8 +1124,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * implicit in some sense).
      */
     protected static boolean isSynthetic(final MethodNode method) {
-        // TODO: What about 'method.getDeclaringClass().equals(VariableScope.GROOVY_OBJECT_CLASS_NODE)'?
-        return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE);
+        return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE) ||
+            GroovyUtils.getAnnotations(method, "groovy.transform.Generated").anyMatch(annotationNode -> true);
     }
 
     protected static boolean isTraitBridge(final MethodNode method) {

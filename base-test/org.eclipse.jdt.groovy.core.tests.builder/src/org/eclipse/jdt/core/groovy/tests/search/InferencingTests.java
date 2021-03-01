@@ -2656,6 +2656,153 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testInvokeMethod() {
+        String contents =
+            "class C {\n" +
+            "  def invokeMethod(String name, args) {\n" +
+            "  }\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    this.method()\n" +
+            "    this.missing()\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("method");
+        assertDeclaration(contents, offset, offset + 6, "C", "method", DeclarationKind.METHOD);
+            offset = contents.lastIndexOf("missing");
+        assertDeclaration(contents, offset, offset + 7, "C", "invokeMethod", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testInvokeMethodAndMethodMissing() {
+        String contents =
+            "class C {\n" +
+            "  def invokeMethod(String name, args) {\n" +
+            "  }\n" +
+            "  def methodMissing(String name, args) {\n" +
+            "  }\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    this.method()\n" +
+            "    this.missing()\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("method");
+        assertDeclaration(contents, offset, offset + 6, "C", "method", DeclarationKind.METHOD);
+            offset = contents.lastIndexOf("missing");
+        assertDeclaration(contents, offset, offset + 7, "C", "methodMissing", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testInvokeMethodGroovyInterceptable() {
+        String contents =
+            "class C implements GroovyInterceptable {\n" +
+            "  def invokeMethod(String name, args) {\n" +
+            "  }\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    this.method()\n" +
+            "    this.missing()\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("method");
+        assertDeclaration(contents, offset, offset + 6, "C", "invokeMethod", DeclarationKind.METHOD);
+            offset = contents.lastIndexOf("missing");
+        assertDeclaration(contents, offset, offset + 7, "C", "invokeMethod", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testMethodMissing() {
+        String contents =
+            "class C {\n" +
+            "  def methodMissing(String name, args) {\n" +
+            "  }\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    this.method()\n" +
+            "    this.missing()\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("method");
+        assertDeclaration(contents, offset, offset + 6, "C", "method", DeclarationKind.METHOD);
+            offset = contents.lastIndexOf("missing");
+        assertDeclaration(contents, offset, offset + 7, "C", "methodMissing", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testStaticMethodMissing() {
+        String contents =
+            "class C {\n" +
+            "  static $static_methodMissing(String name, args) {\n" +
+            "  }\n" +
+            "  static method() {\n" +
+            "  }\n" +
+            "  static test() {\n" +
+            "    this.method()\n" +
+            "    this.missing()\n" +
+            "  }\n" +
+            "}\n";
+
+        boolean is3 = isAtLeastGroovy(30);
+        int offset = contents.lastIndexOf("method");
+        assertDeclaration(contents, offset - (is3 ? 0 : 5), offset + (is3 ? 6 : 8), "C", "method", DeclarationKind.METHOD);
+            offset = contents.lastIndexOf("missing");
+        assertDeclaration(contents, offset, offset + 7, "C", "$static_methodMissing", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testPropertyMissing() {
+        String contents =
+            "class C {\n" +
+            "  def propertyMissing(name) {\n" +
+            "  }\n" +
+            "  def proper\n" +
+            "  void test() {\n" +
+            "    this.proper\n" +
+            "    this.missing\n" +
+            "    this.getMissing()\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("proper");
+        assertDeclaration(contents, offset, offset + 6, "C", "proper", DeclarationKind.PROPERTY);
+            offset = contents.lastIndexOf("missing");
+        assertDeclaration(contents, offset, offset + 7, "C", "missing", DeclarationKind.PROPERTY);
+            offset = contents.lastIndexOf("getMissing");
+        assertUnknownConfidence(contents, offset, offset + 10); // does not map to getProperty/propertyMissing
+    }
+
+    @Test
+    public void testStaticPropertyMissing() {
+        String contents =
+            "class C {\n" +
+            "  static $static_propertyMissing(name) {\n" +
+            "  }\n" +
+            "  static proper\n" +
+            "  static test() {\n" +
+            "    this.proper\n" +
+            "    this.missing\n" +
+            "    this.getMissing()\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("proper");
+        assertDeclaration(contents, offset, offset + 6, "C", "proper", DeclarationKind.PROPERTY);
+            offset = contents.lastIndexOf("missing");
+        assertDeclaration(contents, offset, offset + 7, "C", "missing", DeclarationKind.PROPERTY);
+            offset = contents.lastIndexOf("getMissing");
+        assertUnknownConfidence(contents, offset, offset + 10); // does not map to $static_propertyMissing
+    }
+
+    @Test
     public void testMultiDecl1() {
         String contents = "def (x, y) = []\nx\ny";
         assertType(contents, "x", "java.lang.Object");
