@@ -132,6 +132,9 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         }
         if (clazz == ArgumentListExpression.class) {
             Expression result = exp.transformExpression(this);
+            // GRECLIPSE add -- GROOVY-9966
+            if (foundArgs == null)
+            // GRECLIPSE end
             if (inPropertyExpression) {
                 foundArgs = result;
             }
@@ -139,6 +142,9 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         }
         if (exp instanceof ConstantExpression) {
             Expression result = exp.transformExpression(this);
+            // GRECLIPSE add -- GROOVY-9966
+            if (foundConstant == null)
+            // GRECLIPSE end
             if (inPropertyExpression) {
                 foundConstant = result;
             }

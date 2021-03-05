@@ -4655,6 +4655,21 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9966
+    public void testGroovy9966() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static java.util.Arrays.*\n" +
+            "def m(x) { return x }\n" +
+            "final value = 123.456\n" +
+            "m(\"$value\").missing\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: missing for class: org.codehaus.groovy.runtime.GStringImpl");
+    }
+
     // was worried <clinit> would surface in list of methods used to build the type declaration, but that doesn't appear to be the case
     @Test
     public void testExtendingGroovyObjects_clinit() {
