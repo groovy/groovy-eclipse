@@ -445,10 +445,17 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
     public void makeGroovyObjectGetPropertySite(final Expression receiver, final String methodName, final boolean safe, final boolean implicitThis) {
         TypeChooser typeChooser = controller.getTypeChooser();
         ClassNode classNode = controller.getClassNode();
+        /* GRECLIPSE edit -- GROOVY-9967
         ClassNode receiverType = typeChooser.resolveType(receiver, classNode);
         if (receiver instanceof VariableExpression && ((VariableExpression) receiver).isThisExpression() && !controller.isInClosure()) {
             receiverType = classNode;
         }
+        */
+        ClassNode receiverType = controller.getClassNode();
+        if (!isThisExpression(receiver) || controller.isInClosure()) {
+            receiverType = getPropertyOwnerType(receiver);
+        }
+        // GRECLIPSE edit
 
         String propertyName = methodName;
         if (implicitThis) {
@@ -574,7 +581,11 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             ClassNode replacementType = field.getOriginType();
             OperandStack operandStack = controller.getOperandStack();
             if (field.isStatic()) {
+                /* GRECLIPSE edit -- GROOVY-9955
                 mv.visitFieldInsn(GETSTATIC, BytecodeHelper.getClassInternalName(field.getOwner()), fieldName, BytecodeHelper.getTypeDescription(replacementType));
+                */
+                mv.visitFieldInsn(GETSTATIC, BytecodeHelper.getClassInternalName(receiverType), fieldName, BytecodeHelper.getTypeDescription(replacementType));
+                // GRECLIPSE end
                 operandStack.push(replacementType);
             } else {
                 if (implicitThis) {
@@ -890,7 +901,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         */
         if (name != null && controller.getCompileStack().isLHS()) {
             ClassNode classNode = controller.getClassNode();
-            ClassNode receiverType = controller.getTypeChooser().resolveType(objectExpression, classNode);
+            ClassNode receiverType = getPropertyOwnerType(objectExpression);
             if (adapter == AsmClassGenerator.setField || adapter == AsmClassGenerator.setGroovyObjectField) {
                 if (setField(expression, objectExpression, receiverType, name)) return;
             } else if (isThisExpression(objectExpression)) {
@@ -924,6 +935,36 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         super.fallbackAttributeOrPropertySite(expression, objectExpression, name, adapter);
     }
 
+    // GRECLIPSE add -- GROOVY-9955, GROOVY-9967
+    private ClassNode getPropertyOwnerType(final Expression receiver) {
+        Object inferredType = receiver.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+        if (inferredType == null && receiver instanceof VariableExpression) {
+            Variable variable = ((VariableExpression) receiver).getAccessedVariable();
+            if (variable instanceof Expression) {
+                inferredType = ((Expression) variable).getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+            }
+        }
+        ClassNode receiverType;
+        if (inferredType instanceof ClassNode) {
+            // in case a "flow type" is found, it is preferred to use it instead of the declaration type
+            receiverType = (ClassNode) inferredType;
+        } else {
+            receiverType = receiver.getNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER);
+            if (receiverType == null) {
+                receiverType = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
+            }
+        }
+        if (isClassClassNodeWrappingConcreteType(receiverType)) {
+            receiverType = receiverType.getGenericsTypes()[0].getType();
+        }
+        if (isPrimitiveType(receiverType)) {
+            // GROOVY-6590: wrap primitive types
+            receiverType = getWrapper(receiverType);
+        }
+        return receiverType;
+    }
+    // GRECLIPSE end
+
     // this is just a simple set field handling static and non-static, but not Closure and inner classes
     private boolean setField(PropertyExpression expression, Expression objectExpression, ClassNode rType, String name) {
         if (expression.isSafe()) return false;
@@ -946,6 +987,9 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             mv.visitFieldInsn(PUTFIELD, ownerName, name, BytecodeHelper.getTypeDescription(fn.getType()));
             stack.remove(1);
         } else {
+            // GRECLIPSE add -- GROOVY-9955
+            ownerName = BytecodeHelper.getClassInternalName(rType);
+            // GRECLIPSE end
             mv.visitFieldInsn(PUTSTATIC, ownerName, name, BytecodeHelper.getTypeDescription(fn.getType()));
         }
 

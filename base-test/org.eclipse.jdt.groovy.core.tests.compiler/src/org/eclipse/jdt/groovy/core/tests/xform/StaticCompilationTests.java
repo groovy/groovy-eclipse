@@ -735,6 +735,35 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6276() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Outer {\n" +
+            "  private int outerField = 1\n" +
+            "  private int outerMethod() { 2 }\n" +
+            "  int outerProperty = 3\n" +
+            "  class Inner {\n" +
+            "    void test() {\n" +
+            "      assert outerField == 1\n" +
+            "      assert outerMethod() == 2\n" +
+            "      assert outerProperty == 3\n" +
+            "      assert getOuterProperty() == 3\n" +
+            "    }\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    new Inner().test()\n" +
+            "  }\n" +
+            "}\n" +
+            "new Outer().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic6904() {
         //@formatter:off
         String[] sources = {
@@ -5908,5 +5937,91 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic9955() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import p.Types.Public\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  assert Public.CONST == 'XX'\n" +
+            "  assert Public.VALUE == null\n" +
+            "  Public.VALUE = 'YY'\n" +
+            "  assert Public.VALUE == 'YY'\n" +
+            "  Public.@VALUE = 'ZZ'\n" +
+            "  assert Public.@VALUE == 'ZZ'\n" +
+            "}\n" +
+            "test()\n",
+
+            "p/Types.groovy",
+            "package p\n" +
+            "class Types {\n" +
+            "  @groovy.transform.PackageScope static class PackagePrivate {\n" +
+            "    public static final String CONST = 'XX'\n" +
+            "    public static String VALUE\n" +
+            "  }\n" +
+            "  public static class Public extends PackagePrivate {\n" +
+            "  }\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic9967() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A {\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  String p = 'foo'\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  String scenario1(x) {\n" +
+            "    (x instanceof String) ? x.toLowerCase() : 'bar'\n" +
+            "  }\n" +
+            "  String scenario2(B x) {\n" +
+            "    x.p\n" +
+            "  }\n" +
+            "  String scenario2a(B x) {\n" +
+            "    x.getP()\n" +
+            "  }\n" +
+            "  String scenario3(B x) {\n" +
+            "    (x instanceof B) ? x.p : 'bar'\n" +
+            "  }\n" +
+            "  String scenario3a(B x) {\n" +
+            "    (x instanceof B) ? x.getP() : 'bar'\n" +
+            "  }\n" +
+            "  String scenario4(A x) {\n" +
+            "    (x instanceof B) ? x.p : 'bar'\n" + // Access to A#p is forbidden
+            "  }\n" +
+            "  String scenario4a(A x) {\n" +
+            "    (x instanceof B) ? x.getP() : 'bar'\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().with {\n" +
+            "  assert scenario1(null) == 'bar'\n" +
+            "  assert scenario1('Foo') == 'foo'\n" +
+            "  assert scenario2(new B()) == 'foo'\n" +
+            "  assert scenario2a(new B()) == 'foo'\n" +
+            "  assert scenario3(new B()) == 'foo'\n" +
+            "  assert scenario3a(new B()) == 'foo'\n" +
+
+            "  assert scenario4(new A()) == 'bar'\n" +
+            "  assert scenario4(new B()) == 'foo'\n" +
+            "  assert scenario4a(new A()) == 'bar'\n" +
+            "  assert scenario4a(new B()) == 'foo'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 }
