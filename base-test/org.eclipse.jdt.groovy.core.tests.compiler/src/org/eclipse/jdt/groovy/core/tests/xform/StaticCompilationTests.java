@@ -5947,6 +5947,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "import p.Types.Public\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
+            "  assert Public.answer == 42\n" +
             "  assert Public.CONST == 'XX'\n" +
             "  assert Public.VALUE == null\n" +
             "  Public.VALUE = 'YY'\n" +
@@ -5960,6 +5961,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "package p\n" +
             "class Types {\n" +
             "  @groovy.transform.PackageScope static class PackagePrivate {\n" +
+            "    public static Number getAnswer() { 42 }\n" +
             "    public static final String CONST = 'XX'\n" +
             "    public static String VALUE\n" +
             "  }\n" +

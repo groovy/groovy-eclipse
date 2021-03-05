@@ -74,7 +74,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.getWrapper;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PRIVATE_BRIDGE_METHODS;
 import static groovyjarjarasm.asm.Opcodes.ACONST_NULL;
@@ -761,7 +760,12 @@ public class StaticInvocationWriter extends InvocationWriter {
             if (target instanceof ExtensionMethodNode) {
                 type = ((ExtensionMethodNode) target).getExtensionMethodNode().getDeclaringClass();
             } else {
+                /* GRECLIPSE edit -- GROOVY-9955
                 type = getWrapper(controller.getTypeChooser().resolveType(receiver, controller.getClassNode()));
+                */
+                type = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
+                if (ClassHelper.isPrimitiveType(type)) type = ClassHelper.getWrapper(type);
+                // GRECLIPSE end
                 ClassNode declaringClass = target.getDeclaringClass();
                 if (type.getClass() != ClassNode.class
                         && type.getClass() != InnerClassNode.class

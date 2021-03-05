@@ -45,6 +45,8 @@
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/CallSiteWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/InvocationWriter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/StatementMetaTypeChooser.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/StatementWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />

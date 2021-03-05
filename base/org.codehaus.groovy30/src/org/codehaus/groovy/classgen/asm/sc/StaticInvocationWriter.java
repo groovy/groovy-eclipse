@@ -730,7 +730,12 @@ public class StaticInvocationWriter extends InvocationWriter {
             if (target instanceof ExtensionMethodNode) {
                 type = ((ExtensionMethodNode) target).getExtensionMethodNode().getDeclaringClass();
             } else {
+                /* GRECLIPSE edit -- GROOVY-9955
                 type = ClassHelper.getWrapper(controller.getTypeChooser().resolveType(receiver, controller.getClassNode()));
+                */
+                type = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
+                if (ClassHelper.isPrimitiveType(type)) type = ClassHelper.getWrapper(type);
+                // GRECLIPSE end
                 ClassNode declaringClass = target.getDeclaringClass();
                 if (type.getClass() != ClassNode.class
                         && type.getClass() != InnerClassNode.class
