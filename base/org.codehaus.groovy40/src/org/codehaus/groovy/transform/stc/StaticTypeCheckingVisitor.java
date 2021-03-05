@@ -1484,6 +1484,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         Expression objectExpression = pexp.getObjectExpression();
         ClassNode objectExpressionType = getType(objectExpression);
+        // GRECLIPSE add -- GROOVY-9963
+        if (objectExpression instanceof ConstructorCallExpression) {
+            inferDiamondType((ConstructorCallExpression) objectExpression, objectExpressionType);
+        }
+        // GRECLIPSE end
         List<ClassNode> enclosingTypes = typeCheckingContext.getEnclosingClassNodes();
 
         boolean staticOnlyAccess = isClassClassNodeWrappingConcreteType(objectExpressionType);

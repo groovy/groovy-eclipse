@@ -1067,4 +1067,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign C <Number> to: A <String>\n" +
             "----------\n");
     }
+
+    @Test
+    public void testTypeChecked9963() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class C<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "static m(String s) {\n" +
+            "  print s\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "static test() {\n" +
+            "  m(new C<>('x').p)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
+    }
 }
