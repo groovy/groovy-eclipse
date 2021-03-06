@@ -1090,4 +1090,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "x");
     }
+
+    @Test
+    public void testTypeChecked9968() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@Canonical class Pogo { String prop }\n" +
+            "@Canonical class IterableType<T extends Pogo> implements Iterable<T> {\n" +
+            "  Iterator<T> iterator() {\n" +
+            "    list.iterator()\n" +
+            "  }\n" +
+            "  List<T> list\n" +
+            "}\n" +
+            "@TypeChecked void test() {\n" +
+            "  def iterable = new IterableType([new Pogo('x'), new Pogo('y'), new Pogo('z')])\n" +
+            "  print iterable.collect { Pogo p -> p.prop }\n" +
+            "  print iterable.collect { it.prop }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[x, y, z][x, y, z]");
+    }
 }

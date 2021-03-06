@@ -3195,6 +3195,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private static ClassNode createUsableClassNodeFromGenericsType(final GenericsType genericsType) {
         ClassNode value = genericsType.getType();
         if (genericsType.isPlaceholder()) {
+            // GRECLIPSE add -- GROOVY-9968
+            if (value.isRedirectNode())
+                value = value.redirect();
+            else
+            // GRECLIPSE end
             value = OBJECT_TYPE;
         }
         ClassNode lowerBound = genericsType.getLowerBound();
