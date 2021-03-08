@@ -5518,13 +5518,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (resolvedPlaceholders.isEmpty()) {
             return boundUnboundedWildcards(returnType);
         }
-        /* GRECLIPSE edit -- GROOVY-9570
+        /* GRECLIPSE edit -- GROOVY-9570, GROOVY-9735, GROOVY-9970
         Map<GenericsTypeName, GenericsType> placeholdersFromContext = extractGenericsParameterMapOfThis(typeCheckingContext.getEnclosingMethod());
-        */
-        Map<GenericsTypeName, GenericsType> placeholdersFromContext = extractGenericsParameterMapOfThis(typeCheckingContext);
-        // GRECLIPSE end
         applyGenericsConnections(placeholdersFromContext, resolvedPlaceholders);
-
+        */
         // then resolve receivers from method arguments
         Parameter[] parameters = method.getParameters();
         boolean isVargs = isVargs(parameters);
@@ -5570,13 +5567,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     extractGenericsConnections(connections, actualType, type);
                     extractGenericsConnectionsForSuperClassAndInterfaces(resolvedPlaceholders, connections);
                     applyGenericsConnections(connections, resolvedPlaceholders);
-                    // GRECLIPSE add -- GROOVY-9735
-                    applyGenericsConnections(placeholdersFromContext, resolvedPlaceholders);
-                    // GRECLIPSE end
                 }
             }
         }
-
+        // GRECLIPSE add -- GROOVY-9570, GROOVY-9735, GROOVY-9970
+        applyGenericsConnections(extractGenericsParameterMapOfThis(typeCheckingContext), resolvedPlaceholders);
+        // GRECLIPSE end
         return applyGenericsContext(resolvedPlaceholders, returnType);
     }
 

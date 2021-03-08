@@ -5264,8 +5264,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             return boundUnboundedWildcards(returnType);
         }
         Map<GenericsTypeName, GenericsType> placeholdersFromContext = extractGenericsParameterMapOfThis(typeCheckingContext);
+        /* GRECLIPSE edit -- GROOVY-9970
         applyGenericsConnections(placeholdersFromContext, resolvedPlaceholders);
-
+        */
         // then resolve receivers from method arguments
         List<Expression> expressions = InvocationWriter.makeArgumentList(arguments).getExpressions();
         Parameter[] parameters = method.getParameters();
@@ -5302,11 +5303,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     extractGenericsConnectionsForSuperClassAndInterfaces(resolvedPlaceholders, connections);
 
                     applyGenericsConnections(connections, resolvedPlaceholders);
+                    /* GRECLIPSE edit -- GROOVY-9970
                     applyGenericsConnections(placeholdersFromContext, resolvedPlaceholders);
+                    */
                 }
             }
         }
-
+        // GRECLIPSE add -- GROOVY-9970
+        applyGenericsConnections(placeholdersFromContext, resolvedPlaceholders);
+        // GRECLIPSE end
         return applyGenericsContext(resolvedPlaceholders, returnType);
     }
 
