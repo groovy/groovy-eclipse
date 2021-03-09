@@ -4219,8 +4219,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (hasInferredReturnType(trueExpression)) {
             typeOfTrue = trueExpression.getNodeMetaData(INFERRED_RETURN_TYPE);
         }
-        // TODO consider moving next two statements "up a level", i.e. have just one more widely invoked
-        // check but determine no -ve consequences first
+        /* GRECLIPSE edit -- GROOVY-9972
         typeOfFalse = checkForTargetType(falseExpression, typeOfFalse);
         typeOfTrue = checkForTargetType(trueExpression, typeOfTrue);
         if (isNullConstant(trueExpression) || isNullConstant(falseExpression)) {
@@ -4238,13 +4237,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // store type information
             resultType = lowestUpperBound(typeOfTrue, typeOfFalse);
         }
+        */
+        if (isNullConstant(trueExpression) && isNullConstant(falseExpression)) { // GROOVY-5523
+            resultType = checkForTargetType(expression, UNKNOWN_PARAMETER_TYPE);
+        } else if (isNullConstant(trueExpression)) {
+            resultType = wrapTypeIfNecessary(checkForTargetType(falseExpression, typeOfFalse));
+        } else if (isNullConstant(falseExpression)) {
+            resultType = wrapTypeIfNecessary(checkForTargetType(trueExpression, typeOfTrue));
+        } else {
+            typeOfFalse = checkForTargetType(falseExpression, typeOfFalse);
+            typeOfTrue = checkForTargetType(trueExpression, typeOfTrue);
+            resultType = lowestUpperBound(typeOfTrue, typeOfFalse);
+        }
+        // GRECLIPSE end
         storeType(expression, resultType);
         popAssignmentTracking(oldTracker);
     }
 
-    // currently just for empty literals, not for e.g. Collections.emptyList() at present
-    /// it seems attractive to want to do this for more cases but perhaps not all cases
     private ClassNode checkForTargetType(final Expression expr, final ClassNode type) {
+        /* GRECLIPSE edit -- GROOVY-9972
         BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
         if (enclosingBinaryExpression instanceof DeclarationExpression
                 && isEmptyCollection(expr) && isAssignment(enclosingBinaryExpression.getOperation().getType())) {
@@ -4262,8 +4273,38 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             return adjustForTargetType(enclosingMethod.getReturnType(), type);
         }
         return type;
+        */
+        ClassNode sourceType = type, targetType = null;
+        MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
+        BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
+        if (enclosingBinaryExpression instanceof DeclarationExpression
+                && isAssignment(enclosingBinaryExpression.getOperation().getType())
+                && isTypeSource(expr, enclosingBinaryExpression.getRightExpression())) {
+            targetType = enclosingBinaryExpression.getLeftExpression().getType();
+        } else if (currentField != null
+                && isTypeSource(expr, currentField.getInitialExpression())) {
+            targetType = currentField.getType();
+        } else if (currentProperty != null
+                && isTypeSource(expr, currentProperty.getInitialExpression())) {
+            targetType = currentProperty.getType();
+        } else if (enclosingMethod != null) {
+            // TODO: try enclosingMethod's code with isTypeSource(expr, ...)
+            targetType = enclosingMethod.getReturnType();
+        } // TODO: closure parameter default expression
+
+        if (expr instanceof ConstructorCallExpression) {
+            if (targetType == null) targetType = sourceType;
+            inferDiamondType((ConstructorCallExpression) expr, targetType);
+        } else if (targetType != null && missesGenericsTypes(sourceType)) {
+            // unchecked assignment with ternary/elvis, like "List<T> list = listOfT ?: []"
+            // the inferred type is the RHS type "completed" with generics information from LHS
+            return GenericsUtils.parameterizeType(targetType, sourceType.getPlainNodeReference());
+        }
+        return targetType != null && sourceType == UNKNOWN_PARAMETER_TYPE ? targetType : sourceType;
+        // GRECLIPSE end
     }
 
+    /* GRECLIPSE edit
     private static ClassNode adjustForTargetType(final ClassNode targetType, final ClassNode resultType) {
         if (targetType.isUsingGenerics() && missesGenericsTypes(resultType)) {
             // unchecked assignment within ternary/elvis
@@ -4275,6 +4316,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         return resultType;
     }
+    */
+    private static boolean isTypeSource(final Expression expr, final Expression right) {
+        if (right instanceof TernaryExpression) {
+            return isTypeSource(expr, ((TernaryExpression) right).getTrueExpression())
+                || isTypeSource(expr, ((TernaryExpression) right).getFalseExpression());
+        }
+        return expr == right;
+    }
+    // GRECLIPSE end
 
     private static boolean isEmptyCollection(final Expression expr) {
         return (expr instanceof ListExpression && ((ListExpression) expr).getExpressions().isEmpty())

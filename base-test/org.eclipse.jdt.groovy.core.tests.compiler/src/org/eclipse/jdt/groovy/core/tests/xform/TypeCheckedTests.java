@@ -1143,4 +1143,82 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testTypeChecked9972() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class A<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "class B {\n" +
+            "  public String f = 'B#f'\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  A<B> x = true ? new A<>(new B()) : new A<>(new B())\n" +
+            "  print x.p.f.toLowerCase()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "b#f");
+    }
+
+    @Test
+    public void testTypeChecked9972a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class A<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "class B {\n" +
+            "  public String f = 'B#f'\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(flag) {\n" +
+            "  A<B> x = flag ? new A<>(new B()) : (flag ? new A<>(new B()) : new A<>(new B()))\n" +
+            "  print x.p.f.toLowerCase()\n" +
+            "}\n" +
+            "test(true)\n" +
+            "test(false)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "b#fb#f");
+    }
+
+    @Test
+    public void testTypeChecked9972b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class A<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "class B {\n" +
+            "  public String f = 'B#f'\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def x\n" +
+            "  if (true) {\n" +
+            "    x = new A<>(new B())\n" +
+            "  } else {\n" +
+            "    x = new A<>(new B())\n" +
+            "  }\n" +
+            "  print x.p.f.toLowerCase()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "b#f");
+    }
 }
