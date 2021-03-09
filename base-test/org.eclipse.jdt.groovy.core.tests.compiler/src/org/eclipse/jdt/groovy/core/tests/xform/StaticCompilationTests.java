@@ -6026,4 +6026,25 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testCompileStatic9973() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  private int f\n" +
+            "  int getP() { f }\n" +
+            "  Integer calc() { 123456 - p }\n" +
+            "  Integer calc(int i) { i - p }\n" +
+            "}\n" +
+            "def c = new C()\n" +
+            "print c.calc()\n" +
+            "print c.calc(123)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "123456123");
+    }
 }

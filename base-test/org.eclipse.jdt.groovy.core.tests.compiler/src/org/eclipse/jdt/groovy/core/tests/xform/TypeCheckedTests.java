@@ -1221,4 +1221,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "b#f");
     }
+
+    @Test
+    public void testTypeChecked9972c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class A {\n" +
+            "  List<B> bees\n" +
+            "}\n" +
+            "class B {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(A... args) {\n" +
+            "  List<B> bees = args.collectMany { it.bees ?: [] }\n" +
+            "}\n" +
+            "test(new A(), new A(bees: [new B()]))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
 }

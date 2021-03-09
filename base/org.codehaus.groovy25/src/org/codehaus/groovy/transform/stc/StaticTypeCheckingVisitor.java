@@ -4444,9 +4444,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         */
         if (isNullConstant(trueExpression) && isNullConstant(falseExpression)) { // GROOVY-5523
             resultType = checkForTargetType(expression, UNKNOWN_PARAMETER_TYPE);
-        } else if (isNullConstant(trueExpression)) {
+        } else if (isNullConstant(trueExpression) || (isEmptyCollection(trueExpression)
+                && isOrImplements(typeOfTrue, typeOfFalse))) { // [] : List/Collection/Iterable
             resultType = wrapTypeIfNecessary(checkForTargetType(falseExpression, typeOfFalse));
-        } else if (isNullConstant(falseExpression)) {
+        } else if (isNullConstant(falseExpression) || (isEmptyCollection(falseExpression)
+                && isOrImplements(typeOfFalse, typeOfTrue))) { // List/Collection/Iterable : []
             resultType = wrapTypeIfNecessary(checkForTargetType(trueExpression, typeOfTrue));
         } else {
             typeOfFalse = checkForTargetType(falseExpression, typeOfFalse);
@@ -4499,7 +4501,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (expr instanceof ConstructorCallExpression) {
             if (targetType == null) targetType = sourceType;
             inferDiamondType((ConstructorCallExpression) expr, targetType);
-        } else if (targetType != null && missesGenericsTypes(sourceType)) {
+        } else if (targetType != null && !isPrimitiveType(getUnwrapper(targetType))
+                && !targetType.equals(OBJECT_TYPE) && missesGenericsTypes(sourceType)) {
             // unchecked assignment with ternary/elvis, like "List<T> list = listOfT ?: []"
             // the inferred type is the RHS type "completed" with generics information from LHS
             return GenericsUtils.parameterizeType(targetType, sourceType.getPlainNodeReference());
