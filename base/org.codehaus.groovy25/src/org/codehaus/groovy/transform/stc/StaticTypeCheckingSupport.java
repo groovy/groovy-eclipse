@@ -1790,12 +1790,21 @@ public abstract class StaticTypeCheckingSupport {
     static void extractGenericsConnections(Map<GenericsTypeName, GenericsType> connections, ClassNode type, ClassNode target) {
         if (target == null || type == target || !isUsingGenericsOrIsArrayUsingGenerics(target)) return;
         if (type == null || type == UNKNOWN_PARAMETER_TYPE) return;
+
+        MethodNode sam;
+
         if (type.isArray() && target.isArray()) {
             extractGenericsConnections(connections, type.getComponentType(), target.getComponentType());
+        // GRECLIPSE add
+        } else if (type.equals(CLOSURE_TYPE) && (sam = findSAM(target)) != null) {
+            // GROOVY-9974: Lambda, Closure, Pointer or Reference for SAM-type receiver
+            ClassNode returnType = StaticTypeCheckingVisitor.wrapTypeIfNecessary(sam.getReturnType());
+            extractGenericsConnections(connections, type.getGenericsTypes(), new GenericsType[] {new GenericsType(returnType)});
+        // GRECLIPSE end
         } else if (target.isGenericsPlaceHolder() || type.equals(target) || !implementsInterfaceOrIsSubclassOf(type, target)) {
             // structural match route
             if (target.isGenericsPlaceHolder()) {
-                connections.put(new GenericsTypeName(target.getGenericsTypes()[0].getName()), new GenericsType(type));
+                connections.put(new GenericsTypeName(target.getUnresolvedName()), new GenericsType(type));
             } else {
                 extractGenericsConnections(connections, type.getGenericsTypes(), target.getGenericsTypes());
             }

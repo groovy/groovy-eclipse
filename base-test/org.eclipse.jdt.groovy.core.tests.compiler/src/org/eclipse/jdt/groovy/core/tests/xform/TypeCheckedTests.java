@@ -1243,4 +1243,23 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testTypeChecked9974() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "boolean isBlank(String s) {\n" +
+            "  s.isAllWhitespace()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  print([''].removeIf(this.&isBlank))\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
 }
