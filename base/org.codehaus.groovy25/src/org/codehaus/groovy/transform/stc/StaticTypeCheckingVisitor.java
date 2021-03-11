@@ -132,6 +132,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
@@ -186,7 +187,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.thisPropX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
-import static org.codehaus.groovy.ast.tools.GenericsUtils.extractPlaceholders;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.toGenericTypesString;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigDecCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigIntCategory;
@@ -858,7 +858,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         try {
             final Expression leftExpression = expression.getLeftExpression();
             final Expression rightExpression = expression.getRightExpression();
-            leftExpression.visit(this);
+
+            leftExpression.visit(this); ClassNode lType;
             SetterInfo setterInfo = removeSetterInfo(leftExpression);
             if (setterInfo != null) {
                 if (ensureValidSetter(expression, leftExpression, rightExpression, setterInfo)) {
@@ -867,12 +868,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     // GRECLIPSE end
                     return;
                 }
-
+                lType = getType(leftExpression);
             } else {
+                // GRECLIPSE add -- GROOVY-9977
+                lType = getType(leftExpression);
+                if (op == ASSIGN && isFunctionalInterface(lType)) {
+                    processFunctionalInterfaceAssignment(lType, rightExpression);
+                }
+                // GRECLIPSE end
                 rightExpression.visit(this);
             }
-            ClassNode lType = getType(leftExpression);
             /* GRECLIPSE edit -- GROOVY-9953
+            ClassNode lType = getType(leftExpression);
             ClassNode rType = getType(rightExpression);
             if (isNullConstant(rightExpression)) {
                 if (!isPrimitiveType(lType))
@@ -1032,6 +1039,37 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             typeCheckingContext.popEnclosingBinaryExpression();
         }
     }
+
+    // GRECLIPSE add
+    private static boolean isFunctionalInterface(final ClassNode type) {
+        return type.isInterface() && isSAMType(type);
+    }
+
+    private void processFunctionalInterfaceAssignment(final ClassNode lhsType, final Expression rhsExpression) {
+        if (rhsExpression instanceof ClosureExpression) {
+            MethodNode abstractMethod = ClassHelper.findSAM(lhsType);
+            Map<GenericsType, GenericsType> mappings = GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType(abstractMethod.getDeclaringClass(), lhsType);
+            Function<ClassNode, ClassNode> resolver = t -> t.isGenericsPlaceHolder() ? GenericsUtils.findActualTypeByGenericsPlaceholderName(t.getUnresolvedName(), mappings) : t;
+
+            ClassNode[] samParameterTypes = Arrays.stream(abstractMethod.getParameters()).map(Parameter::getType).map(resolver).toArray(ClassNode[]::new);
+            Parameter[] closureParameters = getParametersSafe((ClosureExpression) rhsExpression);
+            int n = closureParameters.length;
+            if (n == samParameterTypes.length) {
+                for (int i = 0; i < n; i += 1) {
+                    Parameter parameter = closureParameters[i];
+                    if (parameter.isDynamicTyped()) {
+                        parameter.setType(samParameterTypes[i]);
+                        parameter.setOriginType(samParameterTypes[i]);
+                    }
+                }
+            } else {
+                addStaticTypeError("Wrong number of parameters: ", rhsExpression);
+            }
+
+            storeInferredReturnType(rhsExpression, resolver.apply(abstractMethod.getReturnType()));
+        }
+    }
+    // GRECLIPSE end
 
     /**
      * Given a binary expression corresponding to an assignment, will check that the type of the RHS matches one
@@ -1995,7 +2033,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         try {
             typeCheckingContext.isInStaticContext = node.isInStaticContext();
             currentProperty = node;
+            /* GRECLIPSE edit -- GROOVY-9977
             super.visitProperty(node);
+            */
+            visitAnnotations(node);
+            visitClassCodeContainer(node.getGetterBlock());
+            visitClassCodeContainer(node.getSetterBlock());
+            // GRECLIPSE end
         } finally {
             currentProperty = null;
             typeCheckingContext.isInStaticContext = osc;
@@ -2008,9 +2052,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         try {
             typeCheckingContext.isInStaticContext = node.isInStaticContext();
             currentField = node;
+            /* GRECLIPSE edit -- GROOVY-9977
             super.visitField(node);
+            */
+            visitAnnotations(node);
+            // GRECLIPSE end
             Expression init = node.getInitialExpression();
             if (init != null) {
+                // GRECLIPSE add -- GROOVY-9977
+                ClassNode lType = getType(node);
+                if (isFunctionalInterface(lType)) {
+                    processFunctionalInterfaceAssignment(lType, init);
+                }
+                init.visit(this);
+                ClassNode rType = getType(init);
+                if (init instanceof ConstructorCallExpression) {
+                    inferDiamondType((ConstructorCallExpression) init, lType);
+                }
+                // GRECLIPSE end
                 FieldExpression left = new FieldExpression(node);
                 BinaryExpression bexp = binX(
                         left,
@@ -2020,13 +2079,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 bexp.setSourcePosition(init);
                 /* GRECLIPSE edit -- GROOVY-9882
                 typeCheckAssignment(bexp, left, node.getOriginType(), init, getType(init));
-                */
                 ClassNode lType = node.getOriginType(), rType = getType(init);
-                typeCheckAssignment(bexp, left, lType, init, getResultType(lType, ASSIGN, rType, bexp));
-                // GRECLIPSE end
                 if (init instanceof ConstructorCallExpression) {
                     inferDiamondType((ConstructorCallExpression) init, node.getOriginType());
                 }
+                */
+                typeCheckAssignment(bexp, left, lType, init, getResultType(lType, ASSIGN, rType, bexp));
+                // GRECLIPSE end
             }
         } finally {
             currentField = null;

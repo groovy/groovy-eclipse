@@ -1262,4 +1262,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "true");
     }
+
+    @Test
+    public void testTypeChecked9977() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  public final Comparator<Integer> f = { a, b -> Integer.compare(a, b) }\n" +
+            "  \n" +
+            "  final Comparator<Integer> p = { a, b -> Integer.compare(a, b) }\n" +
+            "  def m() {\n" +
+            "    Comparator<Integer> v = { a, b -> Integer.compare(a, b) }\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().getP().compare(0, 1)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "-1");
+    }
 }
