@@ -4371,6 +4371,28 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
+    @Test // GROOVY-9982
+    public void testReferencingFields_ThisClassPropertyVsSuperClassMethod() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  def foo() { 'foo' }\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  def foo\n" +
+            "  def test() {\n" +
+            "    foo = foo()\n" + // not ScriptBytecodeAdapter#invokeClosure
+            "    foo\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo");
+    }
+
     @Test
     public void testGroovyObjectsAreGroovyAtCompileTime() {
         //@formatter:off
