@@ -12,8 +12,9 @@
 		<groovy.rt.version>4.0.0-alpha-2</groovy.rt.version>
 		<!-- groovy-batch version to use for tests: -->
 		<groovy.xx.version>4.0.0-01</groovy.xx.version>
-		<!-- maven-compiler version to use for tests: -->
+		<!-- maven-compiler versions to use for tests: -->
 		<maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
+		<maven-compiler-adapter.version>3.7.0</maven-compiler-adapter.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -37,7 +38,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-invoker-plugin</artifactId>
-				<version>3.2.1</version>
+				<version>3.2.2</version>
 				<configuration>
 					<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
 					<!-- launch with same java used to run maven, not what is defined by JAVA_HOME env var -->

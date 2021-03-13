@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,13 +31,15 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.toolchain.Toolchain;
+import org.apache.maven.toolchain.ToolchainManager;
 import org.codehaus.plexus.compiler.AbstractCompiler;
 import org.codehaus.plexus.compiler.Compiler;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
@@ -51,6 +53,7 @@ import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
 import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
 import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
 import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
@@ -73,6 +76,12 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         // for sources, so we pass it "". Later, we must recalculate for real.
         super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class", null);
     }
+
+    @Requirement
+    private MavenSession session;
+
+    @Requirement
+    private ToolchainManager toolchainManager;
 
     private final List<String> vmArgs = new ArrayList<>();
 
@@ -100,35 +109,23 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         String[] args = createCommandLine(config);
         if (args.length == 0) {
             getLogger().info("Nothing to compile - all classes are up to date");
-
             return new CompilerResult(true, Collections.EMPTY_LIST);
         }
+
         if (config.isFork()) {
-            String executable = config.getExecutable();
-            if (isBlank(executable)) {
-                try {
-                    executable = getJavaExecutable();
-                } catch (IOException e) {
-                    getLogger().warn("Unable to autodetect 'java' path, using 'java' from the environment.");
-                    executable = "java";
-                }
-            }
-
-            String groovyEclipseLocation = getGroovyEclipseBatchLocation();
-            return compileOutOfProcess(config, executable, groovyEclipseLocation, args);
-
-        } else {
-            StringWriter out = new StringWriter();
-            if (verbose) getLogger().info("Compiler arguments: " + Arrays.toString(args));
-            InternalCompiler.Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
-
-            List<CompilerMessage> messages = parseMessages(result.success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
-            if (!result.success) {
-                messages.add(formatFailure(result.globalErrorsCount, result.globalWarningsCount));
-            }
-
-            return new CompilerResult(result.success, messages);
+            return compileOutOfProcess(config, getJavaExecutable(config), getGroovyEclipseBatchLocation(), args);
         }
+
+        StringWriter out = new StringWriter();
+        if (verbose) getLogger().info("Compiler arguments: " + Arrays.toString(args));
+        InternalCompiler.Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
+
+        List<CompilerMessage> messages = parseMessages(result.success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
+        if (!result.success) {
+            messages.add(formatFailure(result.globalErrorsCount, result.globalWarningsCount));
+        }
+
+        return new CompilerResult(result.success, messages);
     }
 
     private void recalculateStaleFiles(final CompilerConfiguration config) throws CompilerException {
@@ -454,7 +451,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                             parsedMessages.add(message);
                         }
                     } else if (!PROBLEM_SEPARATOR.equals(line)) {
-                        unrecognized.append(line).append("\n");
+                        unrecognized.append(line).append(EOL);
                     }
                 }
                 if (unrecognized.length() > 0) {
@@ -586,48 +583,45 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
     }
 
-    /**
-     * Get the path of the javac tool executable: try to find it depending the
-     * OS or the <code>java.home</code> system property or the
-     * <code>JAVA_HOME</code> environment variable.
-     *
-     * @return the path of the Javadoc tool
-     * @throws IOException if not found
-     */
-    private String getJavaExecutable() throws IOException {
+    private String getJavaExecutable(final CompilerConfiguration config) {
+        String executable = config.getExecutable();
+        if (isNotBlank(executable)) {
+            return executable;
+        }
+
+        Toolchain jdkToolchain = toolchainManager.getToolchainFromBuildContext("jdk", session);
+        if (jdkToolchain != null) executable = jdkToolchain.findTool("java");
+        if (isNotBlank(executable)) {
+            return executable;
+        }
+
         String javaCommand = "java" + (Os.isFamily(Os.FAMILY_WINDOWS) ? ".exe" : "");
-
         String javaHome = System.getProperty("java.home");
-        File javaExe;
+        File javaPath;
         if (Os.isName("AIX")) {
-            javaExe = new File(javaHome + File.separator + ".." + File.separator + "sh", javaCommand);
+            javaPath = new File(javaHome + File.separator + ".." + File.separator + "sh", javaCommand);
         } else if (Os.isName("Mac OS X")) {
-            javaExe = new File(javaHome + File.separator + "bin", javaCommand);
+            javaPath = new File(javaHome + File.separator + "bin", javaCommand);
         } else {
-            javaExe = new File(javaHome + File.separator + ".." + File.separator + "bin", javaCommand);
+            javaPath = new File(javaHome + File.separator + ".." + File.separator + "bin", javaCommand);
+        }
+        if (javaPath.isFile()) {
+            return javaPath.getAbsolutePath();
         }
 
-        // ----------------------------------------------------------------------
-        // Try to find javacExe from JAVA_HOME environment variable
-        // ----------------------------------------------------------------------
-        if (!javaExe.isFile()) {
-            Properties env = CommandLineUtils.getSystemEnvVars();
-            javaHome = env.getProperty("JAVA_HOME");
-            if (isBlank(javaHome)) {
-                throw new IOException("The environment variable JAVA_HOME is not correctly set.");
+        try {
+            javaHome = CommandLineUtils.getSystemEnvVars().getProperty("JAVA_HOME");
+            if (isNotBlank(javaHome) && new File(javaHome).isDirectory()) {
+                javaPath = new File(javaHome + File.separator + "bin", javaCommand);
+                if (javaPath.isFile()) {
+                    return javaPath.getAbsolutePath();
+                }
             }
-            if (!new File(javaHome).isDirectory()) {
-                throw new IOException("The environment variable JAVA_HOME=" + javaHome + " doesn't exist or is not a valid directory.");
-            }
-
-            javaExe = new File(env.getProperty("JAVA_HOME") + File.separator + "bin", javaCommand);
+        } catch (IOException ignore) {
         }
 
-        if (!javaExe.isFile()) {
-            throw new IOException("The javadoc executable '" + javaExe + "' doesn't exist or is not a file. Verify the JAVA_HOME environment variable.");
-        }
-
-        return javaExe.getAbsolutePath();
+        getLogger().warn("Failed to auto-detect location of 'java' executable");
+        return "java";
     }
 
     /**

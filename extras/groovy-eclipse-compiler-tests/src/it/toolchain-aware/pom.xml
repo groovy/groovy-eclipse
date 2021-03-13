@@ -5,15 +5,13 @@
                      http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <url>https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-Maven-plugin#use-the-groovy-eclipse-compiler-mojo-for-configuring-source-folders</url>
   <artifactId>groovy-eclipse-maven-test</artifactId>
   <groupId>org.codehaus.groovy</groupId>
   <version>1.0-SNAPSHOT</version>
 
   <properties>
     <maven.compiler.fork>true</maven.compiler.fork>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>11</maven.compiler.release>
     <project.build.sourceEncoding>US-ASCII</project.build.sourceEncoding>
   </properties>
 
@@ -34,12 +32,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy-eclipse-compiler</artifactId>
-        <version>@maven-compiler-adapter.version@</version>
-        <extensions>true</extensions>
-      </plugin>
-      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>@maven-compiler-plugin.version@</version>
         <configuration>
@@ -57,6 +49,26 @@
             <version>@groovy.xx.version@</version>
           </dependency>
         </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <toolchains>
+            <jdk>
+              <version>[11,12)</version>
+            </jdk>
+          </toolchains>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

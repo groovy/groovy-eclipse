@@ -42,7 +42,7 @@
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-eclipse-compiler</artifactId>
-            <version>@project.version@</version>
+            <version>@maven-compiler-adapter.version@</version>
           </dependency>
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
