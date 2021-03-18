@@ -2312,7 +2312,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (call.isThisCall()) {
             receiver = typeCheckingContext.getEnclosingClassNode();
         } else if (call.isSuperCall()) {
+            /* GRECLIPSE edit -- GROVY-7945
             receiver = typeCheckingContext.getEnclosingClassNode().getSuperClass();
+            */
+            receiver = typeCheckingContext.getEnclosingClassNode().getUnresolvedSuperClass();
+            // GRECLIPSE end
         }
         Expression arguments = call.getArguments();
         ArgumentListExpression argumentList = InvocationWriter.makeArgumentList(arguments);

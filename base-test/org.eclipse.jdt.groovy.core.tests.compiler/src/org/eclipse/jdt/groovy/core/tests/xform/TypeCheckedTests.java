@@ -404,6 +404,37 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7945() {
+        //@formatter:off
+        String[] sources = {
+            "Test.groovy",
+            "abstract class A<X, Y> {\n" +
+            "  private final Class<X> x\n" +
+            "  private final Class<Y> y\n" +
+            "  A(Class<X> x, Class<Y> y) {\n" +
+            "    this.x = x\n" +
+            "    this.y = y\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class C extends A<String, Integer> {\n" +
+            "  C() {\n" +
+            "    super(Integer, String)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Test.groovy (at line 12)\n" +
+            "\tsuper(Integer, String)\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call A <String, Integer>#<init>(java.lang.Class <String>, java.lang.Class <Integer>) with arguments [java.lang.Class <java.lang.Integer>, java.lang.Class <java.lang.String>] \n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked8103() {
         //@formatter:off
         String[] sources = {
@@ -417,7 +448,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  fluent(Util.factory('{}')).isSimilarTo('{\"key\":\"val\"}')\n" + // STC error
             "}\n",
 
-            "API.groovy",
+            "Types.groovy",
             "class Fluent {\n" +
             "  static FluentAPI  fluent(String s) { return new FluentAPI() }\n" +
             "  static <T extends FluentExtension> T fluent(T t) { return t }\n" +
