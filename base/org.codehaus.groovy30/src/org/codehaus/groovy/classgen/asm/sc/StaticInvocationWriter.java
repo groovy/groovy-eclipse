@@ -246,6 +246,9 @@ public class StaticInvocationWriter extends InvocationWriter {
             Expression fixedReceiver = receiver;
             if (implicitThis) {
                 if (!controller.isInGeneratedFunction()) {
+                    // GRECLIPSE add -- GROOVY-9524
+                    if (!thisClass.isDerivedFrom(lookupClassNode))
+                    // GRECLIPSE end
                     fixedReceiver = propX(classX(lookupClassNode), "this");
                 } else if (thisClass != null) {
                     ClassNode current = thisClass.getOuterClass();

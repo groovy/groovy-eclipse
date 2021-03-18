@@ -4918,6 +4918,32 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9524() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class W {\n" +
+            "  enum X {\n" +
+            "        Y {\n" +
+            "      def z() {\n" +
+            "        truncate('123', 2)\n" +
+            "      }\n" +
+            "    }\n" +
+            "    abstract def z()\n" +
+            "    private String truncate(String input, int maxLength) {\n" +
+            "      input.substring(0, maxLength)\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print W.X.Y.z()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "12");
+    }
+
+    @Test
     public void testCompileStatic9555() {
         //@formatter:off
         String[] sources = {
