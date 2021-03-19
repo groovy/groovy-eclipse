@@ -764,6 +764,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6610() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Outer {\n" +
+            "  private static Integer VALUE = 42\n" +
+            "  static class Inner {\n" +
+            "    public final String value\n" +
+            "    Inner(String string) {\n" +
+            "      value = string\n" +
+            "    }\n" +
+            "    Inner() {\n" +
+            "      this(VALUE.toString())\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print new Outer.Inner().value\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testCompileStatic6904() {
         //@formatter:off
         String[] sources = {
