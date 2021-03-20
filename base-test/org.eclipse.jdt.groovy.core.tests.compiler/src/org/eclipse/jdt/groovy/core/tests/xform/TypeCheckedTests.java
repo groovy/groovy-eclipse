@@ -1314,4 +1314,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "-1");
     }
+
+    @Test
+    public void testTypeChecked9991() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  java.util.function.Predicate<?> p = { false }\n" +
+            "  print p.test(null)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "false");
+    }
 }

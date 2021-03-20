@@ -180,6 +180,7 @@ import static org.codehaus.groovy.ast.ClassHelper.short_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.void_WRAPPER_TYPE;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getResolveStrategyName;
+import static org.codehaus.groovy.ast.tools.ClosureUtils.hasImplicitParameter;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.block;
@@ -967,9 +968,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         Parameter[] closureParameters = getParametersSafe(rhsExpression);
         ClassNode[] parameterTypes = typeInfo.getV1();
 
+        /* GRECLIPSE edit -- GROOVY-9991
         int n = closureParameters.length;
         if (n == parameterTypes.length) {
             for (int i = 0; i < n; i += 1) {
+        */
+        if (closureParameters.length == parameterTypes.length
+                || (1 == parameterTypes.length && hasImplicitParameter(rhsExpression))) {
+            for (int i = 0; i < closureParameters.length; i += 1) {
+        // GRECLIPSE end
                 Parameter parameter = closureParameters[i];
                 if (parameter.isDynamicTyped()) {
                     parameter.setType(parameterTypes[i]);

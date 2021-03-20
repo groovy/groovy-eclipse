@@ -178,6 +178,7 @@ import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.ast.ClassHelper.short_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.void_WRAPPER_TYPE;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
+import static org.codehaus.groovy.ast.tools.ClosureUtils.hasImplicitParameter;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
@@ -1051,11 +1052,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             Map<GenericsType, GenericsType> mappings = GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType(abstractMethod.getDeclaringClass(), lhsType);
             Function<ClassNode, ClassNode> resolver = t -> t.isGenericsPlaceHolder() ? GenericsUtils.findActualTypeByGenericsPlaceholderName(t.getUnresolvedName(), mappings) : t;
 
-            ClassNode[] samParameterTypes = Arrays.stream(abstractMethod.getParameters()).map(Parameter::getType).map(resolver).toArray(ClassNode[]::new);
             Parameter[] closureParameters = getParametersSafe((ClosureExpression) rhsExpression);
-            int n = closureParameters.length;
-            if (n == samParameterTypes.length) {
-                for (int i = 0; i < n; i += 1) {
+            ClassNode[] samParameterTypes = Arrays.stream(abstractMethod.getParameters()).map(Parameter::getType).map(resolver).toArray(ClassNode[]::new);
+            if (closureParameters.length == samParameterTypes.length || (1 == samParameterTypes.length && hasImplicitParameter((ClosureExpression) rhsExpression))) {
+                for (int i = 0; i < closureParameters.length; i += 1) {
                     Parameter parameter = closureParameters[i];
                     if (parameter.isDynamicTyped()) {
                         parameter.setType(samParameterTypes[i]);
@@ -1063,7 +1063,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             } else {
-                addStaticTypeError("Wrong number of parameters: ", rhsExpression);
+                String descriptor = toMethodParametersString(findSAM(lhsType).getName(), samParameterTypes);
+                addStaticTypeError("Wrong number of parameters for method target " + descriptor, rhsExpression);
             }
 
             storeInferredReturnType(rhsExpression, resolver.apply(abstractMethod.getReturnType()));
