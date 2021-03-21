@@ -1481,6 +1481,43 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "class D$1;class D$2");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8104
+    public void testAnonymousInnerClass29() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class A {\n" +
+            "  void foo() {\n" +
+            "    C c = new C()\n" +
+            "    ['1','2','3'].each {\n" +
+            "      c.baz(it, new I() {\n" +
+            "        void bar(Object o) {\n" +
+            "           B b = new B()\n" + // Could not find matching constructor for: A$B(A$_foo_closure1)
+            "           print \"$o:$b;\"\n" +
+            "        }\n" +
+            "      })\n" +
+            "    }\n" +
+            "  }\n" +
+            "  class B {\n" +
+            "    String toString() { getClass().getSimpleName() }\n" +
+            "  }\n" +
+            "}\n" +
+            "class C {\n" +
+            "  void baz(Object o, I i) {\n" +
+            "    i.bar(o)\n" +
+            "  }\n" +
+            "}\n" +
+            "interface I {\n" +
+            "  void bar(Object o)\n" +
+            "}\n" +
+            "A a = new A()\n" +
+            "a.foo()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1:B;2:B;3:B;");
+    }
+
     @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off
