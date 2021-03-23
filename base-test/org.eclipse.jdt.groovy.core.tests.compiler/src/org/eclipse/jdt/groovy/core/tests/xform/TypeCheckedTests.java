@@ -1334,4 +1334,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "false");
     }
+
+    @Test
+    public void testTypeChecked9995() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class A<T extends Number> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Closure<A<Long>> c = { ->\n" +
+            "    long x = 1\n" +
+            "    new A<>(x)\n" +
+            "  }\n" +
+            "  Long y = c().p\n" +
+            "  print y\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
 }

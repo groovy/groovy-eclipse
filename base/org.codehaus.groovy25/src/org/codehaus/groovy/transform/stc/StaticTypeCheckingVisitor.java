@@ -871,10 +871,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 lType = getType(leftExpression);
             } else {
-                // GRECLIPSE add -- GROOVY-9977
+                // GRECLIPSE add -- GROOVY-9977, GROOVY-9995
                 lType = getType(leftExpression);
-                if (op == ASSIGN && isFunctionalInterface(lType)) {
-                    processFunctionalInterfaceAssignment(lType, rightExpression);
+                if (op == ASSIGN) {
+                    if (isFunctionalInterface(lType)) {
+                        processFunctionalInterfaceAssignment(lType, rightExpression);
+                    } else if (isClosureWithType(lType) && rightExpression instanceof ClosureExpression) {
+                        storeInferredReturnType(rightExpression, getCombinedBoundType(lType.getGenericsTypes()[0]));
+                    }
                 }
                 // GRECLIPSE end
                 rightExpression.visit(this);
@@ -1042,6 +1046,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     // GRECLIPSE add
+    private static boolean isClosureWithType(final ClassNode type) {
+        return type.equals(CLOSURE_TYPE) && Optional.ofNullable(type.getGenericsTypes()).filter(gts -> gts != null && gts.length == 1).isPresent();
+    }
+
     private static boolean isFunctionalInterface(final ClassNode type) {
         return type.isInterface() && isSAMType(type);
     }
@@ -2060,7 +2068,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // GRECLIPSE end
             Expression init = node.getInitialExpression();
             if (init != null) {
-                // GRECLIPSE add -- GROOVY-9977
+                // GRECLIPSE add -- GROOVY-9977, GROOVY-9995
                 ClassNode lType = getType(node);
                 if (isFunctionalInterface(lType)) {
                     processFunctionalInterfaceAssignment(lType, init);
@@ -2069,6 +2077,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode rType = getType(init);
                 if (init instanceof ConstructorCallExpression) {
                     inferDiamondType((ConstructorCallExpression) init, lType);
+                } else if (isClosureWithType(lType) && init instanceof ClosureExpression) {
+                    storeInferredReturnType(init, getCombinedBoundType(lType.getGenericsTypes()[0]));
                 }
                 // GRECLIPSE end
                 FieldExpression left = new FieldExpression(node);
@@ -2443,7 +2453,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
-        /* GRECLIPSE edit -- GROOVY-9907
+        /* GRECLIPSE edit -- GROOVY-9907, GROOVY-9995
         ClassNode type = getType(expression);
 
         if (typeCheckingContext.getEnclosingClosure() != null) {
@@ -2456,11 +2466,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         */
         ClassNode type;
         if (expression instanceof VariableExpression && hasInferredReturnType(expression)) {
-            type = expression.getNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE);
+            type = getInferredReturnType(expression);
         } else {
             type = getType(expression);
         }
         if (typeCheckingContext.getEnclosingClosure() != null) {
+            if (expression instanceof ConstructorCallExpression) {
+                ClassNode inferredClosureReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
+                if (inferredClosureReturnType != null) inferDiamondType((ConstructorCallExpression) expression, inferredClosureReturnType);
+            }
             return type;
         }
         // GRECLIPSE end
