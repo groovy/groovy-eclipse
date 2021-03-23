@@ -4427,6 +4427,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitCastExpression(final CastExpression expression) {
+        /* GRECLIPSE edit -- GROOVY-9997
         super.visitCastExpression(expression);
         if (!expression.isCoerce()) {
             ClassNode targetType = expression.getType();
@@ -4437,6 +4438,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         }
         storeType(expression, expression.getType());
+        */
+        ClassNode type = expression.getType();
+        Expression source = expression.getExpression();
+        if (isFunctionalInterface(type)) {
+            processFunctionalInterfaceAssignment(type, source);
+        }
+
+        source.visit(this);
+
+        if (!expression.isCoerce() && !checkCast(type, source) && !isDelegateOrOwnerInClosure(source)) {
+            addStaticTypeError("Inconvertible types: cannot cast " + prettyPrintType(getType(source)) + " to " + prettyPrintType(type), expression);
+        }
+        // GRECLIPSE end
     }
 
     private boolean isDelegateOrOwnerInClosure(Expression exp) {
