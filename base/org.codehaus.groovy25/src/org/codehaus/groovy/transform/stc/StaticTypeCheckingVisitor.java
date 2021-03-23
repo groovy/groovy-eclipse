@@ -5674,10 +5674,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         List<Expression> expressions = argList.getExpressions();
         int paramLength = parameters.length;
         if (expressions.size() >= paramLength) {
-            for (int i = 0; i < paramLength; i++) {
-                boolean lastArg = i == paramLength - 1;
+            for (int i = 0; i < paramLength; i += 1) {
+                boolean lastArg = (i == paramLength - 1);
                 ClassNode type = parameters[i].getType();
+                /* GRECLIPSE edit -- GROOVY-9996
                 ClassNode actualType = getType(expressions.get(i));
+                */
+                ClassNode actualType = getDeclaredOrInferredType(expressions.get(i));
+                // GRECLIPSE end
                 while (!type.isUsingGenerics() && type.isArray() && actualType.isArray()) {
                     type = type.getComponentType();
                     actualType = actualType.getComponentType();
@@ -5975,6 +5979,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // GRECLIPSE end
         return resolveClassNodeGenerics(resolvedPlaceholders, placeholdersFromContext, currentType);
     }
+
+    // GRECLIPSE add
+    private ClassNode getDeclaredOrInferredType(final Expression expression) {
+        // in case of "T t = new ExtendsOrImplementsT()", return T for the expression type
+        if (expression instanceof Variable && !((Variable) expression).isDynamicTyped()) {
+            return getOriginalDeclarationType(expression); // GROOVY-9996
+        }
+        return getInferredTypeFromTempInfo(expression, getType(expression));
+    }
+    // GRECLIPSE end
 
     private static ClassNode getDeclaringClass(MethodNode method, Expression arguments) {
         ClassNode declaringClass = method.getDeclaringClass();

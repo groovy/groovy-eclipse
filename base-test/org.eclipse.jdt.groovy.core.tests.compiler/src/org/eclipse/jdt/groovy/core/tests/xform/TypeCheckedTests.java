@@ -1361,6 +1361,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9996() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class A<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "class B { }\n" +
+            "class C extends B { }\n" +
+            "static m(A<B> ab) { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  B b = new C()\n" + // "b" infers as C
+            "  def a = new A<>(b)\n" + // "a" infers as A<C>
+            "  m(a)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked9997() {
         //@formatter:off
         String[] sources = {
