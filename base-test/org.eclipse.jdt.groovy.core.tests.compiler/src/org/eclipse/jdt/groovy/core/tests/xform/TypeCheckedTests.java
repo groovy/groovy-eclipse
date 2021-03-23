@@ -1316,6 +1316,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9984() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  C<Integer> c = new C<>(null)\n" +
+            "  print c.p\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null");
+    }
+
+    @Test
     public void testTypeChecked9991() {
         if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
             vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};

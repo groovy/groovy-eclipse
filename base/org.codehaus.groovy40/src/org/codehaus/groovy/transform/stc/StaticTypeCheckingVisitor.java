@@ -5403,6 +5403,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         int paramLength = parameters.length;
         if (expressions.size() >= paramLength) {
             for (int i = 0; i < paramLength; i += 1) {
+                // GRECLIPSE add -- GROOVY-9984: skip null
+                if (isNullConstant(expressions.get(i))) continue;
+                // GRECLIPSE end
                 boolean lastArg = (i == paramLength - 1);
                 ClassNode paramType = parameters[i].getType();
                 /* GRECLIPSE edit -- GROOVY-9996
