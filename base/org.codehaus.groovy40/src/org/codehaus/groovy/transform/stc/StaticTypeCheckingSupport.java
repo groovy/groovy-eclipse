@@ -1602,7 +1602,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     static void applyGenericsConnections(final Map<GenericsTypeName, GenericsType> connections, final Map<GenericsTypeName, GenericsType> resolvedPlaceholders) {
-        if (connections == null) return;
+        if (connections == null || connections.isEmpty()) return;
         int count = 0;
         while (count++ < 10000) {
             boolean checkForMorePlaceholders = false;
@@ -1621,9 +1621,14 @@ public abstract class StaticTypeCheckingSupport {
                         // the original bounds are lost, which can result in accepting an incompatible type as an argument.
                         ClassNode replacementType = extractType(newValue);
                         if (oldValue.isCompatibleWith(replacementType)) {
+                            // GRECLIPSE add -- GROOVY-9998
+                            if (newValue.isWildcard() && newValue.getLowerBound() == null && newValue.getUpperBounds() == null) {
+                                entry.setValue(new GenericsType(replacementType));
+                            } else
+                            // GRECLIPSE end
                             entry.setValue(newValue);
-                            if (newValue.isPlaceholder()) {
-                                checkForMorePlaceholders = checkForMorePlaceholders || !equalIncludingGenerics(oldValue, newValue);
+                            if (!checkForMorePlaceholders && newValue.isPlaceholder()) {
+                                checkForMorePlaceholders = !equalIncludingGenerics(oldValue, newValue);
                             }
                         }
                     }
@@ -1770,6 +1775,7 @@ public abstract class StaticTypeCheckingSupport {
                     extractGenericsConnections(connections, ui.getLowerBound(), di.getLowerBound());
                     extractGenericsConnections(connections, ui.getUpperBounds(), di.getUpperBounds());
                 } else {
+                    /* GRECLIPSE edit -- GROOVY-9998
                     ClassNode cu = ui.getType();
                     extractGenericsConnections(connections, cu, di.getLowerBound());
                     ClassNode[] upperBounds = di.getUpperBounds();
@@ -1778,6 +1784,16 @@ public abstract class StaticTypeCheckingSupport {
                             extractGenericsConnections(connections, cu, cn);
                         }
                     }
+                    */
+                    ClassNode boundType = getCombinedBoundType(di);
+                    if (boundType.isGenericsPlaceHolder()) {
+                        String placeholderName = boundType.getUnresolvedName();
+                        ui = new GenericsType(ui.getType()); ui.setWildcard(true);
+                        connections.put(new GenericsTypeName(placeholderName), ui);
+                    } else { // di like "? super Collection<T>" and ui like "List<Type>"
+                        extractGenericsConnections(connections, ui.getType(), boundType);
+                    }
+                    // GRECLIPSE end
                 }
             } else {
                 extractGenericsConnections(connections, ui.getType(), di.getType());

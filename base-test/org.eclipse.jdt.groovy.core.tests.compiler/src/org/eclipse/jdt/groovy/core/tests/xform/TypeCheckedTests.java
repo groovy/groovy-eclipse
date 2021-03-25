@@ -1471,4 +1471,75 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testTypeChecked9998() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@TupleConstructor(defaults=false)\n" +
+            "class A {\n" +
+            "  final int order\n" +
+            "}\n" +
+            "@InheritConstructors @ToString(includeSuperProperties=true)\n" +
+            "class B extends A {\n" +
+            "}\n" +
+            "@TypeChecked\n" +
+            "def test() {\n" +
+            "  Comparator<A> comparator = { a1, a2 -> Integer.compare(a1.order, a2.order) }\n" +
+            "  [new B(2), new B(3), new B(1), new B(0)].stream().sorted(comparator).toList()\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[B(0), B(1), B(2), B(3)]");
+    }
+
+    @Test
+    public void testTypeChecked9998a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  List<String> strings = [1].collectMany {\n" +
+            "    Collections.emptyList()\n" +
+            "  }\n" +
+            "  print strings\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[]");
+    }
+
+    @Test
+    public void testTypeChecked9998b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static Type.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  CharSequence cs = make(type)\n" +
+            "  print cs\n" +
+            "}\n" +
+            "test()\n",
+
+            "Type.java",
+            "class Type {\n" +
+            "  static <T> T make(Class<T> c) { return null; }\n" +
+            "  static Class<? extends CharSequence> getType() { return String.class; }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null");
+    }
 }
