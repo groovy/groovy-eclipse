@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
+import static org.junit.Assume.assumeTrue;
+
 import java.util.Map;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
@@ -1334,6 +1337,52 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "null");
+    }
+
+    @Test
+    public void testTypeChecked9985() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new Integer[] {123, 'x'}\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tnew Integer[] {123, 'x'}\n" +
+            "\t                    ^^^\n" +
+            "Groovy:[Static type checking] - Cannot convert from java.lang.String to java.lang.Integer\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked9985a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new Integer[123]['x']\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tnew Integer[123]['x']\n" +
+            "\t                 ^^^\n" +
+            "Groovy:[Static type checking] - Cannot convert from java.lang.String to int\n" +
+            "----------\n");
     }
 
     @Test

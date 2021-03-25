@@ -48,6 +48,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
@@ -4243,6 +4244,27 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         Map<VariableExpression, List<ClassNode>> oldTracker = typeCheckingContext.ifElseForWhileAssignmentTracker;
         typeCheckingContext.ifElseForWhileAssignmentTracker = new HashMap<>();
         return oldTracker;
+    }
+
+    @Override
+    public void visitArrayExpression(final ArrayExpression expression) {
+        super.visitArrayExpression(expression);
+        // GRECLIPSE add -- GROOVY-9985
+        ClassNode elementType;
+        List<Expression> expressions;
+        if (expression.hasInitializer()) {
+            elementType = expression.getElementType();
+            expressions = expression.getExpressions();
+        } else {
+            elementType = int_TYPE;
+            expressions = expression.getSizeExpression();
+        }
+        for (Expression elementExpr : expressions) {
+            if (!checkCast(elementType, elementExpr)) {
+                addStaticTypeError("Cannot convert from " + prettyPrintType(getType(elementExpr)) + " to " + prettyPrintType(elementType), elementExpr);
+            }
+        }
+        // GRECLIPSE end
     }
 
     @Override
