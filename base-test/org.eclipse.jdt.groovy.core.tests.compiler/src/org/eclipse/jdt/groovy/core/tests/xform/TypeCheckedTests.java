@@ -438,6 +438,41 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8034() {
+        //@formatter:off
+        String[] sources = {
+            "Test.groovy",
+            "class A<I, O> {\n" +
+            "  def <IO extends A<? super O, ?>> IO andThen(IO next) {\n" +
+            "    next\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def a1 = new A<String , Integer>()\n" +
+            "  def a2 = new A<Integer, Double >()\n" +
+            "  def a3 = new A<Double , String >()\n" +
+            "  def a4 = new A<String , Double >()\n" +
+            "  def a5 = new A<Number , Object >()\n" +
+            "  \n" +
+            "  a1.andThen(a2)\n" +
+            "  a2.andThen(a3)\n" +
+            "  a3.andThen(a4)\n" +
+            "  a4.andThen(a5)\n" +
+            "  \n" +
+            "  a1.andThen(a2)\n" +
+            "    .andThen(a3)\n" +
+            "    .andThen(a4)\n" +
+            "    .andThen(a5)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked8103() {
         //@formatter:off
         String[] sources = {
@@ -468,7 +503,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "      Ours isSimilarTo(String json) { return this }\n" +
             "  }\n" +
             "  static Ours factory(String json) { new Ours() }\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
