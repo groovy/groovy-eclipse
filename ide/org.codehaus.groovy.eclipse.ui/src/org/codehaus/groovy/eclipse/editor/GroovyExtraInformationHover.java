@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
-import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jdt.core.IJavaElement;
@@ -109,18 +108,12 @@ public class GroovyExtraInformationHover extends JavadocHover {
      * an extraDoc.
      */
     private boolean shouldComputeHover(final IJavaElement[] elements) {
-        if (elements != null && elements.length == 1) {
-            if (alwaysReturnInformation) {
-                return true;
-            }
-            if (elements[0] instanceof IGroovyResolvedElement) {
-                IGroovyResolvedElement resolvedElt = (IGroovyResolvedElement) elements[0];
-                if (StringGroovyMethods.asBoolean(resolvedElt.getExtraDoc())) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return (elements != null && elements.length == 1 && (alwaysReturnInformation ||
+            (elements[0] instanceof IGroovyResolvedElement && isNotBlank(((IGroovyResolvedElement) elements[0]).getExtraDoc()))));
+    }
+
+    private static boolean isNotBlank(final String string) {
+        return (string != null && !string.trim().isEmpty());
     }
 
     /**

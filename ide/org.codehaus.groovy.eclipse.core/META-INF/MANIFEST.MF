@@ -13,7 +13,6 @@ Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.model,
  org.codehaus.groovy.eclipse.core.preferences,
  org.codehaus.groovy.eclipse.core.search,
- org.codehaus.groovy.eclipse.core.templates,
  org.codehaus.groovy.eclipse.core.util
 Import-Package: org.eclipse.debug.core;resolution:=optional,
  org.eclipse.eclemma.core.launching;resolution:=optional,

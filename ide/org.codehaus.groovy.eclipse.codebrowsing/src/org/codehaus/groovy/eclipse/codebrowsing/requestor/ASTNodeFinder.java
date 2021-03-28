@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,6 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -136,15 +135,15 @@ public class ASTNodeFinder extends DepthFirstVisitor {
 
             ClassNode returnType = node.getReturnType();
             if (returnType != null /*&& !returnType.isPrimitive()*/) { // allow primitives to be found to stop the visit
-                int n, offset = -1;
+                int offset = -1;
 
                 if (returnType.getEnd() < 1) {
                     // constrain the return type's start offset using generics or annotations
                     ASTNode last = ArrayUtils.lastElement(node.getGenericsTypes());
                     if (last != null) {
                         offset = last.getEnd() + 1;
-                    } else if ((n = node.getAnnotations().size()) > 0) {
-                        for (int i = (n - 1); i >= 0; i -= 1) {
+                    } else if (!node.getAnnotations().isEmpty()) {
+                        for (int i = (node.getAnnotations().size() - 1); i >= 0; i -= 1) {
                             // find the rightmost annotation with end source position info
                             int end = GroovyUtils.lastElement(node.getAnnotations().get(i)).getEnd() + 1;
                             if (end > 0) {
@@ -405,8 +404,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             source = src.substring(offset - node.getStart());
         } catch (Exception err) {
             GroovyCore.logException(String.format(
-                "Error checking super-types at offset %d in file / index %d of:%n%s%n%s",
-                offset, offset - node.getStart(), src, DefaultGroovyMethods.dump(node)), err);
+                "Error checking super-types at offset %d in file / index %d of:%n%s%n%s", offset, offset - node.getStart(), src, node), err);
             return;
         }
 

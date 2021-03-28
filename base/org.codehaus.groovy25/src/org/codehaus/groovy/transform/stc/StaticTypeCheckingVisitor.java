@@ -328,7 +328,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             checkReturnType(returnStatement);
             if (typeCheckingContext.getEnclosingClosure() != null) {
                 addClosureReturnType(getType(returnStatement.getExpression()));
-			*/
+            */
             ClassNode returnType = checkReturnType(returnStatement);
             if (typeCheckingContext.getEnclosingClosure() != null) {
                 addClosureReturnType(returnType);
@@ -4792,12 +4792,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
             // GRECLIPSE add
-            if (GeneralUtils.isOrImplements(rightRedirect, Collection_TYPE)) {
+            if (isOrImplements(rightRedirect, Collection_TYPE)) {
                 if (leftRedirect.isArray()) {
                     return leftRedirect;
                 }
-                if (GeneralUtils.isOrImplements(leftRedirect, Collection_TYPE) &&
-                        rightExpression instanceof ListExpression && isEmptyCollection(rightExpression)) {
+                if (isOrImplements(leftRedirect, Collection_TYPE)
+                        && rightExpression instanceof ListExpression && isEmptyCollection(rightExpression)) {
                     return left;
                 }
             }

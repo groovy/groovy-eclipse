@@ -935,9 +935,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "com.acme.Foo", "xyz",
             "print 'abc'");
 
-        boolean conflictIsError = (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.19")) >= 0);
-
         incrementalBuild(paths[0]);
+        Version jdt = JavaCore.getPlugin().getBundle().getVersion();
+        boolean conflictIsError = (jdt.getMajor() > 3 || jdt.getMinor() >= 19);
         expectingSpecificProblemFor(cuPath, new Problem("", "The type Foo collides with a package", cuPath, 31, 34,
             CategorizedProblem.CAT_TYPE, (conflictIsError ? IMarker.SEVERITY_ERROR : IMarker.SEVERITY_WARNING)));
         expectingCompiledClasses("com.acme.Foo", "xyz");
@@ -3552,15 +3552,21 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild();
         // TODO: expectingNoProblems(); // no cycle error; build order could be ProjectA:main, ProjectB:main, ProjectA:test, ProjectB:test
+        Version jdt = JavaCore.getPlugin().getBundle().getVersion();
+        boolean newCycleError = (jdt.getMajor() > 3 || jdt.getMinor() >= 20);
         expectingProblemsFor(projectA, Arrays.asList(
-            "Problem : One or more cycles were detected in the build path of project 'ProjectA'. The paths towards the cycle and cycle are:\n" +
-                "->{ProjectA, ProjectB} [ resource : </ProjectA> range : <-1,-1> category : <10> severity : <2>]",
+            "Problem : " + (newCycleError
+                ? "One or more cycles were detected in the build path of project 'ProjectA'. The paths towards the cycle and cycle are:\n->"
+                : "A cycle was detected in the build path of project 'ProjectA'. The cycle consists of projects ") +
+                "{ProjectA, ProjectB} [ resource : </ProjectA> range : <-1,-1> category : <10> severity : <2>]",
             "Problem : The project cannot be built until build path errors are resolved" +
                 " [ resource : </ProjectA> range : <-1,-1> category : <10> severity : <2>]"
         ));
         expectingProblemsFor(projectB, Arrays.asList(
-            "Problem : One or more cycles were detected in the build path of project 'ProjectB'. The paths towards the cycle and cycle are:\n" +
-                "->{ProjectA, ProjectB} [ resource : </ProjectB> range : <-1,-1> category : <10> severity : <2>]",
+            "Problem : " + (newCycleError
+                ? "One or more cycles were detected in the build path of project 'ProjectB'. The paths towards the cycle and cycle are:\n->"
+                : "A cycle was detected in the build path of project 'ProjectB'. The cycle consists of projects ") +
+                "{ProjectA, ProjectB} [ resource : </ProjectB> range : <-1,-1> category : <10> severity : <2>]",
             "Problem : The project cannot be built until build path errors are resolved " +
                 "[ resource : </ProjectB> range : <-1,-1> category : <10> severity : <2>]"
         ));
