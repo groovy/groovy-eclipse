@@ -38,7 +38,7 @@
         <file-match-pattern match-pattern="groovy/ast/tools/(Expression|Generics)Utils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/Enum(Completion)?Visitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/InnerClass(CompletionVisitor|Visitor(Helper)?).java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ReturnAdder.java" include-pattern="false" />

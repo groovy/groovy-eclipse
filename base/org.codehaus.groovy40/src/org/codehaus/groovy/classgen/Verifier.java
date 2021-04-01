@@ -1335,6 +1335,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 // it is super(..) since this(..) is already covered
                 otherStatements.remove(0);
                 statements.add(0, firstStatement);
+                // GRECLIPSE add -- GROOVY-7686: place local variable references above super ctor call
+                if (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous()) {
+                    extractVariableReferenceInitializers(statements).forEach(s -> statements.add(0, s));
+                }
+                // GRECLIPSE end
             }
             Statement stmtThis$0 = getImplicitThis$0StmtIfInnerClass(otherStatements);
             if (stmtThis$0 != null) {
@@ -1364,6 +1369,31 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             }
         }
     }
+
+    // GRECLIPSE add
+    private static List<Statement> extractVariableReferenceInitializers(final List<Statement> statements) {
+        List<Statement> localVariableReferences = new ArrayList<>();
+        for (ListIterator<Statement> it = statements.listIterator(1); it.hasNext();) {
+            // the first statement is the super constructor call  ^
+
+            Statement stmt = it.next();
+            if (stmt instanceof ExpressionStatement
+                    && ((ExpressionStatement) stmt).getExpression() instanceof BinaryExpression) {
+                BinaryExpression expr = (BinaryExpression) ((ExpressionStatement) stmt).getExpression();
+
+                if (expr.getOperation().getType() == Types.ASSIGN
+                        && expr.getLeftExpression() instanceof FieldExpression
+                        && expr.getLeftExpression().getType().equals(ClassHelper.REFERENCE_TYPE)
+                        && (((FieldExpression) expr.getLeftExpression()).getField().getModifiers() & Opcodes.ACC_SYNTHETIC) != 0
+                        /* also could check if the right expression is a variable expression that references ctor parameter */) {
+                    localVariableReferences.add(stmt);
+                    it.remove();
+                }
+            }
+        }
+        return localVariableReferences;
+    }
+    // GRECLIPSE end
 
     /*
      * When InnerClassVisitor adds <code>this.this$0 = $p$n</code>, it adds it

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -701,7 +701,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-4219
+    @Test
     public void testEnum4219() {
         //@formatter:off
         String[] sources = {
@@ -746,7 +746,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test(timeout = 1500) // https://issues.apache.org/jira/browse/GROOVY-4438
+    @Test(timeout = 1500)
     public void testEnum4438() {
         //@formatter:off
         String[] sources = {
@@ -765,7 +765,32 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test(timeout = 1500) // https://issues.apache.org/jira/browse/GROOVY-8507
+    @Test
+    public void testEnum6747() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "enum Codes {\n" +
+            "  YES('Y') {\n" +
+            "    @Override String getCode() { /*string*/ }\n" +
+            "  },\n" +
+            "  NO('N') {\n" +
+            "    @Override String getCode() { /*string*/ }\n" +
+            "  }\n" +
+            "  abstract String getCode()\n" +
+            "  private final String string\n" +
+            "  private Codes(String string) {\n" +
+            "    this.string = string\n" +
+            "  }\n" +
+            "}\n" +
+            "print Codes.YES.code\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null"); // TODO: 'Y'
+    }
+
+    @Test(timeout = 1500)
     public void testEnum8507() {
         //@formatter:off
         String[] sources = {

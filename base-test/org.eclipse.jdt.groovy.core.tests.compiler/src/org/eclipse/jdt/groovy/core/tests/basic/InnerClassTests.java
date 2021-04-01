@@ -1481,8 +1481,58 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "class D$1;class D$2");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-8104
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5728
     public void testAnonymousInnerClass29() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  private A() { }\n" +
+            "  abstract answer()\n" +
+            "  static A create() {\n" +
+            "    return new A() {\n" + // IllegalAccessError when A$1 calls private constructor
+            "      def answer() { 42 }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print A.create().answer()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7686
+    public void testAnonymousInnerClass30() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  A() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "  abstract void m()\n" +
+            "}\n" +
+            "void test() {\n" +
+            "  def v = false\n" +
+            "  def a = new A() {\n" +
+            "    // run by super ctor\n" +
+            "    @Override void m() {\n" +
+            "      assert v != null\n" +
+            "    }\n" +
+            "  }\n" +
+            "  v = true\n" +
+            "  a.m()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8104
+    public void testAnonymousInnerClass31() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",

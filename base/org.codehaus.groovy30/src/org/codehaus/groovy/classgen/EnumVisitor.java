@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.EnumConstantClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.InnerClassNode;
@@ -94,17 +95,24 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         boolean isAic = isAnonymousInnerClass(enumClass);
         if (!isAic) {
             ClassNode enumRef = enumClass.getPlainNodeReference();
-
-            // create $VALUES field
+            minValue = new FieldNode("MIN_VALUE", ACC_FINAL | ACC_PUBLIC | ACC_STATIC, enumRef, enumClass, null);
+            maxValue = new FieldNode("MAX_VALUE", ACC_FINAL | ACC_PUBLIC | ACC_STATIC, enumRef, enumClass, null);
             values = new FieldNode("$VALUES", ACC_FINAL | ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC, enumRef.makeArray(), enumClass, null);
             values.setSynthetic(true);
 
+            // GRECLIPSE add -- GROOVY-6747
+            for (ConstructorNode ctor : enumClass.getDeclaredConstructors()) {
+                if (ctor.isSyntheticPublic()) {
+                    ctor.setSyntheticPublic(false);
+                    ctor.setModifiers((ctor.getModifiers() | ACC_PRIVATE) & ~ACC_PUBLIC);
+                } else if (!ctor.isPrivate()) {
+                    addError(ctor, "Illegal modifier for the enum constructor; only private is permitted.");
+                }
+            }
+            // GRECLIPSE end
+
             addMethods(enumClass, values);
             checkForAbstractMethods(enumClass);
-
-            // create MIN_VALUE and MAX_VALUE fields
-            minValue = new FieldNode("MIN_VALUE", ACC_FINAL | ACC_PUBLIC | ACC_STATIC, enumRef, enumClass, null);
-            maxValue = new FieldNode("MAX_VALUE", ACC_FINAL | ACC_PUBLIC | ACC_STATIC, enumRef, enumClass, null);
         }
 
         addInit(enumClass, minValue, maxValue, values, isAic);

@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.EnumConstantClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.InnerClassNode;
@@ -88,22 +89,29 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
 
     private void completeEnum(ClassNode enumClass) {
         boolean isAic = isAnonymousInnerClass(enumClass);
-        // create MIN_VALUE and MAX_VALUE fields
+        // create MIN_VALUE, MAX_VALUE and $VALUES fields
         FieldNode minValue = null, maxValue = null, values = null;
 
         if (!isAic) {
             ClassNode enumRef = enumClass.getPlainNodeReference();
-
-            // create values field
+            minValue = new FieldNode("MIN_VALUE", PUBLIC_FS, enumRef, enumClass, null);
+            maxValue = new FieldNode("MAX_VALUE", PUBLIC_FS, enumRef, enumClass, null);
             values = new FieldNode("$VALUES", PRIVATE_FS | Opcodes.ACC_SYNTHETIC, enumRef.makeArray(), enumClass, null);
             values.setSynthetic(true);
 
+            // GRECLIPSE add -- GROOVY-6747
+            for (ConstructorNode ctor : enumClass.getDeclaredConstructors()) {
+                if (ctor.isSyntheticPublic()) {
+                    ctor.setSyntheticPublic(false);
+                    ctor.setModifiers((ctor.getModifiers() | Opcodes.ACC_PRIVATE) & ~Opcodes.ACC_PUBLIC);
+                } else if (!ctor.isPrivate()) {
+                    addError(ctor, "Illegal modifier for the enum constructor; only private is permitted.");
+                }
+            }
+            // GRECLIPSE end
+
             addMethods(enumClass, values);
             checkForAbstractMethods(enumClass);
-
-            // create MIN_VALUE and MAX_VALUE fields
-            minValue = new FieldNode("MIN_VALUE", PUBLIC_FS, enumRef, enumClass, null);
-            maxValue = new FieldNode("MAX_VALUE", PUBLIC_FS, enumRef, enumClass, null);
         }
         addInit(enumClass, minValue, maxValue, values, isAic);
     }
