@@ -317,6 +317,52 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked6912() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def a = []\n" +
+            "  assert a instanceof List\n" +
+            "  List b = []\n" +
+            "  assert b instanceof List\n" +
+            "  Object c = []\n" +
+            "  assert c instanceof List\n" +
+            "  Iterable d = []\n" +
+            "  assert d instanceof Iterable\n" +
+            "  ArrayList e = []\n" +
+            "  assert e instanceof ArrayList\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked6912a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Set a = []\n" +
+            "  assert a instanceof Set\n" +
+            "  HashSet b = []\n" +
+            "  assert b instanceof HashSet\n" +
+            "  LinkedHashSet c = []\n" +
+            "  assert c instanceof LinkedHashSet\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked6938() {
         //@formatter:off
         String[] sources = {
@@ -355,6 +401,151 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "null");
+    }
+
+    @Test
+    public void testTypeChecked7106() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(Map<String,Object> map) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  ['x'].each {\n" +
+            "    m([(it): it.toLowerCase()])\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked7128() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  List<Number> list = [1,2,3]\n" +
+            "  Set<Number> set = [1,2,3,3]\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked7128a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def a = [:]\n" +
+            "  assert a instanceof Map\n" +
+            "  Map b = [:]\n" +
+            "  assert b instanceof Map\n" +
+            "  Object c = [:]\n" +
+            "  assert c instanceof Map\n" +
+            "  HashMap d = [:]\n" +
+            "  assert d instanceof HashMap\n" +
+            "  LinkedHashMap e = [:]\n" +
+            "  assert e instanceof LinkedHashMap\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked7128b() {
+        for (String spec : new String[] {"CharSequence,Integer", "String,Number", "CharSequence,Number"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.TypeChecked\n" +
+                "void test() {\n" +
+                "  Map<" + spec + "> map = [a:1,b:2,c:3]\n" +
+                "  assert map.size() == 3\n" +
+                "  assert map['c'] == 3\n" +
+                "  assert !('x' in map)\n" +
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "");
+        }
+    }
+
+    @Test
+    public void testTypeChecked7128c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Map<String,Integer> map = [1:2]\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tMap<String,Integer> map = [1:2]\n" +
+            "\t                          ^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.LinkedHashMap <java.lang.Integer, java.lang.Integer> to: java.util.Map <String, Integer>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked7128d() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<B,C> {\n" +
+            "  int x\n" +
+            "  int y\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  A<Number,String> a = [x:100, y:200]\n" +
+            "  assert a.x == 100\n" +
+            "  assert a.y == 200\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked7274() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(Map<String,Object> map) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  m([d:new Date(), i:1, s:''])\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 
     @Test
@@ -438,6 +629,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8001() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  Map<String,Object> map\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  int value = 42\n" +
+            "  def c = new C()\n" +
+            "  c.map = [key:\"$value\"]\n" +
+            "  print c.map\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[key:42]");
+    }
+
+    @Test
     public void testTypeChecked8034() {
         //@formatter:off
         String[] sources = {
@@ -508,6 +721,49 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked8909() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(List<Object> list) {\n" +
+            "  assert list.size() == 3\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  m([1,2,3])\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked8909a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(Set<Integer> set) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  m([1,2,3])\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tm([1,2,3])\n" +
+            "\t^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Main#m(java.util.List <java.lang.Integer>). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
     }
 
     @Test
@@ -783,6 +1039,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked9844() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(Map<String, Object> map) {\n" +
+            "  print map\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Map<String, Object> map = [key: 'val']\n" +
+            "  m([key: 'val'])\n" +
+            "  m(key: 'val')\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[key:val][key:val]");
     }
 
     @Ignore @Test

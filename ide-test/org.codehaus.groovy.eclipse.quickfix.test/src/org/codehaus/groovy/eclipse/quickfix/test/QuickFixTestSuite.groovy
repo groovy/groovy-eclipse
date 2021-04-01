@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.quickfix.test
 
 import static org.eclipse.jdt.internal.core.util.Util.getProblemArgumentsFromMarker
 
+import groovy.transform.AutoFinal
 import groovy.transform.CompileStatic
 
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor
@@ -33,7 +34,7 @@ import org.eclipse.jdt.ui.text.java.IInvocationContext
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jdt.ui.text.java.IProblemLocation
 
-@CompileStatic
+@AutoFinal @CompileStatic
 abstract class QuickFixTestSuite extends GroovyEclipseTestSuite {
 
     @Override
@@ -47,9 +48,9 @@ abstract class QuickFixTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected IJavaCompletionProposal[] getGroovyQuickFixes(CompilationUnit unit) throws CoreException {
-        IMarker[] markers = getJavaProblemMarkers(unit.resource)
+        def markers = getJavaProblemMarkers(unit.resource)
 
-        IProblemLocation[] locations = markers.collect { IMarker marker ->
+        def locations = markers.collect { marker ->
             int offset = marker.getAttribute(IMarker.CHAR_START, -1)
             int length = marker.getAttribute(IMarker.CHAR_END, -1) - offset
             def isError = marker.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR
@@ -59,7 +60,7 @@ abstract class QuickFixTestSuite extends GroovyEclipseTestSuite {
 
         IInvocationContext context = new AssistContext(unit, 0, 0) // TODO: pass offset and length?
 
-        return new GroovyQuickFixProcessor().getCorrections(context, locations)
+        return new GroovyQuickFixProcessor().getCorrections(context, locations as IProblemLocation[])
     }
 
     protected IMarker[] getJavaProblemMarkers(IResource resource) {

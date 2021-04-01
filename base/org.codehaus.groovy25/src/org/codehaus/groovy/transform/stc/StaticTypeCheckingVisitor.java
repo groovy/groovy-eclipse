@@ -133,8 +133,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.codehaus.groovy.ast.ClassHelper.BigDecimal_TYPE;
@@ -301,6 +303,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected static final ClassNode NAMED_PARAMS_CLASSNODE = make(NamedParams.class);
     protected static final ClassNode MAP_ENTRY_TYPE = make(Map.Entry.class);
     protected static final ClassNode ENUMERATION_TYPE = make(Enumeration.class);
+    // GRECLIPSE add
+    private static final ClassNode SET_TYPE = ClassHelper.makeWithoutCaching(Set.class);
+    private static final ClassNode LinkedHashSet_TYPE = ClassHelper.makeWithoutCaching(LinkedHashSet.class);
+    // GRECLIPSE end
 
     public static final Statement GENERATED_EMPTY_STATEMENT = new EmptyStatement();
 
@@ -1338,6 +1344,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // if left type is not a list but right type is a list, then we're in the case of a groovy
         // constructor type : Dimension d = [100,200]
         // In that case, more checks can be performed
+        /* GRECLIPSE edit
         if (rightExpression instanceof ListExpression && !implementsInterfaceOrIsSubclassOf(LIST_TYPE, leftRedirect)) {
             ArgumentListExpression argList = args(((ListExpression) rightExpression).getExpressions());
             ClassNode[] args = getArgumentTypes(argList);
@@ -1352,10 +1359,27 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 addAssignmentError(leftExpressionType, inferredRightExpressionType, assignmentExpression);
             }
         }
+        */
+        if (!implementsInterfaceOrIsSubclassOf(LIST_TYPE, leftRedirect)
+                && (!leftRedirect.isAbstract() || leftRedirect.isArray()) && !leftRedirect.equals(OBJECT_TYPE)
+                && !ArrayList_TYPE.isDerivedFrom(leftRedirect) && !LinkedHashSet_TYPE.isDerivedFrom(leftRedirect)) {
+            ClassNode[] types = getArgumentTypes(args(((ListExpression) rightExpression).getExpressions()));
+            MethodNode methodNode = checkGroovyStyleConstructor(leftRedirect, types, assignmentExpression);
+            if (methodNode != null) {
+                rightExpression.putNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET, methodNode);
+            }
+        } else if (implementsInterfaceOrIsSubclassOf(inferredRightExpressionType, LIST_TYPE)
+                && !implementsInterfaceOrIsSubclassOf(inferredRightExpressionType, leftRedirect)
+                && !isWildcardLeftHandSide(leftRedirect)) {
+            if (!extension.handleIncompatibleAssignment(leftExpressionType, inferredRightExpressionType, assignmentExpression)) {
+                addAssignmentError(leftExpressionType, inferredRightExpressionType, assignmentExpression);
+            }
+        }
+        // GRECLIPSE end
     }
 
     private void addMapAssignmentConstructorErrors(final ClassNode leftRedirect, final Expression leftExpression, final Expression rightExpression) {
-        if (!(rightExpression instanceof MapExpression) || (leftExpression instanceof VariableExpression && ((VariableExpression) leftExpression).isDynamicTyped())
+        if (/* GRECLIPSE edit !(rightExpression instanceof MapExpression) || */(leftExpression instanceof VariableExpression && ((VariableExpression) leftExpression).isDynamicTyped())
                 || leftRedirect.equals(OBJECT_TYPE) || implementsInterfaceOrIsSubclassOf(leftRedirect, MAP_TYPE)) {
             return;
         }
@@ -1394,12 +1418,26 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return false;
     }
 
+    // GRECLIPSE add
+    private static boolean isConstructorAbbreviation(final ClassNode leftType, final Expression rightExpression) {
+        if (rightExpression instanceof ListExpression) {
+            return !(ArrayList_TYPE.isDerivedFrom(leftType) || ArrayList_TYPE.implementsInterface(leftType)
+                    || LinkedHashSet_TYPE.isDerivedFrom(leftType) || LinkedHashSet_TYPE.implementsInterface(leftType));
+        }
+        if (rightExpression instanceof MapExpression) {
+            return !(LINKEDHASHMAP_CLASSNODE.isDerivedFrom(leftType) || LINKEDHASHMAP_CLASSNODE.implementsInterface(leftType));
+        }
+        return false;
+    }
+    // GRECLIPSE end
+
     protected void typeCheckAssignment(
             final BinaryExpression assignmentExpression,
             final Expression leftExpression,
             final ClassNode leftExpressionType,
             final Expression rightExpression,
-            final ClassNode inferredRightExpressionTypeOrig) {
+            final ClassNode rightExpressionType) {
+        /* GRECLIPSE edit
         ClassNode inferredRightExpressionType = inferredRightExpressionTypeOrig;
         if (!typeCheckMultipleAssignmentAndContinue(leftExpression, rightExpression)) return;
 
@@ -1428,6 +1466,37 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (hasGStringStringError(leftExpressionType, wrappedRHS, rightExpression)) return;
             checkTypeGenerics(leftExpressionType, wrappedRHS, rightExpression);
         }
+        */
+        if (!typeCheckMultipleAssignmentAndContinue(leftExpression, rightExpression)) return;
+
+        if (addedReadOnlyPropertyError(leftExpression)) return;
+
+        ClassNode rTypeInferred, rTypeWrapped; // check for instanceof and spreading
+        if (rightExpression instanceof VariableExpression && hasInferredReturnType(rightExpression) && assignmentExpression.getOperation().getType() == ASSIGN) {
+            rTypeInferred = getInferredReturnType(rightExpression);
+        } else {
+            rTypeInferred = rightExpressionType;
+        }
+        rTypeWrapped = adjustTypeForSpreading(rTypeInferred, leftExpression);
+
+        if (!checkCompatibleAssignmentTypes(leftExpressionType, rTypeWrapped, rightExpression)) {
+            if (!extension.handleIncompatibleAssignment(leftExpressionType, rTypeInferred, assignmentExpression)) {
+                addAssignmentError(leftExpressionType, rTypeInferred, rightExpression);
+            }
+        } else {
+            ClassNode lTypeRedirect = leftExpressionType.redirect();
+            addPrecisionErrors(lTypeRedirect, leftExpressionType, rTypeInferred, rightExpression);
+            if (rightExpression instanceof ListExpression) {
+                addListAssignmentConstructorErrors(lTypeRedirect, leftExpressionType, rTypeInferred, rightExpression, assignmentExpression);
+            } else if (rightExpression instanceof MapExpression) {
+                addMapAssignmentConstructorErrors(lTypeRedirect, leftExpression, rightExpression);
+            }
+            if (!hasGStringStringError(leftExpressionType, rTypeWrapped, rightExpression)
+                    && !isConstructorAbbreviation(leftExpressionType, rightExpression)) {
+                checkTypeGenerics(leftExpressionType, rTypeWrapped, rightExpression);
+            }
+        }
+        // GRECLIPSE end
     }
 
     protected void checkGroovyConstructorMap(final Expression receiver, final ClassNode receiverType, final MapExpression mapExpression) {
@@ -2985,7 +3054,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 mn = findMethod(currentReceiver.getType(), name, args);
                 if (!mn.isEmpty()) {
                     if (mn.size() == 1) {
-                        // GRECLIPSE add -- GROOVY-8961, GROOVY-9734, GROOVY-9915
+                        // GRECLIPSE add -- GROOVY-8909, GROOVY-8961, GROOVY-9734, GROOVY-9844, GROOVY-9915
                         resolvePlaceholdersFromImplicitTypeHints(args, argumentList, mn.get(0));
                         // GRECLIPSE end
                         typeCheckMethodsWithGenericsOrFail(currentReceiver.getType(), args, mn.get(0), call);
@@ -3893,7 +3962,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 returnType = md.getType();
                             }
                         }
-                        // GRECLIPSE add -- GROOVY-8961, GROOVY-9734
+                        // GRECLIPSE add -- GROOVY-7106, GROOVY-7274, GROOVY-8909, GROOVY-8961, GROOVY-9734, GROOVY-9844
                         resolvePlaceholdersFromImplicitTypeHints(args, argumentList, directMethodCallCandidate);
                         // GRECLIPSE end
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, directMethodCallCandidate, call)) {
@@ -4792,13 +4861,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
             // GRECLIPSE add
-            if (isOrImplements(rightRedirect, Collection_TYPE)) {
-                if (leftRedirect.isArray()) {
-                    return leftRedirect;
+            if (!leftRedirect.equals(OBJECT_TYPE)) {
+                if (rightExpression instanceof ListExpression) {
+                    if (LIST_TYPE.equals(leftRedirect)
+                            || ITERABLE_TYPE.equals(leftRedirect)
+                            || Collection_TYPE.equals(leftRedirect)
+                            || ArrayList_TYPE.isDerivedFrom(leftRedirect)) { // GROOVY-6912
+                        return getLiteralResultType(left, right, ArrayList_TYPE); // GROOVY-7128
+                    }
+                    if (SET_TYPE.equals(leftRedirect)
+                            || LinkedHashSet_TYPE.isDerivedFrom(leftRedirect)) { // GROOVY-6912
+                        return getLiteralResultType(left, right, LinkedHashSet_TYPE); // GROOVY-7128
+                    }
                 }
-                if (isOrImplements(leftRedirect, Collection_TYPE)
-                        && rightExpression instanceof ListExpression && isEmptyCollection(rightExpression)) {
-                    return left;
+                if (rightExpression instanceof MapExpression) {
+                    if (MAP_TYPE.equals(leftRedirect)
+                            || LINKEDHASHMAP_CLASSNODE.isDerivedFrom(leftRedirect)) {
+                        return getLiteralResultType(left, right, LINKEDHASHMAP_CLASSNODE); // GROOVY-7128, GROOVY-9844
+                    }
                 }
             }
             // GRECLIPSE end
@@ -4848,6 +4928,38 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         //TODO: other cases
         return null;
     }
+
+    // GRECLIPSE add
+    /**
+     * For "{@code List<Type> x = [...]}" or "{@code Set<Type> y = [...]}", etc.
+     * the literal may be composed of sub-types of {@code Type}. In these cases,
+     * {@code ArrayList<Type>} is an appropriate result type for the expression.
+     */
+    private static ClassNode getLiteralResultType(final ClassNode targetType, final ClassNode sourceType, final ClassNode baseType) {
+        ClassNode resultType = sourceType.equals(baseType) ? sourceType
+                : GenericsUtils.parameterizeType(sourceType, baseType.getPlainNodeReference());
+
+        if (targetType.getGenericsTypes() != null
+                && !GenericsUtils.buildWildcardType(targetType).isCompatibleWith(resultType)) {
+            BiPredicate<GenericsType, GenericsType> isEqualOrSuper = (target, source) -> {
+                if (target.isCompatibleWith(source.getType())) {
+                    return true;
+                }
+                if (!target.isPlaceholder() && !target.isWildcard()) {
+                    return GenericsUtils.buildWildcardType(getCombinedBoundType(target)).isCompatibleWith(source.getType());
+                }
+                return false;
+            };
+
+            GenericsType[] lgt = targetType.getGenericsTypes(), rgt = resultType.getGenericsTypes();
+            if (IntStream.range(0, lgt.length).allMatch(i -> isEqualOrSuper.test(lgt[i], rgt[i]))) {
+                resultType = GenericsUtils.parameterizeType(targetType, baseType.getPlainNodeReference());
+            }
+        }
+
+        return resultType;
+    }
+    // GRECLIPSE end
 
     private ClassNode getMathResultType(int op, ClassNode leftRedirect, ClassNode rightRedirect, String operationName) {
         if (isNumberType(leftRedirect) && isNumberType(rightRedirect)) {
@@ -5761,6 +5873,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * method target of "m", {@code T} could be resolved.
      */
     private static void resolvePlaceholdersFromImplicitTypeHints(final ClassNode[] actuals, final ArgumentListExpression argumentList, final MethodNode inferredMethod) {
+        /* GRECLIPSE edit
         for (int i = 0, n = actuals.length; i < n; i += 1) {
             // check for method call with known target
             Expression a = argumentList.getExpression(i);
@@ -5778,6 +5891,30 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
             ClassNode pt = p.getOriginType();
             if (i >= (np - 1) && pt.isArray() && !at.isArray()) pt = pt.getComponentType();
+        */
+        int np = inferredMethod.getParameters().length;
+        for (int i = 0, n = actuals.length; np > 0 && i < n; i += 1) {
+            Expression a = argumentList.getExpression(i);
+            Parameter p = inferredMethod.getParameters()[Math.min(i, np - 1)];
+
+            ClassNode at = actuals[i], pt = p.getOriginType();
+            if (i >= (np - 1) && pt.isArray() && !at.isArray()) pt = pt.getComponentType();
+
+            if (a instanceof ListExpression) {
+                actuals[i] = getLiteralResultType(pt, at, ArrayList_TYPE);
+            } else if (a instanceof MapExpression) {
+                actuals[i] = getLiteralResultType(pt, at, LINKEDHASHMAP_CLASSNODE);
+            }
+
+            // check for method call with known target
+            if (!(a instanceof MethodCallExpression)) continue;
+            if (((MethodCallExpression) a).isUsingGenerics()) continue;
+            MethodNode aNode = a.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (aNode == null || aNode.getGenericsTypes() == null) continue;
+
+            // and unknown generics
+            if (!GenericsUtils.hasUnresolvedGenerics(at)) continue;
+        // GRECLIPSE end
 
             // try to resolve placeholder(s) in argument type using parameter type
 
