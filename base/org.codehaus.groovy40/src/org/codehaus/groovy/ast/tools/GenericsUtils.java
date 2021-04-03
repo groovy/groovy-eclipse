@@ -251,6 +251,13 @@ public class GenericsUtils {
             }
             return target;
         }
+        if (hint.isGenericsPlaceHolder()) {
+            ClassNode bound = hint.redirect();
+            return parameterizeType(bound, target);
+        }
+        if (target.redirect().getGenericsTypes() == null) {
+            return target;
+        }
         if (!target.equals(hint) && implementsInterfaceOrIsSubclassOf(target, hint)) {
             ClassNode nextSuperClass = ClassHelper.getNextSuperClass(target, hint);
             if (!hint.equals(nextSuperClass)) {
@@ -421,9 +428,9 @@ public class GenericsUtils {
             String name = type.getName();
             ret = genericsSpec.get(name);
         }
-        // GRECLIPSE add -- GROOVY-9891
+        // GRECLIPSE add -- GROOVY-8984, GROOVY-9891
         else if (type.isWildcard()) {
-            ret = type.getLowerBound(); // use lower or upper
+          //ret = type.getLowerBound(); // use lower or upper
             if (ret == null && type.getUpperBounds() != null) {
                 ret = type.getUpperBounds()[0]; // ? supports 1
             }

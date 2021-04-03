@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.ParameterUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
@@ -654,6 +655,7 @@ public abstract class StaticTypeCheckingSupport {
         ClassNode rightRedirect = right.redirect();
         if (leftRedirect == rightRedirect) return true;
 
+        /* GRECLIPSE edit -- GROOVY-8983
         if (leftRedirect.isArray() && rightRedirect.isArray()) {
             return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType(), rightExpression, false);
         }
@@ -661,6 +663,22 @@ public abstract class StaticTypeCheckingSupport {
         if (rightRedirect == VOID_TYPE || rightRedirect == void_WRAPPER_TYPE) {
             return leftRedirect == VOID_TYPE || leftRedirect == void_WRAPPER_TYPE;
         }
+        */
+        if (rightRedirect == void_WRAPPER_TYPE) return leftRedirect == VOID_TYPE;
+        if (rightRedirect == VOID_TYPE) return leftRedirect == void_WRAPPER_TYPE;
+
+        if (left.isArray()) {
+            if (right.isArray()) {
+                return checkCompatibleAssignmentTypes(left.getComponentType(), right.getComponentType(), rightExpression, false);
+            }
+            if (GeneralUtils.isOrImplements(right, Collection_TYPE) && !(rightExpression instanceof ListExpression)) {
+                GenericsType elementType = GenericsUtils.parameterizeType(right, Collection_TYPE).getGenericsTypes()[0];
+                return OBJECT_TYPE.equals(left.getComponentType()) // Object[] can accept any collection element type(s)
+                    || (elementType.getLowerBound() == null && isCovariant(extractType(elementType), left.getComponentType()));
+                    //  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GROOVY-8984: "? super T" is only compatible with an Object[] target
+            }
+        }
+        // GRECLIPSE end
 
         if (isNumberType(rightRedirect) || WideningCategories.isNumberCategory(rightRedirect)) {
             if (leftRedirect.equals(BigDecimal_TYPE) || leftRedirect.equals(Number_TYPE)) { // GRECLIPSE add -- GROOVY-9935

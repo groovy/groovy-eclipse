@@ -767,6 +767,140 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8983() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "List<String> m() { ['foo'] }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Set<String> set) {\n" +
+            "  String[] one = m()\n" +
+            "  String[] two = set\n" +
+            "  print(one + two)\n" +
+            "}\n" +
+            "test(['bar'].toSet())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo, bar]");
+    }
+
+    @Test
+    public void testTypeChecked8983a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "List<String> m() { ['foo'] }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Set<String> set) {\n" +
+            "  CharSequence[] one = m()\n" +
+            "  CharSequence[] two = set\n" +
+            "  print(one + two)\n" +
+            "}\n" +
+            "test(['bar'].toSet())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo, bar]");
+    }
+
+    @Test
+    public void testTypeChecked8983b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "List<String> m() { ['foo'] }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Set<String> set) {\n" +
+            "  Object[] one = m()\n" +
+            "  Object[] two = set\n" +
+            "  print(one + two)\n" +
+            "}\n" +
+            "test(['bar'].toSet())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo, bar]");
+    }
+
+    @Test
+    public void testTypeChecked8983c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "List<? extends CharSequence> m() { ['foo'] }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Set<? extends CharSequence> set) {\n" +
+            "  CharSequence[] one = m()\n" +
+            "  CharSequence[] two = set\n" +
+            "  print(one + two)\n" +
+            "}\n" +
+            "test(['bar'].toSet())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo, bar]");
+    }
+
+    @Test
+    public void testTypeChecked8984() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "List<? super CharSequence> m() { [null] }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Set<? super CharSequence> set) {\n" +
+            "  CharSequence[] one = m()\n" +
+            "  CharSequence[] two = set\n" +
+            "}\n" +
+            "test([null].toSet())\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tCharSequence[] one = m()\n" +
+            "\t                     ^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.List <? super java.lang.CharSequence> to variable of type java.lang.CharSequence[]\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 5)\n" +
+            "\tCharSequence[] two = set\n" +
+            "\t                     ^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.Set <? super java.lang.CharSequence> to variable of type java.lang.CharSequence[]\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked8984a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "List<String> m() { ['foo'] }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Set<String> set) {\n" +
+            "  Number[] one = m()\n" +
+            "  Number[] two = set\n" +
+            "}\n" +
+            "test(['bar'].toSet())\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tNumber[] one = m()\n" +
+            "\t               ^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.List <String> to variable of type java.lang.Number[]\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 5)\n" +
+            "\tNumber[] two = set\n" +
+            "\t               ^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.Set <String> to variable of type java.lang.Number[]\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked9460() {
         //@formatter:off
         String[] sources = {
