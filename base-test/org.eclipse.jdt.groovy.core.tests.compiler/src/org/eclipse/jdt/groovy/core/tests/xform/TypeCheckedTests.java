@@ -1625,6 +1625,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9971() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def m(Closure<String> block) {\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  final x = 123\n" +
+            "  Closure<String> c = { \"x=$x\" }\n" +
+            "  print c.call().class.name\n" +
+            "  print((m { \"x=$x\" }).class.name)\n" +
+            "  assert m { -> \"x=$x\" } == 'x=123'\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "java.lang.Stringjava.lang.String");
+    }
+
+    @Test
     public void testTypeChecked9972() {
         //@formatter:off
         String[] sources = {

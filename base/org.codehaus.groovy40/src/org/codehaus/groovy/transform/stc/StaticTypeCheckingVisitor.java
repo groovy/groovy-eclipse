@@ -2380,6 +2380,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void addClosureReturnType(final ClassNode returnType) {
+        // GRECLIPSE add -- GROOVY-9971
+        if (StaticTypeCheckingSupport.isGStringOrGStringStringLUB(returnType) && STRING_TYPE.equals(
+                getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression()))) {
+            typeCheckingContext.getEnclosingClosure().addReturnType(STRING_TYPE);
+        } else
+        // GRECLIPSE end
         typeCheckingContext.getEnclosingClosure().addReturnType(returnType);
     }
 
@@ -2921,6 +2927,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     } else {
                         inferClosureParameterTypes(receiver, newArgs, (ClosureExpression) expression, param, selectedMethod);
                     }
+                    // GRECLIPSE add -- GROOVY-9971
+                    ClassNode targetType = param.getType();
+                    if (isFunctionalInterface(targetType)) {
+                        storeInferredReturnType(expression, GenericsUtils.parameterizeSAM(targetType).getV2());
+                    } else if (isClosureWithType(targetType)) {
+                        storeInferredReturnType(expression, getCombinedBoundType(targetType.getGenericsTypes()[0]));
+                    }
+                    // GRECLIPSE end
                 }
                 expression.visit(this);
                 expression.removeNodeMetaData(DELEGATION_METADATA);

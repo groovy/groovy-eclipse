@@ -1063,7 +1063,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     private void processFunctionalInterfaceAssignment(final ClassNode lhsType, final Expression rhsExpression) {
         if (rhsExpression instanceof ClosureExpression) {
-            MethodNode abstractMethod = ClassHelper.findSAM(lhsType);
+            MethodNode abstractMethod = findSAM(lhsType);
             Map<GenericsType, GenericsType> mappings = GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType(abstractMethod.getDeclaringClass(), lhsType);
             Function<ClassNode, ClassNode> resolver = t -> t.isGenericsPlaceHolder() ? GenericsUtils.findActualTypeByGenericsPlaceholderName(t.getUnresolvedName(), mappings) : t;
 
@@ -2581,6 +2581,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void addClosureReturnType(ClassNode returnType) {
+        // GRECLIPSE add -- GROOVY-9971
+        if (StaticTypeCheckingSupport.isGStringOrGStringStringLUB(returnType) && STRING_TYPE.equals(
+                getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression())))
+            returnType = STRING_TYPE;
+        // GRECLIPSE end
         typeCheckingContext.getEnclosingClosure().addReturnType(returnType);
     }
 
@@ -3153,6 +3158,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     } else {
                         inferClosureParameterTypes(receiver, newArgs, (ClosureExpression) expression, param, selectedMethod);
                     }
+                    // GRECLIPSE add -- GROOVY-9971
+                    ClassNode targetType = param.getType();
+                    if (isFunctionalInterface(targetType)) {
+                        processFunctionalInterfaceAssignment(targetType, expression);
+                    } else if (isClosureWithType(targetType)) {
+                        storeInferredReturnType(expression, getCombinedBoundType(targetType.getGenericsTypes()[0]));
+                    }
+                    // GRECLIPSE end
                 }
                 expression.visit(this);
                 if (expression.getNodeMetaData(StaticTypesMarker.DELEGATION_METADATA) != null) {
