@@ -6267,6 +6267,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 final Parameter parameter = parameters[i];
                 ClassNode type = parameter.getType();
                 ptypes[i] = fullyResolveType(type, classGTs);
+                // GRECLIPSE add -- GROOVY-10010
+                if (i < arguments.length && hasGStringStringError(ptypes[i], arguments[i], location)) {
+                    return false;
+                }
+                // GRECLIPSE end
             }
             addStaticTypeError("Cannot call " + toMethodGenericTypesString(candidateMethod) + receiver.toString(false) + "#" +
                     toMethodParametersString(candidateMethod.getName(), ptypes) +

@@ -2011,4 +2011,62 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "null");
     }
+
+    @Test
+    public void testTypeChecked10010() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(List<String> list) { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def bar = 123\n" +
+            "  m([\"foo\",\"$bar\"])\n" +
+            "  List<String> list = [\"foo\",\"$bar\"]\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tm([\"foo\",\"$bar\"])\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - You are trying to use a GString in place of a String in a type which explicitly declares accepting String. Make sure to call toString() on all GString values.\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 6)\n" +
+            "\tList<String> list = [\"foo\",\"$bar\"]\n" +
+            "\t                    ^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - You are trying to use a GString in place of a String in a type which explicitly declares accepting String. Make sure to call toString() on all GString values.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10010a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(Map<?,String> map) { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def bar = 123\n" +
+            "  m([x:\"foo\",y:\"$bar\"])\n" +
+            "  Map<String,String> map = [x:\"foo\",y:\"$bar\"]\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tm([x:\"foo\",y:\"$bar\"])\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - You are trying to use a GString in place of a String in a type which explicitly declares accepting String. Make sure to call toString() on all GString values.\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 6)\n" +
+            "\tMap<String,String> map = [x:\"foo\",y:\"$bar\"]\n" +
+            "\t                         ^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - You are trying to use a GString in place of a String in a type which explicitly declares accepting String. Make sure to call toString() on all GString values.\n" +
+            "----------\n");
+    }
 }

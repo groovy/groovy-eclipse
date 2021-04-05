@@ -531,7 +531,11 @@ public class GenericsType extends ASTNode {
                                                 if (!match) break;
                                             }
                                         }
+                                        /* GRECLIPSE edit -- GROOVY-10010
                                         return match;
+                                        */
+                                        continue;
+                                        // GRECLIPSE end
                                     } else if (classNodePlaceholders.containsKey(name)) {
                                         redirectBoundType = classNodePlaceholders.get(name);
                                     }
