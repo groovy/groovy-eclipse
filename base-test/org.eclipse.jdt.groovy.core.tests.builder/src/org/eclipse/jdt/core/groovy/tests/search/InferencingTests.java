@@ -3035,6 +3035,24 @@ public final class InferencingTests extends InferencingTestSuite {
             "new Me().meth()");
     }
 
+    @Test
+    public void testNonCategoryUseMethod() {
+        String contents =
+            "class C {\n" +
+            "  void use(... args) {\n" +
+            "    // ...\n" +
+            "  }\n" +
+            "}\n" +
+            "void test(C c) {\n" +
+            "  def x = null\n" +
+            "  c.use(x) {\n" +
+            "    // ...\n" +
+            "  }\n" +
+            "}\n";
+        assertDeclaringType(contents, "use", "C");
+        assertType(contents, "x", "java.lang.Object");
+    }
+
     @Test // GRECLIPSE-1304
     public void testNoGString() {
         assertNoUnknowns("'$'\n'${}'\n'${a}'\n'$a'");

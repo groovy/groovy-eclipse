@@ -1490,8 +1490,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         Tuple inferred = dependentDeclarationStack.removeLast();
         VariableScope.CallAndType cat = new VariableScope.CallAndType(node, inferred.declaration, inferred.declaringType, enclosingModule);
 
-        ClassNode catNode = isCategoryDeclaration(node, scope);
-        if (catNode != null) scope.setCategoryBeingDeclared(catNode);
+        handleCategoryDeclaration(node, scope);
 
         // remember that we are inside a method call while analyzing the arguments
         scope.addEnclosingMethodCall(cat);
@@ -1999,7 +1998,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             ASTNode enclosingNode = completeExpressionStack.getLast();
             if (enclosingNode instanceof MethodCallExpression) {
                 MethodCallExpression mce = (MethodCallExpression) enclosingNode;
-                if (mce.isImplicitThis() && mce.getObjectExpression() instanceof VariableExpression && ((VariableExpression) mce.getObjectExpression()).isThisExpression()) {
+                if (mce.isImplicitThis() && org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression(mce.getObjectExpression())) {
                     primaryType = null; // implicit-this calls are handled like free variables
                     isStatic = scope.isStatic();
                 } else {
@@ -2517,29 +2516,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         return inferredTypes;
     }
 
-    private ClassNode isCategoryDeclaration(final MethodCallExpression node, final VariableScope scope) {
-        if ("use".equals(node.getMethodAsString())) {
-            if (node.getArguments() instanceof TupleExpression) {
-                TupleExpression args = (TupleExpression) node.getArguments();
-                if (args.getExpressions().size() >= 2 && args.getExpression(1) instanceof ClosureExpression) {
-                    // really, should be doing inference on the first expression and seeing if it
-                    // is a class node, but looking up in scope is good enough for now
-                    Expression expr = args.getExpression(0);
-                    if (expr instanceof ClassExpression) {
-                        return expr.getType();
-                    } else if (expr instanceof VariableExpression && expr.getText() != null) {
-                        VariableScope.VariableInfo info = scope.lookupName(expr.getText());
-                        if (info != null && info.type != null) {
-                            // info.type should be Class<Category>
-                            return info.type.getGenericsTypes()[0].getType();
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
     /**
      * Dependent (type depends on another expression) expressions are:
      * <ul>
@@ -3045,6 +3021,30 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             return parameters;
         }
         return methodNode.getParameters();
+    }
+
+    /**
+     * Checks for DGM {@code use(Class,Closure)}.
+     * <p>
+     * TODO: {@code use(List<Class>,Closure)} or {@code use(Object...)}
+     */
+    private static void handleCategoryDeclaration(final MethodCallExpression call, final VariableScope scope) {
+        if ("use".equals(call.getMethodAsString()) && call.getArguments() instanceof TupleExpression &&
+                org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression(call.getObjectExpression())) {
+            final List<Expression> args = ((TupleExpression) call.getArguments()).getExpressions();
+            if (args.size() >= 2 && DefaultGroovyMethods.last(args) instanceof ClosureExpression) {
+                Expression first = args.get(0);
+                if (first instanceof ClassExpression) {
+                    scope.setCategoryBeingDeclared(first.getType());
+                } else if (first instanceof VariableExpression && first.getText() != null) {
+                    VariableScope.VariableInfo info = scope.lookupName(first.getText());
+                    if (info != null && info.type != null) {
+                        // info.type should be Class<Category>
+                        scope.setCategoryBeingDeclared(info.type.getGenericsTypes()[0].getType());
+                    }
+                }
+            }
+        }
     }
 
     private static Map<String, ClassNode[]> inferInstanceOfType(final Expression expression, final VariableScope scope) {
