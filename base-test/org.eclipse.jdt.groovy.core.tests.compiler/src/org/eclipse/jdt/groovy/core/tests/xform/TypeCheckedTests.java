@@ -2069,4 +2069,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Groovy:[Static type checking] - You are trying to use a GString in place of a String in a type which explicitly declares accepting String. Make sure to call toString() on all GString values.\n" +
             "----------\n");
     }
+
+    @Test
+    public void testTypeChecked10011() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "interface I { }\n" +
+            "class D implements I { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(I i) {\n" +
+            "  if (i instanceof D)\n" +
+            "    C<D> cd = new C<>(i)\n" +
+            "}\n" +
+            "test(new D())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
 }

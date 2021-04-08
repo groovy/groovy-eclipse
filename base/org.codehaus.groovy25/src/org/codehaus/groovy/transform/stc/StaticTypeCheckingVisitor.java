@@ -6147,13 +6147,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return resolveClassNodeGenerics(resolvedPlaceholders, placeholdersFromContext, currentType);
     }
 
-    // GRECLIPSE add
+    // GRECLIPSE add -- GROOVY-9996, GROOVY-10011
     private ClassNode getDeclaredOrInferredType(final Expression expression) {
+        ClassNode declaredOrInferred;
         // in case of "T t = new ExtendsOrImplementsT()", return T for the expression type
         if (expression instanceof Variable && !((Variable) expression).isDynamicTyped()) {
-            return getOriginalDeclarationType(expression); // GROOVY-9996
+            declaredOrInferred = getOriginalDeclarationType(expression);
+        } else {
+            declaredOrInferred = getType(expression);
         }
-        return getInferredTypeFromTempInfo(expression, getType(expression));
+        return getInferredTypeFromTempInfo(expression, declaredOrInferred);
     }
     // GRECLIPSE end
 
