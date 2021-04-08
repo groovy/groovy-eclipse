@@ -34,9 +34,8 @@
         <file-match-pattern match-pattern="groovy/ast/expr/EmptyExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/FieldExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/ast/tools/ExpressionUtils.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/ast/tools/GeneralUtils.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/ast/tools/GenericsUtils.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/tools/(Expression|General|Generics)Utils.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/tools/WideningCategories.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/Enum(Completion)?Visitor.java" include-pattern="false" />

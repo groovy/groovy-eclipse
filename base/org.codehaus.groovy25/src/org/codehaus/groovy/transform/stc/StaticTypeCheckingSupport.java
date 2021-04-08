@@ -1645,6 +1645,7 @@ public abstract class StaticTypeCheckingSupport {
                 continue;
             }
             if (!compatibleConnection(resolved, connection)) {
+                /* GRECLIPSE edit -- GROOVY-5692, GROOVY-10006
                 if (!(resolved.isPlaceholder() || resolved.isWildcard()) &&
                         !fixedGenericsPlaceHolders.contains(entry.getKey()) &&
                         compatibleConnection(connection, resolved)) {
@@ -1656,6 +1657,22 @@ public abstract class StaticTypeCheckingSupport {
                 } else {
                     return false;
                 }
+                */
+                if (!resolved.isPlaceholder() && !resolved.isWildcard()
+                        && !fixedGenericsPlaceHolders.contains(entry.getKey())) {
+                    if (compatibleConnection(connection, resolved)) {
+                        // was "T=Integer" and now is "T=Number" or "T=Object"
+                        resolvedMethodGenerics.put(entry.getKey(), connection);
+                        continue;
+                    } else if (!connection.isPlaceholder() && !connection.isWildcard()) {
+                        // combine "T=Integer" and "T=String" to produce "T=? extends Serializable & Comparable<...>"
+                        ClassNode lub = WideningCategories.lowestUpperBound(connection.getType(), resolved.getType());
+                        resolvedMethodGenerics.put(entry.getKey(), lub.asGenericsType());
+                        continue;
+                    }
+                }
+                return false; // incompatible
+                // GRECLIPSE end
             }
         }
         return true;

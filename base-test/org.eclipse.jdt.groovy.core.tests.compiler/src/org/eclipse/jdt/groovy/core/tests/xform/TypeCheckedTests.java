@@ -2013,6 +2013,50 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10006() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> void a(T one, T two) { }\n" +
+            "def <T> void b(T one, List<T> many) { }\n" +
+            "def <T> void c(T one, T two, T three) { }\n" +
+            "def <T extends Number> void d(T one, T two) { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  a(1,'II')\n" +
+            "  b(1,['II','III'])\n" +
+            "  c(1,'II',Class)\n" +
+            "  d(1L,2G)\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked10006a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T extends Number> void d(T one, T two) { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  d(1,'II')\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\td(1,'II')\n" +
+            "\t^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Main#d(int, java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10010() {
         //@formatter:off
         String[] sources = {
