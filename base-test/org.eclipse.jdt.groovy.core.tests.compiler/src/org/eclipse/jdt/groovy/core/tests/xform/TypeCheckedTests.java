@@ -2136,4 +2136,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testTypeChecked10027() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "int getAnswer() { return 42 }\n" +
+            "void m(@NamedParams([\n" +
+            "  @NamedParam(value='n', type=Number)\n" +
+            "]) Map<String,?> map) { print map.n }\n" +
+            "@TypeChecked\n" +
+            "void test() {\n" +
+            "  m(n: answer)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
 }
