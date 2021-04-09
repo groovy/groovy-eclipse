@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -259,7 +259,8 @@ final class OtherCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'v'))
         checkReplacementString(proposals, 'values()', 1)
         checkReplacementString(proposals, 'valueOf(name)', 1)
-        checkReplacementString(proposals, 'valueOf(enumType, name)', 1)
+        float version = Float.parseFloat(System.getProperty('java.specification.version'))
+        checkReplacementString(proposals, "valueOf(enum${version > 15 ? 'Class' : 'Type'}, name)", 1)
     }
 
     @Test

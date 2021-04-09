@@ -77,7 +77,8 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK13 = (57L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK14 = (58L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK15 = (59L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15));
+    protected static final long JDK16 = (60L << 16) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16));
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
