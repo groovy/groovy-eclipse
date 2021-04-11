@@ -174,7 +174,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     public void visitArrayExpression(ArrayExpression expression) {
         if (expression.getEnd() > 0) {
-            check(expression.getElementType(), expression.getNameStart(), expression.getNameEnd() + 1);
+            check(GroovyUtils.getBaseType(expression.getType()), expression.getNameStart(), expression.getNameEnd() + 1);
         }
         super.visitArrayExpression(expression);
     }

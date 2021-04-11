@@ -3389,15 +3389,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     throw createParsingFailedException("dimension should be empty", dimWithExprList.get(0).getV3());
                 }
 
-                /* GRECLIPSE edit
                 ClassNode elementType = classNode;
                 for (int i = 0, n = emptyDimList.size() - 1; i < n; i += 1) {
                     elementType = this.createArrayType(elementType);
                 }
-                */
                 arrayExpression =
                         new ArrayExpression(
-                                classNode,
+                                elementType,
                                 this.visitArrayInitializer(ctx.arrayInitializer()));
 
             } else {

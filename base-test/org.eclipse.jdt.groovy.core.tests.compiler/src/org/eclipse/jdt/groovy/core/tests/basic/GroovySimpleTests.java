@@ -39,6 +39,150 @@ import org.osgi.framework.Version;
 public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
+    public void testArrayBasic1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[] array = new int[0]\n" +
+            "assert array.length == 0\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[I");
+    }
+
+    @Test
+    public void testArrayBasic2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[] array = [123]\n" +
+            "assert array.length == 1\n" +
+            "assert array[0] == 123\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[I");
+    }
+
+    @Test
+    public void testArrayBasic3() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[] array = new int[]{123}\n" +
+            "assert array.length == 1\n" +
+            "assert array[0] == 123\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[I");
+    }
+
+    @Test
+    public void testArrayMulti1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[][] array = new int[1][1]\n" +
+            "assert array.length == 1\n" +
+            "assert array[0][0] == 0\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[I");
+    }
+
+    @Test
+    public void testArrayMulti2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[][] array = [ new int[1] ]\n" +
+            "assert array.length == 1\n" +
+            "assert array[0][0] == 0\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[I");
+    }
+
+    @Test
+    public void testArrayMulti3() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[][] array = new int[][]{ new int[]{1}, new int[]{2} }\n" +
+            "assert array.length == 2\n" +
+            "assert array[0][0] == 1\n" +
+            "assert array[1][0] == 2\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[I");
+    }
+
+    @Test
+    public void testArrayMulti4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[][] array = [ [1], [2] ]\n" +
+            "assert array.length == 2\n" +
+            "assert array[0][0] == 1\n" +
+            "assert array[1][0] == 2\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[I");
+    }
+
+    @Test
+    public void testArrayMulti5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[][] array = [ 1, 2 ]\n" + // runtime converts to arrays of length 1
+            "assert array.length == 2\n" +
+            "assert array[0][0] == 1\n" +
+            "assert array[1][0] == 2\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[I");
+    }
+
+    @Test
+    public void testArrayMulti6() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "String[][] array = [ '1', '23' ]\n" + // runtime converts to arrays of characters
+            "assert array.length == 2\n" +
+            "assert array[0].length == 1\n" +
+            "assert array[0][0] == '1'\n" +
+            "assert array[1].length == 2\n" +
+            "assert array[1][0] == '2'\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[Ljava.lang.String;");
+    }
+
+    @Test
     public void testClosuresBasic() {
         //@formatter:off
         String[] sources = {
