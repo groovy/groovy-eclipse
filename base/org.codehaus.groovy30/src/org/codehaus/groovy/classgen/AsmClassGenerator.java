@@ -1602,9 +1602,10 @@ public class AsmClassGenerator extends ClassGenerator {
     @Override
     public void visitArrayExpression(final ArrayExpression expression) {
         MethodVisitor mv = controller.getMethodVisitor();
+        /* GRECLIPSE edit
         ClassNode elementType = expression.getElementType();
         String arrayTypeName = BytecodeHelper.getClassInternalName(elementType);
-
+        */
         int size = 0;
         int dimensions = 0;
         if (expression.hasInitializer()) {
@@ -1621,6 +1622,7 @@ public class AsmClassGenerator extends ClassGenerator {
             controller.getOperandStack().remove(dimensions);
         }
 
+        /* GRECLIPSE edit -- GROOVY-10031: use NEWARRAY/ANEWARRAY for flat array
         int storeIns = AASTORE;
         if (expression.hasInitializer()) {
             if (ClassHelper.isPrimitiveType(elementType)) {
@@ -1658,6 +1660,47 @@ public class AsmClassGenerator extends ClassGenerator {
             arrayTypeName = BytecodeHelper.getTypeDescription(expression.getType());
             mv.visitMultiANewArrayInsn(arrayTypeName, dimensions);
         }
+        */
+        ClassNode arrayType = expression.getType();
+        ClassNode elementType = arrayType.getComponentType();
+
+        int storeIns = AASTORE;
+        if (!elementType.isArray() || expression.hasInitializer()) {
+            if (ClassHelper.isPrimitiveType(elementType)) {
+                int primType = 0;
+                if (elementType == ClassHelper.boolean_TYPE) {
+                    primType = T_BOOLEAN;
+                    storeIns = BASTORE;
+                } else if (elementType == ClassHelper.byte_TYPE) {
+                    primType = T_BYTE;
+                    storeIns = BASTORE;
+                } else if (elementType == ClassHelper.char_TYPE) {
+                    primType = T_CHAR;
+                    storeIns = CASTORE;
+                } else if (elementType == ClassHelper.double_TYPE) {
+                    primType = T_DOUBLE;
+                    storeIns = DASTORE;
+                } else if (elementType == ClassHelper.float_TYPE) {
+                    primType = T_FLOAT;
+                    storeIns = FASTORE;
+                } else if (elementType == ClassHelper.int_TYPE) {
+                    primType = T_INT;
+                    storeIns = IASTORE;
+                } else if (elementType == ClassHelper.long_TYPE) {
+                    primType = T_LONG;
+                    storeIns = LASTORE;
+                } else if (elementType == ClassHelper.short_TYPE) {
+                    primType = T_SHORT;
+                    storeIns = SASTORE;
+                }
+                mv.visitIntInsn(NEWARRAY, primType);
+            } else {
+                mv.visitTypeInsn(ANEWARRAY, BytecodeHelper.getClassInternalName(elementType));
+            }
+        } else {
+            mv.visitMultiANewArrayInsn(BytecodeHelper.getTypeDescription(arrayType), dimensions);
+        }
+        // GRECLIPSE end
 
         for (int i = 0; i < size; i += 1) {
             mv.visitInsn(DUP);
@@ -1673,7 +1716,7 @@ public class AsmClassGenerator extends ClassGenerator {
             controller.getOperandStack().remove(1);
         }
 
-        controller.getOperandStack().push(expression.getType());
+        controller.getOperandStack().push(arrayType);
     }
 
     @Override

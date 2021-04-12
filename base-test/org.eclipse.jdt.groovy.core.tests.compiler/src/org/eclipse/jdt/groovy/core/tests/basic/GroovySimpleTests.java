@@ -183,6 +183,21 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testArrayMulti7() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[][] array = new int[1][]\n" +
+            "assert array.length == 1\n" +
+            "assert array[0] == null\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[I");
+    }
+
+    @Test
     public void testClosuresBasic() {
         //@formatter:off
         String[] sources = {
