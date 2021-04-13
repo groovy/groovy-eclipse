@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -295,7 +295,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testNoDups1() {
         ICompletionProposal[] proposals = createProposalsAtOffset('[].collectEnt', 13)
-        proposalExists(proposals, 'collectEntries', 4) // (), (Closure), (Map), (Map, Closure)
+        proposalExists(proposals, 'collectEntries', 4) // (), (Map), (Closure), (Map,Closure)
     }
 
     @Test // GRECLIPSE-1422
@@ -316,5 +316,11 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset('List<String> strings = []; strings.findA', 40)
         proposalExists(proposals, 'findAll(Closure closure) : List<T>', 1) // not Collection<T>
         proposalExists(proposals, 'findAll() : List<T>', 1) // not Collection<T>
+    }
+
+    @Test
+    void testNoExtras() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('[].stream().collect()\n', 20)
+        proposalExists(proposals, 'collect', 5) // (), (Closure), (Collector), (Collection,Closure), (Supplier,BiConsumer,BiConsumer)
     }
 }

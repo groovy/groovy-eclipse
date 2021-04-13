@@ -94,6 +94,7 @@ public class TypeLookupResult {
 
     public final TypeConfidence confidence;
     public final ClassNode declaringType;
+    public       ClassNode receiverType;
     public final ClassNode type;
 
     /**
@@ -114,6 +115,14 @@ public class TypeLookupResult {
      * The assignment statement that encloses this expression, or null if there is none.
      */
     public BinaryExpression enclosingAssignment;
+
+    public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeLookupResult that) {
+        this(type, declaringType, declaration, that.confidence, that.scope, that.extraDoc);
+        this.enclosingAnnotation = that.enclosingAnnotation;
+        this.enclosingAssignment = that.enclosingAssignment;
+        this.receiverType = that.receiverType;
+        this.isGroovy = that.isGroovy;
+    }
 
     /**
      * @param type the type of the expression being analyzed
@@ -165,10 +174,7 @@ public class TypeLookupResult {
                 GenericsMapper mapper = GenericsMapper.gatherGenerics(objectType, declaringType);
                 ClassNode maybe = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(type));
                 if (!maybe.toString(false).equals(type.toString(false))) {
-                    TypeLookupResult result = new TypeLookupResult(maybe, declaringType, declaration, confidence, scope, extraDoc);
-                    result.enclosingAnnotation = enclosingAnnotation;
-                    result.isGroovy = isGroovy;
-                    return result;
+                    return new TypeLookupResult(maybe, declaringType, declaration, this);
                 }
             } else {
                 MethodNode method = (MethodNode) declaration;
@@ -264,10 +270,7 @@ public class TypeLookupResult {
                 }
 
                 if (method != declaration || returnType != method.getReturnType()) {
-                    TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method, confidence, scope, extraDoc);
-                    result.enclosingAnnotation = enclosingAnnotation;
-                    result.isGroovy = isGroovy;
-                    return result;
+                    return new TypeLookupResult(returnType, method.getDeclaringClass(), method, this);
                 }
             }
         }

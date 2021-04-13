@@ -328,13 +328,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 }
 
                 // find java elements for each generated method variant
-                for (TypeLookupResult tlr : nodes.map(mn -> {
-                    TypeLookupResult tlr = new TypeLookupResult(result.type, result.declaringType, mn, result.confidence, result.scope);
-                    tlr.enclosingAnnotation = result.enclosingAnnotation;
-                    tlr.enclosingAssignment = result.enclosingAssignment;
-                    tlr.isGroovy = result.isGroovy;
-                    return tlr;
-                }).toArray(TypeLookupResult[]::new)) {
+                for (TypeLookupResult tlr : nodes.map(mn ->
+                    new TypeLookupResult(result.type, result.declaringType, mn, result)
+                ).toArray(TypeLookupResult[]::new)) {
                     nodeToLookFor = tlr.declaration;
                     handleMatch(tlr, enclosingElement);
                 }

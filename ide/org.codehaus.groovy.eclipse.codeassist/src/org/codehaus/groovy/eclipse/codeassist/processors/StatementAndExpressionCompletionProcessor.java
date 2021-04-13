@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import static org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 
@@ -136,8 +137,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         List<IGroovyProposal> groovyProposals = new ArrayList<>();
-        boolean isStatic, isPrimary =
-            (context.location == ContentAssistLocation.STATEMENT);
+        boolean isStatic, isPrimary = (context.location == ContentAssistLocation.STATEMENT ||
+            context.location == ContentAssistLocation.METHOD_CONTEXT && isReceiverImplicit(context));
         ClassNode completionType;
 
         if (requestor.visitSuccessful) {
@@ -509,6 +510,18 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return sig;
     }
 
+    private static boolean isReceiverImplicit(final ContentAssistContext methodContext) {
+        if (methodContext.completionNode instanceof MethodCallExpression) {
+            MethodCallExpression methodCall = (MethodCallExpression) methodContext.completionNode;
+            return methodCall.isImplicitThis() && isThisExpression(methodCall.getObjectExpression());
+        }
+        if (methodContext.completionNode instanceof VariableExpression || // "name |"
+                methodContext.completionNode instanceof StaticMethodCallExpression) {
+            return true;
+        }
+        return false;
+    }
+
     private static VariableScope createTopLevelScope(final ClassNode completionType) {
         return new VariableScope(null, completionType, false);
     }
@@ -616,8 +629,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         private void setResultingType(final TypeLookupResult result, final boolean derefList) {
             ContentAssistContext context = getContext();
 
-            if (context.location == ContentAssistLocation.METHOD_CONTEXT ||
-                    (result.declaration == null && result.declaringType != null)) {
+            if (context.location == ContentAssistLocation.METHOD_CONTEXT) { // for method or constructor
+                resultingType = result.receiverType != null ? result.receiverType : result.declaringType;
+            } else if (result.declaration == null && result.declaringType != null) {
                 resultingType = result.declaringType;
             } else {
                 resultingType = result.type;

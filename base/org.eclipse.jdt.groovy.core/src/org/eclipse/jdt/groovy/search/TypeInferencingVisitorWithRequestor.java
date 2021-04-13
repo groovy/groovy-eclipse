@@ -2047,7 +2047,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private boolean handleRequestor(final Expression node, final ClassNode primaryType, final TypeLookupResult result) {
-        result.enclosingAssignment = enclosingAssignment;
+        result.enclosingAssignment = enclosingAssignment; // TODO: Why does result.scope.getEnclosingAssignment() exist?
+        result.receiverType = primaryType != null ? primaryType : result.scope.getDelegateOrThis();
         VisitStatus status = requestor.acceptASTNode(node, result, enclosingElement);
         VariableScope scope = scopes.getLast();
         scope.setMethodCallArgumentTypes(null);

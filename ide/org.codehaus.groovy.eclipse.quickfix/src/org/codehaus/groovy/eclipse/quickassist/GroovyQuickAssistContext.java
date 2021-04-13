@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -106,7 +106,7 @@ public class GroovyQuickAssistContext {
     }
 
     public TypeLookupResult getNodeType(final ASTNode node) {
-        final TypeLookupResult[] ref = new TypeLookupResult[1];
+        TypeLookupResult[] ref = {new TypeLookupResult(null, null, node, TypeLookupResult.TypeConfidence.UNKNOWN, null)};
         visitCompilationUnit((ASTNode n, TypeLookupResult r, IJavaElement e) -> {
             if (n == node) {
                 ref[0] = r;
@@ -114,10 +114,7 @@ public class GroovyQuickAssistContext {
             }
             return ITypeRequestor.VisitStatus.CONTINUE;
         });
-        if (ref[0] != null) {
-            return ref[0];
-        }
-        return new TypeLookupResult(null, null, node, TypeLookupResult.TypeConfidence.UNKNOWN, null);
+        return ref[0];
     }
 
     public int getSelectionOffset() {
