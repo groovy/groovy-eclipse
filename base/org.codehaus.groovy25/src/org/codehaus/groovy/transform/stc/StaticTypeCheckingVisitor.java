@@ -5794,7 +5794,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             } else {
                 argList.addExpression(arguments);
             }
-            return inferReturnTypeGenerics(receiver, dgmMethod, argList);
+            return inferReturnTypeGenerics(receiver, dgmMethod, argList, explicitTypeHints); // GRECLIPSE edit -- GROOVY-10036
         }
         if (!isUsingGenericsOrIsArrayUsingGenerics(returnType)) return returnType;
         if (getGenericsWithoutArray(returnType) == null) return returnType;

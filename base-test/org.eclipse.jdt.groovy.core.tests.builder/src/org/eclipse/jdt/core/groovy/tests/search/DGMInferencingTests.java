@@ -172,6 +172,29 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testDGM11a() {
+        //@formatter:off
+        String contents =
+            "def map = ['x'].<String,Object,String>collectEntries { [it, it.size()] }\n";
+        //@formatter:on
+        assertExprType(contents, "it", "java.lang.String");
+        assertExprType(contents, "map", "java.util.Map<java.lang.String,java.lang.Object>");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10036
+    public void testDGM11b() {
+        //@formatter:off
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def map = ['x'].<String,Object,String>collectEntries { [it, it.size()] }\n" +
+            "}\n";
+        //@formatter:on
+        assertExprType(contents, "it", "java.lang.String");
+        assertExprType(contents, "map", "java.util.Map<java.lang.String,java.lang.Object>");
+    }
+
+    @Test
     public void testDGM12() {
         //@formatter:off
         String contents =
@@ -469,8 +492,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "it", "java.lang.String");
     }
 
-    @Test @Ignore("ClosureParams states 'List<String>' or 'String[]', but " +
-        "runtime allows for destructuring if number of elements fits into params")
+    @Test @Ignore("ClosureParams states 'List<String>' or 'String[]', but runtime allows for destructuring if number of elements fits into params")
     public void testDGM43() {
         //@formatter:off
         String contents =

@@ -5583,7 +5583,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             } else {
                 args.addExpression(arguments);
             }
-            return inferReturnTypeGenerics(receiver, dgm, args);
+            return inferReturnTypeGenerics(receiver, dgm, args, explicitTypeHints); // GRECLIPSE edit -- GROOVY-10036
         }
         Map<GenericsTypeName, GenericsType> resolvedPlaceholders = resolvePlaceHoldersFromDeclaration(receiver, getDeclaringClass(method, arguments), method, method.isStatic());
         resolvePlaceholdersFromExplicitTypeHints(method, explicitTypeHints, resolvedPlaceholders);
