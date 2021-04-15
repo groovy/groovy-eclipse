@@ -628,6 +628,39 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testRetainImport20() {
+        addJavaSource('class C { static Object f }', 'C', '')
+
+        String contents = '''\
+            |import static C.f
+            |print f
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testRetainImport21() {
+        addJavaSource('class C { static void m() {} }', 'C', '')
+
+        String contents = '''\
+            |import static C.m
+            |m('x')
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testRetainImport22() {
+        addJavaSource('class C { static void m() {} }', 'C', '')
+
+        String contents = '''\
+            |import static C.m
+            |m 'x'
+            |'''
+        doContentsCompareTest(contents)
+    }
+
     @Test
     void testChoices() {
         String contents = '''\

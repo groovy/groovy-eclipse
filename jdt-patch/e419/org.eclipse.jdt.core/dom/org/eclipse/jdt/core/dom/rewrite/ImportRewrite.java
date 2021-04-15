@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
@@ -1177,7 +1178,8 @@ public final class ImportRewrite {
 	 */
 	public String addStaticImport(String declaringTypeName, String simpleName, boolean isField, ImportRewriteContext context) {
 		String key = declaringTypeName + '.' + simpleName;
-		if (declaringTypeName.indexOf('.') == -1) {
+		// GROOVY add -- Groovy allows static import of default-package elements
+		if (declaringTypeName.indexOf('.') == -1 && !this.compilationUnit.getClass().getName().contains("Groovy")) { //$NON-NLS-1$
 			return key;
 		}
 		if (context == null) {
@@ -1317,7 +1319,7 @@ public final class ImportRewrite {
 
 		CompilationUnit usedAstRoot= this.astRoot;
 		if (usedAstRoot == null) {
-			ASTParser parser= ASTParser.newParser(AST.JLS15);
+			ASTParser parser= ASTParser.newParser(AST.JLS_Latest);
 			parser.setSource(this.compilationUnit);
 			parser.setFocalPosition(0); // reduced AST
 			parser.setResolveBindings(false);

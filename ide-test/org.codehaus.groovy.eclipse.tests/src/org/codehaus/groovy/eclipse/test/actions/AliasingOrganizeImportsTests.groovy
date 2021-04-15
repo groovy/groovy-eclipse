@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
+import groovy.transform.NotYetImplemented
+
 import org.junit.Test
 
 /**
@@ -466,6 +468,52 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             |import static p.T.m as f
             |f('x')
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testRetainStaticAlias12() {
+        addJavaSource('class C { static Object f }', 'C', '')
+        String contents = '''\
+            |import static C.f as v
+            |print v
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testRetainStaticAlias13() {
+        addJavaSource('class C { static void m() {} }', 'C', '')
+        String contents = '''\
+            |import static C.m as f
+            |f('x')
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testRetainStaticAlias14() {
+        addJavaSource('class C { static void m() {} }', 'C', '')
+        String contents = '''\
+            |import static C.m as f
+            |f 'x'
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test @NotYetImplemented // https://github.com/groovy/groovy-eclipse/issues/732
+    void testRetainStaticAlias15() {
+        addJavaSource('class A { public static boolean isSomething(String s) { return true; } }', 'A', 'p')
+        addJavaSource('class B { public static boolean isPoorlyNamed(Iterable i) { return true; } }', 'B', 'p')
+
+        String contents = '''\
+            |import static p.A.isSomething
+            |import static p.B.isPoorlyNamed as isSomething
+            |String s
+            |Iterable i
+            |isSomething(s)
+            |isSomething(i)
             |'''
         doContentsCompareTest(contents)
     }
