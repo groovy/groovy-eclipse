@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -555,6 +555,8 @@ public class OrganizeGroovyImports {
                             staticImport += " as " + alias;
                         }
                         doNotRemoveImport(staticImport);
+                    } else if (methodTarget == null) { // unresolved type?
+                        checkRetainImport(expression.getMethodAsString());
                     }
                 } else if (isNotEmpty(expression.getGenericsTypes())) {
                     visitTypeParameters(expression.getGenericsTypes(), null);
@@ -780,10 +782,10 @@ public class OrganizeGroovyImports {
 
         private boolean checkRetainImport(String name) {
             if (!importsSlatedForRemoval.isEmpty() && !"this".equals(name) && !"super".equals(name)) {
-                String suffix = '.' + name;
                 for (Map.Entry<String, ImportNode> entry : importsSlatedForRemoval.entrySet()) {
+                    String suffix = (isAliased(entry.getValue()) ? ' ' : '.') + name;
                     if (entry.getValue().isStatic() && entry.getKey().endsWith(suffix)) {
-                        doNotRemoveImport(entry.getKey());
+                        importsSlatedForRemoval.remove(entry.getKey());
                         return true;
                     }
                 }

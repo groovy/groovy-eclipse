@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,6 +82,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E as X
             |X x
@@ -94,6 +95,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E as X
             |X.F x = null
@@ -106,6 +108,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E as X
             |X.F.G x = null
@@ -118,6 +121,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E as X
             |def x = X.F.G.H
@@ -130,6 +134,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E.F as X
             |X x = null
@@ -142,6 +147,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E.F as X
             |X.G x = null
@@ -154,6 +160,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E.F as X
             |def x = X.G.H
@@ -166,6 +173,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E.F.G as X
             |X x = null
@@ -178,6 +186,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E.F.G as X
             |def x = X.H
@@ -320,6 +329,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             |  static getFineName() {}
             |}
             |'''
+
         String contents = '''\
             |import static p.Q.getBadName as getGoodName
             |import static p.Q.getFineName
@@ -337,6 +347,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             |  static void setFineName(value) {}
             |}
             |'''
+
         String contents = '''\
             |import static p.Q.setBadName as setGoodName
             |import static p.Q.setFineName
@@ -354,6 +365,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             |  static getFineName() {}
             |}
             |'''
+
         String contents = '''\
             |import static p.Q.getBadName as getGoodName
             |import static p.Q.getFineName
@@ -375,6 +387,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             |  static void setFineName(value) {}
             |}
             |'''
+
         String contents = '''\
             |import static p.Q.setBadName as setGoodName
             |import static p.Q.setFineName
@@ -400,6 +413,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             |  }
             |}
             |'''
+
         String contents = '''\
             |import static other.Wrapper.Feature.TopRanking as feature
             |import static other.Wrapper.Feature.values as features
@@ -416,6 +430,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import static a.b.c.d.E.F.G.H as X
             |def x = X
@@ -433,6 +448,24 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             |ONE
             |TWO
             |WON
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1243
+    void testRetainStaticAlias10() {
+        String contents = '''\
+            |import static p.T.f as v
+            |print v
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1243
+    void testRetainStaticAlias11() {
+        String contents = '''\
+            |import static p.T.m as f
+            |f('x')
             |'''
         doContentsCompareTest(contents)
     }
@@ -643,7 +676,6 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             |  }
             |}
             |'''
-
         doContentsCompareTest(originalContents, expectedContents)
     }
 
@@ -664,7 +696,6 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             |TimeUnit units = DAYS
             |units = MILLIS
             |'''
-
         doContentsCompareTest(contents)
     }
 

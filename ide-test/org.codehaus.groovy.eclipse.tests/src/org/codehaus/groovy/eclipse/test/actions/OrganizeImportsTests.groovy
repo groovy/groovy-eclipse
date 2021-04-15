@@ -463,7 +463,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport4a() {
+    void testRetainImport5() {
         // multiple generics caused type to be perceived as "ConcurrentMap<java.util.regex.Pattern,"
         String contents = '''\
             |import java.util.concurrent.ConcurrentMap
@@ -473,7 +473,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport5() {
+    void testRetainImport6() {
         String contents = '''\
             |import java.util.regex.Pattern
             |class C {
@@ -484,7 +484,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport6() {
+    void testRetainImport7() {
         String contents = '''\
             |import java.util.regex.Pattern
             |class C {
@@ -495,7 +495,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport7() {
+    void testRetainImport8() {
         String contents = '''\
             |import static java.util.regex.Pattern.compile
             |class C {
@@ -506,7 +506,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport8() {
+    void testRetainImport9() {
         String contents = '''\
             |import static java.util.regex.Pattern.compile
             |class C {
@@ -520,7 +520,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport9() {
+    void testRetainImport10() {
         String contents = '''\
             |import groovy.transform.AnnotationCollector
             |import groovy.transform.EqualsAndHashCode
@@ -534,7 +534,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport9a() {
+    void testRetainImport11() {
         String contents = '''\
             |import groovy.transform.AnnotationCollector
             |import groovy.transform.EqualsAndHashCode
@@ -550,7 +550,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport10() {
+    void testRetainImport12() {
         addJavaSource('interface I { static String NLS = "nls"; }', 'I', 'p')
 
         String contents = '''\
@@ -566,7 +566,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport11() {
+    void testRetainImport13() {
         String contents = '''\
             |import java.util.regex.Pattern
             |def parse = Pattern.&compile
@@ -575,7 +575,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport12() {
+    void testRetainImport14() {
         String contents = '''\
             |import java.util.Map.*
             |Entry entry
@@ -584,7 +584,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport12a() {
+    void testRetainImport15() {
         String contents = '''\
             |import static java.util.Map.*
             |Entry entry
@@ -592,16 +592,38 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Test @NotYetImplemented
-    void testRetainImport13() {
-        createGroovyType '', 'C', '''\
-            |class C {
-            |  static m() {}
-            |}
-            |'''
+    @Test
+    void testRetainImport16() {
         String contents = '''\
-            |import static C.m
-            |m()
+            |import p.T
+            |def m(T t) {}
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testRetainImport17() {
+        String contents = '''\
+            |import static p.T.f
+            |print f
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1243
+    void testRetainImport18() {
+        String contents = '''\
+            |import static p.T.m
+            |m('x')
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1243
+    void testRetainImport19() {
+        String contents = '''\
+            |import static p.T.m
+            |m 'x'
             |'''
         doContentsCompareTest(contents)
     }
@@ -754,6 +776,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |@interface NamedQuery {
             |}
             |'''
+
         String contents = '''\
             |@NamedQueries(
             |  @NamedQuery
@@ -773,6 +796,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |@interface NamedQuery {
             |}
             |'''
+
         String contents = '''\
             |import anns.NamedQueries
             |import anns.NamedQuery
@@ -813,6 +837,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |@interface NamedQuery {
             |}
             |'''
+
         String contents = '''\
             |import anns.NamedQueries
             |import anns.NamedQuery
@@ -832,6 +857,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |  class InnerInner { }
             |}
             |'''
+
         String contents = '''\
             |InnerInner f
             |'''
@@ -845,6 +871,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |  class InnerInner { }
             |}
             |'''
+
         String contents = '''\
             |import inner.HasInner.InnerInner
             |InnerInner f
@@ -859,6 +886,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |  class InnerInner { }
             |}
             |'''
+
         String contents = '''\
             |HasInner.InnerInner f
             |'''
@@ -872,6 +900,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |  class InnerInner { }
             |}
             |'''
+
         String contents = '''\
             |import inner.HasInner
             |HasInner.InnerInner f
@@ -887,6 +916,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |  }
             |}
             |'''
+
         String originalContents = '''\
             |import foo.Bar
             |import foo.Bar.Baz
@@ -908,6 +938,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |  }
             |}
             |'''
+
         String originalContents = '''\
             |import foo.Bar
             |import foo.Bar.Baz
@@ -925,6 +956,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E
             |E x
@@ -937,6 +969,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E.F
             |F x
@@ -949,6 +982,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import a.b.c.d.E.F.G
             |G x
@@ -961,6 +995,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { interface F { interface G { String H = 'I' } } }
             |'''
+
         String contents = '''\
             |import static a.b.c.d.E.F.G.H
             |def x = H
@@ -976,6 +1011,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |  }
             |}
             |'''
+
         String contents = '''\
             |import p.A
             |import p.A.B
@@ -1141,6 +1177,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         createGroovyType 'a.b.c.d', 'E', '''\
             |interface E { String F = 'G.H' }
             |'''
+
         String contents = '''\
             |import static a.b.c.d.E.F
             |class Foo {
@@ -1581,6 +1618,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |    String name
             |}
             |'''
+
         String contents = '''
             |import groovy.transform.CompileStatic
             |
