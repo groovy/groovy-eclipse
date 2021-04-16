@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.junit.Test;
 public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
-    public void testGroovyAnnotation() {
+    public void testBasicAnnotation() {
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -33,6 +33,23 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testStaticFinalField() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print A.CONST\n",
+
+            "A.groovy",
+            "@interface A {\n" +
+            "  String CONST = 'value'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
     }
 
     @Test // GRECLIPSE-697

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -281,6 +281,27 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('baz'), 3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('baz')), 5, STATIC_VALUE))
+    }
+
+    @Test
+    void testStaticFinals4() {
+        addGroovySource '''\
+            |public @interface A {
+            |  String CONST = 'value'
+            |}
+            |'''.stripMargin(), 'A', 'p'
+
+        String contents = '''\
+            |import static p.A.CONST
+            |p.A.CONST
+            |CONST
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('A'), 1, ANNOTATION),
+            new HighlightedTypedPosition(contents.lastIndexOf('A') + 2, 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('CONST'), 5, STATIC_VALUE))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/905
