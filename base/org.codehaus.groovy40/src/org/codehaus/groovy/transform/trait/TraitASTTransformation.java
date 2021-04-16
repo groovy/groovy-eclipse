@@ -359,20 +359,13 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     }
 
     private void registerASTTransformations(final ClassNode helper) {
-        /* GRECLIPSE edit -- GROOVY-7293, GROOVY-9901
-        {
-            GroovyClassVisitor visitor = new ASTTransformationCollectorCodeVisitor(sourceUnit, compilationUnit.getTransformLoader());
-            visitor.visitClass(helper);
-        }
-        */
         ASTTransformationVisitor.addNewPhaseOperation(compilationUnit, sourceUnit, helper);
-        // GRECLIPSE end
-        // Perform an additional phase which has to be done *after* type checking
+        // perform an additional operation which has to be done *after* static type checking
         compilationUnit.addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
-            if (classNode != helper) return;
-
-            GroovyClassVisitor visitor = new PostTypeCheckingExpressionReplacer(source);
-            visitor.visitClass(helper);
+            if (classNode == helper) {
+                GroovyClassVisitor visitor = new PostTypeCheckingExpressionReplacer(source);
+                visitor.visitClass(helper);
+            }
         }, CompilePhase.INSTRUCTION_SELECTION.getPhaseNumber());
     }
 

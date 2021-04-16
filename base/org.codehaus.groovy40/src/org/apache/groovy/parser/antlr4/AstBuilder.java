@@ -20,6 +20,7 @@ package org.apache.groovy.parser.antlr4;
 
 import groovy.lang.Tuple2;
 import groovy.lang.Tuple3;
+import groovy.transform.CompileStatic;
 import groovy.transform.Trait;
 import groovyjarjarantlr4.v4.runtime.ANTLRErrorListener;
 import groovyjarjarantlr4.v4.runtime.CharStream;
@@ -118,6 +119,7 @@ import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.ast.tools.ClosureUtils;
+import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
@@ -152,7 +154,6 @@ import static org.apache.groovy.parser.antlr4.GroovyParser.ADD;
 import static org.apache.groovy.parser.antlr4.GroovyParser.AS;
 import static org.apache.groovy.parser.antlr4.GroovyParser.CASE;
 import static org.apache.groovy.parser.antlr4.GroovyParser.DEC;
-import static org.apache.groovy.parser.antlr4.GroovyParser.DEF;
 import static org.apache.groovy.parser.antlr4.GroovyParser.DEFAULT;
 import static org.apache.groovy.parser.antlr4.GroovyParser.GE;
 import static org.apache.groovy.parser.antlr4.GroovyParser.GT;
@@ -164,12 +165,20 @@ import static org.apache.groovy.parser.antlr4.GroovyParser.LT;
 import static org.apache.groovy.parser.antlr4.GroovyParser.NOT_IN;
 import static org.apache.groovy.parser.antlr4.GroovyParser.NOT_INSTANCEOF;
 import static org.apache.groovy.parser.antlr4.GroovyParser.PRIVATE;
+import static org.apache.groovy.parser.antlr4.GroovyParser.RANGE_EXCLUSIVE_FULL;
+import static org.apache.groovy.parser.antlr4.GroovyParser.RANGE_EXCLUSIVE_LEFT;
+import static org.apache.groovy.parser.antlr4.GroovyParser.RANGE_EXCLUSIVE_RIGHT;
+import static org.apache.groovy.parser.antlr4.GroovyParser.RANGE_INCLUSIVE;
+import static org.apache.groovy.parser.antlr4.GroovyParser.SAFE_INDEX;
 import static org.apache.groovy.parser.antlr4.GroovyParser.STATIC;
 import static org.apache.groovy.parser.antlr4.GroovyParser.SUB;
 import static org.apache.groovy.parser.antlr4.GroovyParser.VAR;
 /* GRECLIPSE edit
 import static org.apache.groovy.parser.antlr4.util.PositionConfigureUtils.configureAST;
 */
+import static org.codehaus.groovy.ast.tools.GeneralUtils.assignX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.classgen.asm.util.TypeUtil.isPrimitiveType;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
@@ -1999,76 +2008,110 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         return null;
     }
 
-    private void declareProperty(final VariableDeclarationContext ctx, final ModifierManager modifierManager, final ClassNode variableType, final ClassNode classNode, final int i, final VariableExpression variableExpression, final String fieldName, final int modifiers, final Expression initialValue) {
-        if (classNode.hasProperty(fieldName)) {
-            throw createParsingFailedException("The property '" + fieldName + "' is declared multiple times", ctx);
+    private static class PropertyExpander extends Verifier {
+        private PropertyExpander(final ClassNode cNode) {
+            setClassNode(cNode);
         }
 
+        @Override
+        protected Statement createSetterBlock(final PropertyNode propertyNode, final FieldNode field) {
+            return stmt(assignX(varX(field), varX(VALUE_STR, field.getType())));
+        }
+
+        @Override
+        protected Statement createGetterBlock(final PropertyNode propertyNode, final FieldNode field) {
+            return stmt(varX(field));
+        }
+    }
+
+    private void declareProperty(final VariableDeclarationContext ctx, final ModifierManager modifierManager, final ClassNode variableType, final ClassNode classNode, final int i, final VariableExpression variableExpression, final String fieldName, final int modifiers, final Expression initialValue) {
         PropertyNode propertyNode;
         FieldNode fieldNode = classNode.getDeclaredField(fieldName);
 
         if (fieldNode != null && !classNode.hasProperty(fieldName)) {
+            if (fieldNode.hasInitialExpression() && initialValue != null) {
+                throw createParsingFailedException("The split property definition named '" + fieldName + "' must not have an initial value for both the field and the property", ctx);
+            }
+            if (!fieldNode.getType().equals(variableType)) {
+                throw createParsingFailedException("The split property definition named '" + fieldName + "' must not have different types for the field and the property", ctx);
+            }
             classNode.getFields().remove(fieldNode);
 
             propertyNode = new PropertyNode(fieldNode, modifiers | Opcodes.ACC_PUBLIC, null, null);
             classNode.addProperty(propertyNode);
+            if (initialValue != null) {
+                fieldNode.setInitialValueExpression(initialValue);
+            }
+            modifierManager.attachAnnotations(propertyNode);
+            propertyNode.addAnnotation(new AnnotationNode(ClassHelper.make(CompileStatic.class)));
+            // expand properties early so AST transforms will be handled correctly
+            PropertyExpander expander = new PropertyExpander(classNode);
+            expander.visitProperty(propertyNode);
         } else {
-            propertyNode =
-                    classNode.addProperty(
-                            fieldName,
-                            modifiers | Opcodes.ACC_PUBLIC,
-                            variableType,
-                            initialValue,
-                            null,
-                            null);
+            propertyNode = new PropertyNode(fieldName, modifiers | Opcodes.ACC_PUBLIC, variableType, classNode, initialValue, null, null);
+            classNode.addProperty(propertyNode);
 
             fieldNode = propertyNode.getField();
+            fieldNode.setModifiers(modifiers & ~Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE);
+            fieldNode.setSynthetic(!classNode.isInterface());
+            modifierManager.attachAnnotations(fieldNode);
+            modifierManager.attachAnnotations(propertyNode);
+            /* GRECLIPSE edit
+            if (i == 0) {
+                configureAST(fieldNode, ctx, initialValue);
+            } else {
+                configureAST(fieldNode, variableExpression, initialValue);
+            }
+            */
+            if (initialValue != null && initialValue.getEnd() > 0) {
+                configureAST(fieldNode, ctx, initialValue);
+            } else {
+                configureAST(fieldNode, ctx, variableExpression);
+            }
+            fieldNode.setNameStart(variableExpression.getStart());
+            fieldNode.setNameEnd(variableExpression.getEnd() - 1);
+            // GRECLIPSE end
         }
-
-        fieldNode.setModifiers(modifiers & ~Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE);
-        fieldNode.setSynthetic(!classNode.isInterface());
-        modifierManager.attachAnnotations(fieldNode);
 
         groovydocManager.handle(fieldNode, ctx);
         groovydocManager.handle(propertyNode, ctx);
 
         /* GRECLIPSE edit
         if (i == 0) {
-            configureAST(fieldNode, ctx, initialValue);
             configureAST(propertyNode, ctx, initialValue);
         } else {
-            configureAST(fieldNode, variableExpression, initialValue);
             configureAST(propertyNode, variableExpression, initialValue);
         }
         */
         if (initialValue != null && initialValue.getEnd() > 0) {
-            configureAST(fieldNode, ctx, initialValue);
             configureAST(propertyNode, ctx, initialValue);
         } else {
-            configureAST(fieldNode, ctx, variableExpression);
             configureAST(propertyNode, ctx, variableExpression);
         }
-        fieldNode.setNameStart(variableExpression.getStart());
-        fieldNode.setNameEnd(variableExpression.getEnd() - 1);
         propertyNode.setNameStart(variableExpression.getStart());
         propertyNode.setNameEnd(variableExpression.getEnd() - 1);
         // GRECLIPSE end
     }
 
     private void declareField(final VariableDeclarationContext ctx, final ModifierManager modifierManager, final ClassNode variableType, final ClassNode classNode, final int i, final VariableExpression variableExpression, final String fieldName, final int modifiers, final Expression initialValue) {
-        FieldNode existingFieldNode = classNode.getDeclaredField(fieldName);
-        if (null != existingFieldNode && !existingFieldNode.isSynthetic()) {
-            throw createParsingFailedException("The field '" + fieldName + "' is declared multiple times", ctx);
-        }
-
         FieldNode fieldNode;
         PropertyNode propertyNode = classNode.getProperty(fieldName);
 
         if (null != propertyNode && propertyNode.getField().isSynthetic()) {
+            if (propertyNode.hasInitialExpression() && initialValue != null) {
+                throw createParsingFailedException("The split property definition named '" + fieldName + "' must not have an initial value for both the field and the property", ctx);
+            }
+            if (!propertyNode.getType().equals(variableType)) {
+                throw createParsingFailedException("The split property definition named '" + fieldName + "' must not have different types for the field and the property", ctx);
+            }
             classNode.getFields().remove(propertyNode.getField());
-            fieldNode = new FieldNode(fieldName, modifiers, variableType, classNode.redirect(), initialValue);
+            fieldNode = new FieldNode(fieldName, modifiers, variableType, classNode.redirect(), propertyNode.hasInitialExpression() ? propertyNode.getInitialExpression() : initialValue);
             propertyNode.setField(fieldNode);
+            propertyNode.addAnnotation(new AnnotationNode(ClassHelper.make(CompileStatic.class)));
             classNode.addField(fieldNode);
+            // expand properties early so AST transforms will be handled correctly
+            PropertyExpander expander = new PropertyExpander(classNode);
+            expander.visitProperty(propertyNode);
         } else {
             fieldNode =
                     classNode.addField(
@@ -2490,7 +2533,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             Tuple2<Token, Expression> tuple = this.visitIndexPropertyArgs(ctx.indexPropertyArgs());
             boolean isSafeChain = this.isTrue(baseExpr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
             return configureAST(
-                    new BinaryExpression(baseExpr, createGroovyToken(tuple.getV1()), tuple.getV2(), isSafeChain || asBoolean(ctx.indexPropertyArgs().QUESTION())),
+                    new BinaryExpression(baseExpr, createGroovyToken(tuple.getV1()), tuple.getV2(), isSafeChain || asBoolean(ctx.indexPropertyArgs().SAFE_INDEX())),
                     ctx);
         } else if (asBoolean(ctx.namedPropertyArgs())) { // this is a special way to signify a cast, e.g. Person[name: 'Daniel.Sun', location: 'Shanghai']
             List<MapEntryExpression> mapEntryExpressionList = this.visitNamedPropertyArgs(ctx.namedPropertyArgs());
@@ -2523,8 +2566,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 right = listExpression;
             }
 
+            NamedPropertyArgsContext namedPropertyArgsContext = ctx.namedPropertyArgs();
+            Token token = (namedPropertyArgsContext.LBRACK() == null
+                            ? namedPropertyArgsContext.SAFE_INDEX()
+                            : namedPropertyArgsContext.LBRACK()).getSymbol();
             return configureAST(
-                    new BinaryExpression(baseExpr, createGroovyToken(ctx.namedPropertyArgs().LBRACK().getSymbol()), right),
+                    new BinaryExpression(baseExpr, createGroovyToken(token), right),
                     ctx);
         } else if (asBoolean(ctx.arguments())) {
             Expression argumentsExpr = this.visitArguments(ctx.arguments());
@@ -2883,7 +2930,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public Tuple2<Token, Expression> visitIndexPropertyArgs(final IndexPropertyArgsContext ctx) {
         List<Expression> expressionList = this.visitExpressionList(ctx.expressionList());
-
+        Token token = (ctx.LBRACK() == null
+                            ? ctx.SAFE_INDEX()
+                            : ctx.LBRACK()).getSymbol();
 
         if (expressionList.size() == 1) {
             Expression expr = expressionList.get(0);
@@ -2898,14 +2947,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 indexExpr = expr;
             }
 
-            return tuple(ctx.LBRACK().getSymbol(), indexExpr);
+            return tuple(token, indexExpr);
         }
 
         // e.g. a[1, 2]
         ListExpression listExpression = new ListExpression(expressionList);
         listExpression.setWrapped(true);
 
-        return tuple(ctx.LBRACK().getSymbol(), configureAST(listExpression, ctx));
+        return tuple(token, configureAST(listExpression, ctx));
     }
 
     @Override
@@ -3070,7 +3119,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         Expression right = (Expression) this.visit(ctx.right);
 
         if (asBoolean(ctx.rangeOp)) {
-            return configureAST(new RangeExpression(left, right, !ctx.rangeOp.getText().endsWith("<")), ctx);
+            return configureAST(new RangeExpression(left, right, ctx.rangeOp.getText().startsWith("<"), ctx.rangeOp.getText().endsWith("<")), ctx);
         }
 
         org.codehaus.groovy.syntax.Token op;
@@ -3231,7 +3280,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     new BinaryExpression(
                             configureAST(new TupleExpression(leftExpr), ctx.left),
                             this.createGroovyToken(ctx.op),
-                            this.visitEnhancedStatementExpression(ctx.enhancedStatementExpression())),
+                            (Expression) this.visit(ctx.right)),
                     ctx);
         }
 
@@ -3258,7 +3307,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 new BinaryExpression(
                         leftExpr,
                         this.createGroovyToken(ctx.op),
-                        this.visitEnhancedStatementExpression(ctx.enhancedStatementExpression())),
+                        (Expression) this.visit(ctx.right)),
                 ctx);
     }
 
@@ -3911,8 +3960,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public Statement visitLambdaBody(final LambdaBodyContext ctx) {
-        if (asBoolean(ctx.statementExpression())) {
-            return configureAST((ExpressionStatement) this.visit(ctx.statementExpression()), ctx);
+        if (asBoolean(ctx.expression())) {
+            return configureAST(new ExpressionStatement((Expression) this.visit(ctx.expression())), ctx);
         }
 
         if (asBoolean(ctx.block())) {
@@ -4789,10 +4838,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private org.codehaus.groovy.syntax.Token createGroovyToken(final Token token, final int cardinality) {
-        String text = StringGroovyMethods.multiply((CharSequence) token.getText(), cardinality);
+        String tokenText = token.getText();
+        int tokenType = token.getType();
+        String text = 1 == cardinality ? tokenText : StringGroovyMethods.multiply(tokenText, cardinality);
         return new org.codehaus.groovy.syntax.Token(
-                "..<".equals(token.getText()) || "..".equals(token.getText())
+                RANGE_EXCLUSIVE_FULL == tokenType || RANGE_EXCLUSIVE_LEFT == tokenType || RANGE_EXCLUSIVE_RIGHT == tokenType || RANGE_INCLUSIVE == tokenType
                         ? Types.RANGE_OPERATOR
+                        : SAFE_INDEX == tokenType
+                        ? Types.LEFT_SQUARE_BRACKET
                         : Types.lookup(text, Types.ANY),
                 text,
                 token.getLine(),

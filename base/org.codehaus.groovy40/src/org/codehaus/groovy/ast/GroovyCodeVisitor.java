@@ -68,6 +68,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.IfStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.stmt.SwitchStatement;
 import org.codehaus.groovy.ast.stmt.SynchronizedStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
@@ -118,6 +119,10 @@ public interface GroovyCodeVisitor {
     void visitCatchStatement(CatchStatement statement);
 
     default void visitEmptyStatement(EmptyStatement statement) {
+    }
+
+    default void visit(final Statement statement) {
+        if (statement != null) statement.visit(this);
     }
 
     //--------------------------------------------------------------------------
@@ -206,7 +211,11 @@ public interface GroovyCodeVisitor {
     default void visitEmptyExpression(EmptyExpression expression) {
     }
 
-    default void visitListOfExpressions(List<? extends Expression> list) {
+    default void visitListOfExpressions(final List<? extends Expression> list) {
         if (list != null) list.forEach(expr -> expr.visit(this));
+    }
+
+    default void visit(final Expression expression) {
+        if (expression != null) expression.visit(this);
     }
 }

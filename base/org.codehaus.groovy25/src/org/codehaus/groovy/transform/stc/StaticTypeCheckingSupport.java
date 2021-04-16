@@ -911,11 +911,28 @@ public abstract class StaticTypeCheckingSupport {
         return sb.toString();
     }
 
-    static String prettyPrintType(ClassNode type) {
+    /**
+     * Returns string representation of type with generics. Arrays are indicated
+     * with trailing "[]".
+     */
+    static String prettyPrintType(final ClassNode type) {
+        /* GRECLIPSE edit
         if (type.isArray()) {
             return prettyPrintType(type.getComponentType()) + "[]";
         }
+        */
         return type.toString(false);
+    }
+
+    /**
+     * Returns string representation of type *no* generics. Arrays are indicated
+     * with trailing "[]".
+     */
+    static String prettyPrintTypeName(final ClassNode type) {
+        if (type.isArray()) {
+            return prettyPrintTypeName(type.getComponentType()) + "[]";
+        }
+        return type.getText();
     }
 
     public static boolean implementsInterfaceOrIsSubclassOf(ClassNode type, ClassNode superOrInterface) {

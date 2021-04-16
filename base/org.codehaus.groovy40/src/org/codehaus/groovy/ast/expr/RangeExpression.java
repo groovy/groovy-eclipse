@@ -27,16 +27,21 @@ import org.codehaus.groovy.ast.GroovyCodeVisitor;
  * <pre>for i in 0..10 {...}</pre>
  */
 public class RangeExpression extends Expression {
-
     private final Expression from;
     private final Expression to;
-    private final boolean inclusive;
+    private final boolean exclusiveLeft;
+    private final boolean exclusiveRight;
 
     public RangeExpression(final Expression from, final Expression to, final boolean inclusive) {
-        this.from = from;
-        this.to = to;
-        this.inclusive = inclusive;
-        setType(ClassHelper.RANGE_TYPE);
+        this(from, to, false, !inclusive);
+    }
+
+    public RangeExpression(final Expression from, final Expression to, final boolean exclusiveLeft, final boolean exclusiveRight) {
+        this.from = from; this.to = to;
+        this.exclusiveLeft = exclusiveLeft;
+        this.exclusiveRight = exclusiveRight;
+
+        setType(ClassHelper.RANGE_TYPE.getPlainNodeReference());
     }
 
     @Override
@@ -46,7 +51,7 @@ public class RangeExpression extends Expression {
 
     @Override
     public Expression transformExpression(final ExpressionTransformer transformer) {
-        Expression ret = new RangeExpression(transformer.transform(getFrom()), transformer.transform(getTo()), isInclusive());
+        Expression ret = new RangeExpression(transformer.transform(getFrom()), transformer.transform(getTo()), isExclusiveLeft(), isExclusiveRight());
         ret.setSourcePosition(this);
         ret.copyNodeMetaData(this);
         return ret;
@@ -61,11 +66,23 @@ public class RangeExpression extends Expression {
     }
 
     public boolean isInclusive() {
-        return inclusive;
+        return !isExclusiveRight();
+    }
+
+    public boolean isExclusiveLeft() {
+        return exclusiveLeft;
+    }
+
+    public boolean isExclusiveRight() {
+        return exclusiveRight;
     }
 
     @Override
     public String getText() {
-        return "(" + getFrom().getText() + (isInclusive() ? ".." : "..<") + getTo().getText() + ")";
+        return "(" + getFrom().getText() +
+                (isExclusiveLeft() ? "<" : "") +
+                ".." +
+                (isExclusiveRight() ? "<" : "") +
+                getTo().getText() + ")";
     }
 }

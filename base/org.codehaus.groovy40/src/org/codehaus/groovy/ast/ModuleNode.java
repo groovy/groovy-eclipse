@@ -355,12 +355,11 @@ public class ModuleNode extends ASTNode {
         }
     }
 
-    // GRECLIPSE add
-    private static Parameter makeFinal(Parameter parameter) {
+    private static Parameter[] finalParam(final ClassNode type, final String name) {
+        Parameter parameter = param(type, name);
         parameter.setModifiers(ACC_FINAL);
-        return parameter;
+        return params(parameter);
     }
-    // GRECLIPSE end
 
     protected ClassNode createStatementsClass() {
         ClassNode classNode = getScriptClassDummy();
@@ -375,15 +374,11 @@ public class ModuleNode extends ASTNode {
                 "main",
                 ACC_PUBLIC | ACC_STATIC,
                 ClassHelper.VOID_TYPE,
-                params(makeFinal(param(ClassHelper.STRING_TYPE.makeArray(), "args"))),
+                finalParam(ClassHelper.STRING_TYPE.makeArray(), "args"),
                 ClassNode.EMPTY_ARRAY,
                 stmt(
                     callX(
-                        /* GRECLIPSE edit
-                        classX(ClassHelper.make(InvokerHelper.class)),
-                        */
                         ClassHelper.make(InvokerHelper.class),
-                        // GRECLIPSE end
                         "runScript",
                         args(classX(classNode), varX("args"))
                     )
@@ -413,7 +408,7 @@ public class ModuleNode extends ASTNode {
 
         classNode.addConstructor(
             ACC_PUBLIC,
-            params(makeFinal(param(ClassHelper.make(Binding.class), "context"))),
+            finalParam(ClassHelper.make(Binding.class), "context"),
             ClassNode.EMPTY_ARRAY,
             stmt);
 
@@ -433,7 +428,7 @@ public class ModuleNode extends ASTNode {
     private MethodNode handleMainMethodIfPresent(final List<MethodNode> methods) {
         boolean found = false;
         MethodNode result = null;
-        for (Iterator<MethodNode> iter = methods.iterator(); iter.hasNext();) {
+        for (Iterator<MethodNode> iter = methods.iterator(); iter.hasNext(); ) {
             MethodNode node = iter.next();
             if (node.getName().equals("main")) {
                 if (node.isStatic() && node.getParameters().length == 1) {

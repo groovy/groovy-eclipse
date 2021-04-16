@@ -267,7 +267,7 @@ memberDeclaration[int t]
  *  ct  9: script, other see the comment of classDeclaration
  */
 methodDeclaration[int t, int ct]
-    :   modifiersOpt typeParameters? returnType[$ct]?
+    :   modifiersOpt typeParameters? (returnType[$ct] nls)?
         methodName formalParameters
         (
             DEFAULT nls elementValue
@@ -482,7 +482,7 @@ standardLambdaParameters
 
 lambdaBody
     :   block
-    |   statementExpression
+    |   expression
     ;
 
 // CLOSURE
@@ -766,7 +766,9 @@ expression
                         |   dgOp=GT GT
                         )
             |   rangeOp=(    RANGE_INCLUSIVE
-                        |    RANGE_EXCLUSIVE
+                        |    RANGE_EXCLUSIVE_LEFT
+                        |    RANGE_EXCLUSIVE_RIGHT
+                        |    RANGE_EXCLUSIVE_FULL
                         )
             ) nls
         right=expression                                                                    #shiftExprAlt
@@ -831,7 +833,7 @@ expression
                            |   POWER_ASSIGN
                            |   ELVIS_ASSIGN
                            ) nls
-                     enhancedStatementExpression                                            #assignmentExprAlt
+                     right=enhancedStatementExpression                                      #assignmentExprAlt
     ;
 
 castOperandExpression
@@ -980,11 +982,11 @@ dynamicMemberName
  *  The brackets may also be empty, as in T[].  This is how Groovy names array types.
  */
 indexPropertyArgs
-    :   QUESTION? LBRACK expressionList[true]? RBRACK
+    :   (SAFE_INDEX | LBRACK) expressionList[true]? RBRACK
     ;
 
 namedPropertyArgs
-    :   QUESTION? LBRACK (namedPropertyArgList | COLON) RBRACK
+    :   (SAFE_INDEX | LBRACK) (namedPropertyArgList | COLON) RBRACK
     ;
 
 primary

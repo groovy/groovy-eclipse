@@ -69,7 +69,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import static java.util.stream.Collectors.joining;
+import java.util.stream.Collectors;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant;
@@ -84,6 +84,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 import static groovyjarjarasm.asm.Opcodes.ACONST_NULL;
 import static groovyjarjarasm.asm.Opcodes.ALOAD;
 import static groovyjarjarasm.asm.Opcodes.CHECKCAST;
@@ -113,13 +114,10 @@ public class StaticInvocationWriter extends InvocationWriter {
 
     private final AtomicInteger labelCounter = new AtomicInteger();
 
-    final WriterController controller;
-
     private MethodCallExpression currentCall;
 
     public StaticInvocationWriter(final WriterController wc) {
         super(wc);
-        controller = wc;
     }
 
     @Override
@@ -248,10 +246,8 @@ public class StaticInvocationWriter extends InvocationWriter {
             Expression fixedReceiver = receiver;
             if (implicitThis) {
                 if (!controller.isInGeneratedFunction()) {
-                    // GRECLIPSE add -- GROOVY-9524
                     if (!thisClass.isDerivedFrom(lookupClassNode))
-                    // GRECLIPSE end
-                    fixedReceiver = propX(classX(lookupClassNode), "this");
+                        fixedReceiver = propX(classX(lookupClassNode), "this");
                 } else if (thisClass != null) {
                     ClassNode current = thisClass.getOuterClass();
                     fixedReceiver = varX("thisObject", current);
@@ -370,18 +366,20 @@ public class StaticInvocationWriter extends InvocationWriter {
             }
         } else if (target.isPublic() && receiver != null) {
             if (implicitThis
+                    && controller.isInGeneratedFunction()
                     && !classNode.isDerivedFrom(target.getDeclaringClass())
-                    && !classNode.implementsInterface(target.getDeclaringClass())
-                    && classNode.getOuterClass() != null && controller.isInGeneratedFunction()) {
-                ClassNode current = classNode.getOuterClass();
-                fixedReceiver = varX("thisObject", current);
-                // adjust for multiple levels of nesting if needed
-                while (current.getOuterClass() != null && !target.getDeclaringClass().equals(current)) {
-                    FieldNode thisField = current.getField("this$0");
-                    current = current.getOuterClass();
+                    && !classNode.implementsInterface(target.getDeclaringClass())) {
+                ClassNode thisType = controller.getThisType();
+                if (isTrait(thisType.getOuterClass())) thisType = ClassHelper.DYNAMIC_TYPE; // GROOVY-7242
+
+                fixedReceiver = varX("thisObject", thisType);
+                // account for multiple levels of inner types
+                while (thisType.getOuterClass() != null && !target.getDeclaringClass().equals(thisType)) {
+                    FieldNode thisField = thisType.getField("this$0");
+                    thisType = thisType.getOuterClass();
                     if (thisField != null) {
                         fixedReceiver = propX(fixedReceiver, "this$0");
-                        fixedReceiver.setType(current);
+                        fixedReceiver.setType(thisType);
                         fixedImplicitThis = false;
                     }
                 }
@@ -428,77 +426,6 @@ public class StaticInvocationWriter extends InvocationWriter {
 
     @Override
     protected void loadArguments(final List<Expression> argumentList, final Parameter[] parameters) {
-        /* GRECLIPSE edit -- GROOVY-9918
-        if (para.length == 0) return;
-        ClassNode lastParaType = para[para.length - 1].getOriginType();
-        AsmClassGenerator acg = controller.getAcg();
-        TypeChooser typeChooser = controller.getTypeChooser();
-        OperandStack operandStack = controller.getOperandStack();
-        int argumentListSize = argumentList.size();
-        ClassNode lastArgType = argumentListSize > 0 ?
-                typeChooser.resolveType(argumentList.get(argumentListSize -1), controller.getClassNode()) : null;
-        if (lastParaType.isArray()
-                && ((argumentListSize > para.length)
-                || ((argumentListSize == (para.length - 1)) && !lastParaType.equals(lastArgType))
-                || ((argumentListSize == para.length && lastArgType!=null && !lastArgType.isArray())
-                    && (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(lastArgType,lastParaType.getComponentType())))
-                        || ClassHelper.GSTRING_TYPE.equals(lastArgType) && ClassHelper.STRING_TYPE.equals(lastParaType.getComponentType()))
-                ) {
-            int stackLen = operandStack.getStackLength() + argumentListSize;
-            MethodVisitor mv = controller.getMethodVisitor();
-            controller.setMethodVisitor(mv);
-            // varg call
-            // first parameters as usual
-            for (int i = 0; i < para.length - 1; i += 1) {
-                visitArgument(argumentList.get(i), para[i].getType());
-            }
-            // last parameters wrapped in an array
-            List<Expression> lastParams = new ArrayList<>();
-            for (int i = para.length - 1; i < argumentListSize; i += 1) {
-                lastParams.add(argumentList.get(i));
-            }
-            ArrayExpression array = new ArrayExpression(lastParaType.getComponentType(), lastParams);
-            array.visit(acg);
-            // adjust stack length
-            while (operandStack.getStackLength() < stackLen) {
-                operandStack.push(ClassHelper.OBJECT_TYPE);
-            }
-            if (argumentListSize == para.length - 1) {
-                operandStack.remove(1);
-            }
-        } else if (argumentListSize == para.length) {
-            for (int i = 0; i < argumentListSize; i++) {
-                visitArgument(argumentList.get(i), para[i].getType());
-            }
-        } else {
-            // method call with default arguments
-            ClassNode classNode = controller.getClassNode();
-            Expression[] arguments = new Expression[para.length];
-            for (int i = 0, j = 0, n = para.length; i < n; i += 1) {
-                Parameter curParam = para[i];
-                ClassNode curParamType = curParam.getType();
-                Expression curArg = j < argumentListSize ? argumentList.get(j) : null;
-                Expression initialExpression = curParam.getNodeMetaData(StaticTypesMarker.INITIAL_EXPRESSION);
-                if (initialExpression == null && curParam.hasInitialExpression())
-                    initialExpression = curParam.getInitialExpression();
-                if (initialExpression == null && curParam.getNodeMetaData(Verifier.INITIAL_EXPRESSION) != null) {
-                    initialExpression = curParam.getNodeMetaData(Verifier.INITIAL_EXPRESSION);
-                }
-                ClassNode curArgType = curArg == null ? null : typeChooser.resolveType(curArg, classNode);
-
-                if (initialExpression != null && !compatibleArgumentType(curArgType, curParamType)) {
-                    // use default expression
-                    arguments[i] = initialExpression;
-                } else {
-                    arguments[i] = curArg;
-                    j += 1;
-                }
-            }
-            for (int i = 0, n = arguments.length; i < n; i += 1) {
-                visitArgument(arguments[i], para[i].getType());
-            }
-        }
-        */
         final int nArgs = argumentList.size(), nPrms = parameters.length; if (nPrms == 0) return;
 
         ClassNode classNode = controller.getClassNode();
@@ -545,22 +472,21 @@ public class StaticInvocationWriter extends InvocationWriter {
                 ClassNode aType = (a == null ? null : typeChooser.resolveType(a, classNode));
 
                 Expression expression = getInitialExpression(p); // default argument
-                if (expression != null && !compatibleArgumentType(aType, pType)) {
+                if (expression != null && !isCompatibleArgumentType(aType, pType)) {
                     arguments[i] = expression;
                 } else if (a != null) {
                     arguments[i] = a;
                     j += 1;
                 } else {
                     controller.getSourceUnit().addFatalError("Binding failed" +
-                            " for arguments [" + argumentList.stream().map(arg -> typeChooser.resolveType(arg, classNode).toString(false)).collect(joining(", ")) + "]" +
-                            " and parameters [" + Arrays.stream(parameters).map(prm -> prm.getType().toString(false)).collect(joining(", ")) + "]", getCurrentCall());
+                            " for arguments [" + argumentList.stream().map(arg -> typeChooser.resolveType(arg, classNode).toString(false)).collect(Collectors.joining(", ")) + "]" +
+                            " and parameters [" + Arrays.stream(parameters).map(prm -> prm.getType().toString(false)).collect(Collectors.joining(", ")) + "]", getCurrentCall());
                 }
             }
             for (int i = 0; i < nArgs; i += 1) {
                 visitArgument(arguments[i], parameters[i].getType());
             }
         }
-        // GRECLIPSE end
     }
 
     private static Expression getInitialExpression(final Parameter parameter) {
@@ -574,6 +500,18 @@ public class StaticInvocationWriter extends InvocationWriter {
         return initialExpression;
     }
 
+    private static boolean isCompatibleArgumentType(final ClassNode argumentType, final ClassNode parameterType) {
+        if (argumentType == null)
+            return false;
+        if (ClassHelper.getWrapper(argumentType).equals(ClassHelper.getWrapper(parameterType)))
+            return true;
+        if (parameterType.isInterface())
+            return argumentType.implementsInterface(parameterType);
+        if (parameterType.isArray() && argumentType.isArray())
+            return isCompatibleArgumentType(argumentType.getComponentType(), parameterType.getComponentType());
+        return ClassHelper.getWrapper(argumentType).isDerivedFrom(ClassHelper.getWrapper(parameterType));
+    }
+
     private void visitArgument(final Expression argumentExpr, final ClassNode parameterType) {
         // GRECLIPSE add
         if (!argumentExpr.getClass().getSimpleName().equals("StaticConstantExpression"))
@@ -583,15 +521,6 @@ public class StaticInvocationWriter extends InvocationWriter {
         if (!isNullConstant(argumentExpr)) {
             controller.getOperandStack().doGroovyCast(parameterType);
         }
-    }
-
-    private boolean compatibleArgumentType(final ClassNode argumentType, final ClassNode paramType) {
-        if (argumentType == null) return false;
-        if (ClassHelper.getWrapper(argumentType).equals(ClassHelper.getWrapper(paramType))) return true;
-        if (paramType.isInterface()) return argumentType.implementsInterface(paramType);
-        if (paramType.isArray() && argumentType.isArray())
-            return compatibleArgumentType(argumentType.getComponentType(), paramType.getComponentType());
-        return ClassHelper.getWrapper(argumentType).isDerivedFrom(ClassHelper.getWrapper(paramType));
     }
 
     @Override
@@ -761,11 +690,10 @@ public class StaticInvocationWriter extends InvocationWriter {
         private final Expression receiver;
         private final MethodNode target;
 
-        private ClassNode resolvedType;
-
         public CheckcastReceiverExpression(final Expression receiver, final MethodNode target) {
             this.receiver = receiver;
             this.target = target;
+            setType(null);
         }
 
         @Override
@@ -799,37 +727,33 @@ public class StaticInvocationWriter extends InvocationWriter {
 
         @Override
         public ClassNode getType() {
-            if (resolvedType != null) {
-                return resolvedType;
+            ClassNode type = super.getType();
+            if (type == null) {
+                if (target instanceof ExtensionMethodNode) {
+                    type = ((ExtensionMethodNode) target).getExtensionMethodNode().getDeclaringClass();
+                } else {
+                    type = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
+                    if (ClassHelper.isPrimitiveType(type)) {
+                        type = ClassHelper.getWrapper(type);
+                    }
+                    ClassNode declaringClass = target.getDeclaringClass();
+                    if (type.getClass() != ClassNode.class
+                            && type.getClass() != InnerClassNode.class
+                            && type.getClass() != DecompiledClassNode.class) {
+                        type = declaringClass; // ex: LUB type
+                    }
+                    if (ClassHelper.OBJECT_TYPE.equals(declaringClass)) {
+                        // checkcast not necessary because Object never evolves
+                        // and it prevents a potential ClassCastException if the
+                        // delegate of a closure is changed in a SC closure
+                        type = ClassHelper.OBJECT_TYPE;
+                    } else if (ClassHelper.OBJECT_TYPE.equals(type)) {
+                        // can happen for compiler rewritten code, where type information is missing
+                        type = declaringClass;
+                    }
+                }
+                setType(type);
             }
-            ClassNode type;
-            if (target instanceof ExtensionMethodNode) {
-                type = ((ExtensionMethodNode) target).getExtensionMethodNode().getDeclaringClass();
-            } else {
-                /* GRECLIPSE edit -- GROOVY-9955
-                type = ClassHelper.getWrapper(controller.getTypeChooser().resolveType(receiver, controller.getClassNode()));
-                */
-                type = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
-                if (ClassHelper.isPrimitiveType(type)) type = ClassHelper.getWrapper(type);
-                // GRECLIPSE end
-                ClassNode declaringClass = target.getDeclaringClass();
-                if (type.getClass() != ClassNode.class
-                        && type.getClass() != InnerClassNode.class
-                        && type.getClass() != DecompiledClassNode.class) {
-                    type = declaringClass; // ex: LUB type
-                }
-                if (ClassHelper.OBJECT_TYPE.equals(type) && !ClassHelper.OBJECT_TYPE.equals(declaringClass)) {
-                    // can happen for compiler rewritten code, where type information is missing
-                    type = declaringClass;
-                }
-                if (ClassHelper.OBJECT_TYPE.equals(declaringClass)) {
-                    // check cast not necessary because Object never evolves
-                    // and it prevents a potential ClassCastException if the delegate of a closure
-                    // is changed in a statically compiled closure
-                    type = ClassHelper.OBJECT_TYPE;
-                }
-            }
-            resolvedType = type;
             return type;
         }
     }

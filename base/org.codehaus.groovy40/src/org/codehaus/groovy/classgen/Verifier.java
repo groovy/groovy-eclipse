@@ -120,6 +120,7 @@ import static org.apache.groovy.ast.tools.ExpressionUtils.transformInlineConstan
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.methodDescriptorWithoutReturnType;
+import static org.codehaus.groovy.ast.AnnotationNode.METHOD_TARGET;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.block;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.bytecodeX;
@@ -964,13 +965,13 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             getterModifiers &= ~ACC_FINAL;
         }
         if (getterBlock != null) {
-            visitGetter(node, getterBlock, getterModifiers, getterName);
+            visitGetter(node, field, getterBlock, getterModifiers, getterName);
 
             if (node.getGetterName() == null && getterName.startsWith("get") && (node.getType().equals(ClassHelper.boolean_TYPE) || node.getType().equals(ClassHelper.Boolean_TYPE))) {
                 String altGetterName = "is" + capitalize(name);
                 MethodNode altGetter = classNode.getGetterMethod(altGetterName, !node.isStatic());
                 if (methodNeedsReplacement(altGetter)) {
-                    visitGetter(node, getterBlock, getterModifiers, altGetterName);
+                    visitGetter(node, field, getterBlock, getterModifiers, altGetterName);
                 }
             }
         }
@@ -978,22 +979,36 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             Parameter[] setterParameterTypes = {new Parameter(node.getType(), "value")};
             MethodNode setter = new MethodNode(setterName, accessorModifiers, ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);
             // GRECLIPSE add
-            node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(setter::addAnnotation);
+            field.getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(setter::addAnnotation);
             // GRECLIPSE end
             setter.setSynthetic(true);
             addPropertyMethod(setter);
+            if (!field.isSynthetic()) {
+                copyMethodAnnotations(node, setter);
+            }
             visitMethod(setter);
         }
     }
 
-    private void visitGetter(final PropertyNode node, final Statement getterBlock, final int getterModifiers, final String getterName) {
+    private void visitGetter(final PropertyNode node, final FieldNode field, final Statement getterBlock, final int getterModifiers, final String getterName) {
         MethodNode getter = new MethodNode(getterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
         // GRECLIPSE add
-        node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(getter::addAnnotation);
+        field.getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(getter::addAnnotation);
         // GRECLIPSE end
         getter.setSynthetic(true);
         addPropertyMethod(getter);
+        if (!field.isSynthetic()) {
+            copyMethodAnnotations(node, getter);
+        }
         visitMethod(getter);
+    }
+
+    private void copyMethodAnnotations(PropertyNode node, MethodNode accessor) {
+        for (AnnotationNode annotationNode : node.getAnnotations()) {
+            if (annotationNode.isTargetAllowed(METHOD_TARGET)) {
+                accessor.addAnnotation(annotationNode);
+            }
+        }
     }
 
     protected void addPropertyMethod(final MethodNode method) {
@@ -1292,73 +1307,63 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     protected void addInitialization(final ClassNode node, final ConstructorNode constructorNode) {
         Statement firstStatement = constructorNode.getFirstStatement();
-        // if some transformation decided to generate constructor then it probably knows who it does
-        if (firstStatement instanceof BytecodeSequence)
-            return;
 
-        ConstructorCallExpression first = getFirstIfSpecialConstructorCall(firstStatement);
+        // if some transformation decided to generate constructor then it probably knows best
+        if (firstStatement instanceof BytecodeSequence) return;
 
-        // in case of this(...) let the other constructor do the init
-        if (first != null && (first.isThisCall())) return;
+        ConstructorCallExpression specialCtorCall = getFirstIfSpecialConstructorCall(firstStatement);
 
-        List<Statement> statements = new ArrayList<Statement>();
-        List<Statement> staticStatements = new ArrayList<Statement>();
-        final boolean isEnum = node.isEnum();
-        List<Statement> initStmtsAfterEnumValuesInit = new ArrayList<Statement>();
-        Set<String> explicitStaticPropsInEnum = new HashSet<String>();
-        if (isEnum) {
-            for (PropertyNode propNode : node.getProperties()) {
-                if (!propNode.isSynthetic() && propNode.getField().isStatic()) {
-                    explicitStaticPropsInEnum.add(propNode.getField().getName());
-                }
-            }
-            for (FieldNode fieldNode : node.getFields()) {
-                if (!fieldNode.isSynthetic() && fieldNode.isStatic() && fieldNode.getType() != node) {
-                    explicitStaticPropsInEnum.add(fieldNode.getName());
-                }
-            }
-        }
+        // in case of this(...) let the other constructor initialize
+        if (specialCtorCall != null && (specialCtorCall.isThisCall())) return;
+
+        boolean isEnum = node.isEnum();
+        List<Statement> statements = new ArrayList<>();
+        List<Statement> staticStatements = new ArrayList<>();
+        List<Statement> initStmtsAfterEnumValuesInit = new ArrayList<>();
 
         if (!Traits.isTrait(node)) {
+            Set<String> explicitStaticPropsInEnum = !isEnum
+                    ? Collections.emptySet() : getExplicitStaticProperties(node);
+
             for (FieldNode fn : node.getFields()) {
                 addFieldInitialization(statements, staticStatements, fn, isEnum,
                         initStmtsAfterEnumValuesInit, explicitStaticPropsInEnum);
             }
         }
 
-        statements.addAll(node.getObjectInitializerStatements());
-
         BlockStatement block = getCodeAsBlock(constructorNode);
-        List<Statement> otherStatements = block.getStatements();
-        if (!otherStatements.isEmpty()) {
-            if (first != null) {
-                // it is super(..) since this(..) is already covered
-                otherStatements.remove(0);
+        List<Statement> blockStatements = block.getStatements();
+        if (!blockStatements.isEmpty()) {
+            if (specialCtorCall != null) {
+                blockStatements.remove(0);
                 statements.add(0, firstStatement);
-                // GRECLIPSE add -- GROOVY-7686: place local variable references above super ctor call
+                // GROOVY-7686: place local variable references above super ctor call
                 if (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous()) {
                     extractVariableReferenceInitializers(statements).forEach(s -> statements.add(0, s));
                 }
-                // GRECLIPSE end
             }
-            Statement stmtThis$0 = getImplicitThis$0StmtIfInnerClass(otherStatements);
-            if (stmtThis$0 != null) {
-                // since there can be field init statements that depend on method/property dispatching
-                // that uses this$0, it needs to bubble up before the super call itself (GROOVY-4471)
-                statements.add(0, stmtThis$0);
+            if (node instanceof InnerClassNode) {
+                // GROOVY-4471: place this$0 init above other field init and super ctor call;
+                // there can be field initializers that depend on method/property dispatching
+                Statement initThis$0 = getImplicitThis$0Stmt(blockStatements);
+                if (initThis$0 != null) {
+                    statements.add(0, initThis$0);
+                }
             }
-            statements.addAll(otherStatements);
+            statements.addAll(node.getObjectInitializerStatements());
+            statements.addAll(blockStatements);
+        } else {
+            statements.addAll(node.getObjectInitializerStatements());
         }
+
         BlockStatement newBlock = new BlockStatement(statements, block.getVariableScope());
         newBlock.setSourcePosition(block);
         constructorNode.setCode(newBlock);
 
         if (!staticStatements.isEmpty()) {
             if (isEnum) {
-                /*
-                 * GROOVY-3161: initialize statements for explicitly declared static fields
-                 * inside an enum should come after enum values are initialized
-                 */
+                // GROOVY-3161: initialization statements for explicitly declared static
+                // fields inside an enum should come after enum values are initialized
                 staticStatements.removeAll(initStmtsAfterEnumValuesInit);
                 node.addStaticInitializerStatements(staticStatements, true);
                 if (!initStmtsAfterEnumValuesInit.isEmpty()) {
@@ -1370,7 +1375,55 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
     }
 
-    // GRECLIPSE add
+    private static Set<String> getExplicitStaticProperties(final ClassNode cn) {
+        Set<String> staticProperties = new HashSet<>();
+        for (PropertyNode pn : cn.getProperties()) {
+            if (!pn.isSynthetic() && pn.getField().isStatic()) {
+                staticProperties.add(pn.getField().getName());
+            }
+        }
+        for (FieldNode fn : cn.getFields()) {
+            if (!fn.isSynthetic() && fn.isStatic() && fn.getType() != cn) {
+                staticProperties.add(fn.getName());
+            }
+        }
+        return staticProperties;
+    }
+
+    /**
+     * When InnerClassVisitor adds <code>this.this$0 = $p$n</code>, it adds it
+     * as a BlockStatement having that ExpressionStatement.
+     */
+    private static Statement getImplicitThis$0Stmt(final List<Statement> statements) {
+        for (Statement stmt : statements) {
+            if (stmt instanceof BlockStatement) {
+                List<Statement> stmts = ((BlockStatement) stmt).getStatements();
+                for (Statement bstmt : stmts) {
+                    if (bstmt instanceof ExpressionStatement) {
+                        if (extractImplicitThis$0StmtFromExpression(stmts, bstmt)) return bstmt;
+                    }
+                }
+            } else if (stmt instanceof ExpressionStatement) {
+                if (extractImplicitThis$0StmtFromExpression(statements, stmt)) return stmt;
+            }
+        }
+        return null;
+    }
+
+    private static boolean extractImplicitThis$0StmtFromExpression(final List<Statement> stmts, final Statement exprStmt) {
+        Expression expr = ((ExpressionStatement) exprStmt).getExpression();
+        if (expr instanceof BinaryExpression) {
+            Expression lExpr = ((BinaryExpression) expr).getLeftExpression();
+            if (lExpr instanceof FieldExpression) {
+                if ("this$0".equals(((FieldExpression) lExpr).getFieldName())) {
+                    stmts.remove(exprStmt); // remove from here and let the caller reposition it
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private static List<Statement> extractVariableReferenceInitializers(final List<Statement> statements) {
         List<Statement> localVariableReferences = new ArrayList<>();
         for (ListIterator<Statement> it = statements.listIterator(1); it.hasNext();) {
@@ -1392,42 +1445,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             }
         }
         return localVariableReferences;
-    }
-    // GRECLIPSE end
-
-    /*
-     * When InnerClassVisitor adds <code>this.this$0 = $p$n</code>, it adds it
-     * as a BlockStatement having that ExpressionStatement.
-     */
-    private Statement getImplicitThis$0StmtIfInnerClass(final List<Statement> otherStatements) {
-        if (!(classNode instanceof InnerClassNode)) return null;
-        for (Statement stmt : otherStatements) {
-            if (stmt instanceof BlockStatement) {
-                List<Statement> stmts = ((BlockStatement) stmt).getStatements();
-                for (Statement bstmt : stmts) {
-                    if (bstmt instanceof ExpressionStatement) {
-                        if (extractImplicitThis$0StmtIfInnerClassFromExpression(stmts, bstmt)) return bstmt;
-                    }
-                }
-            } else if (stmt instanceof ExpressionStatement) {
-                if (extractImplicitThis$0StmtIfInnerClassFromExpression(otherStatements, stmt)) return stmt;
-            }
-        }
-        return null;
-    }
-
-    private static boolean extractImplicitThis$0StmtIfInnerClassFromExpression(final List<Statement> stmts, final Statement bstmt) {
-        Expression expr = ((ExpressionStatement) bstmt).getExpression();
-        if (expr instanceof BinaryExpression) {
-            Expression lExpr = ((BinaryExpression) expr).getLeftExpression();
-            if (lExpr instanceof FieldExpression) {
-                if ("this$0".equals(((FieldExpression) lExpr).getFieldName())) {
-                    stmts.remove(bstmt); // remove from here and let the caller reposition it
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     // TODO: add generics to collections

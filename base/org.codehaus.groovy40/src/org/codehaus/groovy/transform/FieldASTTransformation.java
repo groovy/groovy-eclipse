@@ -154,7 +154,7 @@ public class FieldASTTransformation extends ClassCodeExpressionTransformer imple
             super.visitClass(cNode);
             // GROOVY-5207: So that Closures can see newly added fields
             // (not super efficient for a very large class with many @Fields but we chose simplicity
-            //  and understandability of this solution over more complex but efficient alternatives)
+            // and understandability of this solution over more complex but efficient alternatives)
             new VariableScopeVisitor(source).visitClass(cNode);
         }
     }

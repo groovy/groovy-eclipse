@@ -85,22 +85,21 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitClass(final ClassNode node) {
-        if (!node.isEnum()) return;
-        completeEnum(node);
+        if (node.isEnum()) completeEnum(node);
     }
 
     private void completeEnum(final ClassNode enumClass) {
+        // create MIN_VALUE, MAX_VALUE and $VALUES fields
         FieldNode minValue = null, maxValue = null, values = null;
 
-        boolean isAic = isAnonymousInnerClass(enumClass);
-        if (!isAic) {
-            ClassNode enumRef = enumClass.getPlainNodeReference();
-            minValue = new FieldNode("MIN_VALUE", ACC_FINAL | ACC_PUBLIC | ACC_STATIC, enumRef, enumClass, null);
-            maxValue = new FieldNode("MAX_VALUE", ACC_FINAL | ACC_PUBLIC | ACC_STATIC, enumRef, enumClass, null);
-            values = new FieldNode("$VALUES", ACC_FINAL | ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC, enumRef.makeArray(), enumClass, null);
+        boolean isAIC = isAnonymousInnerClass(enumClass);
+        if (!isAIC) {
+            ClassNode enumPlain = enumClass.getPlainNodeReference();
+            minValue = new FieldNode("MIN_VALUE", ACC_FINAL | ACC_PUBLIC | ACC_STATIC, enumPlain, enumClass, null);
+            maxValue = new FieldNode("MAX_VALUE", ACC_FINAL | ACC_PUBLIC | ACC_STATIC, enumPlain, enumClass, null);
+            values = new FieldNode("$VALUES", ACC_FINAL | ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC, enumPlain.makeArray(), enumClass, null);
             values.setSynthetic(true);
 
-            // GRECLIPSE add -- GROOVY-6747
             for (ConstructorNode ctor : enumClass.getDeclaredConstructors()) {
                 if (ctor.isSyntheticPublic()) {
                     ctor.setSyntheticPublic(false);
@@ -109,13 +108,12 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                     addError(ctor, "Illegal modifier for the enum constructor; only private is permitted.");
                 }
             }
-            // GRECLIPSE end
 
             addMethods(enumClass, values);
             checkForAbstractMethods(enumClass);
         }
 
-        addInit(enumClass, minValue, maxValue, values, isAic);
+        addInit(enumClass, minValue, maxValue, values, isAIC);
     }
 
     private static void checkForAbstractMethods(final ClassNode enumClass) {
@@ -297,7 +295,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    private void addInit(final ClassNode enumClass, final FieldNode minValue, final FieldNode maxValue, final FieldNode values, final boolean isAic) {
+    private void addInit(final ClassNode enumClass, final FieldNode minValue, final FieldNode maxValue, final FieldNode values, final boolean isAIC) {
         // constructor helper
         // This method is used instead of calling the constructor as
         // calling the constructor may require a table with MetaClass
@@ -403,7 +401,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             arrayInit.add(new FieldExpression(field));
         }
 
-        if (!isAic) {
+        if (!isAIC) {
             if (tempMin != null) {
                 block.add(
                         new ExpressionStatement(
@@ -458,8 +456,8 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         );
     }
 
-    private static boolean isAnonymousInnerClass(final ClassNode enumClass) {
-        if (!(enumClass instanceof EnumConstantClassNode)) return false;
-        return (((EnumConstantClassNode) enumClass).getVariableScope() == null);
+    static boolean isAnonymousInnerClass(final ClassNode enumClass) {
+        return enumClass instanceof EnumConstantClassNode
+            && ((EnumConstantClassNode) enumClass).getVariableScope() == null;
     }
 }

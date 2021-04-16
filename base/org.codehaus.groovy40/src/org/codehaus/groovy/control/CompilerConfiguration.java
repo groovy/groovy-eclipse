@@ -89,6 +89,8 @@ public class CompilerConfiguration {
     public static final String JDK15 = "15";
     /** This (<code>"16"</code>) is the value for targetBytecode to compile for a JDK 16. */
     public static final String JDK16 = "16";
+    /** This (<code>"17"</code>) is the value for targetBytecode to compile for a JDK 17. */
+    public static final String JDK17 = "17";
 
     /**
      * This constant is for comparing targetBytecode to ensure it is set to JDK 1.5 or later.
@@ -120,7 +122,8 @@ public class CompilerConfiguration {
             JDK13, Opcodes.V13,
             JDK14, Opcodes.V14,
             JDK15, Opcodes.V15,
-            JDK16, Opcodes.V16
+            JDK16, Opcodes.V16,
+            JDK17, Opcodes.V17
     );
 
     /**
@@ -443,38 +446,15 @@ public class CompilerConfiguration {
         defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
 
         optimizationOptions = new HashMap<>(4);
-        /* GRECLIPSE edit
-        handleOptimizationOption(optimizationOptions, INVOKEDYNAMIC, "groovy.target.indy", "true");
-        handleOptimizationOption(optimizationOptions, GROOVYDOC, "groovy.attach.groovydoc");
-        handleOptimizationOption(optimizationOptions, RUNTIME_GROOVYDOC, "groovy.attach.runtime.groovydoc");
-        handleOptimizationOption(optimizationOptions, PARALLEL_PARSE, "groovy.parallel.parse", "true");
-        */
-        java.util.function.BiConsumer<String, String> mapper = (key, val) -> {
-            if (val != null) optimizationOptions.put(key, Boolean.valueOf(val));
-        };
-        mapper.accept(INVOKEDYNAMIC,     getSystemPropertySafe("groovy.target.indy", "true"));
-        mapper.accept(GROOVYDOC,         getSystemPropertySafe("groovy.attach.groovydoc"));
-        mapper.accept(RUNTIME_GROOVYDOC, getSystemPropertySafe("groovy.attach.runtime.groovydoc"));
-        mapper.accept(PARALLEL_PARSE,    getSystemPropertySafe("groovy.parallel.parse"));
-        // GRECLIPSE end
+        handleOptimizationOption(INVOKEDYNAMIC,     getSystemPropertySafe("groovy.target.indy", "true"));
+        handleOptimizationOption(GROOVYDOC,         getSystemPropertySafe("groovy.attach.groovydoc"          ));
+        handleOptimizationOption(RUNTIME_GROOVYDOC, getSystemPropertySafe("groovy.attach.runtime.groovydoc"  ));
+        handleOptimizationOption(PARALLEL_PARSE,    getSystemPropertySafe("groovy.parallel.parse"/*, "true"*/));
     }
 
-    /*
-    private void handleOptimizationOption(final Map<String, Boolean> options, final String optionName, final String sysOptionName) {
-        handleOptimizationOption(options, optionName, sysOptionName, null);
+    private void handleOptimizationOption(String key, String val) {
+        if (val != null) optimizationOptions.put(key, Boolean.valueOf(val));
     }
-
-    private void handleOptimizationOption(final Map<String, Boolean> options, final String optionName, final String sysOptionName, String def) {
-        String propValue = getSystemPropertySafe(sysOptionName, def);
-        boolean optionEnabled = propValue == null
-                ? (DEFAULT != null && Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get(optionName)))
-                : Boolean.parseBoolean(propValue);
-
-        if (optionEnabled) {
-            options.put(optionName, Boolean.TRUE);
-        }
-    }
-    */
 
     /**
      * Copy constructor. Use this if you have a mostly correct configuration

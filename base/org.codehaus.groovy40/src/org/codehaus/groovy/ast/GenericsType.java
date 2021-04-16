@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -355,33 +356,21 @@ public class GenericsType extends ASTNode {
                         // class node are not parameterized. This means that we must create a
                         // new class node with the parameterized types that the current class node
                         // has defined.
-                        /* GRECLIPSE edit
-                        ClassNode node = GenericsUtils.parameterizeType(classNode, face);
-                        return compareGenericsWithBound(node, bound);
-                        */
                         if (face.getGenericsTypes() != null) {
                             face = GenericsUtils.parameterizeType(classNode, face);
                         }
                         return compareGenericsWithBound(face, bound);
-                        // GRECLIPSE end
                     }
                 }
             }
             if (bound instanceof WideningCategories.LowestUpperBoundClassNode) {
                 // another special case here, where the bound is a "virtual" type
                 // we must then check the superclass and the interfaces
-                boolean success = compareGenericsWithBound(classNode, bound.getSuperClass());
-                if (success) {
-                    for (ClassNode face : bound.getInterfaces()) {
-                        success &= compareGenericsWithBound(classNode, face);
-                        if (!success) break;
-                    }
-                    if (success) return true;
+                if (compareGenericsWithBound(classNode, bound.getSuperClass())
+                        && Arrays.stream(bound.getInterfaces()).allMatch(face -> compareGenericsWithBound(classNode, face))) {
+                    return true;
                 }
             }
-            /* GRECLIPSE edit
-            return compareGenericsWithBound(getParameterizedSuperClass(classNode), bound);
-            */
             if (classNode.equals(ClassHelper.OBJECT_TYPE)) {
                 return false;
             }
@@ -392,8 +381,6 @@ public class GenericsType extends ASTNode {
                 superClass = GenericsUtils.parameterizeType(classNode, superClass);
             }
             return compareGenericsWithBound(superClass, bound);
-            // GRECLIPSE end
-
         }
 
         GenericsType[] cnTypes = classNode.getGenericsTypes();
@@ -401,7 +388,7 @@ public class GenericsType extends ASTNode {
             cnTypes = classNode.redirect().getGenericsTypes();
         }
         if (cnTypes == null) {
-            // may happen if generic type is Foo<T extends Foo> and classnode is Foo -> Foo
+            // may happen if generic type is Foo<T extends Foo> and ClassNode is Foo -> Foo
             return true;
         }
 
@@ -418,21 +405,15 @@ public class GenericsType extends ASTNode {
                     GenericsTypeName gtn = new GenericsTypeName(redirectBoundType.getName());
                     match = name.equals(gtn);
                     if (!match) {
-                        GenericsType genericsType = boundPlaceHolders.get(gtn);
-                        if (genericsType != null) {
-                            if (genericsType.isPlaceholder()) {
+                        GenericsType boundGenericsType = boundPlaceHolders.get(gtn);
+                        if (boundGenericsType != null) {
+                            if (boundGenericsType.isPlaceholder()) {
                                 match = true;
-                            } else if (genericsType.isWildcard()) {
-                                if (genericsType.getUpperBounds() != null) { // multiple bounds not allowed for ?
-                                /* GRECLIPSE edit -- GROOVY-6786, GROOVY-9902
-                                    match = redirectBoundType.isCompatibleWith(genericsType.getUpperBounds()[0]);
-                                } else if (genericsType.getLowerBound() != null) {
-                                    match = redirectBoundType.isCompatibleWith(genericsType.getLowerBound());
-                                */
-                                    match = classNodeType.isCompatibleWith(genericsType.getUpperBounds()[0]);
-                                } else if (genericsType.getLowerBound() != null) {
-                                    match = classNodeType.isCompatibleWith(genericsType.getLowerBound());
-                                // GRECLIPSE end
+                            } else if (boundGenericsType.isWildcard()) {
+                                if (boundGenericsType.getUpperBounds() != null) { // ? supports single bound only
+                                    match = classNodeType.isCompatibleWith(boundGenericsType.getUpperBounds()[0]);
+                                } else if (boundGenericsType.getLowerBound() != null) {
+                                    match = classNodeType.isCompatibleWith(boundGenericsType.getLowerBound());
                                 } else {
                                     match = true;
                                 }
@@ -495,11 +476,7 @@ public class GenericsType extends ASTNode {
                                         if (!match) break;
                                     }
                                 }
-                                /* GRECLIPSE edit -- GROOVY-10010
-                                return match;
-                                */
                                 continue;
-                                // GRECLIPSE end
                             }
                         }
                         match = redirectBoundType.isCompatibleWith(classNodeType.getType());
@@ -514,48 +491,6 @@ public class GenericsType extends ASTNode {
     }
 
     /**
-     * If you have a class which extends a class using generics, returns the superclass with parameterized types. For
-     * example, if you have:
-     * <code>class MyList&lt;T&gt; extends LinkedList&lt;T&gt;
-     * def list = new MyList&lt;String&gt;
-     * </code>
-     * then the parameterized superclass for MyList&lt;String&gt; is LinkedList&lt;String&gt;
-     * @param classNode the class for which we want to return the parameterized superclass
-     * @return the parameterized superclass
-     */
-    /* GRECLIPSE edit
-    private static ClassNode getParameterizedSuperClass(final ClassNode classNode) {
-        if (ClassHelper.OBJECT_TYPE.equals(classNode)) return null;
-        ClassNode superClass = classNode.getUnresolvedSuperClass();
-        if (superClass == null) return ClassHelper.OBJECT_TYPE;
-
-        if (!classNode.isUsingGenerics() || !superClass.isUsingGenerics()) {
-            return superClass;
-        }
-
-        GenericsType[] genericsTypes = classNode.getGenericsTypes();
-        GenericsType[] redirectGenericTypes = classNode.redirect().getGenericsTypes();
-        superClass = superClass.getPlainNodeReference();
-        if (genericsTypes == null || redirectGenericTypes == null || superClass.getGenericsTypes() == null) {
-            return superClass;
-        }
-        for (int i = 0, genericsTypesLength = genericsTypes.length; i < genericsTypesLength; i += 1) {
-            if (redirectGenericTypes[i].isPlaceholder()) {
-                GenericsType genericsType = genericsTypes[i];
-                GenericsType[] superGenericTypes = superClass.getGenericsTypes();
-                for (int j = 0, superGenericTypesLength = superGenericTypes.length; j < superGenericTypesLength; j += 1) {
-                    final GenericsType superGenericType = superGenericTypes[j];
-                    if (superGenericType.isPlaceholder() && superGenericType.getName().equals(redirectGenericTypes[i].getName())) {
-                        superGenericTypes[j] = genericsType;
-                    }
-                }
-            }
-        }
-        return superClass;
-    }
-    */
-
-    /**
      * Represents GenericsType name
      * TODO In order to distinguish GenericsType with same name(See GROOVY-8409), we should add a property to keep the declaring class.
      *
@@ -568,7 +503,7 @@ public class GenericsType extends ASTNode {
      * We should find a way to set declaring class for `GenericsType` first, it can be completed at the resolving phase.
      */
     public static class GenericsTypeName {
-        private String name;
+        private final String name;
 
         public GenericsTypeName(final String name) {
             this.name = Objects.requireNonNull(name);

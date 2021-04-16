@@ -19,7 +19,7 @@
 
     <target name="build" depends="clean">
         <resolve-dependencies pathid="classpath.antlr4">
-            <dependency org="com.tunnelvisionlabs" name="antlr4" rev="4.7.4">
+            <dependency org="com.tunnelvisionlabs" name="antlr4" rev="4.9.0">
                 <exclude name="org.abego.treelayout.core" />
             </dependency>
         </resolve-dependencies>

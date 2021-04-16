@@ -278,6 +278,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isWild
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.lastArgMatchesVarg;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.missesGenericsTypes;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.prettyPrintType;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.prettyPrintTypeName;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.resolveClassNodeGenerics;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.toMethodParametersString;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodArgumentWithGenerics;
@@ -6044,7 +6045,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 // GRECLIPSE end
             }
-            addStaticTypeError("Cannot call " + toMethodGenericTypesString(candidateMethod) + receiver.toString(false) + "#" +
+            addStaticTypeError("Cannot call " + toMethodGenericTypesString(candidateMethod) + prettyPrintTypeName(receiver) + "#" + // GRECLIPSE edit
                     toMethodParametersString(candidateMethod.getName(), paramTypes) + " with arguments " + formatArgumentList(arguments), location);
             return false;
         }

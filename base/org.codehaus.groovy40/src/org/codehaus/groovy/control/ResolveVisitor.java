@@ -69,7 +69,6 @@ import groovyjarjarasm.asm.Opcodes;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -429,20 +428,16 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected boolean resolveNestedClass(final ClassNode type) {
         if (type instanceof ConstructedNestedClass || type instanceof ConstructedClassWithPackage) return false;
 
-        // We have for example a class name A, are in class X
-        // and there is a nested class A$X. we want to be able
-        // to access that class directly, so A becomes a valid
-        // name in X.
-        // GROOVY-4043: Do this check up the hierarchy, if needed.
-        for (ClassNode classToCheck : findHierClasses(currentClass).values()) {
-            if (setRedirect(type, classToCheck)) return true;
+        ClassNode cn = currentClass; Set<ClassNode> cycleCheck = new HashSet<>();
+        // GROOVY-4043: for type "X", try "A$X" with each type in the class hierarchy (except for Object)
+        for (; cn != null && cycleCheck.add(cn) && !cn.equals(ClassHelper.OBJECT_TYPE); cn = cn.getSuperClass()) {
+            if (setRedirect(type, cn)) return true;
+            // GROOVY-9866: unresolvable interfaces
         }
 
-        // GROOVY-8947: Resolve non-static inner class outside of outer class.
-        ClassNode possibleOuterClassNode = possibleOuterClassNodeMap.get(type);
-        if (possibleOuterClassNode != null) {
-            if (setRedirect(type, possibleOuterClassNode)) return true;
-        }
+        // GROOVY-8947: non-static inner class outside of outer class
+        cn = possibleOuterClassNodeMap.get(type);
+        if (cn != null && setRedirect(type, cn)) return true;
 
         // Another case we want to check here is if we are in a
         // nested class A$B$C and want to access B without
@@ -459,9 +454,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // A.B.C.D.E.F and accessing E from F we test A$E=failed,
             // A$B$E=failed, A$B$C$E=fail, A$B$C$D$E=success.
 
-            for (ListIterator<ClassNode> it = outerClasses.listIterator(outerClasses.size()); it.hasPrevious();) {
-                ClassNode outerClass = it.previous();
-                if (setRedirect(type, outerClass)) return true;
+            for (ListIterator<ClassNode> it = outerClasses.listIterator(outerClasses.size()); it.hasPrevious(); ) {
+                cn = it.previous();
+                if (setRedirect(type, cn)) return true;
             }
         }
 
@@ -1691,14 +1686,5 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         return genericsType.isResolved();
 
-    }
-
-    private static Map<String, ClassNode> findHierClasses(final ClassNode currentClass) {
-        Map<String, ClassNode> hierClasses = new LinkedHashMap<>();
-        for (ClassNode classToCheck = currentClass; classToCheck != ClassHelper.OBJECT_TYPE; classToCheck = classToCheck.getSuperClass()) {
-            if (classToCheck == null || hierClasses.containsKey(classToCheck.getName())) break;
-            hierClasses.put(classToCheck.getName(), classToCheck);
-        }
-        return hierClasses;
     }
 }

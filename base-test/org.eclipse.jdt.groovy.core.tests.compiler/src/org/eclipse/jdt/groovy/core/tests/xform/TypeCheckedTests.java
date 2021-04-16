@@ -624,7 +624,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Test.groovy (at line 12)\n" +
             "\tsuper(Integer, String)\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call A <String, Integer>#<init>(java.lang.Class <String>, java.lang.Class <Integer>) with arguments [java.lang.Class <java.lang.Integer>, java.lang.Class <java.lang.String>] \n" +
+            "Groovy:[Static type checking] - Cannot call A#<init>(java.lang.Class <String>, java.lang.Class <Integer>) with arguments [java.lang.Class <java.lang.Integer>, java.lang.Class <java.lang.String>] \n" +
             "----------\n");
     }
 
@@ -1309,17 +1309,17 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 19)\n" +
             "\th.stringProperty.eq(\"${0}\")\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call TypedProperty <String, Object>#eq(java.lang.String) with arguments [groovy.lang.GString] \n" +
+            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.String) with arguments [groovy.lang.GString] \n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 21)\n" +
             "\tstringProperty.eq(1234)\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call TypedProperty <String, Unknown>#eq(java.lang.String) with arguments [int] \n" +
+            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.String) with arguments [int] \n" +
             "----------\n" +
             "3. ERROR in Main.groovy (at line 22)\n" +
             "\tnumberProperty.eq('xx')\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call TypedProperty <Number, Unknown>#eq(java.lang.Number) with arguments [java.lang.String] \n" +
+            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.Number) with arguments [java.lang.String] \n" +
             "----------\n");
     }
 

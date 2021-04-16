@@ -261,6 +261,10 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         return result;
     }
 
+    @Override
+    public void visitProperty(PropertyNode node) {
+        // ignore: we'll already have allocated to field or accessor method by now
+    }
 
     public static void addPhaseOperations(final CompilationUnit compilationUnit) {
         ASTTransformationsContext context = compilationUnit.getASTTransformationsContext();
@@ -291,7 +295,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    // GRECLIPSE add -- GROOVY-7293, GROOVY-9901
+    /**
+     * Enables transforms for class that was added during current phase.
+     */
     public static void addNewPhaseOperation(final CompilationUnit compilationUnit, final SourceUnit sourceUnit, final ClassNode classNode) {
         int phase = compilationUnit.getPhase();
         if (phase < Phases.SEMANTIC_ANALYSIS) {
@@ -311,7 +317,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }, phase);
     }
-    // GRECLIPSE end
 
     public static void addGlobalTransformsAfterGrab(ASTTransformationsContext context) {
         doAddGlobalTransforms(context, false);

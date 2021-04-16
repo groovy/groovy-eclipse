@@ -38,9 +38,10 @@ options {
 }
 
 @header {
-    import static org.apache.groovy.parser.antlr4.SemanticPredicates.*;
-    import org.codehaus.groovy.ast.Comment;
     import java.util.*;
+    import org.apache.groovy.util.Maps;
+    import org.codehaus.groovy.ast.Comment;
+    import static org.apache.groovy.parser.antlr4.SemanticPredicates.*;
 }
 
 @members {
@@ -167,14 +168,16 @@ options {
     private boolean isInsideParens() {
         Paren paren = parenStack.peek();
 
-        // We just care about "(" and "[", inside which the new lines will be ignored.
+        // We just care about "(", "[" and "?[", inside which the new lines will be ignored.
         // Notice: the new lines between "{" and "}" can not be ignored.
         if (null == paren) {
             return false;
         }
 
-        return ("(".equals(paren.getText()) && TRY != paren.getLastTokenType()) // we don't treat try-paren(i.e. try (....)) as parenthesis
-                    || "[".equals(paren.getText());
+        String text = paren.getText();
+
+        return ("(".equals(text) && TRY != paren.getLastTokenType()) // we don't treat try-paren(i.e. try (....)) as parenthesis
+                    || "[".equals(text) || "?[".equals(text);
     }
     private void ignoreTokenInsideParens() {
         if (!this.isInsideParens()) {
@@ -371,9 +374,9 @@ fragment SlashyStringCharacter
     |   ~[/$\u0000]
     ;
 
-// character in the collar slashy string. e.g. $/a/$
+// character in the dollar slashy string. e.g. $/a/$
 fragment DollarSlashyStringCharacter
-    :   SlashEscape | DollarSlashEscape | DollarDollarEscape
+    :   DollarSlashEscape | DollarDollarEscape
     |   Slash { _input.LA(1) != '$' }?
     |   Dollar { !isFollowedByJavaLetterInGString(_input) }?
     |   ~[/$\u0000]
@@ -795,7 +798,7 @@ DollarSlashyGStringQuotationMarkEnd
 
 fragment
 DollarSlashEscape
-    :   '$/$'
+    :   '$/'
     ;
 
 fragment
@@ -810,22 +813,25 @@ NullLiteral
 
 // Groovy Operators
 
-RANGE_INCLUSIVE     : '..';
-RANGE_EXCLUSIVE     : '..<';
-SPREAD_DOT          : '*.';
-SAFE_DOT            : '?.';
-SAFE_CHAIN_DOT      : '??.';
-ELVIS               : '?:';
-METHOD_POINTER      : '.&';
-METHOD_REFERENCE    : '::';
-REGEX_FIND          : '=~';
-REGEX_MATCH         : '==~';
-POWER               : '**';
-POWER_ASSIGN        : '**=';
-SPACESHIP           : '<=>';
-IDENTICAL           : '===';
-NOT_IDENTICAL       : '!==';
-ARROW               : '->';
+RANGE_INCLUSIVE         : '..';
+RANGE_EXCLUSIVE_LEFT    : '<..';
+RANGE_EXCLUSIVE_RIGHT   : '..<';
+RANGE_EXCLUSIVE_FULL    : '<..<';
+SPREAD_DOT              : '*.';
+SAFE_DOT                : '?.';
+SAFE_INDEX              : '?[' { this.enterParen();     } -> pushMode(DEFAULT_MODE);
+SAFE_CHAIN_DOT          : '??.';
+ELVIS                   : '?:';
+METHOD_POINTER          : '.&';
+METHOD_REFERENCE        : '::';
+REGEX_FIND              : '=~';
+REGEX_MATCH             : '==~';
+POWER                   : '**';
+POWER_ASSIGN            : '**=';
+SPACESHIP               : '<=>';
+IDENTICAL               : '===';
+NOT_IDENTICAL           : '!==';
+ARROW                   : '->';
 
 // !internalPromise will be parsed as !in ternalPromise, so semantic predicates are necessary
 NOT_INSTANCEOF      : '!instanceof' { isFollowedBy(_input, ' ', '\t', '\r', '\n') }?;
