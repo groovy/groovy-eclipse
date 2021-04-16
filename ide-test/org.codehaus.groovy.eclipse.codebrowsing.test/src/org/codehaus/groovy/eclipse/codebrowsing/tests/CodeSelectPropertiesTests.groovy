@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -164,7 +164,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         String contents = '''\
             |class C {
             |  String string = ""
-            |  def meth() {
+            |  void test() {
             |    def str = string
             |  }
             |}
@@ -173,12 +173,12 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectGetProperty1a() {
+    void testCodeSelectGetProperty2() {
         String contents = '''\
             |@groovy.transform.TypeChecked
             |class C {
             |  String string = ""
-            |  def meth() {
+            |  void test() {
             |    def str = string
             |  }
             |}
@@ -187,7 +187,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectGetProperty1b() {
+    void testCodeSelectGetProperty3() {
         String contents = '''\
             |@groovy.transform.CompileStatic
             |class C {
@@ -198,6 +198,21 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()
         assertCodeSelect([contents], 'string')
+    }
+
+    @Test
+    void testCodeSelectGetProperty4() {
+        String contents = '''\
+            |class C {
+            |  def getFoo() { }
+            |}
+            |class D extends C {
+            |  void test() {
+            |    foo
+            |  }
+            |}
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'foo', 'getFoo')
     }
 
     @Test
@@ -205,7 +220,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         String contents = '''\
             |class C {
             |  String string
-            |  def meth() {
+            |  void test() {
             |    string = ""
             |  }
             |}
@@ -214,12 +229,12 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectSetProperty1a() {
+    void testCodeSelectSetProperty2() {
         String contents = '''\
             |@groovy.transform.TypeChecked
             |class C {
             |  String string
-            |  def meth() {
+            |  void test() {
             |    string = ""
             |  }
             |}
@@ -228,17 +243,31 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectSetProperty1b() {
+    void testCodeSelectSetProperty3() {
         String contents = '''\
             |@groovy.transform.CompileStatic
             |class C {
             |  String string
-            |  def meth() {
+            |  void test() {
             |    string = ""
             |  }
             |}
             |'''.stripMargin()
         assertCodeSelect([contents], 'string')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1247
+    void testCodeSelectSetProperty4() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |class C {
+            |  void set$xyz(value) { }
+            |  void test() {
+            |    $xyz = ""
+            |  }
+            |}
+            |'''.stripMargin()
+        assertCodeSelect([contents], '$xyz', 'set$xyz')
     }
 
     @Test
@@ -483,22 +512,6 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         assert elements.length == 1
         assert elements[0].exists()
         assert elements[0].elementName == 'value'
-    }
-
-    @Test
-    void testCodeSelectNonStaticProperty1() {
-        String contents = '''\
-            |class Super {
-            |  def getSql() { null }
-            |}
-            |
-            |class Foo extends Super {
-            |  def foo() {
-            |    sql
-            |  }
-            |}
-            |'''.stripMargin()
-        assertCodeSelect([contents], 'sql', 'getSql')
     }
 
     @Test

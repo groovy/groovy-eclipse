@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,6 +76,11 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 Object[] result = findNodeForRegion(module, select);
                 ASTNode node = (ASTNode) result[0];
                 Region region = (Region) result[1];
+                // check for name that begins with '$' and revert GRECLIPSE-1330
+                if (node != null && start > 0 && node.getStart() == start - 1 && contents[start - 1] == '$') {
+                    start -= 1;
+                    length += 1;
+                }
                 if (node instanceof AnnotatedNode && !isKeyword(node, contents, start, length) && !isStringLiteral(node, contents, start, length)) {
                     // shortcut: check to see if we are looking for this type itself
                     if (isTypeDeclaration(node, module)) {
