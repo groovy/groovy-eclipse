@@ -333,7 +333,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\tdef list = new LinkedList<String>([1,2,3])\n" +
             "\t           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call java.util.LinkedList#<init>(java.util.Collection <? extends java.lang.String>) with arguments [java.util.List <java.lang.Integer>] \n" +
+            "Groovy:[Static type checking] - Cannot call java.util.LinkedList#<init>(java.util.Collection<? extends java.lang.String>) with arguments [java.util.List<java.lang.Integer>] \n" +
             "----------\n");
     }
 
@@ -1744,7 +1744,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 6)\n" +
             "\tbar {\n" +
             "\t^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method Main#bar(groovy.lang.Closure <java.util.List>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Main#bar(groovy.lang.Closure<java.util.List<java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -2004,7 +2004,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList <TreeMap>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList<java.util.TreeMap<java.lang.String, java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -2034,7 +2034,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList <HashMap>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Long>>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -2064,7 +2064,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList <HashMap>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.StringBuffer, java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -4551,7 +4551,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class <? extends java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class<? extends java.lang.CharSequence>) with arguments [java.lang.Class<?>] \n" +
             "----------\n");
     }
 
@@ -4577,7 +4577,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class<? super java.lang.CharSequence>) with arguments [java.lang.Class<?>] \n" +
             "----------\n");
     }
 
@@ -5751,7 +5751,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\tjava.util.function.Supplier<String> p = {\n" +
             "\t                                        ^\n" +
             "Groovy:[Static type checking] - Incompatible generic argument types. " +
-            "Cannot assign java.util.function.Supplier <java.util.UUID> to: java.util.function.Supplier <String>\n" +
+            "Cannot assign java.util.function.Supplier<java.util.UUID> to: java.util.function.Supplier<java.lang.String>\n" +
             "----------\n");
     }
 

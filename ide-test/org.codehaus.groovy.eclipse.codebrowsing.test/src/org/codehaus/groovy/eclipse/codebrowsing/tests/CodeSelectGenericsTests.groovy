@@ -135,7 +135,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         String contents = '[a: Number].keySet()'
         IJavaElement elem = assertCodeSelect([contents], 'keySet')
         MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
-        assert method.returnType.toString(false) == 'java.util.Set <java.lang.String>'
+        assert method.returnType.toString(false) == 'java.util.Set<java.lang.String>'
     }
 
     @Test
@@ -143,7 +143,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         String contents = '[a: Number].values()'
         IJavaElement elem = assertCodeSelect([contents], 'values')
         MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
-        assert method.returnType.toString(false) == 'java.util.Collection <java.lang.Class>'
+        assert method.returnType.toString(false) == 'java.util.Collection<java.lang.Class<java.lang.Number>>'
     }
 
     @Test
@@ -151,7 +151,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         String contents = '[a: Number].entrySet()'
         IJavaElement elem = assertCodeSelect([contents], 'entrySet')
         MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
-        assert method.returnType.toString(false) == 'java.util.Set <java.util.Map$Entry>'
+        assert method.returnType.toString(false) ==~ 'java.util.Set<java.util.Map.Entry<java.lang.String, java.lang.Class<java.lang.Number>>>'
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1213
@@ -160,7 +160,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         String usage = 'cmp = Comparator.<Pogo,Date>comparing{ it.date }'
         IJavaElement elem = assertCodeSelect([types, usage], 'comparing')
         MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
-        assert method.returnType.toString(false) == 'java.util.Comparator <Pogo>'
+        assert method.returnType.toString(false) == 'java.util.Comparator<Pogo>'
     }
 
     @Test
@@ -168,7 +168,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         String contents = '[a: Number].collect { k,v -> "" }'
         IJavaElement elem = assertCodeSelect([contents], 'collect')
         MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
-        assert method.returnType.toString(false) == 'java.util.List <java.lang.String>'
+        assert method.returnType.toString(false) == 'java.util.List<java.lang.String>'
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -307,7 +307,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         IJavaElement[] children = outline.outlineCompilationUnit.children
 
         assert children.tail()*.elementName == ['map', 'obj']
-        assert children.tail()*.typeSignature == ['Qjava.util.Map<QString;QObject;>;', 'Qjava.lang.Object;']
+        assert children.tail()*.typeSignature == ['Qjava.util.Map<Qjava.lang.String;Qjava.lang.Object;>;', 'Qjava.lang.Object;']
         assert children*.elementType == [IJavaElement.IMPORT_CONTAINER, IJavaElement.FIELD, IJavaElement.FIELD]
     }
 

@@ -1295,6 +1295,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         StringBuilder ret = new StringBuilder(!placeholder ? getName() : getUnresolvedName());
         GenericsType[] genericsTypes = getGenericsTypes();
         if (!placeholder && genericsTypes != null) {
+            /* GRECLIPSE edit -- GROOVY-9800
             ret.append(" <");
             for (int i = 0; i < genericsTypes.length; i++) {
                 if (i != 0) ret.append(", ");
@@ -1302,43 +1303,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 ret.append(genericTypeAsString(genericsType));
             }
             ret.append(">");
+            */
+            ret.append('<');
+            for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
+                if (i != 0) ret.append(", ");
+                ret.append(genericsTypes[i]);
+            }
+            ret.append('>');
+            // GRECLIPSE end
         }
         if (isRedirectNode() && showRedirect) {
             ret.append(" -> ").append(redirect.toString());
-        }
-        return ret.toString();
-    }
-
-    /**
-     * This exists to avoid a recursive definition of toString. The default toString
-     * in GenericsType calls ClassNode.toString(), which calls GenericsType.toString(), etc. 
-     * @param genericsType
-     * @return the string representing the generic type
-     */
-    private String genericTypeAsString(GenericsType genericsType) {
-        /* GRECLIPSE edit
-        StringBuilder ret = new StringBuilder(genericsType.getName());
-        */
-        StringBuilder ret = new StringBuilder(genericsType.isWildcard() ? "?" : genericsType.getName());
-        // GRECLIPSE end
-        if (genericsType.getUpperBounds() != null) {
-            ret.append(" extends ");
-            for (int i = 0; i < genericsType.getUpperBounds().length; i++) {
-                ClassNode classNode = genericsType.getUpperBounds()[i];
-                if (classNode.equals(this)) {
-                    ret.append(classNode.getName());
-                } else {
-                    ret.append(classNode.toString(false));
-                }
-                if (i + 1 < genericsType.getUpperBounds().length) ret.append(" & ");
-            }
-        } else if (genericsType.getLowerBound() != null) {
-            ClassNode classNode = genericsType.getLowerBound();
-            if (classNode.equals(this)) {
-                ret.append(" super ").append(classNode.getName());
-            } else {
-                ret.append(" super ").append(classNode.toString(false));
-            }
         }
         return ret.toString();
     }

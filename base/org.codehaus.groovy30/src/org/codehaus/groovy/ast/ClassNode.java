@@ -47,10 +47,9 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 
 /**
@@ -454,7 +453,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public List<MethodNode> getAbstractMethods() {
         return getDeclaredMethodsMap().values().stream()
-            .filter(MethodNode::isAbstract).collect(Collectors.toList());
+            .filter(MethodNode::isAbstract).collect(toList());
     }
 
     public List<MethodNode> getAllDeclaredMethods() {
@@ -1271,39 +1270,23 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         StringBuilder ret = new StringBuilder(!placeholder ? getName() : getUnresolvedName());
         GenericsType[] genericsTypes = getGenericsTypes();
         if (!placeholder && genericsTypes != null && genericsTypes.length > 0) {
+            /* GRECLIPSE edit -- GROOVY-9800
             ret.append(" <");
             ret.append(stream(genericsTypes).map(this::genericTypeAsString).collect(joining(", ")));
             ret.append(">");
+             */
+            ret.append('<');
+            for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
+                if (i != 0) ret.append(", ");
+                ret.append(genericsTypes[i]);
+            }
+            ret.append('>');
+            // GRECLIPSE end
         }
         if (showRedirect && redirect != null) {
             ret.append(" -> ").append(redirect.toString());
         }
         return ret.toString();
-    }
-
-    /**
-     * Avoids a recursive definition of toString. The default {@code toString}
-     * in {@link GenericsType} calls {@code ClassNode.toString()}, which would
-     * call {@code GenericsType.toString()} without this method.
-     */
-    private String genericTypeAsString(GenericsType genericsType) {
-        String name = genericsType.getName();
-        if (genericsType.getUpperBounds() != null) {
-            return name + " extends " + stream(genericsType.getUpperBounds())
-                        .map(this::toStringTerminal).collect(joining(" & "));
-        } else if (genericsType.getLowerBound() != null) {
-            return name + " super " + toStringTerminal(genericsType.getLowerBound());
-        } else {
-            return name;
-        }
-    }
-
-    private String toStringTerminal(ClassNode classNode) {
-        if (classNode.equals(this)) {
-            return classNode.getName();
-        } else {
-            return classNode.toString(false);
-        }
     }
 
     /**

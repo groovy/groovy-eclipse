@@ -103,7 +103,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -234,7 +234,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -254,7 +254,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -338,7 +338,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -359,7 +359,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -375,13 +375,13 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "@TypeChecked\n" +
             "class G extends J<Integer> {\n" +
             "  Integer doSomething() {\n" +
-            "    @ASTTest(phase=CLASS_GENERATION, value={\n" +
+            "    @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
             "      def expr = node.rightExpression\n" +
             "      assert expr instanceof MethodCallExpression\n" +
             "      assert expr.objectExpression.text == 'super'\n" +
 
             "      def type = expr.objectExpression.getNodeMetaData(INFERRED_TYPE)\n" +
-            "      assert type.toString(false) == 'J <Integer>'\n" + // was "J<T>"
+            "      assert type.toString(false) == 'J<java.lang.Integer>'\n" + // was "J<T>"
             "      type = node.leftExpression.getNodeMetaData(INFERRED_TYPE)\n" +
             "      assert type.toString(false) == 'java.lang.Integer'\n" +
             "    })\n" +
@@ -420,7 +420,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -437,7 +437,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -462,7 +462,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -482,7 +482,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             };
             //@formatter:on
 
-            runConformTest(sources, "");
+            runConformTest(sources);
         }
     }
 
@@ -504,7 +504,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\tMap<String,Integer> map = [1:2]\n" +
             "\t                          ^^^^^\n" +
-            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.LinkedHashMap <java.lang.Integer, java.lang.Integer> to: java.util.Map <String, Integer>\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.LinkedHashMap<java.lang.Integer, java.lang.Integer> to: java.util.Map<java.lang.String, java.lang.Integer>\n" +
             "----------\n");
     }
 
@@ -527,7 +527,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -545,7 +545,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -624,7 +624,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Test.groovy (at line 12)\n" +
             "\tsuper(Integer, String)\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call A#<init>(java.lang.Class <String>, java.lang.Class <Integer>) with arguments [java.lang.Class <java.lang.Integer>, java.lang.Class <java.lang.String>] \n" +
+            "Groovy:[Static type checking] - Cannot call A#<init>(java.lang.Class<java.lang.String>, java.lang.Class<java.lang.Integer>) with arguments [java.lang.Class<java.lang.Integer>, java.lang.Class<java.lang.String>] \n" +
             "----------\n");
     }
 
@@ -739,7 +739,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -762,7 +762,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tm([1,2,3])\n" +
             "\t^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method Main#m(java.util.List <java.lang.Integer>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Main#m(java.util.List<java.lang.Integer>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -862,12 +862,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tCharSequence[] one = m()\n" +
             "\t                     ^^^\n" +
-            "Groovy:[Static type checking] - Cannot assign value of type java.util.List <? super java.lang.CharSequence> to variable of type java.lang.CharSequence[]\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.List<? super java.lang.CharSequence> to variable of type java.lang.CharSequence[]\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 5)\n" +
             "\tCharSequence[] two = set\n" +
             "\t                     ^^^\n" +
-            "Groovy:[Static type checking] - Cannot assign value of type java.util.Set <? super java.lang.CharSequence> to variable of type java.lang.CharSequence[]\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.Set<? super java.lang.CharSequence> to variable of type java.lang.CharSequence[]\n" +
             "----------\n");
     }
 
@@ -891,12 +891,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tNumber[] one = m()\n" +
             "\t               ^^^\n" +
-            "Groovy:[Static type checking] - Cannot assign value of type java.util.List <String> to variable of type java.lang.Number[]\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.List<java.lang.String> to variable of type java.lang.Number[]\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 5)\n" +
             "\tNumber[] two = set\n" +
             "\t               ^^^\n" +
-            "Groovy:[Static type checking] - Cannot assign value of type java.util.Set <String> to variable of type java.lang.Number[]\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.Set<java.lang.String> to variable of type java.lang.Number[]\n" +
             "----------\n");
     }
 
@@ -1474,7 +1474,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1496,7 +1496,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1520,7 +1520,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1544,7 +1544,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tA<String> ax = new C<Number>()\n" +
             "\t               ^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign C <Number> to: A <String>\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign C<java.lang.Number> to: A<java.lang.String>\n" +
             "----------\n");
     }
 
@@ -1621,7 +1621,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1744,7 +1744,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1921,7 +1921,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1938,7 +1938,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2031,7 +2031,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2134,7 +2134,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test

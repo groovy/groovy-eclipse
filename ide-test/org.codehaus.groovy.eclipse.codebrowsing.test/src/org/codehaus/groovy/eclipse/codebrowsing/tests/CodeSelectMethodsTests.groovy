@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -485,7 +485,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectStaticMethod4() {
         String contents = 'List<String> empty = Collections.&emptyList'
         IJavaElement element = assertCodeSelect([contents], 'emptyList')
-        assert element.inferredElement.returnType.toString(false) == 'java.util.List <T>' // TODO: want T to be java.lang.String
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<T>' // TODO: want T to be java.lang.String
     }
 
     @Test
@@ -499,7 +499,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}'''.stripMargin()
         IJavaElement element = assertCodeSelect([contents], 'singletonList')
-        assert element.inferredElement.returnType.toString(false) == 'java.util.List <java.lang.String>'
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.String>'
     }
 
     @Test
