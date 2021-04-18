@@ -807,6 +807,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
             if (resultType == null) {
                 resultType = lType;
+            /* GRECLIPSE edit -- GROOVY-9033
             } else if (lType.isUsingGenerics() && isAssignment(op) && missesGenericsTypes(resultType)) {
                 // unchecked assignment
                 // List<Type> list = new LinkedList()
@@ -817,6 +818,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 // "completed" with generics type information available from the LHS
                 resultType = GenericsUtils.parameterizeType(lType, resultType.getPlainNodeReference());
             }
+            */
+            } else if (isAssignment(op)) {
+                if (lType.isUsingGenerics() && missesGenericsTypes(resultType)) {
+                    resultType = GenericsUtils.parameterizeType(lType, resultType.getPlainNodeReference());
+                } else if (lType.equals(OBJECT_TYPE) && GenericsUtils.hasUnresolvedGenerics(resultType)) { // def list = []
+                    Map<GenericsTypeName, GenericsType> placeholders = extractGenericsParameterMapOfThis(typeCheckingContext);
+                    resultType = fullyResolveType(resultType, Optional.ofNullable(placeholders).orElseGet(Collections::emptyMap));
+                }
+            }
+            // GRECLIPSE end
 
             // GROOVY-5874: if left expression is a closure shared variable, a second pass should be done
             if (leftExpression instanceof VariableExpression && ((VariableExpression) leftExpression).isClosureSharedVariable()) {
@@ -5694,6 +5705,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected boolean typeCheckMethodsWithGenericsOrFail(final ClassNode receiver, final ClassNode[] arguments, final MethodNode candidateMethod, final Expression location) {
         if (!typeCheckMethodsWithGenerics(receiver, arguments, candidateMethod)) {
             Map<GenericsTypeName, GenericsType> classGTs = GenericsUtils.extractPlaceholders(receiver);
+            // GRECLIPSE add -- GROOVY-9033
+            applyGenericsConnections(extractGenericsParameterMapOfThis(typeCheckingContext), classGTs);
+            addMethodLevelDeclaredGenerics(candidateMethod, classGTs);
+            // GRECLIPSE end
             Parameter[] parameters = candidateMethod.getParameters();
             ClassNode[] paramTypes = new ClassNode[parameters.length];
             for (int i = 0, n = parameters.length; i < n; i += 1) {

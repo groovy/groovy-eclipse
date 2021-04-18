@@ -1324,6 +1324,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     protected static ClassNode fullyResolveType(final ClassNode type, final Map<GenericsTypeName, GenericsType> placeholders) {
+        /* GRECLIPSE edit -- GROOVY-9033
         if (type.isUsingGenerics() && !type.isGenericsPlaceHolder()) {
             GenericsType[] gts = type.getGenericsTypes();
             if (gts != null) {
@@ -1350,6 +1351,35 @@ public abstract class StaticTypeCheckingSupport {
         } else if (type.isArray()) {
             return fullyResolveType(type.getComponentType(), placeholders).makeArray();
         }
+        */
+        if (type.isArray()) {
+            return fullyResolveType(type.getComponentType(), placeholders).makeArray();
+        }
+        if (type.isUsingGenerics()) {
+            if (type.isGenericsPlaceHolder()) {
+                GenericsType gt = placeholders.get(new GenericsTypeName(type.getUnresolvedName()));
+                if (gt != null) {
+                    return gt.getType();
+                }
+                ClassNode cn = type.redirect();
+                return cn != type ? cn : OBJECT_TYPE;
+            } else {
+                GenericsType[] gts = type.getGenericsTypes();
+                if (gts != null) {
+                    gts = Arrays.stream(gts).map(gt -> {
+                        if (gt.isPlaceholder()) {
+                            GenericsTypeName gtn = new GenericsTypeName(gt.getName());
+                            return placeholders.getOrDefault(gtn, extractType(gt).asGenericsType());
+                        }
+                        return fullyResolve(gt, placeholders);
+                    }).toArray(GenericsType[]::new);
+                }
+                ClassNode cn = type.getPlainNodeReference();
+                cn.setGenericsTypes(gts);
+                return cn;
+            }
+        }
+        // GRECLIPSE end
         return type;
     }
 
@@ -1749,7 +1779,11 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     public static ClassNode getCorrectedClassNode(final ClassNode type, final ClassNode superClass, final boolean handlingGenerics) {
+        /* GRECLIPSE edit -- GROOVY-9033
         if (handlingGenerics && missesGenericsTypes(type)) return superClass.getPlainNodeReference();
+        */
+        if (handlingGenerics && GenericsUtils.hasUnresolvedGenerics(type)) return superClass.getPlainNodeReference();
+        // GRECLIPSE end
         return GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.createGenericsSpec(type), superClass);
     }
 
@@ -2140,7 +2174,8 @@ public abstract class StaticTypeCheckingSupport {
         return node.getSuperClass() != null && isParameterizedWithString(node.getUnresolvedSuperClass());
     }
 
-    public static boolean missesGenericsTypes(final ClassNode cn) {
+    public static boolean missesGenericsTypes(ClassNode cn) {
+        /* GRECLIPSE edit -- GROOVY-9033
         if (cn.isArray()) return missesGenericsTypes(cn.getComponentType());
         GenericsType[] cnTypes = cn.getGenericsTypes();
         GenericsType[] rnTypes = cn.redirect().getGenericsTypes();
@@ -2160,6 +2195,12 @@ public abstract class StaticTypeCheckingSupport {
             }
         }
         return false;
+        */
+        while (cn.isArray()) cn = cn.getComponentType();
+        GenericsType[] cnGenerics = cn.getGenericsTypes();
+        GenericsType[] rnGenerics = cn.redirect().getGenericsTypes();
+        return cnGenerics == null ? rnGenerics != null : GenericsUtils.hasUnresolvedGenerics(cn);
+        // GRECLIPSE end
     }
 
     /**

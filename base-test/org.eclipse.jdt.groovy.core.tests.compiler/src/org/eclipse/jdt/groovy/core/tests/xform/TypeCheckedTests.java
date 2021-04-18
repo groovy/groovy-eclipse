@@ -901,6 +901,72 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9033() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "List<String> test() {\n" +
+            "  def list = []\n" +
+            "  list << null\n" +
+            "  return list\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\treturn list\n" +
+            "\t       ^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.List<java.lang.Object> to: java.util.List<java.lang.String>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked9033a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def map = [key: []]\n" +
+            "  map.add('foo','bar')\n" +
+            "}\n" +
+            "test()",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tmap.add('foo','bar')\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.util.LinkedHashMap#add(java.lang.String, java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked9033b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def type = node.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+            "    assert type.toString(false) == 'java.util.LinkedList<java.lang.String>'\n" +
+            "  })\n" +
+            "  Iterable<String> list = new LinkedList()\n" +
+            "}\n" +
+            "test()",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked9460() {
         //@formatter:off
         String[] sources = {

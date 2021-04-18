@@ -846,6 +846,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             boolean isAssignment = isAssignment(expression.getOperation().getType());
+            /* GRECLIPSE edit -- GROOVY-9033
             if (isAssignment && lType.isUsingGenerics() && missesGenericsTypes(resultType)) {
                 // unchecked assignment
                 // examples:
@@ -859,6 +860,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                 resultType = completedType;
             }
+            */
+            if (isAssignment) {
+                if (lType.isUsingGenerics() && missesGenericsTypes(resultType)) {
+                    resultType = GenericsUtils.parameterizeType(lType, resultType.getPlainNodeReference());
+                } else if (lType.equals(OBJECT_TYPE) && GenericsUtils.hasUnresolvedGenerics(resultType)) { // def list = []
+                    Map<GenericsTypeName, GenericsType> placeholders = extractGenericsParameterMapOfThis(typeCheckingContext);
+                    resultType = fullyResolveType(resultType, Optional.ofNullable(placeholders).orElseGet(Collections::emptyMap));
+                }
+            } else
+            // GRECLIPSE end
 
             if (isArrayOp(op)
                     && !lType.isArray()
@@ -6035,6 +6046,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected boolean typeCheckMethodsWithGenericsOrFail(final ClassNode receiver, final ClassNode[] arguments, final MethodNode candidateMethod, final Expression location) {
         if (!typeCheckMethodsWithGenerics(receiver, arguments, candidateMethod)) {
             Map<GenericsTypeName, GenericsType> classGTs = GenericsUtils.extractPlaceholders(receiver);
+            // GRECLIPSE add -- GROOVY-9033
+            applyGenericsConnections(extractGenericsParameterMapOfThis(typeCheckingContext), classGTs);
+            addMethodLevelDeclaredGenerics(candidateMethod, classGTs);
+            // GRECLIPSE end
             Parameter[] parameters = candidateMethod.getParameters();
             ClassNode[] paramTypes = new ClassNode[parameters.length];
             for (int i = 0, n = parameters.length; i < n; i += 1) {
