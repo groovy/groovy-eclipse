@@ -1294,7 +1294,7 @@ public class ClassNode extends AnnotatedNode {
             // GRECLIPSE end
         }
         if (showRedirect && redirect != null) {
-            ret.append(" -> ").append(redirect.toString());
+            ret.append(" -> ").append(redirect);
         }
         return ret.toString();
     }

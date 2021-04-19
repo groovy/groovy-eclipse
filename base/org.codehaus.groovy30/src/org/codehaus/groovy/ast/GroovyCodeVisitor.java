@@ -206,7 +206,7 @@ public interface GroovyCodeVisitor {
     default void visitEmptyExpression(EmptyExpression expression) {
     }
 
-    default void visitListOfExpressions(List<? extends Expression> list) {
+    default void visitListOfExpressions(final List<? extends Expression> list) {
         if (list != null) list.forEach(expr -> expr.visit(this));
     }
 }

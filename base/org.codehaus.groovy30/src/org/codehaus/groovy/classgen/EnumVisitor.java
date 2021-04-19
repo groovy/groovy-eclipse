@@ -100,7 +100,6 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             values = new FieldNode("$VALUES", ACC_FINAL | ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC, enumRef.makeArray(), enumClass, null);
             values.setSynthetic(true);
 
-            // GRECLIPSE add -- GROOVY-6747
             for (ConstructorNode ctor : enumClass.getDeclaredConstructors()) {
                 if (ctor.isSyntheticPublic()) {
                     ctor.setSyntheticPublic(false);
@@ -109,7 +108,6 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                     addError(ctor, "Illegal modifier for the enum constructor; only private is permitted.");
                 }
             }
-            // GRECLIPSE end
 
             addMethods(enumClass, values);
             checkForAbstractMethods(enumClass);
@@ -458,7 +456,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         );
     }
 
-    private static boolean isAnonymousInnerClass(final ClassNode enumClass) {
+    static boolean isAnonymousInnerClass(final ClassNode enumClass) {
         if (!(enumClass instanceof EnumConstantClassNode)) return false;
         return (((EnumConstantClassNode) enumClass).getVariableScope() == null);
     }

@@ -63,6 +63,7 @@ import static org.apache.groovy.ast.tools.ClassNodeUtils.isValidAccessorName;
 import static org.apache.groovy.ast.tools.ExpressionUtils.transformInlineConstants;
 import static org.apache.groovy.util.BeanUtils.capitalize;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName;
 
 /**
  * Visitor to resolve constants and method calls from static imports.
@@ -78,6 +79,14 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     private Expression foundArgs;
     private boolean inAnnotation;
     private boolean inLeftExpression;
+
+    /**
+     * Use {@link #StaticImportVisitor(ClassNode,SourceUnit)}.
+     */
+    @Deprecated
+    public StaticImportVisitor() {
+        this(null, null);
+    }
 
     public StaticImportVisitor(final ClassNode classNode, final SourceUnit sourceUnit) {
         this.currentClass = classNode;
@@ -132,20 +141,14 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         }
         if (clazz == ArgumentListExpression.class) {
             Expression result = exp.transformExpression(this);
-            // GRECLIPSE add -- GROOVY-9966
-            if (foundArgs == null)
-            // GRECLIPSE end
-            if (inPropertyExpression) {
+            if (foundArgs == null && inPropertyExpression) {
                 foundArgs = result;
             }
             return result;
         }
         if (exp instanceof ConstantExpression) {
             Expression result = exp.transformExpression(this);
-            // GRECLIPSE add -- GROOVY-9966
-            if (foundConstant == null)
-            // GRECLIPSE end
-            if (inPropertyExpression) {
+            if (foundConstant == null && inPropertyExpression) {
                 foundConstant = result;
             }
             if (inAnnotation && exp instanceof AnnotationConstantExpression) {
@@ -375,19 +378,18 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             pexp.setSourcePosition(pe);
             return pexp;
         }
-        boolean oldInPropertyExpression = inPropertyExpression;
-        Expression oldFoundArgs = foundArgs;
-        Expression oldFoundConstant = foundConstant;
-        inPropertyExpression = true;
-        foundArgs = null;
-        foundConstant = null;
-        Expression objectExpression = transform(pe.getObjectExpression());
-        boolean candidate = false;
-        if (objectExpression instanceof MethodCallExpression) {
-            candidate = ((MethodCallExpression)objectExpression).isImplicitThis();
-        }
 
-        if (foundArgs != null && foundConstant != null && candidate) {
+        boolean oldInPropertyExpression = inPropertyExpression;
+        Expression oldFoundConstant = foundConstant;
+        Expression oldFoundArgs = foundArgs;
+        inPropertyExpression = true;
+        foundConstant = null;
+        foundArgs = null;
+        Expression objectExpression = transform(pe.getObjectExpression());
+        if (foundArgs != null && foundConstant != null
+                && !foundConstant.getText().trim().isEmpty()
+                && objectExpression instanceof MethodCallExpression
+                && ((MethodCallExpression)objectExpression).isImplicitThis()) {
             Expression result = findStaticMethodImportFromModule(foundConstant, foundArgs);
             if (result != null) {
                 objectExpression = result;
@@ -395,8 +397,9 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             }
         }
         inPropertyExpression = oldInPropertyExpression;
-        foundArgs = oldFoundArgs;
         foundConstant = oldFoundConstant;
+        foundArgs = oldFoundArgs;
+
         pe.setObjectExpression(objectExpression);
         return pe;
     }
@@ -541,7 +544,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     }
 
     private String getAccessorName(String name) {
-        return (inLeftExpression ? "set" : "get") + capitalize(name);
+        return inLeftExpression ? getSetterName(name) : "get" + capitalize(name);
     }
 
     private Expression findStaticPropertyAccessorGivenArgs(ClassNode staticImportType, String propName, Expression args) {

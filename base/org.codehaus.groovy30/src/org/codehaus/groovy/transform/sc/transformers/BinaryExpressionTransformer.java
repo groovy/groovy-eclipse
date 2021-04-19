@@ -150,8 +150,8 @@ public class BinaryExpressionTransformer {
             Expression right = staticCompilationTransformer.transform(rightExpression);
 
             if (operationType == Types.COMPARE_TO
-                    && findType(left/*Expression*/).implementsInterface(ClassHelper.COMPARABLE_TYPE)
-                    && findType(right/*Expression*/).implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
+                    && findType(leftExpression).implementsInterface(ClassHelper.COMPARABLE_TYPE)
+                    && findType(rightExpression).implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
                 call = callX(left, "compareTo", args(right));
                 call.setImplicitThis(false);
                 call.setMethodTarget(COMPARE_TO_METHOD);

@@ -413,21 +413,15 @@ public class GenericsType extends ASTNode {
                     GenericsTypeName gtn = new GenericsTypeName(redirectBoundType.getName());
                     match = name.equals(gtn);
                     if (!match) {
-                        GenericsType genericsType = boundPlaceHolders.get(gtn);
-                        if (genericsType != null) {
-                            if (genericsType.isPlaceholder()) {
+                        GenericsType boundGenericsType = boundPlaceHolders.get(gtn);
+                        if (boundGenericsType != null) {
+                            if (boundGenericsType.isPlaceholder()) {
                                 match = true;
-                            } else if (genericsType.isWildcard()) {
-                                if (genericsType.getUpperBounds() != null) { // multiple bounds not allowed for ?
-                                /* GRECLIPSE edit -- GROOVY-6786, GROOVY-9902
-                                    match = redirectBoundType.isCompatibleWith(genericsType.getUpperBounds()[0]);
-                                } else if (genericsType.getLowerBound() != null) {
-                                    match = redirectBoundType.isCompatibleWith(genericsType.getLowerBound());
-                                */
-                                    match = classNodeType.isCompatibleWith(genericsType.getUpperBounds()[0]);
-                                } else if (genericsType.getLowerBound() != null) {
-                                    match = classNodeType.isCompatibleWith(genericsType.getLowerBound());
-                                // GRECLIPSE end
+                            } else if (boundGenericsType.isWildcard()) {
+                                if (boundGenericsType.getUpperBounds() != null) { // ? supports single bound only
+                                    match = classNodeType.isCompatibleWith(boundGenericsType.getUpperBounds()[0]);
+                                } else if (boundGenericsType.getLowerBound() != null) {
+                                    match = classNodeType.isCompatibleWith(boundGenericsType.getLowerBound());
                                 } else {
                                     match = true;
                                 }
