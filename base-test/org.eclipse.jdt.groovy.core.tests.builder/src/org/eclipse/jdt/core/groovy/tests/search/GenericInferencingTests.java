@@ -1353,6 +1353,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertEquals("Parameter type should be resolved", "java.util.Collection<? extends java.lang.String>", printTypeName(m.getParameters()[0].getType()));
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1249
+    public void testStaticMethod13() {
+        String contents = "Comparator.<String>comparing{it.length()}";
+        assertType(contents, "comparing", "java.util.Comparator<java.lang.String>");
+    }
+
     @Test
     public void testStaticMethodOverloads1() {
         String contents =

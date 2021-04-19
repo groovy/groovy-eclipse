@@ -121,9 +121,9 @@ public class GenericsMapper {
             }
             mapper.allGenerics.add(resolved);
 
-            if (methodGenerics != null && methodGenerics.length > 0) { assert methodGenerics.length == ugts.length;
+            if (methodGenerics != null && methodGenerics.length > 0) {
                 // method generics are explicitly defined
-                for (int i = 0; i < ugts.length; i += 1) {
+                for (int i = 0, n = Math.min(ugts.length, methodGenerics.length); i < n; i += 1) {
                     resolved.put(ugts[i].getName(), methodGenerics[i].getType());
                 }
             } else if (argumentTypes != null) {
