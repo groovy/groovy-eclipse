@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.VariableScope
 import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
@@ -93,6 +94,7 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
         */
         new ClosureExpression(Parameter.EMPTY_ARRAY, EmptyStatement.INSTANCE).with {
             annotationNode.setMember('value', it)
+            setVariableScope(new VariableScope())
             setStart(member.getStart())
             setEnd(member.getEnd())
         }

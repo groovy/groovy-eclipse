@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.junit.runners.Suite
 
     // Xform tests
     org.eclipse.jdt.groovy.core.tests.xform.AnnotationCollectorTests,
+    org.eclipse.jdt.groovy.core.tests.xform.ASTTestTests,
     org.eclipse.jdt.groovy.core.tests.xform.AutoCloneTests,
     org.eclipse.jdt.groovy.core.tests.xform.AutoFinalTests,
     org.eclipse.jdt.groovy.core.tests.xform.AutoImplementTests,
