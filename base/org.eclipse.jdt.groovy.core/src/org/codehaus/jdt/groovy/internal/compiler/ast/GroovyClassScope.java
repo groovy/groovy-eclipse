@@ -417,6 +417,7 @@ public class GroovyClassScope extends ClassScope {
         case IProblem.CannotOverrideAStaticMethodWithAnInstanceMethod:
         case IProblem.CannotHideAnInstanceMethodWithAStaticMethod:
         case IProblem.EnumConstantMustImplementAbstractMethod:
+        case IProblem.IncorrectArityForParameterizedType:
         case IProblem.AbstractMethodMustBeImplemented:
         case IProblem.MissingValueForAnnotationMember:
         case IProblem.FinalMethodCannotBeOverridden:

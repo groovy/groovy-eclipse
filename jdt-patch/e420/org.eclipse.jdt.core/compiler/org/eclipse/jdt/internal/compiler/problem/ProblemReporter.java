@@ -180,6 +180,7 @@ import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.CaptureBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
@@ -3618,7 +3619,7 @@ public void incorrectArityForParameterizedType(ASTNode location, TypeBinding typ
 	incorrectArityForParameterizedType(location, type, argumentTypes, Integer.MAX_VALUE);
 }
 public void incorrectArityForParameterizedType(ASTNode location, TypeBinding type, TypeBinding[] argumentTypes, int index) {
-    if (location == null) {
+	if (location == null) {
 		this.handle(
 			IProblem.IncorrectArityForParameterizedType,
 			new String[] {new String(type.readableName()), typesAsString(argumentTypes, false)},
@@ -3627,7 +3628,16 @@ public void incorrectArityForParameterizedType(ASTNode location, TypeBinding typ
 			0,
 			0);
 		return; // not reached since aborted above
-    }
+	}
+	// GROOVY add
+	ClassScope classScope = null;
+	if (this.referenceContext instanceof TypeDeclaration) {
+		classScope = ((TypeDeclaration) this.referenceContext).scope;
+	} else if (this.referenceContext instanceof AbstractMethodDeclaration) {
+		classScope = ((AbstractMethodDeclaration) this.referenceContext).scope.classScope();
+	}
+	if (classScope == null || classScope.shouldReport(IProblem.IncorrectArityForParameterizedType))
+	// GROOVY end
 	this.handle(
 		IProblem.IncorrectArityForParameterizedType,
 		new String[] {new String(type.readableName()), typesAsString(argumentTypes, false)},
