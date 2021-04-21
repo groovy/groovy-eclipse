@@ -2801,6 +2801,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (nExpressions > 0 && expressions.get(0) instanceof MapExpression && params.length > 0) {
             checkNamedParamsAnnotation(params[0], (MapExpression) expressions.get(0));
         }
+        // GRECLIPSE add -- GROOVY-10033, GROOVY-10047
+        if (visitClosures) {
+            inferMethodReferenceType(receiver, arguments, selectedMethod);
+        }
+        // GRECLIPSE end
     }
 
     private void checkNamedParamsAnnotation(final Parameter param, final MapExpression args) {
@@ -3643,8 +3648,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
-
+            /* GRECLIPSE edit -- GROOVY-10033, GROOVY-10047
             inferMethodReferenceType(call, receiver, argumentList);
+            */
         } finally {
             typeCheckingContext.popEnclosingMethodCall();
             extension.afterMethodCall(call);
@@ -3662,8 +3668,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return Closure.OWNER_FIRST;
     }
 
+    /* GRECLIPSE edit -- GROOVY-10033, GROOVY-10047
     private void inferMethodReferenceType(final MethodCallExpression call, final ClassNode receiver, final ArgumentListExpression argumentList) {
         if (call == null) return;
+    */
+    private void inferMethodReferenceType(final ClassNode receiver, final ArgumentListExpression argumentList, final MethodNode selectedMethod) {
+    // GRECLISPE end
         if (receiver == null) return;
         if (argumentList == null) return;
 
@@ -3675,7 +3685,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             return;
         }
 
+        /* GRECLIPSE edit -- GROOVY-10033, GROOVY-10047
         MethodNode selectedMethod = call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
+        */
         if (selectedMethod == null) return;
 
         Parameter[] parameters = selectedMethod.getParameters();

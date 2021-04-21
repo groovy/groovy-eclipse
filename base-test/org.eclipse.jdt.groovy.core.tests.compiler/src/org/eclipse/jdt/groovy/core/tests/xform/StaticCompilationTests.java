@@ -4594,7 +4594,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  @groovy.transform.CompileStatic\n" +
             "  void test() {\n" +
-            "    java.util.function.Consumer<Main> consumer = main -> print 'works'\n" + // A transform used a generics containing ClassNode Main for the method ...
+            "    java.util.function.Consumer<Main> consumer = main -> print('works')\n" + // A transform used a generics containing ClassNode Main for the method ...
             "    consumer.accept(this)\n" +
             "  }\n" +
             "}\n",
@@ -6097,5 +6097,48 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "123456123");
+    }
+
+    @Test
+    public void testCompileStatic10033() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  Main(java.util.function.Function<Main,String> f) {" +
+            "    print f.apply(this)\n" +
+            "  }\n" +
+            "  String m() { 'works' }\n" +
+            "  static main(args) {\n" +
+            "    new Main(Main::m)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic10047() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static java.util.stream.Collectors.toMap\n" +
+            "import java.util.function.Function\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), String::length)))\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[a:1, bc:2, def:3]");
     }
 }
