@@ -2223,4 +2223,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "42");
     }
+
+    @Test
+    public void testTypeChecked10049() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <X /*extends Number*/> Set<X> generateNumbers(Class<X> type) {\n" +
+            "  return Collections.singleton(type.newInstance(42))\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <Y extends Number> void printNumbers(Class<Y> numberType) {\n" +
+            "  generateNumbers(numberType).stream()\n" +
+            "    .filter { n -> n.intValue() > 0 }\n" +
+            "    .forEach { n -> print n }\n" +
+            "}\n" +
+            "printNumbers(Integer)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
 }
