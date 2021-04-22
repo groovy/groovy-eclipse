@@ -2247,4 +2247,46 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "42");
     }
+
+    @Test
+    public void testTypeChecked10051() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class State/*<H extends Handle>*/ {\n" +
+            "  def <T extends Handle> HandleContainer<T> getHandleContainer(key) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class HandleContainer<H extends Handle> {\n" +
+            "  H handle\n" +
+            "}\n" +
+            "interface Handle {\n" +
+            "  Result getResult()\n" +
+            "}\n" +
+            "class Result {\n" +
+            "  int itemCount\n" +
+            "  String[] items\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "List<String> getStrings(State state, List<?> keys) {\n" +
+            "  keys.collectMany { key ->\n" +
+            "    List<String> strings = Collections.emptyList()\n" +
+            "    \n" +
+            "    def container = state.getHandleContainer(key)\n" + // returns HandleContainer<Object> not HandleContainer<Handle>
+            "    if (container != null) {\n" +
+            "      def result = container.handle.result\n" +
+            "      if (result != null && result.itemCount > 0) {\n" +
+            "        strings = Arrays.asList(result.items)\n" +
+            "      }\n" +
+            "    }\n" +
+            "    \n" +
+            "    strings\n" +
+            "  }\n" +
+            "}\n" +
+            "print getStrings(null,[])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[]");
+    }
 }
