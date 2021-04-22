@@ -20,7 +20,6 @@ package org.codehaus.groovy.classgen.asm.sc;
 
 import groovy.lang.Tuple;
 import groovy.lang.Tuple2;
-import groovy.transform.CompileStatic;
 import groovy.transform.Generated;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -40,6 +39,7 @@ import org.codehaus.groovy.classgen.asm.MethodReferenceExpressionWriter;
 import org.codehaus.groovy.classgen.asm.WriterController;
 import org.codehaus.groovy.runtime.ArrayTypeUtils;
 import org.codehaus.groovy.syntax.RuntimeParserException;
+import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.stc.ExtensionMethodNode;
 import groovyjarjarasm.asm.Opcodes;
 
@@ -68,7 +68,9 @@ import static org.codehaus.groovy.transform.stc.StaticTypesMarker.CLOSURE_ARGUME
 public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceExpressionWriter implements AbstractFunctionalInterfaceWriter {
     private static final String METHODREF_EXPR_INSTANCE = "__METHODREF_EXPR_INSTANCE";
     private static final ClassNode GENERATED_TYPE = ClassHelper.make(Generated.class);
+    /* GRECLIPSE edit -- GROOVY-10033
     private static final ClassNode COMPILE_STATIC_TYPE = ClassHelper.make(CompileStatic.class);
+    */
 
     public StaticTypesMethodReferenceExpressionWriter(final WriterController controller) {
         super(controller);
@@ -194,7 +196,9 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
         );
 
         syntheticMethodNode.addAnnotation(new AnnotationNode(GENERATED_TYPE));
+        /* GRECLIPSE edit -- GROOVY-10033
         syntheticMethodNode.addAnnotation(new AnnotationNode(COMPILE_STATIC_TYPE));
+        */
 
         return syntheticMethodNode;
     }
@@ -224,7 +228,11 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
         );
 
         syntheticMethodNode.addAnnotation(new AnnotationNode(GENERATED_TYPE));
+        /* GRECLIPSE edit -- GROOVY-10033
         syntheticMethodNode.addAnnotation(new AnnotationNode(COMPILE_STATIC_TYPE));
+        */
+        syntheticMethodNode.putNodeMetaData(StaticCompilationMetadataKeys.STATIC_COMPILE_NODE, Boolean.FALSE);
+        // GRECLIPSE end
 
         return syntheticMethodNode;
     }

@@ -6108,12 +6108,37 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Main {\n" +
-            "  Main(java.util.function.Function<Main,String> f) {" +
+            "  Main(java.util.function.Function<Main,String> f) {\n" +
             "    print f.apply(this)\n" +
             "  }\n" +
             "  String m() { 'works' }\n" +
             "  static main(args) {\n" +
             "    new Main(Main::m)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic10033a() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  Main() {\n" +
+            "    print 'works'\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    test(Main::new)\n" +
+            "  }\n" +
+            "  static test(java.util.function.Supplier<Main> f) {\n" +
+            "    f.get()\n" +
             "  }\n" +
             "}\n",
         };
