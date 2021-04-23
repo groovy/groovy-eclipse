@@ -1896,8 +1896,12 @@ public abstract class StaticTypeCheckingSupport {
         // GRECLIPSE add
         } else if (type.equals(CLOSURE_TYPE) && (sam = findSAM(target)) != null) {
             // GROOVY-9974: Lambda, Closure, Pointer or Reference for SAM-type receiver
-            ClassNode returnType = StaticTypeCheckingVisitor.wrapTypeIfNecessary(sam.getReturnType());
-            extractGenericsConnections(connections, type.getGenericsTypes(), new GenericsType[] {new GenericsType(returnType)});
+            ClassNode returnType = sam.getReturnType();
+            if (returnType.isGenericsPlaceHolder()) { // GROOVY-10052
+                returnType = GenericsUtils.findActualTypeByGenericsPlaceholderName(returnType.getUnresolvedName(),
+                    GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType(sam.getDeclaringClass(), target));
+            }
+            extractGenericsConnections(connections, type.getGenericsTypes(), new GenericsType[] {StaticTypeCheckingVisitor.wrapTypeIfNecessary(returnType).asGenericsType()});
         // GRECLIPSE end
         } else if (target.isGenericsPlaceHolder() || type.equals(target) || !implementsInterfaceOrIsSubclassOf(type, target)) {
             // structural match route

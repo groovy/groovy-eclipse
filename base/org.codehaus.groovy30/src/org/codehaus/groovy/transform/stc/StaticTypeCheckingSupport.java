@@ -1806,18 +1806,16 @@ public abstract class StaticTypeCheckingSupport {
         if (target == null || target == type || !isUsingGenericsOrIsArrayUsingGenerics(target)) return;
         if (type == null || type == UNKNOWN_PARAMETER_TYPE) return;
 
-        MethodNode sam;
-
         if (target.isGenericsPlaceHolder()) {
             connections.put(new GenericsTypeName(target.getUnresolvedName()), new GenericsType(type));
 
         } else if (type.isArray() && target.isArray()) {
             extractGenericsConnections(connections, type.getComponentType(), target.getComponentType());
 
-        } else if (type.equals(CLOSURE_TYPE) && (sam = findSAM(target)) != null) {
-            // GROOVY-9974: Lambda, Closure, Pointer or Reference for SAM-type receiver
-            ClassNode returnType = StaticTypeCheckingVisitor.wrapTypeIfNecessary(sam.getReturnType());
-            extractGenericsConnections(connections, type.getGenericsTypes(), new GenericsType[] {new GenericsType(returnType)});
+        } else if (type.equals(CLOSURE_TYPE) && isSAMType(target)) {
+            // GROOVY-9974, GROOVY-10052: Lambda, Closure, Pointer or Reference for SAM-type receiver
+            ClassNode returnType = StaticTypeCheckingVisitor.wrapTypeIfNecessary(GenericsUtils.parameterizeSAM(target).getV2());
+            extractGenericsConnections(connections, type.getGenericsTypes(), new GenericsType[] {returnType.asGenericsType()});
 
         } else if (type.equals(target) || !implementsInterfaceOrIsSubclassOf(type, target)) {
             extractGenericsConnections(connections, type.getGenericsTypes(), target.getGenericsTypes());

@@ -2289,4 +2289,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[]");
     }
+
+    @Test
+    public void testTypeChecked10052() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  String x = Optional.of('x').orElseThrow({ new Exception() })\n" +
+            "  def f = { ->\n" +
+            "    String y = Optional.of('y').orElseThrow({ new Exception() })\n" +
+            "  }\n" +
+            "  print x\n" +
+            "  print f()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "xy");
+    }
 }
