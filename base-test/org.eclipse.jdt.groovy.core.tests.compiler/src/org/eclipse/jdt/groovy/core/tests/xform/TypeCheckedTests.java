@@ -2310,4 +2310,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "xy");
     }
+
+    @Test
+    public void testTypeChecked10053() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "Set<Number> f() {\n" +
+            "  Collections.<Number>singleton(42)\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <N extends Number> Set<N> g(Class<N> t) {\n" +
+            "  Set<N> result = new HashSet<>()\n" +
+            "  f().stream().filter{n -> t.isInstance(n)}\n" +
+            "    .map{n -> t.cast(n)}.forEach{n -> result.add(n)}\n" +
+            "  return result\n" +
+            "}\n" +
+            "print g(Integer)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[42]");
+    }
 }

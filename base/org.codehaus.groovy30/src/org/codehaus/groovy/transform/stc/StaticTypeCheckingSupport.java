@@ -1704,12 +1704,17 @@ public abstract class StaticTypeCheckingSupport {
                         // GROOVY-6787: Don't override the original if the replacement doesn't respect the bounds otherwise
                         // the original bounds are lost, which can result in accepting an incompatible type as an argument.
                         ClassNode replacementType = extractType(newValue);
+                        /* GRECLIPSE edit -- GROOVY-9998, GROOVY-10053
                         if (oldValue.isCompatibleWith(replacementType)) {
-                            // GRECLIPSE add -- GROOVY-9998
+                        */
+                        ClassNode suitabilityType = !replacementType.isGenericsPlaceHolder()
+                                ? replacementType : Optional.ofNullable(replacementType.getGenericsTypes())
+                                        .map(gts -> extractType(gts[0])).orElse(replacementType.redirect());
+                        if (oldValue.isCompatibleWith(suitabilityType)) {
                             if (newValue.isWildcard() && newValue.getLowerBound() == null && newValue.getUpperBounds() == null) {
                                 entry.setValue(new GenericsType(replacementType));
                             } else
-                            // GRECLIPSE end
+                        // GRECLIPSE end
                             entry.setValue(newValue);
                             if (!checkForMorePlaceholders && newValue.isPlaceholder()) {
                                 checkForMorePlaceholders = !equalIncludingGenerics(oldValue, newValue);

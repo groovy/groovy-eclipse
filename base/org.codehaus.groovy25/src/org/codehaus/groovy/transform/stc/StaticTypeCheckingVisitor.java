@@ -2832,7 +2832,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    // GRECLIPSE add -- GROOVY-9751
+    // GRECLIPSE add -- GROOVY-9751, GROOVY-9803, GROOVY-10053
     @Override
     public void visitMethodPointerExpression(final MethodPointerExpression expression) {
         super.visitMethodPointerExpression(expression);
@@ -2840,21 +2840,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (nameExpr instanceof ConstantExpression
                 && getType(nameExpr).equals(STRING_TYPE)) {
             String nameText = nameExpr.getText();
-
-            if ("new".equals(nameText)) {
-                ClassNode receiverType = getType(expression.getExpression());
-                if (isClassClassNodeWrappingConcreteType(receiverType)) {
-                    storeType(expression, wrapClosureType(receiverType));
-                }
-                return;
-            }
-
             List<Receiver<String>> receivers = new ArrayList<>();
             addReceivers(receivers, makeOwnerList(expression.getExpression()), false);
 
+            ClassNode receiverType = null;
             List<MethodNode> candidates = EMPTY_METHODNODE_LIST;
             for (Receiver<String> currentReceiver : receivers) {
-                ClassNode receiverType = wrapTypeIfNecessary(currentReceiver.getType());
+                receiverType = wrapTypeIfNecessary(currentReceiver.getType());
 
                 candidates = findMethodsWithGenerated(receiverType, nameText);
                 if (isBeingCompiled(receiverType)) candidates.addAll(GROOVY_OBJECT_TYPE.getMethods(nameText));
@@ -2867,11 +2859,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             if (!candidates.isEmpty()) {
-                candidates.stream().map(MethodNode::getReturnType)
-                        .reduce(WideningCategories::lowestUpperBound)
-                        .filter(returnType -> !returnType.equals(OBJECT_TYPE))
-                        .ifPresent(returnType -> storeType(expression, wrapClosureType(returnType)));
-                expression.putNodeMetaData(MethodNode.class, candidates); // GROOVY-9803
+                Map<GenericsTypeName, GenericsType> gts = GenericsUtils.extractPlaceholders(receiverType);
+                candidates.stream().map(candidate -> applyGenericsContext(gts, candidate.getReturnType()))
+                        .reduce(WideningCategories::lowestUpperBound).ifPresent(returnType -> {
+                            storeType(expression, wrapClosureType(returnType));
+                        });
+                expression.putNodeMetaData(MethodNode.class, candidates);
+            } else {
+                ClassNode type = wrapTypeIfNecessary(getType(expression.getExpression()));
+                if (isClassClassNodeWrappingConcreteType(type)) type = type.getGenericsTypes()[0].getType();
+                addStaticTypeError("Cannot find matching method " + type.getText() + "#" + nameText + ". Please check if the declared type is correct and if the method exists.", nameExpr);
             }
         }
     }
@@ -6010,7 +6007,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    // GRECLIPSE add -- GROOVY-9803
+    // GRECLIPSE add -- GROOVY-9803, GROOVY-10053
     private static MethodNode chooseMethod(final MethodPointerExpression source, final Supplier<ClassNode[]> samSignature) {
         List<MethodNode> options = source.getNodeMetaData(MethodNode.class);
         if (options == null || options.isEmpty()) {
@@ -6020,15 +6017,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ClassNode[] paramTypes = samSignature.get();
         return options.stream().filter((MethodNode option) -> {
             ClassNode[] types = collateMethodReferenceParameterTypes(source, option);
-            if (types.length == paramTypes.length) {
-                for (int i = 0, n = types.length; i < n; i += 1) {
-                    if (!types[i].isGenericsPlaceHolder() && !isAssignableTo(types[i], paramTypes[i])) {
-                        return false;
-                    }
-                }
-                return true;
+            final int n = types.length;
+            if (n != paramTypes.length) {
+                return false;
             }
-            return false;
+            for (int i = 0; i < n; i += 1) {
+                // param type represents incoming argument type
+                if (!isAssignableTo(paramTypes[i], types[i])) {
+                    return false;
+                }
+            }
+            return true;
         }).findFirst().orElse(null); // TODO: order matches by param distance
     }
 

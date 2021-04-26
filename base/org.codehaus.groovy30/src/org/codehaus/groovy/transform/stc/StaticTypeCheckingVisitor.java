@@ -2552,9 +2552,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             List<Receiver<String>> receivers = new ArrayList<>();
             addReceivers(receivers, makeOwnerList(expression.getExpression()), false);
 
+            // GRECLIPSE add -- GROOVY-10053
+            ClassNode receiverType = null;
+            // GRECLIPSE end
             List<MethodNode> candidates = EMPTY_METHODNODE_LIST;
             for (Receiver<String> currentReceiver : receivers) {
-                ClassNode receiverType = wrapTypeIfNecessary(currentReceiver.getType());
+                receiverType = wrapTypeIfNecessary(currentReceiver.getType());
 
                 candidates = findMethodsWithGenerated(receiverType, nameText);
                 if (isBeingCompiled(receiverType)) candidates.addAll(GROOVY_OBJECT_TYPE.getMethods(nameText));
@@ -2574,10 +2577,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             if (!candidates.isEmpty()) {
+                /* GRECLIPSE edit -- GROOVY-10053
                 candidates.stream().map(MethodNode::getReturnType)
                         .reduce(WideningCategories::lowestUpperBound)
                         .filter(returnType -> !returnType.equals(OBJECT_TYPE))
                         .ifPresent(returnType -> storeType(expression, wrapClosureType(returnType)));
+                */
+                Map<GenericsTypeName, GenericsType> gts = GenericsUtils.extractPlaceholders(receiverType);
+                candidates.stream().map(candidate -> applyGenericsContext(gts, candidate.getReturnType()))
+                        .reduce(WideningCategories::lowestUpperBound).ifPresent(returnType -> {
+                            storeType(expression, wrapClosureType(returnType));
+                        });
+                // GRECLIPSE end
                 expression.putNodeMetaData(MethodNode.class, candidates);
             } else if (!(expression instanceof MethodReferenceExpression)) {
                 ClassNode type = wrapTypeIfNecessary(getType(expression.getExpression()));
@@ -5715,6 +5726,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ClassNode[] paramTypes = samSignature.get();
         return options.stream().filter((MethodNode option) -> {
             ClassNode[] types = collateMethodReferenceParameterTypes(source, option);
+            /* GRECLIPSE edit -- GROOVY-10053
             if (types.length == paramTypes.length) {
                 for (int i = 0, n = types.length; i < n; i += 1) {
                     if (!types[i].isGenericsPlaceHolder() && !isAssignableTo(types[i], paramTypes[i])) {
@@ -5724,6 +5736,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 return true;
             }
             return false;
+            */
+            final int n = types.length;
+            if (n != paramTypes.length) {
+                return false;
+            }
+            for (int i = 0; i < n; i += 1) {
+                // param type represents incoming argument type
+                if (!isAssignableTo(paramTypes[i], types[i])) {
+                    return false;
+                }
+            }
+            return true;
+            // GRECLIPSE end
         }).findFirst().orElse(null); // TODO: order matches by param distance
     }
 
