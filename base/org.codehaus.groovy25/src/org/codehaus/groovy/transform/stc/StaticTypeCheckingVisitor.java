@@ -5826,32 +5826,43 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         boolean isVargs = isVargs(parameters);
         ArgumentListExpression argList = InvocationWriter.makeArgumentList(arguments);
         List<Expression> expressions = argList.getExpressions();
+        /* GRECLIPSE edit -- GROOVY-9996, GROOVY-10056, GROOVY-10062
         int paramLength = parameters.length;
         if (expressions.size() >= paramLength) {
             for (int i = 0; i < paramLength; i += 1) {
-                // GRECLIPSE add -- GROOVY-9984: skip null
-                if (isNullConstant(expressions.get(i))) continue;
-                // GRECLIPSE end
                 boolean lastArg = (i == paramLength - 1);
                 ClassNode type = parameters[i].getType();
-                /* GRECLIPSE edit -- GROOVY-9996
                 ClassNode actualType = getType(expressions.get(i));
-                */
-                ClassNode actualType = getDeclaredOrInferredType(expressions.get(i));
-                // GRECLIPSE end
                 while (!type.isUsingGenerics() && type.isArray() && actualType.isArray()) {
                     type = type.getComponentType();
                     actualType = actualType.getComponentType();
                 }
+        */
+        int nArguments = expressions.size(), nParams = parameters.length;
+        if (isVargs ? nArguments >= nParams - 1 : nArguments == nParams) {
+            for (int i = 0; i < nArguments; i += 1) {
+                if (isNullConstant(expressions.get(i))) continue; // GROOVY-9984
+                ClassNode type = parameters[Math.min(i, nParams - 1)].getType();
+                ClassNode actualType = getDeclaredOrInferredType(expressions.get(i));
+        // GRECLIPSE end
                 if (isUsingGenericsOrIsArrayUsingGenerics(type)) {
-                    /* GRECLIPSE edit -- GROOVY-9803
+                    /* GRECLIPSE edit -- GROOVY-9803, GROOVY-10056, GROOVY-10062
                     if (implementsInterfaceOrIsSubclassOf(actualType, CLOSURE_TYPE) &&
                             isSAMType(type)) {
                         // implicit closure coercion in action!
                         Map<GenericsTypeName, GenericsType> pholders = applyGenericsContextToParameterClass(resolvedPlaceholders, type);
                         actualType = convertClosureTypeToSAMType(expressions.get(i), actualType, type, pholders);
                     }
+                    if (isVargs && lastArg && actualType.isArray()) {
+                        actualType = actualType.getComponentType();
+                    }
+                    if (isVargs && lastArg && type.isArray()) {
+                        type = type.getComponentType();
+                    }
                     */
+                    if (isVargs && (i >= nParams || (i == nParams - 1 && (nArguments > nParams || !actualType.isArray())))) {
+                        type = type.getComponentType();
+                    }
                     if (actualType.isDerivedFrom(CLOSURE_TYPE)) {
                         MethodNode sam = findSAM(type);
                         if (sam != null) { // implicit closure coercion in action!
@@ -5861,12 +5872,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                     }
                     // GRECLIPSE end
-                    if (isVargs && lastArg && actualType.isArray()) {
-                        actualType = actualType.getComponentType();
-                    }
-                    if (isVargs && lastArg && type.isArray()) {
-                        type = type.getComponentType();
-                    }
                     actualType = wrapTypeIfNecessary(actualType);
 
                     Map<GenericsTypeName, GenericsType> connections = new HashMap<GenericsTypeName, GenericsType>();

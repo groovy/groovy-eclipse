@@ -2335,4 +2335,42 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[42]");
     }
+
+    @Test
+    public void testTypeChecked10056() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(String[][] arrayArray) {\n" +
+            "  print Arrays.asList(arrayArray).get(0).length\n" +
+            "}\n" +
+            "String[][] arrayArray = [\n" +
+            "  ['a','b','c'],\n" +
+            "  ['d','e','f']\n" +
+            "]\n" +
+            "test(arrayArray)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "3");
+    }
+
+    @Test
+    public void testTypeChecked10062() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T m(T t, ... zeroOrMore) { t }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def obj = m(42)\n" +
+            "  print obj.intValue()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
 }

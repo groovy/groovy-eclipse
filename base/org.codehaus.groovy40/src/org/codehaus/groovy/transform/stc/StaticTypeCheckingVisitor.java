@@ -5346,6 +5346,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         List<Expression> expressions = InvocationWriter.makeArgumentList(arguments).getExpressions();
         Parameter[] parameters = method.getParameters();
         boolean isVargs = isVargs(parameters);
+        /* GRECLIPSE edit -- GROOVY-10056, GROOVY-10062
         int paramLength = parameters.length;
         if (expressions.size() >= paramLength) {
             for (int i = 0; i < paramLength; i += 1) {
@@ -5358,7 +5359,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     paramType = paramType.getComponentType();
                     argumentType = argumentType.getComponentType();
                 }
+        */
+        int nArguments = expressions.size(), nParams = parameters.length;
+        if (isVargs ? nArguments >= nParams - 1 : nArguments == nParams) {
+            for (int i = 0; i < nArguments; i += 1) {
+                if (isNullConstant(expressions.get(i))) continue; // GROOVY-9984
+                ClassNode paramType = parameters[Math.min(i, nParams - 1)].getType();
+                ClassNode argumentType = getDeclaredOrInferredType(expressions.get(i));
+        // GRECLIPSE end
                 if (isUsingGenericsOrIsArrayUsingGenerics(paramType)) {
+                    // GRECLIPSE add -- use element type if supplying array param with multiple arguments or single non-array argument
+                    if (isVargs && (i >= nParams || (i == nParams - 1 && (nArguments > nParams || !argumentType.isArray())))) {
+                        paramType = paramType.getComponentType();
+                    }
+                    // GRECLIPSE end
                     if (argumentType.isDerivedFrom(CLOSURE_TYPE)) {
                         MethodNode sam = findSAM(paramType);
                         if (sam != null) { // implicit closure coercion in action!
@@ -5367,12 +5381,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                             applyGenericsContextToParameterClass(resolvedPlaceholders, paramType));
                         }
                     }
+                    /* GRECLIPSE edit -- GROOVY-10056, GROOVY-10062
                     if (isVargs && lastArg && argumentType.isArray()) {
                         argumentType = argumentType.getComponentType();
                     }
                     if (isVargs && lastArg && paramType.isArray()) {
                         paramType = paramType.getComponentType();
                     }
+                    */
                     argumentType = wrapTypeIfNecessary(argumentType);
 
                     Map<GenericsTypeName, GenericsType> connections = new HashMap<>();
