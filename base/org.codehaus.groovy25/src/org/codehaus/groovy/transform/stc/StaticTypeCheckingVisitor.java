@@ -1265,7 +1265,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private boolean typeCheckMultipleAssignmentAndContinue(Expression leftExpression, Expression rightExpression) {
-        // multiple assignment check
+        /* GRECLIPSE edit -- GROOVY-10063
         if (!(leftExpression instanceof TupleExpression)) return true;
 
         if (!(rightExpression instanceof ListExpression)) {
@@ -1293,9 +1293,67 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 storeType(tupleExpression, elemType);
             }
         }
+        */
+        if (leftExpression instanceof TupleExpression) {
+            if (rightExpression instanceof VariableExpression || rightExpression instanceof PropertyExpression || rightExpression instanceof MethodCall) {
+                ClassNode inferredType = Optional.ofNullable(getType(rightExpression)).orElseGet(rightExpression::getType);
+                GenericsType[] genericsTypes = inferredType.getGenericsTypes();
+                ListExpression listExpression = new ListExpression();
+                listExpression.setSourcePosition(rightExpression);
 
+                // convert Tuple[1-16] bearing expressions to mock list for checking
+                for (int n = TUPLE_TYPES.indexOf(inferredType), i = 0; i < n; i += 1) {
+                    ClassNode type = (genericsTypes != null ? genericsTypes[i].getType() : OBJECT_TYPE);
+                    listExpression.addExpression(varX("v" + (i + 1), type));
+                }
+                if (!listExpression.getExpressions().isEmpty()) {
+                    rightExpression = listExpression;
+                }
+            }
+
+            if (!(rightExpression instanceof ListExpression)) {
+                addStaticTypeError("Multiple assignments without list or tuple on the right-hand side are unsupported in static type checking mode", rightExpression);
+                return false;
+            }
+
+            TupleExpression tuple = (TupleExpression) leftExpression;
+            ListExpression values = (ListExpression) rightExpression;
+            List<Expression> tupleExpressions = tuple.getExpressions();
+            List<Expression> valueExpressions = values.getExpressions();
+
+            if (tupleExpressions.size() > valueExpressions.size()) {
+                addStaticTypeError("Incorrect number of values. Expected:" + tupleExpressions.size() + " Was:" + valueExpressions.size(), values);
+                return false;
+            }
+
+            for (int i = 0, n = tupleExpressions.size(); i < n; i += 1) {
+                ClassNode valueType = getType(valueExpressions.get(i));
+                ClassNode targetType = getType(tupleExpressions.get(i));
+                if (!isAssignableTo(valueType, targetType)) {
+                    addStaticTypeError("Cannot assign value of type " + prettyPrintType(valueType) + " to variable of type " + prettyPrintType(targetType), rightExpression);
+                    return false;
+                }
+                storeType(tupleExpressions.get(i), valueType);
+            }
+        }
+        // GRECLIPSE end
         return true;
     }
+
+    // GRECLIPSE add -- GROOVY-10063
+    private static final List<ClassNode> TUPLE_TYPES = Collections.unmodifiableList(Arrays.asList(
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple .class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple1.class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple2.class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple3.class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple4.class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple5.class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple6.class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple7.class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple8.class),
+        ClassHelper.makeWithoutCaching(groovy.lang.Tuple9.class)
+    ));
+    // GRECLIPSE end
 
     private static ClassNode adjustTypeForSpreading(ClassNode inferredRightExpressionType, Expression leftExpression) {
         // imagine we have: list*.foo = 100

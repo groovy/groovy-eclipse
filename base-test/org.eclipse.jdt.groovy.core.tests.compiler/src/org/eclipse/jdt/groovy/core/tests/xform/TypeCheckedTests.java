@@ -2373,4 +2373,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "42");
     }
+
+    @Test
+    public void testTypeChecked10063() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "static Tuple2<String,Integer> m() {\n" +
+            "  new Tuple2<>('answer', 42)\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def (String string, Integer number) = m()\n" +
+            "  print number\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
 }
