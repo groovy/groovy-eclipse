@@ -180,7 +180,7 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
     private MethodNode addSyntheticMethodForDGSM(final MethodNode mn) {
         Parameter[] parameters = removeFirstParameter(mn.getParameters());
         ArgumentListExpression args = args(parameters);
-        args.getExpressions().add(0, ConstantExpression.NULL);
+        args.getExpressions().add(0, new ConstantExpression(null));
 
         MethodNode syntheticMethodNode = controller.getClassNode().addSyntheticMethod(
                 "dgsm$$" + mn.getParameters()[0].getType().getName().replace(".", "$") + "$$" + mn.getName(),

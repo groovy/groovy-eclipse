@@ -430,12 +430,15 @@ public abstract class StaticTypeCheckingSupport {
      */
     static int lastArgMatchesVarg(final Parameter[] parameters, final ClassNode... argumentTypes) {
         if (!isVargs(parameters)) return -1;
-        // case length ==0 handled already
+        // GRECLIPSE add -- GROOVY-10071
+        int lastParamIndex = parameters.length - 1;
+        if (lastParamIndex == argumentTypes.length) return 0;
+        // GRECLIPSE end
         // we have now two cases,
         // the argument is wrapped in the vargs array or
         // the argument is an array that can be used for the vargs part directly
         // we test only the wrapping part, since the non wrapping is done already
-        ClassNode lastParamType = parameters[parameters.length - 1].getType();
+        ClassNode lastParamType = parameters[lastParamIndex].getType();
         ClassNode ptype = lastParamType.getComponentType();
         ClassNode arg = argumentTypes[argumentTypes.length - 1];
         if (isNumberType(ptype) && isNumberType(arg) && !getWrapper(ptype).equals(getWrapper(arg))) return -1;

@@ -130,6 +130,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
@@ -235,7 +236,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.Matche
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.NUMBER_OPS;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.UNKNOWN_PARAMETER_TYPE;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.addMethodLevelDeclaredGenerics;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.allParametersAndArgumentsMatch;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.allParametersAndArgumentsMatchWithDefaultParams;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.applyGenericsConnections;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.applyGenericsContext;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.applyGenericsContextToParameterClass;
@@ -2023,17 +2024,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             typeCheckingContext.isInStaticContext = node.isInStaticContext();
             currentField = node;
             visitAnnotations(node);
+            /* GRECLIPSE edit -- GROOVY-9995
             Expression init = node.getInitialExpression();
             if (init != null) {
                 ClassNode lType = getType(node);
                 if (isFunctionalInterface(lType)) { // GROOVY-9977
                     processFunctionalInterfaceAssignment(lType, init);
                 }
-                // GRECLIPSE add -- GROOVY-9995
-                else if (isClosureWithType(lType) && init instanceof ClosureExpression) {
-                    storeInferredReturnType(init, getCombinedBoundType(lType.getGenericsTypes()[0]));
-                }
-                // GRECLIPSE end
                 init.visit(this);
                 ClassNode rType = getType(init);
                 if (init instanceof ConstructorCallExpression) {
@@ -2044,11 +2041,35 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 BinaryExpression bexp = assignX(left, init, node);
                 typeCheckAssignment(bexp, left, lType, init, getResultType(lType, ASSIGN, rType, bexp));
             }
+            */
+            visitInitialExpression(node.getInitialExpression(), new FieldExpression(node), node);
+            // GRECLIPSE end
         } finally {
             currentField = null;
             typeCheckingContext.isInStaticContext = osc;
         }
     }
+
+    // GRECLIPSE add
+    private void visitInitialExpression(final Expression value, final Expression target, final ASTNode position) {
+        if (value != null) {
+            ClassNode lType = target.getType();
+            if (isFunctionalInterface(lType)) { // GROOVY-9977
+                processFunctionalInterfaceAssignment(lType, value);
+            } else if (isClosureWithType(lType) && value instanceof ClosureExpression) {
+                storeInferredReturnType(value, getCombinedBoundType(lType.getGenericsTypes()[0]));
+            }
+            value.visit(this);
+            ClassNode rType = getType(value);
+            if (value instanceof ConstructorCallExpression) {
+                inferDiamondType((ConstructorCallExpression) value, lType);
+            }
+
+            BinaryExpression bexp = assignX(target, value, position);
+            typeCheckAssignment(bexp, target, lType, value, getResultType(lType, ASSIGN, rType, bexp));
+        }
+    }
+    // GRECLIPSE end
 
     @Override
     public void visitForLoop(final ForStatement forLoop) {
@@ -2577,6 +2598,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         typeCheckingContext.isInStaticContext = oldStaticContext;
         for (Parameter parameter : getParametersSafe(expression)) {
             typeCheckingContext.controlStructureVariables.remove(parameter);
+            // GRECLIPSE add -- GROOVY-10072: visit param default argument expression if present
+            visitInitialExpression(parameter.getInitialExpression(), varX(parameter), parameter);
+            // GRECLIPSE end
         }
     }
 
@@ -3622,6 +3646,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else if (objectExpression instanceof ClosureExpression) {
                     // we can get actual parameters directly
                     Parameter[] parameters = ((ClosureExpression) objectExpression).getParameters();
+                    // GRECLIPSE add
+                    if (parameters != null)
+                    // GRECLIPSE end
                     typeCheckClosureCall(callArguments, args, parameters);
                     ClassNode data = getInferredReturnType(objectExpression);
                     if (data != null) {
@@ -4107,6 +4134,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void typeCheckClosureCall(final Expression callArguments, final ClassNode[] args, final Parameter[] parameters) {
+        /* GRECLIPSE edit -- GROOVY-10071, GROOVY-10072
         if (allParametersAndArgumentsMatch(parameters, args) < 0 &&
                 lastArgMatchesVarg(parameters, args) < 0) {
             StringBuilder sb = new StringBuilder("[");
@@ -4118,6 +4146,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             sb.append("]");
             addStaticTypeError("Closure argument types: " + sb + " do not match with parameter types: " + formatArgumentList(args), callArguments);
         }
+        */
+        if (allParametersAndArgumentsMatchWithDefaultParams(parameters, args) < 0 && lastArgMatchesVarg(parameters, args) < 0) {
+            addStaticTypeError("Cannot call closure that accepts " + formatArgumentList(extractTypesFromParameters(parameters)) + " with " + formatArgumentList(args), callArguments);
+        }
+        // GRECLIPSE end
     }
 
     @Override
@@ -6063,6 +6096,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected static String formatArgumentList(final ClassNode[] nodes) {
         if (nodes == null || nodes.length == 0) return "[]";
+        /* GRECLIPSE edit
         StringBuilder sb = new StringBuilder(24 * nodes.length);
         sb.append('[');
         for (ClassNode node : nodes) {
@@ -6073,6 +6107,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             sb.setCharAt(sb.length() - 2, ']');
         }
         return sb.toString();
+        */
+        StringJoiner joiner = new StringJoiner(", ", "[", "]");
+        for (ClassNode node : nodes) {
+            joiner.add(prettyPrintType(node));
+        }
+        return joiner.toString();
+        // GRECLIPSE end
     }
 
     private static void putSetterInfo(final Expression exp, final SetterInfo info) {

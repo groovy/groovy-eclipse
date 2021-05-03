@@ -198,7 +198,7 @@ public class ClosureWriter {
             parameters = Parameter.EMPTY_ARRAY;
         } else if (parameters.length == 0) {
             // let's create a default 'it' parameter
-            Parameter it = new Parameter(ClassHelper.OBJECT_TYPE, "it", ConstantExpression.NULL);
+            Parameter it = new Parameter(ClassHelper.OBJECT_TYPE, "it", new ConstantExpression(null));
             parameters = new Parameter[]{it};
             Variable ref = expression.getVariableScope().getDeclaredVariable("it");
             if (ref!=null) it.setClosureSharedVariable(ref.isClosureSharedVariable());

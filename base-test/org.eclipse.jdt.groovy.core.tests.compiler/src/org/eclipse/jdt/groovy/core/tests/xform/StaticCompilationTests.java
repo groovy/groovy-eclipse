@@ -333,7 +333,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\tdef list = new LinkedList<String>([1,2,3])\n" +
             "\t           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call java.util.LinkedList#<init>(java.util.Collection<? extends java.lang.String>) with arguments [java.util.List<java.lang.Integer>] \n" +
+            "Groovy:[Static type checking] - Cannot call java.util.LinkedList#<init>(java.util.Collection<? extends java.lang.String>) with arguments [java.util.List<java.lang.Integer>]\n" +
             "----------\n");
     }
 
@@ -4551,7 +4551,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class<? extends java.lang.CharSequence>) with arguments [java.lang.Class<?>] \n" +
+            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class<? extends java.lang.CharSequence>) with arguments [java.lang.Class<?>]\n" +
             "----------\n");
     }
 
@@ -4577,7 +4577,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class<? super java.lang.CharSequence>) with arguments [java.lang.Class<?>] \n" +
+            "Groovy:[Static type checking] - Cannot call Main#meth(java.lang.Class<? super java.lang.CharSequence>) with arguments [java.lang.Class<?>]\n" +
             "----------\n");
     }
 
@@ -6165,5 +6165,45 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "[a:1, bc:2, def:3]");
+    }
+
+    @Test
+    public void testCompileStatic10071() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = { ... zeroOrMore -> 'foo' + zeroOrMore }\n" +
+            "  assert c('bar', 'baz') == 'foo[bar, baz]'\n" +
+            "  assert c('bar') == 'foo[bar]'\n" +
+            "  assert c() == 'foo[]'\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic10072() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = { p = 'foo' -> return p }\n" +
+            "  assert c('bar') == 'bar'\n" +
+            "  assert c() == 'foo'\n" +
+            "  c = { p, q = 'baz' -> '' + p + q }\n" +
+            "  assert c('foo', 'bar') == 'foobar'\n" +
+            "  assert c('foo') == 'foobaz'\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }
