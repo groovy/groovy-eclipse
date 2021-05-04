@@ -767,6 +767,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8974() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T identity(T t) { t }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  List<String> list = identity(new ArrayList<>())\n" +
+            "  list.add('foo'); print list.get(0).toUpperCase()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "FOO");
+    }
+
+    @Test
     public void testTypeChecked8983() {
         //@formatter:off
         String[] sources = {
