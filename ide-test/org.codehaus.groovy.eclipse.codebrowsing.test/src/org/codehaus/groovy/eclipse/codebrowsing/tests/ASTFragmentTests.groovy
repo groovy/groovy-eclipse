@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind.*
 import static org.junit.Assert.*
 
 import org.codehaus.groovy.ast.stmt.Statement
@@ -40,7 +41,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText('a')
         assertEquals("Wrong number of fragments: $first", 1, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -49,7 +50,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText('a+b')
         assertEquals("Wrong number of fragments: $first", 2, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.BINARY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, BINARY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -58,7 +59,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText('a .    b')
         assertEquals("Wrong number of fragments: $first", 2, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -67,7 +68,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText('a .&    b')
         assertEquals("Wrong number of fragments: $first", 2, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.METHOD_POINTER, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, METHOD_POINTER, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -76,7 +77,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText('a .    b(f).j')
         assertEquals("Wrong number of fragments: $first", 3, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, METHOD_CALL, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -85,7 +86,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText('a.j.b(f)')
         assertEquals("Wrong number of fragments: $first", 3, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, PROPERTY, METHOD_CALL)
     }
 
     @Test
@@ -94,7 +95,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText('b(f).j.a')
         assertEquals("Wrong number of fragments: $first", 4, first.fragmentLength()) // implicit this
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, METHOD_CALL, PROPERTY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -104,7 +105,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         // two fragments because of implicit this expression
         assertEquals("Wrong number of fragments: $first", 2, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, METHOD_CALL)
     }
 
     @Test
@@ -115,9 +116,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         // note also that the method pointer is replaced by the method call
         assertEquals("Wrong number of fragments: $first", 8, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL,
-            ASTFragmentKind.METHOD_CALL, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.PROPERTY,
-            ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, METHOD_CALL, METHOD_CALL, METHOD_CALL, PROPERTY, PROPERTY, METHOD_CALL, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -127,9 +126,28 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         // extra starting fragment because of implicit this expression
         assertEquals("Wrong number of fragments: $first", 8, first.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL,
-            ASTFragmentKind.METHOD_CALL, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.PROPERTY,
-            ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, METHOD_CALL, METHOD_CALL, METHOD_CALL, PROPERTY, PROPERTY, METHOD_CALL, SIMPLE_EXPRESSION)
+    }
+
+    @Test
+    void testASTFragment11() {
+        IASTFragment fragment = createFragmentFromText('a.(b.c())')
+        assertEquals("Wrong number of fragments: $fragment", 2, fragment.fragmentLength())
+        new TestFragmentVisitor().checkExpectedKinds(fragment, PROPERTY, SIMPLE_EXPRESSION)
+    }
+
+    @Test
+    void testASTFragment12() {
+        IASTFragment fragment = createFragmentFromText('a.(b.(c.d()))')
+        assertEquals("Wrong number of fragments: $fragment", 2, fragment.fragmentLength())
+        new TestFragmentVisitor().checkExpectedKinds(fragment, PROPERTY, SIMPLE_EXPRESSION)
+    }
+
+    @Test
+    void testASTFragment13() {
+        IASTFragment fragment = createFragmentFromText('a.(b.c()).d')
+        assertEquals("Wrong number of fragments: $fragment", 3, fragment.fragmentLength())
+        new TestFragmentVisitor().checkExpectedKinds(fragment, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -139,8 +157,8 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText(contents, 0, contents.indexOf('.d'))
         assertEquals("Wrong number of fragments: $second", 3, second.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(second, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -152,8 +170,8 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         // fragments should not match because property-based fragments only
         // match from the beginning
         assertFragmentDifferent(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(second, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -163,21 +181,19 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText(contents, 0, contents.indexOf('da'))
         assertEquals("Wrong number of fragments: $second", 3, second.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(second, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
     }
 
     @Test
     void testASTSubFragment2b() {
         IASTFragment first = createFragmentFromText('a.b.c')
-        String contents = 'zzz.a.b.c.dddda'
-        IASTFragment second = createFragmentFromText(contents, 2, contents.indexOf('da'))
+        IASTFragment second = createFragmentFromText('zzz.a.b.c.dddda', 2, 13)
         assertEquals("Wrong number of fragments: $second", 3, second.fragmentLength())
-        // fragments should not match because property-based fragments only
-        // match from the beginning
-        assertFragmentDifferent(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        // fragments should not match because property-based fragments only match from the beginning
+        assertFragmentDifferent(first, second) // variable.constant.constant vs constant.constant.constant
+        new TestFragmentVisitor().checkExpectedKinds(first, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(second, PROPERTY, PROPERTY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -187,7 +203,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText(contents, 4, contents.indexOf(' >>'))
         assertEquals("Wrong number of fragments: $second", 3, second.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(second, BINARY, BINARY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -197,7 +213,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText(contents, 4, contents.indexOf(' >>') + 2)
         assertEquals("Wrong number of fragments: $second", 3, second.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(second, BINARY, BINARY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -207,7 +223,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText(contents, 0, contents.indexOf(')'))
         assertEquals("Wrong number of fragments: $second", 2, second.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL)
+        new TestFragmentVisitor().checkExpectedKinds(second, PROPERTY, METHOD_CALL)
     }
 
     @Test
@@ -217,7 +233,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         IASTFragment second = createFragmentFromText(contents, contents.indexOf('c'), contents.length())
         assertEquals("Wrong number of fragments: $second", 3, second.fragmentLength())
         assertFragmentSame(first, second)
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY, ASTFragmentKind.SIMPLE_EXPRESSION)
+        new TestFragmentVisitor().checkExpectedKinds(second, BINARY, BINARY, SIMPLE_EXPRESSION)
     }
 
     @Test
@@ -367,7 +383,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
     //--------------------------------------------------------------------------
 
     private void assertIsEmptyFragment(IASTFragment fragment) {
-        assertEquals("Fragment should be empty:\n${fragment}", ASTFragmentKind.EMPTY, fragment.kind())
+        assertEquals("Fragment should be empty:\n${fragment}", EMPTY, fragment.kind())
     }
 
     private void assertFragmentSame(IASTFragment first, IASTFragment second) {

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.fragments;
 
+import java.util.Objects;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.IsSameExpression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.Assert;
 
 /**
  * An {@link IASTFragment} that is a part of a binary expression.
@@ -28,14 +29,12 @@ public class PropertyExpressionFragment implements IASTFragment {
 
     private final ASTFragmentKind kind;
     private final Expression expression;
-
     private final IASTFragment next;
 
-    PropertyExpressionFragment(ASTFragmentKind token, Expression expression, IASTFragment next) {
-        Assert.isNotNull(next);
-        this.kind = token;
+    PropertyExpressionFragment(final ASTFragmentKind kind, final Expression expression, final IASTFragment next) {
+        this.kind = kind;
         this.expression = expression;
-        this.next = next;
+        this.next = Objects.requireNonNull(next);
     }
 
     @Override
@@ -64,12 +63,12 @@ public class PropertyExpressionFragment implements IASTFragment {
     }
 
     @Override
-    public int getTrimmedEnd(GroovyCompilationUnit unit) {
+    public int getTrimmedEnd(final GroovyCompilationUnit unit) {
         return getNext().getTrimmedEnd(unit);
     }
 
     @Override
-    public int getTrimmedLength(GroovyCompilationUnit unit) {
+    public int getTrimmedLength(final GroovyCompilationUnit unit) {
         return getTrimmedEnd(unit) - getStart();
     }
 
@@ -78,15 +77,11 @@ public class PropertyExpressionFragment implements IASTFragment {
     }
 
     @Override
-    public boolean matches(IASTFragment other) {
-        if (!(other instanceof PropertyExpressionFragment)) {
-            return false;
-        }
-
-        PropertyExpressionFragment otherBinary = (PropertyExpressionFragment) other;
-        return otherBinary.kind() == this.kind &&
-            new IsSameExpression().isSame(expression, otherBinary.getAssociatedExpression()) &&
-            this.next.matches(otherBinary.getNext());
+    public boolean matches(final IASTFragment that) {
+        if (that == this) return true;
+        if (that == null || !(that instanceof PropertyExpressionFragment)) return false;
+        PropertyExpressionFragment propertyFragment = (PropertyExpressionFragment) that;
+        return propertyFragment.kind() == kind && new IsSameExpression().isSame(expression, propertyFragment.getAssociatedExpression()) && next.matches(propertyFragment.getNext());
     }
 
     @Override
@@ -95,7 +90,7 @@ public class PropertyExpressionFragment implements IASTFragment {
     }
 
     @Override
-    public String print(int indentLvl) {
+    public String print(final int indentLvl) {
         return ASTFragmentFactory.spaces(indentLvl) + "(P) " + expression.toString() + "\n" + next.print(indentLvl + 1);
     }
 
@@ -105,7 +100,7 @@ public class PropertyExpressionFragment implements IASTFragment {
     }
 
     @Override
-    public void accept(FragmentVisitor visitor) {
+    public void accept(final FragmentVisitor visitor) {
         if (visitor.previsit(this) && visitor.visit(this)) {
             next.accept(visitor);
         }
@@ -120,7 +115,7 @@ public class PropertyExpressionFragment implements IASTFragment {
      * must match from the beginning of each fragment
      */
     @Override
-    public IASTFragment findMatchingSubFragment(IASTFragment other) {
+    public IASTFragment findMatchingSubFragment(final IASTFragment other) {
         if (this.fragmentLength() < other.fragmentLength()) {
             return new EmptyASTFragment();
         }

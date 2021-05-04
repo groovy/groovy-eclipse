@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -254,16 +254,12 @@ public class ASTTools {
     }
 
     public static ClassNode getContainingClassNode(ModuleNode moduleNode, int offset) {
-        ClassNode containingClassNode = null;
-        ClassNode scriptClass = null;
-        List<ClassNode> classes = moduleNode.getClasses();
-        for (ClassNode clazz : (Iterable<ClassNode>) classes) {
-            if (clazz.isScript()) {
-                scriptClass = clazz;
-            } else {
-                if (clazz.getStart() <= offset && clazz.getEnd() >= offset) {
-                    containingClassNode = clazz;
-                }
+        ClassNode containingClassNode = null, scriptClass = null;
+        for (ClassNode classNode : moduleNode.getClasses()) {
+            if (classNode.isScript()) {
+                scriptClass = classNode;
+            } else if (classNode.getStart() <= offset && classNode.getEnd() >= offset) {
+                containingClassNode = classNode;
             }
         }
         if (containingClassNode == null) {
@@ -277,7 +273,7 @@ public class ASTTools {
             // look for inner classes
             for (Iterator<InnerClassNode> it = containingClassNode.getInnerClasses(); it.hasNext();) {
                 InnerClassNode innerClass = it.next();
-                if (innerClass.getStart() <= offset && innerClass.getEnd() >= offset) {
+                if (innerClass.getStart() <= offset && innerClass.getEnd() >= offset && !innerClass.isSynthetic()) {
                     containingClassNode = innerClass;
                     it = innerClass.getInnerClasses();
                 }

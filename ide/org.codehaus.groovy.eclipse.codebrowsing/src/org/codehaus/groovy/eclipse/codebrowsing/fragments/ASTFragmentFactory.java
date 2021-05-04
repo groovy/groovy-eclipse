@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@ package org.codehaus.groovy.eclipse.codebrowsing.fragments;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import groovy.lang.Reference;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -32,13 +34,12 @@ import org.codehaus.groovy.syntax.Token;
 import org.eclipse.core.runtime.Assert;
 
 /**
- * Factory class to create an AST Fragment for a given expression.
- * Only works on expressions now, but consider expanding to statements in the
- * future if required.
+ * Factory class to create an AST Fragment for a given expression. Only works on
+ * expressions now, but consider expanding to statements in the future.
  */
 public class ASTFragmentFactory {
 
-    public IASTFragment createFragment(ASTNode node) {
+    public IASTFragment createFragment(final ASTNode node) {
         if (node instanceof Expression) {
             return createFragment((Expression) node, node.getStart(), node.getEnd());
         } else {
@@ -46,11 +47,11 @@ public class ASTFragmentFactory {
         }
     }
 
-    public IASTFragment createFragment(Expression expression) {
+    public IASTFragment createFragment(final Expression expression) {
         return createFragment(expression, expression.getStart(), expression.getEnd());
     }
 
-    public IASTFragment createFragment(Expression expression, int start, int end) {
+    public IASTFragment createFragment(Expression expression, final int start, final int end) {
         Assert.isLegal(expression.getStart() <= start, "Invalid start position: " + start);
         Assert.isLegal(expression.getEnd() >= end, "Invalid end position: " + end);
 
@@ -70,21 +71,20 @@ public class ASTFragmentFactory {
         if (expression instanceof BinaryExpression) {
             IASTFragment fragment = createBinaryFragment((BinaryExpression) expression, start, end);
             if (expression instanceof DeclarationExpression) {
-                // we have a declaration, must include the type in the start position
+                // for declaration, include the type in the start position
                 if (fragment.kind() == ASTFragmentKind.BINARY) {
                     ((BinaryExpressionFragment) fragment).setActualStartPosition(((DeclarationExpression) expression).getStart());
-                } else if (fragment.kind() == ASTFragmentKind.SIMPLE_EXPRESSION) {
-                    // declaration without an assignment
+                } else if (fragment.kind() == ASTFragmentKind.SIMPLE_EXPRESSION) { // declaration without an assignment
                     ((SimpleExpressionASTFragment) fragment).setActualStartPosition(((DeclarationExpression) expression).getStart());
                 }
             }
             return fragment;
         } else if (expression instanceof PropertyExpression) {
-            return createPropertyBasedFragment(expression, start, end);
+            return createPropertyFragment(expression, start, end);
         } else if (expression instanceof MethodCallExpression) {
-            return createPropertyBasedFragment(expression, start, end);
+            return createPropertyFragment(expression, start, end);
         } else if (expression instanceof MethodPointerExpression) {
-            return createPropertyBasedFragment(expression, start, end);
+            return createPropertyFragment(expression, start, end);
         } else if (expression.getStart() == start && expression.getEnd() == end) {
             return new SimpleExpressionASTFragment(expression);
         } else {
@@ -92,47 +92,48 @@ public class ASTFragmentFactory {
         }
     }
 
-    private IASTFragment createBinaryFragment(BinaryExpression expression, int start, int end) {
+    private IASTFragment createBinaryFragment(final BinaryExpression expression, final int start, final int end) {
         // tokens list will be one shorter than the exprs list
-        List<Expression> exprs = new ArrayList<>();
+        List<Expression> expressions = new ArrayList<>();
         List<Token> tokens = new ArrayList<>();
-        walkBinaryExpr(expression, exprs, tokens);
-        Expression firstExpr = exprs.get(exprs.size() - 1);
-        IASTFragment next = new EmptyASTFragment();
-        if (firstExpr.getStart() >= start && firstExpr.getEnd() <= end) {
-            next = new SimpleExpressionASTFragment(firstExpr);
+
+        Reference<java.util.function.Consumer<BinaryExpression>> walker = new Reference<>();
+        walker.set((BinaryExpression bin) -> {
+            if (bin.getLeftExpression() instanceof BinaryExpression) {
+                walker.get().accept((BinaryExpression) bin.getLeftExpression());
+            } else {
+                expressions.add(bin.getLeftExpression());
+            }
+
+            tokens.add(bin.getOperation());
+
+            if (bin.getRightExpression() instanceof BinaryExpression) {
+                walker.get().accept((BinaryExpression) bin.getRightExpression());
+            } else {
+                expressions.add(bin.getRightExpression());
+            }
+        });
+        walker.get().accept(expression);
+
+        IASTFragment fragment = new EmptyASTFragment();
+        Expression lastExpr = expressions.get(expressions.size() - 1);
+        if (lastExpr.getStart() >= start && lastExpr.getEnd() <= end) {
+            fragment = new SimpleExpressionASTFragment(lastExpr);
         }
         for (int i = tokens.size() - 1; i >= 0; i -= 1) {
-            Expression nextExpr = exprs.get(i);
+            Expression nextExpr = expressions.get(i);
             if (nextExpr.getStart() >= start && nextExpr.getEnd() <= end) {
-                if (next.kind() == ASTFragmentKind.EMPTY) {
-                    next = new SimpleExpressionASTFragment(nextExpr);
+                if (fragment.kind() == ASTFragmentKind.EMPTY) {
+                    fragment = new SimpleExpressionASTFragment(nextExpr);
                 } else {
-                    next = new BinaryExpressionFragment(tokens.get(i), nextExpr, next);
+                    fragment = new BinaryExpressionFragment(tokens.get(i), nextExpr, fragment);
                 }
             }
         }
-        return next;
+        return fragment;
     }
 
-    /**
-     * Flattens a binary expression into components
-     */
-    private void walkBinaryExpr(BinaryExpression expression, List<Expression> exprs, List<Token> tokens) {
-        if (expression.getLeftExpression() instanceof BinaryExpression) {
-            walkBinaryExpr((BinaryExpression) expression.getLeftExpression(), exprs, tokens);
-        } else {
-            exprs.add(expression.getLeftExpression());
-        }
-        tokens.add(expression.getOperation());
-        if (expression.getRightExpression() instanceof BinaryExpression) {
-            walkBinaryExpr((BinaryExpression) expression.getRightExpression(), exprs, tokens);
-        } else {
-            exprs.add(expression.getRightExpression());
-        }
-    }
-
-    private IASTFragment createPropertyBasedFragment(Expression expression, int start, int end) {
+    private IASTFragment createPropertyFragment(final Expression expression, final int start, final int end) {
         // kinds list will be same size as exprs list
         // args list will contain nulls for items that are not method calls
         List<ASTFragmentKind> kinds = new ArrayList<>();
@@ -146,104 +147,102 @@ public class ASTFragmentFactory {
         // ensure that method calls include the closing paren
         List<Integer> ends = new ArrayList<>();
 
-        walkPropertyExpr(expression, exprs, args, kinds, ends);
+        Reference<java.util.function.Consumer<Expression>> walker = new Reference<>();
+        walker.set(nextExpression -> {
+            ASTFragmentKind kind = ASTFragmentKind.SIMPLE_EXPRESSION;
+            Expression last = nextExpression, aExpr = null;
+            Integer until = null;
 
-        // return an empty fragment if there are no complete matches
-        IASTFragment prev = new EmptyASTFragment();
+            if (nextExpression instanceof PropertyExpression) {
+                PropertyExpression propExpression = (PropertyExpression) nextExpression;
+                walker.get().accept(propExpression.getObjectExpression());
+                last = propExpression.getProperty();
+                int lastIndex = kinds.size() - 1;
+                if (kinds.get(lastIndex) == ASTFragmentKind.SIMPLE_EXPRESSION) {
+                    kinds.set(lastIndex, ASTFragmentKind.toPropertyKind(propExpression));
+                    args.set(lastIndex, null);
+                }
+            } else if (nextExpression instanceof MethodCallExpression) {
+                MethodCallExpression callExpression = (MethodCallExpression) nextExpression;
+                walker.get().accept(callExpression.getObjectExpression());
+                int lastIndex = kinds.size() - 1;
+                if (kinds.get(lastIndex) == ASTFragmentKind.SIMPLE_EXPRESSION) {
+                    kinds.set(lastIndex, callExpression.isSpreadSafe() ? ASTFragmentKind.SPREAD_SAFE_PROPERTY
+                        : callExpression.isSafe() ? ASTFragmentKind.SAFE_PROPERTY : ASTFragmentKind.PROPERTY);
+                    args.set(lastIndex, null);
+                }
+                kind = ASTFragmentKind.METHOD_CALL;
+                last = callExpression.getMethod();
+                aExpr = callExpression.getArguments();
+                until = callExpression.getEnd();
+                //
+            } else if (nextExpression instanceof MethodPointerExpression) {
+                walker.get().accept(((MethodPointerExpression) nextExpression).getExpression());
+                last = ((MethodPointerExpression) nextExpression).getMethodName();
+                int lastIndex = kinds.size() - 1;
+                if (kinds.get(lastIndex) == ASTFragmentKind.SIMPLE_EXPRESSION) {
+                    kinds.set(lastIndex, ASTFragmentKind.METHOD_POINTER);
+                    args.set(lastIndex, null);
+                }
+            }
+
+            if (until == null)
+                until = last.getEnd();
+
+            kinds.add(kind);
+            exprs.add(last);
+            args.add(aExpr);
+            ends.add(until);
+        });
+        walker.get().accept(expression);
 
         // closure calls are implicitly converted into method calls with 'call' as the method name
         // we need to handle this case specially and ignore this and make the next fragment a method call instead
         boolean wasImplicitCall = false;
-        Expression firstExpr = exprs.get(exprs.size() - 1);
-        if (firstExpr.getStart() >= start && firstExpr.getEnd() <= end) {
+
+        IASTFragment fragment = new EmptyASTFragment();
+        Expression lastExpr = exprs.get(exprs.size() - 1);
+        if (lastExpr.getStart() >= start && lastExpr.getEnd() <= end) {
             if (kinds.get(kinds.size() - 1) == ASTFragmentKind.METHOD_CALL) {
-                MethodCallFragment frag = new MethodCallFragment(firstExpr, args.get(exprs.size() - 1), ends.get(exprs.size() - 1));
+                MethodCallFragment frag = new MethodCallFragment(lastExpr, args.get(exprs.size() - 1), ends.get(exprs.size() - 1));
                 frag.callExpression = (MethodCallExpression) expression;
-                prev = frag;
+                fragment = frag;
             } else {
-                prev = new SimpleExpressionASTFragment(firstExpr);
+                fragment = new SimpleExpressionASTFragment(lastExpr);
             }
-        } else if (checkWasImplicitCall(firstExpr)) {
+        } else if (isCallImplicit(lastExpr)) {
             wasImplicitCall = true;
         }
         for (int i = exprs.size() - 2; i >= 0; i -= 1) {
             Expression expr = exprs.get(i);
             if (expr.getStart() >= start && expr.getEnd() <= end) {
                 if (kinds.get(i) == ASTFragmentKind.METHOD_CALL) {
-                    prev = new MethodCallFragment(expr, args.get(i), prev.kind() == ASTFragmentKind.EMPTY ? null : prev, ends.get(i));
+                    fragment = new MethodCallFragment(expr, args.get(i), fragment.kind() == ASTFragmentKind.EMPTY ? null : fragment, ends.get(i));
                 } else {
-                    if (prev.kind() == ASTFragmentKind.EMPTY) {
+                    if (fragment.kind() == ASTFragmentKind.EMPTY) {
                         if (!wasImplicitCall) {
-                            prev = new SimpleExpressionASTFragment(expr);
+                            fragment = new SimpleExpressionASTFragment(expr);
                         } else {
-                            prev = new MethodCallFragment(expr, args.get(i + 1), null, ends.get(i));
+                            fragment = new MethodCallFragment(expr, args.get(i + 1), null, ends.get(i));
                         }
                     } else {
                         if (!wasImplicitCall) {
-                            prev = new PropertyExpressionFragment(kinds.get(i), expr, prev);
+                            fragment = new PropertyExpressionFragment(kinds.get(i), expr, fragment);
                         } else {
-                            prev = new MethodCallFragment(expr, args.get(i + 1), prev, ends.get(i));
+                            fragment = new MethodCallFragment(expr, args.get(i + 1), fragment, ends.get(i));
                         }
                     }
                 }
                 wasImplicitCall = false;
-            } else if (checkWasImplicitCall(expr)) {
+            } else if (isCallImplicit(expr)) {
                 wasImplicitCall = true;
             }
         }
-        return prev;
+        return fragment;
     }
 
-    private boolean checkWasImplicitCall(Expression firstExpr) {
-        return firstExpr.getEnd() == 0 &&
-            firstExpr instanceof ConstantExpression &&
-            ((ConstantExpression) firstExpr).getText().equals("call");
-    }
-
-    private void walkPropertyExpr(Expression startExpression, List<Expression> targetExprs, List<Expression> targetArgs, List<ASTFragmentKind> targetKinds, List<Integer> targetEnds) {
-        if (startExpression instanceof PropertyExpression) {
-            PropertyExpression propertyExpression = (PropertyExpression) startExpression;
-            ASTFragmentKind kind = ASTFragmentKind.toPropertyKind(propertyExpression);
-            walkPropertyExpr(propertyExpression.getObjectExpression(), targetExprs, targetArgs, targetKinds, targetEnds);
-            int toRemove = targetKinds.size() - 1;
-            if (targetKinds.get(toRemove) == ASTFragmentKind.SIMPLE_EXPRESSION) {
-                // need to replace with a property
-                targetKinds.set(toRemove, kind);
-                targetArgs.set(toRemove, null);
-            }
-            walkPropertyExpr(propertyExpression.getProperty(), targetExprs, targetArgs, targetKinds, targetEnds);
-        } else if (startExpression instanceof MethodCallExpression) {
-            MethodCallExpression methodCallExpression = (MethodCallExpression) startExpression;
-            walkPropertyExpr(methodCallExpression.getObjectExpression(), targetExprs, targetArgs, targetKinds, targetEnds);
-            int toRemove = targetKinds.size() - 1;
-            if (targetKinds.get(toRemove) == ASTFragmentKind.SIMPLE_EXPRESSION) {
-                // need to replace with a property
-                targetKinds.set(toRemove, ASTFragmentKind.PROPERTY);
-                targetArgs.set(toRemove, null);
-            }
-            walkPropertyExpr(methodCallExpression.getMethod(), targetExprs, targetArgs, targetKinds, targetEnds);
-            // replace the last with method call since we need to add arguments here
-            toRemove = targetKinds.size() - 1;
-            targetKinds.set(toRemove, ASTFragmentKind.METHOD_CALL);
-            targetArgs.set(toRemove, methodCallExpression.getArguments());
-            targetEnds.set(toRemove, methodCallExpression.getEnd());
-        } else if (startExpression instanceof MethodPointerExpression) {
-            MethodPointerExpression methodPointerExpression = (MethodPointerExpression) startExpression;
-            walkPropertyExpr(methodPointerExpression.getExpression(), targetExprs, targetArgs, targetKinds, targetEnds);
-            int toRemove = targetKinds.size() - 1;
-            if (targetKinds.get(toRemove) == ASTFragmentKind.SIMPLE_EXPRESSION) {
-                // need to replace with a method pointer
-                targetKinds.set(toRemove, ASTFragmentKind.METHOD_POINTER);
-                targetArgs.set(toRemove, null);
-            }
-            walkPropertyExpr(methodPointerExpression.getMethodName(), targetExprs, targetArgs, targetKinds, targetEnds);
-        } else {
-            // we should only have this kind of fragment as the last one
-            targetKinds.add(ASTFragmentKind.SIMPLE_EXPRESSION);
-            targetArgs.add(null);
-            targetExprs.add(startExpression);
-            targetEnds.add(startExpression.getEnd());
-        }
+    private static boolean isCallImplicit(final Expression e) {
+        return e.getEnd() == 0 && e instanceof ConstantExpression && ((ConstantExpression) e).getText().equals("call");
     }
 
     public static String spaces(int num) {
