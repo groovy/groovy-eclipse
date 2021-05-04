@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,9 +48,8 @@ public final class GrabTests extends GroovyCompilerTestSuite {
     /**
      * This program has a broken grab. Without changes we get a 'general error'
      * recorded on the first line of the source file (big juicy exception).
-     * General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]
-     * java.lang.RuntimeException: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]
-     *
+     * General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.x: not found]
+     * <p>
      * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
      */
     @Test
@@ -94,8 +93,8 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@GrabResolver(name='restlet.org', root='http://maven.restlet.org')\n" +
-            "@Grab(group='org.restlet', module='org.restlet', version='1.1.6')\n" +
+            "@GrabResolver(name='restlet', root='https://maven.restlet.talend.com')\n" +
+            "@Grab(group='org.restlet.jse', module='org.restlet', version='2.4.3')\n" +
             "import org.restlet.Restlet\n",
         };
         //@formatter:on
