@@ -265,7 +265,7 @@ public class GenericsType extends ASTNode {
                 // if the classnode we compare to is a generics placeholder (like <E>) then we
                 // only need to check that the names are equal
                 if (genericsTypes==null) return true;
-                /* GRECLIPSE edit
+                /* GRECLIPSE edit -- GROOVY-9945, GROOVY-10067
                 if (isWildcard()) {
                     if (lowerBound!=null) return genericsTypes[0].getName().equals(lowerBound.getUnresolvedName());
                     if (upperBounds!=null) {
@@ -280,15 +280,19 @@ public class GenericsType extends ASTNode {
                 return genericsTypes[0].getName().equals(name);
                 */
                 String name0 = genericsTypes[0].getName();
-                if (isWildcard()) {
-                    if (getLowerBound() != null) {
-                        return name0.equals(getLowerBound().getUnresolvedName());
+                if (!isWildcard()) {
+                    return name0.equals(getName());
+                }
+                if (getLowerBound() != null) {
+                    if (name0.equals(getLowerBound().getUnresolvedName())) {
+                        return true;
                     }
-                    if (getUpperBounds() != null) {
-                        return name0.equals(getUpperBounds()[0].getUnresolvedName());
+                } else if (getUpperBounds() != null) {
+                    if (name0.equals(getUpperBounds()[0].getUnresolvedName())) {
+                        return true;
                     }
                 }
-                return name0.equals(getName());
+                return checkGenerics(classNode);
                 // GRECLIPSE end
             }
             if (wildcard || placeholder) {

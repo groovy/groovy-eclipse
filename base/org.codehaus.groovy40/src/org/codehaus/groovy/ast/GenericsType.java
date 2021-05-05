@@ -230,6 +230,7 @@ public class GenericsType extends ASTNode {
             if (genericsTypes == null) {
                 return true;
             }
+            /* GRECLIPSE edit -- GROOVY-10067
             if (isWildcard()) {
                 if (getLowerBound() != null) {
                     ClassNode lowerBound = getLowerBound();
@@ -245,6 +246,22 @@ public class GenericsType extends ASTNode {
                 }
             }
             return genericsTypes[0].name.equals(name);
+            */
+            String name0 = genericsTypes[0].getName();
+            if (!isWildcard()) {
+                return name0.equals(getName());
+            }
+            if (getLowerBound() != null) {
+                if (name0.equals(getLowerBound().getUnresolvedName())) {
+                    return true;
+                }
+            } else if (getUpperBounds() != null) {
+                if (name0.equals(getUpperBounds()[0].getUnresolvedName())) {
+                    return true;
+                }
+            }
+            return checkGenerics(classNode);
+            // GRECLIPSE end
         }
         if (isWildcard() || isPlaceholder()) {
             // if the generics spec is a wildcard or a placeholder then check the bounds

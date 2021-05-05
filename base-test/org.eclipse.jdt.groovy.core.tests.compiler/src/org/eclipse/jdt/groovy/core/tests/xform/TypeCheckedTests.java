@@ -2411,4 +2411,38 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "42");
     }
+
+    @Test
+    public void testTypeChecked10067() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <N extends Number> N getNumber() {\n" +
+            "  return (N) 42\n" +
+            "}\n" +
+            "def f(Integer i) {\n" +
+            "}\n" +
+            "def g(int i) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Integer i = this.<Integer>getNumber()\n" +
+            "  f(this.<Integer>getNumber())\n" +
+            "  g(this.<Integer>getNumber())\n" +
+            "  i = (Integer) getNumber()\n" +
+            "  f((Integer) getNumber())\n" +
+            "  g((Integer) getNumber())\n" +
+            "  i = getNumber()\n" +
+          //"  f(getNumber())\n" +
+          //"  g(getNumber())\n" +
+            "  i = number\n" +
+          //"  f(number)\n" +
+          //"  g(number)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }

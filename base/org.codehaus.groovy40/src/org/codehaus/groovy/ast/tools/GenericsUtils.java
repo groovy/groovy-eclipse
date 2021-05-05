@@ -163,6 +163,23 @@ public class GenericsUtils {
         if (!node.isUsingGenerics() || !node.isRedirectNode()) return;
         GenericsType[] parameterized = node.getGenericsTypes();
         if (parameterized == null || parameterized.length == 0) return;
+        // GRECLIPSE add -- GROOVY-10067
+        if (node.isGenericsPlaceHolder()) {
+            GenericsType gt = parameterized[0];
+            map.put(new GenericsType.GenericsTypeName(gt.getName()), gt);
+            ClassNode lowerBound = gt.getLowerBound();
+            if (lowerBound != null) {
+                extractPlaceholders(lowerBound, map);
+            }
+            ClassNode[] upperBounds = gt.getUpperBounds();
+            if (upperBounds != null) {
+                for (ClassNode upperBound : upperBounds) {
+                    extractPlaceholders(upperBound, map);
+                }
+            }
+            return;
+        }
+        // GRECLIPSE end
         GenericsType[] redirectGenericsTypes = node.redirect().getGenericsTypes();
         if (redirectGenericsTypes == null ||
                 (node.isGenericsPlaceHolder() && redirectGenericsTypes.length != parameterized.length) /* GROOVY-8609 */ ) {

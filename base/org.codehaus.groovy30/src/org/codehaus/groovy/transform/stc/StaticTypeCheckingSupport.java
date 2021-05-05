@@ -468,12 +468,19 @@ public abstract class StaticTypeCheckingSupport {
             return true;
         }
         if (implementsInterfaceOrIsSubclassOf(type, toBeAssignedTo)) {
+            /* GRECLIPSE edit -- GROOVY-10067
             if (toBeAssignedTo.getGenericsTypes() != null) {
                 // perform additional check on generics
                 // ? extends toBeAssignedTo
                 GenericsType gt = GenericsUtils.buildWildcardType(toBeAssignedTo);
                 return gt.isCompatibleWith(type);
             }
+            */
+            if (toBeAssignedTo.getGenericsTypes() != null) {
+                GenericsType gt = toBeAssignedTo.isGenericsPlaceHolder() ? toBeAssignedTo.getGenericsTypes()[0] : GenericsUtils.buildWildcardType(toBeAssignedTo);
+                return gt.isCompatibleWith(type);
+            }
+            // GRECLIPSE end
             return true;
         }
         // SAM check
@@ -1816,7 +1823,11 @@ public abstract class StaticTypeCheckingSupport {
 
         if (target.isGenericsPlaceHolder()) {
             connections.put(new GenericsTypeName(target.getUnresolvedName()), new GenericsType(type));
-
+        // GRECLIPSE add -- GROOVY-10067
+        } else if (type.isGenericsPlaceHolder()) {
+            // "T extends java.util.List<X> -> java.util.List<E>" vs "java.util.List<E>"
+            extractGenericsConnections(connections, extractType(new GenericsType(type)), target);
+        // GRECLIPSE end
         } else if (type.isArray() && target.isArray()) {
             extractGenericsConnections(connections, type.getComponentType(), target.getComponentType());
 
@@ -2004,11 +2015,12 @@ public abstract class StaticTypeCheckingSupport {
         if (type.isArray()) {
             return applyGenericsContext(spec, type.getComponentType()).makeArray();
         }
-        ClassNode newType = type.getPlainNodeReference();
+      //ClassNode newType = type.getPlainNodeReference();
         GenericsType[] gt = type.getGenericsTypes();
         if (asBoolean(spec)) {
             gt = applyGenericsContext(spec, gt);
         }
+        /* GRECLIPSE edit -- GROOVY-10067
         newType.setGenericsTypes(gt);
         if (type.isGenericsPlaceHolder()) {
             boolean nonTrivial = hasNonTrivialBounds(gt[0]);
@@ -2025,6 +2037,25 @@ public abstract class StaticTypeCheckingSupport {
             newType.setGenericsPlaceHolder(true);
         }
         return newType;
+        */
+        if (!type.isGenericsPlaceHolder()) {
+            ClassNode cn = type.getPlainNodeReference();
+            cn.setGenericsTypes(gt);
+            return cn;
+        }
+        if (gt[0].isPlaceholder()) {
+            if (type.getGenericsTypes()[0] == gt[0]) {
+                return type; // nothing to do
+            } else if (!hasNonTrivialBounds(gt[0])) {
+                ClassNode cn = make(gt[0].getName());
+                cn.setRedirect(type);
+                cn.setGenericsTypes(gt);
+                cn.setGenericsPlaceHolder(true);
+                return cn;
+            }
+        }
+        return getCombinedBoundType(gt[0]);
+        // GRECLIPSE end
     }
 
     static ClassNode getCombinedBoundType(final GenericsType genericsType) {
