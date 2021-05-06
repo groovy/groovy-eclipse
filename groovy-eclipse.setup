@@ -121,7 +121,7 @@
         name="net.sf.eclipsecs.feature.group"
         optional="true"/>
     <repository
-        url="https://checkstyle.github.io/eclipse-cs/update"/>
+        url="https://checkstyle.org/eclipse-cs-update-site"/>
     <description></description>
   </setupTask>
   <setupTask
