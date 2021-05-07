@@ -1597,12 +1597,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                 FieldNode field = current.getDeclaredField(propertyName);
                 if (field == null) {
-                    if (current.getSuperClass() != null) {
-                        queue.addFirst(current.getUnresolvedSuperClass());
-                    }
-                    for (ClassNode face : current.getAllInterfaces()) {
-                        queue.add(GenericsUtils.parameterizeType(current, face));
-                    }
+                    if (current.getSuperClass() != null)
+                        queue.addFirst(current.getSuperClass());
+                    Collections.addAll(queue, current.getInterfaces());
                 }
 
                 // in case of a lookup on Class we look for instance methods on Class
@@ -1701,15 +1698,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             // GROOVY-5568: the property may be defined by DGM
-            List<ClassNode> dgmReceivers = new ArrayList<>(2);
-            dgmReceivers.add(receiverType);
-            if (isPrimitiveType(receiverType))
-                dgmReceivers.add(getWrapper(receiverType));
-            for (ClassNode dgmReceiver : dgmReceivers) {
+            for (ClassNode dgmReceiver : isPrimitiveType(receiverType) ? new ClassNode[]{receiverType, getWrapper(receiverType)} : new ClassNode[]{receiverType}) {
                 List<MethodNode> methods = findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "get" + capName, ClassNode.EMPTY_ARRAY);
                 for (MethodNode method : findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "is" + capName, ClassNode.EMPTY_ARRAY)) {
                     if (Boolean_TYPE.equals(getWrapper(method.getReturnType()))) methods.add(method);
                 }
+                // GRECLIPSE add -- GROOVY-10075
+                if (isUsingGenericsOrIsArrayUsingGenerics(dgmReceiver)) {
+                    methods.removeIf(method ->
+                        !typeCheckMethodsWithGenerics(dgmReceiver, ClassNode.EMPTY_ARRAY, method)
+                    );
+                }
+                // GRECLIPSE end
                 if (!methods.isEmpty()) {
                     List<MethodNode> bestMethods = chooseBestMethod(dgmReceiver, methods, ClassNode.EMPTY_ARRAY);
                     if (bestMethods.size() == 1) {

@@ -20,10 +20,12 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
+import org.eclipse.jdt.core.tests.builder.Problem;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -139,6 +141,71 @@ public final class FullProjectTests extends BuilderTestSuite {
         fullBuild(paths[0]);
         Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));
         assertContainsProblem(problems, "Cannot find matching method Foo#xxx");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10075
+    public void testDefaultGroovyMethodFromProjectDependency() throws Exception {
+        IPath one = env.addProject("One");
+        env.addGroovyJars(one);
+
+        IPath src = env.getPackageFragmentRootPath(one, "src");
+        env.addGroovyClass(src, "p", "X",
+            "package p\n" +
+            "class X {\n" +
+            "  static String getString(Iterable<String> self) {\n" +
+            "  }\n" +
+            "  static <CS extends CharSequence> CharSequence getSequence(Iterable<CS> self) {\n" +
+            "  }\n" +
+            "}\n");
+        env.addFile(env.addFolder(src, "META-INF/groovy"), "org.codehaus.groovy.runtime.ExtensionModule",
+            "moduleName=ecks\n" +
+            "moduleVersion=1.0\n" +
+            "extensionClasses=p.X\n");
+
+        env.fullBuild(one);
+        expectingNoProblemsFor(one);
+
+        //
+
+        IPath two = env.addProject("Two");
+        env.addGroovyJars(two);
+        env.addRequiredTestProject(two, one);
+        src = env.getPackageFragmentRootPath(two, "src");
+
+        IPath bar = env.addGroovyClass(src, "foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    List<String> strings = []\n" +
+            "    strings.getSequence()\n" +
+            "    strings.getString()\n" +
+            "    strings.sequence\n" +
+            "    strings.string\n" +
+            "  }\n" +
+            "}\n");
+
+        IPath baz = env.addGroovyClass(src, "foo", "Baz",
+            "package foo\n" +
+            "class Baz {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    List<Number> numbers = []\n" +
+            "    numbers.getSequence()\n" +
+            "    numbers.getString()\n" +
+            "    numbers.sequence\n" +
+            "    numbers.string\n" +
+            "  }\n" +
+            "}\n");
+
+        env.fullBuild(two);
+        expectingNoProblemsFor(bar);
+        expectingSpecificProblemsFor(baz, new Problem[] {
+            new Problem("foo/Baz", "Groovy:[Static type checking] - Cannot call <CS extends java.lang.CharSequence> java.util.ArrayList#getSequence() with arguments []", baz, 106, 127, 60, IMarker.SEVERITY_ERROR),
+            new Problem("foo/Baz", "Groovy:[Static type checking] - Cannot call java.util.ArrayList#getString() with arguments []", baz, 132, 151, 60, IMarker.SEVERITY_ERROR),
+            new Problem("foo/Baz", "Groovy:[Static type checking] - No such property: sequence for class: java.util.ArrayList", baz, 156, 172, 60, IMarker.SEVERITY_ERROR),
+            new Problem("foo/Baz", "Groovy:[Static type checking] - No such property: string for class: java.util.ArrayList", baz, 177, 191, 60, IMarker.SEVERITY_ERROR),
+        });
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/903

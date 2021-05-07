@@ -1544,11 +1544,10 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     protected static boolean typeCheckMethodsWithGenerics(ClassNode receiver, ClassNode[] arguments, MethodNode candidateMethod) {
-        /* GRECLIPSE edit -- GROOVY-9902
+        /* GRECLIPSE edit -- GROOVY-9902, GROOVY-10075
         if (isUsingUncheckedGenerics(receiver)) {
             return true;
         }
-        */
         if (CLASS_Type.equals(receiver)
                 && receiver.isUsingGenerics()
                 && !candidateMethod.getDeclaringClass().equals(receiver)
@@ -1568,6 +1567,23 @@ public abstract class StaticTypeCheckingSupport {
         } else {
             return typeCheckMethodsWithGenerics(receiver, arguments, candidateMethod, false);
         }
+        */
+        if (candidateMethod instanceof ExtensionMethodNode) {
+            ClassNode[] realTypes = new ClassNode[arguments.length + 1];
+            realTypes[0] = receiver; // object expression is first argument
+            System.arraycopy(arguments, 0, realTypes, 1, arguments.length);
+            MethodNode realMethod = ((ExtensionMethodNode) candidateMethod).getExtensionMethodNode();
+            return typeCheckMethodsWithGenerics(realMethod.getDeclaringClass(), realTypes, realMethod, true);
+        }
+
+        if (receiver.isUsingGenerics()
+                && receiver.equals(CLASS_Type)
+                && !candidateMethod.getDeclaringClass().equals(CLASS_Type)) {
+            return typeCheckMethodsWithGenerics(receiver.getGenericsTypes()[0].getType(), arguments, candidateMethod);
+        }
+
+        return typeCheckMethodsWithGenerics(receiver, arguments, candidateMethod, false);
+        // GRECLIPSE end
     }
 
     private static boolean typeCheckMethodsWithGenerics(ClassNode receiver, ClassNode[] arguments, MethodNode candidateMethod, boolean isExtensionMethod) {

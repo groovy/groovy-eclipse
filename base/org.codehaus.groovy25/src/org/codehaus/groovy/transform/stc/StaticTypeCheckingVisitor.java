@@ -808,7 +808,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (!extension.handleUnresolvedProperty(pexp)) {
                 Expression objectExpression = pexp.getObjectExpression();
                 addStaticTypeError("No such property: " + pexp.getPropertyAsString() +
-                        " for class: " + findCurrentInstanceOfClass(objectExpression, getType(objectExpression)).toString(false), pexp);
+                        " for class: " + prettyPrintTypeName(findCurrentInstanceOfClass(objectExpression, getType(objectExpression))), pexp);
             }
         } finally {
             typeCheckingContext.popEnclosingPropertyExpression();
@@ -825,7 +825,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (!existsProperty(expression, true) && !extension.handleUnresolvedAttribute(expression)) {
             Expression objectExpression = expression.getObjectExpression();
             addStaticTypeError("No such attribute: " + expression.getPropertyAsString() +
-                    " for class: " + findCurrentInstanceOfClass(objectExpression, getType(objectExpression)).toString(false), expression);
+                    " for class: " + prettyPrintTypeName(findCurrentInstanceOfClass(objectExpression, getType(objectExpression))), expression);
         }
     }
 
@@ -1775,12 +1775,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                 FieldNode field = current.getDeclaredField(propertyName);
                 if (field == null) {
+                    /* GRECLIPSE edit
                     if (current.getSuperClass() != null) {
                         queue.addFirst(current.getUnresolvedSuperClass());
                     }
                     for (ClassNode face : current.getAllInterfaces()) {
                         queue.add(GenericsUtils.parameterizeType(current, face));
                     }
+                    */
+                    if (current.getSuperClass() != null)
+                        queue.addFirst(current.getSuperClass());
+                    Collections.addAll(queue, current.getInterfaces());
+                    // GRECLIPSE end
                 }
 
                 // in case of a lookup on Class we look for instance methods on Class
@@ -1879,14 +1885,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             // GROOVY-5568: the property may be defined by DGM
-            List<ClassNode> dgmReceivers = new ArrayList<ClassNode>(2);
-            dgmReceivers.add(receiverType);
-            if (isPrimitiveType(receiverType)) dgmReceivers.add(getWrapper(receiverType));
-            for (ClassNode dgmReceiver : dgmReceivers) {
+            for (ClassNode dgmReceiver : isPrimitiveType(receiverType) ? new ClassNode[]{receiverType, getWrapper(receiverType)} : new ClassNode[]{receiverType}) {
                 List<MethodNode> methods = findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "get" + capName, ClassNode.EMPTY_ARRAY);
                 for (MethodNode m : findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "is" + capName, ClassNode.EMPTY_ARRAY)) {
                     if (Boolean_TYPE.equals(getWrapper(m.getReturnType()))) methods.add(m);
                 }
+                // GRECLIPSE add -- GROOVY-10075
+                if (isUsingGenericsOrIsArrayUsingGenerics(dgmReceiver)) {
+                    methods.removeIf(method ->
+                        !typeCheckMethodsWithGenerics(dgmReceiver, ClassNode.EMPTY_ARRAY, method)
+                    );
+                }
+                // GRECLIPSE end
                 if (!methods.isEmpty()) {
                     List<MethodNode> methodNodes = chooseBestMethod(dgmReceiver, methods, ClassNode.EMPTY_ARRAY);
                     if (methodNodes.size() == 1) {
