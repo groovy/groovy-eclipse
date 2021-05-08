@@ -3022,7 +3022,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "} \n" +
             "\n" +
-            "class MeCat { \n" +
+            "class MeCat {\n" +
             "  static String getVal(Me self) {\n" +
             "    'val'\n" +
             "  }\n" +
@@ -3033,6 +3033,32 @@ public final class InferencingTests extends InferencingTestSuite {
             "  println new Me().val\n" +
             "}\n" +
             "new Me().meth()");
+    }
+
+    @Test
+    public void testNonPublicCategoryMethod() {
+        String contents =
+            "class Cat { \n" +
+            "  protected static void nope(self) {\n" +
+            "  }\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  this.nope()\n" +
+            "}\n";
+        assertUnknown(contents, "nope");
+    }
+
+    @Test
+    public void testNonStaticCategoryMethod() {
+        String contents =
+            "class Cat { \n" +
+            "  public void nope(self) {\n" +
+            "  }\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  this.nope()\n" +
+            "}\n";
+        assertUnknown(contents, "nope");
     }
 
     @Test
