@@ -2410,11 +2410,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void addClosureReturnType(final ClassNode returnType) {
-        // GRECLIPSE add -- GROOVY-9971
+        // GRECLIPSE add -- GROOVY-8202, GROOVY-9971
         if (StaticTypeCheckingSupport.isGStringOrGStringStringLUB(returnType) && STRING_TYPE.equals(
                 getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression()))) {
             typeCheckingContext.getEnclosingClosure().addReturnType(STRING_TYPE);
-        } else
+        } else if (!VOID_TYPE.equals(returnType))
         // GRECLIPSE end
         typeCheckingContext.getEnclosingClosure().addReturnType(returnType);
     }

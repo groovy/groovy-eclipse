@@ -724,6 +724,56 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8202() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void proc() {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "String test0(flag) {\n" +
+            "  if (flag) {\n" +
+            "    'foo'\n" +
+            "  } else {\n" +
+            "    proc()\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "String test1(flag) {\n" +
+            "  Closure<String> c = { ->\n" +
+            "    if (flag) {\n" +
+            "      'bar'\n" +
+            "    } else {\n" +
+            "      proc()\n" +
+            "      null\n" +
+            "    }\n" +
+            "  }\n" +
+            "  c.call()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "String test2(flag) {\n" +
+            "  Closure<String> c = { ->\n" + // Cannot assign Closure<Object> to Closure<String>
+            "    if (flag) {\n" +
+            "      'baz'\n" +
+            "    } else {\n" +
+            "      proc()\n" +
+            "    }\n" +
+            "  }\n" +
+            "  c.call()\n" +
+            "}\n" +
+            "print test0(true)\n" +
+            "print test1(true)\n" +
+            "print test2(true)\n" +
+            "print test0(false)\n" +
+            "print test1(false)\n" +
+            "print test2(false)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobarbaznullnullnull");
+    }
+
+    @Test
     public void testTypeChecked8909() {
         //@formatter:off
         String[] sources = {
