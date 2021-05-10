@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,99 +72,148 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClassReference4a() {
+    public void testClassReference5() {
         String contents = "String?.dyn";
         assertType(contents, 0, 6, "java.lang.Class<java.lang.String>");
     }
 
     @Test
-    public void testClassReference5() {
+    public void testClassReference6() {
         String contents = "String.@dyn";
         assertType(contents, 0, 6, "java.lang.Class<java.lang.String>");
     }
 
     @Test
-    public void testClassReference6() {
+    public void testClassReference7() {
         String contents = "String.&dyn";
         assertType(contents, 0, 6, "java.lang.Class<java.lang.String>");
     }
 
     @Test
-    public void testClassReference7() {
+    public void testClassReference8() {
         String contents = "String.class.dyn";
         assertType(contents, 0, 12, "java.lang.Class<java.lang.String>");
     }
 
     @Test
-    public void testClassReference8() {
+    public void testClassReference9() {
         String contents = "String.class.@dyn";
         assertType(contents, 0, 12, "java.lang.Class<java.lang.String>");
     }
 
     @Test
-    public void testClassReference9() {
+    public void testClassReference10() {
         String contents = "String.class.&dyn";
         assertType(contents, 0, 12, "java.lang.Class<java.lang.String>");
     }
 
     @Test
-    public void testClassReference10() {
+    public void testClassReference11() {
         String contents = "String.getClass()"; // same as "(String.class).getClass()"
         assertKnown(contents, "getClass", "java.lang.Object", "java.lang.Class<?>");
     }
 
     @Test
-    public void testClassReference11() {
+    public void testClassReference12() {
         String contents = "String.class.getCanonicalName()";
         assertKnown(contents, "getCanonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test
-    public void testClassReference12() {
+    public void testClassReference13() {
         String contents = "String.getCanonicalName()";
         assertKnown(contents, "getCanonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test
-    public void testClassReference13() {
+    public void testClassReference14() {
         String contents = "String.class.canonicalName";
         assertKnown(contents, "canonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test
-    public void testClassReference14() {
+    public void testClassReference15() {
         String contents = "String.canonicalName";
         assertKnown(contents, "canonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test // Class members may be accessed directly from static initializers
-    public void testClassReference15() {
-        String contents = "class S { static { getCanonicalName();}}";
+    public void testClassReference16() {
+        String contents = "class C { static { getCanonicalName();}}";
         assertKnown(contents, "getCanonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/538
-    public void testClassReference16() {
+    public void testClassReference17() {
         String contents = "String.getMethod('toLowerCase')";
         assertKnown(contents, "getMethod", "java.lang.Class", "java.lang.reflect.Method");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/538
-    public void testClassReference16a() {
+    public void testClassReference18() {
         String contents = "String.class.getMethod('toLowerCase')";
         assertKnown(contents, "getMethod", "java.lang.Class", "java.lang.reflect.Method");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/538
-    public void testClassReference17() {
+    public void testClassReference19() {
         String contents = "String.getConstructor()";
         assertKnown(contents, "getConstructor", "java.lang.Class", "java.lang.reflect.Constructor<java.lang.String>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/538
-    public void testClassReference17a() {
+    public void testClassReference20() {
         String contents = "String.class.getConstructor()";
         assertKnown(contents, "getConstructor", "java.lang.Class", "java.lang.reflect.Constructor<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference22() {
+        String contents = "String.getPackage()";
+        assertType(contents, "getPackage", "java.lang.Package");
+        assertDeclaringType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference23() {
+        String contents = "String.package";
+        assertType(contents, "package", "java.lang.Package");
+        assertDeclaringType(contents, "package", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference24() {
+        String contents = "String.class.getPackage()";
+        assertType(contents, "getPackage", "java.lang.Package");
+        assertDeclaringType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference25() {
+        String contents = "String.class.package";
+        assertType(contents, "package", "java.lang.Package");
+        assertDeclaringType(contents, "package", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference26() {
+        String contents = "def clazz = String; clazz.getPackage()";
+        assertType(contents, "getPackage", "java.lang.Package");
+        assertDeclaringType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference27() {
+        String contents = "def clazz = String; clazz.package";
+        assertType(contents, "package", "java.lang.Package");
+        assertDeclaringType(contents, "package", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference28() {
+        String contents = "Class clazz = String; clazz.package";
+        assertType(contents, "package", "java.lang.Package");
+        assertDeclaringType(contents, "package", "java.lang.Class");
     }
 
     //
@@ -172,87 +221,85 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     @Test
     public void testStaticReference1() {
         String contents =
-            "class GGG {\n" +
+            "class C {\n" +
             "  static int length\n" +
             "}\n" +
-            "GGG.length";
-        ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
+            "C.length\n";
+        ASTNode decl = assertKnown(contents, "length", "C", "java.lang.Integer");
         Assert.assertTrue(decl instanceof PropertyNode);
     }
 
     @Test
-    public void testStaticReference1a() {
+    public void testStaticReference2() {
         String contents =
-            "class GGG {\n" +
+            "class C {\n" +
             "  static int length\n" +
             "  static int getLength() { length;}\n" +
             "}\n" +
-            "GGG.length";
-        ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
+            "C.length\n";
+        ASTNode decl = assertKnown(contents, "length", "C", "java.lang.Integer");
         Assert.assertTrue(decl instanceof MethodNode); // not FieldNode
     }
 
     @Test
-    public void testStaticReference1b() {
+    public void testStaticReference3() {
         String contents =
-            "class GGG {\n" +
+            "class C {\n" +
             "  static int length\n" +
             "  static int getLength() { length;}\n" +
             "}\n" +
-            "new GGG().length";
-        ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
+            "new C().length\n";
+        ASTNode decl = assertKnown(contents, "length", "C", "java.lang.Integer");
         Assert.assertTrue(decl instanceof MethodNode); // not FieldNode
     }
 
     @Test // GRECLIPSE-1544
-    public void testStaticReference2() {
-        String contents = "package p\n" +
-            "@groovy.transform.TypeChecked\n" +
-            "public class BugClass {\n" +
-            "  static BugClass getInstance() { null;}\n" +
-            "  void showBug() {\n" +
-            "    BugClass.getInstance();  \n" +
-            "  }\n" +
-            "}";
-        assertKnown(contents, "getInstance", "p.BugClass", "p.BugClass");
+    public void testStaticReference4() {
+        String contents =
+            "package p\n" +
+            "class C {\n" +
+            "  static C getInstance() {}\n" +
+            "  void test() { C.getInstance();}\n" +
+            "}\n";
+        assertKnown(contents, "getInstance", "p.C", "p.C");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/525
-    public void testStaticReference3() {
+    public void testStaticReference5() {
         // name clashes with methods available from java.lang.Class and org.codehaus.groovy.runtime.DefaultGroovyMethods
         String contents = "String[] arr; String str = Arrays.toString(arr)";
         assertKnown(contents, "toString", "java.util.Arrays", "java.lang.String");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/525
-    public void testStaticReference4() {
+    public void testStaticReference6() {
         // name clashes with methods available from java.lang.Class and org.codehaus.groovy.runtime.DefaultGroovyMethods
         String contents = "Arrays.&toString";
         assertKnown(contents, "toString", "java.util.Arrays", "java.lang.String");
     }
 
     @Test
-    public void testStaticReference5() {
+    public void testStaticReference7() {
         String contents = "Arrays.&binarySearch";
         assertKnown(contents, "binarySearch", "java.util.Arrays", "java.lang.Integer");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/595
-    public void testStaticReference6() {
+    public void testStaticReference8() {
         String contents =
-            "class Chars {\n" +
+            "class C {\n" +
             "  static boolean equals(char[] a, char[] b) {\n" +
             "  }\n" +
             "  static void meth(char[] x, char[] y) {\n" +
-            "    if (Chars.equals(x, y)) {\n" + // name clashes with method available from java.lang.Object
+            "    if (C.equals(x, y)) {\n" + // name clashes with method available from java.lang.Object
             "    }\n" +
             "  }\n" +
             "}\n";
-        assertKnown(contents, "equals", "Chars", "java.lang.Boolean");
+        assertKnown(contents, "equals", "C", "java.lang.Boolean");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/646
-    public void testStaticReference7() {
+    public void testStaticReference9() {
         String contents =
             "class Unit {}\n" +
             "class Assert {\n" +
@@ -267,57 +314,250 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference8() {
-        String contents =
-            "class Static {\n" +
-            "  static def foo\n" +
-            "  static {\n" +
-            "    foo\n" +
-            "  }\n" +
-            "}\n";
-        ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
-        Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
-    }
-
-    @Test
-    public void testStaticReference9() {
-        String contents =
-            "class Static {\n" +
-            "  static def foo\n" +
-            "  static def method() {\n" +
-            "    foo\n" +
-            "  }\n" +
-            "}\n";
-        ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
-        Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
-    }
-
-    @Test
     public void testStaticReference10() {
         String contents =
-            "class Static {\n" +
+            "class C {\n" +
             "  static def foo\n" +
-            "  static def getFoo() {}\n" +
             "  static {\n" +
             "    foo\n" +
             "  }\n" +
             "}\n";
-        ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
+        ASTNode decl = assertKnown(contents, "foo", "C", "java.lang.Object");
         Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
     }
 
     @Test
     public void testStaticReference11() {
         String contents =
-            "class Static {\n" +
+            "class C {\n" +
+            "  static def foo\n" +
+            "  static def method() {\n" +
+            "    foo\n" +
+            "  }\n" +
+            "}\n";
+        ASTNode decl = assertKnown(contents, "foo", "C", "java.lang.Object");
+        Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
+    }
+
+    @Test
+    public void testStaticReference12() {
+        String contents =
+            "class C {\n" +
+            "  static def foo\n" +
+            "  static def getFoo() {}\n" +
+            "  static {\n" +
+            "    foo\n" +
+            "  }\n" +
+            "}\n";
+        ASTNode decl = assertKnown(contents, "foo", "C", "java.lang.Object");
+        Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
+    }
+
+    @Test
+    public void testStaticReference13() {
+        String contents =
+            "class C {\n" +
             "  static def foo\n" +
             "  static def getFoo() {}\n" +
             "  static def method() {\n" +
             "    foo\n" +
             "  }\n" +
             "}\n";
-        ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
+        ASTNode decl = assertKnown(contents, "foo", "C", "java.lang.Object");
         Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
+    }
+
+    @Test
+    public void testStaticReference14() {
+        String contents = "class C {\n" +
+            "  static Number x() {\n" +
+            "    42\n" +
+            "  }\n" +
+            "}\n" +
+            "C.x()\n";
+        assertType(contents, "x", "java.lang.Number");
+    }
+
+    @Test
+    public void testStaticReference15() {
+        String contents = "class C {\n" +
+            "  static Number x() {\n" +
+            "    42\n" +
+            "  }\n" +
+            "}\n" +
+            "C.x\n";
+        assertUnknown(contents, "x");
+    }
+
+    @Test
+    public void testStaticReference16() {
+        String contents =
+            "class Two {\n" +
+            "  static Number x() {\n" +
+            "  }\n" +
+            "  def other() {\n" +
+            "    x()\n" + // this
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Number");
+    }
+
+    @Test
+    public void testStaticReference17() {
+        String contents =
+            "class Two {\n" +
+            "  static Number x() {\n" +
+            "  }\n" +
+            "  def other() {\n" +
+            "    x\n" + // this
+            "  }\n" +
+            "}\n";
+        assertUnknown(contents, "x");
+    }
+
+    @Test // GRECLISPE-1244
+    public void testStaticReference18() {
+        String contents =
+            "class Parent {\n" +
+            "    static p() {}\n" +
+            "}\n" +
+            "class Child extends Parent {\n" +
+            "    def c() {\n" +
+            "        p()\n" +
+            "    }\n" +
+            "}\n";
+        assertDeclaringType(contents, "p()", "Parent");
+    }
+
+    @Test // GRECLISPE-1244
+    public void testStaticReference19() {
+        createUnit("Parent",
+            "class Parent {\n" +
+            "    static p() {}\n" +
+            "}\n");
+        String contents =
+            "class Child extends Parent {\n" +
+            "    def c() {\n" +
+            "        p()\n" +
+            "    }\n" +
+            "}\n";
+        assertDeclaringType(contents, "p()", "Parent");
+    }
+
+    @Test
+    public void testStaticReference20() {
+        createUnit("foo", "Bar", "package foo\n" +
+            "import java.util.regex.*\n" +
+            "class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}\n");
+
+        String contents = "import static foo.Bar.*\nmeth([])";
+        assertType(contents, "meth([])", "java.util.Collection");
+    }
+
+    @Test
+    public void testStaticReference21() {
+        createUnit("foo", "Bar", "package foo\n" +
+            "import java.util.regex.*\n" +
+            "class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}\n");
+
+        String contents = "import static foo.Bar.*\nmeth(~/abc/)";
+        assertType(contents, "meth(~/abc/)", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticReference22() {
+        createUnit("foo", "Bar", "package foo\n" +
+            "import java.util.regex.*\n" +
+            "class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}\n");
+
+        String contents =
+            "import static foo.Bar.*\n" +
+            "import static java.util.regex.Pattern.*\n" +
+            "meth(compile('abc'))\n";
+        assertType(contents, "meth(compile('abc'))", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticReference23() {
+        createUnit("foo", "Bar", "package foo\n" +
+            "import java.util.regex.*\n" +
+            "abstract class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}\n");
+
+        String contents =
+            "import static foo.Bar.*\n" +
+            "import static java.util.regex.Pattern.*\n" +
+            "meth(compile('abc'))\n";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticReference24() {
+        String contents =
+            "import static java.util.regex.Pattern.*\n" +
+            "import java.util.regex.*\n" +
+            "abstract class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "  static main(args) {\n" +
+            "    meth(compile('abc'))\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticReference25() {
+        String contents =
+            "import static java.util.regex.Pattern.*\n" +
+            "import java.util.regex.*\n" +
+            "class Foo {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}\n" +
+            "abstract class Bar extends Foo {\n" +
+            "  static main(args) {\n" +
+            "    meth(compile('abc'))\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1257
+    public void testStaticReference26() {
+        String contents =
+            "class C {\n" +
+            "  static name\n" +
+            "}\n" +
+            "C.name\n"; // not Class#getName()
+        assertKnown(contents, "name", "C", "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1257
+    public void testStaticReference27() {
+        String contents =
+            "class C {\n" +
+            "  static getName() {}\n" +
+            "}\n" +
+            "C.name\n"; // not Class#getName()
+        assertKnown(contents, "name", "C", "java.lang.Object");
     }
 
     //
@@ -336,37 +576,37 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testNonStaticReference3() {
-        String contents = "class GGG { int length;}\nGGG.length";
+        String contents = "class C { int length;}\nGGG.length";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference4() {
-        String contents = "class GGG { int length;}\nGGG.@length";
+        String contents = "class C { int length;}\nGGG.@length";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference5() {
-        String contents = "class GGG { int length() {}}\nGGG.length()";
+        String contents = "class C { int length() {}}\nGGG.length()";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference6() {
-        String contents = "class GGG { def length = {}}\nGGG.length()";
+        String contents = "class C { def length = {}}\nGGG.length()";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference7() {
-        String contents = "class GGG { int length() {} \nstatic {\nlength();}}";
+        String contents = "class C { int length() {} \nstatic {\nlength();}}";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference8() {
-        String contents = "class GGG { def length = {} \nstatic {\nlength();}}";
+        String contents = "class C { def length = {} \nstatic {\nlength();}}";
         assertUnknown(contents, "length");
     }
 
@@ -562,5 +802,37 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, offset, offset + "wasSomething".length(), "p.B");
             offset = contents.indexOf("wasSomething(a)");
         assertDeclaringType(contents, offset, offset + "wasSomething".length(), DEFAULT_UNIT_NAME);
+    }
+
+    @Test
+    public void testStaticImport16() {
+        String contents =
+            "import static javax.swing.text.html.HTML.NULL_ATTRIBUTE_VALUE\n" +
+            "NULL_ATTRIBUTE_VALUE\n";
+        assertType(contents, "NULL_ATTRIBUTE_VALUE", "java.lang.String");
+    }
+
+    @Test
+    public void testStaticImport17() {
+        String contents =
+            "import static javax.swing.text.html.HTML.getAttributeKey\n" +
+            "getAttributeKey('')\n";
+        assertType(contents, "getAttributeKey('')", "javax.swing.text.html.HTML$Attribute");
+    }
+
+    @Test
+    public void testStaticImport18() {
+        String contents =
+            "import static javax.swing.text.html.HTML.*\n" +
+            "NULL_ATTRIBUTE_VALUE\n";
+        assertType(contents, "NULL_ATTRIBUTE_VALUE", "java.lang.String");
+    }
+
+    @Test
+    public void testStaticImport19() {
+        String contents =
+            "import static javax.swing.text.html.HTML.*\n" +
+            "getAttributeKey('')\n";
+        assertType(contents, "getAttributeKey('')", "javax.swing.text.html.HTML$Attribute");
     }
 }

@@ -359,10 +359,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         TypeConfidence confidence = TypeConfidence.EXACT;
         int fieldAccessPolicy = (!scope.isFieldAccessDirect() || !(isThisObjectExpression(scope) || isSuperObjectExpression(scope)) ? 0 : isThisObjectExpression(scope) ? 1 : 2);
-        ASTNode declaration = findDeclaration(name, declaringType, isLhsExpression, isStaticObjectExpression, fieldAccessPolicy, scope.getEnclosingNode() instanceof MethodPointerExpression ? UNKNOWN_TYPES : scope.getMethodCallArgumentTypes());
+        // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations; StatementAndExpressionCompletionProcessor circa line 275 has similar check for proposals
+        ClassNode declaring = isStaticObjectExpression && (!Traits.isTrait(getBaseDeclaringType(declaringType)) || "$static$self".equals(getObjectExpression(scope).getText())) ? getBaseDeclaringType(declaringType) : declaringType;
+        ASTNode declaration = findDeclaration(name, declaring, isLhsExpression, isStaticObjectExpression, fieldAccessPolicy, scope.getEnclosingNode() instanceof MethodPointerExpression ? UNKNOWN_TYPES : scope.getMethodCallArgumentTypes());
         if (declaration instanceof MethodNode && scope.getEnclosingNode() instanceof PropertyExpression && !scope.isMethodCall() &&
                 (!AccessorSupport.isGetter((MethodNode) declaration) || name.equals(((MethodNode) declaration).getName()))) {
             declaration = null; // property expression "foo.bar" does not resolve to "bar(...)" or "setBar(x)" w/o call args
+        }
+
+        if (declaration == null && declaring != declaringType) {
+            // "Type.getPackage()" or "def type = Type.class; type.getPackage()"
+            return findTypeForNameWithKnownObjectExpression(name, type, declaringType, scope, isLhsExpression, false);
         }
 
         ClassNode resolvedType, resolvedDeclaringType;
@@ -447,16 +454,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         confidence = TypeConfidence.UNKNOWN;
                     }
                 }
-            }
-        }
-
-        // StatementAndExpressionCompletionProcessor circa line 275 has similar check for proposals
-        if (confidence.isLessThan(TypeConfidence.INFERRED) && declaringType.equals(VariableScope.CLASS_CLASS_NODE) && GroovyUtils.getGenericsTypes(declaringType).length > 0) {
-            ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
-            if (!typeParam.equals(VariableScope.CLASS_CLASS_NODE) && !typeParam.equals(VariableScope.OBJECT_CLASS_NODE) &&
-                            (!Traits.isTrait(typeParam) || "$static$self".equals(getObjectExpression(scope).getText()))) {
-                // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations
-                return findTypeForNameWithKnownObjectExpression(name, resolvedType, typeParam, scope, isLhsExpression, isStaticObjectExpression);
             }
         }
 

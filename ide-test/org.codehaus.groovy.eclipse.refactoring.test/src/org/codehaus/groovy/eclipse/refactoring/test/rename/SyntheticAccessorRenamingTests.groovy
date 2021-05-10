@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1342,7 +1342,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 |package q
                 |@groovy.transform.CompileStatic
                 |def m() {
-                |  p.First.fooBar // ambiguous reference
+                |  p.First.foo // ambiguous reference
                 |}
                 |'''.stripMargin()
         ))
@@ -1381,7 +1381,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             finalContents: '''\
                 |package q
                 |def m() {
-                |  p.First.fooBar // ambiguous reference
+                |  p.First.foo // ambiguous reference
                 |}
                 |'''.stripMargin()
         ))
