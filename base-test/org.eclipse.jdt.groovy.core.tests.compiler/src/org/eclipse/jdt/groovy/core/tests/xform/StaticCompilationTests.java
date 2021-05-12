@@ -1834,7 +1834,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "method:property");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8409")
+    @Test
     public void testCompileStatic8409() {
         for (char t : new char[] {'R', 'S', 'T', 'U'}) { // BiFunction uses R, T and U
             //@formatter:off

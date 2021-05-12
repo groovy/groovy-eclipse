@@ -1750,6 +1750,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             } else {
                 if (!isWild) {
                     if (toDealWithGenerics) {
+                        /* GRECLIPSE edit
                         GenericsType originalGt = genericParameterNames.get(gtn);
                         genericParameterNames.put(gtn, type);
                         type.setPlaceholder(true);
@@ -1759,6 +1760,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         } else {
                             classNode.setRedirect(originalGt.getType());
                         }
+                        */
+                        type.setPlaceholder(true);
+                        GenericsType last = genericParameterNames.put(gtn, type);
+                        classNode.setRedirect(last != null ? last.getType().redirect() : ClassHelper.OBJECT_TYPE);
+                        // GRECLIPSE end
                     }
                 }
             }

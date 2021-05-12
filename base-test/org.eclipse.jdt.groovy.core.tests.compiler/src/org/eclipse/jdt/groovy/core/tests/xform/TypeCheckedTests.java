@@ -238,6 +238,148 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked11() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static java.util.stream.Collectors.toList\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  List<CharSequence> xxx = ['x'].collect()\n" +
+            "  List<CharSequence> yyy = ['y'].stream().toList()\n" +
+            "  List<CharSequence> zzz = ['z'].stream().collect(toList())\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tList<CharSequence> xxx = ['x'].collect()\n" +
+            "\t                         ^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.List<java.lang.String> to: java.util.List<java.lang.CharSequence>\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 5)\n" +
+            "\tList<CharSequence> yyy = ['y'].stream().toList()\n" +
+            "\t                         ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.List<java.lang.String> to: java.util.List<java.lang.CharSequence>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked12() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import org.codehaus.groovy.runtime.DefaultGroovyMethods as DGM\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def strings = ['x','yy','zzz']\n" +
+            "  print(strings.inject(0) { result, string -> result += string.length() })\n" +
+            "  print(strings.inject { result, string -> result += string.toUpperCase() })\n" +
+            "  print(DGM.inject(strings) { result, string -> result += string.toUpperCase() })\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "6xYYZZZxYYZZZ");
+    }
+
+    @Test
+    public void testTypeChecked13() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface OngoingStubbing<T> /*extends IOngoingStubbing*/ {\n" +
+            "  OngoingStubbing<T> thenReturn(T value)\n" +
+            "}\n" +
+            "static <T> OngoingStubbing<T> when(T methodCall) {\n" +
+            "  [thenReturn: { T value -> null }] as OngoingStubbing<T>\n" +
+            "}\n" +
+            "Optional<String> foo() {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  when(foo()).thenReturn(Optional.empty())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked14() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Pojo pojo) {\n" +
+            "  Foo raw = pojo.getFoo('')\n" +
+            "  raw.bar = raw.baz\n" +
+            "}\n" +
+            "test(new Pojo())\n",
+
+            "Pojo.java",
+            "public class Pojo {\n" +
+            "  public <R extends I> Foo<R> getFoo(String key) {\n" +
+            "    return new Foo<>();\n" +
+            "  }\n" +
+            "}\n",
+
+            "Types.groovy",
+            "interface I {\n" +
+            "}\n" +
+            "class Foo<T extends I> {\n" +
+            "  T bar\n" +
+            "  T baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked15() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T,U extends Configurable<T>> U configure(Class<U> type, @DelegatesTo(type='T',strategy=Closure.DELEGATE_FIRST) Closure<?> spec) {\n" +
+            "  Configurable<T> obj = (Configurable<T>) type.newInstance()\n" +
+            "  obj.configure(spec)\n" +
+            "  obj\n" +
+            "}\n" +
+            "trait Configurable<X> { X configObject\n" +
+            "  void configure(Closure<Void> spec) {\n" +
+            "    configObject.with(spec)\n" +
+            "  }\n" +
+            "}\n" +
+            "class Item implements Configurable<ItemConfig> {\n" +
+            "  Item() {\n" +
+            "    configObject = new ItemConfig()\n" +
+            "  }\n" +
+            "}\n" +
+            "class ItemConfig {\n" +
+            "  String name, version\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def test() {\n" +
+            "  configure(Item) {\n" +
+            "    name = 'test'\n" +
+            "    version = '1'\n" +
+            "  }\n" +
+            "}\n" +
+            "print test().configObject.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "test");
+    }
+
+    @Test
     public void testTypeChecked6232() {
         //@formatter:off
         String[] sources = {
@@ -595,6 +737,22 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked7804() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" + // Supplier also uses "T"
+            "def <T> T test(java.util.function.Supplier<T> supplier) {\n" +
+            "  supplier.get()\n" +
+            "}\n" +
+            "print(test { -> 'foo' })\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo");
     }
 
     @Test
@@ -1415,15 +1573,15 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  def <T> TypedProperty<T, Unknown> prop(Class<T> clazz) {\n" +
             "    new TypedProperty<T, Unknown>(clazz: clazz)\n" +
             "  }\n" +
-            // Note: type argument of Holder cannot be supplied to value attribute of @DelegatesTo
-            "  def <T> T of(@DelegatesTo(value=Holder, strategy=Closure.DELEGATE_FIRST) Closure<T> c) {\n" +
+            "  def <U> U of(@DelegatesTo(value=Holder, strategy=Closure.DELEGATE_FIRST) Closure<U> c) {\n" +
+            //                                 ^^^^^^ type argument cannot be supplied using value attribute
             "    this.with(c)\n" +
             "  }\n" +
             "}\n" +
-            "class TypedProperty<X, Y> {\n" +
-            "  Class<X> clazz\n" +
-            "  void eq(X x) {\n" +
-            "    assert x.class == clazz : \"x.class is ${x.class} not ${clazz}\"\n" +
+            "class TypedProperty<V, Unused> {\n" +
+            "  Class<V> clazz\n" +
+            "  void eq(V that) {\n" +
+            "    assert that.class == this.lclazz : \"that.class is ${that.class} not ${this.clazz}\"\n" +
             "  }\n" +
             "}\n" +
             "@groovy.transform.TypeChecked\n" +
@@ -1448,12 +1606,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "2. ERROR in Main.groovy (at line 21)\n" +
             "\tstringProperty.eq(1234)\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.String) with arguments [int]\n" +
+            "Groovy:[Static type checking] - Cannot find matching method TypedProperty#eq(int). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n" +
             "3. ERROR in Main.groovy (at line 22)\n" +
             "\tnumberProperty.eq('xx')\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.Number) with arguments [java.lang.String]\n" +
+            "Groovy:[Static type checking] - Cannot find matching method TypedProperty#eq(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -1504,23 +1662,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked9915() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
-            "class C {\n" +
-            "  void m() {\n" +
-            "    init(Collections.emptyList())\n" + // Cannot call C#init(List<String>) with arguments [List<T>]
-            "  }\n" +
-            "  private static void init(List<String> strings) {\n" +
-            "    print strings\n" +
-            "  }\n" +
-            "}\n" +
-            "new C().m()\n",
-        };
-        //@formatter:on
+        for (String type : new String[] {"List", "Iterable", "Collection"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.TypeChecked\n" +
+                "class C {\n" +
+                "  void m() {\n" +
+                "    init(Collections.emptyList())\n" + // Cannot call C#init(List<String>) with arguments [List<T>]
+                "  }\n" +
+                "  private static void init(" + type + "<String> strings) {\n" +
+                "    print strings\n" +
+                "  }\n" +
+                "}\n" +
+                "new C().m()\n",
+            };
+            //@formatter:on
 
-        runConformTest(sources, "[]");
+            runConformTest(sources, "[]");
+        }
     }
 
     @Test
@@ -2483,11 +2643,11 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  f((Integer) getNumber())\n" +
             "  g((Integer) getNumber())\n" +
             "  i = getNumber()\n" +
-          //"  f(getNumber())\n" +
-          //"  g(getNumber())\n" +
+            "  f(getNumber())\n" +
+            "  g(getNumber())\n" +
             "  i = number\n" +
-          //"  f(number)\n" +
-          //"  g(number)\n" +
+            "  f(number)\n" +
+            "  g(number)\n" +
             "}\n" +
             "test()\n",
         };

@@ -2515,8 +2515,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  \n" +
             "  boolean isValid(String newValue) {\n" +
             "    try {\n" +
-            "      return validators.inject(true) {\n" +
-            "       prev, cur -> prev && cur.call([newValue, source])\n" +
+            "      return validators.inject(true) { valid, validator ->\n" +
+            "        valid && validator.call([newValue, source])\n" +
             "      }\n" +
             "    } catch (e) {\n" +
             "      return false\n" +

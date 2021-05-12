@@ -467,23 +467,28 @@ public abstract class StaticTypeCheckingSupport {
         if (STRING_TYPE.equals(type) && toBeAssignedTo.isDerivedFrom(GSTRING_TYPE)) {
             return true;
         }
+        /* GRECLIPSE edit -- GROOVY-10067
         if (implementsInterfaceOrIsSubclassOf(type, toBeAssignedTo)) {
-            /* GRECLIPSE edit -- GROOVY-10067
             if (toBeAssignedTo.getGenericsTypes() != null) {
                 // perform additional check on generics
                 // ? extends toBeAssignedTo
                 GenericsType gt = GenericsUtils.buildWildcardType(toBeAssignedTo);
                 return gt.isCompatibleWith(type);
             }
-            */
+            return true;
+        }
+        */
+        if (implementsInterfaceOrIsSubclassOf(type, toBeAssignedTo)) {
             if (toBeAssignedTo.getGenericsTypes() != null) {
                 GenericsType gt = toBeAssignedTo.isGenericsPlaceHolder() ? toBeAssignedTo.getGenericsTypes()[0] : GenericsUtils.buildWildcardType(toBeAssignedTo);
                 return gt.isCompatibleWith(type);
             }
-            // GRECLIPSE end
             return true;
         }
-        // SAM check
+        if (type.isGenericsPlaceHolder() && type.getUnresolvedName().charAt(0) == '#') {
+            return type.getGenericsTypes()[0].isCompatibleWith(toBeAssignedTo);
+        }
+        // GRECLIPSE end
         if (type.isDerivedFrom(CLOSURE_TYPE) && isSAMType(toBeAssignedTo)) {
             return true;
         }
@@ -1065,10 +1070,11 @@ public abstract class StaticTypeCheckingSupport {
         if (!asBoolean(methods)) {
             return Collections.emptyList();
         }
+        /* GRECLIPSE edit -- GROOVY-8409, et al.
         if (isUsingUncheckedGenerics(receiver)) {
             return chooseBestMethod(makeRawType(receiver), methods, argumentTypes);
         }
-
+        */
         int bestDist = Integer.MAX_VALUE;
         List<MethodNode> bestChoices = new LinkedList<>();
         boolean noCulling = methods.size() <= 1 || "<init>".equals(methods.iterator().next().getName());
@@ -1725,6 +1731,9 @@ public abstract class StaticTypeCheckingSupport {
                     GenericsTypeName name = new GenericsTypeName(oldValue.getName());
                     GenericsType newValue = connections.get(name); // find "V" in T=V
                     if (newValue == oldValue) continue;
+                    // GRECLIPSE add -- GROOVY-10067
+                    if (name.getName().charAt(0) == '#') continue;
+                    // GRECLIPSE end
                     if (newValue == null) {
                         entry.setValue(newValue = applyGenericsContext(connections, oldValue));
                         checkForMorePlaceholders = checkForMorePlaceholders || !equalIncludingGenerics(oldValue, newValue);
@@ -1947,6 +1956,7 @@ public abstract class StaticTypeCheckingSupport {
         return type.getGenericsTypes();
     }
 
+    /* GRECLIPSE edit
     static Map<GenericsTypeName, GenericsType> applyGenericsContextToParameterClass(final Map<GenericsTypeName, GenericsType> spec, final ClassNode parameterUsage) {
         GenericsType[] gts = parameterUsage.getGenericsTypes();
         if (gts == null) return Collections.emptyMap();
@@ -1960,9 +1970,11 @@ public abstract class StaticTypeCheckingSupport {
         );
         return newSpec;
     }
+    */
 
-    private static GenericsType[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final GenericsType[] gts) {
-        if (gts == null) return null;
+    // GRECLIPSE private->package
+    static GenericsType[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final GenericsType[] gts) {
+        if (gts == null || spec == null || spec.isEmpty()) return gts;
         GenericsType[] newGTs = new GenericsType[gts.length];
         for (int i = 0, n = gts.length; i < n; i += 1) {
             GenericsType gt = gts[i];
@@ -2056,23 +2068,22 @@ public abstract class StaticTypeCheckingSupport {
         }
         return newType;
         */
-        if (!type.isGenericsPlaceHolder()) {
+        if (!type.isGenericsPlaceHolder()) { // convert Type<T> to Type<...>
             ClassNode cn = type.getPlainNodeReference();
             cn.setGenericsTypes(gt);
             return cn;
         }
-        if (gt[0].isPlaceholder()) {
-            if (type.getGenericsTypes()[0] == gt[0]) {
-                return type; // nothing to do
-            } else if (!hasNonTrivialBounds(gt[0])) {
-                ClassNode cn = make(gt[0].getName());
-                cn.setRedirect(type);
-                cn.setGenericsTypes(gt);
-                cn.setGenericsPlaceHolder(true);
-                return cn;
-            }
+        if (!gt[0].isPlaceholder()) { // convert T to Type or Type<...>
+            return getCombinedBoundType(gt[0]);
         }
-        return getCombinedBoundType(gt[0]);
+        if (type.getGenericsTypes()[0] != gt[0]) { // convert T to X
+            ClassNode cn = make(gt[0].getName());
+            cn.setRedirect(gt[0].getType());
+            cn.setGenericsPlaceHolder(true);
+            cn.setGenericsTypes(gt);
+            return cn;
+        }
+        return type;
         // GRECLIPSE end
     }
 

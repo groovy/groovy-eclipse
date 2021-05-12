@@ -27,7 +27,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class GenericInferencingTests extends InferencingTestSuite {
@@ -919,26 +918,28 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test // GROOVY-9803
     public void testClosure7() {
-        String contents =
-            "class C<T> {\n" +
-            "  static <U> C<U> of(U item) {}\n" +
-            "  def <V> C<V> map(F<? super T, ? super V> func) {}\n" +
-            "}\n" +
-            "class D {\n" +
-            "  static <W> Set<W> wrap(W o) {}\n" +
-            "}\n" +
-            "interface F<X,Y> {\n" +
-            "  Y apply(X x)\n" +
-            "}\n" +
-            "@groovy.transform.TypeChecked\n" +
-            "void test() {\n" +
-            "  def c = C.of(123)\n" +
-            "  def d = c.map(D.&wrap)\n" +
-            "  def e = d.map{x -> x.first()}\n" +
-            "}\n";
-        assertType(contents, "wrap", "java.util.Set<java.lang.Integer>");
-        assertType(contents, "x", "java.util.Set<java.lang.Integer>");
-        assertType(contents, "e", "C<java.lang.Integer>");
+        for (String toSet : new String[] {"D.&wrap", "Collections.&singleton", "{x -> [x].toSet()}", "{Collections.singleton(it)}"}) {
+            String contents =
+                "class C<T> {\n" +
+                "  static <U> C<U> of(U item) {}\n" +
+                "  def <V> C<V> map(F<? super T, ? super V> func) {}\n" +
+                "}\n" +
+                "class D {\n" +
+                "  static <W> Set<W> wrap(W o) {}\n" +
+                "}\n" +
+                "interface F<X,Y> {\n" +
+                "  Y apply(X x)\n" +
+                "}\n" +
+                "@groovy.transform.TypeChecked\n" +
+                "void test() {\n" +
+                "  def c = C.of(123)\n" +
+                "  def d = c.map(" + toSet + ")\n" +
+                "  def e = d.map{x -> x.first()}\n" +
+                "}\n";
+            assertType(contents, "d", "C<java.util.Set<java.lang.Integer>>");
+            assertType(contents, "x", "java.util.Set<java.lang.Integer>");
+            assertType(contents, "e", "C<java.lang.Integer>");
+        }
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1194
@@ -1572,7 +1573,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + "withStuff".length(), "Concrete");
     }
 
-    @Test @Ignore
+    @Test
     public void testJira1718() throws Exception {
         createUnit("p2", "Renderer",
             "package p2\n" +
@@ -1630,7 +1631,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "    if (htmlRenderer == null) {\n" +
             "      htmlRenderer = new DefaultRenderer(targetType)\n" +
             "    }\n" +
-            "    htmlRenderer.render(object, context)\n" + // TODO: Cannot call p2.Renderer<java.lang.Object>#render(java.lang.Object<java.lang.Object>, java.lang.String) with arguments [T, java.lang.String]
+            "    htmlRenderer.render(object, context)\n" + // Cannot call p2.Renderer#render(java.lang.Object<java.lang.Object>, java.lang.String) with arguments [T, java.lang.String]
             "  }\n" +
             "}\n");
 
