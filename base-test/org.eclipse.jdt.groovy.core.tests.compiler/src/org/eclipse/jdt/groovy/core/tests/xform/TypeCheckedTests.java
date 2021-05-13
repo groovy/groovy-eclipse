@@ -2655,4 +2655,32 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10088() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new D<Number>().p = 'x'\n" +
+            "}\n",
+
+            "Types.groovy",
+            "class C<T> {\n" +
+            "  void setP(T t) { }\n" +
+            "}\n" +
+            "class D<X> extends C<X> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tnew D<Number>().p = 'x'\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.lang.String to variable of type java.lang.Number\n" +
+            "----------\n");
+    }
 }
