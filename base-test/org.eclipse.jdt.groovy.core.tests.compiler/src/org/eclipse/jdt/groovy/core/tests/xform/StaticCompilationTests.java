@@ -789,6 +789,25 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6782() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  String[] array = [123]\n" +
+            "  def temp = array\n" +
+            "  def x = temp[0]\n" +
+            "  temp = [:]\n" + // works if this line is removed
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testCompileStatic6904() {
         //@formatter:off
         String[] sources = {
@@ -6205,5 +6224,32 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic10089() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(... attributes) {\n" +
+            "  List one = [\n" +
+            "    [id:'x', options:[count:1]]\n" +
+            "  ]\n" +
+            "  List two = attributes.collect {\n" +
+            "    def node = Collections.singletonMap('children', one)\n" +
+            "    if (node) {\n" +
+            "      node = node.get('children').find { child -> child['id'] == 'x' }\n" +
+            "    }\n" +
+            "    [id: it['id'], name: node['name'], count: node['options']['count']]\n" +
+            //                                             ^^^^^^^^^^^^^^^ GroovyCastException (map ctor for Collection)
+            "  }\n" +
+            "  print two\n" +
+            "}\n" +
+            "test( [id:'x'] )\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[id:x, name:null, count:1]]");
     }
 }

@@ -935,7 +935,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
 
-            /* GRECLIPSE edit -- GROOVY-8974, GROOVY-9033
+            /* GRECLIPSE edit -- GROOVY-8974, et al.
             if (lType.isUsingGenerics() && missesGenericsTypes(resultType) && isAssignment(op)) {
                 // unchecked assignment
                 // examples:
@@ -950,19 +950,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 resultType = completedType;
             }
             */
-            if (isAssignment(op)) {
-                if (rightExpression instanceof ConstructorCallExpression) {
-                    inferDiamondType((ConstructorCallExpression) rightExpression, lType);
-                }
-                if (lType.isUsingGenerics() && missesGenericsTypes(resultType)) {
-                    if (!resultType.isGenericsPlaceHolder()) // plain reference loses information
-                    resultType = GenericsUtils.parameterizeType(lType, resultType.getPlainNodeReference());
-                } else if (lType.equals(OBJECT_TYPE) && GenericsUtils.hasUnresolvedGenerics(resultType)) { // def list = []
-                    Map<GenericsTypeName, GenericsType> placeholders = extractGenericsParameterMapOfThis(typeCheckingContext);
-                    resultType = fullyResolveType(resultType, Optional.ofNullable(placeholders).orElseGet(Collections::emptyMap));
-                }
-            } else
-            // GRECLIPSE end
 
             if (isArrayOp(op)
                     && !lType.isArray()
@@ -985,13 +972,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
             boolean isEmptyDeclaration = expression instanceof DeclarationExpression && rightExpression instanceof EmptyExpression;
             if (!isEmptyDeclaration && isAssignment(op)) {
-                /* GRECLIPSE edit -- GROOVY-8974
                 if (rightExpression instanceof ConstructorCallExpression) {
                     inferDiamondType((ConstructorCallExpression) rightExpression, lType);
                 }
-                */
+                // GRECLIPSE add -- unchecked assignment
+                if (lType.isUsingGenerics() && missesGenericsTypes(resultType)) {
+                    // the inferred type of the binary expression is the type of the RHS
+                    // "completed" with generics type information available from the LHS
+                    if (!resultType.isGenericsPlaceHolder()) // plain reference loses information
+                    resultType = GenericsUtils.parameterizeType(lType, resultType.getPlainNodeReference());
+                }
+                // GRECLIPSE end
                 ClassNode originType = getOriginalDeclarationType(leftExpression);
                 typeCheckAssignment(expression, leftExpression, originType, rightExpression, resultType);
+                /* GRECLIPSE edit
                 // if assignment succeeds but result type is not a subtype of original type, then we are in a special cast handling
                 // and we must update the result type
                 if (!implementsInterfaceOrIsSubclassOf(getWrapper(resultType), getWrapper(originType))) {
@@ -999,6 +993,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else if (lType.isUsingGenerics() && !lType.isEnum() && hasRHSIncompleteGenericTypeInfo(resultType)) {
                     // for example, LHS is List<ConcreteClass> and RHS is List<T> where T is a placeholder
                     resultType = lType;
+                */
+                // check for implicit conversion like "String a = 123", "int[] b = [1,2,3]", "List c = [].stream()", etc.
+                if (!implementsInterfaceOrIsSubclassOf(wrapTypeIfNecessary(resultType), wrapTypeIfNecessary(originType))) {
+                    resultType = originType;
+                } else if (isPrimitiveType(originType) && resultType.equals(getWrapper(originType))) {
+                    resultType = originType; // retain primitive semantics
+                // GRECLIPSE end
                 } else {
                     // GROOVY-7549: RHS type may not be accessible to enclosing class
                     int modifiers = resultType.getModifiers();
@@ -1008,12 +1009,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             && (Modifier.isPrivate(modifiers) || !Objects.equals(enclosingType.getPackageName(), resultType.getPackageName()))) {
                         resultType = originType; // TODO: Find accesible type in hierarchy of resultType?
                     }
+                    // GRECLIPSE add -- GROOVY-9033, GROOVY-10089
+                    else if (GenericsUtils.hasUnresolvedGenerics(resultType)) {
+                        Map<GenericsTypeName, GenericsType> enclosing = extractGenericsParameterMapOfThis(typeCheckingContext);
+                        resultType = fullyResolveType(resultType, Optional.ofNullable(enclosing).orElseGet(Collections::emptyMap));
+                    }
+                    // GRECLIPSE end
                 }
-
+                /* GRECLIPSE edit
                 // make sure we keep primitive types
                 if (isPrimitiveType(originType) && resultType.equals(getWrapper(originType))) {
                     resultType = originType;
                 }
+                */
 
                 // if we are in an if/else branch, keep track of assignment
                 if (typeCheckingContext.ifElseForWhileAssignmentTracker != null && leftExpression instanceof VariableExpression
