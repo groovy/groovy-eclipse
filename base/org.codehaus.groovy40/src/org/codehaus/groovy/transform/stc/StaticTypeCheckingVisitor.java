@@ -2305,7 +2305,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             type = getType(expression);
         }
         if (typeCheckingContext.getEnclosingClosure() != null) {
-            /* GRECLIPSE edit -- GROOVY-9971, GROOVY-9995, GROOVY-10080
+            /* GRECLIPSE edit -- GROOVY-9971, GROOVY-9995, GROOVY-10080, GROOVY-10082
             if (expression instanceof ConstructorCallExpression) {
                 ClassNode inferredClosureReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
                 if (inferredClosureReturnType != null) inferDiamondType((ConstructorCallExpression) expression, inferredClosureReturnType);
@@ -2317,6 +2317,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             if (STRING_TYPE.equals(inferredReturnType) && isGStringOrGStringStringLUB(type)) {
                 type = STRING_TYPE; // convert GString to String at the point of return
+            } else if (inferredReturnType != null && !inferredReturnType.isGenericsPlaceHolder()
+                    && !type.isUsingGenerics() && !type.equals(inferredReturnType) && (inferredReturnType.isInterface()
+                            ? type.implementsInterface(inferredReturnType) : type.isDerivedFrom(inferredReturnType))) {
+                type = inferredReturnType; // allow simple covariance
             }
             // GRECLIPSE end
             return type;

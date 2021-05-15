@@ -2392,13 +2392,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             type = getType(expression);
         }
         if (typeCheckingContext.getEnclosingClosure() != null) {
-            // GRECLIPSE add -- GROOVY-9971, GROOVY-9995, GROOVY-10080
+            // GRECLIPSE add -- GROOVY-9971, GROOVY-9995, GROOVY-10080, GROOVY-10082
             ClassNode inferredReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
             if (expression instanceof ConstructorCallExpression) {
                 inferDiamondType((ConstructorCallExpression) expression, inferredReturnType != null ? inferredReturnType : DYNAMIC_TYPE);
             }
             if (STRING_TYPE.equals(inferredReturnType) && StaticTypeCheckingSupport.isGStringOrGStringStringLUB(type)) {
                 type = STRING_TYPE; // implicit "toString()" before return
+            } else if (inferredReturnType != null && !inferredReturnType.isGenericsPlaceHolder()
+                    && !type.isUsingGenerics() && !type.equals(inferredReturnType) && (inferredReturnType.isInterface()
+                            ? type.implementsInterface(inferredReturnType) : type.isDerivedFrom(inferredReturnType))) {
+                type = inferredReturnType; // allow simple covariance
             }
             // GRECLIPSE end
             return type;

@@ -2639,7 +2639,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
-        /* GRECLIPSE edit -- GROOVY-9907, GROOVY-9971, GROOVY-9995, GROOVY-10080
+        /* GRECLIPSE edit -- GROOVY-9907, GROOVY-9971, GROOVY-9995, GROOVY-10080, GROOVY-10082
         ClassNode type = getType(expression);
 
         if (typeCheckingContext.getEnclosingClosure() != null) {
@@ -2663,6 +2663,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             if (STRING_TYPE.equals(inferredReturnType) && StaticTypeCheckingSupport.isGStringOrGStringStringLUB(type)) {
                 type = STRING_TYPE; // implicit "toString()" before return
+            } else if (inferredReturnType != null && !inferredReturnType.isGenericsPlaceHolder()
+                    && !type.isUsingGenerics() && !type.equals(inferredReturnType) && (inferredReturnType.isInterface()
+                            ? type.implementsInterface(inferredReturnType) : type.isDerivedFrom(inferredReturnType))) {
+                type = inferredReturnType; // allow simple covariance
             }
             return type;
         }
