@@ -2305,11 +2305,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             type = getType(expression);
         }
         if (typeCheckingContext.getEnclosingClosure() != null) {
-            // GROOVY-9995: return ctor call with diamond operator
+            /* GRECLIPSE edit -- GROOVY-9971, GROOVY-9995, GROOVY-10080
             if (expression instanceof ConstructorCallExpression) {
                 ClassNode inferredClosureReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
                 if (inferredClosureReturnType != null) inferDiamondType((ConstructorCallExpression) expression, inferredClosureReturnType);
             }
+            */
+            ClassNode inferredReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
+            if (expression instanceof ConstructorCallExpression) {
+                inferDiamondType((ConstructorCallExpression) expression, inferredReturnType != null ? inferredReturnType : DYNAMIC_TYPE);
+            }
+            if (STRING_TYPE.equals(inferredReturnType) && isGStringOrGStringStringLUB(type)) {
+                type = STRING_TYPE; // convert GString to String at the point of return
+            }
+            // GRECLIPSE end
             return type;
         }
         MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
@@ -2342,17 +2351,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void addClosureReturnType(final ClassNode returnType) {
-        TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
-        if (isGStringOrGStringStringLUB(returnType)
-                && STRING_TYPE.equals(getInferredReturnType(enclosingClosure.getClosureExpression()))) {
-            // GROOVY-9971: convert GString to String at the point of return
-            enclosingClosure.addReturnType(STRING_TYPE);
         // GRECLIPSE add -- GROOVY-8202
-        } else if (VOID_TYPE.equals(returnType)) {
+        if (returnType != null && !returnType.equals(VOID_TYPE))
         // GRECLIPSE end
-        } else {
-            enclosingClosure.addReturnType(returnType);
-        }
+        typeCheckingContext.getEnclosingClosure().addReturnType(returnType);
     }
 
     @Override

@@ -2657,6 +2657,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10080() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "class D {\n" +
+            "  int m(Object[] objects) {\n" +
+            "    42\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def closure = { ->\n" +
+            "    new C<>(new D())\n" +
+            "  }\n" +
+            "  print(closure().p.m(new BigDecimal[0]))\n" + // Cannot find matching method Object#m(...)
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testTypeChecked10088() {
         //@formatter:off
         String[] sources = {

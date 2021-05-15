@@ -2392,10 +2392,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             type = getType(expression);
         }
         if (typeCheckingContext.getEnclosingClosure() != null) {
-            // GRECLIPSE add -- GROOVY-9995
+            // GRECLIPSE add -- GROOVY-9971, GROOVY-9995, GROOVY-10080
+            ClassNode inferredReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
             if (expression instanceof ConstructorCallExpression) {
-                ClassNode inferredClosureReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
-                if (inferredClosureReturnType != null) inferDiamondType((ConstructorCallExpression) expression, inferredClosureReturnType);
+                inferDiamondType((ConstructorCallExpression) expression, inferredReturnType != null ? inferredReturnType : DYNAMIC_TYPE);
+            }
+            if (STRING_TYPE.equals(inferredReturnType) && StaticTypeCheckingSupport.isGStringOrGStringStringLUB(type)) {
+                type = STRING_TYPE; // implicit "toString()" before return
             }
             // GRECLIPSE end
             return type;
@@ -2430,11 +2433,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void addClosureReturnType(final ClassNode returnType) {
-        // GRECLIPSE add -- GROOVY-8202, GROOVY-9971
-        if (StaticTypeCheckingSupport.isGStringOrGStringStringLUB(returnType) && STRING_TYPE.equals(
-                getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression()))) {
-            typeCheckingContext.getEnclosingClosure().addReturnType(STRING_TYPE);
-        } else if (!VOID_TYPE.equals(returnType))
+        // GRECLIPSE add -- GROOVY-8202
+        if (returnType != null && !returnType.equals(VOID_TYPE))
         // GRECLIPSE end
         typeCheckingContext.getEnclosingClosure().addReturnType(returnType);
     }
