@@ -380,6 +380,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked5523() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static org.codehaus.groovy.ast.ClassHelper.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def findFile(String path) {\n" +
+            "  @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    assert node.getNodeMetaData(INFERRED_TYPE) == make(File)\n" +
+            "  })\n" +
+            "  File file = path ? null : null\n" + // edge case
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked6232() {
         //@formatter:off
         String[] sources = {
@@ -2079,6 +2099,44 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "-1");
+    }
+
+    @Test
+    public void testTypeChecked9983() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class A<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "class B {\n" +
+            "}\n" +
+            "class C {\n" +
+            "  static m(A<B> a_of_b) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class D extends B {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  boolean flag = true\n" +
+            "  A<B> v = new A<>(null)\n" + // Cannot call C#m(A<B>) with arguments [A<#>]
+            "  A<B> w = new A<>(new B())\n" +
+            "  A<B> x = new A<>(new D())\n" +
+            "  A<B> y = flag ? new A<>(new B()) : new A<>(new B())\n" +
+            "  A<B> z = flag ? new A<>(new B()) : new A<>(new D())\n" +
+            "  C.m(new A<>(null))\n" +
+            "  C.m(new A<>(new B()))\n" +
+            "  C.m(new A<>(new D()))\n" +
+            "  C.m(flag ? new A<>(new B()) : new A<>(new B()))\n" +
+            "  C.m(flag ? new A<>(new B()) : new A<>(new D()))\n" + // Cannot call m(A<B>) with arguments [A<? extends B>]\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test

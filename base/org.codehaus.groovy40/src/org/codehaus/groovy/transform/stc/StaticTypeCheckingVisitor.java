@@ -1098,7 +1098,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 type = inferReturnTypeGenerics(type, constructor, argumentList);
                 if (type.isUsingGenerics()) {
                     // GROOVY-6232, GROOVY-9956: if cce not assignment compatible, process target as additional type witness
-                    if (checkCompatibleAssignmentTypes(lType, type, cce) && !GenericsUtils.buildWildcardType(lType).isCompatibleWith(type)) {
+                    if (GenericsUtils.hasUnresolvedGenerics(type) || checkCompatibleAssignmentTypes(lType, type, cce) && !GenericsUtils.buildWildcardType(lType).isCompatibleWith(type)) {
                         // allow covariance of each type parameter, but maintain semantics for nested generics
 
                         ClassNode pType = GenericsUtils.parameterizeType(lType, type);
@@ -2005,13 +2005,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             } else if (isClosureWithType(lType) && value instanceof ClosureExpression) {
                 storeInferredReturnType(value, getCombinedBoundType(lType.getGenericsTypes()[0]));
             }
+            // GRECLIPSE add -- GROOVY-9983
+            typeCheckingContext.pushEnclosingBinaryExpression(assignX(target, value, position));
+            // GRECLIPSE end
             value.visit(this);
             ClassNode rType = getType(value);
             if (value instanceof ConstructorCallExpression) {
                 inferDiamondType((ConstructorCallExpression) value, lType);
             }
 
+            /* GRECLIPSE edit
             BinaryExpression bexp = assignX(target, value, position);
+            */
+            BinaryExpression bexp = typeCheckingContext.popEnclosingBinaryExpression();
+            // GRECLIPSE end
             typeCheckAssignment(bexp, target, lType, value, getResultType(lType, ASSIGN, rType, bexp));
         }
     }
@@ -4393,7 +4400,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         ClassNode resultType;
         if (isNullConstant(trueExpression) && isNullConstant(falseExpression)) { // GROOVY-5523
-            resultType = checkForTargetType(expression, UNKNOWN_PARAMETER_TYPE);
+            resultType = checkForTargetType(trueExpression, UNKNOWN_PARAMETER_TYPE);
         } else if (isNullConstant(trueExpression) || (isEmptyCollection(trueExpression)
                 && isOrImplements(typeOfTrue, typeOfFalse))) { // [] : List/Collection/Iterable
             resultType = wrapTypeIfNecessary(checkForTargetType(falseExpression, typeOfFalse));
@@ -4419,6 +4426,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ClassNode targetType = null;
         MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
         BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
+        /* GRECLIPSE edit -- GROOVY-5523, GROOVY-7753, GROOVY-9972, GROOVY-9983
         if (enclosingBinaryExpression instanceof DeclarationExpression
                 && isAssignment(enclosingBinaryExpression.getOperation().getType())
                 && isTypeSource(expr, enclosingBinaryExpression.getRightExpression())) {
@@ -4433,9 +4441,23 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // TODO: try enclosingMethod's code with isTypeSource(expr, ...)
             targetType = enclosingMethod.getReturnType();
         } // TODO: closure parameter default expression
+        */
+        if (enclosingBinaryExpression != null
+                && isAssignment(enclosingBinaryExpression.getOperation().getType())
+                && isTypeSource(expr, enclosingBinaryExpression.getRightExpression())) {
+            targetType = getDeclaredOrInferredType(enclosingBinaryExpression.getLeftExpression());
+        } else if (enclosingMethod != null
+                && !enclosingMethod.isVoidMethod()
+                && isTypeSource(expr, enclosingMethod)) {
+             targetType = enclosingMethod.getReturnType();
+        }
+        if (targetType == null) return sourceType;
+        // GRECLIPSE end
 
         if (expr instanceof ConstructorCallExpression) {
+            /* GRECLIPSE edit
             if (targetType == null) targetType = sourceType;
+            */
             inferDiamondType((ConstructorCallExpression) expr, targetType);
         } else if (targetType != null && !isPrimitiveType(getUnwrapper(targetType))
                 && !targetType.equals(OBJECT_TYPE) && missesGenericsTypes(sourceType)) {
@@ -4453,6 +4475,34 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         return expr == right;
     }
+
+    // GRECLIPSE add
+    private static boolean isTypeSource(final Expression expr, final MethodNode mNode) {
+        boolean[] returned = new boolean[1];
+
+        mNode.getCode().visit(new org.codehaus.groovy.ast.CodeVisitorSupport() {
+            @Override
+            public void visitReturnStatement(final ReturnStatement returnStatement) {
+                if (isTypeSource(expr, returnStatement.getExpression())) {
+                    returned[0] = true;
+                }
+            }
+            @Override
+            public void visitClosureExpression(final ClosureExpression expression) {
+            }
+        });
+
+        if (!returned[0]) {
+            new ReturnAdder(returnStatement -> {
+                if (isTypeSource(expr, returnStatement.getExpression())) {
+                    returned[0] = true;
+                }
+            }).visitMethod(mNode);
+        }
+
+        return returned[0];
+    }
+    // GRECLIPSE end
 
     private static boolean isEmptyCollection(final Expression expr) {
         return isEmptyList(expr) || isEmptyMap(expr);
@@ -5682,9 +5732,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 actuals[i] = getLiteralResultType(pt, at, ArrayList_TYPE);
             } else if (a instanceof MapExpression) {
                 actuals[i] = getLiteralResultType(pt, at, LinkedHashMap_TYPE);
-            // GRECLIPSE add
+            // GRECLIPSE add -- GROOVY-9983, GROOVY-10086
             } else if (a instanceof ConstructorCallExpression) {
-                inferDiamondType((ConstructorCallExpression) a, pt); // GROOVY-10086
+                inferDiamondType((ConstructorCallExpression) a, pt);
+            } else if (a instanceof TernaryExpression && at.isUsingGenerics() && at.getGenericsTypes().length == 0) {
+                // double diamond scenario -- "m(flag ? new Type<>(...) : new Type<>(...))"
+                typeCheckingContext.pushEnclosingBinaryExpression(assignX(varX(p), a, a));
+                a.visit(this); // re-visit with target type witness
+                typeCheckingContext.popEnclosingBinaryExpression();
+                actuals[i] = getType(a);
             // GRECLIPSE end
             }
 
