@@ -2705,6 +2705,36 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10086() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def m(C<D> c_of_d) {c_of_d.p}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  m(new C<>(0))\n" +
+            "}\n",
+
+            "Types.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "class D {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tm(new C<>(0))\n" +
+            "\t^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call Main#m(C<D>) with arguments [C<java.lang.Integer>]\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10088() {
         //@formatter:off
         String[] sources = {
