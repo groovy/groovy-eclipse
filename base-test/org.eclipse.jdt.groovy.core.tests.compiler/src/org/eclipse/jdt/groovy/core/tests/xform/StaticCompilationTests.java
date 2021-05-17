@@ -593,6 +593,24 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic22() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def x = '123';\n" +
+            "  { -> x = new StringBuffer() }\n" +
+            "  print x.charAt(0) // available in String and StringBuffer\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
@@ -2357,11 +2375,12 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8946")
+    @Test
     public void testCompileStatic8946() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
+            /*
             "@GrabResolver(name='grails', root='https://repo.grails.org/grails/core')\n" +
             "@Grapes([\n" +
             "  @Grab('javax.servlet:javax.servlet-api:3.0.1'),\n" +
@@ -2370,16 +2389,26 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "])\n" +
             "@GrabExclude('org.codehaus.groovy:*')\n" +
             "import static grails.converters.JSON.parse\n" +
-            "\n" +
+            */
+            "class JSONElement {\n" +
+            "  def getProperty(String name) {\n" +
+            "    if (name == 'k') return [1,2]\n" +
+            "  }\n" +
+            "}\n" +
+            "JSONElement parse(String json) {\n" +
+            "  new JSONElement()\n" +
+            "}\n" +
+
             "@groovy.transform.CompileStatic\n" +
-            "void test() {\n" +
-            "  def json = parse('[{\"k\":1},{\"k\":2}]')\n" + // returns org.grails.web.json.JSONElement
+            "def test() {\n" +
+            "  def json = parse('[{\"k\":1},{\"k\":2}]')\n" +
             "  def vals = json['k']\n" +
             "  assert vals == [1,2]\n" +
             "  boolean result = 'k'.tokenize('.').every { token ->\n" + // 'k' represents a path like 'a.b.c.d'
-            "    json = json[token]\n" + // GroovyCastException: Cannot cast object '[1, 2]' with class 'java.util.ArrayList' to class 'org.grails.web.json.JSONElement'
+            "    json = json[token]\n" +
             "  }\n" +
             "  assert result\n" +
+            "  return json\n" + // ClassCastException: java.util.ArrayList cannot cast to org.grails.web.json.JSONElement
             "}\n" +
             "test()\n",
         };
