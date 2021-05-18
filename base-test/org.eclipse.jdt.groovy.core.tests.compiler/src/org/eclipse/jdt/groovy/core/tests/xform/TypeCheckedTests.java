@@ -2763,6 +2763,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10082a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Closure<String> c = {-> 42}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tClosure<String> c = {-> 42}\n" +
+            "\t                    ^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign groovy.lang.Closure<java.lang.Integer> to: groovy.lang.Closure<java.lang.String>\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10086() {
         //@formatter:off
         String[] sources = {
@@ -2817,6 +2838,33 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\tnew D<Number>().p = 'x'\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot assign value of type java.lang.String to variable of type java.lang.Number\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10091() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T> {}\n" +
+            "class B extends A<Number> {}\n" +
+            "class X extends A<String> {}\n" +
+            "class Y<Z> extends A<Number> {}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Closure<A<Number>> b = { -> new B()}\n" +
+            "  Closure<A<Number>> x = { -> new X()}\n" +
+            "  Closure<A<Number>> y = { -> new Y<String>()}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 8)\n" +
+            "\tClosure<A<Number>> x = { -> new X()}\n" +
+            "\t                       ^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign groovy.lang.Closure<X> to: groovy.lang.Closure<A<java.lang.Number>>\n" +
             "----------\n");
     }
 }

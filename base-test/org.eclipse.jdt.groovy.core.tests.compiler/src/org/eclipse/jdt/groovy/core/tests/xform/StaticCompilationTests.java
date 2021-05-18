@@ -1764,25 +1764,20 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "def bar(Closure<Collection<Integer>> block) {\n" +
-            "  block()\n" +
+            "def bar(Closure<Collection<Integer>> baz) {\n" +
+            "  baz()\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
-            "def use() {\n" +
+            "def foo() {\n" +
             "  bar {\n" +
-            "    [1]\n" + // List<Integer> is not compatible with Collection<Integer>; "? extends Collection<Integer>" works
+            "    [1]\n" +
             "  }\n" +
-            "}\n",
+            "}\n" +
+            "print foo()\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 6)\n" +
-            "\tbar {\n" +
-            "\t^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method Main#bar(groovy.lang.Closure<java.util.List<java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n" +
-            "----------\n");
+        runConformTest(sources, "[1]");
     }
 
     @Test
