@@ -2,19 +2,27 @@
 setPreferences=true
 indentendOnly=false
 ###src
-class Issue1219 extends spock.lang.Specification {
-void 'test'() {
+class SpockTests extends spock.lang.Specification {
+void "issue 1219"() {
 expect:
 [] == [] 
 toString()
 }
+void "issue 1258"() {
+	expect:
+	[] == []
+}
 }
 ###exp
-class Issue1219 extends spock.lang.Specification {
-	void 'test'() {
+class SpockTests extends spock.lang.Specification {
+	void "issue 1219"() {
 		expect:
 		[] == []
 		toString()
+	}
+	void "issue 1258"() {
+		expect:
+		[] == []
 	}
 }
 ###end

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,13 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     public void setUp() throws Exception {
         String spockCorePath;
         if (isAtLeastGroovy(30)) {
-            spockCorePath = "lib/spock-core-2.0-M4-groovy-3.0.jar";
+            spockCorePath = "lib/spock-core-2.0-groovy-3.0.jar";
         } else {
-            spockCorePath = "lib/spock-core-1.3-groovy-2.5.jar";
+            spockCorePath = "lib/spock-core-2.0-groovy-2.5.jar";
+            env.addJar(project.getFullPath(), "lib/spock-groovy2-compat-2.0.jar");
         }
         env.addJar(project.getFullPath(), spockCorePath);
-        env.addEntry(project.getFullPath(), JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
+        env.addEntry(project.getFullPath(), JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
     }
 
     @Test
@@ -129,7 +130,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
         assertType(source, offset, offset + 3, "java.lang.Integer");
     }
 
-    @Test @Ignore("see #814") // https://github.com/groovy/groovy-eclipse/issues/812
+    @Test @Ignore("see #814") // https://github.com/groovy/groovy-eclipse/issues/814
     public void testDataTableChecks() {
         //@formatter:off
         String source =
