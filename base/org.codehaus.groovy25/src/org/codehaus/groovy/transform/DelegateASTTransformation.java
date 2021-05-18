@@ -137,7 +137,37 @@ public class DelegateASTTransformation extends AbstractASTTransformation {
                         ". Delegation to own type not supported. Please use a different type.", parent);
                 return;
             }
-            final List<MethodNode> delegateMethods = getAllMethods(delegate.type);
+            final List<MethodNode> delegateMethods = new java.util.LinkedList<>(getAllMethods(delegate.type));
+            // GRECLIPSE add -- GROOVY-4320, GROOVY-4516
+            for (java.util.ListIterator<MethodNode> it = delegateMethods.listIterator(); it.hasNext();) {
+                MethodNode next = it.next();
+                if (next.isPublic() && !next.isAbstract() && next.hasDefaultValue()) {
+                    int n = 0;
+                    for (Parameter p : next.getParameters())
+                        if (p.hasInitialExpression()) n += 1;
+                    for (int i = 1; i <= n; i += 1) { // from Verifier#addDefaultParameters
+                        Parameter[] params = new Parameter[next.getParameters().length - i];
+                        int index = 0, j = 1;
+                        for (Parameter parameter : next.getParameters()) {
+                            if (j > n - i && parameter.hasInitialExpression()) {
+                                j += 1;
+                            } else {
+                                params[index++] = parameter;
+                                if (parameter.hasInitialExpression()) j += 1;
+                            }
+                        }
+    
+                        if (delegateMethods.stream().noneMatch(mn -> mn.getName().equals(next.getName()) && org.codehaus.groovy.ast.tools.ParameterUtils.parametersEqual(mn.getParameters(), params))) {
+                            MethodNode mn = new MethodNode(next.getName(), next.getModifiers(), next.getReturnType(), params, next.getExceptions(), null);
+                            mn.setDeclaringClass(next.getDeclaringClass());
+                            mn.setGenericsTypes(next.getGenericsTypes());
+                            mn.addAnnotations(next.getAnnotations());
+                            it.add(mn);
+                        }
+                    }
+                }
+            }
+            // GRECLIPSE end
             for (ClassNode next : delegate.type.getAllInterfaces()) {
                 delegateMethods.addAll(getAllMethods(next));
             }
@@ -310,8 +340,9 @@ public class DelegateASTTransformation extends AbstractASTTransformation {
             for (int i = 0; i < newParams.length; i++) {
                 ClassNode newParamType = correctToGenericsSpecRecurse(genericsSpec, params[i].getType(), currentMethodGenPlaceholders);
                 Parameter newParam = new Parameter(newParamType, getParamName(params, i, delegate.name));
+                /* GRECLIPSE edit -- GROOVY-4320, GROOVY-4516
                 newParam.setInitialExpression(params[i].getInitialExpression());
-
+                */
                 if (memberHasValue(delegate.annotation, MEMBER_PARAMETER_ANNOTATIONS, true)) {
                     newParam.addAnnotations(copyAnnotatedNodeAnnotations(params[i], MY_TYPE_NAME));
                 }
