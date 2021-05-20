@@ -2867,4 +2867,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign groovy.lang.Closure<X> to: groovy.lang.Closure<A<java.lang.Number>>\n" +
             "----------\n");
     }
+
+    @Test
+    public void testTypeChecked10098() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C<T extends Number> {\n" +
+            "  T p\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  T test() {\n" +
+            "    Closure<T> x = { -> p }\n" +
+            "    x()\n" + // Cannot return value of type Object on method returning type T
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print new C<>(42).test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
 }

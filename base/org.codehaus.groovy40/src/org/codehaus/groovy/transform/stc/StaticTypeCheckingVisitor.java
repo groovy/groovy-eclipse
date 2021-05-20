@@ -3587,10 +3587,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         ClassNode type = getType(((ASTNode) variable));
                         if (CLOSURE_TYPE.equals(type)) {
                             GenericsType[] genericsTypes = type.getGenericsTypes();
+                            /* GRECLIPSE edit -- GROOVY-10098
                             type = OBJECT_TYPE;
                             if (genericsTypes != null && !genericsTypes[0].isPlaceholder()) {
                                 type = genericsTypes[0].getType();
                             }
+                            */
+                            if (genericsTypes != null && genericsTypes.length == 1
+                                    && genericsTypes[0].getLowerBound() == null) {
+                                type = getCombinedBoundType(genericsTypes[0]);
+                            } else {
+                                type = OBJECT_TYPE;
+                            }
+                            // GRECLIPSE end
                         }
                         if (type != null) {
                             storeType(call, type);
