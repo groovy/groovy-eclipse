@@ -17,6 +17,7 @@ package org.eclipse.jdt.core.groovy.tests.builder;
 
 import static org.codehaus.groovy.eclipse.core.model.RequireModuleOperation.requireModule;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -3185,33 +3186,33 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         //@formatter:off
         String baseType =
             "package test\n" +
-            "abstract class Class1 {\n" +
+            "abstract class Foo {\n" +
             "  abstract void m1()\n" +
             "  \n" +
             "  void m2() {}\n" +
             "  \n" +
-            "  static Class1 create(String type) {\n" +
+            "  static Foo create(String type) {\n" +
             "    switch (type) {\n" +
-            "    case 'Class2':\n" +
-            "      return new Class2()\n" +
-            "    case 'Class3':\n" +
-            "      return new Class3()\n" +
+            "    case 'Bar':\n" +
+            "      return new Bar()\n" +
+            "    case 'Baz':\n" +
+            "      return new Baz()\n" +
             "    default:\n" +
             "      assert false : \"Unexpected type ${type}\"\n" +
             "    }\n" +
             "  }\n" +
             "}\n";
-        IPath class1 = env.addGroovyClass(paths[1], "test", "Class1", baseType);
-        IPath class2 = env.addGroovyClass(paths[1], "test", "Class2",
+        IPath foo = env.addGroovyClass(paths[1], "test", "Foo", baseType);
+        IPath bar = env.addGroovyClass(paths[1], "test", "Bar",
             "package test\n" +
-            "class Class2 extends Class1 {\n" +
+            "class Bar extends Foo {\n" +
             "  @Override\n" +
             "  public void m1() {\n" +
             "  }\n" +
             "}\n");
-        IPath class3 = env.addGroovyClass(paths[1], "test", "Class3",
+        IPath baz = env.addGroovyClass(paths[1], "test", "Baz",
             "package test\n" +
-            "class Class3 extends Class1 {\n" +
+            "class Baz extends Foo {\n" +
             "  @Override\n" +
             "  public void m1() {\n" +
             "  }\n" +
@@ -3219,31 +3220,34 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         //@formatter:on
 
         incrementalBuild(paths[0]);
+        expectingCompiledClasses("test.Foo", "test.Bar", "test.Baz");
         expectingNoProblems();
-        expectingCompiledClasses("test.Class1", "test.Class2", "test.Class3");
 
         // modify the body of the abstract class to break build
-        class1 = env.addGroovyClass(paths[1], "test", "Class1", baseType.replace("m1", ""));
+        foo = env.addGroovyClass(paths[1], "test", "Foo", baseType.replace("m1()", "mx(){}"));
 
         incrementalBuild(paths[0]);
-        expectingProblemsFor(class1, Arrays.asList(
-            "Problem : Groovy:expecting EOF, found 'abstract'" +
-            " [ resource : </Project/src/test/Class1.groovy> range : <39,40> category : <60> severity : <2>]",
-            "Problem : Groovy:unexpected token: abstract" +
-            " [ resource : </Project/src/test/Class1.groovy> range : <39,40> category : <60> severity : <2>]"));
-        expectingProblemsFor(class2, Arrays.asList(
-            "Problem : Groovy:Method \'m1\' from class \'test.Class2\' does not override method from its superclass or interfaces" +
-            " but is annotated with @Override. [ resource : </Project/src/test/Class2.groovy> range : <45,54> category : <60> severity : <2>]"));
-        expectingProblemsFor(class3, Arrays.asList(
-            "Problem : Groovy:Method \'m1\' from class \'test.Class3\' does not override method from its superclass or interfaces" +
-            " but is annotated with @Override. [ resource : </Project/src/test/Class3.groovy> range : <45,54> category : <60> severity : <2>]"));
+        expectingProblemsFor(foo, Arrays.asList(
+            "Problem : Groovy:" + (!isParrotParser() ? "Abstract methods do not define a body."
+                : "You defined an abstract method[mx] with a body. Try removing the method body") +
+            " [ resource : </Project/src/test/Foo.groovy> range : <36,56> category : <60> severity : <2>]",
+            "Problem : The declared package \"\" does not match the expected package \"test\"" +
+            " [ resource : </Project/src/test/Foo.groovy> range : <0,1> category : <60> severity : <2>]"));
+        expectingProblemsFor(bar, Arrays.asList(
+            "Problem : Groovy:Method \'m1\' from class \'test.Bar\' does not override method from its superclass or interfaces" +
+            " but is annotated with @Override. [ resource : </Project/src/test/Bar.groovy> range : <39,48> category : <60> severity : <2>]",
+            "Problem : Groovy:unable to resolve class Foo [ resource : </Project/src/test/Bar.groovy> range : <31,34> category : <60> severity : <2>]"));
+        expectingProblemsFor(baz, Arrays.asList(
+            "Problem : Groovy:Method \'m1\' from class \'test.Baz\' does not override method from its superclass or interfaces" +
+            " but is annotated with @Override. [ resource : </Project/src/test/Baz.groovy> range : <39,48> category : <60> severity : <2>]",
+            "Problem : Groovy:unable to resolve class Foo [ resource : </Project/src/test/Baz.groovy> range : <31,34> category : <60> severity : <2>]"));
 
         // modify the body of the abstract class to fix build
-        env.addGroovyClass(paths[1], "test", "Class1", baseType);
+        env.addGroovyClass(paths[1], "test", "Foo", baseType);
 
         incrementalBuild(paths[0]);
+        expectingCompiledClasses("test.Foo", "test.Bar", "test.Baz", "test.Foo");
         expectingNoProblems();
-        expectingCompiledClasses("test.Class1", "test.Class2", "test.Class3");
     }
 
     @Test // https://bugs.eclipse.org/bugs/show_bug.cgi?id=123721

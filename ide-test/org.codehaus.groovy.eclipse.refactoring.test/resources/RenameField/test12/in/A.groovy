@@ -6,6 +6,5 @@ class A {
 	 */
 	def f
 	
-	A{}
+	A(){}
 }
-A

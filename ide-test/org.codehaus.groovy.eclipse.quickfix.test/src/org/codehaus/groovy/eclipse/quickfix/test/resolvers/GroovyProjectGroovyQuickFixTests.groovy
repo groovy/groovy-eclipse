@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -278,7 +278,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixTestSuite {
     @Test
     void testAddImportStaticInnerType2() {
         // When an inner type is referenced with its declaring type, for example,
-        // Map.Entry, 'Map' is imported. When the InnerType is referenced by it's
+        // Map.Entry, 'Map' is imported. When the inner type is referenced by its
         // simple name, there may be further suggestions as other top level types
         // might have inner types with the same name.
 
@@ -286,7 +286,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixTestSuite {
             |class Foo {
             |  static class Bar {
             |  }
-            |}.stripMargin()''', 'Foo', 'p')
+            |}'''.stripMargin(), 'Foo', 'p')
 
         def unit = addGroovySource('Foo.Bar bar = null')
 

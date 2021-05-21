@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 
 import org.eclipse.core.runtime.Platform;
@@ -596,13 +597,27 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in X.groovy (at line 2)\n" +
-            "\tOne<String,Integer>.Two<Boolean> two\n" +
-            "\t^\n" +
-            "Groovy:unexpected token: One\n" +
-            "----------\n");
+        runNegativeTest(sources, !isParrotParser()
+            ?
+                "----------\n" +
+                "1. ERROR in X.groovy (at line 2)\n" +
+                "\tOne<String,Integer>.Two<Boolean> two\n" +
+                "\t^\n" +
+                "Groovy:unexpected token: One\n" +
+                "----------\n"
+            :
+                "----------\n" +
+                "1. ERROR in X.groovy (at line 0)\n" +
+                "\tclass X {\n" +
+                "\t^\n" +
+                "Groovy:General error during conversion: groovyjarjarantlr4.v4.runtime.NoViableAltException\n" +
+                "----------\n" +
+                "2. ERROR in X.groovy (at line 2)\n" +
+                "\tOne<String,Integer>.Two<Boolean> two\n" +
+                "\t                   ^\n" +
+                "Groovy:Unexpected input: 'One<String,Integer>.'\n" +
+                "----------\n"
+        );
         /*TODO:
         runWarningFreeTest(sources);
         CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");

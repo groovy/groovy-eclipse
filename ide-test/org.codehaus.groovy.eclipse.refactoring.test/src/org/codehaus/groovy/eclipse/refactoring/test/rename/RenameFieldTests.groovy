@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ import groovy.transform.CompileStatic
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.groovy.eclipse.refactoring.test.internal.ParticipantTesting
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.jdt.core.Flags
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameFieldProcessor
-import org.eclipse.jdt.internal.corext.util.JdtFlags
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.participants.RenameArguments
@@ -46,7 +46,7 @@ final class RenameFieldTests extends RefactoringTestSuite {
         def unit = createCUfromTestFile(packageP, 'A')
         def type = getType(unit, typeName) ?: findType(typeName, unit)
         def field = type.getField(fieldName)
-        boolean isEnum = JdtFlags.isEnum(field)
+        boolean isEnum = Flags.isEnum(field.flags)
         boolean renameGetters = flags.getOrDefault('renameGetters', false)
         boolean renameSetters = flags.getOrDefault('renameSetters', false)
         boolean updateReferences = flags.getOrDefault('updateReferences', true)

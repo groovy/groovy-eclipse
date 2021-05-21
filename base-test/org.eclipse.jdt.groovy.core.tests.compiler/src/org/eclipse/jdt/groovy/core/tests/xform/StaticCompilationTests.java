@@ -4037,13 +4037,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foo");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9151")
+    @Test
     public void testCompileStatic9151() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "void greet(Object o = 'world', String s = o.toString()) {\n" +
+            "void greet(Object o = 'world', String s = o) {\n" +
             "  print \"hello $s\"\n" +
             "}\n" +
             "greet()\n",

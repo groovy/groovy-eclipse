@@ -2385,4 +2385,35 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
+
+    @Test
+    public void testAnnotationsTargetType13() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p;\n" +
+            "public class Main {\n" +
+            "  void m(@Anno('x') String s) {}\n" +
+            "  static main(args) {\n" +
+            "    print getMethod('m', String).annotatedParameterTypes[0].annotations[0].value()\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.groovy",
+            "package p\n" +
+            "import java.lang.annotation.*\n" +
+            "@Target(ElementType.TYPE_USE)\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\Main.groovy (at line 3)\n" +
+            "\tvoid m(@Anno('x') String s) {}\n" +
+            "\t       ^^^^^\n" +
+            "Groovy:Annotation @p.Anno is not allowed on element PARAMETER\n" +
+            "----------\n");
+    }
 }

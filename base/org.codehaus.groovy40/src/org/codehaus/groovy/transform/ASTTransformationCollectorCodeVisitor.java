@@ -209,7 +209,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                     for (AnnotationNode annotationNode : result) {
                         annotationNode.getNodeMetaData("AnnotationCollector", x -> new ArrayList<>(1)).add(alias);
                     }
-                    alias.setNodeMetaData("AnnotationCollectorTransform", result);
+                    alias.putNodeMetaData("AnnotationCollectorTransform", result);
                     // GRECLIPSE end
                     replacements.put(index, result);
                     return;
