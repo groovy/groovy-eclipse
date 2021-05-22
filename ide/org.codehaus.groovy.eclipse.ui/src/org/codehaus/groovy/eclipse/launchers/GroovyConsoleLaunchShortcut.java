@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ public class GroovyConsoleLaunchShortcut extends AbstractGroovyLaunchShortcut {
 
     @Override
     protected String mainArgs(final IType runType, final IJavaProject javaProject) {
-        StringBuilder mainArgs = new StringBuilder("groovy.ui.Console");
+        StringBuilder mainArgs = new StringBuilder(isAtLeastGroovy(3, 0, 0) ? "groovy.console.ui.Console" : "groovy.ui.Console");
 
         if (isAtLeastGroovy(2, 5, 0)) {
             CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
