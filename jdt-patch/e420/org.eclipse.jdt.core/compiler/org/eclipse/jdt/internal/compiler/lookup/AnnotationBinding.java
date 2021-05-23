@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -42,14 +42,17 @@ public static AnnotationBinding[] addStandardAnnotations(AnnotationBinding[] rec
 		return recordedAnnotations;
 	}
 	boolean haveDeprecated = false;
-	for (AnnotationBinding annotationBinding : recordedAnnotations) {
-		if (annotationBinding.getAnnotationType().id == TypeIds.T_JavaLangDeprecated) {
+	boolean hasTarget = false;
+	for (AnnotationBinding ab : recordedAnnotations) {
+		ReferenceBinding type = ab.getAnnotationType();
+		if (type.id == TypeIds.T_JavaLangDeprecated) {
 			haveDeprecated = true;
-			break;
+		} else if (type.id == TypeIds.T_JavaLangAnnotationTarget) {
+			hasTarget = true;
 		}
 	}
 	int count = 0;
-	if ((annotationTagBits & TagBits.AnnotationTargetMASK) != 0)
+	if (!hasTarget && (annotationTagBits & TagBits.AnnotationTargetMASK) != 0)
 		count++;
 	if ((annotationTagBits & TagBits.AnnotationRetentionMASK) != 0)
 		count++;
@@ -75,8 +78,13 @@ public static AnnotationBinding[] addStandardAnnotations(AnnotationBinding[] rec
 	int index = recordedAnnotations.length;
 	AnnotationBinding[] result = new AnnotationBinding[index + count];
 	System.arraycopy(recordedAnnotations, 0, result, 0, index);
-	if ((annotationTagBits & TagBits.AnnotationTargetMASK) != 0)
-		result[index++] = buildTargetAnnotation(annotationTagBits, env);
+	if ((annotationTagBits & TagBits.AnnotationTargetMASK) != 0) {
+		// Build it anyway to ensure all necessary bindings are resolved
+		AnnotationBinding targetAnnot = buildTargetAnnotation(annotationTagBits, env);
+		if (!hasTarget) {
+			result[index++] = targetAnnot;
+		}
+	}
 	if ((annotationTagBits & TagBits.AnnotationRetentionMASK) != 0)
 		result[index++] = buildRetentionAnnotation(annotationTagBits, env);
 	if (!haveDeprecated && (annotationTagBits & TagBits.AnnotationDeprecated) != 0)

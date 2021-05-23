@@ -15,6 +15,7 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.util.Locale;
 
+import org.eclipse.jdt.internal.codeassist.complete.CompletionOnMemberAccess;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionParser;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionScanner;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -24,6 +25,7 @@ import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Initializer;
+import org.eclipse.jdt.internal.compiler.ast.ThisReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -290,10 +292,18 @@ private void checkParse(
 	if (expectedReplacedSource != null){
 		char[] chars = null;
 		if (parser.assistNode != null){
-			chars = CharOperation.subarray(
-				parser.scanner.source,
-				parser.assistNode.sourceStart,
-				parser.assistNode.sourceEnd + 1);
+			int start = parser.assistNode.sourceStart;
+			int end = parser.assistNode.sourceEnd;
+			if (parser.assistNode instanceof CompletionOnMemberAccess) {
+				CompletionOnMemberAccess memberAccess = (CompletionOnMemberAccess) parser.assistNode;
+				if (!(memberAccess.receiver instanceof ThisReference)) {
+					// for these CompletionEngine uses a more specific position:
+					long position = memberAccess.nameSourcePosition;
+					start = (int) (position >>> 32);
+					end = (int) position;
+				}
+			}
+			chars = CharOperation.subarray(parser.scanner.source, start, end + 1);
 		} else {
 			if (parser.assistIdentifier() != null){
 				if (((CompletionScanner)parser.scanner).completedIdentifierEnd

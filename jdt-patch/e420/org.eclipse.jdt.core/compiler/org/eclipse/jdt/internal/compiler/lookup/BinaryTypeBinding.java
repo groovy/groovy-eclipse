@@ -45,6 +45,8 @@
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *    Sebastian Zarnekow - Contributions for
  *								bug 544921 - [performance] Poor performance with large source files
+ *    Alexander Lehmann - Contributions for
+ *								bug 566258 - Intermittent NPE in APT RoundDispatcher
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -1711,10 +1713,9 @@ public ReferenceBinding[] memberTypes() {
 		 * is sorted, too.
 		 */
 		ReferenceBinding [] members = this.prototype.memberTypes();
-		int memberTypesLength = members == null ? 0 : members.length;
-		if (memberTypesLength > 0) {
-			this.memberTypes = new ReferenceBinding[memberTypesLength];
-			for (int i = 0; i < memberTypesLength; i++)
+		if (members != null) {
+			this.memberTypes = new ReferenceBinding[members.length];
+			for (int i = 0; i < members.length; i++)
 				this.memberTypes[i] = this.environment.createMemberType(members[i], this);
 		}
 		this.tagBits &= ~TagBits.HasUnresolvedMemberTypes;

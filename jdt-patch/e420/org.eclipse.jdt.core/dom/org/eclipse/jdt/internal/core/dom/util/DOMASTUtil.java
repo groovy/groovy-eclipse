@@ -148,23 +148,16 @@ public class DOMASTUtil {
 
 	@SuppressWarnings("deprecation")
 	public static void checkASTLevel(int level) {
+		// Clients can use AST.JLS_Latest
+		if(level >=AST.JLS8 && level <= AST.JLS_Latest )
+			return;
 		switch (level) {
 	        case AST.JLS2 :
 	        case AST.JLS3 :
 	        case AST.JLS4 :
-	        case AST.JLS8 :
-	        case AST.JLS9 :
-	        case AST.JLS10 :
-	        case AST.JLS11 :
-	        case AST.JLS12 :
-	        case AST.JLS13 :
-	        case AST.JLS14 :
-	        case AST.JLS15 :
-	        case AST.JLS16 :
 	        	return;
 		}
-		throw new IllegalArgumentException();
-
+		throw new IllegalArgumentException(Integer.toString(level));
 	}
 
 }

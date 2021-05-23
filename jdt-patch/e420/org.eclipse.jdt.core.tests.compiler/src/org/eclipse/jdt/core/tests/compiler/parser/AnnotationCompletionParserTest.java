@@ -3191,7 +3191,7 @@ public void test0083(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "(<CompleteOnName:foo> && c)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -3522,7 +3522,7 @@ public void test0093(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "(<CompleteOnName:foo> && c)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -3842,7 +3842,7 @@ public void test0103(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "(<CompleteOnName:foo> && c)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4918,7 +4918,7 @@ public void test0123(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "(<CompleteOnName:foo> && c)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =

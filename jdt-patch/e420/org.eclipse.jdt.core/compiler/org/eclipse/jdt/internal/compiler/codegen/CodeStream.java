@@ -3433,6 +3433,35 @@ public void generateSyntheticOuterArgumentValues(BlockScope currentScope, Refere
 		}
 	}
 }
+public void generateSyntheticBodyForRecordCanonicalConstructor(SyntheticMethodBinding canonConstructor) {
+	initializeMaxLocals(canonConstructor);
+	SourceTypeBinding declaringClass = (SourceTypeBinding) canonConstructor.declaringClass;
+	ReferenceBinding superClass = declaringClass.superclass();
+	MethodBinding superCons = superClass.getExactConstructor(new TypeBinding[0]);
+	aload_0();
+	invoke(Opcodes.OPC_invokespecial, superCons, superClass);
+	int resolvedPosition;
+	FieldBinding[] fields =  declaringClass.getImplicitComponentFields();
+	int len = fields != null ? fields.length : 0;
+	resolvedPosition = 1;
+	for (int i = 0;  i < len; ++i) {
+		FieldBinding field = fields[i];
+		aload_0();
+	    TypeBinding type = field.type;
+		load(type, resolvedPosition);
+		switch(type.id) {
+			case TypeIds.T_long :
+			case TypeIds.T_double :
+				resolvedPosition += 2;
+				break;
+			default :
+				resolvedPosition++;
+				break;
+		}
+		fieldAccess(Opcodes.OPC_putfield, field, declaringClass);
+	}
+	return_();
+}
 public void generateSyntheticBodyForRecordEquals(SyntheticMethodBinding methodBinding, int index) {
 	initializeMaxLocals(methodBinding);
 	aload_0();

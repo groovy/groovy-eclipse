@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.util.IAttributeNamesConstants;
 import org.eclipse.jdt.core.util.IClassFileAttribute;
 import org.eclipse.jdt.core.util.IClassFileReader;
 import org.eclipse.jdt.core.util.IMethodInfo;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.util.BootstrapMethodsAttribute;
 
@@ -7204,6 +7205,81 @@ public void testBug540631() {
 			"}\n"
 		};
 	runner.runConformTest();
+}
+public void testBug562324() {
+	if (this.complianceLevel < ClassFileConstants.JDK11)
+		return; // uses 'var'
+	runConformTest(
+		new String[] {
+			"X.java",
+			"\n" +
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"import java.util.Set;\n" +
+			"import java.util.function.Function;\n" +
+			"import java.util.stream.Collector;\n" +
+			"\n" +
+			"public class X  {\n" +
+			"\n" +
+			"	public static void main(String[] args) {\n" +
+			"		try {\n" +
+			"			List<String> taskNames = Arrays.asList(\"First\", \"Second\", \"Third\");\n" +
+			"			\n" +
+			"			// To avoid the ClassFormatError at run-time, declare this variable with type 'Set<Y>'\n" +
+			"			var services = taskNames.stream().collect(X.toSet(name -> new Y(){}));\n" +
+			"\n" +
+			"			String[] names = services.stream().map(e -> e).toArray(String[] :: new);\n" +
+			"		} catch (RuntimeException re) {\n" +
+			"			System.out.print(re.getMessage());\n" +
+			"		}\n" +
+			"	}\n" +
+			"    public static <T, U>\n" +
+			"    Collector<T, ?, Set<U>> toSet(Function<? super T, ? extends U> valueMapper) {\n" +
+			"    	throw new RuntimeException(\"it runs\");\n" +
+			"    }\n" +
+			"\n" +
+			"}\n" +
+			"\n" +
+			"abstract class Y{}\n"
+		},
+		"it runs");
+}
+public void testBug562324b() {
+	runConformTest(
+		new String[] {
+			"X.java",
+			"\n" +
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"import java.util.Set;\n" +
+			"import java.util.function.Function;\n" +
+			"import java.util.stream.Collector;\n" +
+			"\n" +
+			"public class X  {\n" +
+			"\n" +
+			"	public static void main(String[] args) {\n" +
+			"		try {\n" +
+			"			List<String> taskNames = Arrays.asList(\"First\", \"Second\", \"Third\");\n" +
+			"			\n" +
+			"			// To avoid the ClassFormatError at run-time, declare this variable with type 'Set<Y>'\n" +
+			"			;\n" +
+			"\n" +
+			"			String[] names = taskNames.stream().collect(X.toSet(name -> new Y(){}))\n" +
+			"								.stream().map(e -> e).toArray(String[] :: new);\n" +
+			"		} catch (RuntimeException re) {\n" +
+			"			System.out.print(re.getMessage());\n" +
+			"		}\n" +
+			"	}\n" +
+			"    public static <T, U>\n" +
+			"    Collector<T, ?, Set<U>> toSet(Function<? super T, ? extends U> valueMapper) {\n" +
+			"    	throw new RuntimeException(\"it runs\");\n" +
+			"    }\n" +
+			"\n" +
+			"}\n" +
+			"\n" +
+			"abstract class Y{}\n"
+		},
+		"it runs");
 }
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

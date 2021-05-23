@@ -663,8 +663,13 @@ public CompilationUnitDeclaration getCompilationUnitDeclaration() {
 	return null;
 }
 
-/* only for records */
+/**
+ * This is applicable only for records - ideally get the canonical constructor, if not
+ * get a constructor and at the client side tentatively marked as canonical constructor
+ * which gets checked at the binding time. If there are no constructors, then null is returned.
+ **/
 public ConstructorDeclaration getConstructor(Parser parser) {
+	ConstructorDeclaration cd = null;
 	if (this.methods != null) {
 		for (int i = this.methods.length; --i >= 0;) {
 			AbstractMethodDeclaration am;
@@ -686,17 +691,19 @@ public ConstructorDeclaration getConstructor(Parser parser) {
 						return ccd;
 					}
 					// now we are looking at a "normal" constructor
-					if (this.recordComponents == null && am.arguments == null)
+					if ((this.recordComponents == null || this.recordComponents.length == 0)
+							&& am.arguments == null)
 						return (ConstructorDeclaration) am;
+					cd = (ConstructorDeclaration) am; // just return the last constructor
 				}
 			}
 		}
 	}
-	/* At this point we can only say that there is high possibility that there is a constructor
-	 * If it is a CCD, then definitely it is there (except for empty one); else we need to check
-	 * the bindings to say that there is a canonical constructor. To take care at binding resolution time.
-	 */
-	return null;
+//	/* At this point we can only say that there is high possibility that there is a constructor
+//	 * If it is a CCD, then definitely it is there (except for empty one); else we need to check
+//	 * the bindings to say that there is a canonical constructor. To take care at binding resolution time.
+//	 */
+	return cd; // the last constructor
 }
 
 /**

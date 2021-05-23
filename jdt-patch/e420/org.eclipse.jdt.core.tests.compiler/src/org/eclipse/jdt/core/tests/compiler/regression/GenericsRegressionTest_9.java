@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2018 IBM Corporation.
+ * Copyright (c) 2016, 2021 IBM Corporation.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -23,7 +23,7 @@ import junit.framework.Test;
 public class GenericsRegressionTest_9 extends AbstractRegressionTest9 {
 
 static {
-//	TESTS_NAMES = new String[] { "testBug488663_006" };
+//	TESTS_NAMES = new String[] { "testBug551913_001", "testBug551913_002" };
 //	TESTS_NUMBERS = new int[] { 40, 41, 43, 45, 63, 64 };
 //	TESTS_RANGE = new int[] { 11, -1 };
 }
@@ -166,8 +166,9 @@ public void testBug488663_005() {
 			"1. ERROR in X.java (at line 7)\n" +
 			"	Y<?> y = new Y<>() {};\n" +
 			"	             ^\n" +
-			"Type Y<\\E(I & J|J & I)\\Q> inferred for Y<>, is not valid for an anonymous class with '<>'\n" +
+			"Type Y<I & J> inferred for Y<>, is not valid for an anonymous class with '<>'\n" +
 			"----------\n");
+
 }
 
 //compiler error for non-denotable anonymous type with diamond operator - negative test
@@ -668,6 +669,58 @@ public void testBug533644() {
 			"}\n"
 	};
 	runner.runConformTest();
+}
+//As All non-private methods of an anonymous class instantiated with '<>' must be treated as being annotated with @override,
+//"Remove redundant type arguments" error should be reported if all the non-private methods defined in the anonymous class
+//are also present in the parent class.
+public void testBug551913_001() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"	int foo() {\n" +
+			"		java.util.HashSet<String> a = new java.util.HashSet<>();\n" +
+			"		java.util.HashSet<String> b = new java.util.HashSet<String>(a) {\n" +
+			"			private static final long serialVersionUID = 1L;\n" +
+			"			public int x() {return 10;}\n" +
+			"		};\n" +
+			"		return 10;\n" +
+			"	}\n\n" +
+			"	public static void main(String[] args) {\n" +
+			"		X abc= new X();\n" +
+			"		System.out.println(abc.foo());" +
+			"	}" +
+			"}",
+		},"10", options);
+}
+// As All non-private methods of an anonymous class instantiated with '<>' must be treated as being annotated with @override,
+// "Remove redundant type arguments" error should be reported if all the non-private methods defined in the anonymous class
+// are also present in the parent class.
+public void testBug551913_002() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"	void foo() {\n" +
+			"		java.util.HashSet<String> a = new java.util.HashSet<>();\n" +
+			"		java.util.HashSet<String> b = new java.util.HashSet<String>(a) {\n" +
+			"			private static final long serialVersionUID = 1L;\n" +
+			"			public String toString() {return null;}\n" +
+			"		};\n" +
+			"	}\n" +
+			"}",
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\n" +
+		"	java.util.HashSet<String> b = new java.util.HashSet<String>(a) {\n" +
+		"	                                            ^^^^^^^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n",
+		null, true, options);
 }
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;

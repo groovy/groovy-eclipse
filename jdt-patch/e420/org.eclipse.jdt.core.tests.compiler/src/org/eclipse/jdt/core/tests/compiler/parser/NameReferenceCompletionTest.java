@@ -166,7 +166,7 @@ public void test1FVRQQA_2() {
 		"  void foo() {\n" +
 		"    Enumeration e;\n" +
 	    "    for (; <CompleteOnName:e.has>; ) \n" +
-	    "      ;\n" + 
+	    "      ;\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -301,7 +301,7 @@ public void test1G8DE30() {
 		// expectedCompletionIdentifier:
 		"",
 		// expectedReplacedSource:
-		"",
+		"Bar",
 		// test name
 		"<1G8DE30>"
 	);
@@ -614,7 +614,7 @@ public void testMethodInvocationAnonymousInnerClass() {
 		// expectedCompletionIdentifier:
 		"",
 		// expectedReplacedSource:
-		"x.",
+		"x.y.z",
 		// test name
 		"<complete inside anonymous inner class inside method invocation 1>"
 	);

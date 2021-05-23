@@ -357,12 +357,12 @@ public class BindingKeyResolver extends BindingKeyParser {
 			this.typeBinding = null;
 			return;
 		}
- 		LocalTypeBinding[] localTypeBindings  = this.parsedUnit.localTypes;
- 		for (int i = 0; i < this.parsedUnit.localTypeCount; i++)
- 			if (CharOperation.equals(uniqueKey, localTypeBindings[i].computeUniqueKey(false/*not a leaf*/))) {
- 				this.typeBinding = localTypeBindings[i];
+ 		for (LocalTypeBinding localTypeBinding : this.parsedUnit.localTypes.values()) {
+ 			if (CharOperation.equals(uniqueKey, localTypeBinding.computeUniqueKey(false/*not a leaf*/))) {
+ 				this.typeBinding = localTypeBinding;
  				return;
  			}
+ 		}
 	}
 
 	@Override

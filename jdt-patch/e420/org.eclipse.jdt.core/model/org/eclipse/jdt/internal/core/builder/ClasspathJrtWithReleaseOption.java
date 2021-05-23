@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2019 IBM Corporation and others.
+ * Copyright (c) 2016, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -253,6 +253,13 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 						reader = new ClassFileReader(content, qualifiedBinaryFileName.toCharArray());
 						if (moduleName != null) {
 							((ClassFileReader) reader).moduleName = moduleName.toCharArray();
+						} else {
+							if (this.ctSym.isJRE12Plus()) {
+								moduleName = this.ctSym.getModuleInJre12plus(this.releaseCode, qualifiedBinaryFileName);
+								if (moduleName != null) {
+									((ClassFileReader) reader).moduleName = moduleName.toCharArray();
+								}
+							}
 						}
 					}
 				}

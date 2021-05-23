@@ -42,7 +42,7 @@ public abstract class AbstractLeakTest extends BuilderTests {
 	static boolean LINUX;
 	static boolean MAC;
 	static boolean lsofCheckDone;
-	
+
 	static {
 		String os = System.getProperty("os.name").toLowerCase();
 		WINDOWS = os.contains("windows");
@@ -168,10 +168,25 @@ public abstract class AbstractLeakTest extends BuilderTests {
 	}
 
 	private void checkOpenDescriptors(IFile file) throws Exception {
+		runGcAndFInalization();
 		List<String> processes = getProcessesOpenedFile(Paths.get(file.getLocation().toOSString()));
 		if(!processes.isEmpty()) {
-			throw new IllegalStateException("File leaked during build: " + file);
+			runGcAndFInalization();
+			Thread.sleep(5000);
+			processes = getProcessesOpenedFile(Paths.get(file.getLocation().toOSString()));
+			if(!processes.isEmpty()) {
+				throw new IllegalStateException("File leaked during build: " + file);
+			}
 		}
+	}
+
+	private void runGcAndFInalization() {
+		System.gc();
+		System.runFinalization();
+		System.gc();
+		System.runFinalization();
+		System.gc();
+		System.runFinalization();
 	}
 
 

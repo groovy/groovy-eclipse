@@ -768,7 +768,8 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				if (length > 0) {
 					int parameterNamesLength = parameterNames.length;
 					if (length < parameterNamesLength) {
-						System.arraycopy(invisibleParameterAnnotations, 0, (invisibleParameterAnnotations = new IParameterAnnotation[parameterNamesLength]), 1, length);
+						int startExplicitParams = parameterNamesLength - length;
+						System.arraycopy(invisibleParameterAnnotations, 0, (invisibleParameterAnnotations = new IParameterAnnotation[parameterNamesLength]), startExplicitParams, length);
 						length = parameterNamesLength;
 					}
 				}
@@ -780,7 +781,8 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				if (length > 0) {
 					int parameterNamesLength = parameterNames.length;
 					if (length < parameterNamesLength) {
-						System.arraycopy(visibleParameterAnnotations, 0, (visibleParameterAnnotations = new IParameterAnnotation[parameterNamesLength]), 1, length);
+						int startExplicitParams = parameterNamesLength - length;
+						System.arraycopy(visibleParameterAnnotations, 0, (visibleParameterAnnotations = new IParameterAnnotation[parameterNamesLength]), startExplicitParams, length);
 						length = parameterNamesLength;
 					}
 				}

@@ -323,6 +323,7 @@ private AssertUtil detectAssertionUtility(int argumentIdx) {
 					break;
 				case TypeIds.T_JunitFrameworkAssert:
 				case TypeIds.T_OrgJunitAssert:
+				case TypeIds.T_OrgJunitJupiterApiAssertions:
 					if (parameterType.id == TypeIds.T_boolean) {
 						if (CharOperation.equals(TypeConstants.ASSERT_TRUE, this.selector))
 							return AssertUtil.TRUE_ASSERTION;

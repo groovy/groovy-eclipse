@@ -105,6 +105,10 @@ public class IndexManager extends JobManager implements IIndexConstants {
 	public static final String MANAGE_PRODUCT_INDEXES_PROPERTY = "jdt.core.manageProductIndexes"; //$NON-NLS-1$
 	private static final boolean IS_MANAGING_PRODUCT_INDEXES_PROPERTY = Boolean.getBoolean(MANAGE_PRODUCT_INDEXES_PROPERTY);
 
+	// save indices after idling for time equal to this property (in ms)
+	public static final String INDEX_MANAGER_NOTIFY_IDLE_WAIT_PROPERTY = "jdt.core.indexManager.notifyIdleWait"; //$NON-NLS-1$
+	private static final long INDEX_MANAGER_NOTIFY_IDLE_WAIT = getNotifyIdleWait();
+
 	// Debug
 	public static boolean DEBUG = false;
 
@@ -711,7 +715,7 @@ protected synchronized void moveToNextJob() {
  */
 @Override
 protected void notifyIdle(long idlingTime){
-	if (idlingTime > 1000 && this.needToSave) saveIndexes();
+	if (idlingTime > INDEX_MANAGER_NOTIFY_IDLE_WAIT && this.needToSave) saveIndexes();
 }
 /**
  * Name of the background process
@@ -1329,5 +1333,18 @@ private void writeSavedIndexNamesFile() {
 		}
 	}
 	this.nameRegistry.write(arrays);
+}
+
+private static long getNotifyIdleWait() {
+	long idleWait = 1000;
+	String idleWaitPropertyValue = System.getProperty(INDEX_MANAGER_NOTIFY_IDLE_WAIT_PROPERTY);
+	if (idleWaitPropertyValue != null) {
+		try {
+			idleWait = Long.parseLong(idleWaitPropertyValue);
+		} catch (NumberFormatException e) {
+			Util.log(e, "Failed to parse value of property \"" + INDEX_MANAGER_NOTIFY_IDLE_WAIT_PROPERTY + "\": " + idleWaitPropertyValue); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+	return idleWait;
 }
 }

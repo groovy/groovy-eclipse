@@ -13,6 +13,8 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.File;
 
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+
 import junit.framework.Test;
 @SuppressWarnings({ "rawtypes" })
 public class BatchCompilerTest_16 extends AbstractBatchCompilerTest {
@@ -37,6 +39,8 @@ public class BatchCompilerTest_16 extends AbstractBatchCompilerTest {
                 super(name);
         }
         public void testBug571454_001(){
+        		if (!AbstractBatchCompilerTest.isJREVersionEqualTo(CompilerOptions.VERSION_16))
+        			return;
                 String currentWorkingDirectoryPath = System.getProperty("user.dir");
                 if (currentWorkingDirectoryPath == null) {
                         System.err.println("BatchCompilerTest#testBug564047_001 could not access the current working directory " + currentWorkingDirectoryPath);
@@ -65,7 +69,7 @@ public class BatchCompilerTest_16 extends AbstractBatchCompilerTest {
                                     "\"" + OUTPUT_DIR +  File.separator + "src/X.java\""
                                     + " \"" + OUTPUT_DIR +  File.separator + "src/R.java\""
                                         + " -sourcepath \"" + OUTPUT_DIR +  File.separator + "src\""
-                                + " --release 16 --enable-preview -g -preserveAllLocals"
+                                + " --release 16 -g -preserveAllLocals"
                                 + " -proceedOnError -referenceInfo"
                                 + " -d \"" + OUTPUT_DIR + File.separator + "bin\" ",
                                 "",
@@ -80,5 +84,34 @@ public class BatchCompilerTest_16 extends AbstractBatchCompilerTest {
                         } finally {
                         }
                 }
+        }
+        public void testBug570399(){
+    		if (!AbstractBatchCompilerTest.isJREVersionEqualTo(CompilerOptions.VERSION_16))
+    			return;
+        	this.runConformTest(
+        		new String[] {
+                    "src/X.java",
+                    "public class X {\n"+
+                    "    public static void main(String argv[]) {\n"+
+                    "       new R(3);\n"+
+                    "       new R();\n"+
+                    "    }\n"+
+                    "}\n",
+                    "src/R.java",
+                    "record R(int x) {\n"+
+                    "       R() {\n"+
+                    "       this(0);\n"+
+                    "       }\n"+
+                    "}",
+                },
+                "\"" + OUTPUT_DIR +  File.separator + "src/X.java\""
+                + " \"" + OUTPUT_DIR +  File.separator + "src/R.java\""
+                    + " -sourcepath \"" + OUTPUT_DIR +  File.separator + "src\""
+            + " --release 16 -g -preserveAllLocals"
+            + " -proceedOnError -referenceInfo"
+            + " -d \"" + OUTPUT_DIR + File.separator + "bin\" ",
+            "",
+                "",
+                true);
         }
 }

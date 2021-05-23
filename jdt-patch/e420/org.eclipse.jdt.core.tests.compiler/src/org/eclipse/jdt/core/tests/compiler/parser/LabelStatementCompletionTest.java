@@ -307,19 +307,18 @@ public void testInLabeledInnerClass() {
 		// completeBehind:
 		"X",
 		// expectedCompletionNodeToString:
-		"<CompleteOnName:X>",
+		"<CompleteOnType:X>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
 		"    {\n" +
-		"      Object o;\n" +
-		"      new Object() {\n" +
+		"      Object o = new Object() {\n" +
 		"        void fred() {\n" +
-		"          {\n" +
-		"            <CompleteOnName:X>;\n" +
-		"          }\n" +
+		"          label2: {\n" +
+		"  <CompleteOnType:X> o;\n" +
+		"}\n" +
 		"        }\n" +
 		"      };\n" +
 		"    }\n" +

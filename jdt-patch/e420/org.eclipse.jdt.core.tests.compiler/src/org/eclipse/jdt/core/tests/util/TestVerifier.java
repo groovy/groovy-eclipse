@@ -128,8 +128,7 @@ public void execute(String className, String[] classpaths) {
 
 	launchAndRun(className, classpaths, null, null);
 }
-@Override
-@SuppressWarnings("deprecation")
+@Override @SuppressWarnings("deprecation")
 protected void finalize() throws Throwable {
 	shutDown();
 }

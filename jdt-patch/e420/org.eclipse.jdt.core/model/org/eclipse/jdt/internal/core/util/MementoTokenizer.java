@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2018 IBM Corporation and others.
+ * Copyright (c) 2004, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -63,9 +63,9 @@ public class MementoTokenizer {
 			case JavaElement.JEM_COUNT:
 				return COUNT;
 			case JavaElement.JEM_JAVAPROJECT:
-				// Also covers JavaElement#JEM_DELIMITER_ESCAPE, in which case, 
+				// Also covers JavaElement#JEM_DELIMITER_ESCAPE, in which case,
 				// we seek ahead by one char and check if it's an escaped delimiter
-				// and if that's true, we return that as the token. 
+				// and if that's true, we return that as the token.
 				// Else, we decide that JEM_JAVAPROJECT is the current token.
 				if (this.index < this.length) {
 					char nextChar = this.memento[this.index++];
@@ -121,8 +121,6 @@ public class MementoTokenizer {
 					if (buffer == null) buffer = new StringBuffer();
 					buffer.append(this.memento, start, this.index - start);
 					start = ++this.index;
-					if (this.memento[this.index] == JavaElement.JEM_MODULE)
-						return buffer.toString();
 					break;
 				case JavaElement.JEM_COUNT:
 				case JavaElement.JEM_JAVAPROJECT:

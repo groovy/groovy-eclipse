@@ -125,6 +125,8 @@ public interface TypeIds {
 	final int T_OrgApacheCommonsLang3Validate = 72;
 	final int T_ComGoogleCommonBasePreconditions = 73;
 	final int T_JavaUtilObjects = 74;
+	// new in 3.26 to identify more assertion utilities:
+	final int T_OrgJunitJupiterApiAssertions = 75;
 
 	// java 8
 	final int T_JavaLangFunctionalInterface = 77;
@@ -285,7 +287,7 @@ public interface TypeIds {
 	 * Set of type bits that should be inherited by any sub types.
 	 */
 	final int InheritableBits = BitAutoCloseable | BitCloseable | BitUninternedType | BitMap | BitCollection | BitList ;
-	
+
 	public static int getCategory(int typeId) {
 		return typeId == TypeIds.T_double || typeId == TypeIds.T_long ? 2 : 1;
 	}

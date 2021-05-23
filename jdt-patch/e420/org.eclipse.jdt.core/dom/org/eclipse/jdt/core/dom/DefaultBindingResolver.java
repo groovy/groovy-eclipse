@@ -641,6 +641,9 @@ class DefaultBindingResolver extends BindingResolver {
 	@Override
 	Object resolveConstantExpressionValue(Expression expression) {
 		org.eclipse.jdt.internal.compiler.ast.ASTNode node = (org.eclipse.jdt.internal.compiler.ast.ASTNode) this.newAstToOldAst.get(expression);
+		if(node instanceof org.eclipse.jdt.internal.compiler.ast.FieldDeclaration) {
+				node = ((org.eclipse.jdt.internal.compiler.ast.FieldDeclaration) node).initialization;
+		}
 		if (node instanceof org.eclipse.jdt.internal.compiler.ast.Expression &&
 				((org.eclipse.jdt.internal.compiler.ast.Expression) node).isTrulyExpression()) {
 			org.eclipse.jdt.internal.compiler.ast.Expression compilerExpression = (org.eclipse.jdt.internal.compiler.ast.Expression) node;

@@ -8593,12 +8593,12 @@ public void test428177() {
 		"4. ERROR in X.java (at line 36)\n" +
 		"	if(\"1\" == \"\") { return stream.collect(Collectors.toList()).stream(); // ERROR\n" +
 		"	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Type mismatch: cannot convert from Stream<capture#25-of ? extends String> to Stream<String>\n" +
+		"Type mismatch: cannot convert from Stream<capture#24-of ? extends String> to Stream<String>\n" +
 		"----------\n" +
 		"5. ERROR in X.java (at line 38)\n" +
 		"	return stream.collect(Collectors.toList()); // NO ERROR\n" +
 		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Type mismatch: cannot convert from List<capture#28-of ? extends String> to Stream<String>\n" +
+		"Type mismatch: cannot convert from List<capture#27-of ? extends String> to Stream<String>\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428795, - [1.8]Internal compiler error: java.lang.NullPointerException at org.eclipse.jdt.internal.compiler.ast.MessageSend.analyseCode

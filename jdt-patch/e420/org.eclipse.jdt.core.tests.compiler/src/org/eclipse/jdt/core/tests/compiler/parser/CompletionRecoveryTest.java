@@ -462,7 +462,7 @@ public void test10() {
 		// completeBehind:
 		"argv",
 		// expectedCompletionNodeToString:
-		"<CompleteOnName:>",
+		"<CompleteOnArgumentName:String[] argv>",
 		// expectedUnitDisplayString:
 		"package pack;\n" +
 		"class A {\n" +
@@ -478,9 +478,9 @@ public void test10() {
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
-		"",
+		"argv",
 		// expectedReplacedSource:
-		"",
+		"argv",
 		// test name
 		"<completion on argument name>"
 	);
@@ -554,7 +554,7 @@ public void test12() {
 		// completeBehind:
 		"argv",
 		// expectedCompletionNodeToString:
-		"<CompleteOnName:>",
+		"<CompleteOnArgumentName:String[] argv>",
 		// expectedUnitDisplayString:
 		"class DD {\n" +
 		"  DD() {\n" +
@@ -563,9 +563,9 @@ public void test12() {
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
-		"",
+		"argv",
 		// expectedReplacedSource:
-		"",
+		"argv",
 		// test name
 		"<complete on argument name with class decl later on>"
 	);
@@ -1035,46 +1035,46 @@ public void test25() {
 public void test26() {
 	this.runTestCheckMethodParse(
 		// compilationUnit:
-		"import org.eclipse.swt.*;\n" + 
-		"import org.eclipse.swt.events.*;\n" + 
-		"import org.eclipse.swt.widgets.*;\n" + 
-		"\n" + 
-		"public class Try {\n" + 
-		"\n" + 
-		"    void main(Shell shell) {\n" + 
-		"\n" + 
-		"        final Label label= new Label(shell, SWT.WRAP);\n" + 
-		"        label.addPaintListener(new PaintListener() {\n" + 
-		"            public void paintControl(PaintEvent e) {\n" + 
-		"                e.gc.setLineCap(SWT.CAP_); // content assist after CAP_\n" + 
-		"            }\n" + 
-		"        });\n" + 
-		"\n" + 
-		"        shell.addControlListener(new ControlAdapter() { });\n" + 
-		"\n" + 
-		"        while (!shell.isDisposed()) { }\n" + 
-		"    }\n" + 
-		"}\n" + 
+		"import org.eclipse.swt.*;\n" +
+		"import org.eclipse.swt.events.*;\n" +
+		"import org.eclipse.swt.widgets.*;\n" +
+		"\n" +
+		"public class Try {\n" +
+		"\n" +
+		"    void main(Shell shell) {\n" +
+		"\n" +
+		"        final Label label= new Label(shell, SWT.WRAP);\n" +
+		"        label.addPaintListener(new PaintListener() {\n" +
+		"            public void paintControl(PaintEvent e) {\n" +
+		"                e.gc.setLineCap(SWT.CAP_); // content assist after CAP_\n" +
+		"            }\n" +
+		"        });\n" +
+		"\n" +
+		"        shell.addControlListener(new ControlAdapter() { });\n" +
+		"\n" +
+		"        while (!shell.isDisposed()) { }\n" +
+		"    }\n" +
+		"}\n" +
 		"\n",
 		// completeBehind:
 		"SWT.CAP_",
 		// expectedCompletionNodeToString:
 		"<CompleteOnName:SWT.CAP_>",
 		// expectedUnitDisplayString:
-		"import org.eclipse.swt.*;\n" + 
-		"import org.eclipse.swt.events.*;\n" + 
-		"import org.eclipse.swt.widgets.*;\n" + 
-		"public class Try {\n" + 
-		"  public Try() {\n" + 
-		"  }\n" + 
-		"  void main(Shell shell) {\n" + 
-		"    final Label label;\n" + 
-		"    new PaintListener() {\n" + 
-		"      public void paintControl(PaintEvent e) {\n" + 
-		"        e.gc.setLineCap(<CompleteOnName:SWT.CAP_>);\n" + 
-		"      }\n" + 
-		"    };\n" + 
-		"  }\n" + 
+		"import org.eclipse.swt.*;\n" +
+		"import org.eclipse.swt.events.*;\n" +
+		"import org.eclipse.swt.widgets.*;\n" +
+		"public class Try {\n" +
+		"  public Try() {\n" +
+		"  }\n" +
+		"  void main(Shell shell) {\n" +
+		"    final Label label;\n" +
+		"    label.addPaintListener(new PaintListener() {\n" +
+		"  public void paintControl(PaintEvent e) {\n" +
+		"    e.gc.setLineCap(<CompleteOnName:SWT.CAP_>);\n" +
+		"  }\n" +
+		"});\n" +
+		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
 		"CAP_",

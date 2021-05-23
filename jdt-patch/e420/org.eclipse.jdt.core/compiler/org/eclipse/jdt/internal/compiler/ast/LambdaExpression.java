@@ -84,6 +84,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedGenericMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PolyTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
@@ -123,6 +124,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	private boolean requiresGenericSignature;
 	boolean returnsVoid;
 	public LambdaExpression original = this;
+	private boolean committed = false;
 	public SyntheticArgumentBinding[] outerLocalVariables = NO_SYNTHETIC_ARGUMENTS;
 	private int outerLocalVariablesSlotSize = 0;
 	private boolean assistNode = false;
@@ -471,6 +473,9 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		}
 		// beyond this point ensure that all local type bindings are their final binding:
 		updateLocalTypes();
+		if (this.original == this) {
+			this.committed = true; // the original has been resolved
+		}
 		return (argumentsHaveErrors|parametersHaveErrors) ? null : this.resolvedType;
 	}
 
@@ -887,7 +892,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 
 		LambdaExpression copy = null;
 		try {
-			copy = cachedResolvedCopy(targetType, argumentsTypeElided(), false, null); // if argument types are elided, we don't care for result expressions against *this* target, any valid target is OK.
+			copy = cachedResolvedCopy(targetType, argumentsTypeElided(), false, null, skope); // if argument types are elided, we don't care for result expressions against *this* target, any valid target is OK.
 		} catch (CopyFailureException cfe) {
 			if (this.assistNode)
 				return CompatibilityResult.COMPATIBLE; // can't type check result expressions, just say yes.
@@ -941,7 +946,19 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		private static final long serialVersionUID = 1L;
 	}
 
-	private LambdaExpression cachedResolvedCopy(TypeBinding targetType, boolean anyTargetOk, boolean requireExceptionAnalysis, InferenceContext18 context) {
+	private LambdaExpression cachedResolvedCopy(TypeBinding targetType, boolean anyTargetOk, boolean requireExceptionAnalysis, InferenceContext18 context, Scope outerScope) {
+		if (this.committed && outerScope instanceof BlockScope) {
+			this.enclosingScope = (BlockScope) outerScope;
+			// trust the result of any previous shape analysis:
+			if (this.copiesPerTargetType != null && !this.copiesPerTargetType.isEmpty()) {
+				LambdaExpression firstCopy = this.copiesPerTargetType.values().iterator().next();
+				if (firstCopy != null) {
+					this.valueCompatible = firstCopy.valueCompatible;
+					this.voidCompatible = firstCopy.voidCompatible;
+				}
+			}
+			return this;
+		}
 
 		targetType = findGroundTargetType(this.enclosingScope, targetType, targetType, argumentsTypeElided());
 		if (targetType == null)
@@ -976,6 +993,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 				if (type == null || !type.isValidBinding())
 					return null;
 
+				targetType = copy.expectedType; // possibly updated local types
 				if (this.copiesPerTargetType == null)
 					this.copiesPerTargetType = new HashMap<TypeBinding, LambdaExpression>();
 				this.copiesPerTargetType.put(targetType, copy);
@@ -1002,7 +1020,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	public LambdaExpression resolveExpressionExpecting(TypeBinding targetType, Scope skope, InferenceContext18 context) {
 		LambdaExpression copy = null;
 		try {
-			copy = cachedResolvedCopy(targetType, false, true, context);
+			copy = cachedResolvedCopy(targetType, false, true, context, null /* to be safe we signal: not yet committed */);
 		} catch (CopyFailureException cfe) {
 			return null;
 		}
@@ -1055,7 +1073,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 
 		LambdaExpression copy;
 		try {
-			copy = cachedResolvedCopy(s, true /* any resolved copy is good */, false, null); // we expect a cached copy - otherwise control won't reach here.
+			copy = cachedResolvedCopy(s, true /* any resolved copy is good */, false, null, null /*not yet committed*/); // we expect a cached copy - otherwise control won't reach here.
 		} catch (CopyFailureException cfe) {
 			if (this.assistNode)
 				return false;
@@ -1457,26 +1475,26 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	 * previous binding should never escape the context of resolving this lambda.
 	 * </p>
 	 */
-	class LocalTypeSubstitutor extends Substitutor {
+	static class LocalTypeSubstitutor extends Substitutor {
 		Map<Integer,LocalTypeBinding> localTypes2;
 
-		public LocalTypeSubstitutor(Map<Integer, LocalTypeBinding> localTypes) {
+		public LocalTypeSubstitutor(Map<Integer, LocalTypeBinding> localTypes, MethodBinding methodBinding) {
 			this.localTypes2 = localTypes;
+			if (methodBinding != null && methodBinding.isStatic())
+				this.staticContext = methodBinding.declaringClass;
 		}
 
 		@Override
 		public TypeBinding substitute(Substitution substitution, TypeBinding originalType) {
 			if (originalType.isLocalType()) {
-				LocalTypeBinding orgLocal = (LocalTypeBinding) originalType;
+				LocalTypeBinding orgLocal = (LocalTypeBinding) originalType.original();
 				MethodScope lambdaScope2 = orgLocal.scope.enclosingLambdaScope();
 				if (lambdaScope2 != null) {
-					if (((LambdaExpression) lambdaScope2.referenceContext).sourceStart == LambdaExpression.this.sourceStart) {
-						// local type within this lambda needs replacement:
-						TypeBinding substType = this.localTypes2.get(orgLocal.sourceStart);
-						if (substType != null && substType != orgLocal) { //$IDENTITY-COMPARISON$
-							orgLocal.transferConstantPoolNameTo(substType);
-							return substType;
-						}
+					// local type within a lambda may need replacement:
+					TypeBinding substType = this.localTypes2.get(orgLocal.sourceStart);
+					if (substType != null && substType != orgLocal) { //$IDENTITY-COMPARISON$
+						orgLocal.transferConstantPoolNameTo(substType);
+						return substType;
 					}
 				}
 				return originalType;
@@ -1485,15 +1503,16 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		}
 	}
 
-	private void updateLocalTypes() {
+	boolean updateLocalTypes() {
 		if (this.descriptor == null || this.localTypes == null)
-			return;
-		LocalTypeSubstitutor substor = new LocalTypeSubstitutor(this.localTypes);
+			return false;
+		LocalTypeSubstitutor substor = new LocalTypeSubstitutor(this.localTypes, null/*lambda method is never static*/);
 		NullSubstitution subst = new NullSubstitution(this.scope.environment());
 		updateLocalTypesInMethod(this.binding, substor, subst);
 		updateLocalTypesInMethod(this.descriptor, substor, subst);
 		this.resolvedType = substor.substitute(subst, this.resolvedType);
 		this.expectedType = substor.substitute(subst, this.expectedType);
+		return true;
 	}
 
 	/**
@@ -1502,15 +1521,21 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	boolean updateLocalTypesInMethod(MethodBinding method) {
 		if (this.localTypes == null)
 			return false;
-		updateLocalTypesInMethod(method, new LocalTypeSubstitutor(this.localTypes), new NullSubstitution(this.scope.environment()));
+		updateLocalTypesInMethod(method, new LocalTypeSubstitutor(this.localTypes, method), new NullSubstitution(this.scope.environment()));
 		return true;
 	}
 
-	private void updateLocalTypesInMethod(MethodBinding method, Substitutor substor, Substitution subst) {
+	public static void updateLocalTypesInMethod(MethodBinding method, Substitutor substor, Substitution subst) {
 		method.declaringClass = (ReferenceBinding) substor.substitute(subst, method.declaringClass);
 		method.returnType = substor.substitute(subst, method.returnType);
 		for (int i = 0; i < method.parameters.length; i++) {
 			method.parameters[i] = substor.substitute(subst, method.parameters[i]);
+		}
+		if (method instanceof ParameterizedGenericMethodBinding) {
+			ParameterizedGenericMethodBinding pgmb = (ParameterizedGenericMethodBinding) method;
+			for (int i = 0; i < pgmb.typeArguments.length; i++) {
+				pgmb.typeArguments[i] = substor.substitute(subst, pgmb.typeArguments[i]);
+			}
 		}
 	}
 }

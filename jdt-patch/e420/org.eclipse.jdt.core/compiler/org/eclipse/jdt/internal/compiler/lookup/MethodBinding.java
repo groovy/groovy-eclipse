@@ -1123,7 +1123,9 @@ public char[] signature(ClassFile classFile) {
 			// we need to record inner classes references
 			boolean isConstructor = isConstructor();
 			TypeBinding[] targetParameters = this.parameters;
-			boolean needSynthetics = isConstructor && this.declaringClass.isNestedType();
+			boolean needSynthetics = isConstructor
+						&& this.declaringClass.isNestedType()
+						&& !this.declaringClass.isStatic();
 			if (needSynthetics) {
 				// take into account the synthetic argument type signatures as well
 				ReferenceBinding[] syntheticArgumentTypes = this.declaringClass.syntheticEnclosingInstanceTypes();
@@ -1178,7 +1180,9 @@ public char[] signature(ClassFile classFile) {
 		buffer.append(ConstantPool.JavaLangStringSignature);
 		buffer.append(TypeBinding.INT.signature());
 	}
-	boolean needSynthetics = isConstructor && this.declaringClass.isNestedType();
+	boolean needSynthetics = isConstructor
+			&& this.declaringClass.isNestedType()
+			&& !this.declaringClass.isStatic();
 	if (needSynthetics) {
 		// take into account the synthetic argument type signatures as well
 		ReferenceBinding[] syntheticArgumentTypes = this.declaringClass.syntheticEnclosingInstanceTypes();

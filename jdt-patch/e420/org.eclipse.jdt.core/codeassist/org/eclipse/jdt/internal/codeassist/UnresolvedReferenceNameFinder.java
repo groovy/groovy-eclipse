@@ -149,6 +149,8 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 		}
 
 		this.parser.startRecordingIdentifiers(from, end);
+		int savedCursorLocation = this.parser.cursorLocation;
+		this.parser.cursorLocation = Integer.MAX_VALUE; // limit (from,end) already defines what we want to look at.
 
 		MethodDeclaration fakeMethod = this.parser.parseSomeStatements(
 				from,
@@ -156,6 +158,7 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 				outsideEnclosingBlock ? FAKE_BLOCKS_COUNT : 0,
 				s.compilationUnitScope().referenceContext);
 
+		this.parser.cursorLocation = savedCursorLocation;
 		this.parser.stopRecordingIdentifiers();
 
 		if(!initPotentialNamesTables(discouragedNames)) return null;

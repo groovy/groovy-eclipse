@@ -274,6 +274,10 @@ public class AND_AND_Expression extends BinaryExpression {
 	}
 	@Override
 	public void collectPatternVariablesToScope(LocalVariableBinding[] variables, BlockScope scope) {
+		this.addPatternVariablesWhenTrue(variables);
+		// If upper level already supplied positive new vars for us, also make those available to the left expr
+		this.left.addPatternVariablesWhenTrue(this.patternVarsWhenTrue);
+
 		this.left.collectPatternVariablesToScope(this.patternVarsWhenTrue, scope);
 
 		variables = this.left.getPatternVariablesWhenTrue();

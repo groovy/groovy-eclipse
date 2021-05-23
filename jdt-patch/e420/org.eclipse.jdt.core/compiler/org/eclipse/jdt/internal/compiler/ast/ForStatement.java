@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -270,7 +270,7 @@ public class ForStatement extends Statement {
 				this.initializations[i].generateCode(this.scope, codeStream);
 			}
 		}
-		if (this.condition != null && this.condition.containsPatternVariable()) {
+		if (containsPatternVariable()) {
 			this.condition.addPatternVariables(currentScope, codeStream);
 		}
 		Constant cst = this.condition == null ? null : this.condition.optimizedBooleanConstant();
@@ -411,7 +411,7 @@ public class ForStatement extends Statement {
 		LocalVariableBinding[] patternVariablesInTrueScope = null;
 		LocalVariableBinding[] patternVariablesInFalseScope = null;
 
-		if (this.condition != null && this.condition.containsPatternVariable()) {
+		if (containsPatternVariable()) {
 			this.condition.collectPatternVariablesToScope(null, upperScope);
 			patternVariablesInTrueScope = this.condition.getPatternVariablesWhenTrue();
 			patternVariablesInFalseScope = this.condition.getPatternVariablesWhenFalse();
@@ -435,6 +435,11 @@ public class ForStatement extends Statement {
 			this.action.promotePatternVariablesIfApplicable(patternVariablesInFalseScope,
 					() -> !this.action.breaksOut(null));
 		}
+	}
+
+	@Override
+	public boolean containsPatternVariable() {
+		return this.condition != null && this.condition.containsPatternVariable();
 	}
 
 	@Override

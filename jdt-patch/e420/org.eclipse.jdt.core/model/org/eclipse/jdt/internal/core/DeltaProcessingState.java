@@ -122,6 +122,7 @@ public class DeltaProcessingState implements IResourceChangeListener, Indexer.Li
 	 * This is null if no refresh is needed.
 	 */
 	private Set<IJavaElement> externalElementsToRefresh;
+	private final Object mutex = new Object();
 
 	/*
 	 * Need to clone defensively the listener information, in case some listener is reacting to some notification iteration by adding/changing/removing
@@ -187,7 +188,7 @@ public class DeltaProcessingState implements IResourceChangeListener, Indexer.Li
 	}
 
 	public ClasspathChange addClasspathChange(IProject project, IClasspathEntry[] oldRawClasspath, IPath oldOutputLocation, IClasspathEntry[] oldResolvedClasspath) {
-		synchronized (this.classpathChanges) {
+		synchronized (this.mutex) {
 			ClasspathChange change = this.classpathChanges.get(project);
 			if (change == null) {
 				change = new ClasspathChange((JavaProject) JavaModelManager.getJavaModelManager().getJavaModel().getJavaProject(project), oldRawClasspath, oldOutputLocation, oldResolvedClasspath);
@@ -205,13 +206,13 @@ public class DeltaProcessingState implements IResourceChangeListener, Indexer.Li
 	}
 
 	public ClasspathChange getClasspathChange(IProject project) {
-		synchronized (this.classpathChanges) {
+		synchronized (this.mutex) {
 			return this.classpathChanges.get(project);
 		}
 	}
 
 	public Map<IProject, ClasspathChange> removeAllClasspathChanges() {
-		synchronized (this.classpathChanges) {
+		synchronized (this.mutex) {
 			Map<IProject, ClasspathChange> result = this.classpathChanges;
 			this.classpathChanges = new LinkedHashMap<>(result.size());
 			return result;

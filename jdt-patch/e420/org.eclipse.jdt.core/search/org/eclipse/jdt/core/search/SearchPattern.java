@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -18,8 +18,18 @@ import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.core.compiler.*;
+import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IImportDeclaration;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IModularClassFile;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeParameter;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
@@ -33,7 +43,21 @@ import org.eclipse.jdt.internal.core.search.IndexQueryRequestor;
 import org.eclipse.jdt.internal.core.search.JavaSearchScope;
 import org.eclipse.jdt.internal.core.search.StringOperation;
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
-import org.eclipse.jdt.internal.core.search.matching.*;
+import org.eclipse.jdt.internal.core.search.matching.AndPattern;
+import org.eclipse.jdt.internal.core.search.matching.ConstructorPattern;
+import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
+import org.eclipse.jdt.internal.core.search.matching.LocalVariablePattern;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
+import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
+import org.eclipse.jdt.internal.core.search.matching.ModulePattern;
+import org.eclipse.jdt.internal.core.search.matching.OrPattern;
+import org.eclipse.jdt.internal.core.search.matching.PackageDeclarationPattern;
+import org.eclipse.jdt.internal.core.search.matching.PackageReferencePattern;
+import org.eclipse.jdt.internal.core.search.matching.QualifiedTypeDeclarationPattern;
+import org.eclipse.jdt.internal.core.search.matching.SuperTypeReferencePattern;
+import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern;
+import org.eclipse.jdt.internal.core.search.matching.TypeParameterPattern;
+import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 
 
 /**
@@ -2029,6 +2053,28 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 					typeSignature,
 					limitTo,
 					matchRule);
+
+			//If field is record's component, create a OR pattern comprising of record's component and its accessor methods
+			IType declaringType = field.getDeclaringType();
+			try {
+				if( declaringType.isRecord()){
+					MethodPattern accessorMethodPattern = new MethodPattern(name,
+							declaringQualification,
+							declaringSimpleName,
+							typeQualification,
+							typeSimpleName,
+							null,
+							null,
+							field.getDeclaringType(),
+							limitTo,
+							matchRule);
+
+					searchPattern= new OrPattern(searchPattern,accessorMethodPattern);
+				}
+			} catch (JavaModelException e1) {
+			// continue with previous searchPattern
+			}
+
 			break;
 		case IJavaElement.IMPORT_DECLARATION :
 			String elementName = element.getElementName();

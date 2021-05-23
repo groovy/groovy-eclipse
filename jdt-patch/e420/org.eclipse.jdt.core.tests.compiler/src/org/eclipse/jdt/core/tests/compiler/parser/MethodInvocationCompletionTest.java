@@ -463,7 +463,7 @@ public void testEmptyInFirstParameter() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    (\"abc\" + <CompleteOnName:>);\n" +
+		"    this.fred((\"abc\" + <CompleteOnName:>), 2, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -494,7 +494,7 @@ public void testInFirstParameter() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    (\"abc\" + <CompleteOnName:bi>);\n" +
+		"    this.fred((\"abc\" + <CompleteOnName:bi>), 2, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -527,15 +527,16 @@ public void testInIfStatement() {
 		"  X() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    {\n" +
-		"      <CompleteOnMessageSend:bar.fred()>;\n" +
-		"    }\n" +
+		"    if (true)\n" +
+		"        {\n" +
+		"          <CompleteOnMessageSend:bar.fred()>;\n" +
+		"        }\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
 		"",
 		// expectedReplacedSource:
-		"fred(",
+		"fred()",
 		// test name
 		"<completion inside a if statement>"
 	);
@@ -725,7 +726,7 @@ public void testWithExpressionReceiver() {
 		// expectedCompletionIdentifier:
 		"",
 		// expectedReplacedSource:
-		"fred(",
+		"fred()",
 		// test name
 		"<completion on method invocation with expression receiver>"
 	);

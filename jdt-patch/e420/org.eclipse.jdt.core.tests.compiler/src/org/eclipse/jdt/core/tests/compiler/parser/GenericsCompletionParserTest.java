@@ -1248,7 +1248,7 @@ public void test0034_Method(){
 	String completeBehind = "Y<Z>.";
 	int cursorLocation = str.indexOf("Y<Z>.") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnType:Y<Z>.>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "this.<Y, <CompleteOnType:Y<Z>.>>bar()";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
@@ -1256,7 +1256,7 @@ public void test0034_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void foo() {\n" +
-			"    <CompleteOnType:Y<Z>.>;\n" +
+			"    this.<Y, <CompleteOnType:Y<Z>.>>bar();\n" +
 			"  }\n" +
 			"}\n";
 
@@ -1650,7 +1650,7 @@ public void test0040_Method(){
 	String completeBehind = "Y<Z>.";
 	int cursorLocation = str.indexOf("Y<Z>.") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnType:Y<Z>.>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "aaa.new <Y, <CompleteOnType:Y<Z>.>>X()";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
@@ -1658,7 +1658,7 @@ public void test0040_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void foo() {\n" +
-			"    <CompleteOnType:Y<Z>.>;\n" +
+			"    aaa.new <Y, <CompleteOnType:Y<Z>.>>X();\n" +
 			"  }\n" +
 			"}\n";
 
@@ -1717,7 +1717,7 @@ public void test0041_Method(){
 	String completeBehind = "Y<Z>.";
 	int cursorLocation = str.indexOf("Y<Z>.") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnType:Y<Z>.>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "new V().new <Y, <CompleteOnType:Y<Z>.>>X()";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
@@ -1725,7 +1725,7 @@ public void test0041_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void foo() {\n" +
-			"    <CompleteOnType:Y<Z>.>;\n" +
+			"    new V().new <Y, <CompleteOnType:Y<Z>.>>X();\n" +
 			"  }\n" +
 			"}\n";
 
@@ -2147,7 +2147,7 @@ public void test0047_Method(){
 	String completeBehind = "Y<Z>.";
 	int cursorLocation = str.indexOf("Y<Z>.") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnType:Y<Z>.>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "Object a = <CompleteOnType:Y<Z>.>;";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
@@ -2214,7 +2214,7 @@ public void test0048_Method(){
 	String completeBehind = "Y<Z>.";
 	int cursorLocation = str.indexOf("Y<Z>.") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnType:Y<Z>.>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "Object a = <CompleteOnType:Y<Z>.>;";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
@@ -2672,14 +2672,13 @@ public void test0055_Method(){
 	String completeBehind = "Y<Z>.";
 	int cursorLocation = str.indexOf("Y<Z>.") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnType:Y<Z>.>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "A.this.<<CompleteOnType:Y<Z>.>>super();";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
 			"public class X {\n" +
 			"  public X() {\n" +
-			"    super();\n" +
-			"    <CompleteOnType:Y<Z>.>;\n" +
+			"    A.this.<<CompleteOnType:Y<Z>.>>super();\n" +
 			"  }\n" +
 			"}\n";
 
@@ -4329,7 +4328,7 @@ public void test0101_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void foo() {\n" +
-			"    Y<<CompleteOnType:Z>>;\n" +
+			"    this.<Y, Y<<CompleteOnType:Z>>>bar();\n" +
 			"  }\n" +
 			"}\n";
 
@@ -5133,7 +5132,7 @@ public void test0113_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void foo() {\n" +
-			"    Y<<CompleteOnType:Z>>;\n" +
+			"    aaa.new <Y, Y<<CompleteOnType:Z>>>X();\n" +
 			"  }\n" +
 			"}\n";
 
@@ -5334,7 +5333,7 @@ public void test0116_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void foo() {\n" +
-			"    Y<<CompleteOnType:Z>>;\n" +
+			"    new V().new <Y, Y<<CompleteOnType:Z>>>X();\n" +
 			"  }\n" +
 			"}\n";
 
@@ -7197,7 +7196,6 @@ public void test0144_Method(){
 	String expectedUnitDisplayString =
 			"public class X {\n" +
 			"  public X() {\n" +
-			"    super();\n" +
 			"    Y<<CompleteOnType:Z>>;\n" +
 			"  }\n" +
 			"}\n";
@@ -7261,8 +7259,7 @@ public void test0145_Method(){
 	String expectedUnitDisplayString =
 			"public class X {\n" +
 			"  public X() {\n" +
-			"    super();\n" +
-			"    Y<<CompleteOnType:Z>>;\n" +
+			"    A.this.<Y<<CompleteOnType:Z>>>super(0);\n" +
 			"  }\n" +
 			"}\n";
 
@@ -10940,17 +10937,17 @@ public void test0215_Method() {
 
 	String completeBehind = "bar(";
 	int cursorLocation = str.lastIndexOf("bar(") + completeBehind.length() - 1;
-	String expectedCompletionNodeToString = "<CompleteOnMessageSend:this.bar()>";
+	String expectedCompletionNodeToString = "<CompleteOnMessageSend:this.<X>bar()>";
 	String expectedParentNodeToString = "<NONE>";
 	String completionIdentifier = "";
-	String expectedReplacedSource = "bar(";
+	String expectedReplacedSource = "bar()";
 	// we are not in a constructor then the completion node isn't attached to the ast
 	String expectedUnitDisplayString =
 			"public class X {\n" +
 			"  public X() {\n" +
 			"  }\n" +
 			"  void foo() {\n" +
-			"    <CompleteOnMessageSend:this.bar()>;\n" +
+			"    <CompleteOnMessageSend:this.<X>bar()>;\n" +
 			"  }\n" +
 			"}\n";
 
@@ -11056,7 +11053,10 @@ public void test0218_Diet() {
 	String completeBehind = "ZZZ";
 	int cursorLocation = str.lastIndexOf("ZZZ") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnType:ZZZ>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString =
+			"() {\n" +
+			"  <CompleteOnType:ZZZ>;\n" +
+			"}";
 	String completionIdentifier = "ZZZ";
 	String expectedReplacedSource = "ZZZ";
 	String expectedUnitDisplayString =

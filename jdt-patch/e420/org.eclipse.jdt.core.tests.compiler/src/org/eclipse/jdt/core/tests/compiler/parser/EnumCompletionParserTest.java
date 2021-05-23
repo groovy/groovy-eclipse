@@ -122,6 +122,7 @@ public void test0002(){
 	expectedParentNodeToString =
 		"switch (c) {\n" +
 		"case <CompleteOnName:FOO> :\n" +
+		"    break;\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -130,10 +131,9 @@ public void test0002(){
 		"  public Test() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    {\n" +
-		"      switch (c) {\n" +
-		"      case <CompleteOnName:FOO> :\n" +
-		"      }\n" +
+		"    switch (c) {\n" +
+		"    case <CompleteOnName:FOO> :\n" +
+		"        break;\n" +
 		"    }\n" +
 		"  }\n" +
 		"}\n";
@@ -190,6 +190,7 @@ public void test0003(){
 		"switch (c) {\n" +
 		"case BAR :\n" +
 		"case <CompleteOnName:FOO> :\n" +
+		"    break;\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -198,11 +199,10 @@ public void test0003(){
 		"  public Test() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    {\n" +
-		"      switch (c) {\n" +
-		"      case BAR :\n" +
-		"      case <CompleteOnName:FOO> :\n" +
-		"      }\n" +
+		"    switch (c) {\n" +
+		"    case BAR :\n" +
+		"    case <CompleteOnName:FOO> :\n" +
+		"        break;\n" +
 		"    }\n" +
 		"  }\n" +
 		"}\n";
@@ -261,6 +261,7 @@ public void test0004(){
 		"case BAR :\n" +
 		"    break;\n" +
 		"case <CompleteOnName:FOO> :\n" +
+		"    break;\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -269,12 +270,11 @@ public void test0004(){
 		"  public Test() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    {\n" +
-		"      switch (c) {\n" +
-		"      case BAR :\n" +
-		"          break;\n" +
-		"      case <CompleteOnName:FOO> :\n" +
-		"      }\n" +
+		"    switch (c) {\n" +
+		"    case BAR :\n" +
+		"        break;\n" +
+		"    case <CompleteOnName:FOO> :\n" +
+		"        break;\n" +
 		"    }\n" +
 		"  }\n" +
 		"}\n";
@@ -340,12 +340,10 @@ public void test0005(){
 		"  public Test() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    {\n" +
-		"      switch (c) {\n" +
-		"      case BAR :\n" +
-		"          break;\n" +
-		"      case <CompleteOnName:FOO> :\n" +
-		"      }\n" +
+		"    switch (c) {\n" +
+		"    case BAR :\n" +
+		"        break;\n" +
+		"    case <CompleteOnName:FOO> :\n" +
 		"    }\n" +
 		"  }\n" +
 		"}\n";
@@ -794,7 +792,10 @@ public void test0014(){
 	String completeBehind = "tos";
 	int cursorLocation = str.indexOf("tos") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnType:tos>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString =
+			"() {\n" +
+			"  <CompleteOnType:tos>;\n" +
+			"}";
 	String completionIdentifier = "tos";
 	String expectedReplacedSource = "tos";
 	String expectedUnitDisplayString =

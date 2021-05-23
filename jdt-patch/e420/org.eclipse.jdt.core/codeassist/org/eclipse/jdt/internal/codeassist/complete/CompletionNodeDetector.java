@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -13,7 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.complete;
 
-import java.util.stream.Stream;
+import java.util.Stack;
 
 import org.eclipse.jdt.internal.compiler.*;
 import org.eclipse.jdt.internal.compiler.ast.*;
@@ -23,16 +23,35 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
  * Detect the presence of a node in expression
  */
 public class CompletionNodeDetector extends ASTVisitor {
+
+	@SuppressWarnings("serial")
+	static class StopTraversal extends RuntimeException { /* no details */}
+
 	private ASTNode searchedNode;
 	private ASTNode parent;
+	private Expression outerExpression;
+	private Stack<ASTNode> interestingEnclosings = new Stack<>();
+	private ASTNode enclosingNode;
 	private boolean result;
+	private ASTNode blockedNode;
+	private boolean containsPotentialPolyExpression = false;
 
 	public CompletionNodeDetector(ASTNode searchedNode, ASTNode visitedAst){
 		this.searchedNode = searchedNode;
 		this.result = false;
 
 		if(searchedNode != null && visitedAst != null) {
-			visitedAst.traverse(this, null);
+			try {
+				if (visitedAst instanceof AbstractMethodDeclaration) {
+					((AbstractMethodDeclaration) visitedAst).traverse(this, (ClassScope) null);
+				} else if (visitedAst instanceof CompilationUnitDeclaration) {
+					((CompilationUnitDeclaration) visitedAst).traverse(this, (CompilationUnitScope) null);
+				} else {
+					visitedAst.traverse(this, null);
+				}
+			} catch (StopTraversal st) {
+				// nothing
+			}
 		}
 	}
 
@@ -43,12 +62,25 @@ public class CompletionNodeDetector extends ASTVisitor {
 	public ASTNode getCompletionNodeParent() {
 		return this.parent;
 	}
+	public Expression getCompletionNodeOuterExpression() {
+		if (this.outerExpression != null)
+			return this.outerExpression;
+		else if (this.parent instanceof Expression)
+			return (Expression) this.parent;
+		return null;
+	}
+
+	public ASTNode getCompletionEnclosingNode() {
+		return this.enclosingNode;
+	}
+
 	@Override
 	public void endVisit(AllocationExpression allocationExpression, BlockScope scope) {
 		endVisit(allocationExpression);
 	}
 	@Override
 	public void endVisit(AND_AND_Expression and_and_Expression, BlockScope scope) {
+		this.interestingEnclosings.pop();
 		endVisit(and_and_Expression);
 	}
 	@Override
@@ -112,8 +144,16 @@ public class CompletionNodeDetector extends ASTVisitor {
 		endVisit(fieldReference);
 	}
 	@Override
+	public void endVisit(IfStatement ifStatement, BlockScope scope) {
+		this.interestingEnclosings.pop();
+	}
+	@Override
 	public void endVisit(InstanceOfExpression instanceOfExpression, BlockScope scope) {
 		endVisit(instanceOfExpression);
+	}
+	@Override
+	public void endVisit(LocalDeclaration localDeclaration, BlockScope scope) {
+		endVisit(localDeclaration);
 	}
 	@Override
 	public void endVisit(MessageSend messageSend, BlockScope scope) {
@@ -176,6 +216,10 @@ public class CompletionNodeDetector extends ASTVisitor {
 		endVisit(referenceExpression);
 	}
 	@Override
+	public void endVisit(ReturnStatement returnStatement, BlockScope scope) {
+		endVisit(returnStatement);
+	}
+	@Override
 	public void endVisit(SingleNameReference singleNameReference, BlockScope scope) {
 		endVisit(singleNameReference);
 	}
@@ -190,6 +234,10 @@ public class CompletionNodeDetector extends ASTVisitor {
 	@Override
 	public void endVisit(SuperReference superReference, BlockScope scope) {
 		endVisit(superReference);
+	}
+	@Override
+	public void endVisit(SwitchStatement switchStatement, BlockScope scope) {
+		endVisit(switchStatement);
 	}
 	@Override
 	public void endVisit(ThisReference thisReference, BlockScope scope) {
@@ -211,11 +259,22 @@ public class CompletionNodeDetector extends ASTVisitor {
 		endVisit(lambda);
 	}
 	@Override
+	public void endVisit(MethodDeclaration methodDeclaration, ClassScope scope) {
+		if (this.result)
+			throw new StopTraversal(); // don't associate with out-of-scope outer expression
+	}
+	@Override
+	public void endVisit(ConstructorDeclaration constructorDeclaration, ClassScope scope) {
+		if (this.result)
+			throw new StopTraversal(); // don't associate with out-of-scope outer expression
+	}
+	@Override
 	public boolean visit(AllocationExpression allocationExpression, BlockScope scope) {
 		return this.visit(allocationExpression);
 	}
 	@Override
 	public boolean visit(AND_AND_Expression and_and_Expression, BlockScope scope) {
+		this.interestingEnclosings.add(and_and_Expression);
 		return this.visit(and_and_Expression);
 	}
 	@Override
@@ -279,8 +338,17 @@ public class CompletionNodeDetector extends ASTVisitor {
 		return this.visit(fieldReference);
 	}
 	@Override
+	public boolean visit(IfStatement ifStatement, BlockScope scope) {
+		this.interestingEnclosings.push(ifStatement);
+		return true;
+	}
+	@Override
 	public boolean visit(InstanceOfExpression instanceOfExpression, BlockScope scope) {
 		return this.visit(instanceOfExpression);
+	}
+	@Override
+	public boolean visit(LocalDeclaration localDeclaration, BlockScope scope) {
+		return this.visit(localDeclaration);
 	}
 	@Override
 	public boolean visit(MessageSend messageSend, BlockScope scope) {
@@ -343,6 +411,10 @@ public class CompletionNodeDetector extends ASTVisitor {
 		return this.visit(referenceExpression);
 	}
 	@Override
+	public boolean visit(ReturnStatement returnStatement, BlockScope scope) {
+		return this.visit(returnStatement);
+	}
+	@Override
 	public boolean visit(SingleNameReference singleNameReference, BlockScope scope) {
 		return this.visit(singleNameReference);
 	}
@@ -363,6 +435,10 @@ public class CompletionNodeDetector extends ASTVisitor {
 		return this.visit(superReference);
 	}
 	@Override
+	public boolean visit(SwitchStatement switchStatement, BlockScope blockScope) {
+		return this.visit(switchStatement);
+	}
+	@Override
 	public boolean visit(ThisReference thisReference, BlockScope scope) {
 		return this.visit(thisReference);
 	}
@@ -378,27 +454,62 @@ public class CompletionNodeDetector extends ASTVisitor {
 		return this.visit(pair);
 	}
 	private void endVisit(ASTNode astNode) {
-		if(this.result && this.parent == null && astNode != this.searchedNode) {
-			if(!(astNode instanceof AllocationExpression && ((AllocationExpression) astNode).type == this.searchedNode)
-				&& !(astNode instanceof ConditionalExpression && ((ConditionalExpression) astNode).valueIfTrue == this.searchedNode)
-				&& !(astNode instanceof ConditionalExpression && ((ConditionalExpression) astNode).valueIfFalse == this.searchedNode)) {
-				this.parent = astNode;
+		if (this.blockedNode == astNode) {
+			return; // result was found even before this node was entered => sibling of the searchNode => skip
+		}
+		if(this.result) {
+			if ((this.parent == null
+					|| (this.parent instanceof ArrayInitializer && astNode instanceof Statement)) // heuristically get more context
+					&& astNode != this.searchedNode) {
+				if(!(astNode instanceof AllocationExpression && ((AllocationExpression) astNode).type == this.searchedNode)
+					&& !(astNode instanceof ConditionalExpression && ((ConditionalExpression) astNode).valueIfTrue == this.searchedNode)
+					&& !(astNode instanceof ConditionalExpression && ((ConditionalExpression) astNode).valueIfFalse == this.searchedNode)) {
+					this.parent = astNode;
+				}
+			}
+			checkUpdateOuter(astNode);
+		}
+	}
+
+	protected void checkUpdateOuter(ASTNode astNode) {
+		if (this.containsPotentialPolyExpression && astNode instanceof Expression) {
+			// resolving a contained poly expression can only benefit from any additional expression context
+			this.outerExpression = (Expression) astNode;
+		} else {
+			this.containsPotentialPolyExpression |= isPotentiallyPolyExpression(astNode);
+			// resetting containsPotentialPolyExpression could become necessary when we search the outerExpression within
+			// a node larger than expressions, but currently CompletionParser.attachOrphanCompletionNode() is the only client
+			// interested in outerExpression and only passes an expression for visiting.
+		}
+
+		if (!this.interestingEnclosings.isEmpty()) {
+			// prepare enclosingNode for use in CompletionEngine.findFieldsAndMethodsFromCastedReceiver(..)
+			ASTNode enclosing = this.interestingEnclosings.peek();
+			ASTNode rightOfEnclosing = null;
+			if (enclosing instanceof AND_AND_Expression) {
+				rightOfEnclosing = ((AND_AND_Expression) enclosing).right;
+			} else if (enclosing instanceof IfStatement) {
+				rightOfEnclosing = ((IfStatement) enclosing).thenStatement;
+			}
+			if (rightOfEnclosing == astNode || rightOfEnclosing == this.enclosingNode) {
+				this.enclosingNode = enclosing;
 				return;
 			}
 		}
-
-		// when we have recovering node like private Map<String, Function<I,R>> the visitor actually endVisit on I and
-		// R when completions are requested at I. The above logic actually identify R as a parent since the R is visited
-		// and endVisited after founding that I was the searched node. This happens for all type parameters which are at
-		// index where index < n.
-		// Therefore we need to following check to fix the parent by setting the parent to the node which represents
-		// Map<String, Function<Long,$>> when we are invoking endVisit.
-		if(this.result && astNode instanceof ParameterizedSingleTypeReference &&
-				Stream.of(((ParameterizedSingleTypeReference) astNode).typeArguments).anyMatch(n -> n == this.searchedNode)) {
-			this.parent = astNode;
+		// the following corresponds to stuff in CompletionParser.buildMoreContext* that would set CompletionParser.enclosingNode:
+		if (astNode instanceof ReturnStatement || astNode instanceof AbstractVariableDeclaration) {
+			this.enclosingNode = astNode;
+			throw new StopTraversal();
 		}
 	}
+	private boolean isPotentiallyPolyExpression(ASTNode node) {
+		// these expressions may need more enclosing context for resolution:
+		return node instanceof Invocation || node instanceof FunctionalExpression || node instanceof ConditionalExpression;
+	}
 	private boolean visit(ASTNode astNode) {
+		if (this.result) {
+			this.blockedNode = astNode;
+		}
 		if(astNode == this.searchedNode) {
 			this.result = true;
 		}

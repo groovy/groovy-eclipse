@@ -51,8 +51,7 @@ public void testAnonymousFirstMethod() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    Object o;\n" +
-		"    new Object() {\n" +
+		"    Object o = new Object() {\n" +
 		"      void buzz() {\n" +
 		"        int i = <CompleteOnMemberAccess:fred().x>;\n" +
 		"      }\n" +
@@ -93,8 +92,7 @@ public void testAnonymousNoStatementBefore() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    Object o;\n" +
-		"    new Object() {\n" +
+		"    Object o = new Object() {\n" +
 		"      void buzz() {\n" +
 		"        int i = <CompleteOnMemberAccess:fred().x>;\n" +
 		"      }\n" +
@@ -135,8 +133,7 @@ public void testAnonymousOneFieldBefore() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    Object o;\n" +
-		"    new Object() {\n" +
+		"    Object o = new Object() {\n" +
 		"      int field;\n" +
 		"      void buzz() {\n" +
 		"        int i = <CompleteOnMemberAccess:fred().x>;\n" +
@@ -178,8 +175,7 @@ public void testAnonymousOneStatementBefore() {
 		"  }\n" +
 		"  void foo() {\n" +
 		"    int i;\n" +
-		"    Object o;\n" +
-		"    new Object() {\n" +
+		"    Object o = new Object() {\n" +
 		"      void buzz() {\n" +
 		"        int i = <CompleteOnMemberAccess:fred().x>;\n" +
 		"      }\n" +
@@ -220,8 +216,7 @@ public void testAnonymousSecondMethod() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    Object o;\n" +
-		"    new Object() {\n" +
+		"    Object o = new Object() {\n" +
 		"      void fuzz() {\n" +
 		"      }\n" +
 		"      void buzz() {\n" +

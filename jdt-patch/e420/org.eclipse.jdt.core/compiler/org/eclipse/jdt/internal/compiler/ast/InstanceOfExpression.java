@@ -160,6 +160,7 @@ public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStr
 	BranchLabel nextSibling = falseLabel != null ? falseLabel : new BranchLabel(codeStream);
 	codeStream.instance_of(this.type, this.type.resolvedType);
 	if (this.elementVariable != null) {
+		valueRequired = true;
 		codeStream.ifeq(nextSibling);
 		codeStream.load(this.secretInstanceOfPatternExpressionValue);
 		codeStream.checkcast(this.type, this.type.resolvedType, codeStream.position);

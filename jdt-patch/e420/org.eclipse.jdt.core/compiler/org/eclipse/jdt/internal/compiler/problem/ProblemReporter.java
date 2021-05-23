@@ -6202,7 +6202,9 @@ public void localVariableHiding(LocalDeclaration local, Binding hiddenVariable, 
 			nodeSourceStart(hiddenVariable, local),
 			nodeSourceEnd(hiddenVariable, local));
 	} else if (hiddenVariable instanceof FieldBinding) {
-		if (isSpecialArgHidingField && !this.options.reportSpecialParameterHidingField){
+		if (isSpecialArgHidingField
+				&& ( !this.options.reportSpecialParameterHidingField
+						|| ((FieldBinding) hiddenVariable).isRecordComponent())) {
 			return;
 		}
 		int id = (local instanceof Argument)

@@ -46,8 +46,13 @@ public class CompletionOnMessageSend extends MessageSend {
 		this.constant = Constant.NotAConstant;
 		if (this.arguments != null) {
 			int argsLength = this.arguments.length;
-			for (int a = argsLength; --a >= 0;)
-				this.arguments[a].resolveType(scope);
+			for (int a = argsLength; --a >= 0;) {
+				try {
+					this.arguments[a].resolveType(scope);
+				} catch (CompletionNodeFound cnf) {
+					// ignore nested completion node
+				}
+			}
 		}
 
 		if (this.receiver.isImplicitThis())

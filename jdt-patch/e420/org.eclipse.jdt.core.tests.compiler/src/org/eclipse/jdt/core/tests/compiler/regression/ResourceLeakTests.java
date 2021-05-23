@@ -52,6 +52,14 @@ private static final String APACHE_DBUTILS_CONTENT = "package org.apache.commons
 	"    public static void closeQuietly(Connection conn, Statement stmt, ResultSet rs) {}\n" +
 	"}\n";
 
+// one.util.streamex.StreamEx stub
+private static final String STREAMEX_JAVA = "one/util/streamex/StreamEx.java";
+private static final String STREAMEX_CONTENT = "package one.util.streamex;\n" +
+	"import java.util.stream.*;\n" +
+	"public abstract class StreamEx<T> implements Stream<T> {\n" +
+	"    public static <T> StreamEx<T> create() { return null; }\n" +
+	"}\n";
+
 static {
 //	TESTS_NAMES = new String[] { "testBug463320" };
 //	TESTS_NUMBERS = new int[] { 50 };
@@ -4705,6 +4713,28 @@ public void testStream1_Double_Long() {
 		},
 		options
 		);
+}
+// normal java.util.stream.{Double,Long}Stream doesn't hold on to any resources
+public void testStreamEx_572707() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // uses JRE 8 API
+
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	runConformTest(
+		new String[] {
+			STREAMEX_JAVA,
+			STREAMEX_CONTENT,
+			"Bug572707.java",
+			"import one.util.streamex.*;\n" +
+			"\n" +
+			"public class Bug572707 {\n" +
+			"	public void m() {\n" +
+			"		System.out.println(StreamEx.create());\n" +
+			"	}\n" +
+			"}\n"
+		},
+		options);
 }
 // Functions java.nio.file.Files.x() returning *Stream* do produce a resource needing closing
 public void testStream2() {

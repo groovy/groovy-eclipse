@@ -76,6 +76,7 @@ public class SyntheticMethodBinding extends MethodBinding {
     public static final int RecordOverrideToString = 19;
     public static final int RecordOverrideHashCode = 20;
     public static final int RecordOverrideEquals = 21;
+    public static final int RecordCanonicalConstructor = 22;
 
 	public int sourceStart = 0; // start position of the matching declaration
 	public int index; // used for sorting access methods in the class file
@@ -442,6 +443,27 @@ public class SyntheticMethodBinding extends MethodBinding {
 		this.index = methodId;
 	}
 
+	public SyntheticMethodBinding(ReferenceBinding declaringClass, RecordComponentBinding[] rcb) {
+		SourceTypeBinding declaringSourceType = (SourceTypeBinding) declaringClass;
+		assert declaringSourceType.isRecord();
+		this.declaringClass = declaringSourceType;
+		this.modifiers = declaringClass.modifiers & (ClassFileConstants.AccPublic|ClassFileConstants.AccPrivate|ClassFileConstants.AccProtected);
+		if (this.declaringClass.isStrictfp())
+			this.modifiers |= ClassFileConstants.AccStrictfp;
+		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
+		this.tagBits |= (TagBits.IsCanonicalConstructor | TagBits.isImplicit);
+		this.parameters = rcb.length == 0 ? Binding.NO_PARAMETERS : new TypeBinding[rcb.length];
+		for (int i = 0; i < rcb.length; i++) this.parameters[i] = TypeBinding.VOID; // placeholder
+		this.selector = TypeConstants.INIT;
+		this.returnType = TypeBinding.VOID;
+		this.purpose = SyntheticMethodBinding.RecordCanonicalConstructor;
+		this.thrownExceptions = Binding.NO_EXCEPTIONS;
+		this.declaringClass = declaringSourceType;
+		this.tagBits |= TagBits.IsCanonicalConstructor;
+		SyntheticMethodBinding[] knownAccessMethods = declaringSourceType.syntheticMethods();
+		int methodId = knownAccessMethods == null ? 0 : knownAccessMethods.length;
+		this.index = methodId;
+	}
 	public SyntheticMethodBinding(ReferenceBinding declaringClass, RecordComponentBinding rcb, int index) {
 		SourceTypeBinding declaringSourceType = (SourceTypeBinding) declaringClass;
 		assert declaringSourceType.isRecord();
@@ -462,7 +484,9 @@ public class SyntheticMethodBinding extends MethodBinding {
 		this.purpose = SyntheticMethodBinding.FieldReadAccess;
 		this.thrownExceptions = Binding.NO_EXCEPTIONS;
 		this.declaringClass = declaringSourceType;
-		this.index = index;
+		SyntheticMethodBinding[] knownAccessMethods = declaringSourceType.syntheticMethods();
+		int methodId = knownAccessMethods == null ? 0 : knownAccessMethods.length;
+		this.index = methodId;
 		this.sourceStart = rcb.sourceRecordComponent().sourceStart;
 	}
 	public SyntheticMethodBinding(ReferenceBinding declaringClass, char[] selector, int index) {
@@ -488,7 +512,9 @@ public class SyntheticMethodBinding extends MethodBinding {
 		    this.parameters = new TypeBinding[] {declaringSourceType.scope.getJavaLangObject()};
 		    this.purpose = SyntheticMethodBinding.RecordOverrideEquals;
 		}
-		this.index = index;
+		SyntheticMethodBinding[] knownAccessMethods = declaringSourceType.syntheticMethods();
+		int methodId = knownAccessMethods == null ? 0 : knownAccessMethods.length;
+		this.index = methodId;
 	}
 	/**
 	 * An constructor accessor is a constructor with an extra argument (declaringClass), in case of

@@ -540,6 +540,7 @@ public abstract class Scope {
 	/** Bridge to non-static implementation in {@link Substitutor}, to make methods overridable. */
 	private static Substitutor defaultSubstitutor = new Substitutor();
 	public static class Substitutor {
+		protected ReferenceBinding staticContext;
 		/**
 		 * Returns an array of types, where original types got substituted given a substitution.
 		 * Only allocate an array if anything is different.
@@ -688,7 +689,9 @@ public abstract class Scope {
 					if (substitution.isRawSubstitution()) {
 						return substitution.environment().createRawType(originalReferenceType, substitutedEnclosing, originalType.getTypeAnnotations());
 					}
-				    // treat as if parameterized with its type variables (non generic type gets 'null' arguments)
+				    // potentially treat as if parameterized with its type variables (non generic type gets 'null' arguments)
+					if (TypeBinding.equalsEquals(this.staticContext, originalType))
+						return originalType; // substitution happens on a static member of the generic type, where its type variables are not available
 					originalArguments = originalReferenceType.typeVariables();
 					substitutedArguments = substitute(substitution, originalArguments);
 					return substitution.environment().createParameterizedType(originalReferenceType, substitutedArguments, substitutedEnclosing, originalType.getTypeAnnotations());

@@ -6073,4 +6073,24 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 		);
 
 	}
+	public void testBug572382() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"import java.lang.invoke.MethodHandle;\n"+
+						"\n"+
+						"public class X {\n"+
+						"\n"+
+						"	Object triggerBug(MethodHandle method) throws Throwable {\n"+
+						"		return switch (0) {\n"+
+						"		case 0 -> method.invoke(\"name\");\n"+
+						"		default -> null;\n"+
+						"		};\n"+
+						"	}\n"+
+						"}\n"
+				},
+				(String)null
+				);
+
+	}
 }

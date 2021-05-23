@@ -3656,4 +3656,76 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				true,
 				compilerOptions);
 	}
+	public void testBug572380_1() {
+		Map<String, String> options = getCompilerOptions(false);
+		runConformTest(
+				new String[] {
+						"X1.java",
+						"\n"
+						+ "public class X1 {\n"
+						+ "    boolean b1, b2, b3;\n"
+						+ "\n"
+						+ "    static boolean bubbleOut(Object obj) {\n"
+						+ "	       return obj instanceof X1 that && that.b1 && that.b2 && that.b3;\n"
+						+ "    }\n"
+						+ "\n"
+						+ "    static boolean propagateTrueIn(Object obj) {\n"
+						+ "        return obj instanceof X1 that && (that.b1 && that.b2 && that.b3);\n"
+						+ "    }\n"
+						+ "\n"
+						+ "    public static void main(String[] obj) {\n"
+						+ "        var ip = new X1();\n"
+						+ "        ip.b1 = ip.b2 = ip.b3 = true;\n"
+						+ "        System.out.println(bubbleOut(ip) && propagateTrueIn(ip));\n"
+						+ "    }\n"
+						+ "\n"
+						+ "}\n",
+				},
+				"true",
+				options);
+	}
+	public void testBug572380_2() {
+		Map<String, String> options = getCompilerOptions(false);
+		runConformTest(
+				new String[] {
+						"X1.java",
+						"\n"
+						+ "public class X1 {\n"
+						+ "    boolean b1, b2, b3;\n"
+						+ "    static boolean testErrorOr(Object obj) {\n"
+						+ "        return (!(obj instanceof X1 that)) || that.b1 && that.b2;\n"
+						+ "    }\n"
+						+ "    \n"
+						+ "    public static void main(String[] obj) {\n"
+						+ "        var ip = new X1();\n"
+						+ "        ip.b1 = ip.b2 = ip.b3 = true;\n"
+						+ "        System.out.println(testErrorOr(ip));\n"
+						+ "    }\n"
+						+ "\n"
+						+ "}\n",
+				},
+				"true",
+				options);
+	}
+	public void testBug572431() {
+		Map<String, String> options = getCompilerOptions(false);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n"
+						+ "			   static public void something () {\n"
+						+ "			      boolean bool = true;\n"
+						+ "			      Object object = null;\n"
+						+ "			      if (object instanceof String string) {\n"
+						+ "			      } else if (bool && object instanceof Integer integer) {\n"
+						+ "			      }\n"
+						+ "			   }\n"
+						+ "			   static public void main (String[] args) throws Exception {\n"
+						+ "			   }\n"
+						+ "			}",
+				},
+				"",
+				options);
+
+	}
 }

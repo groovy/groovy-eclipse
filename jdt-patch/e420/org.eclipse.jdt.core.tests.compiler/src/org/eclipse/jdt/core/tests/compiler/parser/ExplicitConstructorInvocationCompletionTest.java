@@ -216,7 +216,7 @@ public void testWrapperNameSuper() {
 		"  }\n" +
 		"  public class SubInnerBar extends InnerBar {\n" +
 		"    SubInnerBar() {\n" +
-		"      super(<CompleteOnMemberAccess:fred().x>);\n" +
+		"      Bar.super(<CompleteOnMemberAccess:fred().x>);\n" +
 		"    }\n" +
 		"  }\n" +
 		"  static Bar x;\n" +
@@ -263,7 +263,7 @@ public void testWrapperNameThis() {
 		"  }\n" +
 		"  public class SubInnerBar extends InnerBar {\n" +
 		"    SubInnerBar() {\n" +
-		"      this(<CompleteOnMemberAccess:fred().x>);\n" +
+		"      Bar.this(<CompleteOnMemberAccess:fred().x>);\n" +
 		"    }\n" +
 		"  }\n" +
 		"  static Bar x;\n" +
@@ -310,7 +310,7 @@ public void testWrapperPrimarySuper() {
 		"  }\n" +
 		"  public class SubInnerBar extends InnerBar {\n" +
 		"    SubInnerBar(Bar x) {\n" +
-		"      super(<CompleteOnMemberAccess:fred().x>);\n" +
+		"      primary().super(<CompleteOnMemberAccess:fred().x>);\n" +
 		"    }\n" +
 		"  }\n" +
 		"  static Bar x;\n" +

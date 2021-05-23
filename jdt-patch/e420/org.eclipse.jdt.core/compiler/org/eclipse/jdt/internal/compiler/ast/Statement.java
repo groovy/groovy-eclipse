@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -559,6 +559,9 @@ public Constant[] resolveCase(BlockScope scope, TypeBinding testType, SwitchStat
  */
 public TypeBinding resolveExpressionType(BlockScope scope) {
 	return null;
+}
+public boolean containsPatternVariable() {
+	return false;
 }
 /**
  * Implementation of {@link org.eclipse.jdt.internal.compiler.lookup.InvocationSite#invocationTargetType}

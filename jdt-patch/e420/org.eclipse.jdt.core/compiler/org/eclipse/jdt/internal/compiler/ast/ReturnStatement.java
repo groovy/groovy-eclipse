@@ -348,7 +348,7 @@ public void resolve(BlockScope scope) {
 
 	if (methodType.isProperType(true) && lambda != null) {
 		// ensure that type conversions don't leak a preliminary local type:
-		if (lambda.updateLocalTypesInMethod(lambda.descriptor))
+		if (lambda.updateLocalTypes())
 			methodType = lambda.expectedResultType();
 	}
 	if (TypeBinding.notEquals(methodType, expressionType)) // must call before computeConversion() and typeMismatchError()

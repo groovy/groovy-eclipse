@@ -192,9 +192,6 @@ public static Test suite() {
 	 // add 14 specific test here (check duplicates)
 	 ArrayList since_14 = new ArrayList();
 	 since_14.add(SwitchExpressionsYieldTest.class);
-	 since_14.add(RecordsRestrictedClassTest.class);
-	 since_14.add(PatternMatching16Test.class);
-	 since_14.add(JavadocTestForRecord.class);
 	 since_14.add(BatchCompilerTest_14.class);
 
 	 // add 15 specific test here (check duplicates)
@@ -202,6 +199,7 @@ public static Test suite() {
 	 since_15.add(ClassFileReaderTest_15.class);
 	 since_15.add(JavadocTest_15.class);
 	 since_15.add(Unicode13Test.class);
+	 since_15.add(BatchCompilerTest_15.class);
 
 	 // add 16 specific test here (check duplicates)
 	 ArrayList since_16 = new ArrayList();
@@ -210,6 +208,10 @@ public static Test suite() {
 	 since_16.add(LocalStaticsTest.class);
 	 since_16.add(PreviewFeatureTest.class);
 	 since_16.add(ValueBasedAnnotationTests.class);
+	 since_16.add(BatchCompilerTest_16.class);
+	 since_16.add(RecordsRestrictedClassTest.class);
+	 since_16.add(PatternMatching16Test.class);
+	 since_16.add(JavadocTestForRecord.class);
 
 	 // Build final test suite
 	TestSuite all = new TestSuite(TestAll.class.getName());

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -93,9 +93,6 @@ private void generateAnnotationInfo(JavaElement parent, char[] parameterName, Ha
 private void generateStandardAnnotationsInfos(JavaElement javaElement, char[] parameterName, long tagBits, HashMap newElements) {
 	if ((tagBits & TagBits.AllStandardAnnotationsMask) == 0)
 		return;
-	if ((tagBits & TagBits.AnnotationTargetMASK) != 0) {
-		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_ANNOTATION_TARGET, getTargetElementTypes(tagBits), newElements);
-	}
 	if ((tagBits & TagBits.AnnotationRetentionMASK) != 0) {
 		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_ANNOTATION_RETENTION, getRetentionPolicy(tagBits), newElements);
 	}
@@ -122,74 +119,6 @@ private void generateStandardAnnotation(JavaElement javaElement, char[][] typeNa
 	AnnotationInfo annotationInfo = new AnnotationInfo();
 	annotationInfo.members = members;
 	newElements.put(annotation, annotationInfo);
-}
-
-private IMemberValuePair[] getTargetElementTypes(long tagBits) {
-	ArrayList values = new ArrayList();
-	String elementType = new String(CharOperation.concatWith(TypeConstants.JAVA_LANG_ANNOTATION_ELEMENTTYPE, '.')) + '.';
-	if ((tagBits & TagBits.AnnotationForType) != 0) {
-		values.add(elementType + new String(TypeConstants.TYPE));
-	}
-	if ((tagBits & TagBits.AnnotationForField) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_FIELD));
-	}
-	if ((tagBits & TagBits.AnnotationForMethod) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_METHOD));
-	}
-	if ((tagBits & TagBits.AnnotationForParameter) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_PARAMETER));
-	}
-	if ((tagBits & TagBits.AnnotationForConstructor) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_CONSTRUCTOR));
-	}
-	if ((tagBits & TagBits.AnnotationForLocalVariable) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_LOCAL_VARIABLE));
-	}
-	if ((tagBits & TagBits.AnnotationForAnnotationType) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_ANNOTATION_TYPE));
-	}
-	if ((tagBits & TagBits.AnnotationForPackage) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_PACKAGE));
-	}
-	if ((tagBits & TagBits.AnnotationForTypeUse) != 0) {
-		values.add(elementType + new String(TypeConstants.TYPE_USE_TARGET));
-	}
-	if ((tagBits & TagBits.AnnotationForTypeParameter) != 0) {
-		values.add(elementType + new String(TypeConstants.TYPE_PARAMETER_TARGET));
-	}
-	if ((tagBits & TagBits.AnnotationForModule) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_MODULE));
-	}
-	if ((tagBits & TagBits.AnnotationForRecordComponent) != 0) {
-		values.add(elementType + new String(TypeConstants.UPPER_RECORD_COMPONENT));
-	}
-	final Object value;
-	if (values.size() == 0) {
-		if ((tagBits & TagBits.AnnotationTarget) != 0)
-			value = CharOperation.NO_STRINGS;
-		else
-			return Annotation.NO_MEMBER_VALUE_PAIRS;
-	} else if (values.size() == 1) {
-		value = values.get(0);
-	} else {
-		value = values.toArray(new String[values.size()]);
-	}
-	return new IMemberValuePair[] {
-		new IMemberValuePair() {
-			@Override
-			public int getValueKind() {
-				return IMemberValuePair.K_QUALIFIED_NAME;
-			}
-			@Override
-			public Object getValue() {
-				return value;
-			}
-			@Override
-			public String getMemberName() {
-				return new String(TypeConstants.VALUE);
-			}
-		}
-	};
 }
 
 private IMemberValuePair[] getRetentionPolicy(long tagBits) {

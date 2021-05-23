@@ -18,6 +18,8 @@ import java.io.IOException;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+
 import junit.framework.Test;
 
 @SuppressWarnings({ "rawtypes" })
@@ -45,6 +47,9 @@ public class BatchCompilerTest_15 extends AbstractBatchCompilerTest {
 		super(name);
 	}
 	public void testBug564047_001(){
+		if (!AbstractBatchCompilerTest.isJREVersionEqualTo(CompilerOptions.VERSION_15))
+			return; // preview test - relevant only at level 15
+
 		String currentWorkingDirectoryPath = System.getProperty("user.dir");
 		if (currentWorkingDirectoryPath == null) {
 			System.err.println("BatchCompilerTest#testBug564047_001 could not access the current working directory " + currentWorkingDirectoryPath);

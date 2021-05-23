@@ -130,7 +130,7 @@ public class ClasspathJep247 extends ClasspathJrt {
 	}
 	@Override
 	public void loadModules() {
-		// Modules below level 8 are not dealt with here. Leave it to ClasspathJrt
+		// Modules below level 9 are not dealt with here. Leave it to ClasspathJrt
 		if (this.jdklevel <= ClassFileConstants.JDK1_8) {
 			super.loadModules();
 			return;
@@ -191,7 +191,7 @@ public class ClasspathJep247 extends ClasspathJrt {
 	}
 	@Override
 	void acceptModule(ClassFileReader reader, Map<String, IModule> cache) {
-		// Modules below level 8 are not dealt with here. Leave it to ClasspathJrt
+		// Modules below level 9 are not dealt with here. Leave it to ClasspathJrt
 		if (this.jdklevel <= ClassFileConstants.JDK1_8) {
 			super.acceptModule(reader, cache);
 			return;

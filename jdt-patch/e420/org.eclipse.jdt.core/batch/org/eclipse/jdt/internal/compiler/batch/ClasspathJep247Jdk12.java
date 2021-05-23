@@ -65,6 +65,7 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 		try {
 			ClassFileReader reader = null;
 			byte[] content = null;
+			char[] foundModName = null;
 			qualifiedBinaryFileName = qualifiedBinaryFileName.replace(".class", ".sig"); //$NON-NLS-1$ //$NON-NLS-2$
 			if (this.subReleases != null && this.subReleases.length > 0) {
 				done: for (String rel : this.subReleases) {
@@ -75,6 +76,7 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 								Path f = this.fs.getPath(rel, JRTUtil.sanitizedFileName(subdir), qualifiedBinaryFileName);
 								if (Files.exists(f)) {
 									content = JRTUtil.safeReadBytes(f);
+									foundModName = JRTUtil.sanitizedFileName(subdir).toCharArray();
 									if (content != null)
 										break done;
 								}
@@ -94,7 +96,7 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 			}
 			if (content != null) {
 				reader = new ClassFileReader(content, qualifiedBinaryFileName.toCharArray());
-				char[] modName = moduleName != null ? moduleName.toCharArray() : null;
+				char[] modName = moduleName != null ? moduleName.toCharArray() : foundModName;
 				return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName), modName);
 			}
 		} catch (ClassFormatException | IOException e) {
@@ -147,7 +149,7 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 	}
 	@Override
 	public void loadModules() {
-		// Modules below level 8 are not dealt with here. Leave it to ClasspathJrt
+		// Modules below level 9 are not dealt with here. Leave it to ClasspathJrt
 		if (this.jdklevel <= ClassFileConstants.JDK1_8) {
 			super.loadModules();
 			return;
@@ -217,6 +219,10 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 	}
 	@Override
 	public IModule getModule(char[] moduleName) {
+		// Modules below level 9 are not dealt with here. Leave it to ClasspathJrt
+		if (this.jdklevel <= ClassFileConstants.JDK1_8) {
+			return super.getModule(moduleName);
+		}
 		if (this.modules != null) {
 			return this.modules.get(String.valueOf(moduleName));
 		}
@@ -241,7 +247,7 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 	}
 	@Override
 	void acceptModule(ClassFileReader reader, Map<String, IModule> cache) {
-		// Modules below level 8 are not dealt with here. Leave it to ClasspathJrt
+		// Modules below level 9 are not dealt with here. Leave it to ClasspathJrt
 		if (this.jdklevel <= ClassFileConstants.JDK1_8) {
 			super.acceptModule(reader, cache);
 			return;

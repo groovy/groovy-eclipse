@@ -14,11 +14,8 @@
 
 package org.eclipse.jdt.internal.compiler;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class ReadManager implements Runnable {
 	ICompilationUnit[] units;
 	int nextFileToRead;
@@ -37,19 +34,11 @@ public class ReadManager implements Runnable {
 
 public ReadManager(ICompilationUnit[] files, int length) {
 	// start the background threads to read the file's contents
-	int threadCount = 0;
-	try {
-		Class runtime = Class.forName("java.lang.Runtime"); //$NON-NLS-1$
-		java.lang.reflect.Method m = runtime.getDeclaredMethod("availableProcessors", new Class[0]); //$NON-NLS-1$
-		if (m != null) {
-			Integer result = (Integer) m.invoke(Runtime.getRuntime(), (Object[]) null);
-			threadCount = result.intValue() + 1;
-			if (threadCount < 2)
-				threadCount = 0;
-			else if (threadCount > CACHE_SIZE)
-				threadCount = CACHE_SIZE;
-		}
-	} catch (IllegalAccessException | ClassNotFoundException | SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException e) { // ignored
+	int threadCount = Runtime.getRuntime().availableProcessors() + 1;
+	if (threadCount < 2) {
+		threadCount = 0;
+	} else if (threadCount > CACHE_SIZE) {
+		threadCount = CACHE_SIZE;
 	}
 
 	if (threadCount > 0) {

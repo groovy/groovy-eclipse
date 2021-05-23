@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -127,6 +127,8 @@ public abstract class AssistParser extends Parser {
 	AssistParser[] snapShotStack = new AssistParser[3];
 	int[] snapShotPositions = new int[3];
 	int snapShotPtr = -1;
+
+	public int cursorLocation = Integer.MAX_VALUE;
 
 	protected static final int[] RECOVERY_TOKENS = { TokenNameSEMICOLON, TokenNameRPAREN, TokenNameRBRACE, TokenNameRBRACKET};
 
@@ -346,6 +348,10 @@ public RecoveredElement buildInitialRecoveryState(){
 				} else if ((stmt instanceof ForeachStatement) && ((ForeachStatement) stmt).action == null) {
 					element = element.add(stmt, 0);
 					this.lastCheckPoint = stmt.sourceEnd + 1;
+				} else if (stmt.containsPatternVariable()) {
+					element.add(stmt, 0);
+					this.lastCheckPoint = stmt.sourceEnd + 1;
+					this.isOrphanCompletionNode = false;
 				}
 			}
 			continue;
@@ -504,7 +510,16 @@ protected boolean triggerRecoveryUponLambdaClosure(Statement statement, boolean 
 	boolean lambdaClosed = false;
 	int statementStart, statementEnd;
 	statementStart = statement.sourceStart;
-	statementEnd = statement instanceof AbstractVariableDeclaration ? ((AbstractVariableDeclaration)statement).declarationSourceEnd : statement.sourceEnd;
+	if (statement instanceof AbstractVariableDeclaration) {
+		AbstractVariableDeclaration variable = (AbstractVariableDeclaration)statement;
+		if (variable.initialization != null && variable.initialization.sourceEnd == 0) {
+			statementEnd = Integer.MAX_VALUE; // variable end is not yet known, don't make it a limiting factor
+		} else {
+			statementEnd = variable.declarationSourceEnd;
+		}
+	} else {
+		statementEnd = statement.sourceEnd;
+	}
 	for (int i = this.elementPtr; i >= 0; --i) {
 		if (this.elementKindStack[i] != K_LAMBDA_EXPRESSION_DELIMITER)
 			continue;
@@ -556,6 +571,7 @@ protected boolean triggerRecoveryUponLambdaClosure(Statement statement, boolean 
 					RecoveredStatement recoveredStatement = recoveredBlock.statementCount > 0 ? recoveredBlock.statements[recoveredBlock.statementCount - 1] : null;
 					ASTNode parseTree = recoveredStatement != null ? recoveredStatement.updatedStatement(0, new HashSet<TypeDeclaration>()) : null;
 					if (parseTree != null) {
+						detectAssistNodeParent(parseTree);
 						if ((parseTree.sourceStart == 0 || parseTree.sourceEnd == 0) || (parseTree.sourceStart >= statementStart && parseTree.sourceEnd <= statementEnd)) {
 							recoveredBlock.statements[recoveredBlock.statementCount - 1] = new RecoveredStatement(statement, recoveredBlock, 0);
 							statement = null;
@@ -591,6 +607,11 @@ protected boolean triggerRecoveryUponLambdaClosure(Statement statement, boolean 
 		popSnapShot();
 	return lambdaClosed;
 }
+
+protected void detectAssistNodeParent(ASTNode parseTree) {
+	// only for completion
+}
+
 public Statement replaceAssistStatement(RecoveredElement top, ASTNode assistParent, int start, int end, Statement stmt) {
 	if (top == null) return null;
 	if (top instanceof RecoveredBlock) {
@@ -626,10 +647,6 @@ public Statement replaceAssistStatement(RecoveredElement top, ASTNode assistPare
 protected ASTNode assistNodeParent() {
 	return null;
 }
-protected ASTNode enclosingNode() {
-	return null;
-}
-
 @Override
 protected boolean isAssistParser() {
 	return true;
@@ -2203,7 +2220,8 @@ public void recoveryTokenCheck() {
 					popElement(K_FIELD_INITIALIZER_DELIMITER);
 				}
 				if(this.currentElement != oldElement
-					&& topKnownElementKind(ASSIST_PARSER) != K_METHOD_DELIMITER) {
+					&& topKnownElementKind(ASSIST_PARSER) != K_METHOD_DELIMITER
+					&& topKnownElementKind(ASSIST_PARSER) != K_LAMBDA_EXPRESSION_DELIMITER) {
 					pushOnElementStack(K_METHOD_DELIMITER);
 				}
 			}
@@ -2232,9 +2250,8 @@ public void recoveryTokenCheck() {
 			break;
 	}
 }
-
 @Override
-public void reset(){
+public void reset() {
 	flushAssistState();
 }
 
@@ -2294,9 +2311,12 @@ protected int fallBackToSpringForward(Statement unused) {
 		int extendedEnd = this.scanner.source.length;
 		if (this.referenceContext instanceof AbstractMethodDeclaration)
 			extendedEnd = ((AbstractMethodDeclaration) this.referenceContext).bodyEnd; // no use parsing beyond the method's body end
-		if (this.scanner.eofPosition < extendedEnd) {
+		if (this.cursorLocation < extendedEnd) {
 			shouldStackAssistNode();
-			this.scanner.eofPosition = extendedEnd;
+			// the following is against the new strategy as of https://bugs.eclipse.org/539685
+			// but needed because CompletionParser.consumeToken(token == TokenNameIdentifier) still sets eof to cursorLocation
+			if (this.scanner.eofPosition < extendedEnd)
+				this.scanner.eofPosition = extendedEnd;
 			nextToken = getNextToken();
 			if (automatonWillShift(nextToken, automatonState)) {
 				this.currentToken = nextToken;
@@ -2307,6 +2327,8 @@ protected int fallBackToSpringForward(Statement unused) {
 			return HALT; // don't know how to proceed.
 		}
 	} else {
+		if (this.scanner.currentPosition > this.cursorLocation)
+			shouldStackAssistNode();
 		nextToken = this.currentToken;
 		this.scanner.ungetToken(nextToken);
 		if (nextToken == TokenNameRBRACE)

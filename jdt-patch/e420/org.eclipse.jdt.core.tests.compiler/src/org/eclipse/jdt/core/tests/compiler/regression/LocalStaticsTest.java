@@ -29,7 +29,8 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testBug571274_001"};
+//		TESTS_NAMES = new String[] { "testBug569444_001"};
+//		TESTS_NAMES = new String[] { "testBug572994_001"};
 	}
 
 	public static Class<?> testClass() {
@@ -1459,5 +1460,89 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 					"	             ^\n" +
 					"Local variable i defined in an enclosing scope must be final or effectively final\n" +
 					"----------\n");
+	}
+	public void testBug572994_001() {
+		runNegativeTest(
+			new String[] {
+					"X.java",
+					"public class X {\n"+
+					"\n"+
+					" public class Singleton {\n"+
+					"   private static Singleton pinstance = new Singleton();\n"+
+					"   public static Singleton instance() {\n"+
+					"     return pinstance;\n"+
+					"   }\n"+
+					"   public String message() {\n"+
+					"     return \"Hello world!\";\n"+
+					"   }\n"+
+					" }\n"+
+					" \n"+
+					" public static void main(String[] args) {\n"+
+					"   System.out.println(Singleton.instance().message());\n"+
+					" }\n"+
+					"}"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	private static Singleton pinstance = new Singleton();\n" +
+				"	                                     ^^^^^^^^^^^^^^^\n" +
+				"No enclosing instance of type X is accessible. Must qualify the allocation with an enclosing instance of type X (e.g. x.new A() where x is an instance of X).\n" +
+				"----------\n");
+	}
+	public void testBug572994_002() {
+		runNegativeTest(
+			new String[] {
+					"X.java",
+					"public class X {\n"+
+					"\n"+
+					" public class Singleton {\n"+
+					"   private static Singleton pinstance = this;\n"+
+					"   public static Singleton instance() {\n"+
+					"     return pinstance;\n"+
+					"   }\n"+
+					"   public String message() {\n"+
+					"     return \"Hello world!\";\n"+
+					"   }\n"+
+					" }\n"+
+					" \n"+
+					" public static void main(String[] args) {\n"+
+					"   System.out.println(Singleton.instance().message());\n"+
+					" }\n"+
+					"}"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	private static Singleton pinstance = this;\n" +
+				"	                                     ^^^^\n" +
+				"Cannot use this in a static context\n" +
+				"----------\n");
+	}
+	public void testBug572994_003() {
+		runNegativeTest(
+			new String[] {
+					"X.java",
+					"public class X {\n"+
+					"\n"+
+					" public class Singleton {\n"+
+					"   private static Y pinstance = new Y();\n"+
+					"   public static Y instance() {\n"+
+					"     return pinstance;\n"+
+					"   }\n"+
+					"   public String message() {\n"+
+					"     return \"Hello world!\";\n"+
+					"   }\n"+
+					" }\n"+
+					" \n"+
+					" public static void main(String[] args) {\n"+
+					" }\n"+
+					" class Y {}\n"+
+					"}"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	private static Y pinstance = new Y();\n" +
+				"	                             ^^^^^^^\n" +
+				"No enclosing instance of type X is accessible. Must qualify the allocation with an enclosing instance of type X (e.g. x.new A() where x is an instance of X).\n" +
+				"----------\n");
 	}
 }

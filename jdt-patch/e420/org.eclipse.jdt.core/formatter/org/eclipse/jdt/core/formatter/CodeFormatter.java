@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -98,6 +98,17 @@ public abstract class CodeFormatter {
 	 * </p>
 	 */
 	public static final int K_COMPILATION_UNIT = 0x08;
+
+	/**
+	 * Kind used to format a set of class body declarations
+	 *<p>
+	 * if the corresponding comment option is set to
+	 * <code>true</code> then it is also possible to format the comments on the fly
+	 * by adding the {@link #F_INCLUDE_COMMENTS} flag to this kind of format.
+	 * </p>
+	 * @since 3.26
+	 */
+	public static final int K_RECORD_BODY_DECLARATIONS  = 0x16;
 
 	/**
 	 * Kind used to format a single-line comment

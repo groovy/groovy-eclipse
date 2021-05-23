@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 GK Software AG and others.
+ * Copyright (c) 2017, 2021 GK Software AG and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -37,6 +37,15 @@ public abstract class AbstractBatchCompilerTest extends AbstractRegressionTest {
 		abstract String expected(); // for use in JUnit comparison framework
 	}
 
+	/**
+	 * Used for preview features especially.
+	 * @param compilerVersion - CompilerOptions.version string
+	 * @return true if spec version is same as compiler version
+	 */
+	public static boolean isJREVersionEqualTo(String compilerVersion) {
+		String specVersion = System.getProperty("java.specification.version");
+		return specVersion != null && Integer.valueOf(specVersion) == Integer.valueOf(compilerVersion);
+	}
 	/**
 	 * Abstract normalizer for output comparison. This class merely embodies a
 	 * chain of responsibility, plus the signature of the method of interest

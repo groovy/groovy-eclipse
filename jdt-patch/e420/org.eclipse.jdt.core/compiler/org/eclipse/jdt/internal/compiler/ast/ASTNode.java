@@ -734,6 +734,9 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 					if (lambda.hasErrors() || lambda.hasDescripterProblem) {
 						continue;
 					}
+					// avoid that preliminary local type bindings escape beyond this point:
+					lambda.updateLocalTypesInMethod(candidateMethod);
+					parameterType = InferenceContext18.getParameter(parameters, i, variableArity); // refresh after update
 					if (!lambda.isCompatibleWith(parameterType, scope)) {
 						if (method.isValidBinding() && problemMethod == null) {
 							TypeBinding[] originalArguments = Arrays.copyOf(argumentTypes, argumentTypes.length);
@@ -745,8 +748,6 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 						}
 						continue;
 					}
-					// avoid that preliminary local type bindings escape beyond this point:
-					lambda.updateLocalTypesInMethod(candidateMethod);
 				} else {
 					updatedArgumentType = argument.resolveType(scope);
 				}
@@ -756,6 +757,9 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 						candidateMethod.parameters[i] = updatedArgumentType;
 				}
 			}
+		}
+		if (method.returnType instanceof ReferenceBinding) {
+			scope.referenceCompilationUnit().updateLocalTypesInMethod(method);
 		}
 		if (method instanceof ParameterizedGenericMethodBinding) {
 			InferenceContext18 ic18 = invocation.getInferenceContext((ParameterizedMethodBinding) method);

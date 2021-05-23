@@ -890,6 +890,11 @@ public Object[] getEmulationPath(ReferenceBinding targetEnclosingType, boolean o
 		}
 		return null;
 	}
+	if (sourceType.isNestedType() && currentMethodScope.isInsideInitializer()) {
+		if (currentMethodScope.isStatic) {
+			return BlockScope.NoEnclosingInstanceInStaticContext;
+		}
+	}
 	boolean insideConstructor = currentMethodScope.isInsideInitializerOrConstructor();
 	// use synthetic constructor arguments if possible
 	if (insideConstructor) {

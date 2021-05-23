@@ -50,6 +50,7 @@ public class AbstractCompilerTest extends TestCase {
 	public static final int F_16  = 0x2000;
 
 	public static final boolean RUN_JAVAC = CompilerOptions.ENABLED.equals(System.getProperty("run.javac"));
+	public static final boolean PERFORMANCE_ASSERTS = !CompilerOptions.DISABLED.equals(System.getProperty("jdt.performance.asserts"));
 	private static final int UNINITIALIZED = -1;
 	private static final int NONE = 0;
 	private static int possibleComplianceLevels = UNINITIALIZED;

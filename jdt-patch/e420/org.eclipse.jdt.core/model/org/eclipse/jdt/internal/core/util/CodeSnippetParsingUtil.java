@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2013 IBM Corporation and others.
+ * Copyright (c) 2002, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -36,7 +36,7 @@ public class CodeSnippetParsingUtil {
 
 	public RecordedParsingInformation recordedParsingInformation;
 	public boolean ignoreMethodBodies;
-	
+
 	public CodeSnippetParsingUtil(boolean ignoreMethodBodies) {
 		this.ignoreMethodBodies = ignoreMethodBodies;
 	}
@@ -93,6 +93,43 @@ public class CodeSnippetParsingUtil {
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		final CompilationUnitDeclaration compilationUnitDeclaration = new CompilationUnitDeclaration(problemReporter, compilationResult, source.length);
 		ASTNode[] result = parser.parseClassBodyDeclarations(source, offset, length, compilationUnitDeclaration);
+
+		if (recordParsingInformation) {
+			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, compilationUnitDeclaration.comments);
+		}
+		return result;
+	}
+
+	public ASTNode[] parseRecordBodyDeclarations(
+			char[] source,
+			int offset,
+			int length,
+			Map<String, String> settings,
+			boolean recordParsingInformation,
+			boolean enabledStatementRecovery) {
+		if (source == null) {
+			throw new IllegalArgumentException();
+		}
+		CompilerOptions compilerOptions = new CompilerOptions(settings);
+		compilerOptions.ignoreMethodBodies = this.ignoreMethodBodies;
+		final ProblemReporter problemReporter = new ProblemReporter(
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					compilerOptions,
+					new DefaultProblemFactory(Locale.getDefault()));
+
+		CommentRecorderParser parser = new CommentRecorderParser(problemReporter, false);
+		parser.setMethodsFullRecovery(false);
+		parser.setStatementsRecovery(enabledStatementRecovery);
+
+		ICompilationUnit sourceUnit =
+			new CompilationUnit(
+				source,
+				"", //$NON-NLS-1$
+				compilerOptions.defaultEncoding);
+
+		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
+		final CompilationUnitDeclaration compilationUnitDeclaration = new CompilationUnitDeclaration(problemReporter, compilationResult, source.length);
+		ASTNode[] result = parser.parseRecordBodyDeclarations(source, offset, length, compilationUnitDeclaration);
 
 		if (recordParsingInformation) {
 			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, compilationUnitDeclaration.comments);

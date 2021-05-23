@@ -122,6 +122,7 @@ import org.eclipse.jdt.internal.codeassist.impl.Keywords;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ExtraFlags;
+import org.eclipse.jdt.internal.compiler.ast.AND_AND_Expression;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
@@ -133,6 +134,7 @@ import org.eclipse.jdt.internal.compiler.ast.ArrayReference;
 import org.eclipse.jdt.internal.compiler.ast.AssertStatement;
 import org.eclipse.jdt.internal.compiler.ast.Assignment;
 import org.eclipse.jdt.internal.compiler.ast.BinaryExpression;
+import org.eclipse.jdt.internal.compiler.ast.Block;
 import org.eclipse.jdt.internal.compiler.ast.CaseStatement;
 import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -166,6 +168,7 @@ import org.eclipse.jdt.internal.compiler.ast.PackageVisibilityStatement;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ProvidesStatement;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
@@ -173,6 +176,7 @@ import org.eclipse.jdt.internal.compiler.ast.RequiresStatement;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.SuperReference;
 import org.eclipse.jdt.internal.compiler.ast.SwitchStatement;
 import org.eclipse.jdt.internal.compiler.ast.ThisReference;
@@ -1719,7 +1723,7 @@ public final class CompletionEngine
 		}
 	}
 	private void addExpectedType(TypeBinding type, Scope scope){
-		if (type == null || !type.isValidBinding() || type == TypeBinding.NULL) return;
+		if (type == null || !type.isValidBinding() || type == TypeBinding.NULL || type == TypeBinding.VOID) return;
 
 		// do not add twice the same type
 		for (int i = 0; i <= this.expectedTypesPtr; i++) {
@@ -1881,12 +1885,16 @@ public final class CompletionEngine
 		} else if (astNode instanceof CompletionOnSingleTypeReference) {
 			CompletionOnSingleTypeReference completionOnSingleTypeReference = (CompletionOnSingleTypeReference) astNode;
 			if (completionOnSingleTypeReference.isConstructorType) {
-						context.setTokenLocation(CompletionContext.TL_CONSTRUCTOR_START);
+				context.setTokenLocation(CompletionContext.TL_CONSTRUCTOR_START);
+			} else if (astNodeParent instanceof LambdaExpression) {
+				context.setTokenLocation(CompletionContext.TL_STATEMENT_START);
 			}
 		} else if (astNode instanceof CompletionOnQualifiedTypeReference) {
 			CompletionOnQualifiedTypeReference completionOnQualifiedTypeReference = (CompletionOnQualifiedTypeReference) astNode;
 			if (completionOnQualifiedTypeReference.isConstructorType){
-						context.setTokenLocation(CompletionContext.TL_CONSTRUCTOR_START);
+				context.setTokenLocation(CompletionContext.TL_CONSTRUCTOR_START);
+			} else if (astNodeParent instanceof LambdaExpression) {
+				context.setTokenLocation(CompletionContext.TL_STATEMENT_START);
 			}
 		} else if (astNode instanceof CompletionOnKeyword3 && ((CompletionOnKeyword3) astNode).afterTryOrCatch()) {
 				context.setTokenLocation(CompletionContext.TL_STATEMENT_START);
@@ -2135,7 +2143,6 @@ public final class CompletionEngine
 						if (uses != null) {
 							for (int i = 0, l = uses.length; i < l; ++i) {
 								UsesStatement usesStatement = uses[i];
-								this.parser.enclosingNode = usesStatement;
 								TypeReference usesReference = usesStatement.serviceInterface;
 								if (usesReference instanceof CompletionOnUsesSingleTypeReference ||
 										usesReference instanceof CompletionOnUsesQualifiedTypeReference) {
@@ -2935,6 +2942,10 @@ public final class CompletionEngine
 			} else {
 				CompletionOnArgumentName arg = (CompletionOnArgumentName) variable;
 				this.completionToken = arg.realName;
+				if ((variable.bits & ASTNode.IsTypeElided) != 0) {
+					findKeywords(variable.name, new char[][] { Keywords.VAR }, false, false);
+					return; // heuristics below need a type, which we don't have here
+				}
 				kind = arg.isCatchArgument ? InternalNamingConventions.VK_LOCAL : InternalNamingConventions.VK_PARAMETER;
 			}
 
@@ -3221,6 +3232,10 @@ public final class CompletionEngine
 		if (!this.requestor.isIgnored(CompletionProposal.METHOD_REF)) {
 			CompletionOnMessageSendName messageSend = (CompletionOnMessageSendName) astNode;
 
+			setTokenRange(messageSend.sourceStart, messageSend.sourceEnd);
+			if (messageSend.statementEnd > messageSend.sourceStart)
+				setSourceRange(messageSend.sourceStart, messageSend.statementEnd);
+
 			this.insideQualifiedReference = true;
 			this.completionToken = messageSend.selector;
 			boolean onlyStatic = false;
@@ -3228,7 +3243,8 @@ public final class CompletionEngine
 				onlyStatic = ((NameReference)messageSend.receiver).isTypeReference();
 			} else if (!(messageSend.receiver instanceof MessageSend) &&
 					!(messageSend.receiver instanceof FieldReference) &&
-					!(messageSend.receiver.isThis())) {
+					!(messageSend.receiver.isThis()) &&
+					!(messageSend.receiver.isSuper())) {
 				onlyStatic = true;
 			}
 
@@ -3765,9 +3781,10 @@ public final class CompletionEngine
 			if (scope instanceof BlockScope && !this.requestor.isIgnored(CompletionProposal.LOCAL_VARIABLE_REF)) {
 				char[][] alreadyDefinedName = computeAlreadyDefinedName((BlockScope)scope, singleNameReference);
 
+				int end = Math.min(singleNameReference.sourceEnd, this.actualCompletionPosition);
 				findUnresolvedReference(
 						singleNameReference.sourceStart,
-						singleNameReference.sourceEnd,
+						end,
 						(BlockScope)scope,
 						alreadyDefinedName);
 			}
@@ -4069,6 +4086,16 @@ public final class CompletionEngine
 					addExpectedType(binding, scope);
 				}
 			}
+		} else if (parent instanceof LambdaExpression) {
+			LambdaExpression lambda = (LambdaExpression) parent;
+			if (lambda.body == node) {
+				if (lambda.binding != null) {
+					TypeBinding returnType = lambda.binding.returnType;
+					if (returnType != null) {
+						addExpectedType(returnType, scope);
+					}
+				}
+			}
 		} else if(parent instanceof CastExpression) {
 			TypeReference e = ((CastExpression)parent).type;
 			TypeBinding binding = e.resolvedType;
@@ -4106,7 +4133,7 @@ public final class CompletionEngine
 		} else if(parent instanceof AllocationExpression) {
 			AllocationExpression allocationExpression = (AllocationExpression) parent;
 
-			ReferenceBinding binding = (ReferenceBinding)allocationExpression.type.resolvedType;
+			ReferenceBinding binding = (ReferenceBinding) allocationExpression.resolvedType;
 
 			if(binding != null) {
 				computeExpectedTypesForAllocationExpression(
@@ -4408,6 +4435,9 @@ public final class CompletionEngine
 		Scope scope,
 		InvocationSite invocationSite) {
 
+		if (arguments == null)
+			return;
+
 		MethodBinding[] methods = binding.availableMethods();
 		nextMethod : for (int i = 0; i < methods.length; i++) {
 			MethodBinding method = methods[i];
@@ -4445,6 +4475,9 @@ public final class CompletionEngine
 		Scope scope,
 		InvocationSite invocationSite,
 		boolean isStatic) {
+
+		if (arguments == null)
+			return;
 
 		MethodBinding[] methods = binding.availableMethods();
 		nextMethod : for (int i = 0; i < methods.length; i++) {
@@ -4905,7 +4938,7 @@ public final class CompletionEngine
 	}
 
 	private TypeBinding[] computeTypesIfCorrect(Expression[] arguments) {
-		if (arguments == null) return null;
+		if (arguments == null) return Binding.NO_TYPES;
 		int argsLength = arguments.length;
 		TypeBinding[] argTypes = new TypeBinding[argsLength];
 		for (int a = argsLength; --a >= 0;) {
@@ -7543,13 +7576,12 @@ public final class CompletionEngine
 			Scope invocationScope,
 			Expression receiver) {
 
-		if (enclosingNode == null || !(enclosingNode instanceof IfStatement)) return;
+		if (enclosingNode == null) return;
 
-		IfStatement ifStatement = (IfStatement)enclosingNode;
-		while (true) {
-			if (!(ifStatement.condition instanceof InstanceOfExpression)) return;
-
-			InstanceOfExpression instanceOfExpression = (InstanceOfExpression) ifStatement.condition;
+		ASTNode currentEnclosing = enclosingNode;
+		while (currentEnclosing != null) {
+			InstanceOfExpression instanceOfExpression = findGuardingInstanceOf(currentEnclosing);
+			if (instanceOfExpression == null) return;
 
 			TypeReference instanceOfType = instanceOfExpression.type;
 
@@ -7677,13 +7709,42 @@ public final class CompletionEngine
 			// traverse the enclosing node to find the instanceof expression corresponding
 			// to the completion node (if any)
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=304006
-			if (ifStatement.thenStatement instanceof IfStatement) {
-				ifStatement = (IfStatement) ifStatement.thenStatement;
-			} else {
-				break;
-			}
+			currentEnclosing = findGuardedInner(currentEnclosing);
 		}
 	}
+
+	private InstanceOfExpression findGuardingInstanceOf(ASTNode node) {
+		// CompletionNodeDetector selects the enclosing node such that it will contain the assist node only in the positive branch.
+		// Thus we don't have to check here in which branch we are asking for completion.
+		ASTNode left = null;
+		if (node instanceof IfStatement) {
+			left = ((IfStatement) node).condition;
+		} else if (node instanceof AND_AND_Expression) {
+			left = ((AND_AND_Expression) node).left;
+		} else {
+			return null;
+		}
+		if (left instanceof InstanceOfExpression) {
+			return (InstanceOfExpression) left;
+		}
+		return null;
+	}
+
+	private ASTNode findGuardedInner(ASTNode currentEnclosing) {
+		if (currentEnclosing instanceof IfStatement) {
+			Statement thenStatement = ((IfStatement) currentEnclosing).thenStatement;
+			if (thenStatement instanceof Block) {
+				Block block = (Block) thenStatement;
+				if (block.statements != null && block.statements.length > 0)
+					return block.statements[0];
+			}
+			return thenStatement;
+		} else if (currentEnclosing instanceof AND_AND_Expression) {
+			return ((AND_AND_Expression) currentEnclosing).right;
+		}
+		return null;
+	}
+
 	private void findFieldsAndMethodsFromFavorites(
 			char[] token,
 			Scope scope,
@@ -13103,6 +13164,24 @@ public final class CompletionEngine
 							scope.problemReporter().incorrectArityForParameterizedType(ref, ref.resolvedType, typeBindings);
 						}
 						return false;
+					}
+				}
+			}
+		} else if (parent instanceof QualifiedAllocationExpression) {
+			Expression enclosingInstance = ((QualifiedAllocationExpression) parent).enclosingInstance();
+			if (enclosingInstance instanceof AllocationExpression) {
+				AllocationExpression enclosingAllocation = (AllocationExpression) enclosingInstance;
+				if (enclosingAllocation.type != null && (enclosingAllocation.type.bits & ASTNode.IsDiamond) != 0) {
+					if (enclosingAllocation.binding != null) {
+						for (TypeBinding param : enclosingAllocation.binding.original().parameters) {
+							if (param.kind() == Binding.TYPE_PARAMETER)
+								return true; // this could possible help type inference, let's assume the best
+						}
+						scope.problemReporter().cannotInferElidedTypes(enclosingAllocation);
+						return false; // will fail type inference, hence no useful proposals can be made
+					} else if (enclosingAllocation.arguments == null) {
+						scope.problemReporter().cannotInferElidedTypes(enclosingAllocation);
+						return false; // will fail type inference, hence no useful proposals can be made
 					}
 				}
 			}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -110,7 +110,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 					// The corresponding problem (when called from static) is not produced until during code generation
 				}
 			}
-			
+
 		}
 
 		// check captured variables are initialized in current context (26134)
@@ -124,8 +124,8 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		// process arguments
 		if (this.arguments != null) {
 			boolean analyseResources = currentScope.compilerOptions().analyseResourceLeaks;
-			boolean hasResourceWrapperType = analyseResources 
-						&& this.resolvedType instanceof ReferenceBinding 
+			boolean hasResourceWrapperType = analyseResources
+						&& this.resolvedType instanceof ReferenceBinding
 						&& ((ReferenceBinding)this.resolvedType).hasTypeBit(TypeIds.BitWrapperCloseable);
 			for (int i = 0, count = this.arguments.length; i < count; i++) {
 				flowInfo = this.arguments[i].analyseCode(currentScope, flowContext, flowInfo);
@@ -149,7 +149,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 			if ((this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null) {
 				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=277643, align with javac on JLS 15.12.2.6
 				thrownExceptions = currentScope.environment().convertToRawTypes(this.binding.thrownExceptions, true, true);
-			}			
+			}
 			// check exception handling
 			flowContext.checkExceptionHandlers(
 				thrownExceptions,
@@ -324,7 +324,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		}
 		return result;
 	}
-	
+
 	private TypeBinding resolveTypeForQualifiedAllocationExpression(BlockScope scope) {
 		// Propagate the type checking to the arguments, and checks if the constructor is defined.
 		// ClassInstanceCreationExpression ::= Primary '.' 'new' SimpleName '(' ArgumentListopt ')' ClassBodyopt
@@ -503,7 +503,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 						scope.problemReporter().diamondNotWithAnoymousClasses(this.type);
 						return null;
 					}
-				}	
+				}
 				ReferenceBinding superType = (ReferenceBinding) receiverType;
 				if (superType.isTypeVariable()) {
 					superType = new ProblemReferenceBinding(new char[][]{superType.sourceName()}, superType, ProblemReasons.IllegalSuperTypeVariable);
@@ -601,7 +601,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 			}
 			this.enclosingInstance.computeConversion(scope, targetEnclosing, enclosingInstanceType);
 		}
-		if (!isDiamond && receiverType.isParameterizedTypeWithActualArguments() && 
+		if (!isDiamond && receiverType.isParameterizedTypeWithActualArguments() &&
 				(this.anonymousType == null || sourceLevel >= ClassFileConstants.JDK9)) {
 			checkTypeArgumentRedundancy((ParameterizedTypeBinding) receiverType, scope);
 		}
@@ -654,7 +654,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				return this.noErrors;
 			}
 		}
-		
+
 		return new ValidityInspector().isValid();
 	}
 	private MethodBinding getAnonymousConstructorBinding(ReferenceBinding receiverType, BlockScope scope) {
@@ -693,5 +693,24 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				this.anonymousType.traverse(visitor, scope);
 		}
 		visitor.endVisit(this, scope);
+	}
+	@Override
+	protected void reportTypeArgumentRedundancyProblem(ParameterizedTypeBinding allocationType, final BlockScope scope) {
+		if (checkDiamondOperatorCanbeRemoved(scope)) {
+			scope.problemReporter().redundantSpecificationOfTypeArguments(this.type, allocationType.arguments);
+		}
+	}
+	private boolean checkDiamondOperatorCanbeRemoved(final BlockScope scope) {
+		if (this.anonymousType != null &&
+				this.anonymousType.methods != null &&
+				this.anonymousType.methods.length > 0) {
+			//diamond operator is allowed for anonymous types only from java 9
+			if (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK9) return false;
+			for (AbstractMethodDeclaration method : this.anonymousType.methods) {
+				if ( method.binding != null && (method.binding.modifiers & ExtraCompilerModifiers.AccOverriding) == 0)
+					return false;
+			}
+		}
+		return true;
 	}
 }

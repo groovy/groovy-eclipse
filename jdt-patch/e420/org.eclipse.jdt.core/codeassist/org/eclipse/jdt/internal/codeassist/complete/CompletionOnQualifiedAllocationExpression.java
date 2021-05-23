@@ -44,12 +44,18 @@ public class CompletionOnQualifiedAllocationExpression extends QualifiedAllocati
 @Override
 public TypeBinding resolveType(BlockScope scope) {
 	this.argumentTypes = Binding.NO_PARAMETERS;
+	boolean hasMissingType = false;
 	if (this.arguments != null) {
 		int argsLength = this.arguments.length;
 		int length = this.arguments.length;
 		this.argumentTypes = new TypeBinding[length];
 		for (int a = argsLength; --a >= 0;) {
-			this.argumentTypes[a] = this.arguments[a].resolveType(scope);
+			try {
+				this.argumentTypes[a] = this.arguments[a].resolveType(scope);
+			} catch (CompletionNodeFound cnf) {
+				// ignore nested completion node
+				hasMissingType = true;
+			}
 		}
 	}
 	final boolean isDiamond = this.type != null && (this.type.bits & ASTNode.IsDiamond) != 0;
@@ -69,7 +75,7 @@ public TypeBinding resolveType(BlockScope scope) {
 			throw new CompletionNodeFound();
 		}
 		this.resolvedType = ((SingleTypeReference) this.type).resolveTypeEnclosing(scope, (ReferenceBinding) enclosingType);
-		if (isDiamond && (this.resolvedType instanceof ParameterizedTypeBinding)) {
+		if (isDiamond && (this.resolvedType instanceof ParameterizedTypeBinding) && !hasMissingType) {
 			TypeBinding [] inferredTypes = inferElidedTypes(scope);
 			if (inferredTypes != null) {
 				this.resolvedType = this.type.resolvedType = scope.environment().createParameterizedType(((ParameterizedTypeBinding) this.resolvedType).genericType(), inferredTypes, this.resolvedType.enclosingType());

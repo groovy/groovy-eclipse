@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -392,7 +392,7 @@ public void testClassInstanceCreationExpression3() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    new Y(1, true, new <CompleteOnType:X>());\n" +
+		"    new Y(1, true, new <CompleteOnType:X>()).zzz();\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -423,7 +423,7 @@ public void testClassInstanceCreationExpression4() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    fred().new Y(new <CompleteOnType:X>());\n" +
+		"    fred().new Y(new <CompleteOnType:X>()).zzz();\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -853,18 +853,25 @@ public void testDeepReference() {
 		// completeBehind:
 		"X",
 		// expectedCompletionNodeToString:
-		"<CompleteOnName:X>",
+		"<CompleteOnType:X>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    {\n" +
+		"    if ((a == 2))\n" +
+		"        {\n" +
+		"        }\n" +
+		"    try\n" +
+		"      {\n" +
+		"      }\n" +
+		"    finally\n" +
 		"      {\n" +
 		"        if ((1 == fgh))\n" +
-		"            <CompleteOnName:X>;\n" +
+		"            {\n" +
+		"              <CompleteOnType:X> o;\n" +
+		"            }\n" +
 		"      }\n" +
-		"    }\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -1116,7 +1123,7 @@ public void testInstanceOf() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  boolean foo() {\n" +
-		"    (this instanceof <CompleteOnType:X>);\n" +
+		"    return (this instanceof <CompleteOnType:X>);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -1508,15 +1515,18 @@ public void testSwitchBlockStatement() {
 		// completeBehind:
 		"X",
 		// expectedCompletionNodeToString:
-		"<CompleteOnName:X>",
+		"<CompleteOnType:X>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
 		"    int i;\n" +
-		"    {\n" +
-		"      <CompleteOnName:X>;\n" +
+		"    switch (i) {\n" +
+		"    case 1 :\n" +
+		"        <CompleteOnType:X> o;\n" +
+		"        break;\n" +
+		"    default :\n" +
 		"    }\n" +
 		"  }\n" +
 		"}\n",

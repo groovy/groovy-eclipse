@@ -250,6 +250,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ASTParser.java" type="org.eclipse.jdt.core.dom.ASTParser">
+        <filter comment="Not updating to 4.0" id="336658481">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.ASTParser"/>
+                <message_argument value="K_RECORD_BODY_DECLARATIONS"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="dom/org/eclipse/jdt/core/dom/Annotation.java" type="org.eclipse.jdt.core.dom.Annotation">
         <filter id="576725006">
             <message_arguments>
@@ -459,6 +467,14 @@
             <message_arguments>
                 <message_argument value="ASTNode"/>
                 <message_argument value="VariableDeclaration"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="formatter/org/eclipse/jdt/core/formatter/CodeFormatter.java" type="org.eclipse.jdt.core.formatter.CodeFormatter">
+        <filter comment="Not updating to 4.0" id="336658481">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.formatter.CodeFormatter"/>
+                <message_argument value="K_RECORD_BODY_DECLARATIONS"/>
             </message_arguments>
         </filter>
     </resource>

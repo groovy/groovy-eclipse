@@ -18,6 +18,7 @@ package org.eclipse.jdt.internal.codeassist.complete;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
@@ -33,6 +34,10 @@ public class CompletionOnArgumentName extends Argument {
 
 		super(CharOperation.concat(name, FAKENAMESUFFIX), posNom, tr, modifiers);
 		this.realName = name;
+	}
+	/** For type elided lambda argument */
+	public CompletionOnArgumentName(Argument typeElidedArgument, long posNom) {
+		super(typeElidedArgument.name, posNom, null, ClassFileConstants.AccDefault, true);
 	}
 
 	@Override

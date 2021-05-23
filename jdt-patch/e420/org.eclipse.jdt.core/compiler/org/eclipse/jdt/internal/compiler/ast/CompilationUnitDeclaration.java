@@ -20,7 +20,10 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -28,6 +31,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.ast.LambdaExpression.LocalTypeSubstitutor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -38,11 +42,13 @@ import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
+import org.eclipse.jdt.internal.compiler.lookup.Substitution.NullSubstitution;
 import org.eclipse.jdt.internal.compiler.parser.NLSTag;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
 import org.eclipse.jdt.internal.compiler.problem.AbortMethod;
@@ -76,8 +82,7 @@ public class CompilationUnitDeclaration extends ASTNode implements ProblemSeveri
 	public ProblemReporter problemReporter;
 	public CompilationResult compilationResult;
 
-	public LocalTypeBinding[] localTypes;
-	public int localTypeCount = 0;
+	public Map<Integer,LocalTypeBinding> localTypes = Collections.emptyMap();
 
 	public boolean isPropagatingInnerClassEmulation;
 
@@ -152,8 +157,7 @@ public void cleanUp() {
 		for (int i = 0, max = this.types.length; i < max; i++) {
 			cleanUp(this.types[i]);
 		}
-		for (int i = 0, max = this.localTypeCount; i < max; i++) {
-		    LocalTypeBinding localType = this.localTypes[i];
+		for (LocalTypeBinding localType : this.localTypes.values()) {
 			// null out the type's scope backpointers
 			localType.cleanUp(); // local members are already in the list
 			localType.enclosingCase = null;
@@ -512,8 +516,7 @@ public StringBuffer print(int indent, StringBuffer output) {
  */
 public void propagateInnerEmulationForAllLocalTypes() {
 	this.isPropagatingInnerClassEmulation = true;
-	for (int i = 0, max = this.localTypeCount; i < max; i++) {
-		LocalTypeBinding localType = this.localTypes[i];
+	for (LocalTypeBinding localType : this.localTypes.values()) {
 		// only propagate for reachable local types
 		if ((localType.scope.referenceType().bits & IsReachable) != 0) {
 			localType.updateInnerEmulationDependents();
@@ -593,12 +596,14 @@ public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation,
  * emulation later on.
  */
 public void record(LocalTypeBinding localType) {
-	if (this.localTypeCount == 0) {
-		this.localTypes = new LocalTypeBinding[5];
-	} else if (this.localTypeCount == this.localTypes.length) {
-		System.arraycopy(this.localTypes, 0, (this.localTypes = new LocalTypeBinding[this.localTypeCount * 2]), 0, this.localTypeCount);
-	}
-	this.localTypes[this.localTypeCount++] = localType;
+	if (this.localTypes == Collections.EMPTY_MAP)
+		this.localTypes = new HashMap<>();
+	this.localTypes.put(localType.sourceStart, localType);
+}
+public void updateLocalTypesInMethod(MethodBinding methodBinding) {
+	if (this.localTypes == Collections.EMPTY_MAP)
+		return;
+	LambdaExpression.updateLocalTypesInMethod(methodBinding, new LocalTypeSubstitutor(this.localTypes, methodBinding), new NullSubstitution(this.scope.environment()));
 }
 
 /*

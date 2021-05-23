@@ -5521,4 +5521,20 @@ public void testBug521362_emptyFile() {
     		 "1 problem (1 warning)\n",
 		     true);
 	}
+	public void testBug571363() throws Exception {
+		if (!isJRE12Plus) return;
+		this.runConformTest(
+			new String[] {
+				"A.java",
+				"public final class A {\n"
+				+ "    org.w3c.dom.Element list;\n"
+				+ "}",
+			},
+	     "\"" + OUTPUT_DIR +  File.separator + "A.java\""
+	     + " -classpath " + "\"" + this.getCompilerTestsPluginDirectoryPath() + File.separator + "workspace" + File.separator + "Test571363.jar\""
+	     + " --release 11 -d \"" + OUTPUT_DIR + "\"",
+	     "",
+	     "",
+	     true);
+	}
 }

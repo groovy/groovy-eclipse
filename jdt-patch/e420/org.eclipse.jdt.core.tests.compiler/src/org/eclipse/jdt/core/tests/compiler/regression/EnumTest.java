@@ -7223,4 +7223,56 @@ public void test476281a() {
 			"}"},
 			"Success");
 }
+public void testBug388314() throws Exception {
+	this.runConformTest(
+			new String[] {
+					"p/Nullable.java",
+					"package p;\n" +
+					"import static java.lang.annotation.ElementType.*;\n" +
+					"import java.lang.annotation.*;\n" +
+					"@Documented\n" +
+					"@Retention(RetentionPolicy.RUNTIME)\n" +
+					"@Target(value = { FIELD, LOCAL_VARIABLE, METHOD, PARAMETER })\n" +
+					"public @interface Nullable {\n" +
+					"	// Nothing to do.\n" +
+					"}",
+					"p/EnumWithNullable.java",
+					"package p;\n" +
+					"public enum EnumWithNullable {\n" +
+					"	A;\n" +
+					"\n" +
+					"	@Nullable\n" +
+					"	private final Object b;\n" +
+					"\n" +
+					"	private EnumWithNullable(@Nullable Object b) {\n" +
+					"		this.b = b;\n" +
+					"	}\n" +
+					"\n" +
+					"	private EnumWithNullable() {\n" +
+					"		this(null);\n" +
+					"	}\n" +
+					"}\n"
+			},
+			"");
+
+	String expectedOutput =
+		"  // Method descriptor #27 (Ljava/lang/String;ILjava/lang/Object;)V\n" +
+		"  // Stack: 3, Locals: 4\n" +
+		"  private EnumWithNullable(java.lang.String arg0,  int arg1, @p.Nullable java.lang.Object b);\n";
+
+	ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+	byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(new File(OUTPUT_DIR + File.separator  +"p" + File.separator + "EnumWithNullable.class"));
+	String actualOutput =
+		disassembler.disassemble(
+			classFileBytes,
+			"\n",
+			ClassFileBytesDisassembler.DETAILED);
+	int index = actualOutput.indexOf(expectedOutput);
+	if (index == -1 || expectedOutput.length() == 0) {
+		System.out.println(Util.displayString(actualOutput, 3));
+	}
+	if (index == -1) {
+		assertEquals("Wrong contents", expectedOutput, actualOutput);
+	}
+}
 }
