@@ -3076,11 +3076,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // method has already been visited by a static type checking visitor
             return;
         }
+        /* GRECLIPSE edit -- GROOVY-6851, GROOVY-9151, GROOVY-10104
         for (Parameter parameter : node.getParameters()) {
             if (parameter.getInitialExpression() != null) {
                 parameter.getInitialExpression().visit(this);
             }
         }
+        */
         super.visitConstructor(node);
     }
 
@@ -3106,6 +3108,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         try {
             typeCheckingContext.isInStaticContext = node.isStatic();
             super.visitMethod(node);
+/* GRECLIPSE edit -- GROOVY-6851, GROOVY-9151, GROOVY-10104
             for (Parameter parameter : node.getParameters()) {
                 if (parameter.getInitialExpression() != null) {
                     parameter.getInitialExpression().visit(this);

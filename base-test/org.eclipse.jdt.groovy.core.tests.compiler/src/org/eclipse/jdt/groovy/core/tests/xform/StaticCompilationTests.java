@@ -826,6 +826,26 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6851() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    new Main().test()\n" +
+            "  }\n" +
+            "  void test(Map<String, Object> m = new HashMap<>(Collections.emptyMap())) {\n" +
+            "    print m\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[:]");
+    }
+
+    @Test
     public void testCompileStatic6904() {
         //@formatter:off
         String[] sources = {
@@ -4053,14 +4073,34 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "hello world");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9151")
-    public void testCompileStatic9151a() {
+    @Test
+    public void testCompileStatic9151and10104() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void greet(Object o = 'world', String s = o.toString()) {\n" +
+            "  print \"hello $s\"\n" +
+            "}\n" +
+            /*void greet() {
+              Object o = 'world'
+              greet(o, (String)o.toString()) // IncompatibleClassChangeError: Expected static method java.lang.Object.toString()Ljava/lang/String;
+            }*/
+            "greet()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hello world");
+    }
+
+    @Test
+    public void testCompileStatic9151b() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Thing {\n" +
-            "  Thing(Object o = 'foo', String s = o.toString()) {\n" +
+            "  Thing(Object o = 'foo', String s = o) {\n" +
             "    print s\n" +
             "  }\n" +
             "}\n" +
