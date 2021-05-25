@@ -6042,38 +6042,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic9938b() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "class Main {\n" +
-            "  interface I {\n" +
-            "    void m(@DelegatesTo(value=D, strategy=Closure.DELEGATE_FIRST) Closure<?> c)\n" +
-            "  }\n" +
-            "  trait T {\n" +
-            "    void m(@DelegatesTo(value=D, strategy=Closure.DELEGATE_FIRST) Closure<?> c) {\n" +
-            "      new D().with(c)\n" +
-            "    }\n" +
-            "  }\n" +
-            "  static class C implements T {\n" + // generates m(Closure) that delegates to T$TraitHelper#m(Closure)
-            "  }\n" +
-            "  static class D {\n" +
-            "    void f() {\n" +
-            "      print 'works'\n" +
-            "    }\n" +
-            "  }\n" +
-            "  static main(args) {\n" +
-            "    new C().m { f() }\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "works");
-    }
-
-    @Test
     public void testCompileStatic9955() {
         //@formatter:off
         String[] sources = {

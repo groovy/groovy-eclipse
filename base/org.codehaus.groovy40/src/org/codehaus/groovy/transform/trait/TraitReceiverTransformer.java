@@ -30,7 +30,6 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
@@ -47,14 +46,13 @@ import org.codehaus.groovy.syntax.Token;
 
 import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.List;
 
-import static org.codehaus.groovy.ast.tools.GeneralUtils.INSTANCEOF;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isInstanceOfX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ternaryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
@@ -243,8 +241,12 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
     private Expression transformFieldReference(final Expression exp, final FieldNode fn, final boolean isStatic) {
         Expression receiver = createFieldHelperReceiver();
         if (isStatic) {
+            /* GRECLIPSE edit
             Expression isClass = binX(receiver, INSTANCEOF, classX(ClassHelper.CLASS_Type));
             receiver = ternaryX(isClass, receiver, callX(receiver, "getClass"));
+            */
+            receiver = asClass(receiver);
+            // GRECLIPSE end
         }
 
         MethodCallExpression mce = callX(receiver, Traits.helperGetterName(fn));
@@ -315,6 +317,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
     private Expression transformMethodCallOnThis(final MethodCallExpression call) {
         Expression method = call.getMethod();
         Expression arguments = call.getArguments();
+        /* GRECLIPSE edit -- GROOVY-10106
         if (method instanceof ConstantExpression) {
             String methodName = method.getText();
             List<MethodNode> methods = traitClass.getMethods(methodName);
@@ -331,8 +334,32 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             return transformMethodCallOnThisInClosure(call);
         }
         return transformMethodCallOnThisFallBack(call, method, arguments);
+        */
+        if (method instanceof ConstantExpression) {
+            String methodName = call.getMethodAsString();
+            for (MethodNode methodNode : traitClass.getMethods(methodName)) {
+                if (methodName.equals(methodNode.getName()) && (methodNode.isStatic() || methodNode.isPrivate())) {
+                    ArgumentListExpression newArgs = createArgumentList(methodNode.isStatic() ? asClass(call.getObjectExpression()) : weaved, arguments);
+                    MethodCallExpression newCall = callX(inClosure ? classX(traitHelperClass) : varX("this"), methodName, newArgs);
+                    newCall.setImplicitThis(true);
+                    newCall.setSafe(call.isSafe());
+                    newCall.setSourcePosition(call);
+                    newCall.setSpreadSafe(call.isSpreadSafe());
+                    return newCall;
+                }
+            }
+        }
+
+        MethodCallExpression newCall = callX(inClosure ? call.getObjectExpression() : weaved, method, transform(arguments));
+        newCall.setImplicitThis(inClosure ? call.isImplicitThis() : false);
+        newCall.setSafe(call.isSafe());
+        newCall.setSourcePosition(call);
+        newCall.setSpreadSafe(call.isSpreadSafe());
+        return newCall;
+        // GRECLIPSE end
     }
 
+    /* GRECLIPSE edit
     private Expression transformMethodCallOnThisFallBack(final MethodCallExpression call,
                                                          final Expression method, final Expression arguments) {
         MethodCallExpression transformed = new MethodCallExpression(
@@ -340,9 +367,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                 method,
                 transform(arguments)
         );
-        /* GRECLIPSE edit
         transformed.setSourcePosition(call);
-        */
         transformed.setSafe(call.isSafe());
         transformed.setSpreadSafe(call.isSpreadSafe());
         transformed.setImplicitThis(false);
@@ -355,9 +380,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                 call.getMethod(),
                 transform(call.getArguments())
         );
-        /* GRECLIPSE edit
         transformed.setSourcePosition(call);
-        */
         transformed.setSafe(call.isSafe());
         transformed.setSpreadSafe(call.isSpreadSafe());
         transformed.setImplicitThis(call.isImplicitThis());
@@ -407,6 +430,25 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         }
         return newArgs;
     }
+    */
+    private ArgumentListExpression createArgumentList(final Expression self, final Expression arguments) {
+        ArgumentListExpression newArgs = new ArgumentListExpression();
+        newArgs.addExpression(self);
+        if (arguments instanceof TupleExpression) {
+            for (Expression argument : (TupleExpression) arguments) {
+                newArgs.addExpression(transform(argument));
+            }
+        } else {
+            newArgs.addExpression(transform(arguments));
+        }
+        return newArgs;
+    }
+
+    private static Expression asClass(final Expression e) {
+        ClassNode rawClass = ClassHelper.CLASS_Type.getPlainNodeReference();
+        return ternaryX(isInstanceOfX(e, rawClass), e, callX(e, "getClass"));
+    }
+    // GRECLIPSE end
 
     private Expression createFieldHelperReceiver() {
         return weaved.getOriginType().equals(ClassHelper.CLASS_Type) ? weaved : castX(fieldHelper, weaved);

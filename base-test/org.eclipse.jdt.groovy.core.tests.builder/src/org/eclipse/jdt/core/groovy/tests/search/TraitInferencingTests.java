@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -561,6 +561,27 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         assertDeclType(contents, "m", "T");
+    }
+
+    @Test // GROOVY-10106
+    public void testPublicStaticMethod5() {
+        for (String mods : new String[] {"", "@groovy.transform.TypeChecked ", "@groovy.transform.CompileStatic "}) {
+            //@formatter:off
+            String contents =
+                "class C {\n" +
+                "}\n" +
+                mods + "trait T {\n" +
+                "  static void m(C c) {\n" +
+                "  }\n" +
+                "  final C c = new C().tap {\n" +
+                "    m(it)\n" +
+                "  }\n" +
+                "}\n";
+            //@formatter:on
+
+            assertDeclType(contents, "m", "T");
+            assertDeclType(contents, "tap", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        }
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8272

@@ -221,6 +221,11 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             }
         }
 
+        // GRECLIPSE add -- GROOVY-10106
+        for (FieldNode field : fields) {
+            processField(field, initializer, staticInitializer, fieldHelper, helper, staticFieldHelper, cNode, fieldNames);
+        }
+        // GRECLIPSE end
         // add methods
         List<MethodNode> methods = new ArrayList<>(cNode.getMethods());
         List<MethodNode> nonPublicAPIMethods = new LinkedList<>();
@@ -260,9 +265,11 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         // GRECLIPSE end
 
         // add fields
+        /* GRECLIPSE edit
         for (FieldNode field : fields) {
             processField(field, initializer, staticInitializer, fieldHelper, helper, staticFieldHelper, cNode, fieldNames);
         }
+        */
 
         // copy statements from static and instance init blocks
         if (staticInitStatements != null) {

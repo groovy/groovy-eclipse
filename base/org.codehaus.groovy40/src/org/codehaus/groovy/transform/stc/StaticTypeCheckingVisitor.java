@@ -4404,8 +4404,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             expression.getBooleanExpression().visit(this);
         }
         Expression trueExpression = expression.getTrueExpression();
+        /* GRECLIPSE edit -- GROOVY-10106
         trueExpression.visit(this);
         ClassNode typeOfTrue = findCurrentInstanceOfClass(trueExpression, getType(trueExpression));
+        */
+        ClassNode typeOfTrue = findCurrentInstanceOfClass(trueExpression, null);
+        trueExpression.visit(this);
+        if (typeOfTrue == null) typeOfTrue = getType(trueExpression);
+        // GRECLIPSE end
         typeCheckingContext.popTemporaryTypeInfo(); // instanceof doesn't apply to false branch
         Expression falseExpression = expression.getFalseExpression();
         falseExpression.visit(this);

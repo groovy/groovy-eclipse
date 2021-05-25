@@ -2267,7 +2267,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (operator.isA(Types.MATH_OPERATOR) && !operator.isA(Types.LOGICAL_OPERATOR))
                 return findLeafNode(((BinaryExpression) expression).getLeftExpression());
         } else if (expression instanceof TernaryExpression) {
-            return findLeafNode(((TernaryExpression) expression).getTrueExpression());
+            return findLeafNode(((TernaryExpression) expression).getFalseExpression());
         } else if (expression instanceof UnaryMinusExpression) {
             return findLeafNode(((UnaryMinusExpression) expression).getExpression());
         } else if (expression instanceof UnaryPlusExpression) {

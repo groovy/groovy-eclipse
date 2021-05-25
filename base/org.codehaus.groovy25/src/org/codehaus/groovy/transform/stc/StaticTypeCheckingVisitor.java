@@ -4751,9 +4751,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         expression.getBooleanExpression().visit(this);
         Expression trueExpression = expression.getTrueExpression();
         Expression falseExpression = expression.getFalseExpression();
+        // GRECLIPSE add
+        ClassNode typeOfTrue = findCurrentInstanceOfClass(trueExpression, null);
+        // GRECLIPSE end
         trueExpression.visit(this);
         // GRECLIPSE add
-        ClassNode typeOfTrue = findCurrentInstanceOfClass(trueExpression, getType(trueExpression));
+        if (typeOfTrue == null) typeOfTrue = getType(trueExpression);
         // GRECLIPSE end
         // pop if-then-else temporary type info
         typeCheckingContext.popTemporaryTypeInfo();

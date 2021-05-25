@@ -2734,4 +2734,62 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testTraits9938() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  interface I {\n" +
+            "    void m(@DelegatesTo(value=D, strategy=Closure.DELEGATE_FIRST) Closure<?> c)\n" +
+            "  }\n" +
+            "  trait T {\n" +
+            "    void m(@DelegatesTo(value=D, strategy=Closure.DELEGATE_FIRST) Closure<?> c) {\n" +
+            "      new D().with(c)\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static class C implements T {\n" + // generates m(Closure) that delegates to T$TraitHelper#m(Closure)
+            "  }\n" +
+            "  static class D {\n" +
+            "    void f() {\n" +
+            "      print 'works'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new C().m { f() }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTraits10106() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  String s\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "trait T {\n" +
+            "  final C c = new C().tap {\n" +
+            "    config(it)\n" +
+            "  }\n" +
+            "  static void config(C c) {\n" +
+            "    c.s = 'works'\n" +
+            "  }\n" +
+            "}\n" +
+            "class X implements T {\n" +
+            "}\n" +
+            "print new X().c.s\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
