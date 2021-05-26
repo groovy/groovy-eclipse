@@ -345,12 +345,26 @@ public abstract class Traits {
             for (AnnotationNode annotation : annotations) {
                 Expression value = annotation.getMember("value");
                 if (value instanceof ClassExpression) {
+                    /* GRECLIPSE add -- GROOVY-10102
                     selfTypes.add(value.getType());
+                    */
+                    ClassNode selfType = value.getType();
+                    if (selfTypes.add(selfType)) {
+                        collectSelfTypes(selfType, selfTypes, checkInterfaces, checkSuper);
+                    }
+                    // GRECLIPSE end
                 } else if (value instanceof ListExpression) {
                     List<Expression> expressions = ((ListExpression) value).getExpressions();
                     for (Expression expression : expressions) {
                         if (expression instanceof ClassExpression) {
+                            /* GRECLIPSE add -- GROOVY-10102
                             selfTypes.add(expression.getType());
+                            */
+                            ClassNode selfType = expression.getType();
+                            if (selfTypes.add(selfType)) {
+                                collectSelfTypes(selfType, selfTypes, checkInterfaces, checkSuper);
+                            }
+                            // GRECLIPSE end
                         }
                     }
                 }
@@ -359,6 +373,9 @@ public abstract class Traits {
         if (checkInterfaces) {
             ClassNode[] interfaces = receiver.getInterfaces();
             for (ClassNode anInterface : interfaces) {
+                // GRECLIPSE add
+                if (!selfTypes.contains(anInterface))
+                // GRECLIPSE end
                 collectSelfTypes(anInterface, selfTypes, true, checkSuper);
             }
         }
@@ -366,6 +383,9 @@ public abstract class Traits {
         if (checkSuper) {
             ClassNode superClass = receiver.getSuperClass();
             if (superClass != null) {
+                // GRECLIPSE add
+                if (!superClass.equals(ClassHelper.OBJECT_TYPE))
+                // GRECLIPSE end
                 collectSelfTypes(superClass, selfTypes, checkInterfaces, true);
             }
         }

@@ -2768,6 +2768,43 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits10102() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import groovy.transform.*\n" +
+            "trait A {\n" +
+            "  String foo = 'foo'\n" +
+            "  String m(String s, Closure x) {\n" +
+            "    s + x()\n" +
+            "  }\n" +
+            "}\n" +
+            "@SelfType(A)\n" +
+            "trait B {\n" +
+            "}\n" +
+            "@SelfType(B)\n" +
+            "trait C {\n" +
+            "}\n" +
+            "@CompileStatic\n" +
+            "@SelfType(C)\n" +
+            "trait D {\n" +
+            "  void test() {\n" +
+            "    String s = foo\n" +
+            "    print(m(s) {\n" +
+            "      s.toUpperCase()\n" +
+            "    })\n" +
+            "  }\n" +
+            "}\n" +
+            "class X implements A, B, C, D {\n" +
+            "}\n" +
+            "new X().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "fooFOO");
+    }
+
+    @Test
     public void testTraits10106() {
         //@formatter:off
         String[] sources = {
