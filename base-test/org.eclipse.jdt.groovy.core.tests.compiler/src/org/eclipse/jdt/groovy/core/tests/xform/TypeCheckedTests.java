@@ -2186,6 +2186,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked9985a() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new char[] {'a','b','c'}\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked9985b() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -2889,5 +2907,44 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testTypeChecked10111() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<X, Y> { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <X extends C<Number, String>> X[] m() {\n" +
+            "  new X[]{ new C<Number, String>() }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10111a() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<X, Y> { }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def String[] test() {\n" +
+            "  new String[]{ 1, (long)2, (short)3 }\n" +
+            "}\n" +
+            "def result = test()\n" +
+            "assert result.toString == '[1, 2, 3]'\n" +
+            "assert result.every { it.class == String }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }

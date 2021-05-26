@@ -4673,8 +4673,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // GRECLIPSE add -- GROOVY-9985, GROOVY-9994
         if (expression.getSizeExpression() != null) {
             expression.getSizeExpression().forEach(sizeExpr -> {
-                if (!checkCast(int_TYPE, sizeExpr)) addStaticTypeError(
-                    "Cannot convert from " + prettyPrintType(getType(sizeExpr)) + " to int", sizeExpr);
+                if (!checkCompatibleAssignmentTypes(int_TYPE, getType(sizeExpr), sizeExpr, false))
+                    addStaticTypeError("Cannot convert from " + prettyPrintType(getType(sizeExpr)) + " to int", sizeExpr);
             });
         }
         // GRECLIPSE end

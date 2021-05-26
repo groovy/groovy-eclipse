@@ -4422,7 +4422,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     @Override
-    /* GRECLIPSE edit -- GROOVY-9985
+    /* GRECLIPSE edit -- GROOVY-9985, GROOVY-10111
     public void visitArrayExpression(ArrayExpression source) {
         super.visitArrayExpression(source);
         ClassNode elementType = source.getElementType();
@@ -4447,7 +4447,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             expressions = expression.getSizeExpression();
         }
         for (Expression elementExpr : expressions) {
-            if (!checkCast(elementType, elementExpr)) {
+            if (!checkCompatibleAssignmentTypes(elementType, getType(elementExpr), elementExpr, false)) {
                 addStaticTypeError("Cannot convert from " + prettyPrintType(getType(elementExpr)) + " to " + prettyPrintType(elementType), elementExpr);
             }
         }
