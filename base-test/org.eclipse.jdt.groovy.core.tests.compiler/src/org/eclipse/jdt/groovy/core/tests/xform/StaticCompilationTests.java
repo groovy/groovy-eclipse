@@ -1125,6 +1125,49 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7363() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def abc = new ABC()\n" +
+            "  print('' + abc.b.object.value)\n" +
+            "}\n" +
+            "test()\n",
+
+            "Types.java",
+            "interface A<T, U extends B<T>> {\n" +
+            "  U getB();\n" +
+            "}\n" +
+            "class ABC implements A<C, BC> {\n" +
+            "  void setB(BC b) {}\n" +
+            "  @Override\n" +
+            "  public BC getB() {\n" +
+            "    return new BC();\n" +
+            "  }\n" +
+            "}\n" +
+            "interface B<T> {\n" +
+            "  T getObject();\n" +
+            "}\n" +
+            "class BC implements B<C> {\n" +
+            "  @Override\n" +
+            "  public C getObject() {\n" +
+            "      return new C();\n" +
+            "  }\n" +
+            "}\n" +
+            "class C {\n" +
+            "  long getValue() {\n" +
+            "      return 42;\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testCompileStatic7549() {
         //@formatter:off
         String[] sources = {

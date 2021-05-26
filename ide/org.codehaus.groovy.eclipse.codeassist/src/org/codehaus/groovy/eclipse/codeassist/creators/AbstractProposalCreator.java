@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
 import org.codehaus.groovy.ast.ClassHelper;
@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
@@ -112,7 +113,9 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
 
         Map<String, FieldNode> allFields = new HashMap<>();
 
-        Set<ClassNode> types = getAllSupers(thisType, exclude);
+        Set<ClassNode> types = new LinkedHashSet<>();
+        VariableScope.createTypeHierarchy(thisType, types, false);
+        types.removeAll(exclude);
 
         for (ClassNode type : types) {
             List<FieldNode> fields = type.getFields();
@@ -140,32 +143,50 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     protected Collection<MethodNode> getAllMethods(ClassNode type, Set<ClassNode> exclude) {
-        List<MethodNode> traitMethods = type.redirect().getNodeMetaData("trait.methods");
-        List<MethodNode> allMethods = type.getAllDeclaredMethods();
-        if (traitMethods != null) allMethods.addAll(traitMethods);
+        Map<String, MethodNode> methods = new HashMap<>();
 
-        if (!exclude.isEmpty()) {
-            // remove all methods from classes that have already been visited
-            for (Iterator<MethodNode> methodIter = allMethods.iterator(); methodIter.hasNext();) {
-                if (exclude.contains(methodIter.next().getDeclaringClass())) {
-                    methodIter.remove();
+        BiConsumer<MethodNode, Map<String, ClassNode>> mapper = (mn, spec) -> {
+            StringBuilder sb = new StringBuilder(mn.getName());
+            sb.append('(');
+            for (org.codehaus.groovy.ast.Parameter p : mn.getParameters()) {
+                ClassNode pt = p.getOriginType();
+                if (!pt.isGenericsPlaceHolder()) {
+                    sb.append(pt.getName());
+                } else {
+                    sb.append(spec.getOrDefault(pt.getUnresolvedName(), pt).getName());
+                }
+                sb.append(';');
+            }
+
+            methods.merge(sb.toString(), mn, (m1, m2) ->
+                // keep override method unless it's synthetic
+                !Flags.isSynthetic(m1.getModifiers()) ? m1 : m2);
+        };
+
+        if (exclude == null || !exclude.contains(type)) {
+            List<MethodNode> traitMethods = type.redirect().getNodeMetaData("trait.methods");
+            if (traitMethods != null && !traitMethods.isEmpty()) {
+                for (MethodNode mn : traitMethods) {
+                    mapper.accept(mn, Collections.emptyMap());
                 }
             }
         }
 
-        Set<ClassNode> types = getAllSupers(type, exclude);
+        Set<ClassNode> types = new LinkedHashSet<>();
+        VariableScope.createTypeHierarchy(type, types, true);
+        for (ClassNode cn : types) {
+            if ((exclude != null && exclude.contains(cn)) ||
+                Flags.isSynthetic(cn.getModifiers())) continue;
 
-        // keep track of the already seen types so that next time, we won't include them
-        exclude.addAll(types);
+            Map<String, ClassNode> spec = GenericsUtils.createGenericsSpec(cn);
+            for (MethodNode mn : cn.getMethods()) {
+                mapper.accept(mn, spec);
+            }
+        }
 
-        return allMethods;
-    }
+        if (exclude != null) exclude.addAll(types); // exclude types next time
 
-    private static Set<ClassNode> getAllSupers(ClassNode type, Set<ClassNode> exclude) {
-        Set<ClassNode> superTypes = new LinkedHashSet<>();
-        VariableScope.createTypeHierarchy(type, superTypes, false);
-        superTypes.removeAll(exclude);
-        return superTypes;
+        return methods.values();
     }
 
     protected static boolean leftIsMoreAccessible(FieldNode field, FieldNode existing) {

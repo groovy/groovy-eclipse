@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         List<IGroovyProposal> proposals = new ArrayList<>();
         for (ClassNode category : categories) {
             boolean isDefaultCategory = isDefaultCategory(category);
-            for (MethodNode method : category.getAllDeclaredMethods()) {
+            for (MethodNode method : getAllMethods(category, null)) {
                 // check for DGMs filtered by deprecation or user preference
                 if (isDefaultCategory && (GroovyUtils.isDeprecated(method) || filter.isFiltered(method))) {
                     continue;

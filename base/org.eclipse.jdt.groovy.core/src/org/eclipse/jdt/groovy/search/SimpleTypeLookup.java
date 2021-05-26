@@ -737,7 +737,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // concrete types (without mixins/traits) return all methods from getMethods(String), except interface default methods
         if (!declaringType.isAbstract() && !declaringType.isInterface() && !implementsTrait(declaringType)) {
-            List<MethodNode> candidates = declaringType.getMethods(name);
+            List<MethodNode> candidates = getMethods(name, declaringType);
             for (ClassNode face : interfaces) {
                 for (MethodNode method : face.getDeclaredMethods(name)) {
                     if (method.isDefault()) candidates.add(method);
@@ -949,13 +949,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         List<MethodNode> methods = type.getMethods(name);
         List<MethodNode> traitMethods = type.redirect().getNodeMetaData("trait.methods");
         if (traitMethods != null) {
-            methods = new ArrayList<>(methods);
             for (MethodNode method : traitMethods) {
                 if (method.getName().equals(name)) {
                     methods.add(method);
                 }
             }
         }
+        methods.removeIf(m -> Flags.isSynthetic(m.getModifiers())); // GROOVY-8638
+
         return methods.size() <= 1 ? methods : unique(methods, Comparator.comparing(m -> {
             StringBuilder sb = new StringBuilder();
             for (Parameter p : m.getParameters()) {
