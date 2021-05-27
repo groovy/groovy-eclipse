@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveType;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.first;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.tail;
@@ -246,6 +247,10 @@ public class CategoryTypeLookup implements ITypeLookup {
                     method = candidate;
                 }
             }
+        }
+        // "self.m()" is implicitly "self.m(null)" if only one method exists and it has two parameters and the non-self parameter is non-primitive
+        if (method == null && argumentTypes.size() == 1 && candidates.size() == 1 && candidates.get(0).getParameters().length == 2 && !isPrimitiveType(candidates.get(0).getParameters()[1].getOriginType())) {
+            method = candidates.get(0);
         }
 
         return method;

@@ -17,14 +17,12 @@ class D {
             this.m
             this.k()
             new A().m
-            new A().m()
+            new A().k()
             def x = new A()
             x.m
-            x.m()
+            x.k()
         }
-        m
-        m()
-        this.m
-        this.m()
+        A.&k
+        A.k()
     }
 }

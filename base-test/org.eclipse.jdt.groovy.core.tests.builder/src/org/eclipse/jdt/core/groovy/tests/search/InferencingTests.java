@@ -647,6 +647,32 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testLocalMethod6() {
+        String contents =
+            "int f(int x) {}\n" +
+            "int g(x) {}\n" +
+            "f()\n" + // no
+            "g()\n"; // yes
+        assertUnknown(contents, "f");
+        assertType(contents, "g", "java.lang.Integer");
+    }
+
+    @Test // GROOVY-5136
+    public void testCategoryMethod() {
+        String contents =
+            "class Cat {\n" +
+            "  static int f(String self, int x) {}\n" +
+            "  static int g(String self, x) {}\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  'x'.f()\n" + // no
+            "  'x'.g()\n" + // yes
+            "}\n";
+        assertUnknown(contents, "f");
+        assertType(contents, "g", "java.lang.Integer");
+    }
+
+    @Test
     public void testMatcher1() {
         String contents = "def x = ('' =~ /pattern/)";
         assertType(contents, "x", "java.util.regex.Matcher");

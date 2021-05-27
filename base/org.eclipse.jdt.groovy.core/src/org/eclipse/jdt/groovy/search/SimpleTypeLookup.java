@@ -822,15 +822,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }
         }
-        if (closestMatch == null && argumentCount > 0 && argumentTypes.stream().anyMatch(t -> ClassHelper.isPrimitiveType(ClassHelper.getUnwrapper(t)) || ClassHelper.OBJECT_TYPE.equals(t) || ClassHelper.STRING_TYPE.equals(t))) {
-            // prefer method with the same number of parameters as arguments
-            for (MethodNode candidate : candidates) {
-                Parameter[] parameters = candidate.getParameters();
-                if (argumentCount == parameters.length || (argumentCount >= parameters.length - 1 && GenericsMapper.isVargs(parameters))) {
-                    if (isCompatible(candidate, isStaticExpression)) {
-                        return candidate;
+        if (closestMatch == null) {
+            if (argumentCount == 0) { // "m()" is implicitly "m(null)" if only 1 method exists and it has 1 parameter and the parameter isn't primitive
+                if (candidates.size() == 1 && candidates.get(0).getParameters().length == 1 && !ClassHelper.isPrimitiveType(candidates.get(0).getParameters()[0].getOriginType())) {
+                    return candidates.get(0);
+                }
+            } else if (argumentTypes.stream().anyMatch(t -> ClassHelper.isPrimitiveType(ClassHelper.getUnwrapper(t)) || ClassHelper.OBJECT_TYPE.equals(t) || ClassHelper.STRING_TYPE.equals(t))) {
+                // prefer method with the same number of parameters as arguments
+                for (MethodNode candidate : candidates) {
+                    Parameter[] parameters = candidate.getParameters();
+                    if (argumentCount == parameters.length || (argumentCount >= parameters.length - 1 && GenericsMapper.isVargs(parameters))) {
+                        if (isCompatible(candidate, isStaticExpression)) {
+                            return candidate;
+                        }
+                        closestMatch = candidate;
                     }
-                    closestMatch = candidate;
                 }
             }
         }
