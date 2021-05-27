@@ -253,7 +253,8 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
 
         if (mce.isImplicitThis() || isExplicitThisOrSuper) {
             if (mce.isImplicitThis()) {
-                if (null == currentClass.tryFindPossibleMethod(mce.getMethodAsString(), args)) {
+                if (currentClass.tryFindPossibleMethod(mce.getMethodAsString(), args) == null // GRECLIPSE add -- GROOVY-5239
+                        && currentClass.getOuterClasses().stream().noneMatch(oc -> oc.tryFindPossibleMethod(mce.getMethodAsString(), args) != null)) {
                     Expression ret = findStaticMethodImportFromModule(method, args);
                     if (ret != null) {
                         // GRECLIPSE add

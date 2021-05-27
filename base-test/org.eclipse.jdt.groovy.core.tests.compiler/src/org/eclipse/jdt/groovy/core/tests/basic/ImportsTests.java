@@ -1365,4 +1365,76 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "abc");
     }
+
+    @Test // GROOVY-5239
+    public void testStaticImportVersusOuterClassMethod1() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.Q.who\n" +
+            "class C {\n" +
+            "  def who() {\n" +
+            "    'C'\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    print who()\n" +
+            "    new D().test()\n" +
+            "  }\n" +
+            "  class D {\n" +
+            "    void test() {\n" +
+            "      print who()\n" + // resolves to static import
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static String who() {\n" +
+            "    return \"Q\";\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "CC");
+    }
+
+    @Test // GROOVY-5239
+    public void testStaticImportVersusOuterClassMethod2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.Q.who\n" +
+            "class C {\n" +
+            "  def who() {\n" +
+            "    'C'\n" +
+            "  }\n" +
+            "}\n" +
+            "class D extends C {\n" +
+            "  void test() {\n" +
+            "    print who()\n" +
+            "    new E().test()\n" +
+            "  }\n" +
+            "  class E {\n" +
+            "    void test() {\n" +
+            "      print who()\n" + // resolves to static import
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new D().test()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static String who() {\n" +
+            "    return \"Q\";\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "CC");
+    }
 }
