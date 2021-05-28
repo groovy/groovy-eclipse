@@ -369,7 +369,8 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticReference14() {
-        String contents = "class C {\n" +
+        String contents =
+            "class C {\n" +
             "  static Number x() {\n" +
             "    42\n" +
             "  }\n" +
@@ -380,7 +381,8 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticReference15() {
-        String contents = "class C {\n" +
+        String contents =
+            "class C {\n" +
             "  static Number x() {\n" +
             "    42\n" +
             "  }\n" +
@@ -419,12 +421,12 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testStaticReference18() {
         String contents =
             "class Parent {\n" +
-            "    static p() {}\n" +
+            "  static p() {}\n" +
             "}\n" +
             "class Child extends Parent {\n" +
-            "    def c() {\n" +
-            "        p()\n" +
-            "    }\n" +
+            "  def c() {\n" +
+            "    p()\n" +
+            "  }\n" +
             "}\n";
         assertDeclaringType(contents, "p()", "Parent");
     }
@@ -433,13 +435,13 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testStaticReference19() {
         createUnit("Parent",
             "class Parent {\n" +
-            "    static p() {}\n" +
+            "  static p() {}\n" +
             "}\n");
         String contents =
             "class Child extends Parent {\n" +
-            "    def c() {\n" +
-            "        p()\n" +
-            "    }\n" +
+            "  def c() {\n" +
+            "    p()\n" +
+            "  }\n" +
             "}\n";
         assertDeclaringType(contents, "p()", "Parent");
     }
@@ -558,6 +560,30 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "}\n" +
             "C.name\n"; // not Class#getName()
         assertKnown(contents, "name", "C", "java.lang.Object");
+    }
+
+    @Test
+    public void testStaticReference28() {
+        String contents =
+            "static getStaticProperty() {}\n" +
+            "static staticMethod() {\n" +
+            "  getStaticProperty()\n" +
+            "  staticProperty\n" +
+            "}\n";
+        assertKnown(contents, "getStaticProperty", "Search", "java.lang.Object");
+        assertKnown(contents, "staticProperty", "Search", "java.lang.Object");
+    }
+
+    @Test
+    public void testStaticReference29() {
+        String contents =
+            "static getStaticProperty() {}\n" +
+            "def scriptMethod() {\n" +
+            "  getStaticProperty()\n" +
+            "  staticProperty\n" +
+            "}\n";
+        assertKnown(contents, "getStaticProperty", "Search", "java.lang.Object");
+        assertKnown(contents, "staticProperty", "Search", "java.lang.Object");
     }
 
     //

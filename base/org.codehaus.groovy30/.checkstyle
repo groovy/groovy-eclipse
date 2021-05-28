@@ -39,11 +39,9 @@
         <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/(Expression|General|Generics)Utils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/WideningCategories.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum|VariableScope)Visitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/(Extended)?Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/ClosureWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/InvocationWriter.java" include-pattern="false" />

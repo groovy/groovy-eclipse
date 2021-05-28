@@ -944,6 +944,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "3");
     }
 
+    @Test // GROOVY-5364
+    public void testStaticProperty11() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "static getStaticProperty() { '!' }\n" +
+            "static staticMethod() {\n" +
+            "  print getStaticProperty()\n" +
+            "  print staticProperty\n" +
+            "}\n" +
+            "staticMethod()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "!!");
+    }
+
     @Test
     public void testClash_GRE1076() {
         //@formatter:off
