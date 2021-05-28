@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.transform.trait.Traits;
 
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isUnboundedWildcard;
@@ -119,11 +120,19 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
         if (expression.isMultipleAssignmentDeclaration()) {
             TupleExpression tExpr = expression.getTupleExpression();
             for (Expression nextExpr : tExpr.getExpressions()) {
+                /* GRECLIPSE edit -- GROOVY-5441
                 ClassNode declType = nextExpr.getType();
+                */
+                ClassNode declType = ((VariableExpression)nextExpr).getOriginType();
+                // GRECLIPSE end
                 checkGenericsUsage(declType, declType.redirect());
             }
         } else {
+            /* GRECLIPSE edit -- GROOVY-5441
             ClassNode declType = expression.getVariableExpression().getType();
+            */
+            ClassNode declType = expression.getVariableExpression().getOriginType();
+            // GRECLIPSE end
             checkGenericsUsage(declType, declType.redirect());
         }
         super.visitDeclarationExpression(expression);

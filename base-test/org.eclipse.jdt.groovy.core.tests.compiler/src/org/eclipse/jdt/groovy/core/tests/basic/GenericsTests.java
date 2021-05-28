@@ -367,6 +367,49 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
+    @Test // GROOVY-5441
+    public void testGenericsArityErrors() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "groovy.lang.Tuple2<Object> tooFew\n" +
+            "java.util.List<Object,Object> tooMany\n" +
+            "def (\n" +
+            "  java.util.Map<Object> tooFew2,\n" +
+            "  java.lang.Object<Object> tooMany2\n" +
+            ") = [null,null]\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 1)\n" +
+            "\tgroovy.lang.Tuple2<Object> tooFew\n" +
+            "\t^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:The class groovy.lang.Tuple2<Object> (supplied with 1 type parameter) refers to the class groovy.lang.Tuple2<T1,T2> which takes 2 parameters\n" +
+            "----------\n" +
+            "2. ERROR in Script.groovy (at line 2)\n" +
+            "\tjava.util.List<Object,Object> tooMany\n" +
+            "\t^^^^^^^^^^^^^^\n" +
+            "Groovy:The class java.util.List<Object,Object> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
+            "----------\n" +
+            "3. ERROR in Script.groovy (at line 4)\n" +
+            "\tjava.util.Map<Object> tooFew2,\n" +
+            "\t^^^^^^^^^^^^^\n" +
+            "Groovy:The class java.util.Map<Object> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "----------\n" +
+            "4. ERROR in Script.groovy (at line 5)\n" +
+            "\tjava.lang.Object<Object> tooMany2\n" +
+            "\t^^^^^^^^^^^^^^^^\n" +
+            "The type Object is not generic; it cannot be parameterized with arguments <Object>\n" +
+            "----------\n" +
+            "5. ERROR in Script.groovy (at line 5)\n" +
+            "\tjava.lang.Object<Object> tooMany2\n" +
+            "\t^^^^^^^^^^^^^^^^\n" +
+            "Groovy:The class java.lang.Object<Object> (supplied with 1 type parameter) refers to the class java.lang.Object which takes no parameters\n" +
+            "----------\n");
+    }
+
     @Test
     public void testCallingGenericConstructors() {
         //@formatter:off
