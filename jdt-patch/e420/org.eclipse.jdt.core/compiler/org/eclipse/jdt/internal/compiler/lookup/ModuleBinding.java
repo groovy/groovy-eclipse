@@ -7,10 +7,10 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     
+ *
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -65,7 +65,6 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 
 		private static final char[] UNNAMED_READABLE_NAME = "<unnamed>".toCharArray(); //$NON-NLS-1$
 
-		@SuppressWarnings("synthetic-access")
 		UnNamedModule(LookupEnvironment env) {
 			super(env);
 		}
@@ -167,7 +166,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	public HashtableOfPackage<PlainPackageBinding> declaredPackages;
 
 	/** Constructor for the unnamed module. */
-	private ModuleBinding(LookupEnvironment env) {
+	ModuleBinding(LookupEnvironment env) {
 		this.moduleName = ModuleBinding.UNNAMED;
 		this.environment = env;
 		this.requires = Binding.NO_MODULES;
@@ -197,7 +196,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		this.environment = new LookupEnvironment(existingEnvironment.root, this);
 		this.declaredPackages = new HashtableOfPackage<PlainPackageBinding>(5);
 	}
-	
+
 	public PlainPackageBinding[] getExports() {
 		completeIfNeeded(UpdateKind.PACKAGE);
 		return this.exportedPackages;
@@ -207,7 +206,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		if (this.exportRestrictions != null) {
 			SimpleSetOfCharArray set = this.exportRestrictions.get(pack);
 			if (set != null) {
-				char[][] names = new char[set.elementSize][]; 
+				char[][] names = new char[set.elementSize][];
 				set.asArray(names);
 				return CharOperation.charArrayToStringArray(names);
 			}
@@ -223,7 +222,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		if (this.openRestrictions != null) {
 			SimpleSetOfCharArray set = this.openRestrictions.get(pack);
 			if (set != null) {
-				char[][] names = new char[set.elementSize][]; 
+				char[][] names = new char[set.elementSize][];
 				set.asArray(names);
 				return CharOperation.charArrayToStringArray(names);
 			}
@@ -244,11 +243,11 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		completeIfNeeded(UpdateKind.MODULE);
 		return this.requiresTransitive;
 	}
-	
+
 	public TypeBinding[] getUses() {
 		return this.uses;
 	}
-	
+
 	public TypeBinding[] getServices() {
 		return this.services;
 	}
@@ -456,7 +455,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	 * All required modules include modules explicitly specified as required in the module declaration
 	 * as well as implicit dependencies - those specified as ' requires transitive ' by one of the
 	 * dependencies
-	 * 
+	 *
 	 * @return
 	 *   An array of all required modules
 	 */
@@ -470,9 +469,9 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		}
 		ModuleBinding javaBase = this.environment.javaBaseModule();
 																			// add java.base?
-		if (!CharOperation.equals(this.moduleName, TypeConstants.JAVA_BASE)	// ... not if this *is* java.base 
+		if (!CharOperation.equals(this.moduleName, TypeConstants.JAVA_BASE)	// ... not if this *is* java.base
 				&& javaBase != null 										// ... nor when java.base is absent
-				&& javaBase != this.environment.UnNamedModule)				// ..... or faked by the unnamed module 
+				&& javaBase != this.environment.UnNamedModule)				// ..... or faked by the unnamed module
 		{
 			allRequires.add(javaBase);
 		}
@@ -538,14 +537,14 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 
 	/**
 	 * Return a package binding if there exists a package named name in this module's context and it can be seen by this module.
-	 * A package can be seen by this module if it is declared in this module or any other module read by this module 
+	 * A package can be seen by this module if it is declared in this module or any other module read by this module
 	 * (JLS 7.4.3 for packages based on JLS 7.3 for compilation units).
 	 * Package exports are not considered for visibility check (only when checking "uniquely visible" (JLS 7.4.3)).
 	 * <p>
 	 * The returned package may be a {@link SplitPackageBinding}, if more than one package of the given name is visible.
 	 * </p>
 	 * <p>
-	 * When asked via the unnamed module or an automatic module all other named modules are considered visible. 
+	 * When asked via the unnamed module or an automatic module all other named modules are considered visible.
 	 * </p>
 	 */
 	public PackageBinding getTopLevelPackage(char[] name) {
@@ -611,11 +610,11 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 			if (this.environment.nameEnvironment.isPackage(parentName, name))
 				binding = this.createDeclaredPackage(subPkgCompoundName, parent);
 		}
-		
+
 		binding = combineWithPackagesFromOtherRelevantModules(binding, subPkgCompoundName, declaringModuleNames);
 
 		assert binding == null || binding instanceof PlainPackageBinding || binding.enclosingModule == this;
-		
+
 		if (binding == null || !binding.isValidBinding()) {
 			if (parent != null) {
 				if (binding == null) {
@@ -656,7 +655,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 
 		// check each sub package
 		for (int i = 1; i < qualifiedPackageName.length; i++) {
-			PackageBinding binding = getVisiblePackage(parent, qualifiedPackageName[i]); 
+			PackageBinding binding = getVisiblePackage(parent, qualifiedPackageName[i]);
 			if (binding == null) {
 				return null;
 			}
@@ -691,9 +690,9 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	 * Check if the given package is accessible by this module. True when the package is declared in
 	 * this module or exported by some required module to this module.
 	 * See {@link #isPackageExportedTo(PackageBinding, ModuleBinding)}
-	 * 
+	 *
 	 * @param pkg
-	 * 
+	 *
 	 * @return True, if the package is accessible by this module, false otherwise
 	 */
 	public boolean canAccess(PackageBinding pkg) {
@@ -857,7 +856,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		return this.defaultNullness;
 	}
 	SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore) {
-		
+
 		if (forceInitialize && this.storedAnnotations == null) {
 			if (!this.environment.globalOptions.storeAnnotations && !forceStore)
 				return null; // not supported during this compile

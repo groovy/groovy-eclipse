@@ -9,3 +9,4 @@ Bug 436266 - Use RC3 (plus) version of JDT compiler to build RC4
 Bug 551547 - The library org.eclipse.jdt.core.compiler.batch_*.jar should be signed
 Bug 549687 - Local ecj build has a SHA-256 digest error for org/eclipse/jdt/internal/compiler/apt/model/PackageElementImpl.class
 Bug 566471 - I20200828-0150 - Comparator Errors Found
+Bug 573283 - don't include javax15api.jar in jdt binaries

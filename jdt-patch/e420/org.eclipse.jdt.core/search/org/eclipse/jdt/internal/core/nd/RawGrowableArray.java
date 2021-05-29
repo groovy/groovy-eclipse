@@ -28,7 +28,7 @@ import org.eclipse.jdt.internal.core.nd.util.MathUtils;
  * <p>
  * The memory format contains a header is as follows:
  * <p>
- * 
+ *
  * <pre>
  * Byte				Meaning
  * --------------------------------------------
@@ -38,7 +38,7 @@ import org.eclipse.jdt.internal.core.nd.util.MathUtils;
  * ...
  * k...k+4			Record [inlineRecordCount-1]
  * </pre>
- * 
+ *
  * As shown above, the first few records are stored inline with the array. inlineRecordCount is a tunable parameter
  * which may be 0. If there are fewer than inlineRecordCount records, there is no growable block and all records are
  * stored in the header. Storing the first few records in the header is intended as an optimization for very small
@@ -49,7 +49,7 @@ import org.eclipse.jdt.internal.core.nd.util.MathUtils;
  * <p>
  * The memory format for a growable block is as follows:
  * <p>
- * 
+ *
  * <pre>
  * Byte				Meaning
  * --------------------------------------------
@@ -61,7 +61,7 @@ import org.eclipse.jdt.internal.core.nd.util.MathUtils;
  * ...
  * k...k+4			Record [blockSize-1]
  * </pre>
- * 
+ *
  * <p>
  * The growable block itself begins with a 4-byte int holding the size of the array, followed by a 4-byte int holding
  * the capacity of the growable block. In the event that the array is larger than
@@ -103,7 +103,7 @@ public final class RawGrowableArray {
 	private static final FieldPointer GROWABLE_BLOCK_ADDRESS;
 	private static final int ARRAY_HEADER_BYTES;
 
-	private static final StructDef<RawGrowableArray> type; 
+	private static final StructDef<RawGrowableArray> type;
 
 	static {
 		type = StructDef.createAbstract(RawGrowableArray.class);
@@ -113,7 +113,7 @@ public final class RawGrowableArray {
 		ARRAY_HEADER_BYTES = type.size();
 	}
 
-	private static class GrowableBlockHeader {
+	static class GrowableBlockHeader {
 		public static final FieldInt ARRAY_SIZE;
 		public static final FieldInt ALLOCATED_SIZE;
 		public static final int GROWABLE_BLOCK_HEADER_BYTES;
@@ -134,14 +134,17 @@ public final class RawGrowableArray {
 			MAX_GROWABLE_SIZE = (Database.MAX_SINGLE_BLOCK_MALLOC_SIZE - GROWABLE_BLOCK_HEADER_BYTES)
 					/ Database.PTR_SIZE;
 		}
+
+		static StructDef<GrowableBlockHeader> getType() {
+			return type;
+		}
 	}
 
-	@SuppressWarnings("synthetic-access")
-	private static final class MetaBlockHeader extends GrowableBlockHeader {
+	static final class MetaBlockHeader extends GrowableBlockHeader {
 		/**
 		 * Holds the number of pages used for the metablock. Note that the start of the metablock array needs to be
 		 * 4-byte aligned. Since all malloc calls are always 2 bytes away from 4-byte alignment, we need to use at
-		 * least one short in this struct. */ 
+		 * least one short in this struct. */
 		public static final FieldShort METABLOCK_NUM_PAGES;
 		public static final int META_BLOCK_HEADER_BYTES;
 
@@ -149,7 +152,7 @@ public final class RawGrowableArray {
 		private static final StructDef<MetaBlockHeader> type;
 
 		static {
-			type = StructDef.createAbstract(MetaBlockHeader.class, GrowableBlockHeader.type);
+			type = StructDef.createAbstract(MetaBlockHeader.class, GrowableBlockHeader.getType());
 
 			METABLOCK_NUM_PAGES = type.addShort();
 			type.done();
@@ -157,7 +160,7 @@ public final class RawGrowableArray {
 			META_BLOCK_HEADER_BYTES = type.size();
 		}
 	}
-	
+
 	private final int inlineSize;
 
 	public RawGrowableArray(int inlineRecords) {
@@ -170,7 +173,7 @@ public final class RawGrowableArray {
 
 	/**
 	 * Returns the size of the array.
-	 * 
+	 *
 	 * @param address address of the array
 	 * @return the array size, in number elements
 	 */
@@ -246,7 +249,7 @@ public final class RawGrowableArray {
 
 		Database db = nd.getDB();
 
-		int neededBlockSize = getGrowableRegionSizeFor(desiredSize); 
+		int neededBlockSize = getGrowableRegionSizeFor(desiredSize);
 		if (neededBlockSize > GrowableBlockHeader.MAX_GROWABLE_SIZE) {
 			// We need a metablock.
 			long metablockAddress = growableBlockAddress;
@@ -482,7 +485,7 @@ public final class RawGrowableArray {
 	/**
 	 * Checks if we should reduce the amount of allocated in the growable region, such that the array can hold the given
 	 * number of elements.
-	 * 
+	 *
 	 * @param desiredSize
 	 *            the new current size of the array or 0 to free up all memory
 	 */
@@ -632,10 +635,10 @@ public final class RawGrowableArray {
 		repackIfNecessary(nd, address, 0);
 	}
 
-	
+
 	/**
 	 * Returns true iff the size of the array is 0
-	 * 
+	 *
 	 * @param address address of the array
 	 * @return the array size, in number elements
 	 */

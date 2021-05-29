@@ -100,17 +100,6 @@ public abstract class CodeFormatter {
 	public static final int K_COMPILATION_UNIT = 0x08;
 
 	/**
-	 * Kind used to format a set of class body declarations
-	 *<p>
-	 * if the corresponding comment option is set to
-	 * <code>true</code> then it is also possible to format the comments on the fly
-	 * by adding the {@link #F_INCLUDE_COMMENTS} flag to this kind of format.
-	 * </p>
-	 * @since 3.26
-	 */
-	public static final int K_RECORD_BODY_DECLARATIONS  = 0x16;
-
-	/**
 	 * Kind used to format a single-line comment
 	 * @since 3.1
 	 */

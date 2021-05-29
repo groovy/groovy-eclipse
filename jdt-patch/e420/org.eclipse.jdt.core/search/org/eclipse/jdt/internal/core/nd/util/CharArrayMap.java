@@ -104,11 +104,10 @@ public final class CharArrayMap<V> {
             return result;
         }
 
-        @SuppressWarnings("nls")
 		@Override
         public String toString() {
         	String slice = new String(this.buffer, this.start, this.length);
-        	return "'" + slice + "'@(" + this.start + "," + this.length + ")";
+        	return "'" + slice + "'@(" + this.start + "," + this.length + ")";    //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$
         }
 
 

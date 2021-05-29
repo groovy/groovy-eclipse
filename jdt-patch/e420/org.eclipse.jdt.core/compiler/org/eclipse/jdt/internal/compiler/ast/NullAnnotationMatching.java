@@ -51,7 +51,7 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
  * @since 3.10
  */
 public class NullAnnotationMatching {
-	
+
 	public static final NullAnnotationMatching NULL_ANNOTATIONS_OK = new NullAnnotationMatching(Severity.OK, FlowInfo.UNKNOWN, null);
 	public static final NullAnnotationMatching NULL_ANNOTATIONS_OK_NONNULL = new NullAnnotationMatching(Severity.OK, FlowInfo.NON_NULL, null);
 	public static final NullAnnotationMatching NULL_ANNOTATIONS_UNCHECKED = new NullAnnotationMatching(Severity.UNCHECKED, FlowInfo.UNKNOWN, null);
@@ -74,7 +74,7 @@ public class NullAnnotationMatching {
 		OVERRIDE_RETURN {
 			@Override CheckMode toDetail() {
 				return OVERRIDE;
-			}			
+			}
 		},
 		/** in this mode we do not tolerate incompatibly missing annotations on type parameters (for overriding analysis) */
 		OVERRIDE {
@@ -85,7 +85,7 @@ public class NullAnnotationMatching {
 				return OVERRIDE;
 			}
 		};
-		
+
 		boolean requiredNullableMatchesAll() {
 			return false;
 		}
@@ -111,18 +111,18 @@ public class NullAnnotationMatching {
 				return severity;
 			return this;
 		}
-	
+
 		public boolean isAnyMismatch() {
 			return compareTo(LEGACY_WARNING) > 0;
 		}
 	}
 
 	private final Severity severity;
-	
+
 	/** If non-null this field holds the supertype of the provided type which was used for direct matching. */
 	public final TypeBinding superTypeHint;
 	public final int nullStatus;
-	
+
 	NullAnnotationMatching(Severity severity, int nullStatus, TypeBinding superTypeHint) {
 		this.severity = severity;
 		this.superTypeHint = superTypeHint;
@@ -130,7 +130,7 @@ public class NullAnnotationMatching {
 	}
 
 	/**
-	 * For creating updated status during *FlowContext.complainOnDeferred*Checks() once the actual nullStatus is known
+ 	 * For creating updated status during *FlowContext.complainOnDeferred*Checks() once the actual nullStatus is known
 	 */
 	public NullAnnotationMatching withNullStatus(int updatedNullStatus) {
 		return updatedNullStatus == this.nullStatus ? this
@@ -150,7 +150,7 @@ public class NullAnnotationMatching {
 	public String superTypeHintName(CompilerOptions options, boolean shortNames) {
 		return String.valueOf(this.superTypeHint.nullAnnotatedReadableName(options, shortNames));
 	}
-	
+
 	/** Check null-ness of 'var' against a possible null annotation */
 	public static int checkAssignment(BlockScope currentScope, FlowContext flowContext,
 									   VariableBinding var, FlowInfo flowInfo, int nullStatus, Expression expression, TypeBinding providedType)
@@ -180,7 +180,7 @@ public class NullAnnotationMatching {
 				for (int i = 1, l = resExprs.length; i < l; ++i) {
 					re = resExprs[i];
 					int otherStatus = NullAnnotationMatching.checkAssignment(currentScope, flowContext, var, flowInfo,  re.nullStatus(flowInfo, flowContext), re, re.resolvedType);
-					identicalStatus &= status0 == otherStatus;		
+					identicalStatus &= status0 == otherStatus;
 				}
 				return identicalStatus ? status0 : nullStatus; // if not all branches agree use the precomputed & merged nullStatus
 			}
@@ -294,7 +294,7 @@ public class NullAnnotationMatching {
 							long requiredBits = validNullTagBits(requiredDimsTagBits[i]);
 							long providedBits = validNullTagBits(providedDimsTagBits[i]);
 							if (i == 0 && requiredBits == TagBits.AnnotationNullable && nullStatus != -1 && mode.requiredNullableMatchesAll()) {
-								// toplevel nullable array: no need to check 
+								// toplevel nullable array: no need to check
 								if (nullStatus == FlowInfo.NULL)
 									break; // null value has no details
 							} else {
@@ -395,7 +395,7 @@ public class NullAnnotationMatching {
 			if (method != null && method.isValidBinding()) {
 				MethodBinding originalMethod = method.original();
 				TypeBinding originalDeclaringClass = originalMethod.declaringClass;
-				if (originalDeclaringClass instanceof BinaryTypeBinding 
+				if (originalDeclaringClass instanceof BinaryTypeBinding
 						&& ((BinaryTypeBinding) originalDeclaringClass).externalAnnotationStatus.isPotentiallyUnannotatedLib()
 						&& originalMethod.returnType.isTypeVariable()
 						&& (originalMethod.returnType.tagBits & TagBits.AnnotationNullMASK) == 0)
@@ -462,8 +462,8 @@ public class NullAnnotationMatching {
 					break;
 			}
 			return TagBits.AnnotationNullMASK;
-		} 
-		
+		}
+
 		if (type.isTypeVariable()) {
 			// assume we must require @NonNull, unless lower @Nullable bound
 			// (annotation directly on the TV has already been checked above)
@@ -496,11 +496,11 @@ public class NullAnnotationMatching {
 		long tagBits = type.tagBits & TagBits.AnnotationNullMASK;
 		if (tagBits != 0)
 			return validNullTagBits(tagBits);
-		
+
 		if (type.isWildcard()) { // wildcard can be 'provided' during inheritance checks
 			return TagBits.AnnotationNullMASK;
 		}
-	
+
 		if (type.isTypeVariable()) { // incl. captures
 			TypeVariableBinding typeVariable = (TypeVariableBinding)type;
 			boolean haveNullBits = false;
@@ -544,7 +544,7 @@ public class NullAnnotationMatching {
 		bits &= TagBits.AnnotationNullMASK;
 		return bits == TagBits.AnnotationNullMASK ? 0 : bits;
 	}
-	
+
 	/** Provided that both types are {@link TypeBinding#equalsEquals}, return the one that is more likely to show null at runtime. */
 	public static TypeBinding moreDangerousType(TypeBinding one, TypeBinding two) {
 		if (one == null) return null;
@@ -578,7 +578,7 @@ public class NullAnnotationMatching {
 	private static Severity computeNullProblemSeverity(long requiredBits, long providedBits, int nullStatus, CheckMode mode, TypeBinding requiredType) {
 		if (requiredBits == providedBits)
 			return Severity.OK;
-		if (requiredBits == 0) { 
+		if (requiredBits == 0) {
 			switch (mode) {
 				case EXACT:
 					if (providedBits == TagBits.AnnotationNonNull && !(requiredType instanceof TypeVariableBinding))
@@ -629,7 +629,7 @@ public class NullAnnotationMatching {
 						return Severity.UNCHECKED;
 					return Severity.MISMATCH;
 			}
-			
+
 		} else if (requiredBits == TagBits.AnnotationNullable) {
 			switch (mode) {
 				case COMPATIBLE:
@@ -793,16 +793,15 @@ public class NullAnnotationMatching {
 		return mainType;
 	}
 
-	@SuppressWarnings("nls")
 	@Override
 	public String toString() {
-		if (this == NULL_ANNOTATIONS_OK) return "OK";
-		if (this == NULL_ANNOTATIONS_MISMATCH) return "MISMATCH";
-		if (this == NULL_ANNOTATIONS_OK_NONNULL) return "OK NonNull";
-		if (this == NULL_ANNOTATIONS_UNCHECKED) return "UNCHECKED";
+		if (this == NULL_ANNOTATIONS_OK) return "OK"; //$NON-NLS-1$
+		if (this == NULL_ANNOTATIONS_MISMATCH) return "MISMATCH"; //$NON-NLS-1$
+		if (this == NULL_ANNOTATIONS_OK_NONNULL) return "OK NonNull"; //$NON-NLS-1$
+		if (this == NULL_ANNOTATIONS_UNCHECKED) return "UNCHECKED"; //$NON-NLS-1$
 		StringBuilder buf = new StringBuilder();
-		buf.append("Analysis result: severity="+this.severity);
-		buf.append(" nullStatus="+this.nullStatus);
+		buf.append("Analysis result: severity="+this.severity); //$NON-NLS-1$
+		buf.append(" nullStatus="+this.nullStatus); //$NON-NLS-1$
 		return buf.toString();
 	}
 }

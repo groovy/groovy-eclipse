@@ -171,7 +171,7 @@ public final class Nd {
 	}
 
 	/**
-	 * Inserts a cookie that can be later retrieved via getData(String). 
+	 * Inserts a cookie that can be later retrieved via getData(String).
 	 */
 	public <T> void setData(Class<T> key, T value) {
 		synchronized (this.cookies) {
@@ -361,12 +361,11 @@ public final class Nd {
 		releaseWriteLock(0, false);
 	}
 
-	@SuppressWarnings("nls")
 	public void releaseWriteLock(int establishReadLocks, boolean flush) {
 		synchronized (this.mutex) {
 			Thread current = Thread.currentThread();
 			if (current != this.writeLockOwner) {
-				throw new IllegalStateException("Index wasn't locked by this thread!!!");
+				throw new IllegalStateException("Index wasn't locked by this thread!!!"); //$NON-NLS-1$
 			}
 			this.writeLockOwner = null;
 		}
@@ -511,13 +510,12 @@ public final class Nd {
 			return this.fTraces.size();
 		}
 
-		@SuppressWarnings("nls")
 		public void write(String threadName) {
-			System.out.println("Thread: '" + threadName + "': " + this.fReadLocks + " readlocks, " + this.fWriteLocks + " writelocks");
+			System.out.println("Thread: '" + threadName + "': " + this.fReadLocks + " readlocks, " + this.fWriteLocks + " writelocks");    //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$
 			for (StackTraceElement[] trace : this.fTraces) {
-				System.out.println("  Stacktrace:");
+				System.out.println("  Stacktrace:"); //$NON-NLS-1$
 				for (StackTraceElement ste : trace) {
-					System.out.println("    " + ste);
+					System.out.println("    " + ste); //$NON-NLS-1$
 				}
 			}
 		}
@@ -555,16 +553,15 @@ public final class Nd {
 	}
 
 	// For debugging lock issues
-	@SuppressWarnings("nls")
 	static void decReadLock(Map<Thread, DebugLockInfo> lockDebugging) throws AssertionError {
 		DebugLockInfo info = getLockInfo(lockDebugging);
 		if (info.fReadLocks <= 0) {
 			outputReadLocks(lockDebugging);
-			throw new AssertionError("Superfluous releaseReadLock");
+			throw new AssertionError("Superfluous releaseReadLock"); //$NON-NLS-1$
 		}
 		if (info.fWriteLocks != 0) {
 			outputReadLocks(lockDebugging);
-			throw new AssertionError("Releasing readlock while holding write lock");
+			throw new AssertionError("Releasing readlock while holding write lock"); //$NON-NLS-1$
 		}
 		if (--info.fReadLocks == 0) {
 			lockDebugging.remove(Thread.currentThread());
@@ -574,15 +571,14 @@ public final class Nd {
 	}
 
 	// For debugging lock issues
-	@SuppressWarnings("nls")
 	private void incWriteLock(int giveupReadLocks) throws AssertionError {
 		DebugLockInfo info = getLockInfo(this.fLockDebugging);
 		if (info.fReadLocks != giveupReadLocks) {
 			outputReadLocks(this.fLockDebugging);
-			throw new AssertionError("write lock with " + giveupReadLocks + " readlocks, expected " + info.fReadLocks);
+			throw new AssertionError("write lock with " + giveupReadLocks + " readlocks, expected " + info.fReadLocks); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		if (info.fWriteLocks != 0)
-			throw new AssertionError("Duplicate write lock");
+			throw new AssertionError("Duplicate write lock"); //$NON-NLS-1$
 		info.fWriteLocks++;
 	}
 
@@ -600,13 +596,12 @@ public final class Nd {
 	}
 
 	// For debugging lock issues
-	@SuppressWarnings("nls")
 	private long reportBlockedWriteLock(long start, int giveupReadLocks) {
 		long now= System.currentTimeMillis();
 		if (now >= start + BLOCKED_WRITE_LOCK_OUTPUT_INTERVAL) {
 			System.out.println();
-			System.out.println("Blocked writeLock");
-			System.out.println("  lockcount= " + this.lockCount + ", giveupReadLocks=" + giveupReadLocks + ", waitingReaders=" + this.waitingReaders);
+			System.out.println("Blocked writeLock"); //$NON-NLS-1$
+			System.out.println("  lockcount= " + this.lockCount + ", giveupReadLocks=" + giveupReadLocks + ", waitingReaders=" + this.waitingReaders); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			outputReadLocks(this.fLockDebugging);
 			start= now;
 		}
@@ -614,14 +609,13 @@ public final class Nd {
 	}
 
 	// For debugging lock issues
-	@SuppressWarnings("nls")
 	private static void outputReadLocks(Map<Thread, DebugLockInfo> lockDebugging) {
-		System.out.println("---------------------  Lock Debugging -------------------------");
+		System.out.println("---------------------  Lock Debugging -------------------------"); //$NON-NLS-1$
 		for (Thread th: lockDebugging.keySet()) {
 			DebugLockInfo info = lockDebugging.get(th);
 			info.write(th.getName());
 		}
-		System.out.println("---------------------------------------------------------------");
+		System.out.println("---------------------------------------------------------------"); //$NON-NLS-1$
 	}
 
 	// For debugging lock issues
@@ -711,7 +705,7 @@ public final class Nd {
 	}
 
 	/**
-	 * Creates a {@link IndexExceptionBuilder} object that collects information about database corruption after it is 
+	 * Creates a {@link IndexExceptionBuilder} object that collects information about database corruption after it is
 	 * detected.
 	 */
 	public IndexExceptionBuilder describeProblem() {

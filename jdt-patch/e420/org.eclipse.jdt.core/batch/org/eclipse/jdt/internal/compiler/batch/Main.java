@@ -3209,51 +3209,50 @@ public void configure(String[] argv) {
 	}
 }
 /** Translates any supported standard version starting at 1.3 up-to latest into the corresponding constant from CompilerOptions */
-@SuppressWarnings("nls")
 private String optionStringToVersion(String currentArg) {
 	switch (currentArg) {
-		case "1.3": return CompilerOptions.VERSION_1_3;
-		case "1.4": return CompilerOptions.VERSION_1_4;
-		case "1.5":
-		case "5":
-		case "5.0":
+		case "1.3": return CompilerOptions.VERSION_1_3; //$NON-NLS-1$
+		case "1.4": return CompilerOptions.VERSION_1_4; //$NON-NLS-1$
+		case "1.5": //$NON-NLS-1$
+		case "5": //$NON-NLS-1$
+		case "5.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_1_5;
-		case "1.6":
-		case "6":
-		case "6.0":
+		case "1.6": //$NON-NLS-1$
+		case "6": //$NON-NLS-1$
+		case "6.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_1_6;
-		case "1.7":
-		case "7":
-		case "7.0":
+		case "1.7": //$NON-NLS-1$
+		case "7": //$NON-NLS-1$
+		case "7.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_1_7;
-		case "1.8":
-		case "8":
-		case "8.0":
+		case "1.8": //$NON-NLS-1$
+		case "8": //$NON-NLS-1$
+		case "8.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_1_8;
-		case "1.9":
-		case "9":
-		case "9.0":
+		case "1.9": //$NON-NLS-1$
+		case "9": //$NON-NLS-1$
+		case "9.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_9;
-		case "10":
-		case "10.0":
+		case "10": //$NON-NLS-1$
+		case "10.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_10;
-		case "11":
-		case "11.0":
+		case "11": //$NON-NLS-1$
+		case "11.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_11;
-		case "12":
-		case "12.0":
+		case "12": //$NON-NLS-1$
+		case "12.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_12;
-		case "13":
-		case "13.0":
+		case "13": //$NON-NLS-1$
+		case "13.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_13;
-		case "14":
-		case "14.0":
+		case "14": //$NON-NLS-1$
+		case "14.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_14;
-		case "15":
-		case "15.0":
+		case "15": //$NON-NLS-1$
+		case "15.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_15;
-		case "16":
-		case "16.0":
+		case "16": //$NON-NLS-1$
+		case "16.0": //$NON-NLS-1$
 			return CompilerOptions.VERSION_16;
 		default:
 			return null;

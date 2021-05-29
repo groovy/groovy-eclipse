@@ -124,13 +124,6 @@ public class ASTParser {
 	public static final int K_COMPILATION_UNIT = 0x08;
 
 	/**
-	 * Kind constant used to request that the source be parsed
-	 * as a compilation unit.
-	 * @since 3.26
-	 */
-	public static final int K_RECORD_BODY_DECLARATIONS = 0x16;
-
-	/**
 	 * Creates a new object for creating a Java abstract syntax tree
      * (AST) following the specified set of API rules.
      *
@@ -1452,39 +1445,6 @@ public class ASTParser {
 					ast.setOriginalModificationCount(ast.modificationCount());
 					return compilationUnit;
 				}
-			case K_RECORD_BODY_DECLARATIONS:
-				final org.eclipse.jdt.internal.compiler.ast.ASTNode[] recordNodes =
-				codeSnippetParsingUtil.parseClassBodyDeclarations(
-						this.rawSource,
-						this.sourceOffset,
-						this.sourceLength,
-						this.compilerOptions,
-						true,
-						(this.bits & CompilationUnitResolver.STATEMENT_RECOVERY) != 0);
-			recordedParsingInformation = codeSnippetParsingUtil.recordedParsingInformation;
-			comments = recordedParsingInformation.commentPositions;
-			if (comments != null) {
-				converter.buildCommentsTable(compilationUnit, comments);
-			}
-			compilationUnit.setLineEndTable(recordedParsingInformation.lineEnds);
-			if (recordNodes != null) {
-				// source has no syntax error or the statement recovery is enabled
-				RecordDeclaration recordDeclaration = converter.convertToRecord(recordNodes);
-				recordDeclaration.setSourceRange(this.sourceOffset, this.sourceOffset + this.sourceLength);
-				rootNodeToCompilationUnit(recordDeclaration.getAST(), compilationUnit, recordDeclaration, codeSnippetParsingUtil.recordedParsingInformation, null);
-				ast.setDefaultNodeFlag(0);
-				ast.setOriginalModificationCount(ast.modificationCount());
-				return recordDeclaration;
-			} else {
-				// source has syntax error and the statement recovery is disabled
-				CategorizedProblem[] problems = recordedParsingInformation.problems;
-				if (problems != null) {
-					compilationUnit.setProblems(problems);
-				}
-				ast.setDefaultNodeFlag(0);
-				ast.setOriginalModificationCount(ast.modificationCount());
-				return compilationUnit;
-			}
 		}
 		throw new IllegalStateException();
 	}
