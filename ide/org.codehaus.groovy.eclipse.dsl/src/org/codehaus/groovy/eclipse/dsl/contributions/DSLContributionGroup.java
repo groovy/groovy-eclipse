@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -211,15 +211,25 @@ public class DSLContributionGroup extends ContributionGroup {
             return;
         }
         if (!VariableScope.OBJECT_CLASS_NODE.equals(type)) {
-            // use this to resolve parameterized types
             GenericsMapper mapper = GenericsMapper.gatherGenerics(type);
-
+            Map<String, MethodNode> methods = currentType.getDeclaredMethodsMap();
             // naked variants of getter and setter methods must be added at the end
             // FIXADE why???
             List<IContributionElement> accessorContribs = new ArrayList<>(1);
             for (MethodNode method : type.getMethods()) {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && !method.getName().contains("$")) {
                     method = VariableScope.resolveTypeParameterization(mapper, method);
+                    // skip method if defined by currentType or GroovyObject
+                    MethodNode mn = methods.get(method.getTypeDescriptor());
+                    if (mn != null && mn.getEnd() > 1) continue;
+                    switch (method.getTypeDescriptor()) {
+                    case "groovy.lang.MetaClass getMetaClass()":
+                    case "void setMetaClass(groovy.lang.MetaClass)":
+                    case "java.lang.Object getProperty(java.lang.String)":
+                    case "void setProperty(java.lang.String, java.lang.Object)":
+                    case "java.lang.Object invokeMethod(java.lang.String, java.lang.Object)":
+                        continue;
+                    }
                     if (asCategory) {
                         delegateToCategoryMethod(useNamedArgs, isStatic, type, method, method.getReturnType(), isDeprecated, accessorContribs, noParens);
                     } else {

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import groovy.transform.NotYetImplemented
+
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IResource
@@ -98,6 +100,62 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             assert result.extraDoc.replace('}', '') =~ 'Delegate AST transform'
             assert declaringTypeName == 'java.net.URL'
             assert typeName == 'java.lang.String'
+        }
+    }
+
+    @Test // GROOVY-5204
+    void testDelegate3() {
+        String contents = '''\
+            |class Bar {
+            |  def baz() {}
+            |}
+            |class Foo {
+            |  @Delegate Bar bar = new Bar()
+            |  def baz() {}
+            |}
+            |new Foo().baz()
+            |'''.stripMargin()
+
+        inferType(contents, 'baz').with {
+            assert declaringTypeName == 'Foo'
+            assert result.extraDoc == null
+        }
+    }
+
+    @Test @NotYetImplemented // GROOVY-5204
+    void testDelegate4() {
+        String contents = '''\
+            |class Bar {
+            |  def baz() {}
+            |  def baz(int i) {}
+            |}
+            |class Foo {
+            |  @Delegate Bar bar = new Bar()
+            |  def baz() {}
+            |}
+            |new Foo().baz()
+            |'''.stripMargin()
+
+        inferType(contents, 'baz').with {
+            assert declaringTypeName == 'Foo'
+            assert result.extraDoc == null
+        }
+    }
+
+    @Test // GROOVY-3917
+    void testDelegate5() {
+        String contents = '''\
+            |class Bar {
+            |}
+            |class Foo {
+            |  @Delegate Bar bar = new Bar()
+            |}
+            |new Foo().getProperty('baz')
+            |'''.stripMargin()
+
+        inferType(contents, 'getProperty').with {
+            assert declaringTypeName == 'Foo'
+            assert result.extraDoc == null
         }
     }
 
