@@ -902,6 +902,38 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8111() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def test(thing) {\n" +
+            "  thing != null ?: Pair.of('k','v')\n" + // StackOverflowError
+            "}\n",
+
+            "Pair.groovy",
+            "class Pair<L,R> implements Map.Entry<L,R>, Comparable<Pair<L,R>>, Serializable {\n" +
+            "  public final L left\n" +
+            "  public final R right\n" +
+            "  private Pair(final L left, final R right) {\n" +
+            "    this.left = left\n" +
+            "    this.right = right\n" +
+            "  }\n" +
+            "  static <L, R> Pair<L, R> of(final L left, final R right) {\n" +
+            "    return new Pair<>(left, right)\n" +
+            "  }\n" +
+            "  L getKey() { left }\n" +
+            "  R getValue() { right }\n" +
+            "  R setValue(R value) { right }\n" +
+            "  int compareTo(Pair<L,R> that) { 0 }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked8202() {
         //@formatter:off
         String[] sources = {
@@ -2940,7 +2972,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  new String[]{ 1, (long)2, (short)3 }\n" +
             "}\n" +
             "def result = test()\n" +
-            "assert result.toString == '[1, 2, 3]'\n" +
+            "assert result.toString() == '[1, 2, 3]'\n" +
             "assert result.every { it.class == String }\n",
         };
         //@formatter:on
