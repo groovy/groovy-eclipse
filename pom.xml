@@ -51,7 +51,7 @@
 			When not running on bamboo, singing is disabled by default.
 		-->
 		<signing.skip>true</signing.skip>
-		<signing.alias>pivotal</signing.alias>
+		<signing.alias></signing.alias>
 		<signing.keystore></signing.keystore>
 		<signing.key.password></signing.key.password>
 		<signing.store.password></signing.store.password>
@@ -474,8 +474,6 @@
 			</activation>
 			<properties>
 				<signing.skip>false</signing.skip>
-				<signing.alias>pivotal</signing.alias>
-				<signing.keystore>~/.keytool/pivotal.jks</signing.keystore>
 				<signing.key.password>${env.bamboo_signing_key_password}</signing.key.password>
 				<signing.store.password>${env.bamboo_signing_store_password}</signing.store.password>
 			</properties>
