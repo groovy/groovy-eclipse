@@ -1082,9 +1082,6 @@ public class ClassScope extends Scope {
 		ReferenceBinding superclass = findSupertype(superclassRef);
 		if (superclass != null) { // is null if a cycle was detected cycle or a problem
 			if (!superclass.isClass() && (superclass.tagBits & TagBits.HasMissingType) == 0) {
-				// GROOVY add -- make reporting conditional
-				if (shouldReport(org.eclipse.jdt.core.compiler.IProblem.SuperclassMustBeAClass))
-				// GROOVY end
 				problemReporter().superclassMustBeAClass(sourceType, superclassRef, superclass);
 			} else if (superclass.isFinal()) {
 				problemReporter().classExtendFinalClass(sourceType, superclassRef, superclass);

@@ -2701,6 +2701,11 @@ public void hiddenCatchBlock(ReferenceBinding exceptionType, ASTNode location) {
 }
 
 public void hierarchyCircularity(SourceTypeBinding sourceType, ReferenceBinding superType, TypeReference reference) {
+	// GROOVY add
+	if (sourceType.scope != null && !sourceType.scope.shouldReport(IProblem.HierarchyCircularity)) {
+		return;
+	}
+	// GROOVY end
 	int start = 0;
 	int end = 0;
 
@@ -2729,6 +2734,12 @@ public void hierarchyCircularity(SourceTypeBinding sourceType, ReferenceBinding 
 }
 
 public void hierarchyCircularity(TypeVariableBinding type, ReferenceBinding superType, TypeReference reference) {
+	// GROOVY add
+	if (type.declaringElement instanceof SourceTypeBinding && ((SourceTypeBinding)type.declaringElement).scope != null &&
+			!((SourceTypeBinding)type.declaringElement).scope.shouldReport(IProblem.HierarchyCircularity)) {
+		return;
+	}
+	// GROOVY end
 	int start = 0;
 	int end = 0;
 
@@ -8259,6 +8270,11 @@ public void stringConstantIsExceedingUtf8Limit(ASTNode location) {
 		location.sourceEnd);
 }
 public void superclassMustBeAClass(SourceTypeBinding type, TypeReference superclassRef, ReferenceBinding superType) {
+	// GROOVY add
+	if (type.scope != null && !type.scope.shouldReport(IProblem.SuperclassMustBeAClass)) {
+		return;
+	}
+	// GROOVY end
 	this.handle(
 		IProblem.SuperclassMustBeAClass,
 		new String[] {new String(superType.readableName()), new String(type.sourceName())},
@@ -8275,6 +8291,11 @@ public void superfluousSemicolon(int sourceStart, int sourceEnd) {
 		sourceEnd);
 }
 public void superinterfaceMustBeAnInterface(SourceTypeBinding type, TypeReference superInterfaceRef, ReferenceBinding superType) {
+	// GROOVY add
+	if (type.scope != null && !type.scope.shouldReport(IProblem.SuperInterfaceMustBeAnInterface)) {
+		return;
+	}
+	// GROOVY end
 	this.handle(
 		IProblem.SuperInterfaceMustBeAnInterface,
 		new String[] {new String(superType.readableName()), new String(type.sourceName())},

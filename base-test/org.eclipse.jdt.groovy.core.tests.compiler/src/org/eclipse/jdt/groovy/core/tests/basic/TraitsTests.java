@@ -999,29 +999,22 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@interface Trait{}\n" +
+            "@interface Trait {\n" +
+            "}\n" +
             "@Trait\n" +
-            "class MyTrait {\n" +
-            "  def m() { 'a' }\n" +
+            "class NotTrait {\n" +
             "}\n" +
-            "class MyClass implements MyTrait {\n" +
-            "}\n" +
-            "def myClass = new MyClass()\n" +
-            "print myClass.m()\n",
+            "class MyClass implements NotTrait {\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Script.groovy (at line 6)\n" +
-            "\tclass MyClass implements MyTrait {\n" +
+            "\tclass MyClass implements NotTrait {\n" +
             "\t      ^^^^^^^\n" +
-            "Groovy:You are not allowed to implement the class 'MyTrait', use extends instead.\n" +
-            "----------\n" +
-            "2. ERROR in Script.groovy (at line 6)\n" +
-            "\tclass MyClass implements MyTrait {\n" +
-            "\t                         ^^^^^^^\n" +
-            "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" +
+            "Groovy:You are not allowed to implement the class 'NotTrait', use extends instead.\n" +
             "----------\n");
     }
 
@@ -1029,35 +1022,27 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     public void testTraits41() {
         //@formatter:off
         String[] sources = {
-            "Trait.groovy",
-            "package a\n" +
-            "@interface Trait {}\n",
+            "p/Trait.groovy",
+            "package p\n" +
+            "@interface Trait {\n" +
+            "}\n",
 
             "Script.groovy",
-            "package b\n" +
-            "import a.Trait\n" +
+            "import p.Trait\n" +
             "@Trait\n" +
-            "class MyTrait {\n" +
-            "  def m() { 'a' }\n" +
+            "class NotTrait {\n" +
             "}\n" +
-            "class MyClass implements MyTrait {\n" +
-            "}\n" +
-            "def myClass = new MyClass()\n" +
-            "print myClass.m()\n",
+            "class MyClass implements NotTrait {\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 7)\n" +
-            "\tclass MyClass implements MyTrait {\n" +
+            "1. ERROR in Script.groovy (at line 5)\n" +
+            "\tclass MyClass implements NotTrait {\n" +
             "\t      ^^^^^^^\n" +
-            "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" +
-            "----------\n" +
-            "2. ERROR in Script.groovy (at line 7)\n" +
-            "\tclass MyClass implements MyTrait {\n" +
-            "\t                         ^^^^^^^\n" +
-            "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" +
+            "Groovy:You are not allowed to implement the class 'NotTrait', use extends instead.\n" +
             "----------\n");
     }
 
@@ -1065,34 +1050,25 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     public void testTraits42() {
         //@formatter:off
         String[] sources = {
-            "Trait.groovy",
-            "package a\n" +
+            "p/Trait.groovy",
+            "package p\n" +
             "@interface Trait {}\n",
 
             "Script.groovy",
-            "package b\n" +
-            "@a.Trait\n" +
-            "class MyTrait {\n" +
-            "  def m() { 'a' }\n" +
+            "@p.Trait\n" +
+            "class NotTrait {\n" +
             "}\n" +
-            "class MyClass implements MyTrait {\n" +
-            "}\n" +
-            "def myClass = new MyClass()\n" +
-            "print myClass.m()\n",
+            "class MyClass implements NotTrait {\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 6)\n" +
-            "\tclass MyClass implements MyTrait {\n" +
+            "1. ERROR in Script.groovy (at line 4)\n" +
+            "\tclass MyClass implements NotTrait {\n" +
             "\t      ^^^^^^^\n" +
-            "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" +
-            "----------\n" +
-            "2. ERROR in Script.groovy (at line 6)\n" +
-            "\tclass MyClass implements MyTrait {\n" +
-            "\t                         ^^^^^^^\n" +
-            "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" +
+            "Groovy:You are not allowed to implement the class 'NotTrait', use extends instead.\n" +
             "----------\n");
     }
 
@@ -1100,36 +1076,27 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     public void testTraits43() {
         //@formatter:off
         String[] sources = {
-            "Trait.groovy",
-            "package a\n" +
+            "p/Trait.groovy",
+            "package p\n" +
             "@interface Trait {}\n",
 
             "Script.groovy",
-            "package b\n" +
-            "import a.Trait\n" +
+            "import p.Trait\n" +
             "import groovy.transform.*\n" +
             "@Trait\n" +
-            "class MyTrait {\n" +
-            "  def m() { 'a' }\n" +
+            "class NotTrait {\n" +
             "}\n" +
-            "class MyClass implements MyTrait {\n" +
-            "}\n" +
-            "def myClass = new MyClass()\n" +
-            "print myClass.m()\n",
+            "class MyClass implements NotTrait {\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 8)\n" +
-            "\tclass MyClass implements MyTrait {\n" +
+            "1. ERROR in Script.groovy (at line 6)\n" +
+            "\tclass MyClass implements NotTrait {\n" +
             "\t      ^^^^^^^\n" +
-            "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" +
-            "----------\n" +
-            "2. ERROR in Script.groovy (at line 8)\n" +
-            "\tclass MyClass implements MyTrait {\n" +
-            "\t                         ^^^^^^^\n" +
-            "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" +
+            "Groovy:You are not allowed to implement the class 'NotTrait', use extends instead.\n" +
             "----------\n");
     }
 

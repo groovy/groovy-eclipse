@@ -67,6 +67,7 @@ import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -1474,9 +1475,23 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         for (ClassNode anInterface : node.getInterfaces()) {
             resolveOrFail(anInterface, "", node, true);
         }
-
+        /* GRECLIPSE edit -- GROOVY-10113
         checkCyclicInheritance(node, node.getUnresolvedSuperClass(), node.getInterfaces());
-
+        */
+        if (sn != null) checkCyclicInheritance(node, sn);
+        for (ClassNode in : node.getInterfaces()) {
+            checkCyclicInheritance(node, in);
+        }
+        if (node.getGenericsTypes() != null) {
+            for (GenericsType gt : node.getGenericsTypes()) {
+                if (gt != null && gt.getUpperBounds() != null) {
+                    for (ClassNode variant : gt.getUpperBounds()) {
+                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(gt.getType().redirect(), variant);
+                    }
+                }
+            }
+        }
+        // GRECLIPSE end
         super.visitClass(node);
 
         // GRECLIPSE add
@@ -1504,6 +1519,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
     // GRECLIPSE end
 
+    /* GRECLIPSE edit -- GROOVY-10113
     private void checkCyclicInheritance(final ClassNode originalNode, final ClassNode parentToCompare, final ClassNode[] interfacesToCompare) {
         if (!originalNode.isInterface()) {
             if (parentToCompare == null) return;
@@ -1546,6 +1562,37 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
         }
     }
+    */
+    private void checkCyclicInheritance(final ClassNode node, final ClassNode type) {
+        if (type.redirect() == node || type.getOuterClasses().contains(node)) {
+            addError("Cycle detected: the type " + node.getName() + " cannot extend/implement itself or one of its own member types", type);
+            node.setHasInconsistentHierarchy(true);
+
+        } else if (type != ClassHelper.OBJECT_TYPE) {
+            Set<ClassNode> done = new HashSet<>();
+            done.add(ClassHelper.OBJECT_TYPE);
+            done.add(null);
+
+            LinkedList<ClassNode> todo = new LinkedList<>();
+            Collections.addAll(todo, type.getInterfaces());
+            todo.add(type.getUnresolvedSuperClass());
+            todo.add(type.getOuterClass());
+            do {
+                ClassNode next = todo.poll();
+                if (!done.add(next)) continue;
+                if (next.redirect() == node) {
+                    ClassNode cn = type; while (cn.getOuterClass() != null) cn = cn.getOuterClass();
+                    addError("Cycle detected: a cycle exists in the type hierarchy between " + node.getName() + " and " + cn.getName(), type);
+                    node.setHasInconsistentHierarchy(true);
+                    return;
+                }
+                Collections.addAll(todo, next.getInterfaces());
+                todo.add(next.getUnresolvedSuperClass());
+                todo.add(next.getOuterClass());
+            } while (!todo.isEmpty());
+        }
+    }
+    // GRECLIPSE end
 
     @Override
     public void visitCatchStatement(final CatchStatement cs) {

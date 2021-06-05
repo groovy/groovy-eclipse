@@ -420,11 +420,13 @@ public class GroovyClassScope extends ClassScope {
         case IProblem.IncorrectArityForParameterizedType:
         case IProblem.AbstractMethodMustBeImplemented:
         case IProblem.MissingValueForAnnotationMember:
+        case IProblem.SuperInterfaceMustBeAnInterface:
         case IProblem.FinalMethodCannotBeOverridden:
         case IProblem.MethodMustOverrideOrImplement:
         case IProblem.MethodReducesVisibility:
         case IProblem.IncompatibleReturnType:
         case IProblem.SuperclassMustBeAClass:
+        case IProblem.HierarchyCircularity:
         case IProblem.UndefinedConstructor:
         case IProblem.MethodNameClash:
         case IProblem.VarargsConflict:

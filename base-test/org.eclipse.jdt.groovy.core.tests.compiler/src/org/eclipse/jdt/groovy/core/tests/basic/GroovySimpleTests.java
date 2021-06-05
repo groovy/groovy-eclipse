@@ -1014,70 +1014,50 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCyclicReference() {
+    public void testCyclicReference1() {
         //@formatter:off
         String[] sources = {
-            "p/B.groovy",
-            "package p;\n" +
-            "class B extends B<String> {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new B();\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
+            "C.groovy",
+            "class C extends C {\n" +
             "}\n",
-
-            "p/A.java",
-            "package p;\n" +
-            "public class A<T> {}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in p\\B.groovy (at line 2)\n" +
-            "\tclass B extends B<String> {\n" +
-            "\t      ^\n" +
-            "Groovy:Cyclic inheritance involving p.B in class p.B\n" +
-            "----------\n" +
-            "2. ERROR in p\\B.groovy (at line 2)\n" +
-            "\tclass B extends B<String> {\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C extends C {\n" +
             "\t                ^\n" +
-            "Cycle detected: the type B cannot extend/implement itself or one of its own member types\n" +
+            "Groovy:Cycle detected: the type C cannot extend/implement itself or one of its own member types\n" +
             "----------\n");
     }
 
     @Test
-    public void testCyclicReference_GR531() {
+    public void testCyclicReference2() {
         //@formatter:off
         String[] sources = {
-            "XXX.groovy",
-            "class XXX extends XXX {\n" +
+            "I.groovy",
+            "interface I extends I {\n" +
             "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in XXX.groovy (at line 1)\n" +
-            "\tclass XXX extends XXX {\n" +
-            "\t      ^^^\n" +
-            "Groovy:Cyclic inheritance involving XXX in class XXX\n" +
-            "----------\n" +
-            "2. ERROR in XXX.groovy (at line 1)\n" +
-            "\tclass XXX extends XXX {\n" +
-            "\t                  ^^^\n" +
-            "Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
+            "1. ERROR in I.groovy (at line 1)\n" +
+            "\tinterface I extends I {\n" +
+            "\t                    ^\n" +
+            "Groovy:Cycle detected: the type I cannot extend/implement itself or one of its own member types\n" +
             "----------\n");
     }
 
     @Test
-    public void testCyclicReference_GR531_2() {
+    public void testCyclicReference3() {
         //@formatter:off
         String[] sources = {
-            "XXX.groovy",
-            "class XXX extends XXX {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    print \"success\"\n" +
+            "C.groovy",
+            "class C extends C.D {\n" +
+            "  class D {\n" +
             "  }\n" +
             "}\n",
         };
@@ -1085,32 +1065,20 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in XXX.groovy (at line 1)\n" +
-            "\tclass XXX extends XXX {\n" +
-            "\t      ^^^\n" +
-            "Groovy:Cyclic inheritance involving XXX in class XXX\n" +
-            "----------\n" +
-            "2. ERROR in XXX.groovy (at line 1)\n" +
-            "\tclass XXX extends XXX {\n" +
-            "\t                  ^^^\n" +
-            "Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C extends C.D {\n" +
+            "\t                ^^^\n" +
+            "Groovy:Cycle detected: the type C cannot extend/implement itself or one of its own member types\n" +
             "----------\n");
     }
 
-    @Test
-    public void testCyclicReference_GR531_3() {
+    @Test // GROOVY-10124
+    public void testCyclicReference4() {
         //@formatter:off
         String[] sources = {
-            "XXX.groovy",
-            "class XXX extends YYY {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n",
-            "YYY.groovy",
-            "class YYY extends XXX {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    print \"success\"\n" +
+            "C.groovy",
+            "class C extends D {\n" +
+            "  class D {\n" +
             "  }\n" +
             "}\n",
         };
@@ -1118,46 +1086,197 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in XXX.groovy (at line 1)\n" +
-            "\tclass XXX extends YYY {\n" +
-            "\t      ^^^\n" +
-            "The hierarchy of the type XXX is inconsistent\n" +
-            "----------\n" +
-            "----------\n" +
-            "1. ERROR in YYY.groovy (at line 1)\n" +
-            "\tclass YYY extends XXX {\n" +
-            "\t      ^^^\n" +
-            "Groovy:Cyclic inheritance involving YYY in class YYY\n" +
-            "----------\n" +
-            "2. ERROR in YYY.groovy (at line 1)\n" +
-            "\tclass YYY extends XXX {\n" +
-            "\t                  ^^^\n" +
-            "Cycle detected: a cycle exists in the type hierarchy between YYY and XXX\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C extends D {\n" +
+            "\t                ^\n" +
+            "Groovy:Cycle detected: the type C cannot extend/implement itself or one of its own member types\n" +
             "----------\n");
     }
 
-    @Test
-    public void testCyclicReference_GR531_4() {
+    @Test // GROOVY-10113
+    public void testCyclicReference5() {
         //@formatter:off
         String[] sources = {
-            "XXX.groovy",
-            "interface XXX extends XXX {\n" +
+            "C.groovy",
+            "class C<T extends T> {\n" +
             "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in XXX.groovy (at line 1)\n" +
-            "\tinterface XXX extends XXX {\n" +
-            "\t          ^^^\n" +
-            "Groovy:Cyclic inheritance involving XXX in interface XXX\n" +
-            "----------\n" +
-            "2. ERROR in XXX.groovy (at line 1)\n" +
-            "\tinterface XXX extends XXX {\n" +
-            "\t                      ^^^\n" +
-            "Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C<T extends T> {\n" +
+            "\t                  ^\n" +
+            "Groovy:Cycle detected: the type T cannot extend/implement itself or one of its own member types\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testCyclicReference6() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C extends C<String> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C extends C<String> {\n" +
+            "\t                ^\n" +
+            "Groovy:Cycle detected: the type C cannot extend/implement itself or one of its own member types\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCyclicReference7() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C extends D {\n" +
+            "}\n",
+
+            "D.groovy",
+            "class D extends C {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C extends D {\n" +
+            "\t      ^\n" +
+            "The hierarchy of the type C is inconsistent\n" +
+            "----------\n" +
+            "----------\n" +
+            "1. ERROR in D.groovy (at line 1)\n" +
+            "\tclass D extends C {\n" +
+            "\t                ^\n" +
+            "Groovy:Cycle detected: a cycle exists in the type hierarchy between D and C\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCyclicReference8() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I extends J {\n" +
+            "}\n",
+
+            "J.groovy",
+            "interface J extends I {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in I.groovy (at line 1)\n" +
+            "\tinterface I extends J {\n" +
+            "\t          ^\n" +
+            "The hierarchy of the type I is inconsistent\n" +
+            "----------\n" +
+            "----------\n" +
+            "1. ERROR in J.groovy (at line 1)\n" +
+            "\tinterface J extends I {\n" +
+            "\t                    ^\n" +
+            "Groovy:Cycle detected: a cycle exists in the type hierarchy between J and I\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCyclicReference9() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C extends D {\n" +
+            "  interface I {\n" +
+            "  }\n" +
+            "}\n",
+
+            "D.groovy",
+            "class D implements C.I {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C extends D {\n" +
+            "\t      ^\n" +
+            "The hierarchy of the type C is inconsistent\n" +
+            "----------\n" +
+            "----------\n" +
+            "1. ERROR in D.groovy (at line 1)\n" +
+            "\tclass D implements C.I {\n" +
+            "\t                   ^^^\n" +
+            "Groovy:Cycle detected: a cycle exists in the type hierarchy between D and C\n" +
+            "----------\n");
+    }
+
+    @Test // typo that caused overflow
+    public void testCyclicReference10() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "interface A extends B {\n" +
+            "}\n",
+
+            "B.groovy",
+            "class B extends A {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\tinterface A extends B {\n" +
+            "\t          ^\n" +
+            "Groovy:You are not allowed to implement the class 'B', use extends instead.\n" +
+            "----------\n" +
+            "----------\n" +
+            "1. ERROR in B.groovy (at line 1)\n" +
+            "\tclass B extends A {\n" +
+            "\t                ^\n" +
+            "Groovy:Cycle detected: a cycle exists in the type hierarchy between B and A\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testNonCyclicReference1() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@SuppressWarnings('rawtypes')\n" +
+            "class C<T extends C> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testNonCyclicReference2() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@SuppressWarnings('rawtypes')\n" +
+            "class C<T extends C.D> {\n" +
+            "  class D {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
     }
 
     @Test
