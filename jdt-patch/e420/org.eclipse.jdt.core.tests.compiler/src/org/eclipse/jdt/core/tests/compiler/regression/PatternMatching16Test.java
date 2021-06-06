@@ -3707,7 +3707,7 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				"true",
 				options);
 	}
-	public void testBug572431() {
+	public void testBug572431_1() {
 		Map<String, String> options = getCompilerOptions(false);
 		runConformTest(
 				new String[] {
@@ -3723,6 +3723,90 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 						+ "			   static public void main (String[] args) throws Exception {\n"
 						+ "			   }\n"
 						+ "			}",
+				},
+				"",
+				options);
+
+	}
+	public void testBug572431_2() {
+		Map<String, String> options = getCompilerOptions(false);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n"
+						+ "  static public void something () {\n"
+						+ "    boolean bool = true;\n"
+						+ "    Object object = null;\n"
+						+ "    if (object instanceof String string) {\n"
+						+ "    } else if (bool) {\n"
+						+ "      if (object instanceof Integer integer) {\n"
+						+ "      }\n"
+						+ "    }\n"
+						+ "  }\n"
+						+ "  static public void main (String[] args) throws Exception {\n"
+						+ "  }\n"
+						+ "}",
+				},
+				"",
+				options);
+
+	}
+	public void testBug572431_3() {
+		Map<String, String> options = getCompilerOptions(false);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n"
+						+ "  static public void something () {\n"
+						+ "    boolean bool = true;\n"
+						+ "    Object object = null;\n"
+						+ "    if (bool && object instanceof Integer i) {\n"
+						+ "	   }\n"
+						+ "  }\n"
+						+ "  static public void main (String[] args) throws Exception {\n"
+						+ "  }\n"
+						+ "}",
+				},
+				"",
+				options);
+
+	}
+	public void testBug572431_4() {
+		Map<String, String> options = getCompilerOptions(false);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n"
+						+ "  static public void something () {\n"
+						+ "    boolean bool = true;\n"
+						+ "    Object object = null;\n"
+						+ "    if (!(object instanceof Integer i)) {\n"
+						+ "	   }\n"
+						+ "  }\n"
+						+ "  static public void main (String[] args) throws Exception {\n"
+						+ "  }\n"
+						+ "}",
+				},
+				"",
+				options);
+
+	}
+	public void testBug572431_5() {
+		Map<String, String> options = getCompilerOptions(false);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n"
+						+ "  static public void something () {\n"
+						+ "    boolean bool = true;\n"
+						+ "    Object object = null;\n"
+						+ "    if (false) {\n"
+						+ "	   } else if (!(object instanceof Integer i)) {\n"
+						+ "	   }\n"
+						+ "  }\n"
+						+ "  static public void main (String[] args) throws Exception {\n"
+						+ "  }\n"
+						+ "}",
 				},
 				"",
 				options);

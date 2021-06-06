@@ -3397,7 +3397,7 @@ public abstract class Scope {
 							return typeVariable;
 						}
 						insideStaticContext |= sourceType.isStatic();
-						insideClassContext = true;
+						insideClassContext = !sourceType.isAnonymousType();
 						insideTypeAnnotation = false;
 						if (CharOperation.equals(sourceType.sourceName, name)) {
 							if (foundType != null && TypeBinding.notEquals(foundType, sourceType) && foundType.problemId() != ProblemReasons.NotVisible)

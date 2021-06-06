@@ -246,7 +246,16 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 		this.elseStatement.generateCode(currentScope, codeStream);
 	} else {
 		// generate condition side-effects
-		this.condition.generateCode(currentScope, codeStream, false);
+		if (this.condition.containsPatternVariable()) {
+			this.condition.generateOptimizedBoolean(
+				currentScope,
+				codeStream,
+				endifLabel,
+				null,
+				cst == Constant.NotAConstant);
+		} else {
+			this.condition.generateCode(currentScope, codeStream, false);
+		}
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 	// May loose some local variable initializations : affecting the local variable attributes

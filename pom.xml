@@ -120,7 +120,7 @@
 				<repository>
 					<id>eclipse</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.20-I-builds/I20210526-2310</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.20-I-builds/I20210603-0040</url>
 				</repository>
 			</repositories>
 			<modules>
