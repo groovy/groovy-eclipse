@@ -1475,7 +1475,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         for (ClassNode anInterface : node.getInterfaces()) {
             resolveOrFail(anInterface, "", node, true);
         }
-        /* GRECLIPSE edit -- GROOVY-10113
+        /* GRECLIPSE edit -- GRECLIPSE-531, GROOVY-10113, GROOVY-10125, et al.
         checkCyclicInheritance(node, node.getUnresolvedSuperClass(), node.getInterfaces());
         */
         if (sn != null) checkCyclicInheritance(node, sn);
@@ -1486,7 +1486,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (GenericsType gt : node.getGenericsTypes()) {
                 if (gt != null && gt.getUpperBounds() != null) {
                     for (ClassNode variant : gt.getUpperBounds()) {
-                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(gt.getType().redirect(), variant);
+                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType());
                     }
                 }
             }

@@ -1120,13 +1120,32 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in C.groovy (at line 1)\n" +
             "\tclass C<T extends T> {\n" +
-            "\t                  ^\n" +
+            "\t        ^\n" +
             "Groovy:Cycle detected: the type T cannot extend/implement itself or one of its own member types\n" +
             "----------\n");
     }
 
     @Test
     public void testCyclicReference6() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C<T extends U, U extends T> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C<T extends U, U extends T> {\n" +
+            "\t                     ^\n" +
+            "Groovy:Cycle detected: the type T cannot extend/implement itself or one of its own member types\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCyclicReference7() {
         //@formatter:off
         String[] sources = {
             "C.groovy",
@@ -1145,7 +1164,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCyclicReference7() {
+    public void testCyclicReference8() {
         //@formatter:off
         String[] sources = {
             "C.groovy",
@@ -1174,7 +1193,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCyclicReference8() {
+    public void testCyclicReference9() {
         //@formatter:off
         String[] sources = {
             "I.groovy",
@@ -1203,7 +1222,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCyclicReference9() {
+    public void testCyclicReference10() {
         //@formatter:off
         String[] sources = {
             "C.groovy",
@@ -1234,7 +1253,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test // typo that caused overflow
-    public void testCyclicReference10() {
+    public void testCyclicReference11() {
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -1285,6 +1304,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "class C<T extends C.D> {\n" +
             "  class D {\n" +
             "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test // GROOVY-10125
+    public void testNonCyclicReference3() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C<T, U extends T> {\n" +
             "}\n",
         };
         //@formatter:on
