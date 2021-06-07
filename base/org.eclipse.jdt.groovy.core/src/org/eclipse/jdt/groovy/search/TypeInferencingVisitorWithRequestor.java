@@ -1368,11 +1368,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         completeExpressionStack.add(node);
         ClassNode keyType, valType;
         try {
-            node.getKeyExpression().visit(this);
-            keyType = primaryTypeStack.removeLast();
+            if (!(node.getKeyExpression() instanceof SpreadMapExpression)) {
+                node.getKeyExpression().visit(this);
+                keyType = primaryTypeStack.removeLast();
 
-            node.getValueExpression().visit(this);
-            valType = primaryTypeStack.removeLast();
+                node.getValueExpression().visit(this);
+                valType = primaryTypeStack.removeLast();
+            } else {
+                node.getValueExpression().visit(this);
+                ClassNode type = primaryTypeStack.removeLast();
+                if (type.equals(VariableScope.MAP_CLASS_NODE) &&
+                        GroovyUtils.getGenericsTypes(type).length == 2) {
+                    keyType = type.getGenericsTypes()[0].getType();
+                    valType = type.getGenericsTypes()[1].getType();
+                } else {
+                    keyType = VariableScope.OBJECT_CLASS_NODE;
+                    valType = VariableScope.OBJECT_CLASS_NODE;
+                }
+            }
         } finally {
             completeExpressionStack.removeLast();
         }
@@ -1675,7 +1688,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitSpreadMapExpression(final SpreadMapExpression node) {
-        visitUnaryExpression(node, node.getExpression(), "*");
     }
 
     @Override
@@ -2560,8 +2572,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * <li>first element of a list expression (the first element is assumed to be representative of all list elements)
      * <li>first element of a range expression (the first element is assumed to be representative of the range components)
      * <li>either the key or the value expression of a {@link MapEntryExpression}
-     * <li>expression of a {@link ReturnStatement},{@link SwitchStatement},  {@link BooleanExpression}, {@link CastExpression}, {@link PrefixExpression}, {@link PostfixExpression},
-     *     {@link SpreadExpression}, {@link SpreadMapExpression}, {@link UnaryMinusExpression}, {@link UnaryPlusExpression}, {@link BitwiseNegationExpression}
+     * <li>expression of a {@link ReturnStatement},{@link SwitchStatement},  {@link BooleanExpression}, {@link CastExpression},
+     *     {@link PrefixExpression}, {@link PostfixExpression}, {@link UnaryPlusExpression}, {@link UnaryMinusExpression},
+     *     {@link BitwiseNegationExpression}, {@link SpreadExpression}
      * <li>collection expression of a for statement
      * </ul>
      *
@@ -2635,10 +2648,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
 
                 @Override public void visitSpreadExpression(final SpreadExpression expression) {
-                    result[0] = (expr == expression.getExpression());
-                }
-
-                @Override public void visitSpreadMapExpression(final SpreadMapExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 

@@ -405,13 +405,21 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test
     public void testMap17() {
         String contents =
+            "def xxx = [*:[1:true]]\n";
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+    }
+
+    @Test
+    public void testMap18() {
+        String contents =
             "def xxx = ['item'].collectEntries {str -> /*...*/}\n";
 
         assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
 
     @Test
-    public void testMap18() {
+    public void testMap19() {
         String contents =
             "def map = [key:'val']\n" +
             "map.getAt('key').toUpperCase()\n" +
@@ -444,7 +452,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testMap19() {
+    public void testMap20() {
         String contents =
             "import groovy.transform.stc.*\n" +
             "def map = [key:'val']\n" +
@@ -499,7 +507,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // methods and property resolution differs
-    public void testMap20() {
+    public void testMap21() {
         String contents =
             "def map = [foo:'bar']\n" +
             "map.getMetaClass()\n" +
@@ -544,7 +552,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testMap21() {
+    public void testMap22() {
         String contents =
             "LinkedHashMap<String,String> map = [foo:'bar']\n" +
             "def put = map.&put\n" +

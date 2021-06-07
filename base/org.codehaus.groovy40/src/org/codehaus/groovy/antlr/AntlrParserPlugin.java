@@ -2683,9 +2683,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression expr = expression(exprNode);
         SpreadMapExpression spreadMapExpression = new SpreadMapExpression(expr);
         configureAST(spreadMapExpression, node);
-        // GRECLIPSE add -- sloc for node only covers the operator; must include the expression
-        setSourceEnd(spreadMapExpression, expr);
-        // GRECLIPSE end
         return spreadMapExpression;
     }
 

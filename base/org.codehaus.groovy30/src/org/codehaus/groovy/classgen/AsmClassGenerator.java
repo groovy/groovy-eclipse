@@ -769,6 +769,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
     @Override
     public void visitSpreadMapExpression(final SpreadMapExpression expression) {
+        /* GRECLIPSE edit -- GROOVY-3421 (take 2)
         Expression subExpression = expression.getExpression();
         // to not record the underlying MapExpression twice,
         // we disable the assertion tracker
@@ -778,6 +779,10 @@ public class AsmClassGenerator extends ClassGenerator {
         controller.getOperandStack().box();
         spreadMap.call(controller.getMethodVisitor());
         controller.getAssertionWriter().reenableTracker();
+        */
+        callX(ClassHelper.make(java.util.Collections.class), "emptyMap").visit(this);
+        spreadMap.call(controller.getMethodVisitor());
+        // GRECLIPSE end
         controller.getOperandStack().replace(ClassHelper.OBJECT_TYPE);
     }
 

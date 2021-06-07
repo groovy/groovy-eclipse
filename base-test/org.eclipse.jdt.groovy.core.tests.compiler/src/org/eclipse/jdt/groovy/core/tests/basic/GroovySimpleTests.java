@@ -594,7 +594,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "module-info.java",
             "module test.project {\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -614,11 +614,24 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "    }\n" +
             "  }\n" +
             "  public static void foo() throws IOException { print 'foo' }\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
         runConformTest(sources, "foo");
+    }
+
+    @Test // GROOVY-3421
+    public void testSpreadMap() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int i = 1\n" +
+            "print([a:i, *:[b:++i]])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[a:1, b:2]");
     }
 
     @Test
