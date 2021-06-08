@@ -657,21 +657,6 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "g", "java.lang.Integer");
     }
 
-    @Test // GROOVY-5136
-    public void testCategoryMethod() {
-        String contents =
-            "class Cat {\n" +
-            "  static int f(String self, int x) {}\n" +
-            "  static int g(String self, x) {}\n" +
-            "}\n" +
-            "use (Cat) {\n" +
-            "  'x'.f()\n" + // no
-            "  'x'.g()\n" + // yes
-            "}\n";
-        assertUnknown(contents, "f");
-        assertType(contents, "g", "java.lang.Integer");
-    }
-
     @Test
     public void testMatcher1() {
         String contents = "def x = ('' =~ /pattern/)";
@@ -2341,6 +2326,85 @@ public final class InferencingTests extends InferencingTestSuite {
         assertEquals("Should resolve to remove(int) due to return type of inner call", "int", printTypeName(m.getParameters()[0].getType()));
     }
 
+    @Test // GROOVY-5136
+    public void testCategoryMethod() {
+        String contents =
+            "class Cat {\n" +
+            "  static int f(String self, int x) {}\n" +
+            "  static int g(String self, x) {}\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  'x'.f()\n" + // no
+            "  'x'.g()\n" + // yes
+            "}\n";
+        assertUnknown(contents, "f");
+        assertType(contents, "g", "java.lang.Integer");
+    }
+
+    @Test // GROOVY-5245
+    public void testCategoryMethod2() {
+        String contents =
+            "class Cat {\n" +
+            "  static boolean getWorking(String self) {}\n" +
+            "  static boolean isNotWorking(String self) {}\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  'x'.working\n" +
+            "  'x'.notWorking\n" +
+            "}\n";
+        assertType(contents, "working", "java.lang.Boolean");
+        assertUnknown(contents, "notWorking"); // TODO: assertType(contents, "notWorking", "java.lang.Boolean");
+    }
+
+    @Test // GROOVY-5609
+    public void testVariadicCategoryMethods() {
+        String contents =
+            "class Cat {\n" +
+            "  static <T> void foo(List<T> self, T[] tees) {\n" +
+            "    print(self.size() + tees.length)\n" +
+            "  }\n" +
+            "  static <T> void foo(T[] self, T[] tees) {\n" +
+            "    print(self.length + tees.length)\n" +
+            "  }\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  Integer[] array = [1,2,3]\n" + // line 10
+            "  array.foo(array)\n" +
+            "  array.foo(4,5,6)\n" +
+            "  array.foo(4)\n" +
+            "  array.foo()\n" +
+            "  List<Integer> list = [1,2,3]\n" +
+            "  list.foo(array)\n" +
+            "  list.foo(4,5,6)\n" +
+            "  list.foo(4)\n" +
+            "  list.foo()\n" +
+            "}\n";
+
+        int offset = contents.indexOf("foo", contents.indexOf("use"));
+        assertDeclaringType(contents, offset, offset + 3, "Cat"); // line 11
+
+        offset = contents.indexOf("foo", offset + 3);
+        assertDeclaringType(contents, offset, offset + 3, "Cat"); // line 12
+
+        offset = contents.indexOf("foo", offset + 3);
+        assertDeclaringType(contents, offset, offset + 3, "Cat"); // line 13
+
+        offset = contents.indexOf("foo", offset + 3);
+        assertDeclaringType(contents, offset, offset + 3, "Cat"); // line 14
+
+        offset = contents.indexOf("foo", offset + 3);
+        assertDeclaringType(contents, offset, offset + 3, "Cat"); // line 16
+
+        offset = contents.indexOf("foo", offset + 3);
+        assertDeclaringType(contents, offset, offset + 3, "Cat"); // line 17
+
+        offset = contents.indexOf("foo", offset + 3);
+        assertDeclaringType(contents, offset, offset + 3, "Cat"); // line 18
+
+        offset = contents.indexOf("foo", offset + 3);
+        assertDeclaringType(contents, offset, offset + 3, "Cat"); // line 19
+    }
+
     @Test // GRECLIPSE-1013
     public void testCategoryMethodAsProperty() {
         String contents = "''.toURL().text";
@@ -2845,13 +2909,13 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n" +
             "void test(C c) {\n" +
-            "  def x = null\n" +
+            "  def x = 42\n" +
             "  c.use(x) {\n" +
             "    // ...\n" +
             "  }\n" +
             "}\n";
-        assertDeclaringType(contents, "use", "C");
-        assertType(contents, "x", "java.lang.Object");
+        //assertDeclaringType(contents, "use", "C");
+        assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test // GRECLIPSE-1304

@@ -232,8 +232,9 @@ public class CategoryTypeLookup implements ITypeLookup {
         // Phase 2: find best set of parameters for given call arguments
         MethodNode method = null;
         for (MethodNode candidate : m.values()) {
-            if (argumentTypes.size() == candidate.getParameters().length) {
-                Boolean compatible = SimpleTypeLookup.isTypeCompatible(argumentTypes.subList(1, argumentTypes.size()), tail(candidate.getParameters()));
+            int argumentCount = argumentTypes.size(), parameterCount = candidate.getParameters().length;
+            if (argumentCount == parameterCount || (parameterCount > 1 && argumentCount >= parameterCount - 1 && GenericsMapper.isVargs(candidate.getParameters()))) {
+                Boolean compatible = SimpleTypeLookup.isTypeCompatible(argumentTypes.subList(1, argumentCount), tail(candidate.getParameters()));
                 if (compatible == Boolean.TRUE) { // exact match
                     method = candidate;
                     break;

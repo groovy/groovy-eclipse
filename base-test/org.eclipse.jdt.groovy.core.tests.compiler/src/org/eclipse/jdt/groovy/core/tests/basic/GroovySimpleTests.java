@@ -634,6 +634,37 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[a:1, b:2]");
     }
 
+    @Test // GROOVY-5609 (STC of extensions)
+    public void testVariadicCategoryMethods() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Cat {\n" +
+            "  static <T> void foo(List<T> self, T[] tees) {\n" +
+            "    print(self.size() + tees.length)\n" +
+            "  }\n" +
+            "  static <T> void foo(T[] self, T[] tees) {\n" +
+            "    print(self.length + tees.length)\n" +
+            "  }\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  Integer[] array = [1,2,3]\n" +
+            "  array.foo(array)\n" +
+            "  array.foo(4,5,6)\n" +
+            "  array.foo(4)\n" +
+            "  array.foo()\n" +
+            "  List<Integer> list = [1,2,3]\n" +
+            "  list.foo(array)\n" +
+            "  list.foo(4,5,6)\n" +
+            "  list.foo(4)\n" +
+            "  list.foo()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "66436643");
+    }
+
     @Test
     public void testGreclipse719() {
         //@formatter:off
