@@ -1127,18 +1127,16 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-1696: Generic method type inference with @CompileStatic
     public void testMethod1() {
         String contents =
-            "import groovy.transform.CompileStatic\n" +
             "class A {\n" +
-            "    public <T> T myMethod(Class<T> claz) {\n" +
-            "        return null\n" +
-            "    }\n" +
-            "    @CompileStatic\n" +
-            "    static void main(String[] args) {\n" +
-            "        A a = new A()\n" +
-            "        def val = a.myMethod(String.class)\n" +
-            "        val.trim()\n" +
-            "    }\n" +
-            "}";
+            "  def <T> T myMethod(Class<T> claz) {\n" +
+            "  }\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  static main(args) {\n" +
+            "    A a = new A()\n" +
+            "    def val = a.myMethod(String.class)\n" +
+            "    val.trim()\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1148,15 +1146,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testMethod2() {
         String contents =
             "class A {\n" +
-            "    public <T> T myMethod(Class<T> claz) {\n" +
-            "        return null\n" +
-            "    }\n" +
-            "    static void main(String[] args) {\n" +
-            "        A a = new A()\n" +
-            "        def val = a.myMethod(String.class)\n" +
-            "        val.trim()\n" +
-            "    }\n" +
-            "}";
+            "  def <T> T myMethod(Class<T> claz) {\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    A a = new A()\n" +
+            "    def val = a.myMethod(String.class)\n" +
+            "    val.trim()\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1165,17 +1162,15 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // Generic method without object type inference with @CompileStatic
     public void testMethod3() {
         String contents =
-            "import groovy.transform.CompileStatic\n" +
             "class A {\n" +
-            "    public <T> T myMethod(Class<T> claz) {\n" +
-            "        return null\n" +
-            "    }\n" +
-            "    @CompileStatic\n" +
-            "    def m() {\n" +
-            "        def val = myMethod(String.class)\n" +
-            "        val.trim()\n" +
-            "    }\n" +
-            "}";
+            "  def <T> T myMethod(Class<T> claz) {\n" +
+            "  }\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  def m() {\n" +
+            "    def val = myMethod(String.class)\n" +
+            "    val.trim()\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1185,17 +1180,46 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testMethod4() {
         String contents =
             "class A {\n" +
-            "    public <T> T myMethod(Class<T> claz) {\n" +
-            "        return null\n" +
-            "    }\n" +
-            "    def m() {\n" +
-            "        def val = myMethod(String.class)\n" +
-            "        val.trim()\n" +
-            "    }\n" +
-            "}";
+            "  def <T> T myMethod(Class<T> claz) {\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    def val = myMethod(String.class)\n" +
+            "    val.trim()\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1266
+    public void testMethod5() {
+        String contents =
+            "class C {\n" +
+            "  private <N extends Number> N m(Class<N> t) {\n" +
+            "    t.newInstance()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def n = m()\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "m", "java.lang.Number");
+        assertType(contents, "n", "java.lang.Number");
+    }
+
+    @Test
+    public void testMethod6() {
+        String contents =
+            "class C {\n" +
+            "  private <N extends Number> N m(Class<N> t) {\n" +
+            "    t.newInstance()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def n = m(Byte)\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "m", "java.lang.Byte");
+        assertType(contents, "n", "java.lang.Byte");
     }
 
     @Test // GRECLIPSE-1129: Static generic method type inference with @CompileStatic

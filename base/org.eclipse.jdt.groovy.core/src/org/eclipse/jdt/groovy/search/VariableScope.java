@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -624,17 +624,19 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode type) {
         if (mapper.hasGenerics()) {
-            GenericsType[] parameterizedTypes = GroovyUtils.getGenericsTypes(type);
-            if (parameterizedTypes.length > 0) {
-                for (int i = 0, n = parameterizedTypes.length; i < n; i += 1) {
-                    GenericsType parameterizedType = parameterizedTypes[i];
-                    ClassNode maybe = resolveTypeParameterization(mapper, parameterizedType, type);
+            GenericsType[] genericsTypes = GroovyUtils.getGenericsTypes(type);
+            int n = genericsTypes.length;
+            if (n > 0) {
+                for (int i = 0; i < n; i += 1) {
+                    ClassNode maybe = resolveTypeParameterization(mapper, genericsTypes[i], type);
                     if (maybe != type) {
                         assert n == 1;
                         type = maybe;
                         break;
                     }
                 }
+            } else if (type.isGenericsPlaceHolder()) {
+                type = mapper.findParameter(type.getUnresolvedName(), type.redirect());
             }
         }
         return type;

@@ -64,6 +64,17 @@ public class GenericsMapper {
      * @param declaringType a type that is somewhere in {@code resolvedType}'s hierarchy used to find the target of the mapping
      */
     public static GenericsMapper gatherGenerics(final ClassNode resolvedType, final ClassNode declaringType) {
+        if (resolvedType.isArray() && declaringType.isArray()) {
+            return gatherGenerics(resolvedType.getComponentType(), declaringType.getComponentType());
+        }
+        if (declaringType.isGenericsPlaceHolder()) {
+            Map<String, ClassNode> resolved = new java.util.IdentityHashMap<>();
+            resolved.put(declaringType.getUnresolvedName(), resolvedType);
+            GenericsMapper mapper = new GenericsMapper();
+            mapper.allGenerics.add(resolved);
+            return mapper;
+        }
+
         GenericsMapper mapper = new GenericsMapper();
 
         ClassNode rCandidate = resolvedType;
@@ -261,6 +272,7 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
                     if (type.getUnresolvedName().equals(tp.getName())) {
                         // replace placeholder "T" with type "Number" or "Object" or whatever
                         type = type.hasMultiRedirect() ? type.asGenericsType().getUpperBounds()[0] : type.redirect();
+                        if (type.isGenericsPlaceHolder()) type = type.getSuperClass();
                         name2Type.setValue(type);
                         break;
                     }
