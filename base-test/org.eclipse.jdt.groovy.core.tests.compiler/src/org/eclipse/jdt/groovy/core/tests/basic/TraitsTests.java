@@ -1701,6 +1701,36 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits70() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main extends C {\n" +
+            "  static main(args) {\n" +
+            "    // TODO\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "class C implements T, U {\n" +
+            "}\n",
+
+            "T.groovy",
+            "trait T {\n" +
+            "  void one() {}\n" +
+            "}\n",
+
+            "U.groovy",
+            "trait U {\n" +
+            "  void two() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTraits7242() {
         //@formatter:off
         String[] sources = {

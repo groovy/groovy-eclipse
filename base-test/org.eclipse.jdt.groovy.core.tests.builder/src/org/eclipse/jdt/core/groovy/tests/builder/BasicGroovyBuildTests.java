@@ -51,6 +51,7 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -2926,12 +2927,39 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "p", "Named",
             "package p\n" +
             "trait Named {\n" +
-            "    String name() { 'name' }" +
+            "  String name() { 'name' }\n" +
             "}\n");
         //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.Named", "p.Named$Trait$Helper");
+        expectingNoProblems();
+    }
+
+    @Test
+    public void testTraitBasics2() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "p", "C",
+            "package p\n" +
+            "class C implements T {\n" +
+            "}\n");
+        IPath d = env.addGroovyClass(paths[1], "p", "D",
+            "package p\n" +
+            "class D extends C {\n" +
+            "}\n");
+        env.addGroovyClass(paths[1], "p", "T",
+            "package p\n" +
+            "trait T {\n" +
+            "  void proc() {}\n" +
+            "}\n");
+        //@formatter:on
+
+        incrementalBuild(paths[0]);
+
+        expectingCompiledClasses("p.C", "p.D", "p.T", "p.T$Trait$Helper");
+        assertTrue(ReconcilerUtils.reconcile(env.getUnit(d)).isEmpty());
         expectingNoProblems();
     }
 

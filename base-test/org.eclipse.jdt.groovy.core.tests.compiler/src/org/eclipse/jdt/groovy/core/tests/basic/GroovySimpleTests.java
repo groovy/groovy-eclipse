@@ -584,24 +584,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testModuleInfo() {
-        assumeTrue(isAtLeastJava(JDK9));
-
-        //@formatter:off
-        String[] sources = {
-            "script.groovy",
-            "print 'hello'",
-
-            "module-info.java",
-            "module test.project {\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "hello");
-    }
-
-    @Test
     public void testMultiCatch() {
         //@formatter:off
         String[] sources = {

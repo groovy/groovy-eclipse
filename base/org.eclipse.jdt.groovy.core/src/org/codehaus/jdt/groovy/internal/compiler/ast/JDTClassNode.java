@@ -61,6 +61,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.DelegateMethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MemberTypeBinding;
@@ -341,11 +342,29 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
+    private static boolean isNotReallyAbstract(final MethodBinding methodBinding) {
+        if (methodBinding.declaringClass instanceof SourceTypeBinding) {
+            return (methodBinding.modifiers & ExtraCompilerModifiers.AccSemicolonBody) == 0;
+        }
+        if (methodBinding.declaringClass instanceof BinaryTypeBinding) {
+            for (AnnotationBinding a : methodBinding.getAnnotations()) {
+                if (a.getAnnotationType().debugName().equals("org.codehaus.groovy.transform.trait.Traits.Implemented")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private MethodNode methodBindingToMethodNode(final MethodBinding methodBinding) {
         try {
             int modifiers = methodBinding.modifiers;
-            if (isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && !Flags.isDefaultMethod(modifiers) && !isTrait()) {
-                modifiers |= Flags.AccAbstract;
+            if (isInterface()) {
+                if ((modifiers & (Flags.AccStatic | Flags.AccPrivate | Flags.AccSynthetic | Flags.AccDefaultMethod)) == 0 && !isTrait()) {
+                    modifiers |= Flags.AccAbstract;
+                } else if (methodBinding.isAbstract() && isNotReallyAbstract(methodBinding)) {
+                    modifiers &= ~Flags.AccAbstract;
+                }
             }
 
             ClassNode returnType = (methodBinding.returnType != null ? resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE);
