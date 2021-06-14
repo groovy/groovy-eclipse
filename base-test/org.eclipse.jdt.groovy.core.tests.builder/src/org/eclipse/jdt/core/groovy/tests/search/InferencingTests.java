@@ -873,38 +873,51 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testBoolean2() {
-        String contents = "(x < y).booleanValue()";
-        assertType(contents, "booleanValue", "java.lang.Boolean");
+        assertType("!!x", "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean3() {
-        String contents = "(x <= y).booleanValue()";
-        assertType(contents, "booleanValue", "java.lang.Boolean");
+        String contents = "(x < y)";
+        assertType(contents, "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean4() {
-        String contents = "(x >= y).booleanValue()";
-        assertType(contents, "booleanValue", "java.lang.Boolean");
+        String contents = "(x <= y)";
+        assertType(contents, "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean5() {
-        String contents = "(x != y).booleanValue()";
-        assertType(contents, "booleanValue", "java.lang.Boolean");
+        String contents = "(x != y)";
+        assertType(contents, "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean6() {
-        String contents = "(x == y).booleanValue()";
-        assertType(contents, "booleanValue", "java.lang.Boolean");
+        String contents = "(x == y)";
+        assertType(contents, "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean7() {
-        String contents = "(x in y).booleanValue()";
-        assertType(contents, "booleanValue", "java.lang.Boolean");
+        assumeTrue(isParrotParser());
+
+        String contents = "(x === y)";
+        assertType(contents, "java.lang.Boolean");
+    }
+
+    @Test
+    public void testBoolean8() {
+        String contents = "(x in y)";
+        assertType(contents, "java.lang.Boolean");
+    }
+
+    @Test
+    public void testBoolean9() {
+        String contents = "(x instanceof Object)";
+        assertType(contents, "java.lang.Boolean");
     }
 
     @Test

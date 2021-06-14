@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -83,7 +82,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
 
     protected GroovyCompilationUnit createUnit(final String name, final String contents) {
         IPath path = env.addGroovyClass(project.getFolder("src").getFullPath(), name, contents);
-        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+        return (GroovyCompilationUnit) env.getUnit(path);
     }
 
     protected GroovyCompilationUnit createUnit(final String pack, final String name, final String contents) {
@@ -97,17 +96,17 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         }
 
         IPath path = env.addGroovyClass(folder.getFullPath(), name, contents);
-        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+        return (GroovyCompilationUnit) env.getUnit(path);
     }
 
     protected ICompilationUnit createJavaUnit(final String name, final String contents) {
         IPath path = env.addClass(project.getFolder("src").getFullPath(), name, contents);
-        return JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+        return env.getUnit(path);
     }
 
     protected ICompilationUnit createJavaUnit(final String pack, final String name, final String contents) {
         IPath path = env.addClass(project.getFolder("src").getFullPath(), pack, name, contents);
-        return JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+        return env.getUnit(path);
     }
 
     //--------------------------------------------------------------------------

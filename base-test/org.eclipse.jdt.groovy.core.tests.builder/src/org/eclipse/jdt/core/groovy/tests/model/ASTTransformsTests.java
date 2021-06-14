@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,6 +99,6 @@ public final class ASTTransformsTests extends BuilderTestSuite {
 
     private GroovyCompilationUnit createUnit(String name, String contents) {
         IPath path = env.addGroovyClass(ResourcesPlugin.getWorkspace().getRoot().getProject("Project").getFolder("src").getFullPath(), name, contents);
-        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+        return (GroovyCompilationUnit) env.getUnit(path);
     }
 }
