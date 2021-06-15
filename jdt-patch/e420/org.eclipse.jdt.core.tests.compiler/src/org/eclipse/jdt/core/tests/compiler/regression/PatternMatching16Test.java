@@ -3812,4 +3812,30 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				options);
 
 	}
+	public void testBug572431_6() {
+		Map<String, String> options = getCompilerOptions(false);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n"
+						+ "  static public void something () {\n"
+						+ "    boolean bool = true;\n"
+						+ "		Object object = null;\n"
+						+ "		for (int i = 0; i < 10; i++) {\n"
+						+ "			if (object instanceof String string) {\n"
+						+ "				System.out.println(i);\n"
+						+ "			} else if (bool) {\n"
+						+ "				if (i == 4) continue;\n"
+						+ "				System.out.println(i);\n"
+						+ "			}\n"
+						+ "		}\n"
+						+ "  }\n"
+						+ "  static public void main (String[] args) throws Exception {\n"
+						+ "  }\n"
+						+ "}",
+				},
+				"",
+				options);
+
+	}
 }

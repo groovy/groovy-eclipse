@@ -74,7 +74,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		flowContext.recordUsingNullReference(currentScope, local,
 				this.expression, FlowContext.CAN_ONLY_NULL | FlowContext.IN_INSTANCEOF, flowInfo);
 		// no impact upon enclosing try context
-		flowInfo =  FlowInfo.conditional(initsWhenTrue, flowInfo.copy());
+		flowInfo =  FlowInfo.conditional(initsWhenTrue.copy(), flowInfo.copy());
 	} else if (this.expression instanceof Reference) {
 		if (currentScope.compilerOptions().enableSyntacticNullAnalysisForFields) {
 			FieldBinding field = ((Reference)this.expression).lastFieldBinding();
