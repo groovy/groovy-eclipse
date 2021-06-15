@@ -4983,7 +4983,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         } else { // GROOVY-9890: always search for default methods
             List<MethodNode> interfaceMethods = new ArrayList<>();
             collectAllInterfaceMethodsByName(receiver, name, interfaceMethods);
+            /* GRECLIPSE edit
             interfaceMethods.stream().filter(MethodNode::isDefault).forEach(methods::add);
+            */
+            interfaceMethods.stream().filter(mn -> mn.isDefault() || (mn.isPublic()
+                && !mn.isStatic() && !mn.isAbstract() && Traits.isTrait(mn.getDeclaringClass()))
+            ).forEach(methods::add);
+            // GRECLIPSE end
         }
         if (receiver.isInterface()) {
             methods.addAll(OBJECT_TYPE.getMethods(name));

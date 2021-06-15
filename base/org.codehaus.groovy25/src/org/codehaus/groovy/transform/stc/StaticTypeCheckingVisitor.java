@@ -5371,7 +5371,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         } else {
             List<MethodNode> interfaceMethods = new ArrayList<>();
             collectAllInterfaceMethodsByName(receiver, name, interfaceMethods);
-            interfaceMethods.stream().filter(MethodNode::isDefault).forEach(methods::add);
+            interfaceMethods.stream().filter(mn -> mn.isDefault() || (mn.isPublic()
+                && !mn.isStatic() && !mn.isAbstract() && Traits.isTrait(mn.getDeclaringClass()))
+            ).forEach(methods::add);
         }
         if (receiver.isInterface()) {
             methods.addAll(OBJECT_TYPE.getMethods(name));

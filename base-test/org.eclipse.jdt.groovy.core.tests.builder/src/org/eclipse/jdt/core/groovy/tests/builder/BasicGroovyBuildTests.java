@@ -2936,7 +2936,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1267
     public void testTraitBasics2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2947,7 +2947,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "}\n");
         IPath d = env.addGroovyClass(paths[1], "p", "D",
             "package p\n" +
+            "@groovy.transform.TypeChecked\n" +
             "class D extends C {\n" +
+            "  void test() {\n" +
+            "    proc()\n" +
+            "  }\n" +
             "}\n");
         env.addGroovyClass(paths[1], "p", "T",
             "package p\n" +
