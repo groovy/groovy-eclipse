@@ -1568,6 +1568,33 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "1:B;2:B;3:B;");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1268
+    public void testAnonymousInnerClass32() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  class D {\n" +
+            "  }\n" +
+            "  def obj = new Object() {\n" +
+            "    @Override\n" +
+            "    String toString() {\n" +
+            "      return new Object() {\n" +
+            "        @Override\n" +
+            "        String toString() {\n" +
+            "          new D()\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().obj\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off

@@ -802,13 +802,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ((InnerClassNode) classNode).setAnonymous(true);
         classNode.setEnclosingMethod(methodNode);
         configureAST(classNode, node);
-
+        // GRECLIPSE add
+        output.addClass(classNode);
+        // GRECLIPSE end
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
 
         AnonymousInnerClassCarrier ret = new AnonymousInnerClassCarrier();
         ret.innerClass = classNode;
+        /* GRECLIPSE edit
         output.addClass(classNode);
+        */
         classNode = oldNode;
         return ret;
     }
