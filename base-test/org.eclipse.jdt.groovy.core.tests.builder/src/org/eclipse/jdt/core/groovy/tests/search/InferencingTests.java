@@ -1473,6 +1473,151 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testSuperPropertyReference6() {
+        for (String qual : new String[] {"", "this.", "super."}) {
+            String contents =
+                "class A {\n" +
+                "  boolean isValue() {}\n" +
+                "  boolean getValue() {}\n" +
+                "}\n" +
+                "class B extends A {\n" +
+                "  void test() {\n" +
+                "    " + qual + "value\n" +
+                "  }\n" +
+                "}";
+            int offset = contents.lastIndexOf("value");
+            assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
+        }
+    }
+
+    @Test // GROOVY-1736
+    public void testSuperPropertyReference6a() {
+        for (String qual : new String[] {"", "this.", "super."}) {
+            String contents =
+                "class A {\n" +
+                "  boolean isValue() {}\n" +
+                "}\n" +
+                "class B extends A {\n" +
+                "  boolean getValue() {}\n" +
+                "  void test() {\n" +
+                "    " + qual + "value\n" +
+                "  }\n" +
+                "}";
+            int offset = contents.lastIndexOf("value");
+            if (qual.startsWith("super")) {
+                assertUnknownConfidence(contents, offset, offset + 5);
+            } else {
+                assertDeclaration(contents, offset, offset + 5, "B", "getValue", DeclarationKind.METHOD);
+            }
+        }
+    }
+
+    @Test
+    public void testSuperPropertyReference6b() {
+        for (String qual : new String[] {"", "this.", "super."}) {
+            String contents =
+                "class A {\n" +
+                "  boolean value\n" +
+                "}\n" +
+                "class B extends A {\n" +
+                "  boolean getValue() {}\n" +
+                "  void test() {\n" +
+                "    " + qual + "value\n" +
+                "  }\n" +
+                "}";
+            int offset = contents.lastIndexOf("value");
+            if (qual.startsWith("super")) {
+                assertDeclaration(contents, offset, offset + 5, "A", "value", DeclarationKind.PROPERTY);
+            } else {
+                assertDeclaration(contents, offset, offset + 5, "B", "getValue", DeclarationKind.METHOD);
+            }
+        }
+    }
+
+    @Test // isX only applies to [Bb]oolean
+    public void testSuperPropertyReference7() {
+        for (String qual : new String[] {"", "this.", "super."}) {
+            String contents =
+                "class A {\n" +
+                "  Number isValue() {}\n" +
+                "  Number getValue() {}\n" +
+                "}\n" +
+                "class B extends A {\n" +
+                "  void test() {\n" +
+                "    " + qual + "value\n" +
+                "  }\n" +
+                "}";
+            int offset = contents.lastIndexOf("value");
+            assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
+        }
+    }
+
+    @Test
+    public void testSuperPropertyReference8() {
+        for (String qual : new String[] {"", "this.", "super."}) {
+            String contents =
+                "class A {\n" +
+                "  boolean value\n" +
+                "  boolean getValue() {}\n" + // no isValue() generated
+                "}\n" +
+                "class B extends A {\n" +
+                "  void test() {\n" +
+                "    " + qual + "value\n" +
+                "    " + qual + "isValue()\n" +
+                "  }\n" +
+                "}";
+            assertUnknown(contents, "isValue");
+            int offset = contents.lastIndexOf("value");
+            assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
+        }
+    }
+
+    @Test // GROOVY-6097
+    public void testSuperPropertyReference9() {
+        for (String qual : new String[] {"", "this.", "super."}) {
+            String contents =
+                "class A {\n" +
+                "  boolean value\n" +
+                "  boolean isValue() {}\n" + // no getValue() generated
+                "}\n" +
+                "class B extends A {\n" +
+                "  void test() {\n" +
+                "    " + qual + "value\n" +
+                "    " + qual + "getValue()\n" +
+                "  }\n" +
+                "}";
+            assertUnknown(contents, "getValue");
+            if (qual.startsWith("super")) {
+                assertUnknown(contents, "value");
+            } else {
+                int offset = contents.lastIndexOf("value");
+                assertDeclaration(contents, offset, offset + 5, "A", "isValue", DeclarationKind.METHOD);
+            }
+        }
+    }
+
+    @Test
+    public void testSuperPropertyReference9a() {
+        for (String qual : new String[] {"", "this.", "super."}) {
+            String contents =
+                "class A {\n" +
+                "  Boolean value\n" +
+                "  Boolean isValue() {}\n" + // getValue() generated
+                "}\n" +
+                "class B extends A {\n" +
+                "  void test() {\n" +
+                "    " + qual + "value\n" +
+                "    " + qual + "getValue()\n" +
+                "  }\n" +
+                "}";
+            int offset = contents.lastIndexOf("value");
+            assertDeclaration(contents, offset, offset + 5, "A", "value", DeclarationKind.PROPERTY);
+            /**/offset = contents.lastIndexOf("getValue");
+            assertDeclaration(contents, offset, offset + 8, "A", "getValue", DeclarationKind.METHOD);
+        }
+    }
+
+    @Test
     public void testSuperClassMethod1() {
         String contents =
             "class A {\n" +

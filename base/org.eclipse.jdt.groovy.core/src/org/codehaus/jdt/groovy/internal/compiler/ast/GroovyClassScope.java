@@ -129,10 +129,12 @@ public class GroovyClassScope extends ClassScope {
                 String capitalizedName = MetaClassHelper.capitalize(property.getName());
 
                 if (property.getType().equals(ClassHelper.boolean_TYPE)) {
+                    if (!createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings).isPresent()) {
+                        continue; // only generate accessor method(s) if one or both are not explicitly declared
+                    }
                     createGetterMethod(property, "is" + capitalizedName, modifiers, methodBindings)
                         .ifPresent(binding -> {
                             groovyMethods.add(binding);
-                            // GROOVY-9382: no getter generated if isser declared
                             createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings)
                                 .ifPresent(groovyMethods::add);
                         });

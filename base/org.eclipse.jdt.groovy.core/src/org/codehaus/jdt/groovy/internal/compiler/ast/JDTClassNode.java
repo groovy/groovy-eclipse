@@ -302,14 +302,16 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 for (PropertyNode pNode : getProperties()) {
                     String pName = pNode.getName(), capitalizedName = MetaClassHelper.capitalize(pName);
                     int mMods = Flags.AccPublic | (pNode.getModifiers() & Flags.AccStatic);
-                    if (ClassHelper.boolean_TYPE.equals(pNode.getType())) {
+                    if (pNode.getType().equals(ClassHelper.boolean_TYPE)) {
+                        // only generate accessor method(s) if one or both are not explicitly declared
+                        if (getDeclaredMethod("get" + capitalizedName, Parameter.EMPTY_ARRAY) != null) continue;
+
                         MethodNode mNode = addMethod("is" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
                         if (!(mNode instanceof JDTNode)) {
                             mNode.setNameStart(pNode.getField().getNameStart());
                             mNode.setNameEnd(pNode.getField().getNameEnd());
                             mNode.setSynthetic(true);
 
-                            // GROOVY-9382: include "getter" if "isser" was not declared
                             mNode = addMethod("get" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
                             if (!(mNode instanceof JDTNode)) {
                                 mNode.setNameStart(pNode.getField().getNameStart());

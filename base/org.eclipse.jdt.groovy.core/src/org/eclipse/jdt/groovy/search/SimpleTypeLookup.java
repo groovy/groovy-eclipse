@@ -421,6 +421,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     } else if (method.isPrivate() && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                         // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
                         confidence = TypeConfidence.UNKNOWN;
+                    } else if (method.getName().startsWith("is") && !name.startsWith("is") && isSuperObjectExpression(scope)) {
+                        // GROOVY-1736, GROOVY-6097: "super.name" => "super.getName()" in AsmClassGenerator
+                        confidence = TypeConfidence.UNKNOWN;
+                        declaration = null;
                     } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters()) &&
                             !(isStaticObjectExpression && isStaticReferenceToUnambiguousMethod(scope, name, declaringType)) &&
                             !(AccessorSupport.isGetter(method) && !scope.isMethodCall() && scope.getEnclosingNode() instanceof PropertyExpression)) {

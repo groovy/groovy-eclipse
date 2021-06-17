@@ -5074,19 +5074,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testGroovyPropertyAccessors1() {
         //@formatter:off
         String[] sources = {
-            "p/C.java",
-            "package p;\n" +
+            "C.java",
             "public class C {\n" +
             "  public static void main(String[] argv) {\n" +
-            "    G o = new G();\n" +
-            "    System.out.print(o.isB());\n" +
-            "    System.out.print(o.getB());\n" +
+            "    G pogo = new G();\n" +
+            "    System.out.print(pogo.isB());\n" +
+            "    System.out.print(pogo.getB());\n" +
             "  }\n" +
             "}\n",
 
-            "p/G.groovy",
-            "package p;\n" +
-            "public class G {\n" +
+            "G.groovy",
+            "class G {\n" +
             "  boolean b\n" +
             "}\n",
         };
@@ -5099,20 +5097,18 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testGroovyPropertyAccessors2() {
         //@formatter:off
         String[] sources = {
-            "p/C.java",
-            "package p;\n" +
+            "C.java",
             "public class C {\n" +
             "  public static void main(String[] argv) {\n" +
-            "    G o = new G();\n" +
-            "    System.out.print(o.getB());\n" +
-            "    o.setB(true);\n" +
-            "    System.out.print(o.getB());\n" +
+            "    G pogo = new G();\n" +
+            "    System.out.print(pogo.getB());\n" +
+            "    pogo.setB(true);\n" +
+            "    System.out.print(pogo.getB());\n" +
             "  }\n" +
             "}\n",
 
-            "p/G.groovy",
-            "package p;\n" +
-            "public class G {\n" +
+            "G.groovy",
+            "class G {\n" +
             "  boolean b\n" +
             "}\n",
         };
@@ -5121,12 +5117,71 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "falsetrue");
     }
 
-    @Test // @Deprecated should be propagated to accessors
+    @Test
     public void testGroovyPropertyAccessors3() {
         //@formatter:off
         String[] sources = {
-            "p/G.groovy",
-            "package p;\n" +
+            "C.java",
+            "public class C {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    G pogo = new G();\n" +
+            "    System.out.print(pogo.isB());\n" +
+            "    System.out.print(pogo.getB());\n" +
+            "  }\n" +
+            "}\n",
+
+            "G.groovy",
+            "class G {\n" +
+            "  boolean b\n" +
+            "  boolean isB() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.java (at line 5)\n" +
+            "\tSystem.out.print(pogo.getB());\n" +
+            "\t                      ^^^^\n" +
+            "The method getB() is undefined for the type G\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testGroovyPropertyAccessors4() {
+        //@formatter:off
+        String[] sources = {
+            "C.java",
+            "public class C {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    G pogo = new G();\n" +
+            "    System.out.print(pogo.isB());\n" +
+            "    System.out.print(pogo.getB());\n" +
+            "  }\n" +
+            "}\n",
+
+            "G.groovy",
+            "class G {\n" +
+            "  boolean b\n" +
+            "  boolean getB() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.java (at line 4)\n" +
+            "\tSystem.out.print(pogo.isB());\n" +
+            "\t                      ^^^\n" +
+            "The method isB() is undefined for the type G\n" +
+            "----------\n");
+    }
+
+    @Test // @Deprecated should be propagated to accessors
+    public void testGroovyPropertyAccessors5() {
+        //@formatter:off
+        String[] sources = {
+            "G.groovy",
             "class G {\n" +
             "  @Deprecated\n" +
             "  boolean flag\n" +
@@ -5136,19 +5191,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
-        checkDisassemblyFor("p/G.class",
+        checkDisassemblyFor("G.class",
             "  @java.lang.Deprecated\n" +
             "  private boolean flag;\n");
 
-        checkDisassemblyFor("p/G.class",
+        checkDisassemblyFor("G.class",
             "  @java.lang.Deprecated\n  @groovy.transform.Generated\n" +
             "  public boolean isFlag();\n");
 
-        checkDisassemblyFor("p/G.class",
+        checkDisassemblyFor("G.class",
             "  @java.lang.Deprecated\n  @groovy.transform.Generated\n" +
             "  public boolean getFlag();\n");
 
-        checkDisassemblyFor("p/G.class",
+        checkDisassemblyFor("G.class",
             "  @java.lang.Deprecated\n  @groovy.transform.Generated\n" +
             "  public void setFlag(boolean arg0);\n");
     }
