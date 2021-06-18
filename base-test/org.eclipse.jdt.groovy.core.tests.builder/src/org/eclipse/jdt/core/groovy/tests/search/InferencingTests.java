@@ -2297,54 +2297,66 @@ public final class InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+
         int offset = contents.indexOf("m();");
         assertDeclaringType(contents, offset, offset + 1, "A");
-            offset = contents.indexOf("p  ;");
+
+        offset = contents.indexOf("p  ;");
         assertDeclaringType(contents, offset, offset + 1, "A");
-            offset = contents.lastIndexOf("m");
+
+        offset = contents.lastIndexOf("m");
         assertDeclaringType(contents, offset, offset + 1, "A");
-            offset = contents.lastIndexOf("p");
+
+        offset = contents.lastIndexOf("p");
         assertDeclaringType(contents, offset, offset + 1, "A");
     }
 
     @Test
     public void testCatchBlock1() {
-        String catchString = "try {\n} catch (NullPointerException e) {\n e\n}";
-        int start = catchString.lastIndexOf("NullPointerException");
-        int end = start + "NullPointerException".length();
-        assertType(catchString, start, end, "java.lang.NullPointerException");
+        String contents = "try {\n} catch (e) {\n}\n";
+
+        int offset = contents.lastIndexOf("e");
+        assertType(contents, offset, offset + 1, "java.lang.Exception");
     }
 
     @Test
     public void testCatchBlock2() {
-        String catchString = "try {\n} catch (NullPointerException e) {\n e\n}";
-        int start = catchString.lastIndexOf("e");
-        int end = start + 1;
-        assertType(catchString, start, end, "java.lang.NullPointerException");
+        String contents = "try {\n} catch (e) {\n e\n}\n";
+
+        int offset = contents.lastIndexOf("e");
+        assertType(contents, offset, offset + 1, "java.lang.Exception");
     }
 
     @Test
     public void testCatchBlock3() {
-        String catchString = "try {\n} catch (NullPointerException e) {\n e\n}";
-        int start = catchString.indexOf("NullPointerException e");
-        int end = start + ("NullPointerException e").length();
-        assertType(catchString, start, end, "java.lang.NullPointerException");
+        String contents = "try {\n} catch (NullPointerException e) {\n}\n";
+
+        int offset = contents.lastIndexOf("NullPointerException");
+        assertType(contents, offset, offset + 20, "java.lang.NullPointerException");
     }
 
     @Test
     public void testCatchBlock4() {
-        String catchString2 = "try {\n} catch (e) {\n e\n}";
-        int start = catchString2.indexOf("e");
-        int end = start + 1;
-        assertType(catchString2, start, end, "java.lang.Exception");
+        String contents = "try {\n} catch (NullPointerException e) {\n}\n";
+
+        int offset = contents.lastIndexOf("e");
+        assertType(contents, offset, offset + 1, "java.lang.NullPointerException");
     }
 
     @Test
     public void testCatchBlock5() {
-        String catchString2 = "try {\n} catch (e) {\n e\n}";
-        int start = catchString2.lastIndexOf("e");
-        int end = start + 1;
-        assertType(catchString2, start, end, "java.lang.Exception");
+        String contents = "try {\n} catch (NullPointerException e) {\n e\n}\n";
+
+        int offset = contents.lastIndexOf("e");
+        assertType(contents, offset, offset + 1, "java.lang.NullPointerException");
+    }
+
+    @Test
+    public void testCatchBlock6() {
+        String contents = "try {\n} catch (Exception | Error e) {\n}\n";
+
+        int offset = contents.lastIndexOf("e");
+        assertType(contents, offset, offset + 1, "java.lang.Exception"); // TODO
     }
 
     private static final String CONTENTS_GETAT1 =
@@ -2668,7 +2680,8 @@ public final class InferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("method");
         assertDeclaration(contents, offset, offset + 6, "C", "method", DeclarationKind.METHOD);
-            offset = contents.lastIndexOf("missing");
+
+        offset = contents.lastIndexOf("missing");
         assertDeclaration(contents, offset, offset + 7, "C", "invokeMethod", DeclarationKind.METHOD);
     }
 
@@ -2690,7 +2703,8 @@ public final class InferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("method");
         assertDeclaration(contents, offset, offset + 6, "C", "method", DeclarationKind.METHOD);
-            offset = contents.lastIndexOf("missing");
+
+        offset = contents.lastIndexOf("missing");
         assertDeclaration(contents, offset, offset + 7, "C", "methodMissing", DeclarationKind.METHOD);
     }
 
@@ -2710,7 +2724,8 @@ public final class InferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("method");
         assertDeclaration(contents, offset, offset + 6, "C", "invokeMethod", DeclarationKind.METHOD);
-            offset = contents.lastIndexOf("missing");
+
+        offset = contents.lastIndexOf("missing");
         assertDeclaration(contents, offset, offset + 7, "C", "invokeMethod", DeclarationKind.METHOD);
     }
 
@@ -2730,7 +2745,8 @@ public final class InferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("method");
         assertDeclaration(contents, offset, offset + 6, "C", "method", DeclarationKind.METHOD);
-            offset = contents.lastIndexOf("missing");
+
+        offset = contents.lastIndexOf("missing");
         assertDeclaration(contents, offset, offset + 7, "C", "methodMissing", DeclarationKind.METHOD);
     }
 
@@ -2751,7 +2767,8 @@ public final class InferencingTests extends InferencingTestSuite {
         boolean is3 = isAtLeastGroovy(30);
         int offset = contents.lastIndexOf("method");
         assertDeclaration(contents, offset - (is3 ? 0 : 5), offset + (is3 ? 6 : 8), "C", "method", DeclarationKind.METHOD);
-            offset = contents.lastIndexOf("missing");
+
+        offset = contents.lastIndexOf("missing");
         assertDeclaration(contents, offset, offset + 7, "C", "$static_methodMissing", DeclarationKind.METHOD);
     }
 
@@ -2771,9 +2788,11 @@ public final class InferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("proper");
         assertDeclaration(contents, offset, offset + 6, "C", "proper", DeclarationKind.PROPERTY);
-            offset = contents.lastIndexOf("missing");
+
+        offset = contents.lastIndexOf("missing");
         assertDeclaration(contents, offset, offset + 7, "C", "missing", DeclarationKind.PROPERTY);
-            offset = contents.lastIndexOf("getMissing");
+
+        offset = contents.lastIndexOf("getMissing");
         assertUnknownConfidence(contents, offset, offset + 10); // does not map to getProperty/propertyMissing
     }
 
@@ -2793,9 +2812,11 @@ public final class InferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("proper");
         assertDeclaration(contents, offset, offset + 6, "C", "proper", DeclarationKind.PROPERTY);
-            offset = contents.lastIndexOf("missing");
+
+        offset = contents.lastIndexOf("missing");
         assertDeclaration(contents, offset, offset + 7, "C", "missing", DeclarationKind.PROPERTY);
-            offset = contents.lastIndexOf("getMissing");
+
+        offset = contents.lastIndexOf("getMissing");
         assertUnknownConfidence(contents, offset, offset + 10); // does not map to $static_propertyMissing
     }
 

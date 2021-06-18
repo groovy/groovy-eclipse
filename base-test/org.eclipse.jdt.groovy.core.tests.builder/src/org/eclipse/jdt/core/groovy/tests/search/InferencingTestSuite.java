@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,11 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -338,13 +340,16 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
             // might have AST nodes with overlapping locations, so result may not be null
             if (this.result == null &&
-                    visitorNode.getStart() == start && (visitorNode.getEnd() == end || (visitorNode instanceof AnnotatedNode && ((AnnotatedNode) visitorNode).getNameEnd() + 1 == end)) &&
-                    !(visitorNode instanceof Statement /* ignore any statement */) &&
-                    !(visitorNode instanceof TupleExpression /* ignore wrapper */) &&
-                    !(visitorNode instanceof MethodNode /* ignore the run() method */) &&
-                    !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */)) {
-                if (ClassHelper.isPrimitiveType(visitorResult.type)) {
-                    this.result = new TypeLookupResult(ClassHelper.getWrapper(visitorResult.type), visitorResult.declaringType, visitorResult.declaration, visitorResult.confidence, visitorResult.scope, visitorResult.extraDoc);
+                    (
+                        (visitorNode.getStart() == start && visitorNode.getEnd() == end) ||
+                        (visitorNode instanceof AnnotatedNode && ((AnnotatedNode) visitorNode).getNameStart() == start && ((AnnotatedNode) visitorNode).getNameEnd() + 1 == end)
+                    ) &&
+                    !(visitorNode instanceof MethodNode /* ignore run() method */) &&
+                    !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */) &&
+                    !(visitorNode instanceof Statement || visitorNode instanceof ImportNode /* ignore any statement */) &&
+                    !(visitorNode instanceof ArrayExpression || visitorNode instanceof TupleExpression /* ignore wrapper */)) {
+                if (visitorResult.type != null && ClassHelper.isPrimitiveType(visitorResult.type)) {
+                    this.result = new TypeLookupResult(ClassHelper.getWrapper(visitorResult.type), visitorResult.declaringType, visitorResult.declaration, visitorResult);
                 } else {
                     this.result = visitorResult;
                 }
