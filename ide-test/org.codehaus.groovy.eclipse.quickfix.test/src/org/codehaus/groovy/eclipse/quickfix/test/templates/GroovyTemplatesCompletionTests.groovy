@@ -37,7 +37,7 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
 
     /**
      * @param contents editor begin state
-     * @param expected editor end state -- use '|' at the end of a line to preserve thw whitespace
+     * @param expected editor end state -- use '#' at the end of a line to preserve the whitespace
      * @param target substring to find for code completion proposals
      * @param which name of completion proposal to select and apply
      */
@@ -77,7 +77,20 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testBasicTemplate() {
+    void testNewVariable() {
+        //@formatter:off
+        String input = '''\
+            |d
+            |'''.stripMargin()
+        String output = '''\
+            |def name = value
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'd', 'def')
+    }
+
+    @Test
+    void testTryAndCatch() {
         //@formatter:off
         String input = '''\
             |try

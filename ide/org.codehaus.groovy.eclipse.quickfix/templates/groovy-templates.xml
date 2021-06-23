@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-   Copyright 2009-2017 the original author or authors.
+   Copyright 2009-2021 the original author or authors.
    
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 
 <template name="ase"
 	description="assert equals"
-	id="org.codehaus.groovy.eclipse.templates.assert"
+	id="org.codehaus.groovy.eclipse.templates.ase"
 	autoinsert="true"
 	context="groovy"
 	enabled="true"
@@ -32,6 +32,14 @@
 	context="groovy"
 	enabled="true"
 >assert ${actual:var(java.lang.Object)} != null</template>
+
+<template name="def"
+	description="define variable (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.def"
+	autoinsert="true"
+	context="groovy"
+	enabled="true"
+>def ${word_selection}${name} = ${value}${cursor}</template>
 
 <template name="closure"
 	description="closure block (Groovy)"
@@ -49,7 +57,7 @@
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->for (${var} in ${collection}) {
+>for (${var} in ${iterable}) {
 	${line_selection}${cursor}
 }</template>
 
