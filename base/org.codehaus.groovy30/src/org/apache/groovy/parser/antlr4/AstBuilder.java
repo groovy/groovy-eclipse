@@ -1098,32 +1098,24 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         ctx))
                 .collect(Collectors.toList());
         */
-        ASTNode nameNode = null;
-        Parameter catchParameter = null;
-        List<CatchStatement> list = new ArrayList<>();
-        for (ClassNode e : this.visitCatchType(ctx.catchType())) {
-            CatchStatement catchStatement = configureAST(
-                    new CatchStatement(
-                            new Parameter(e, this.visitIdentifier(ctx.identifier())),
-                            this.visitBlock(ctx.block())),
-                    ctx);
-            catchParameter = configureAST(catchStatement.getVariable(), ctx.catchType() != null ? ctx.catchType() : ctx.identifier());
-            nameNode = configureAST(new ConstantExpression(catchParameter.getName()), ctx.identifier());
+        List<ClassNode> catchTypes = this.visitCatchType(ctx.catchType());
+        if (catchTypes.size() > 1) {
+            return catchTypes.stream().map(e -> {
+                Parameter catchParameter = configureAST(new Parameter(e, this.visitIdentifier(ctx.identifier())), ctx.identifier());
+                catchParameter.setNameStart(catchParameter.getStart()); catchParameter.setNameEnd(catchParameter.getEnd() - 1);
+                CatchStatement catchStatement = new CatchStatement(catchParameter, this.visitBlock(ctx.block()));
+                catchStatement.putNodeMetaData("catch.types", catchTypes);
+                return catchStatement;
+            }).collect(Collectors.toList());
+        } else {
+            Parameter catchParameter = new Parameter(catchTypes.get(0), this.visitIdentifier(ctx.identifier()));
+            ASTNode nameNode = configureAST(new ConstantExpression(catchParameter.getName()), ctx.identifier());
+            configureAST(catchParameter, ctx.variableModifiersOpt(), nameNode);
             catchParameter.setNameStart(nameNode.getStart());
             catchParameter.setNameEnd(nameNode.getEnd() - 1);
-            list.add(catchStatement);
+            CatchStatement catchStatement = new CatchStatement(catchParameter, this.visitBlock(ctx.block()));
+            return Collections.singletonList(configureAST(catchStatement, ctx));
         }
-        if (catchParameter != null) {
-            catchParameter.setEnd(nameNode.getEnd());
-            catchParameter.setLastLineNumber(nameNode.getLastLineNumber());
-            catchParameter.setLastColumnNumber(nameNode.getLastColumnNumber());
-
-            catchParameter = list.get(0).getVariable();
-            catchParameter.setLineNumber(ctx.variableModifiersOpt().getStart().getLine());
-            catchParameter.setColumnNumber(ctx.variableModifiersOpt().getStart().getCharPositionInLine() + 1);
-            catchParameter.setStart(locationSupport.findOffset(catchParameter.getLineNumber(), catchParameter.getColumnNumber()));
-        }
-        return list;
         // GRECLIPSE end
     }
 

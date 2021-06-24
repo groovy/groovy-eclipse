@@ -2176,8 +2176,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 Parameter catchParameter = new Parameter(ClassHelper.DYNAMIC_TYPE, variable);
                 // GRECLIPSE add
                 configureAST(catchParameter, multicatches);
+                catchParameter.setNameStart(catchParameter.getStart());
                 catchParameter.setNameEnd(catchParameter.getEnd() - 1);
-                catchParameter.setNameStart(catchParameter.getEnd() - catchParameter.getName().length());
                 // GRECLIPSE end
                 CatchStatement answer = new CatchStatement(catchParameter, statement(node.getNextSibling()));
                 configureAST(answer, catchNode);
@@ -2192,23 +2192,26 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     ClassNode exceptionType = buildName(exceptionNodes);
                     Parameter catchParameter = new Parameter(exceptionType, variable);
                     // GRECLIPSE add
-                    // a little tricky since there can be multi-catches and the
-                    // multicatches node doesn't include sloc for parameter name
-                    configureAST(catchParameter, multicatches);
-                    GroovySourceAST paramAST = (GroovySourceAST) multicatches.getNextSibling();
-                    int lastLine = paramAST.getLineLast();
-                    catchParameter.setLastLineNumber(lastLine);
-                    int lastCol = paramAST.getColumnLast();
-                    catchParameter.setLastColumnNumber(lastCol);
-                    catchParameter.setEnd(locations.findOffset(lastLine, lastCol));
+                    configureAST(catchParameter, multicatches.getNextSibling());
+                    catchParameter.setNameStart(catchParameter.getStart());
                     catchParameter.setNameEnd(catchParameter.getEnd() - 1);
-                    catchParameter.setNameStart(catchParameter.getEnd() - catchParameter.getName().length());
                     // GRECLIPSE end
                     CatchStatement answer = new CatchStatement(catchParameter, statement(node.getNextSibling()));
+                    /* GRECLIPSE edit -- cannot select multi-catch types when a catch covers others
                     configureAST(answer, catchNode);
+                    */
                     catches.add(answer);
                     exceptionNodes = exceptionNodes.getNextSibling();
                 }
+                // GRECLIPSE add
+                if (catches.size() > 1) {
+                    List<ClassNode> types = new ArrayList<>();
+                    for (CatchStatement catchStmt : catches) {
+                        types.add(catchStmt.getExceptionType());
+                        catchStmt.putNodeMetaData("catch.types", types);
+                    }
+                }
+                // GRECLIPSE end
             }
         }
         return catches;

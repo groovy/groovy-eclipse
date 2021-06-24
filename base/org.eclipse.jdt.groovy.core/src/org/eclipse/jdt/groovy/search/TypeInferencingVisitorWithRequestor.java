@@ -900,7 +900,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             Parameter param = node.getVariable();
             if (param != null) {
-                handleParameterList(new Parameter[] {param});
+                // add param to scope, accounting for multi-catch
+                List<ClassNode> types = node.getNodeMetaData("catch.types");
+                scopes.getLast().addVariable(param.getName(), types == null ? param.getType()
+                                            : WideningCategories.lowestUpperBound(types), null);
+                handleParameters(param);
             }
             super.visitCatchStatement(node);
         } finally {
@@ -968,7 +972,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         parameters[i].setType(inferredParamTypes[i]);
                     }
                 }
-                handleParameterList(parameters);
+                handleParameters(parameters);
             } else if (node.getParameters() != null && !scope.containsInThisScope("it")) {
                 scope.addVariable("it", inferredParamTypes[0], VariableScope.CLOSURE_CLASS_NODE);
             }
@@ -1105,7 +1109,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     visitClassReference(e);
                 }
             }
-            if (handleParameterList(node.getParameters())) {
+            if (handleParameters(node.getParameters())) {
                 visitAnnotations(node);
                 if (!isConstructor || !(node.getCode() instanceof BlockStatement)) {
                     visitClassCodeContainer(node.getCode());
@@ -1243,7 +1247,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     // update the type of the parameter from the collection type
                     scopes.getLast().addVariable(param.getName(), VariableScope.extractElementType(collectionType), null);
                 }
-                handleParameterList(new Parameter[] {param});
+                handleParameters(param);
             }
 
             node.getLoopBlock().visit(this);
@@ -1951,7 +1955,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private boolean handleParameterList(final Parameter[] params) {
+    private boolean handleParameters(final Parameter... params) {
         if (params != null) {
             VariableScope scope = scopes.getLast();
             scope.setPrimaryNode(false);
