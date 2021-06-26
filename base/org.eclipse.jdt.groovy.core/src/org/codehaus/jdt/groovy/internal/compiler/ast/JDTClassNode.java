@@ -407,7 +407,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
         ConstructorNode ctorNode = new ConstructorNode(methodBinding.modifiers, parameters, exceptions, null);
         for (AnnotationBinding annotationBinding : methodBinding.getAnnotations()) {
-            ctorNode.addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+            ctorNode.addAnnotation(resolver.convertToAnnotationNode(annotationBinding));
         }
         ctorNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
         ctorNode.putNodeMetaData("JdtBinding", methodBinding);
@@ -495,7 +495,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 parameters[i] = makeParameter(parameterTypes[i], parameterName);
                 if (parameterAnnotations != null && parameterAnnotations.length > i) {
                     for (AnnotationBinding annotationBinding : parameterAnnotations[i]) {
-                        parameters[i].addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                        parameters[i].addAnnotation(resolver.convertToAnnotationNode(annotationBinding));
                     }
                 }
             }
@@ -515,7 +515,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         long tagBits = ((SourceTypeBinding) jdtBinding).getAnnotationTagBits();
                     }
                     for (AnnotationBinding annotationBinding : jdtBinding.getAnnotations()) {
-                        addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                        addAnnotation(resolver.convertToAnnotationNode(annotationBinding));
                     }
                     bits |= ANNOTATIONS_INITIALIZED;
                 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2379,7 +2379,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private int getModifiers(MethodNode node) {
-            int modifiers = node.getModifiers() & ~(Flags.AccSynthetic | Flags.AccTransient);
+            int modifiers = node.getModifiers() & ~(Flags.AccSynthetic | Flags.AccTransient); // GRECLIPSE-370, GROOVY-10140
             if (node.isDefault()) {
                 modifiers |= Flags.AccDefaultMethod;
             }

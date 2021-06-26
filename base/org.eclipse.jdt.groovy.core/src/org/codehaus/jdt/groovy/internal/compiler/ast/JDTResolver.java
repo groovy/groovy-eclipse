@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -39,6 +40,7 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
@@ -460,8 +462,20 @@ public class JDTResolver extends ResolveVisitor {
         return false;
     }
 
+    //--------------------------------------------------------------------------
+
     /**
-     * Converts a JDT TypeBinding to a Groovy ClassNode.
+     * Converts a JDT {@code AnnotationBinding} to a Groovy {@code AnnotationNode}.
+     */
+    protected AnnotationNode convertToAnnotationNode(AnnotationBinding jdtBinding) {
+        if (jdtBinding == null || jdtBinding.getAnnotationType().problemId() != 0) {
+            return null;
+        }
+        return new JDTAnnotationNode(jdtBinding, this);
+    }
+
+    /**
+     * Converts a JDT {@code TypeBinding} to a Groovy {@code ClassNode}.
      */
     protected ClassNode convertToClassNode(TypeBinding jdtBinding) {
         ClassNode existingNode = checkForExisting(jdtBinding);

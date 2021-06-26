@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,7 @@ import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.core.runtime.IPath;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -93,13 +89,15 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
 
     @Test
     public void testClosureReturner() throws Exception {
-        IProject project = createSimpleGroovyProject().getProject();
+        IPath src = createEmptyGroovyProject();
         //@formatter:off
-        env.addGroovyClass(project.getFullPath().append("src"), "p1", "Hello2",
-            "class C { def aaa = { 123 } }");
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
+            "  def aaa = { 123 }\n" +
+            "}\n"
+        ));
         //@formatter:on
-        IFile javaFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path("Project/src/p1/Hello2.groovy"));
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(javaFile);
         ClassNode inClass = unit.getModuleNode().getClasses().get(0);
         FieldNode field = inClass.getField("aaa");
         Expression initialExpression = field.getInitialExpression();
@@ -112,8 +110,7 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
     //--------------------------------------------------------------------------
 
     private Expression findFieldInitializer(String contents, Class<? extends Expression> expressionClass) throws Exception {
-        IProject project = createSimpleGroovyProject().getProject();
-        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(project.getFullPath().append("src"), "p", "C", contents));
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(createEmptyGroovyProject(), "p", "C", contents));
 
         ClassNode clazz = unit.getModuleNode().getClasses().get(0);
         FieldNode field = clazz.getField("aField");

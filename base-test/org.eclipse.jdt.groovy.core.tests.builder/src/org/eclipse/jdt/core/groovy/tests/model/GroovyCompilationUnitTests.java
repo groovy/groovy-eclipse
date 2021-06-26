@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -32,8 +31,8 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -42,7 +41,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMemberValuePair;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
@@ -51,104 +49,104 @@ import org.junit.Test;
 public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
 
     @Test
-    public void testCreateJavaCompilationUnit() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        fullBuild(projectPath);
-
-        IPath root = env.getPackageFragmentRootPath(projectPath, "src");
-
-        IPath path = env.addClass(root, "p1", "Hello",
-            "package p1;\n" +
+    public void testJavaCompilationUnit() throws Exception {
+        IPath project = env.addProject("Project");
+        IPath src = env.getPackageFragmentRootPath(project, "src");
+        ICompilationUnit unit = env.getUnit(env.addClass(src, "p", "Hello",
+            "package p;\n" +
             "public class Hello {\n" +
             "  public static void main(String[] args) {\n" +
             "    System.out.println(\"Hello world\");\n" +
             "  }\n" +
             "}"
-        );
-
-        ICompilationUnit unit = env.getUnit(path);
+        ));
 
         assertTrue(unit.exists());
         assertFalse(unit instanceof GroovyCompilationUnit);
     }
 
     @Test
-    public void testCreateGroovyCompilationUnit() throws Exception {
+    public void testGroovyCompilationUnit() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(groovyFile);
-        assertTrue("CompilationUnit " + groovyFile + " should exist.", unit.exists());
-        assertTrue("CompilationUnit " + groovyFile + " should be a Groovy compilation unit.", unit instanceof GroovyCompilationUnit);
+        ICompilationUnit unit = env.getUnit(groovyFile.getFullPath());
+
+        assertTrue(unit.exists());
+        assertTrue(unit instanceof GroovyCompilationUnit);
     }
 
     @Test
     public void testGetModuleNode1() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
-        unit1.becomeWorkingCopy(null);
-        ModuleNode node1 = unit1.getModuleNode();
-        ModuleNode node2 = unit1.getModuleNode();
+        GroovyCompilationUnit unit = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
+        unit.becomeWorkingCopy(null);
+        ModuleNode node1 = unit.getModuleNode();
+        ModuleNode node2 = unit.getModuleNode();
+        unit.discardWorkingCopy();
+
         assertSame("getModuleNode() should return the same object if nothing has changed underneath", node1, node2);
-        unit1.discardWorkingCopy();
     }
 
     @Test
     public void testGetModuleNode2() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        GroovyCompilationUnit unit1 = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
         unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
-        GroovyCompilationUnit unit2 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        GroovyCompilationUnit unit2 = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
         unit2.becomeWorkingCopy(null);
         ModuleNode node2 = unit2.getModuleNode();
-        assertSame("getModuleNode() should return the same object if nothing has changed underneath", node1, node2);
         unit1.discardWorkingCopy();
         unit2.discardWorkingCopy();
+
+        assertSame("getModuleNode() should return the same object if nothing has changed underneath", node1, node2);
     }
 
     @Test
     public void testGetModuleNode3() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
-        unit1.becomeWorkingCopy(null);
-        ModuleNode node1 = unit1.getModuleNode();
-        unit1.reconcile(JavaConstants.AST_LEVEL, true, unit1.owner, null);
-        ModuleNode node2 = unit1.getModuleNode();
+        GroovyCompilationUnit unit = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
+        unit.becomeWorkingCopy(null);
+        ModuleNode node1 = unit.getModuleNode();
+        unit.reconcile(JavaConstants.AST_LEVEL, true, unit.owner, null);
+        ModuleNode node2 = unit.getModuleNode();
+        unit.discardWorkingCopy();
+
         assertNotSame("getModuleNode() should not return the same object after a call to reconcile with problem detection enabled", node1, node2);
-        unit1.discardWorkingCopy();
     }
 
     @Test
-    @SuppressWarnings("rawtypes")
     public void testGetModuleNode4() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
-        unit1.becomeWorkingCopy(null);
-        ModuleNode node1 = unit1.getModuleNode();
-        unit1.makeConsistent(JavaConstants.AST_LEVEL, true, ICompilationUnit.FORCE_PROBLEM_DETECTION, new HashMap(), null);
-        ModuleNode node2 = unit1.getModuleNode();
+        GroovyCompilationUnit unit = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
+        unit.becomeWorkingCopy(null);
+        ModuleNode node1 = unit.getModuleNode();
+        unit.makeConsistent(JavaConstants.AST_LEVEL, true, ICompilationUnit.FORCE_PROBLEM_DETECTION, new HashMap<>(), null);
+        ModuleNode node2 = unit.getModuleNode();
+        unit.discardWorkingCopy();
+
         assertSame("getModuleNode() should return the same object if nothing has changed underneath", node1, node2);
-        unit1.discardWorkingCopy();
     }
 
     @Test
     public void testGetModuleNode5() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
-        unit1.becomeWorkingCopy(null);
-        ModuleNode node1 = unit1.getModuleNode();
-        unit1.getBuffer().append(" ");
-        ModuleNode node2 = unit1.getModuleNode();
+        GroovyCompilationUnit unit = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
+        unit.becomeWorkingCopy(null);
+        ModuleNode node1 = unit.getModuleNode();
+        unit.getBuffer().append(" ");
+        ModuleNode node2 = unit.getModuleNode();
+        unit.discardWorkingCopy();
+
         assertNotSame("getModuleNode() should return different objects if something has changed underneath", node1, node2);
-        unit1.discardWorkingCopy();
     }
 
     @Test
     public void testGetModuleNode6() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        GroovyCompilationUnit unit1 = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
         unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
-        GroovyCompilationUnit unit2 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        GroovyCompilationUnit unit2 = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
         unit2.becomeWorkingCopy(null);
         ModuleNode node2 = unit2.getModuleNode();
         unit1.getBuffer().append(" ");
@@ -165,10 +163,10 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
     @Test
     public void testGetModuleNode7() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        GroovyCompilationUnit unit1 = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
         unit1.becomeWorkingCopy(null);
         unit1.getModuleNode();
-        GroovyCompilationUnit unit2 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        GroovyCompilationUnit unit2 = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
         unit2.becomeWorkingCopy(null);
         unit2.getModuleNode();
         unit1.getBuffer().append(" ");
@@ -183,10 +181,9 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
     @Test
     public void testGetModuleNode8() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
-        ModuleNode node1 = unit1.getModuleNode();
-        ModuleNode node2 = unit1.getModuleNode();
-        unit1.discardWorkingCopy();
+        GroovyCompilationUnit unit = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
+        ModuleNode node1 = unit.getModuleNode();
+        ModuleNode node2 = unit.getModuleNode();
 
         assertNotSame("getModuleNode() should return the different objects if unit is not a working copy", node1, node2);
     }
@@ -194,12 +191,12 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
     @Test
     public void testGetModuleNode9() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
-        unit1.becomeWorkingCopy(null);
-        ModuleNode node1 = unit1.getModuleNode();
-        unit1.reconcile(true, null);
-        ModuleNode node2 = unit1.getModuleNode();
-        unit1.discardWorkingCopy();
+        GroovyCompilationUnit unit = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
+        unit.becomeWorkingCopy(null);
+        ModuleNode node1 = unit.getModuleNode();
+        unit.reconcile(true, null);
+        ModuleNode node2 = unit.getModuleNode();
+        unit.discardWorkingCopy();
 
         assertNotSame("getModuleNode() should return the different objects after a call to reconcile with force problem detection", node1, node2);
     }
@@ -207,186 +204,79 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
     @Test
     public void testGetModuleNode10() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
-        unit1.becomeWorkingCopy(null);
-        ModuleNode node1 = unit1.getModuleNode();
-        unit1.reconcile(false, null);
-        ModuleNode node2 = unit1.getModuleNode();
-        unit1.discardWorkingCopy();
+        GroovyCompilationUnit unit = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
+        unit.becomeWorkingCopy(null);
+        ModuleNode node1 = unit.getModuleNode();
+        unit.reconcile(false, null);
+        ModuleNode node2 = unit.getModuleNode();
+        unit.discardWorkingCopy();
 
         assertSame("getModuleNode() should return the same object after a call to reconcile with no force problem detection", node1, node2);
     }
 
     @Test
-    public void testGetNewModuleNode() throws Exception {
+    public void testGetModuleNode11() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
-        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
-        ModuleNode module1 = unit1.getModuleNode();
-        ModuleNode module2 = unit1.getNewModuleInfo().module;
-        unit1.discardWorkingCopy();
+        GroovyCompilationUnit unit = Adapters.adapt(groovyFile, GroovyCompilationUnit.class);
+        ModuleNode module1 = unit.getModuleNode();
+        ModuleNode module2 = unit.getNewModuleInfo().module;
 
         assertNotSame("getNewModuleNode() should have forced creation of a new module node", module1, module2);
     }
 
     @Test
     public void testMarkerAnnotation1() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
             "@Anno2\n" +
-            "public class X {\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
+            "class C {\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        assertEquals("Should have one annotation on type X", 1, type.getAnnotations().length);
-        IAnnotation annotation = type.getAnnotations()[0];
-        assertMarkerAnnotation(annotation, "Anno2");
+        IType type = unit.getType("C");
+        IAnnotation[] annotations = type.getAnnotations();
+
+        assertEquals(1, annotations.length);
+        assertMarkerAnnotation(annotations[0], "Anno2");
     }
 
     @Test
     public void testMarkerAnnotation2() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "public class X {\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
             "  @Anno2\n" +
-            "  public int foo = 5\n" +
-            "  public static void m() {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
+            "  public int f\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        IField field = type.getField("foo");
-        assertEquals("Should have one annotation on field foo", 1, field.getAnnotations().length);
-        IAnnotation annotation = field.getAnnotations()[0];
-        assertMarkerAnnotation(annotation, "Anno2");
+        IType type = unit.getType("C");
+        IField field = type.getField("f");
+        IAnnotation[] annotations = field.getAnnotations();
+
+        assertEquals(1, annotations.length);
+        assertMarkerAnnotation(annotations[0], "Anno2");
     }
 
     @Test
     public void testMarkerAnnotation3() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public int foo = 5\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
             "  @Anno2\n" +
-            "  public static void m() {\n" +
-            "    print \"success\"\n" +
+            "  void m() {\n" +
             "  }\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
+        IType type = unit.getType("C");
         IMethod method = type.getMethod("m", new String[0]);
-        assertEquals("Should have one annotation on method main()", 1, method.getAnnotations().length);
-        IAnnotation annotation = method.getAnnotations()[0];
-        assertMarkerAnnotation(annotation, "Anno2");
-    }
-
-    @Test
-    public void testMarkerAnnotation4() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "@p.Anno2\n" +
-            "public class X {\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n"
-        );
-        incrementalBuild();
-        env.waitForAutoBuild();
-        expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        assertEquals("Should have one annotation on type X", 1, type.getAnnotations().length);
-        IAnnotation annotation = type.getAnnotations()[0];
-        assertMarkerAnnotation(annotation, "p.Anno2");
-    }
-
-    @Test
-    public void testMarkerAnnotation5() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @p.Anno2\n" +
-            "  public int foo = 5\n" +
-            "  public static void m() {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n"
-        );
-        incrementalBuild();
-        env.waitForAutoBuild();
-        expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        IField field = type.getField("foo");
-        assertEquals("Should have one annotation on field foo", 1, field.getAnnotations().length);
-        IAnnotation annotation = field.getAnnotations()[0];
-        assertMarkerAnnotation(annotation, "p.Anno2");
-    }
-
-    @Test
-    public void testMarkerAnnotation6() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public int foo = 5\n" +
-            "  @p.Anno2\n" +
-            "  public static void m() {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n"
-        );
-        incrementalBuild();
-        env.waitForAutoBuild();
-        expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        IMethod method = type.getMethod("m", new String[0]);
-        assertEquals("Should have one annotation on method main()", 1, method.getAnnotations().length);
-        IAnnotation annotation = method.getAnnotations()[0];
-        assertMarkerAnnotation(annotation, "p.Anno2");
-    }
-
-    @Test
-    public void testMarkerAnnotation7() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "class X {\n" +
-            "  @Anno2\n" +
-            "  X() {\n" +
-            "  }\n" +
-            "}\n"
-        );
-        incrementalBuild();
-        env.waitForAutoBuild();
-        expectingNoProblems();
-
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IMethod method = unit.getType("X").getMethods()[0];
         IAnnotation[] annotations = method.getAnnotations();
 
         assertEquals(1, annotations.length);
@@ -394,184 +284,215 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
     }
 
     @Test
-    @SuppressWarnings("rawtypes")
-    public void testMarkerAnnotation8() throws Exception {
-        // source references to Groovy types go from Groovy AST -> GCUD -> JDT bindings -> Groovy AST
-        IPath root = createAnnotationGroovyProject();
-        env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "class X {\n" +
-            "  @Anno2\n" +
-            "  X() {\n" +
+    public void testMarkerAnnotation4() throws Exception {
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "@p.Anno2\n" +
+            "class C {\n" +
+            "}\n"
+        ));
+        incrementalBuild();
+        expectingNoProblems();
+        IType type = unit.getType("C");
+        IAnnotation[] annotations = type.getAnnotations();
+
+        assertEquals(1, annotations.length);
+        assertMarkerAnnotation(annotations[0], "p.Anno2");
+    }
+
+    @Test
+    public void testMarkerAnnotation5() throws Exception {
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
+            "  @p.Anno2\n" +
+            "  public int f\n" +
+            "}\n"
+        ));
+        incrementalBuild();
+        expectingNoProblems();
+        IType type = unit.getType("C");
+        IField field = type.getField("f");
+        IAnnotation[] annotations = field.getAnnotations();
+
+        assertEquals(1, annotations.length);
+        assertMarkerAnnotation(annotations[0], "p.Anno2");
+    }
+
+    @Test
+    public void testMarkerAnnotation6() throws Exception {
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
+            "  @p.Anno2\n" +
+            "  void m() {\n" +
             "  }\n" +
             "}\n"
-        );
-        IPath path = env.addGroovyClass(root, "p", "Y",
-            "package p;\n" +
-            "class Y extends X {\n" +
-            "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
+        IType type = unit.getType("C");
+        IMethod method = type.getMethod("m", new String[0]);
+        IAnnotation[] annotations = method.getAnnotations();
 
-        GroovyCompilationUnit unit = env.getUnit(path);
-        ClassNode x = unit.getModuleNode().getClasses().get(0).getSuperClass();
-        List annotations = x.getDeclaredConstructors().get(0).getAnnotations();
+        assertEquals(1, annotations.length);
+        assertMarkerAnnotation(annotations[0], "p.Anno2");
+    }
 
-        assertEquals(1, annotations.size());
+    @Test
+    public void testMarkerAnnotation7() throws Exception {
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
+            " @p.Anno2\n" +
+            "  C() {}\n" +
+            "}\n"
+        ));
+        incrementalBuild();
+        expectingNoProblems();
+        IMethod method = unit.getType("C").getMethods()[0];
+        IAnnotation[] annotations = method.getAnnotations();
+
+        assertEquals(1, annotations.length);
+        assertMarkerAnnotation(annotations[0], "p.Anno2");
+
+        // source references to Groovy types go from Groovy AST -> GCUD -> JDT bindings -> Groovy AST
+        unit = env.getUnit(env.addGroovyClass(src, "p", "D", "package p\nclass D extends C {\n}\n"));
+        incrementalBuild();
+        expectingNoProblems();
+        ClassNode c = unit.getModuleNode().getClasses().get(0).getSuperClass();
+        // TODO: figure out why the PackageBinding for "p" cannot resolve "Anno2"
+        assertEquals(0, c.getDeclaredConstructors().get(0).getAnnotations().size());
     }
 
     @Test
     public void testSingleMemberAnnotation1() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
             "@Anno1(Target.class)\n" +
-            "public class X {\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
+            "class C {\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        assertEquals("Should have one annotation on type X", 1, type.getAnnotations().length);
+        IType type = unit.getType("C");
+
+        assertEquals(1, type.getAnnotations().length);
         assertSingleMemberAnnotation(type, "Target");
     }
 
     @Test
     public void testSingleMemberAnnotation2() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "public class X {\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
             "  @Anno1(Target.class)\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
+            "  public int f\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        IField field = type.getField("foo");
-        assertEquals("Should have one annotation on field foo", 1, field.getAnnotations().length);
+        IType type = unit.getType("C");
+        IField field = type.getField("f");
+
+        assertEquals(1, field.getAnnotations().length);
         assertSingleMemberAnnotation(field, "Target");
     }
 
     @Test
     public void testSingleMemberAnnotation3() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public int foo = 5\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
             "  @Anno1(Target.class)\n" +
-            "  public static void m() {\n" +
-            "    print \"success\"\n" +
+            "  void m() {\n" +
             "  }\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
+        IType type = unit.getType("C");
         IMethod method = type.getMethod("m", new String[0]);
-        assertEquals("Should have one annotation on field m", 1, method.getAnnotations().length);
+
+        assertEquals(1, method.getAnnotations().length);
         assertSingleMemberAnnotation(method, "Target");
     }
 
     @Test
     public void testSingleMemberAnnotation4() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
             "@Anno1(p.Target.class)\n" +
-            "public class X {\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
+            "class C {\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        assertEquals("Should have one annotation on type X", 1, type.getAnnotations().length);
+        IType type = unit.getType("C");
+
+        assertEquals(1, type.getAnnotations().length);
         assertSingleMemberAnnotation(type, "p.Target");
     }
 
     @Test
     public void testSingleMemberAnnotation5() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "public class X {\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
             "  @Anno1(p.Target.class)\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
+            "  public int f\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
-        IField field = type.getField("foo");
-        assertEquals("Should have one annotation on field foo", 1, field.getAnnotations().length);
+        IType type = unit.getType("C");
+        IField field = type.getField("f");
+
+        assertEquals(1, field.getAnnotations().length);
         assertSingleMemberAnnotation(field, "p.Target");
     }
 
     @Test
     public void testSingleMemberAnnotation6() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public int foo = 5\n" +
+        IPath src = createAnnotationGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "C",
+            "package p\n" +
+            "class C {\n" +
             "  @Anno1(p.Target.class)\n" +
-            "  public static void m() {\n" +
-            "    print \"success\"\n" +
+            "  void m() {\n" +
             "  }\n" +
             "}\n"
-        );
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        IType type = unit.getType("X");
+        IType type = unit.getType("C");
         IMethod method = type.getMethod("m", new String[0]);
-        assertEquals("Should have one annotation on field m", 1, method.getAnnotations().length);
+
+        assertEquals(1, method.getAnnotations().length);
         assertSingleMemberAnnotation(method, "p.Target");
     }
 
     @Test
     public void testAnonymousInner1() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
+        IPath src = createEmptyGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "X",
+            "package p\n" +
             "def foo = new Runnable() {\n" +
             "  void run() {}\n" +
-            "}"
-        );
+            "}\n"
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        unit.becomeWorkingCopy(new NullProgressMonitor());
+        unit.becomeWorkingCopy(null);
         try {
             IType type = unit.getType("X");
             IMethod method = type.getMethod("run", new String[0]);
@@ -589,22 +510,20 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
 
     @Test
     public void testAnonymousInner2() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
+        IPath src = createEmptyGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "X",
+            "package p\n" +
             "def foo = new Runnable() {\n" +
             "  void run() {}\n" +
             "}\n" +
             "foo = new Runnable() {\n" +
             "  void run() {}\n" +
             "  void other() {}\n" +
-            "}"
-        );
+            "}\n"
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        unit.becomeWorkingCopy(new NullProgressMonitor());
+        unit.becomeWorkingCopy(null);
         try {
             IType type = unit.getType("X");
             IMethod method = type.getMethod("run", new String[0]);
@@ -628,22 +547,20 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
 
     @Test
     public void testAnonymousInner3() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
+        IPath src = createEmptyGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "X",
+            "package p\n" +
             "class Foo {\n" +
             "  def run() {\n" +
             "    def foo = new Runnable() {\n" +
             "      void run() {}\n" +
             "    }\n" +
             "  }\n" +
-            "}"
-        );
+            "}\n"
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        unit.becomeWorkingCopy(new NullProgressMonitor());
+        unit.becomeWorkingCopy(null);
         try {
             IType type = unit.getType("Foo");
             IMethod method = type.getMethod("run", new String[0]);
@@ -661,9 +578,9 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
 
     @Test
     public void testAnonymousInner4() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
+        IPath src = createEmptyGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "X",
+            "package p\n" +
             "class Foo {\n" +
             "  def run() {\n" +
             "    def foo = new Runnable() {\n" +
@@ -674,13 +591,11 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
             "      void other() {}\n" +
             "    }\n" +
             "  }\n" +
-            "}"
-        );
+            "}\n"
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        unit.becomeWorkingCopy(new NullProgressMonitor());
+        unit.becomeWorkingCopy(null);
         try {
             IType type = unit.getType("Foo");
             IMethod method = type.getMethod("run", new String[0]);
@@ -704,19 +619,18 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
 
     @Test
     public void testAnonymousInner5() throws Exception {
-        IPath path = env.addGroovyClass(createAnnotationGroovyProject(), "p", "X",
-            "package p;\n" +
+        IPath src = createEmptyGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "X",
+            "package p\n" +
             "class Foo {\n" +
             "  def foo = new Runnable() {\n" +
             "    void run() {}\n" +
             "  }\n" +
-            "}"
-        );
+            "}\n"
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        unit.becomeWorkingCopy(new NullProgressMonitor());
+        unit.becomeWorkingCopy(null);
         try {
             IType type = unit.getType("Foo");
             IField field = type.getField("foo");
@@ -729,22 +643,20 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
         }
     }
 
-    @Test // ensures classes in a script are not treated as anon inners
+    @Test // ensures classes in a script are not treated as anon. inner types
     public void testAnonymousInner6() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        IPath path = env.addGroovyClass(root, "p", "X",
-            "package p;\n" +
+        IPath src = createEmptyGroovyProject();
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(src, "p", "X",
+            "package p\n" +
             "class Other {}\n" +
             "def foo = new Runnable() {\n" +
             "  void run() {}\n" +
             "}\n" +
-            "class Other2 {}"
-            );
+            "class Other2 {}\n"
+        ));
         incrementalBuild();
-        env.waitForAutoBuild();
         expectingNoProblems();
-        GroovyCompilationUnit unit = env.getUnit(path);
-        unit.becomeWorkingCopy(new NullProgressMonitor());
+        unit.becomeWorkingCopy(null);
         try {
             unit.getType("Other").exists();
             unit.getType("Other2").exists();
@@ -764,12 +676,11 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
 
     @Test
     public void testVariadicMethod1() throws Exception {
-        IPath path = env.addGroovyClass(createEmptyGroovyProject(), "X",
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(createEmptyGroovyProject(), "X",
             "class X {\n" +
-            "  private void fn(String one, int... two) {}\n" +
-            "}");
-
-        GroovyCompilationUnit unit = env.getUnit(path);
+            "  private void proc(String one, int... two) {}\n" +
+            "}\n"
+        ));
         Set<IProblem> problems = reconcile(unit);
         assertTrue(problems.isEmpty());
     }

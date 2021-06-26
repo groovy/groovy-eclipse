@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ public class JDTMethodNode extends MethodNode implements JDTNode {
                     // if the declaring entity for the member is not a SourceTypeBinding
                     // then the annotations will have already been discarded/lost
                     for (AnnotationBinding annotationBinding : methodBinding.getAnnotations()) {
-                        super.addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                        super.addAnnotation(resolver.convertToAnnotationNode(annotationBinding));
                     }
                     bits |= ANNOTATIONS_INITIALIZED;
                 }

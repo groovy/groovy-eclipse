@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.junit.Test;
 
@@ -132,7 +129,6 @@ public final class MoveRenameCopyTests extends BuilderTestSuite {
 
         IPath root = env.getPackageFragmentRootPath(projectPath, "src");
         IPath path = env.addGroovyClass(root, "Groovy", contents);
-        IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        return env.getUnit(path);
     }
 }
