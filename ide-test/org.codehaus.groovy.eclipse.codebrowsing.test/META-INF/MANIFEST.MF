@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codebrowsing.test;singleton:=true
 Bundle-Name: Groovy Code Browsing Tests
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 4.3.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codebrowsing.tests
-Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="4.2.0",
- org.codehaus.groovy.eclipse.tests;bundle-version="4.2.0"
+Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="4.3.0",
+ org.codehaus.groovy.eclipse.tests;bundle-version="4.3.0"
