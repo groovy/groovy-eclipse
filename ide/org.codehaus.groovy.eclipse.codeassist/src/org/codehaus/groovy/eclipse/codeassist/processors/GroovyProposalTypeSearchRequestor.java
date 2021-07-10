@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.beans.Introspector;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -82,8 +83,8 @@ import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
+import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;
 import org.eclipse.jdt.internal.core.NameLookup;
-import org.eclipse.jdt.internal.core.nd.util.CharArrayMap;
 import org.eclipse.jdt.internal.corext.util.TypeFilter;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
@@ -112,8 +113,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private int foundConstructorsCount;
 
     private ObjectVector acceptedTypes;
-    private CharArrayMap<?> acceptedPackages;
     private ObjectVector acceptedConstructors;
+    private SimpleSetOfCharArray acceptedPackages;
 
     /** Array of simple name, fully-qualified name pairs. Default imports should be included (aka BigDecimal, etc.). */
     private char[][][] imports;
@@ -189,8 +190,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
 
         if (acceptedPackages == null)
-            acceptedPackages = new CharArrayMap<>();
-        acceptedPackages.put(packageName, null);
+            acceptedPackages = new SimpleSetOfCharArray();
+        acceptedPackages.add(packageName);
     }
 
     @Override
@@ -368,7 +369,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return Collections.emptyList();
         }
 
-        return acceptedPackages.keys().stream()
+        return Stream.of(acceptedPackages.values).filter(Objects::nonNull)
             .map(packageName -> {
                 GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, context.completionLocation);
                 proposal.setDeclarationSignature(packageName);
