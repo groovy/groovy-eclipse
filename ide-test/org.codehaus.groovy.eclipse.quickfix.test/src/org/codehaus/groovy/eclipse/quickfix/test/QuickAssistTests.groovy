@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -339,16 +339,16 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testConvertToMultiLine1() {
         def assertConversion = { String pre, String post ->
-            assertConversion("'" + pre + "'", "'''" + post + "'''", 0, 0, new ConvertToMultiLineStringProposal())
+            assertConversion("'${pre}'", "'''${post}'''", 0, 0, new ConvertToMultiLineStringProposal())
         }
         assertConversion('a', 'a')
         assertConversion('.', '.')
         assertConversion('$', '$')
         assertConversion('\\"', '"')
-        assertConversion("\\'", "\\'") // leading and trailing single-quote is special case
-        assertConversion("\\' ", "\\' ")
-        assertConversion(" \\'", " \\'")
-        assertConversion(" \\' ", " \' ")
+        assertConversion('\\\'', '\\\'') // leading and trailing single-quote is special case
+        assertConversion('\\\' ', '\\\' ')
+        assertConversion(' \\\'', ' \\\'')
+        assertConversion(' \\\' ', ' \' ')
         assertConversion('\\t', '\t')
         assertConversion('\\n', '\n')
         assertConversion('\\r', '\\r')
@@ -394,7 +394,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testConvertToMultiLine6() {
         assertConversion(
-            '"\' \'\'\' \'"', // "' ''' '"
+            $/"' ''' '"/$,
             $/'''\' \'\'\' \''''/$,
             0, 9, new ConvertToMultiLineStringProposal())
     }
@@ -409,23 +409,17 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testConvertToMultiLine8() {
-        String original = $/
-            'A\n' +
-            "B\n" +
-            """C\n""" +
-            D
-            /$.substring(1).stripIndent()
-
-        String expected = $/
-            """A
-            B
-            C
-            $${D}"""
-            /$.substring(1).stripIndent()
-
-        assertConversion(
-            original, expected,
-            0, 29, new ConvertToMultiLineStringProposal())
+        assertConversion('''\
+            |'A\\n' +
+            |"B\\n" +
+            |"""C\\n""" +
+            |D
+            |'''.stripMargin(), '''\
+            |"""A
+            |B
+            |C
+            |${D}"""
+            |'''.stripMargin(), 0, 29, new ConvertToMultiLineStringProposal())
     }
 
     @Test

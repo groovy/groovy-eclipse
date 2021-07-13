@@ -744,7 +744,7 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Single quotation marks should be used for simple string literals" /><!-- ^(?:\s{4})*+(?!//|[/\s]\*|\|) tries to exclude comments or multi-line string continuation -->
-        <property name="format" value="^(?:\s{4})*+(?!//|[/\s]\*|\|)(?:&apos;[^&apos;]*&apos;|&quot;[^&quot;]*\$[^&quot;]*&quot;|[^&quot;])*+((?&lt;!\\)&quot;{2}(?!&quot;)|&quot;(?:\\&quot;|[^\$&quot;])+&quot;(?!\s*:)|(?&lt;=\bcase\s{1,9})&quot;(?:\\&quot;|[^\$&quot;])+&quot;)" />
+        <property name="format" value="^(?:\s{4})*+(?!//|[/\s]\*|\|)(?:&apos;(?:\\&apos;|[^&apos;])*&apos;|&quot;(?:\\&quot;|[^&quot;])*\$(?:\\&quot;|[^&quot;])*&quot;|[^&quot;])*+((?&lt;!\\)&quot;{2}(?!&quot;)|&quot;(?:\\&quot;|[^\$&quot;])+&quot;(?!\s*:)|(?&lt;=\bcase\s{1,9})&quot;(?:\\&quot;|[^\$&quot;])+&quot;)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyStringLiterals" />
     </module>

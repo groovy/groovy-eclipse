@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ final class SemicolonRemoverTests {
 
     @Test
     void testCommentInString() {
-        assertContentChangedFromTo("def a = 'foo; // bar'; // baz;", "def a = 'foo; // bar' // baz;")
+        assertContentChangedFromTo('def a = \'foo; // bar\'; // baz;', 'def a = \'foo; // bar\' // baz;')
         assertContentChangedFromTo('def a = "foo; // bar"; // baz;', 'def a = "foo; // bar" // baz;')
     }
 
@@ -131,43 +131,37 @@ final class SemicolonRemoverTests {
 
     @Test
     void testClosureOnNextLine1() {
-        assertContentUnchanged '''\
-            def a = m();
-            { -> print a }
-            '''
+        assertContentUnchanged 'def a = m();\n\t{ -> print a }'
     }
 
     @Test
     void testClosureOnNextLine2() {
-        assertContentUnchanged '''\
-            def b = '123';
-            { -> b = 123 }
-            '''
+        assertContentUnchanged 'def b = "123";\n\t{ -> b = 123 }'
     }
 
     @Test
     void testSelection_ifNothingIsSelected_theWholeDocumentShouldBeFormatted() {
         assertSelectedContentChangedFromTo(null, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
 
-        def selection = new TextSelection(5, 0) // selecting: nothing
+        def selection = new TextSelection(5, 0) // selecting nothing
         assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
     }
 
     @Test
     void testSelection_ifEverythingIsSelected_theWholeDocumentShouldBeFormatted() {
-        def selection = new TextSelection(0, 21) // selecting: everything
+        def selection = new TextSelection(0, 21) // selecting everything
         assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
     }
 
     @Test
     void testSelection_ifARegionWithAnUnnecessarySemicolonIsSelected_theSemicolonShouldBeRemoved() {
-        def selection = new TextSelection(13, 6) // selecting: { 2; }
+        def selection = new TextSelection(13, 6) // selecting '{ 2; }'
         assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1; }, { 2 }];')
     }
 
     @Test
     void testSelection_ifARegionWithANecessarySemicolonIsSelected_theSemicolonShouldNotBeRemoved() {
-        def selection = new TextSelection(0, 6) // selecting: a = 1;
+        def selection = new TextSelection(0, 6) // selecting 'a = 1;'
         assertSelectedContentChangedFromTo(selection, 'a = 1; b = 2;', 'a = 1; b = 2;')
     }
 }
