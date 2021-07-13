@@ -619,7 +619,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, isStaticExpression, 0, methodCallArgumentTypes);
         }
 
-        if (!isLhsExpression && methodCallArgumentTypes != null) {
+        boolean isMethodCall = (!isLhsExpression && methodCallArgumentTypes != null);
+
+        if (isMethodCall) {
             if (!isStaticExpression && declaringType.implementsInterface(ClassHelper.GROOVY_INTERCEPTABLE_TYPE)) {
                 return declaringType.getMethod("invokeMethod", new Parameter[] {new Parameter(VariableScope.STRING_CLASS_NODE, "name"), new Parameter(VariableScope.OBJECT_CLASS_NODE, "args")});
             }
@@ -631,7 +633,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // name may still map to something that is callable; keep looking
         }
 
-        if (!isStaticExpression && directFieldAccess == 0 && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE)) {
+        if (!isMethodCall && !isStaticExpression && directFieldAccess == 0 && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE)) {
             ClassNode resolvedType;
             if (isLhsExpression) {
                 resolvedType = VariableScope.VOID_CLASS_NODE;
@@ -706,8 +708,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }).findFirst();
             if (mopMethod.isPresent()) {
-                return mopMethod.map(mm -> (isLhsExpression || methodCallArgumentTypes == null)
-                    ? createDynamicProperty(name, VariableScope.OBJECT_CLASS_NODE, declaringType, isStaticExpression) : mm).get();
+                return mopMethod.map(mm -> !isMethodCall ? createDynamicProperty(name, VariableScope.OBJECT_CLASS_NODE, declaringType, isStaticExpression) : mm).get();
             }
         }
 

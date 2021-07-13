@@ -1262,7 +1262,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1230
-    public void testWithAndClosure8a() {
+    public void testWithAndClosure9() {
         //@formatter:off
         String contents =
             "class C {\n" +
@@ -1281,6 +1281,24 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         assertDeclaringType(contents, "x", "D");
         assertType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1277
+    public void testWithAndClosure10() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  Number x\n" +
+            "  def m() {\n" +
+            "    [x:'map'].with {\n" +
+            "      getX()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclaringType(contents, "getX", "C");
+        assertType(contents, "getX", "java.lang.Number");
     }
 
     @Test

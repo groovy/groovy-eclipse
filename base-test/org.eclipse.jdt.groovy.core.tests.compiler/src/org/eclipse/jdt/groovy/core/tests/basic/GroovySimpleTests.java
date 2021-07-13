@@ -5208,6 +5208,50 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  public void setFlag(boolean arg0);\n");
     }
 
+    @Test
+    public void testGroovyPropertyAccessors6() {
+        //@formatter:off
+        String[] sources = {
+            "G.groovy",
+            "class G {\n" +
+            "  def p = 'G'\n" +
+            "  void test() {\n" +
+            "    [p:'map'].with {\n" +
+            "      print getP()\n" + // resolves to enclosing class not map
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new G().test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "G");
+    }
+
+    @Test
+    public void testGroovyPropertyAccessors7() {
+        //@formatter:off
+        String[] sources = {
+            "G.groovy",
+            "class G {\n" +
+            "  def p = 'G'\n" +
+            "  void test() {\n" +
+            "    [p:'map'].with {\n" +
+            "      print p\n" + // resolves to map not enclosing class
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new G().test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "map");
+    }
+
     @Test // check no duplicate created for 'String getProp'
     public void testGroovyPropertyAccessors_ErrorCases1() {
         //@formatter:off
