@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,12 @@ import java.util.Map;
 import java.util.regex.Matcher;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
@@ -45,6 +46,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.text.edits.DeleteEdit;
+import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -97,8 +99,8 @@ public class ConvertToPropertyAction extends Action {
                 call = (StaticMethodCallExpression) node;
             }
 
-            if (call != null && call.getArguments() instanceof ArgumentListExpression) {
-                ArgumentListExpression args = (ArgumentListExpression) call.getArguments();
+            if (call != null && call.getArguments() instanceof TupleExpression) {
+                TupleExpression args = (TupleExpression) call.getArguments();
 
                 Matcher match; // check for accessor or mutator
                 if (args.getExpressions().isEmpty() && (match = compile("(?:get|is)(\\p{javaJavaIdentifierPart}+)").matcher(call.getMethodAsString())).matches()) {
@@ -124,8 +126,17 @@ public class ConvertToPropertyAction extends Action {
                     if (JavaCore.INSERT.equals(options.get(FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR))) {
                         replacement.append(' ');
                     }
+                    if (args.getExpression(0) instanceof NamedArgumentListExpression) {
+                        replacement.append('[');
+                    }
                     edits.addChild(new ReplaceEdit(offset, length, replacement.toString()));
-                    if (gcu.getContents()[args.getEnd()] == ')') edits.addChild(new DeleteEdit(args.getEnd(), 1));
+
+                    boolean rparen = (args.getEnd() < gcu.getContents().length && gcu.getContents()[args.getEnd()] == ')');
+                    if (args.getExpression(0) instanceof NamedArgumentListExpression) {
+                        edits.addChild(rparen ? new ReplaceEdit(args.getEnd(), 1, "]") : new InsertEdit(args.getEnd(), "]"));
+                    } else if (rparen) {
+                        edits.addChild(new DeleteEdit(args.getEnd(), 1));
+                    }
 
                     return edits;
                 }

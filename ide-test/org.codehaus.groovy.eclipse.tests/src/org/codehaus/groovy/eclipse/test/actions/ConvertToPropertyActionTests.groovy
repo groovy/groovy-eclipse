@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,6 +77,34 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
         addGroovySource 'class Foo { void setURLEncoder(encoder) {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}URLEncoder(null)"
         assertEditorContents 'new Foo().URLEncoder = null'
+    }
+
+    @Test
+    void testSetterToProperty4() {
+        addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
+        convertToProperty "new Foo().set${CARET}Map(x: null)"
+        assertEditorContents 'new Foo().map = [x: null]'
+    }
+
+    @Test
+    void testSetterToProperty5() {
+        addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
+        convertToProperty "new Foo().set${CARET}Map('x' : null, y:1)"
+        assertEditorContents 'new Foo().map = [\'x\' : null, y:1]'
+    }
+
+    @Test
+    void testSetterToProperty6() {
+        addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
+        convertToProperty "new Foo().set${CARET}Map(['x' : null, y:1 ] )"
+        assertEditorContents 'new Foo().map = [\'x\' : null, y:1 ] '
+    }
+
+    @Test
+    void testSetterToProperty7() {
+        addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
+        convertToProperty "new Foo().set${CARET}Map x: null"
+        assertEditorContents 'new Foo().map = [x: null]'
     }
 
     @Test
@@ -244,12 +272,4 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
         convertToProperty "new Foo().set${CARET}Something()"
         assertEditorContents 'new Foo().setSomething()'
     }
-
-    @Test
-    void testNoConversion10() {
-        convertToProperty "new Date().set${CARET}Time(time: 1234L)"
-        assertEditorContents 'new Date().setTime(time: 1234L)'
-    }
-
-    // TODO: Convert "setX(p1: v1, p2: v2)" to "x = [p1: v1, p2: v2]"?
 }
