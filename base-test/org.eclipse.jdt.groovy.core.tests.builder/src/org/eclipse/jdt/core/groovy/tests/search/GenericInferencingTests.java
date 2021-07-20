@@ -1007,6 +1007,24 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertEquals("java.lang.String", printTypeName(m.getReturnType()));
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1282
+    public void testClosure15() {
+        String contents =
+            "def <T> void test(Iterator<T> it) {\n" +
+            "  it.forEachRemaining{e->}\n" +
+            "}\n";
+        assertType(contents, "e", "T");
+    }
+
+    @Test
+    public void testClosure16() {
+        String contents =
+            "void test(List list) {\n" +
+            "  list.stream().map{e->}\n" +
+            "}\n";
+        assertType(contents, "e", "java.lang.Object");
+    }
+
     @Test
     public void testArrayDGM() {
         String contents =

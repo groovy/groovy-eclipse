@@ -968,7 +968,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 Parameter[] parameters = node.getParameters();
                 for (int i = 0, n = parameters.length; i < n; i += 1) {
                     // only change the type of the parameter if it's not explicitly defined
-                    if (parameters[i].isDynamicTyped() && !VariableScope.OBJECT_CLASS_NODE.equals(inferredParamTypes[i])) {
+                    if (parameters[i].isDynamicTyped() && (inferredParamTypes[i].isGenericsPlaceHolder() || !inferredParamTypes[i].equals(VariableScope.OBJECT_CLASS_NODE))) {
                         parameters[i].setType(inferredParamTypes[i]);
                     }
                 }
