@@ -2308,7 +2308,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             super.visitForLoop(forLoop);
         } else {
             collectionExpression.visit(this);
+            /* GRECLIPSE edit -- GROOVY-10179
             final ClassNode collectionType = getType(collectionExpression);
+            */
+            ClassNode collectionType;
+            if (collectionExpression instanceof VariableExpression && hasInferredReturnType(collectionExpression)) {
+                collectionType = getInferredReturnType(collectionExpression);
+            } else {
+                collectionType = getType(collectionExpression);
+            }
+            // GRECLIPSE end
             ClassNode forLoopVariableType = forLoop.getVariableType();
             ClassNode componentType;
             if (Character_TYPE.equals(ClassHelper.getWrapper(forLoopVariableType)) && STRING_TYPE.equals(collectionType)) {
@@ -3932,8 +3941,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         // for arguments, we need to visit closures *after* the method has been chosen
 
-
+        /* GRECLIPSE edit
         ClassNode receiver = getType(objectExpression);
+        */
+        ClassNode receiver;
+        if (objectExpression instanceof VariableExpression && hasInferredReturnType(objectExpression)) {
+            receiver = getInferredReturnType(objectExpression);
+        } else {
+            receiver = getType(objectExpression);
+        }
+        // GRECLIPSE end
         visitMethodCallArguments(receiver, argumentList, false, null);
 
         ClassNode[] args = getArgumentTypes(argumentList);
@@ -4345,8 +4362,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      */
     protected List<Receiver<String>> makeOwnerList(final Expression objectExpression) {
         final ClassNode receiver = getType(objectExpression);
-        /* GRECLIPSE edit -- GROOVY-9586
         List<Receiver<String>> owners = new LinkedList<Receiver<String>>();
+        /* GRECLIPSE edit -- GROOVY-9586, GROOVY-10180
         owners.add(Receiver.<String>make(receiver));
         if (isClassClassNodeWrappingConcreteType(receiver)) {
             GenericsType clazzGT = receiver.getGenericsTypes()[0];
@@ -4357,21 +4374,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         addSelfTypes(receiver, owners);
         */
-        List<Receiver<String>> owners = new ArrayList<>();
-        if (isClassClassNodeWrappingConcreteType(receiver)) {
-            ClassNode staticType = receiver.getGenericsTypes()[0].getType();
-            owners.add(Receiver.make(staticType)); // Type from Class<Type>
-            addTraitType(staticType, owners); // T in Class<T$Trait$Helper>
-            owners.add(Receiver.make(receiver)); // Class<Type>
-        } else {
-            owners.add(Receiver.make(receiver));
-            if (receiver.isInterface()) {
-                owners.add(Receiver.make(OBJECT_TYPE));
-            }
-            addSelfTypes(receiver, owners);
-            addTraitType(receiver, owners);
-        }
-        // GRECLIPSE end
         if (!typeCheckingContext.temporaryIfBranchTypeInformation.empty()) {
             List<ClassNode> potentialReceiverType = getTemporaryTypesForExpression(objectExpression);
             if (potentialReceiverType != null) {
@@ -4394,6 +4396,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     Receiver.<String>make(typeCheckingContext.getEnclosingClassNode()));
             addReceivers(owners, enclosingClass, typeCheckingContext.delegationMetadata.getParent(), "owner.");
         }
+        // GRECLIPSE add
+        else if (isClassClassNodeWrappingConcreteType(receiver)) {
+            ClassNode staticType = receiver.getGenericsTypes()[0].getType();
+            owners.add(Receiver.make(staticType)); // Type from Class<Type>
+            addTraitType(staticType, owners); // T in Class<T$Trait$Helper>
+            owners.add(Receiver.make(receiver)); // Class<Type>
+        } else {
+            owners.add(Receiver.make(receiver));
+            addSelfTypes(receiver, owners);
+            addTraitType(receiver, owners);
+            if (receiver.isInterface()) {
+                owners.add(Receiver.make(OBJECT_TYPE));
+            }
+        }
+        // GRECLIPSE end
         return owners;
     }
 

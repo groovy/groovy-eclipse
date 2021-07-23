@@ -437,6 +437,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked6240() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<String,Number> map) {\n" +
+            "  for (e in map) {\n" +
+            "    print \"${e.key.toUpperCase()}${e.value.intValue()}\"\n" +
+            "  }\n" +
+            "}\n" +
+            "test(a:1,b:2,c:3.14)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "A1B2C3");
+    }
+
+    @Test
     public void testTypeChecked6786() {
         //@formatter:off
         String[] sources = {
@@ -3035,5 +3053,45 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10179() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(args) {\n" +
+            "  if (args instanceof Map) {\n" +
+            "    for (e in args) {\n" +
+            "      print \"${e.key}${e.value}\"\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test(a:1,b:2,c:3.14)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "a1b2c3.14");
+    }
+
+    @Test
+    public void testTypeChecked10180() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(args) {\n" +
+            "  if (args instanceof Map) {\n" +
+            "    args.each { e ->\n" +
+            "      print \"${e.key}${e.value}\"\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test(a:1,b:2,c:3.14)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "a1b2c3.14");
     }
 }
