@@ -259,6 +259,18 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testSet9() {
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(obj) {\n" +
+            "  if (obj instanceof Map)\n" +
+            "    def xxx = obj.entrySet()\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.util.Set<java.util.Map$Entry<java.lang.Object,java.lang.Object>>");
+    }
+
+    @Test
     public void testMap0() {
         String contents =
             "def xxx = Collections.emptyMap()\n";

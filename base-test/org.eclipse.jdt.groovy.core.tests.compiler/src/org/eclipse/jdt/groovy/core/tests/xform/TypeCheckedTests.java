@@ -35,8 +35,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "import groovy.transform.TypeChecked\n"+
-            "@TypeChecked\n"+
+            "@groovy.transform.TypeChecked\n"+
             "void method(String message) {\n"+
             "  if (rareCondition) {\n"+
             "    println \"Did you spot the error in this ${message.toUppercase()}?\"\n"+
@@ -47,12 +46,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Main.groovy (at line 4)\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
             "\tif (rareCondition) {\n" +
             "\t    ^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - The variable [rareCondition] is undeclared.\n" +
             "----------\n" +
-            "2. ERROR in Main.groovy (at line 5)\n" +
+            "2. ERROR in Main.groovy (at line 4)\n" +
             "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
             "\t                                          ^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()." +
@@ -65,8 +64,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "import groovy.transform.TypeChecked\n" +
-            "@TypeChecked\n" +
+            "@groovy.transform.TypeChecked\n" +
             "void method(String message) {\n" +
             "  List<Integer> ls = new ArrayList<Integer>()\n" +
             "  ls.add(123)\n" +
@@ -77,37 +75,15 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Main.groovy (at line 6)\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
             "\tls.add(\'abc\')\n" +
             "\t^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9412
-    public void testTypeChecked3() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "interface I {\n" +
-            "}\n" +
-            "enum E implements I {\n" +
-            "  X\n" +
-            "}\n" +
-            "@groovy.transform.TypeChecked\n" +
-            "void test() {\n" +
-            "  List<I> list = []\n" +
-            "  list.add(E.X)\n" +
-            "}\n" +
-            "test()\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources);
-    }
-
     @Test
-    public void testTypeChecked4() {
+    public void testTypeChecked3() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -125,7 +101,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked5() {
+    public void testTypeChecked4() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -143,7 +119,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked6() {
+    public void testTypeChecked5() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -161,7 +137,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked7() {
+    public void testTypeChecked6() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -181,7 +157,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked8() {
+    public void testTypeChecked7() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -202,7 +178,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked9() {
+    public void testTypeChecked8() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -222,7 +198,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked10() {
+    public void testTypeChecked9() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -237,8 +213,49 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1281
+    public void testTypeChecked10() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Object v1 = 'a'\n" +
+            "  Object v2 = 'b'\n" +
+            "  [v1, v2].each { v ->\n" +
+            "    if (v instanceof Map) {\n" +
+            "      v.entrySet().each { e ->\n" +
+            "        def s = e.value\n" + // No such property "value" for Object
+            "        if (s instanceof String)\n" +
+            "          e.value = s.toUpperCase()\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
     @Test
     public void testTypeChecked11() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "void test(Map args) {\n" +
+            "  Set<String> keys = args.keySet()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked12() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -267,7 +284,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked12() {
+    public void testTypeChecked13() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -287,7 +304,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked13() {
+    public void testTypeChecked14() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -311,7 +328,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked14() {
+    public void testTypeChecked15() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -343,7 +360,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked15() {
+    public void testTypeChecked16() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -1211,7 +1228,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  def map = [key: []]\n" +
             "  map.add('foo','bar')\n" +
             "}\n" +
-            "test()",
+            "test()\n",
         };
         //@formatter:on
 
@@ -1237,7 +1254,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  })\n" +
             "  Iterable<String> list = new LinkedList()\n" +
             "}\n" +
-            "test()",
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked9412() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I {\n" +
+            "}\n" +
+            "enum E implements I {\n" +
+            "  X\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  List<I> list = []\n" +
+            "  list.add(E.X)\n" +
+            "}\n" +
+            "test()\n",
         };
         //@formatter:on
 

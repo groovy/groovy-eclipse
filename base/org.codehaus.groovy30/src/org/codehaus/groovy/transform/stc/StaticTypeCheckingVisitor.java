@@ -5804,13 +5804,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         // 2) resolve type parameters of method's enclosing context
 
-        if (context != null) {
-            returnType = applyGenericsContext(context, returnType);
-
-            if (receiver.getGenericsTypes() == null && receiver.redirect().getGenericsTypes() != null && GenericsUtils.hasUnresolvedGenerics(returnType)) {
-                returnType = returnType.getPlainNodeReference(); // GROOVY-10049: do not return "Stream<E>" for raw type "List#stream()"
-            }
-        }
+        if (context != null) returnType = applyGenericsContext(context, returnType);
 
         // 3) resolve bounds of type parameters from calling context
 
