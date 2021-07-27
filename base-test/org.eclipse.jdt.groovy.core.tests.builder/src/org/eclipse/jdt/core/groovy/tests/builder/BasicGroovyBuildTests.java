@@ -581,7 +581,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  public static void doIt(Runnable runner = null) {\n" +
             "    runner = runner ?: new DefaultRunnable()\n" + // DefaultRunnable is a Java type, so it's not in the CompileUnit
             "  }\n" +
-            "}");
+            "}\n");
 
         fullBuild(paths[0]);
         expectingNoProblems();
@@ -711,7 +711,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "      }\n" +
             "    }\n" +
             "  }\n" +
-            "}");
+            "}\n");
         //@formatter:on
 
         incrementalBuild(paths[0]);
@@ -804,10 +804,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "public class HttpSensorAdapter {}\n" +
             "\n" +
             "public class Foo implements ValueProvider<String> {\n" +
-            "public String compute() {\n" +
-            "  return null\n" +
-            "}\n" +
-            "}");
+            "  public String compute() {\n" +
+            "    return null\n" +
+            "  }\n" +
+            "}\n");
         //@formatter:on
 
         //@formatter:off
@@ -830,10 +830,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "public class HttpSensorAdapter {}\n" +
             "\n" +
             "public class Foo implements ValueProvider<String> {\n" +
-            "public String compute() {\n" +
-            "  return null\n" +
-            "}\n" +
-            "}");
+            "  public String compute() {\n" +
+            "    return null\n" +
+            "  }\n" +
+            "}\n");
         //@formatter:on
 
         incrementalBuild(paths[0]);
@@ -3477,7 +3477,69 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testMultiProjectDependencies() throws Exception {
+    public void testMultiProjectDependencies1() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+        env.addRequiredProject(paths[0], new Path("/Unknown"), true);
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "p", "Main",
+            "package p\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
+
+        fullBuild();
+        expectingNoProblems();
+        expectingCompiledClasses("p.Main");
+    }
+
+    @Test
+    public void testMultiProjectDependencies2() throws Exception {
+        IPath project = createSimpleProject("Another", true)[0];
+        IPath[] paths = createSimpleProject("Project", true);
+        env.addRequiredProject(paths[0], project, true);
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "p", "Main",
+            "package p\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
+
+        env.getProject(project).close(null);
+
+        fullBuild();
+        expectingNoProblems();
+        expectingCompiledClasses("p.Main");
+    }
+
+    @Test
+    public void testMultiProjectDependencies3() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        //@formatter:off
+        IPath main = env.addGroovyClass(paths[1], "p", "Main",
+            "package p\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
+
+        IFile bin = env.getWorkspace().getRoot().getFile(env.getOutputLocation(paths[0]));
+        bin.getLocation().toFile().delete(); // remove output folder
+        env.getProject(paths[0]).refreshLocal(1, null);
+
+        assertTrue(ReconcilerUtils.reconcile(env.getUnit(main)).isEmpty());
+        expectingNoProblems();
+    }
+
+    @Test
+    public void testMultiProjectDependencies4() throws Exception {
         // Construct ProjectA
         IPath[] paths = createSimpleProject("ProjectA", true);
 
@@ -3539,8 +3601,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         //@formatter:on
 
         fullBuild();
-        expectingCompiledClasses("a.Hello", "b.Hello", "c.Hello", "d.Hello");
         expectingNoProblems();
+        expectingCompiledClasses("a.Hello", "b.Hello", "c.Hello", "d.Hello");
     }
 
     @Test

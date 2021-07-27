@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,7 +185,7 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
             protected String changePressed() {
                 String value = super.changePressed();
                 if (value != null) {
-                    IPath path = new Path(value);
+                    IPath path = Path.fromOSString(value);
                     if (getProject().getLocation().isPrefixOf(path)) {
                         value = path.makeRelativeTo(getProject().getLocation()).toOSString();
                     }
@@ -209,7 +209,6 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
                 }
             }
         };
-        configScriptSelector.setFilterPath(getProject().getLocation().toFile());
         configScriptSelector.setPreferenceStore(// this preference is from JavaCore scope
             new ScopedPreferenceStore(new ProjectScope(getProject()), JavaCore.PLUGIN_ID));
         configScriptSelector.load();

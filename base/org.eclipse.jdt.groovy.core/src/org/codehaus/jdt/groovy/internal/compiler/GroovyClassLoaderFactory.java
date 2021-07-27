@@ -148,7 +148,7 @@ public final class GroovyClassLoaderFactory {
 
     private GroovyClassLoader[] getProjectGroovyClassLoaders(final CompilerConfiguration compilerConfiguration) {
         String projectName = compilerOptions.groovyProjectName;
-        IProject project = findProject(projectName);
+        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
         try {
             IJavaProject javaProject = ExternalJavaProject.EXTERNAL_PROJECT_NAME.equals(projectName)
                 ? new ExternalJavaProject(JavaCore.create(project).getRawClasspath()) : JavaCore.create(project);
@@ -220,10 +220,6 @@ public final class GroovyClassLoaderFactory {
 
     //--------------------------------------------------------------------------
 
-    private static IProject findProject(String projectName) {
-        return ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-    }
-
     private static void calculateClasspath(IJavaProject javaProject, boolean mainOnly, Set<String> classPaths, Set<String> xformPaths) {
         try {
             IRuntimeClasspathEntry[] entries = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject);
@@ -231,7 +227,8 @@ public final class GroovyClassLoaderFactory {
             for (IRuntimeClasspathEntry unresolved : entries) {
                 Set<String> paths = (unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths);
                 for (IRuntimeClasspathEntry resolved : resolveRuntimeClasspathEntry(unresolved, mainOnly)) {
-                    paths.add(getAbsoluteLocation(resolved));
+                    String path = getAbsoluteLocation(resolved);
+                    if (path != null) paths.add(path);
                 }
             }
             classPaths.addAll(xformPaths);
@@ -246,24 +243,26 @@ public final class GroovyClassLoaderFactory {
         return (IRuntimeClasspathEntry[]) JavaRuntime.class.getDeclaredMethod("resolveRuntimeClasspathEntry", IRuntimeClasspathEntry.class, IJavaProject.class, boolean.class).invoke(JavaRuntime.class, classpathEntry, classpathEntry.getJavaProject(), excludeTestCode);
     }
 
-    private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) {
+    private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) throws Exception {
         if (classpathEntry.getType() == IRuntimeClasspathEntry.PROJECT) {
             try {
                 // entry.getLocation() logs if project.getOutputLocation() throws, so test it first
                 ((IJavaProject) JavaCore.create(classpathEntry.getResource())).getOutputLocation();
-            } catch (NullPointerException | JavaModelException ignore) {
-                return classpathEntry.getResource().getLocation().toOSString();
+            } catch (NullPointerException | JavaModelException ignore) { // absent / closed project
+                return ResourcesPlugin.getWorkspace().getRoot().getLocation().append(classpathEntry.getPath()).toOSString();
             }
         }
 
         String location = classpathEntry.getLocation();
-        if (!new File(location).exists()) {
-            IPath path = new Path(location);
-            IProject project = findProject(path.segment(0));
-            IResource resource = (path.segmentCount() == 1 ? project : project.getFile(path.removeFirstSegments(1)));
-            if (resource.getLocation() != null) {
-                location = resource.getLocation().toOSString();
+        if (location == null) { // remote project reference
+            if (classpathEntry.getType() != IRuntimeClasspathEntry.PROJECT) {
+                location = Util.toLocalFile(classpathEntry.getResource().getLocationURI(), null).getAbsolutePath();
             }
+        } else if (!new File(location).exists()) {
+            IPath path = new Path(location); // absent output folder
+            IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(path.segment(0));
+            IResource resource = (path.segmentCount() == 1 ? project : project.getFile(path.removeFirstSegments(1)));
+            location = Optional.ofNullable(resource).map(IResource::getLocation).map(IPath::toOSString).orElse(null);
         }
         return location;
     }
@@ -320,19 +319,12 @@ public final class GroovyClassLoaderFactory {
             Enumeration<URL> resources = super.getResources(name);
             // GRECLIPSE-1762: exclude project's own extension definitions
             if (project != null && resources.hasMoreElements() && (name.startsWith("META-INF/groovy/") || name.startsWith("META-INF/services/"))) {
-                String exclude = project.getLocation().toOSString();
-                if (!exclude.startsWith("/")) {
-                    try {
-                        // normalize "C:\b\a" to "/C:/b/a/" for URL comparison
-                        exclude = new File(exclude).toURI().toURL().getPath();
-                    } catch (Exception ignore) {
-                    }
-                }
+                String exclude = project.getLocationURI().getPath();
 
                 List<URL> list = new ArrayList<>();
                 while (resources.hasMoreElements()) {
                     URL resource = resources.nextElement();
-                    if (!resource.getProtocol().equals("file") || !resource.getPath().startsWith(exclude)) {
+                    if (!resource.getPath().startsWith(exclude)) {
                         list.add(resource);
                     }
                 }
