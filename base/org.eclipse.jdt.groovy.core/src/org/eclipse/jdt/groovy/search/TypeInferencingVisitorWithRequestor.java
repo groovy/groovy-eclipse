@@ -1846,19 +1846,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             node.removeNodeMetaData("tuple.types");
             if (isNotEmpty(node.getExpressions())) {
+                List<ClassNode> tupleTypes = new ArrayList<>();
                 for (Expression expr : node) {
                     // prevent revisit of statically-compiled chained assignment nodes
                     if (!(expr instanceof TemporaryVariableExpression)) {
                         expr.visit(this);
-
-                        node.getNodeMetaData("tuple.types", x -> new ArrayList<>()).add(primaryTypeStack.removeLast());
+                        tupleTypes.add(primaryTypeStack.removeLast());
                     }
                 }
+                node.putNodeMetaData("tuple.types", tupleTypes);
             }
-        } catch (RuntimeException e) {
-            // dump partial type inference metadata
-            node.removeNodeMetaData("tuple.types");
-            throw e;
         } finally {
             completeExpressionStack.removeLast();
         }
