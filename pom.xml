@@ -63,6 +63,7 @@
 		<module>base/org.codehaus.groovy40</module>
 
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
+		<module>base/org.codehaus.groovy.eclipse.frameworkAdapter</module>
 		<module>base/org.eclipse.jdt.groovy.core</module>
 
 		<module>ide/org.codehaus.groovy.eclipse</module>

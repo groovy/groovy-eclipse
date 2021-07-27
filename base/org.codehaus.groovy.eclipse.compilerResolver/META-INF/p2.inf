@@ -1,7 +1,1 @@
 instructions.configure = setStartLevel(startLevel:1); markStarted(started: true);
-
-# logback declares optional linkage to groovy packages, which impacts efficacy
-requires.0.namespace = org.eclipse.equinox.p2.iu
-requires.0.name = ch.qos.logback.classic
-requires.0.min = 0
-requires.0.max = 0

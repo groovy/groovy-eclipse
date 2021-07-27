@@ -78,7 +78,11 @@ Implementations of Groovy language, where XX stands for Groovy language version.
 
 ### org.codehaus.groovy.eclipse.compilerResolver
 
-Supports the ability to detect and switch between the available version of Groovy available within the Eclipse.
+Provides the ability to detect and switch between the available versions of Groovy.
+
+### org.codehaus.groovy.eclipse.frameworkAdapter
+
+Hooks the framework resolve process to prevent linking Groovy to bundles that have optional dependencies.
 
 ### org.codehaus.groovy.eclipse.junit.test
 
@@ -156,10 +160,14 @@ This minimal project set should be open in your workspace:
 * org.codehaus.groovy.eclipse.tests
 * org.codehaus.groovy.eclipse.ui
 * org.codehaus.groovyXX (where XX is the Groovy version you are working with; you should only have one of these open in your workspace at a time)
-* org.eclipse.jdt.core (There are multiple projects with this name, so they cannot all be imported into the workspace at once.  Import only the one in the folder corresponding to the Eclipse version you are working with; for example, the patch in the /e421 folder is for Eclipse 4.21 (2021-09))
+* org.eclipse.jdt.core
+* org.eclipse.jdt.core.tests.builder
+* org.eclipse.jdt.core.tests.compiler
 * org.eclipse.jdt.groovy.core
 * org.eclipse.jdt.groovy.core.tests.builder
 * org.eclipse.jdt.groovy.core.tests.compiler
+
+Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.tests.builder`, `org.eclipse.jdt.core.tests.compiler`) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e421` folder is for Eclipse 4.21 (2021-09).
 
 
 ## Test with Eclipse

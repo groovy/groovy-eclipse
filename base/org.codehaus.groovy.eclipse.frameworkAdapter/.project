@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <projectDescription>
-    <name>org.codehaus.groovy.eclipse.compilerResolver</name>
+    <name>org.codehaus.groovy.eclipse.frameworkAdapter</name>
     <buildSpec>
         <buildCommand>
             <name>org.eclipse.jdt.core.javabuilder</name>
