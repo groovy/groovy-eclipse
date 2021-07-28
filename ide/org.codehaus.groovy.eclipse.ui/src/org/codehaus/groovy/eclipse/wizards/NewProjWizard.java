@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.util.ExceptionHandler;
 import org.eclipse.jdt.internal.ui.wizards.NewElementWizard;
 import org.eclipse.jdt.ui.wizards.JavaCapabilityConfigurationPage;
@@ -57,6 +58,8 @@ public class NewProjWizard extends NewElementWizard implements IExecutableExtens
 
     @Override
     public void addPages() {
+        JavaPlugin.getDefault().getDialogSettings().put("org.eclipse.jdt.ui.last.selected.create.moduleinfo", false);
+
         pageOne = new NewJavaProjectWizardPageOne() {
             @Override
             public IClasspathEntry[] getDefaultClasspathEntries() {
@@ -79,6 +82,8 @@ public class NewProjWizard extends NewElementWizard implements IExecutableExtens
             @Override
             public void createControl(final Composite parent) {
                 super.createControl(parent);
+
+                if (JavaPlugin.getDefault().getBundle().getVersion().compareTo(org.osgi.framework.Version.valueOf("3.23")) >= 0) return;
 
                 Object buildPathsBlock = ReflectionUtils.executePrivateMethod(JavaCapabilityConfigurationPage.class, "getBuildPathsBlock", this);
                 if (buildPathsBlock != null) {
