@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.function.Predicate;
@@ -36,11 +37,11 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationDecorator;
+import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
-import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
@@ -148,16 +149,13 @@ IModule initializeModule() {
 String zipFilename; // keep for equals
 IFile resource;
 ZipFile zipFile;
-ZipFile annotationZipFile;
 long lastModified;
 boolean closeZipFileAtEnd;
 private SimpleSet knownPackageNames;
-AccessRuleSet accessRuleSet;
-String externalAnnotationPath;
 // Meant for ClasspathMultiReleaseJar, not used in here
 String compliance;
 
-ClasspathJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, boolean isOnModulePath) {
+ClasspathJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, Collection<ClasspathLocation> allLocationsForEEA, boolean isOnModulePath) {
 	this.resource = resource;
 	try {
 		java.net.URI location = resource.getLocationURI();
@@ -176,6 +174,7 @@ ClasspathJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotati
 	this.accessRuleSet = accessRuleSet;
 	if (externalAnnotationPath != null)
 		this.externalAnnotationPath = externalAnnotationPath.toString();
+	this.allLocationsForEEA = allLocationsForEEA;
 	this.isOnModulePath = isOnModulePath;
 }
 
@@ -274,28 +273,7 @@ public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPa
 					modName = classReader.moduleName;
 				}
 			String fileNameWithoutExtension = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length() - SuffixConstants.SUFFIX_CLASS.length);
-			if (this.externalAnnotationPath != null) {
-				try {
-					if (this.annotationZipFile == null) {
-						this.annotationZipFile = ExternalAnnotationDecorator
-								.getAnnotationZipFile(this.externalAnnotationPath, null);
-					}
-
-					reader = ExternalAnnotationDecorator.create(reader, this.externalAnnotationPath,
-							fileNameWithoutExtension, this.annotationZipFile);
-				} catch (IOException e) {
-					// don't let error on annotations fail class reading
-				}
-				if (reader.getExternalAnnotationStatus() == ExternalAnnotationStatus.NOT_EEA_CONFIGURED) {
-					// ensure a reader that answers NO_EEA_FILE
-					reader = new ExternalAnnotationDecorator(reader, null);
-				}
-			}
-			if (this.accessRuleSet == null)
-				return new NameEnvironmentAnswer(reader, null, modName);
-			return new NameEnvironmentAnswer(reader,
-					this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()),
-					modName);
+			return createAnswer(fileNameWithoutExtension, reader, modName);
 		}
 	} catch (IOException | ClassFormatException e) { // treat as if class file is missing
 	}
@@ -430,5 +408,21 @@ public char[][] listPackages() {
 	if (count < result.length)
 		return Arrays.copyOf(result, count);
 	return result;
+}
+
+@Override
+protected IBinaryType decorateWithExternalAnnotations(IBinaryType reader, String fileNameWithoutExtension) {
+	if (scanContent()) { // ensure zipFile is initialized
+		String qualifiedBinaryFileName = fileNameWithoutExtension + ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX;
+		ZipEntry entry = this.zipFile.getEntry(qualifiedBinaryFileName);
+		if (entry != null) {
+			try(InputStream is = this.zipFile.getInputStream(entry)) {
+				return new ExternalAnnotationDecorator(reader, new ExternalAnnotationProvider(is, fileNameWithoutExtension));
+			} catch (IOException e) {
+				// ignore
+			}
+		}
+	}
+	return reader; // undecorated
 }
 }

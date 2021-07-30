@@ -267,7 +267,7 @@ public boolean resolvePatternVariable(BlockScope scope) {
 }
 @Override
 public void collectPatternVariablesToScope(LocalVariableBinding[] variables, BlockScope scope) {
-	this.expression.collectPatternVariablesToScope(this.patternVarsWhenTrue, scope);
+	this.expression.collectPatternVariablesToScope(variables, scope);
 	if (this.elementVariable != null) {
 		if (this.elementVariable.binding == null) {
 			resolvePatternVariable(scope);
@@ -287,21 +287,6 @@ public void collectPatternVariablesToScope(LocalVariableBinding[] variables, Blo
 		}
 	}
 
-}
-@Override
-public void addPatternVariablesWhenTrue(LocalVariableBinding[] vars) {
-	if (this.patternVarsWhenTrue == null) {
-		this.getPatternVariablesWhenTrue();
-	}
-	if (vars == null || vars.length == 0) return;
-	if (this.patternVarsWhenTrue == null) {
-		this.patternVarsWhenTrue = vars;
-	} else {
-		int oldSize = this.patternVarsWhenTrue.length;
-		int newLength = oldSize + vars.length;
-		System.arraycopy(this.patternVarsWhenTrue, 0, (this.patternVarsWhenTrue = new LocalVariableBinding[newLength]), 0, oldSize);
-		System.arraycopy(vars, 0, this.patternVarsWhenTrue, oldSize, vars.length);
-	}
 }
 @Override
 public boolean containsPatternVariable() {

@@ -115,6 +115,7 @@ public interface TypeConstants {
     char[] LAMBDA_TYPE = "<lambda>".toCharArray(); //$NON-NLS-1$
     char[] UPPER_MODULE = "MODULE".toCharArray(); //$NON-NLS-1$
     char[] UPPER_RECORD_COMPONENT = "RECORD_COMPONENT".toCharArray(); //$NON-NLS-1$
+    char[] YIELD = "yield".toCharArray(); //$NON-NLS-1$
 
     // JEP 286
 	char[] VAR = "var".toCharArray(); //$NON-NLS-1$

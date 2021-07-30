@@ -29,7 +29,7 @@ public class RecordsRestrictedClassTest extends AbstractRegressionTest {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testBug73195_001"};
+//		TESTS_NAMES = new String[] { "testBug574284"};
 	}
 
 	public static Class<?> testClass() {
@@ -8999,4 +8999,84 @@ public void testBug573195_001() throws Exception {
 			"     9  return\n";
 	RecordsRestrictedClassTest.verifyClassFile(expectedOutput, "X$R.class", ClassFileBytesDisassembler.SYSTEM);
 }
+
+public void testBug574284_001() throws Exception {
+	runConformTest(
+			new String[] {
+					"X.java",
+					"public class X {\n" +
+					"\n" +
+					"    public static void main(String[] args) {\n" +
+					"        new X.Rec(false); // fails\n" +
+					"        new X.Rec(false, new int[0]);\n" +
+					"        System.out.println(0);\n" +
+					"    }\n" +
+					"\n" +
+					"    record Rec(boolean isHidden, int... indexes) {\n" +
+					"        Rec(int... indexes) {\n" +
+					"            this(false, indexes);\n" +
+					"        }\n" +
+					"    }\n" +
+					"}"
+			},
+		"0");
+	String expectedOutput = // constructor
+			"  // Method descriptor #14 (Z[I)V\n" +
+			"  // Stack: 2, Locals: 3\n" +
+			"  X$Rec(boolean arg0, int... arg1);\n" +
+			"     0  aload_0 [this]\n" +
+			"     1  invokespecial java.lang.Record() [41]\n" +
+			"     4  aload_0 [this]\n" +
+			"     5  iload_1 [arg0]\n" +
+			"     6  putfield X$Rec.isHidden : boolean [21]\n" +
+			"     9  aload_0 [this]\n" +
+			"    10  aload_2 [arg1]\n" +
+			"    11  putfield X$Rec.indexes : int[] [24]\n" +
+			"    14  return\n";
+	RecordsRestrictedClassTest.verifyClassFile(expectedOutput, "X$Rec.class", ClassFileBytesDisassembler.SYSTEM);
+
+}
+public void testBug574284_002() {
+	runConformTest(
+			new String[] {
+					"X.java",
+					"public class X {\n" +
+					"\n" +
+					"    public static void main(String[] args) {\n" +
+					"        new X.Rec(false); // fails\n" +
+					"        new X.Rec(false, new int[0]);\n" +
+					"        System.out.println(0);\n" +
+					"    }\n" +
+					"\n" +
+					"    record Rec(boolean isHidden, int... indexes) {\n" +
+					"    }\n" +
+					"}"
+			},
+		"0");
+}
+
+public void testBug574282_001() {
+	runConformTest(
+			new String[] {
+					"X.java",
+					"record Rec(String name) {\n" +
+					"\n" +
+					"    Rec() {\n" +
+					"        this(\"\");\n" +
+					"    }\n" +
+					"\n" +
+					"    @Override\n" +
+					"    public boolean equals(Object obj) {\n" +
+					"        return false;\n" +
+					"    }\n" +
+					"}\n" +
+					"public class X {\n"+
+					"  public static void main(String[] args){\n"+
+					"     System.out.println(0);\n" +
+					"  }\n"+
+					"}\n"
+			},
+		"0");
+}
+
 }

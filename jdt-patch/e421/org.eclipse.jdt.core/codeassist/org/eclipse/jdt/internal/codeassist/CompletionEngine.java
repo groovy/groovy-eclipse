@@ -3235,8 +3235,15 @@ public final class CompletionEngine
 			if (messageSend.statementEnd > messageSend.sourceStart)
 				setSourceRange(messageSend.sourceStart, messageSend.statementEnd);
 
-			this.insideQualifiedReference = true;
 			this.completionToken = messageSend.selector;
+
+			if (messageSend.nextIsCast) {
+				// optionalPrefix|((String) s) was mistaken as a messageSend(?). Treat like beginning of statement.
+				findVariablesAndMethods(this.completionToken, scope, messageSend, scope, false, false);
+				return;
+			}
+
+			this.insideQualifiedReference = true;
 
 			TypeBinding receiverType = (TypeBinding)qualifiedBinding;
 

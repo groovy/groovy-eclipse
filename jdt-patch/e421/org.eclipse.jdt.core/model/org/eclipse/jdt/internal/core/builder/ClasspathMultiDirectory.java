@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
+import java.util.List;
+
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -34,8 +36,8 @@ boolean hasIndependentOutputFolder; // if output folder is not equal to any of t
 public boolean ignoreOptionalProblems;
 
 ClasspathMultiDirectory(IContainer sourceFolder, IContainer binaryFolder, char[][] inclusionPatterns, char[][] exclusionPatterns,
-		boolean ignoreOptionalProblems, IPath externalAnnotationPath) {
-	super(binaryFolder, true, null, externalAnnotationPath, false /* source never an automatic module*/);
+		boolean ignoreOptionalProblems, IPath externalAnnotationPath, List<ClasspathLocation> allExternalAnnotationPaths) {
+	super(binaryFolder, true, null, externalAnnotationPath, allExternalAnnotationPaths, false /* source never an automatic module*/);
 
 	this.sourceFolder = sourceFolder;
 	this.inclusionPatterns = inclusionPatterns;

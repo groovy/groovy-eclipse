@@ -30,7 +30,6 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
 //		TESTS_NAMES = new String[] { "testBug569444_001"};
-//		TESTS_NAMES = new String[] { "testBug572994_001"};
 	}
 
 	public static Class<?> testClass() {
@@ -49,7 +48,6 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 		defaultOptions.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_16); // FIXME
 		defaultOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_16);
 		defaultOptions.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_16);
-		defaultOptions.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
 		defaultOptions.put(CompilerOptions.OPTION_ReportPreviewFeatures, CompilerOptions.IGNORE);
 		defaultOptions.put(CompilerOptions.OPTION_Store_Annotations, CompilerOptions.ENABLED);
 		return defaultOptions;
@@ -93,12 +91,9 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 		runner.runWarningTest();
 	}
 
-	private static void verifyClassFile(String expectedOutput, String classFileName, int mode)
+	private static void verifyClassFile(String expectedOutput, String classFileName)
 			throws IOException, ClassFormatException {
-		File f = new File(OUTPUT_DIR + File.separator + classFileName);
-		byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
-		ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
-		String result = disassembler.disassemble(classFileBytes, "\n", mode);
+		String result = getClassfileContent(classFileName);
 		int index = result.indexOf(expectedOutput);
 		if (index == -1 || expectedOutput.length() == 0) {
 			System.out.println(Util.displayString(result, 3));
@@ -107,6 +102,13 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 		if (index == -1) {
 			assertEquals("Wrong contents", expectedOutput, result);
 		}
+	}
+	private static String getClassfileContent(String classFileName) throws IOException, ClassFormatException {
+		File f = new File(OUTPUT_DIR + File.separator + classFileName);
+		byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
+		ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+		String result = disassembler.disassemble(classFileBytes, "\n", ClassFileBytesDisassembler.SYSTEM);
+		return result;
 	}
 
 	public void testBug566284_001() {
@@ -842,7 +844,7 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 			},
 			"");
 		String expectedOutput = "abstract static interface X$1I {\n";
-		LocalStaticsTest.verifyClassFile(expectedOutput, "X$1I.class", ClassFileBytesDisassembler.SYSTEM);
+		LocalStaticsTest.verifyClassFile(expectedOutput, "X$1I.class");
 	}
 	// 14.3 for enum
 	public void testBug564557BinaryForm_006() throws Exception {
@@ -861,7 +863,7 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 			},
 			"");
 		String expectedOutput = "static final enum X$1I {\n";
-		LocalStaticsTest.verifyClassFile(expectedOutput, "X$1I.class", ClassFileBytesDisassembler.SYSTEM);
+		LocalStaticsTest.verifyClassFile(expectedOutput, "X$1I.class");
 	}
 	// 15.8.3
 	public void testBug564557thisInStatic_007() {
@@ -1544,5 +1546,168 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 				"	                             ^^^^^^^\n" +
 				"No enclosing instance of type X is accessible. Must qualify the allocation with an enclosing instance of type X (e.g. x.new A() where x is an instance of X).\n" +
 				"----------\n");
+	}
+	// Test that static field inside inner types are properly initialized
+	public void testBug574791_1() {
+		runConformTest(
+			new String[] {
+					"EnumTester.java",
+					"public class EnumTester {\n"
+					+ "	public static void main(String[] args) {\n"
+					+ "		Test e = Test.ONE;\n"
+					+ "		System.out.println(e.value());\n"
+					+ "		System.out.println(MyTest.TWO.value());\n"
+					+ "		I TWO = new I() {\n"
+					+ "			private static final String value = getString();\n"
+					+ "			@Override\n"
+					+ "			public String value() {\n"
+					+ "				return value;\n"
+					+ "			}\n"
+					+ "		};\n"
+					+ "		System.out.println(TWO.value());\n"
+					+ "	}\n"
+					+ "	private static String getString() {\n"
+					+ "		return \"Hi from EnumTester\";\n"
+					+ "	}\n"
+					+ "	class MyTest {\n"
+					+ "		public static final String value = getString();\n"
+					+ "		private static String getString() {\n"
+					+ "			return \"Hi from MyTest\";\n"
+					+ "		}\n"
+					+ "		public static I TWO = new I() {\n"
+					+ "			private static final String value = getString();\n"
+					+ "			@Override\n"
+					+ "			public String value() {\n"
+					+ "				return value;\n"
+					+ "			}\n"
+					+ "		};\n"
+					+ "	}\n"
+					+ "	interface I {\n"
+					+ "		public String value();\n"
+					+ "	}\n"
+					+ "}\n"
+					+ "enum Test {\n"
+					+ "	ONE {\n"
+					+ "		private static final String value = getString();\n"
+					+ "		@Override\n"
+					+ "		String value() {\n"
+					+ "			return value;\n"
+					+ "		}\n"
+					+ "	};\n"
+					+ "	abstract String value();\n"
+					+ "	private static String getString() {\n"
+					+ "		return \"Hi from Test\";\n"
+					+ "	}\n"
+					+ "}"
+				},
+			"Hi from Test\n" +
+			"Hi from MyTest\n" +
+			"Hi from EnumTester");
+	}
+	// Test that the static initializer is generated only when required
+	// i.e., when the (anonymous) inner class contains a static field
+	public void testBug574791_2() throws Exception {
+		runConformTest(
+			new String[] {
+					"X.java",
+					"public class X {\n"
+					+ "	public static void main(String[] args) {\n"
+					+ " }\n"
+					+ "}\n"
+					+ "enum Test {\n"
+					+ "	ONE {\n"
+					+ "		private static final String value = getString();\n"
+					+ "		@Override\n"
+					+ "		String value() {\n"
+					+ "			return value;\n"
+					+ "		}\n"
+					+ "	},\n"
+					+ "	TWO {\n"
+					+ "		String value() {\n"
+					+ "			return \"TWO\";\n"
+					+ "		}\n"
+					+ "	},\n"
+					+ "	;\n"
+					+ "	abstract String value();\n"
+					+ "	private static String getString() {\n"
+					+ "		return \"default\";\n"
+					+ "	}\n"
+					+ "}"
+				},
+			"");
+			String expectedOutput =
+					"  // Method descriptor #17 ()V\n"
+					+ "  // Stack: 1, Locals: 0\n"
+					+ "  static {};\n"
+					+ "    0  invokestatic Test.getString() : java.lang.String [18]\n"
+					+ "    3  putstatic Test$1.value : java.lang.String [22]\n"
+					+ "    6  return";
+			String content = getClassfileContent("Test$1.class");
+			assertTrue("Expected code not found", content.indexOf(expectedOutput) != -1);
+			expectedOutput = "  static {};";
+			content = getClassfileContent("Test$2.class");
+			assertTrue("Unexpected code found", content.indexOf(expectedOutput) == -1);
+	}
+	public void testBug574791_3() {
+		runConformTest(
+			new String[] {
+					"EnumTester.java",
+					"public class EnumTester {\n"
+					+ "	public static void main(String[] args) {\n"
+					+ "		Test e = Test.ONE;\n"
+					+ "		System.out.println(e.value());\n"
+					+ "		System.out.println(MyTest.TWO.value());\n"
+					+ "		I TWO = new I() {\n"
+					+ "			private static final String value = getString();\n"
+					+ "			@Override\n"
+					+ "			public String value() {\n"
+					+ "				return value;\n"
+					+ "			}\n"
+					+ "		};\n"
+					+ "		System.out.println(TWO.value());\n"
+					+ "	}\n"
+					+ "	private static String getString() {\n"
+					+ "		return \"Hi from EnumTester\";\n"
+					+ "	}\n"
+					+ "	class MyTest {\n"
+					+ "		public static String value;\n"
+					+ "     static {\n"
+					+ "       value = getString();\n"
+					+ "     }\n"
+					+ "		private static String getString() {\n"
+					+ "			return \"Hi from MyTest\";\n"
+					+ "		}\n"
+					+ "		public static I TWO = new I() {\n"
+					+ "			private static final String value = getString();\n"
+					+ "			@Override\n"
+					+ "			public String value() {\n"
+					+ "				return value;\n"
+					+ "			}\n"
+					+ "		};\n"
+					+ "	}\n"
+					+ "	interface I {\n"
+					+ "		public String value();\n"
+					+ "	}\n"
+					+ "}\n"
+					+ "enum Test {\n"
+					+ "	ONE {\n"
+					+ "		public static String value;\n"
+					+ "     static {\n"
+					+ "       value = getString();\n"
+					+ "     }\n"
+					+ "		@Override\n"
+					+ "		String value() {\n"
+					+ "			return value;\n"
+					+ "		}\n"
+					+ "	};\n"
+					+ "	abstract String value();\n"
+					+ "	private static String getString() {\n"
+					+ "		return \"Hi from Test\";\n"
+					+ "	}\n"
+					+ "}"
+				},
+			"Hi from Test\n" +
+			"Hi from MyTest\n" +
+			"Hi from EnumTester");
 	}
 }

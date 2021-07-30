@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
+import java.io.File;
+
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.core.index.Index;
@@ -38,10 +40,12 @@ class RemoveFromIndex extends IndexRequest {
 		try {
 			monitor.enterWrite(); // ask permission to write
 			index.remove(this.resourceName);
-
-			this.manager.updateMetaIndex(index, index.getIndexLocation(), true);
 		} finally {
 			monitor.exitWrite(); // free write lock
+		}
+		File indexFile = index.getIndexFile();
+		if(indexFile != null) {
+			this.manager.removeFromMetaIndex(index, indexFile, this.containerPath);
 		}
 		return true;
 	}

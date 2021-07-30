@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -539,13 +539,11 @@ class TypeBinding implements ITypeBinding {
 
 	private ITypeBinding[] getIntersectingTypes() {
 		ITypeBinding[] intersectionBindings = TypeBinding.NO_TYPE_BINDINGS;
-		if (this.binding instanceof IntersectionTypeBinding18) {
-			ReferenceBinding[] intersectingTypes = this.binding.getIntersectingTypes();
-			int l = intersectingTypes.length;
-			intersectionBindings = new ITypeBinding[l];
-			for (int i = 0; i < l; ++i) {
-				intersectionBindings[i] = this.resolver.getTypeBinding(intersectingTypes[i]);
-			}
+		ReferenceBinding[] intersectingTypes = this.binding.getIntersectingTypes();
+		int l = intersectingTypes.length;
+		intersectionBindings = new ITypeBinding[l];
+		for (int i = 0; i < l; ++i) {
+			intersectionBindings[i] = this.resolver.getTypeBinding(intersectingTypes[i]);
 		}
 		return intersectionBindings;
 	}
@@ -911,6 +909,15 @@ class TypeBinding implements ITypeBinding {
 		} else if (this.binding instanceof WildcardBinding) {
 			WildcardBinding wildcardBinding = (WildcardBinding) this.binding;
 			typeVariableBinding = wildcardBinding.typeVariable();
+			if (typeVariableBinding == null) {
+				org.eclipse.jdt.internal.compiler.lookup.TypeBinding allBounds = wildcardBinding.allBounds();
+				if (allBounds instanceof IntersectionTypeBinding18) { // doubles up as null check
+					ITypeBinding typeBinding = this.resolver.getTypeBinding(allBounds);
+					if (typeBinding instanceof TypeBinding) { // doubles up as null check
+						return ((TypeBinding) typeBinding).getIntersectingTypes();
+					}
+				}
+			}
 		} else if (this.binding instanceof IntersectionTypeBinding18) {
 			return this.bounds = getIntersectingTypes();
 		}

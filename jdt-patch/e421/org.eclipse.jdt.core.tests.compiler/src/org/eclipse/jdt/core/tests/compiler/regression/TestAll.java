@@ -200,6 +200,7 @@ public static Test suite() {
 	 since_15.add(JavadocTest_15.class);
 	 since_15.add(Unicode13Test.class);
 	 since_15.add(BatchCompilerTest_15.class);
+	 since_15.add(TextBlockTest.class);
 
 	 // add 16 specific test here (check duplicates)
 	 ArrayList since_16 = new ArrayList();

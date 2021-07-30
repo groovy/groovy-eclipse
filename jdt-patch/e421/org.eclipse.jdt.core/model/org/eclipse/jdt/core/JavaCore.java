@@ -1854,6 +1854,20 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String COMPILER_PB_MISSING_NONNULL_BY_DEFAULT_ANNOTATION = PLUGIN_ID + ".compiler.annotation.missingNonNullByDefaultAnnotation"; //$NON-NLS-1$
 	/**
+	 * Core option ID: Read external annotations from all build path entries.
+	 * <p>This option controls where the compiler will look for external annotations for enhanced null analysis</p>
+	 * <p>When enabled, the compiler will search all buildpath entries of a given project to locate external annotation files
+	 * 		({@code .eea}) in order to superimpose null annotations over classes read from dependencies.</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.builder.annotationPath.allLocations"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "disabled", "enabled" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"disabled"</code></dd>
+	 * </dl>
+	 * @since 3.27
+	 * @category CoreOptionID
+	 */
+	public static final String CORE_JAVA_BUILD_EXTERNAL_ANNOTATIONS_FROM_ALL_LOCATIONS = PLUGIN_ID + ".builder.annotationPath.allLocations"; //$NON-NLS-1$
+	/**
 	 * Compiler option ID: Reporting Violations of Null Specifications.
 	 * <p>Depending on this option, the compiler will issue either an error or a warning
 	 *    whenever one of the following situations is detected:</p>

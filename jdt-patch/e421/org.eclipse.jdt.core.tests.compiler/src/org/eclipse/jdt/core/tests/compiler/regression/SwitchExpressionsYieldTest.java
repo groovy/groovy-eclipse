@@ -2370,7 +2370,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"2. ERROR in X.java (at line 6)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n");
 	}
 	public void testBug547891_04() {
@@ -2395,7 +2395,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"2. ERROR in X.java (at line 7)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n";
 		this.runNegativeTest(
 				testFiles,
@@ -2417,12 +2417,12 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	yield y;\n" +
 				"	^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 6)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n");
 	}
 	public void testBug547891_06() {
@@ -2442,7 +2442,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	yield y;\n" +
 				"	^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 4)\n" +
 				"	Zork();\n" +
@@ -2452,7 +2452,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"3. ERROR in X.java (at line 7)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n";
 		this.runNegativeTest(
 				testFiles,
@@ -2474,12 +2474,12 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	yield y = null;\n" +
 				"	^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 6)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n");
 	}
 	public void testBug547891_08() {
@@ -2499,7 +2499,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	yield y = null;\n" +
 				"	^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 4)\n" +
 				"	Zork();\n" +
@@ -2509,7 +2509,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"3. ERROR in X.java (at line 7)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n";
 		this.runNegativeTest(
 				testFiles,
@@ -2530,7 +2530,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 5)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n");
 	}
 	public void testBug547891_10() {
@@ -2554,7 +2554,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"2. ERROR in X.java (at line 6)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n";
 		this.runNegativeTest(
 				testFiles,
@@ -2576,12 +2576,12 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	new yield();\n" +
 				"	    ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 6)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n");
 	}
 	public void testBug547891_12() {
@@ -2601,7 +2601,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	new yield();\n" +
 				"	    ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 4)\n" +
 				"	Zork();\n" +
@@ -2611,7 +2611,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"3. ERROR in X.java (at line 7)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n";
 		this.runNegativeTest(
 				testFiles,
@@ -2633,12 +2633,12 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	yield[] y;\n" +
 				"	^^^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 6)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n");
 	}
 	public void testBug547891_14() {
@@ -2658,7 +2658,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	yield[] y;\n" +
 				"	^^^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 4)\n" +
 				"	Zork();\n" +
@@ -2668,7 +2668,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"3. ERROR in X.java (at line 7)\n" +
 				"	class yield {\n" +
 				"	      ^^^^^\n" +
-				"yield is a restricted identifier and cannot be used as type name\n" +
+				"'yield' is not a valid type name; it is a restricted identifier and not allowed as a type identifier in Java 14\n" +
 				"----------\n";
 		this.runNegativeTest(
 				testFiles,

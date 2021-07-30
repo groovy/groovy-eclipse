@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -70,7 +70,7 @@ import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.core.util.Util;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({"rawtypes"})
 public class InternalExtendedCompletionContext {
 	private static Util.BindingsToNodesMap EmptyNodeMap = new Util.BindingsToNodesMap() {
 		@Override
@@ -99,8 +99,8 @@ public class InternalExtendedCompletionContext {
 	private ObjectVector visibleMethods;
 
 	private boolean hasComputedEnclosingJavaElements;
-	private Map bindingsToHandles;
-	private Map nodesWithProblemsToHandles;
+	private Map<Binding, JavaElement> bindingsToHandles;
+	private Map<ASTNode, JavaElement> nodesWithProblemsToHandles;
 	private ICompilationUnit compilationUnit;
 
 	public InternalExtendedCompletionContext(
@@ -132,10 +132,10 @@ public class InternalExtendedCompletionContext {
 		if (this.typeRoot.getElementType() == IJavaElement.COMPILATION_UNIT) {
 	 		ICompilationUnit original = (org.eclipse.jdt.core.ICompilationUnit)this.typeRoot;
 
-			HashMap handleToBinding = new HashMap();
-			HashMap bindingToHandle = new HashMap();
-			HashMap nodeWithProblemToHandle = new HashMap();
-			HashMap handleToInfo = new HashMap();
+			HashMap<JavaElement, Binding> handleToBinding = new HashMap<>();
+			HashMap<Binding, JavaElement> bindingToHandle = new HashMap<>();
+			HashMap<ASTNode, JavaElement> nodeWithProblemToHandle = new HashMap<>();
+			HashMap<ICompilationUnit, CompilationUnitElementInfo> handleToInfo = new HashMap<ICompilationUnit, CompilationUnitElementInfo>();
 
 			org.eclipse.jdt.core.ICompilationUnit handle = new AssistCompilationUnit(original, this.owner, handleToBinding, handleToInfo);
 			CompilationUnitElementInfo info = new CompilationUnitElementInfo();
@@ -178,15 +178,15 @@ public class InternalExtendedCompletionContext {
 		this.lookupEnvironment.unitBeingCompleted = this.compilationUnitDeclaration;
 		try {
 			this.hasComputedVisibleElementBindings = true;
-	
+
 			Scope scope = this.assistScope;
 			ASTNode astNode = this.assistNode;
 			boolean notInJavadoc = this.completionContext.javadoc == 0;
-	
+
 			this.visibleLocalVariables = new ObjectVector();
 			this.visibleFields = new ObjectVector();
 			this.visibleMethods = new ObjectVector();
-	
+
 			ReferenceContext referenceContext = scope.referenceContext();
 			if (referenceContext instanceof AbstractMethodDeclaration || referenceContext instanceof LambdaExpression) {
 				// completion is inside a method body
@@ -205,7 +205,7 @@ public class InternalExtendedCompletionContext {
 								break done;
 							}
 						} else {
-							FieldDeclaration fieldDeclaration = fields[i];							
+							FieldDeclaration fieldDeclaration = fields[i];
 							if (fieldDeclaration.initialization != null && fieldDeclaration.binding != null) {
 								boolean isInsideInitializer = false;
 								if (fieldDeclaration.initialization.sourceEnd > 0) {
@@ -298,7 +298,7 @@ public class InternalExtendedCompletionContext {
 			computeEnclosingJavaElements();
 		}
 		if (this.bindingsToHandles == null) return null;
-		return (JavaElement)this.bindingsToHandles.get(binding);
+		return this.bindingsToHandles.get(binding);
 	}
 
 	private JavaElement getJavaElementOfCompilationUnit(ASTNode node, Binding binding) {
@@ -307,10 +307,10 @@ public class InternalExtendedCompletionContext {
 		}
 		if (binding != null) {
 			if (this.bindingsToHandles == null) return null;
-			return (JavaElement)this.bindingsToHandles.get(binding);
+			return this.bindingsToHandles.get(binding);
 		} else {
 			if (this.nodesWithProblemsToHandles == null) return null;
-			return (JavaElement)this.nodesWithProblemsToHandles.get(node);
+			return this.nodesWithProblemsToHandles.get(node);
 		}
 	}
 
@@ -770,7 +770,7 @@ public class InternalExtendedCompletionContext {
 						// If the local variable declaration's initialization statement itself has the completion,
 						// then don't propose the local variable
 						if (local.declaration.initialization != null) {
-							/*(use this if-else block if it is found that local.declaration.initialization != null is not sufficient to 
+							/*(use this if-else block if it is found that local.declaration.initialization != null is not sufficient to
 							  guarantee that proposal is being asked inside a local variable declaration's initializer)
 							 if(local.declaration.initialization.sourceEnd > 0) {
 								if (this.assistNode.sourceEnd <= local.declaration.initialization.sourceEnd
@@ -913,7 +913,7 @@ public class InternalExtendedCompletionContext {
 		char[][] expectedTypekeys= this.completionContext.getExpectedTypesKeys();
 		if (expectedTypekeys == null || expectedTypekeys.length == 0)
 			return true;
-		// Next, find out whether any of the constructor parameters are the same as one of the 
+		// Next, find out whether any of the constructor parameters are the same as one of the
 		// class type variables. If yes, diamond cannot be used.
 		TypeReference ref;
 		if (cn.length == 1) {
@@ -944,14 +944,14 @@ public class InternalExtendedCompletionContext {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * @see InternalCompletionContext#getCompletionNode()
 	 */
 	public ASTNode getCompletionNode() {
 		return this.assistNode;
 	}
-	
+
 	/**
 	 * @see InternalCompletionContext#getCompletionNodeParent()
 	 */
@@ -959,21 +959,21 @@ public class InternalExtendedCompletionContext {
 		// TODO Auto-generated method stub
 		return this.assistNodeParent;
 	}
-	
+
 	public ObjectVector getVisibleLocalVariables() {
 		if (!this.hasComputedVisibleElementBindings) {
 			computeVisibleElementBindings();
 		}
 		return this.visibleLocalVariables;
 	}
-	
+
 	public ObjectVector getVisibleFields() {
 		if (!this.hasComputedVisibleElementBindings) {
 			computeVisibleElementBindings();
 		}
 		return this.visibleFields;
 	}
-	
+
 	public ObjectVector getVisibleMethods() {
 		if (!this.hasComputedVisibleElementBindings) {
 			computeVisibleElementBindings();

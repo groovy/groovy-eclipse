@@ -10301,4 +10301,28 @@ public void testBug508834_comment0() {
 			"The type of count() from the type Stream<Object> is long, this is incompatible with the descriptor\'s return type: int\n" +
 			"----------\n");
 	}
+	public void testBug549446() {
+		if (this.complianceLevel < ClassFileConstants.JDK12)
+			return; // uses interface Constable
+		runConformTest(
+			new String[] {
+				"TestFile.java",
+				"import java.lang.constant.Constable;\n" +
+				"public class TestFile {\n" +
+				"\n" +
+				"  @SafeVarargs\n" +
+				"  public final <E> E elements(E... args) {\n" +
+				"    return null;\n" +
+				"  }\n" +
+				"\n" +
+				"  public void test1() {\n" +
+				"    var v = elements(\"a\", 1);\n" +
+				"  }\n" +
+				"\n" +
+				"  public void test2() {\n" +
+				"    var v = elements(\"a\", (Comparable<String> & Constable) null);\n" +
+				"  }\n" +
+				"}\n"
+			});
+	}
 }

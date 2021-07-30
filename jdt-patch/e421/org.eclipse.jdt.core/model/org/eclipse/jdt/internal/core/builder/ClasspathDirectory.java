@@ -14,10 +14,10 @@
 package org.eclipse.jdt.internal.core.builder;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationDecorator;
+import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
@@ -44,17 +45,17 @@ IContainer binaryFolder; // includes .class files for a single directory
 boolean isOutputFolder;
 SimpleLookupTable directoryCache;
 String[] missingPackageHolder = new String[1];
-AccessRuleSet accessRuleSet;
-ZipFile annotationZipFile;
-String externalAnnotationPath;
 
-ClasspathDirectory(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, boolean isOnModulePath) {
+ClasspathDirectory(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSet accessRuleSet,
+		IPath externalAnnotationPath, Collection<ClasspathLocation> allLocationsForEEA, boolean isOnModulePath)
+{
 	this.binaryFolder = binaryFolder;
 	this.isOutputFolder = isOutputFolder || binaryFolder.getProjectRelativePath().isEmpty(); // if binaryFolder == project, then treat it as an outputFolder
 	this.directoryCache = new SimpleLookupTable(5);
 	this.accessRuleSet = accessRuleSet;
 	if (externalAnnotationPath != null)
 		this.externalAnnotationPath = externalAnnotationPath.toOSString();
+	this.allLocationsForEEA = allLocationsForEEA; // shared within the project, may be updated after this constructor
 	this.isOnModulePath = isOnModulePath;
 }
 
@@ -173,21 +174,7 @@ public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPa
 				modName = cfReader.moduleName;
 		}
 		String fileNameWithoutExtension = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length() - SuffixConstants.SUFFIX_CLASS.length);
-		if (this.externalAnnotationPath != null) {
-			try {
-				if (this.annotationZipFile == null) {
-					this.annotationZipFile = ExternalAnnotationDecorator
-							.getAnnotationZipFile(this.externalAnnotationPath, null);
-				}
-				reader = ExternalAnnotationDecorator.create(reader, this.externalAnnotationPath,
-						fileNameWithoutExtension, this.annotationZipFile);
-			} catch (IOException e) {
-				// don't let error on annotations fail class reading
-			}
-		}
-		if (this.accessRuleSet == null)
-			return this.module == null ? new NameEnvironmentAnswer(reader, null) : new NameEnvironmentAnswer(reader, null, modName);
-		return new NameEnvironmentAnswer(reader, this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()), modName);
+		return createAnswer(fileNameWithoutExtension, reader, modName);
 	}
 	return null;
 }
@@ -268,7 +255,7 @@ public String debugPathString() {
 
 @Override
 public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
-	// 
+	//
 	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false, null);
 }
 
@@ -289,5 +276,18 @@ public char[][] listPackages() {
 	}
 	return packageNames.stream().map(String::toCharArray).toArray(char[][]::new);
 }
-
+@Override
+protected IBinaryType decorateWithExternalAnnotations(IBinaryType reader, String fileNameWithoutExtension) {
+	String qualifiedFileName = fileNameWithoutExtension + ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX;
+	IFile file = this.binaryFolder.getFile(new Path(qualifiedFileName));
+	if (file.exists()) {
+		try {
+			ExternalAnnotationProvider provider = new ExternalAnnotationProvider(file.getContents(), fileNameWithoutExtension);
+			return new ExternalAnnotationDecorator(reader, provider);
+		} catch (IOException|CoreException e) {
+			// ignore
+		}
+	}
+	return reader; // undecorated
+}
 }

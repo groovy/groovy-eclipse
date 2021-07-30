@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.impl;
 
+import java.util.Arrays;
+
 /*
  * Parser extension for code assist task
  *
@@ -127,6 +129,8 @@ public abstract class AssistParser extends Parser {
 	AssistParser[] snapShotStack = new AssistParser[3];
 	int[] snapShotPositions = new int[3];
 	int snapShotPtr = -1;
+	AssistParser lastResumeState;
+	int resumeCount = 0;
 
 	public int cursorLocation = Integer.MAX_VALUE;
 
@@ -2366,6 +2370,9 @@ protected int resumeAfterRecovery() {
 	if (requireExtendedRecovery()) {
 		if (this.unstackedAct == ERROR_ACTION) {
 			int mode = fallBackToSpringForward((Statement) null);
+			if (mode == RESUME && !safeToResume()) {
+				mode = HALT; // emergency halt to prevent infinite recovery attempts
+			}
 			this.resumedAfterRepair = mode == RESUME;
 			if (mode == RESUME || mode == HALT)
 				return mode;
@@ -2456,6 +2463,27 @@ protected int resumeAfterRecovery() {
 	// does not know how to restart
 	return HALT;
 }
+private boolean safeToResume() {
+	if (this.lastResumeState != null && this.noProgressSince(this.lastResumeState)) {
+		if (this.resumeCount++ > 0)
+			return false; // cause an emergency halt to prevent infinite recovery attempts
+	} else {
+		this.resumeCount = 0;
+	}
+	this.lastResumeState = createSnapShotParser();
+	this.lastResumeState.copyState(this);
+	return true;
+}
+private boolean noProgressSince(AssistParser previous) {
+	int stateTop = this.stateStackTop;
+	int astTop = this.astPtr;
+	int exprTop = this.expressionPtr;
+	return stateTop == previous.stateStackTop && astTop == previous.astPtr && exprTop == previous.expressionPtr
+			&& Arrays.equals(this.stack, 0, stateTop, previous.stack, 0, stateTop)
+			&& (astTop == -1 || Arrays.equals(this.astStack, 0, astTop, previous.astStack, 0, astTop))
+			&& (exprTop == -1 || Arrays.equals(this.expressionStack, 0, exprTop, previous.expressionStack, 0, exprTop));
+}
+
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=292087
 // To be implemented in children viz. CompletionParser that are aware of array initializers
 protected boolean isInsideArrayInitializer() {

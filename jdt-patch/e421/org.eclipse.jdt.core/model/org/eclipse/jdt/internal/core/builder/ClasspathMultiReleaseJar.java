@@ -2,6 +2,7 @@ package org.eclipse.jdt.internal.core.builder;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.function.Predicate;
@@ -13,13 +14,11 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
-import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationDecorator;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -29,9 +28,9 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 	private static final int META_INF_LENGTH = META_INF_VERSIONS.length();
 	private volatile String[] supportedVersions;
 
-	ClasspathMultiReleaseJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotationPath,
+	ClasspathMultiReleaseJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, Collection<ClasspathLocation> allLocationsForEEA,
 			boolean isOnModulePath, String compliance) {
-		super(resource, accessRuleSet, externalAnnotationPath, isOnModulePath);
+		super(resource, accessRuleSet, externalAnnotationPath, allLocationsForEEA, isOnModulePath);
 		this.compliance = compliance;
 	}
 
@@ -158,28 +157,7 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 					}
 					String fileNameWithoutExtension = qualifiedBinaryFileName.substring(0,
 							qualifiedBinaryFileName.length() - SuffixConstants.SUFFIX_CLASS.length);
-					if (this.externalAnnotationPath != null) {
-						try {
-							if (this.annotationZipFile == null) {
-								this.annotationZipFile = ExternalAnnotationDecorator
-										.getAnnotationZipFile(this.externalAnnotationPath, null);
-							}
-
-							reader = ExternalAnnotationDecorator.create(reader, this.externalAnnotationPath,
-									fileNameWithoutExtension, this.annotationZipFile);
-						} catch (IOException e) {
-							// don't let error on annotations fail class reading
-						}
-						if (reader.getExternalAnnotationStatus() == ExternalAnnotationStatus.NOT_EEA_CONFIGURED) {
-							// ensure a reader that answers NO_EEA_FILE
-							reader = new ExternalAnnotationDecorator(reader, null);
-						}
-					}
-					if (this.accessRuleSet == null) {
-						return new NameEnvironmentAnswer(reader, null, modName);
-					}
-					return new NameEnvironmentAnswer(reader,
-							this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()), modName);
+					return createAnswer(fileNameWithoutExtension, reader, modName);
 				}
 			} catch (IOException | ClassFormatException e) {
 				Util.log(e, "Failed to find class for: " + s + " in: " + this);  //$NON-NLS-1$ //$NON-NLS-2$

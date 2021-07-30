@@ -23,7 +23,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
-import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationDecorator;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
@@ -84,22 +83,7 @@ public class ClasspathJMod extends ClasspathJar {
 						modName = classReader.moduleName;
 				}
 				String fileNameWithoutExtension = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length() - SuffixConstants.SUFFIX_CLASS.length);
-				if (this.externalAnnotationPath != null) {
-					try {
-						if (this.annotationZipFile == null) {
-							this.annotationZipFile = ExternalAnnotationDecorator
-									.getAnnotationZipFile(this.externalAnnotationPath, null);
-						}
-
-						reader = ExternalAnnotationDecorator.create(reader, this.externalAnnotationPath,
-								fileNameWithoutExtension, this.annotationZipFile);
-					} catch (IOException e) {
-						// don't let error on annotations fail class reading
-					}
-				}
-				if (this.accessRuleSet == null)
-					return new NameEnvironmentAnswer(reader, null, modName);
-				return new NameEnvironmentAnswer(reader, this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()), modName);
+				return createAnswer(fileNameWithoutExtension, reader, modName);
 			}
 		} catch (IOException | ClassFormatException e) { // treat as if class file is missing
 		}

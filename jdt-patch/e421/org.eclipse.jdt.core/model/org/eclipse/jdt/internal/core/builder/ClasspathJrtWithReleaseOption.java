@@ -61,8 +61,8 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 
 
 
-	public ClasspathJrtWithReleaseOption(String zipFilename, AccessRuleSet accessRuleSet, IPath externalAnnotationPath,
-			String release) throws CoreException {
+	public ClasspathJrtWithReleaseOption(String zipFilename, AccessRuleSet accessRuleSet,
+			IPath externalAnnotationPath, Collection<ClasspathLocation> allLocationsForEEA, String release) throws CoreException {
 		super();
 		if (release == null || release.equals("")) { //$NON-NLS-1$
 			throw new IllegalArgumentException("--release argument can not be null"); //$NON-NLS-1$
@@ -72,6 +72,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		if (externalAnnotationPath != null) {
 			this.externalAnnotationPath = externalAnnotationPath.toString();
 		}
+		this.allLocationsForEEA = allLocationsForEEA;
 		this.release = getReleaseOptionFromCompliance(release);
 		try {
 			this.ctSym = JRTUtil.getCtSym(Paths.get(this.zipFilename).getParent().getParent());
@@ -268,7 +269,8 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 				reader = ClassFileReader.readFromModule(this.jrtFile, moduleName, qualifiedBinaryFileName,
 						moduleNameFilter);
 			}
-			return createAnswer(fileNameWithoutExtension, reader);
+			if (reader != null)
+				return createAnswer(fileNameWithoutExtension, reader, reader.getModule());
 		} catch (ClassFormatException | IOException e) {
 			// treat as if class file is missing
 		}

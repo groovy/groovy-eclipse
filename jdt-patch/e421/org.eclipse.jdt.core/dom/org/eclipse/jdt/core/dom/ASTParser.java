@@ -27,8 +27,8 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
@@ -37,14 +37,18 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
-import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
+import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScannerData;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
-import org.eclipse.jdt.internal.core.*;
+import org.eclipse.jdt.internal.core.BasicCompilationUnit;
+import org.eclipse.jdt.internal.core.BinaryType;
+import org.eclipse.jdt.internal.core.ClassFileWorkingCopy;
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
+import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.dom.util.DOMASTUtil;
 import org.eclipse.jdt.internal.core.util.CodeSnippetParsingUtil;
 import org.eclipse.jdt.internal.core.util.RecordedParsingInformation;
@@ -653,6 +657,50 @@ public class ASTParser {
 			Map<String, String> options = this.project.getOptions(true);
 			options.remove(JavaCore.COMPILER_TASK_TAGS); // no need to parse task tags
 			this.compilerOptions = options;
+		}
+	}
+
+
+	/**
+	 * Sets the source code to be parsed.
+	 *
+	 *
+	 * <p>This method automatically sets the project (and compiler
+	 * options) based on the given compilation unit of class file, in a manner
+	 * equivalent to {@link #setProject(IJavaProject) setProject(source.getJavaProject())}.</p>
+	 * <p>If the source is a class file without source attachment, the creation of the
+	 * ast will fail with an {@link IllegalStateException}.</p>
+	 *
+	 * <p>If this method is used, the user need not specify compiler options explicitly.
+	 * The @param astLevel will be used for setting the corresponding values for the compiler
+	 * options: {@link JavaCore#COMPILER_SOURCE}, {@link JavaCore#COMPILER_CODEGEN_TARGET_PLATFORM}
+	 * and {@link JavaCore#COMPILER_COMPLIANCE}.</p>
+	 *
+	 * <p>This source is not used when the AST is built using
+	 * {@link #createASTs(ICompilationUnit[], String[], ASTRequestor, IProgressMonitor)}.</p>
+	 *
+	 * <p>This astLevel will be used as the
+	 * {@link #createASTs(ICompilationUnit[], String[], ASTRequestor, IProgressMonitor)}.</p>
+	 *
+	 * @param source the Java model compilation unit or class file whose corresponding source code
+	 * is to be parsed, or <code>null</code> if none
+	 * @param astLevel the API level; one of the <code>JLS*</code> level constants
+	 * declared on {@link AST}
+	 * @since 3.27
+	 */
+	public void setSource(ITypeRoot source, int astLevel) {
+		this.typeRoot = source;
+		// clear the raw source
+		this.rawSource = null;
+		if (source != null) {
+			this.project = source.getJavaProject();
+			Map<String, String> options = this.project.getOptions(true);
+			options.remove(JavaCore.COMPILER_TASK_TAGS); // no need to parse task tags
+			this.compilerOptions = options;
+			String compliance = DOMASTUtil.getCompliance(astLevel);
+			this.compilerOptions.put(JavaCore.COMPILER_COMPLIANCE, compliance);
+			this.compilerOptions.put(JavaCore.COMPILER_SOURCE, compliance);
+			this.compilerOptions.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, compliance);
 		}
 	}
 

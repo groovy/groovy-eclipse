@@ -3707,6 +3707,26 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				"true",
 				options);
 	}
+    public void testBug574892() {
+        Map<String, String> options = getCompilerOptions(false);
+        runConformTest(
+                new String[] {
+                        "X1.java",
+                        "\n"
+                        + "public class X1 {\n"
+                        + "    static boolean testConditional(Object obj) {\n"
+                        + "        return obj instanceof Integer other\n"
+                        + "                && ( other.intValue() > 100\n"
+                        + "                   ? other.intValue() < 200 : other.intValue() < 50);\n"
+                        + "    }\n"
+                        + "    public static void main(String[] obj) {\n"
+                        + "        System.out.println(testConditional(101));\n"
+                        + "    }\n"
+                        + "}\n",
+                },
+                "true",
+                options);
+    }
 	public void testBug572431_1() {
 		Map<String, String> options = getCompilerOptions(false);
 		runConformTest(
@@ -3838,4 +3858,22 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				options);
 
 	}
+    public void testBug574906() {
+        Map<String, String> options = getCompilerOptions(false);
+        runConformTest(
+                new String[] {
+                        "X1.java",
+                        "\n"
+                        + "public class X1 {\n"
+                        + "    static boolean testConditional(Object obj) {\n"
+                        + "        return obj instanceof Number oNum && oNum.intValue() < 0 && !(oNum instanceof Integer);\n"
+                        + "    }\n"
+                        + "    public static void main(String[] obj) {\n"
+                        + "        System.out.println(testConditional(-2f));\n"
+                        + "    }\n"
+                        + "}\n",
+                },
+                "true",
+                options);
+    }
 }

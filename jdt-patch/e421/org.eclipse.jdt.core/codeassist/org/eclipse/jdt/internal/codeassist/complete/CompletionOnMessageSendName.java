@@ -25,12 +25,16 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
  * and signals that the selector is to be matched inexactly (in contrast to CompletionOnMessageSend)..
  */
 public class CompletionOnMessageSendName extends MessageSend {
-	public CompletionOnMessageSendName(char[] selector, int start, int end) {
+
+	public boolean nextIsCast;
+
+	public CompletionOnMessageSendName(char[] selector, int start, int end, boolean nextIsCast) {
 		super();
 		this.selector = selector;
 		this.sourceStart = start;
 		this.sourceEnd = end;
 		this.nameSourcePosition = end;
+		this.nextIsCast = nextIsCast;
 	}
 
 	@Override

@@ -14,6 +14,7 @@
 
 package org.eclipse.jdt.internal.core.dom.util;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -158,6 +159,23 @@ public class DOMASTUtil {
 	        	return;
 		}
 		throw new IllegalArgumentException(Integer.toString(level));
+	}
+
+	private static final String[] AST_COMPLIANCE_MAP = {"-1","-1",JavaCore.VERSION_1_2, JavaCore.VERSION_1_3, JavaCore.VERSION_1_7, //$NON-NLS-1$ //$NON-NLS-2$
+			JavaCore.VERSION_1_7, JavaCore.VERSION_1_7, JavaCore.VERSION_1_7, JavaCore.VERSION_1_8, JavaCore.VERSION_9, JavaCore.VERSION_10,
+			JavaCore.VERSION_11, JavaCore.VERSION_12, JavaCore.VERSION_13, JavaCore.VERSION_14, JavaCore.VERSION_15, JavaCore.VERSION_16};
+
+	/**
+	 * Calculates the JavaCore Option value string corresponding to the input ast level.
+	 * AST Level 4 is used for Java versions 1.4 to 1.7 and is converted to compliance level 7
+	 * if input ast level is out of boundary, latest compliance will be returned
+	 * @param astLevel
+	 * @return JavaCore Option value string corresponding to the ast level
+	 */
+	@SuppressWarnings("deprecation")
+	public static String getCompliance(int astLevel) {
+		if (astLevel < AST.JLS2 && astLevel > AST.getJLSLatest()) return JavaCore.latestSupportedJavaVersion();
+		return AST_COMPLIANCE_MAP[astLevel];
 	}
 
 }

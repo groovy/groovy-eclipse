@@ -41,6 +41,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
@@ -256,11 +257,16 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 	newState.buildNumber = in.readInt();
 	newState.lastStructuralBuildTime = in.readLong();
 
-	newState.sourceLocations = readSourceLocations(project, in);
-	newState.binaryLocations = readBinaryLocations(project, in, newState.sourceLocations);
+	ArrayList<ClasspathLocation> allLocationsForEEA = null;
+	if (JavaCore.ENABLED.equals(JavaCore.create(project).getOption(JavaCore.CORE_JAVA_BUILD_EXTERNAL_ANNOTATIONS_FROM_ALL_LOCATIONS, true))) {
+		allLocationsForEEA = new ArrayList<>(); // signals that we are collecting locations
+	}
 
-	newState.testSourceLocations = readSourceLocations(project, in);
-	newState.testBinaryLocations = readBinaryLocations(project, in, newState.testSourceLocations);
+	newState.sourceLocations = readSourceLocations(project, in, allLocationsForEEA);
+	newState.binaryLocations = readBinaryLocations(project, in, newState.sourceLocations, allLocationsForEEA);
+
+	newState.testSourceLocations = readSourceLocations(project, in, allLocationsForEEA);
+	newState.testBinaryLocations = readBinaryLocations(project, in, newState.testSourceLocations, allLocationsForEEA);
 
 	int length;
 	newState.structuralBuildTimes = new SimpleLookupTable(length = in.readInt());
@@ -329,7 +335,7 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 	return newState;
 }
 
-private static ClasspathMultiDirectory[] readSourceLocations(IProject project, DataInputStream in) throws IOException {
+private static ClasspathMultiDirectory[] readSourceLocations(IProject project, DataInputStream in, List<ClasspathLocation> allLocationsForEEA) throws IOException {
 	int length = in.readInt();
 	ClasspathMultiDirectory[] sourceLocations = new ClasspathMultiDirectory[length];
 	for (int i = 0; i < length; i++) {
@@ -338,20 +344,23 @@ private static ClasspathMultiDirectory[] readSourceLocations(IProject project, D
 		if ((folderName = in.readUTF()).length() > 0) sourceFolder = project.getFolder(folderName);
 		if ((folderName = in.readUTF()).length() > 0) outputFolder = project.getFolder(folderName);
 		ClasspathMultiDirectory md =
-			(ClasspathMultiDirectory) ClasspathLocation.forSourceFolder(sourceFolder, outputFolder, readNames(in), readNames(in), in.readBoolean(), readNullablePath(in));
+			(ClasspathMultiDirectory) ClasspathLocation.forSourceFolder(sourceFolder, outputFolder, readNames(in), readNames(in), in.readBoolean(), readNullablePath(in), allLocationsForEEA);
 		if (in.readBoolean())
 			md.hasIndependentOutputFolder = true;
 		sourceLocations[i] = md;
+		if (allLocationsForEEA != null)
+			allLocationsForEEA.add(md);
 	}
 	return sourceLocations;
 }
 
-private static ClasspathLocation[] readBinaryLocations(IProject project, DataInputStream in, ClasspathMultiDirectory[] sourceLocations) throws IOException, CoreException {
+private static ClasspathLocation[] readBinaryLocations(IProject project, DataInputStream in, ClasspathMultiDirectory[] sourceLocations, ArrayList<ClasspathLocation> allLocationsForEEA) throws IOException, CoreException {
 	int length = in.readInt();
 	ClasspathLocation[] locations = new ClasspathLocation[length];
 	IWorkspaceRoot root = project.getWorkspace().getRoot();
 	for (int i = 0; i < length; i++) {
-		switch (in.readByte()) {
+		byte kind = in.readByte();
+		switch (kind) {
 			case SOURCE_FOLDER :
 				locations[i] = sourceLocations[in.readInt()];
 				break;
@@ -360,13 +369,13 @@ private static ClasspathLocation[] readBinaryLocations(IProject project, DataInp
 				IContainer outputFolder = path.segmentCount() == 1
 					? (IContainer) root.getProject(path.toString())
 					: (IContainer) root.getFolder(path);
-					locations[i] = ClasspathLocation.forBinaryFolder(outputFolder, in.readBoolean(),
-							readRestriction(in), new Path(in.readUTF()), in.readBoolean());
+				locations[i] = ClasspathLocation.forBinaryFolder(outputFolder, in.readBoolean(),
+							readRestriction(in), new Path(in.readUTF()), allLocationsForEEA, in.readBoolean());
 				break;
 			case EXTERNAL_JAR :
 				String jarPath = in.readUTF();
 				if (Util.isJrt(jarPath)) {
-					locations[i] = ClasspathLocation.forJrtSystem(jarPath, readRestriction(in), new Path(in.readUTF()), in.readUTF());
+					locations[i] = ClasspathLocation.forJrtSystem(jarPath, readRestriction(in), new Path(in.readUTF()), allLocationsForEEA, in.readUTF());
 				} else {
 					locations[i] = ClasspathLocation.forLibrary(jarPath, in.readLong(),
 							readRestriction(in), new Path(in.readUTF()), in.readBoolean(), in.readUTF());
@@ -374,10 +383,12 @@ private static ClasspathLocation[] readBinaryLocations(IProject project, DataInp
 				break;
 			case INTERNAL_JAR :
 					locations[i] = ClasspathLocation.forLibrary(root.getFile(new Path(in.readUTF())),
-							readRestriction(in), new Path(in.readUTF()), in.readBoolean(), in.readUTF());
+							readRestriction(in), new Path(in.readUTF()), allLocationsForEEA, in.readBoolean(), in.readUTF());
 					break;
 		}
 		ClasspathLocation loc = locations[i];
+		if (allLocationsForEEA != null && kind != SOURCE_FOLDER && !allLocationsForEEA.contains(loc))
+			allLocationsForEEA.add(loc);
 		char[] patchName = readName(in);
 		loc.patchModuleName = patchName.length > 0 ? new String(patchName) : null;
 		int limitSize = in.readInt();

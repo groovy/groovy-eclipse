@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 IBM Corporation and others.
+ * Copyright (c) 2020, 2021 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1309,35 +1309,6 @@ public class TextBlockTest extends AbstractRegressionTest {
 				new String[] {"-source 14 "},
 				copy);
 	}
-	public void testBug553252b() {
-		Map<String, String> defaultOptions = super.getCompilerOptions();
-		Map<String, String> copy = new HashMap<String, String>(defaultOptions);
-		copy.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_14);
-		copy.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_14);
-		copy.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_14);
-		copy.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
-		runNegativeTest(
-				new String[] {
-						"X.java",
-						"public class X {\n" +
-						"	public static String textb = \"\"\"\n" +
-						"\"\"\";\n" +
-						"	public static void main(String[] args) {\n" +
-						"		System.out.println(textb);\n" +
-						"	}\n" +
-						"}\n"
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 0)\n" +
-				"	public class X {\n" +
-				"	^\n" +
-				"Preview features enabled at an invalid source release level 14, preview can be enabled only at source level 15\n" +
-				"----------\n",
-				null,
-				true,
-				new String[] {"-source 14 --enable-preview"},
-				copy);
-	}
 	public void testBug562460() {
 		runConformTest(
 				new String[] {
@@ -1454,7 +1425,7 @@ public class TextBlockTest extends AbstractRegressionTest {
 				getCompilerOptions(),
 				"",
 				"",
-				"Exception in thread \"main\" java.lang.RuntimeException: This is line 10.\n" +
+				"java.lang.RuntimeException: This is line 10.\n" +
 						"	at X.main(X.java:10)",
 				new String[] {"--enable-preview"},
 				new JavacTestOptions("-source 14 --enable-preview"));
@@ -1480,7 +1451,7 @@ public class TextBlockTest extends AbstractRegressionTest {
 			getCompilerOptions(),
 			"",
 			"",
-			"Exception in thread \"main\" java.lang.RuntimeException: This is line 10.\n" +
+			"java.lang.RuntimeException: This is line 10.\n" +
 					"	at X.main(X.java:10)",
 			new String[] {"--enable-preview"},
 			new JavacTestOptions("-source 14 --enable-preview"));

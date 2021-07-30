@@ -26,11 +26,16 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -143,6 +148,82 @@ public class StateTest extends BuilderTests {
 
 		writeReadAndCompareTestBinaryLocations(project);
 	}
+	public void testSelfAnnotatedJars() throws CoreException, IOException {
+		// derived from the same named test in ExternalAnnotation18Test:
+		IPath projectPath = env.addProject("PrjTest", "1.8"); //$NON-NLS-1$
+		IJavaProject project = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot().getProject(projectPath.segment(0)));
+
+		project.setOption(JavaCore.CORE_JAVA_BUILD_EXTERNAL_ANNOTATIONS_FROM_ALL_LOCATIONS, JavaCore.ENABLED);
+
+		String projectLoc = project.getProject().getLocation().toString();
+		Util.createJar(new String[] {
+				"pgen/CGen.java",
+				"package pgen;\n" +
+				"public class CGen {\n" +
+				"	public String get(String in) { return in; }\n" +
+				"}\n"
+			},
+			new String[] {
+				"pgen/CGen.eea",
+				"class pgen/CGen\n" +
+				"\n" +
+				"get\n" +
+				" (Ljava/lang/String;)Ljava/lang/String;\n" +
+				" (L1java/lang/String;)L1java/lang/String;\n"
+			},
+			projectLoc+"/lib/prj1.jar",
+			"1.8");
+		IClasspathEntry entry = JavaCore.newLibraryEntry(
+				new Path("/PrjTest/lib/prj1.jar"),
+				null/*access rules*/,
+				null,
+				false/*exported*/);
+		env.addEntry(project.getPath(), entry);
+
+		Util.createJar(new String[] {
+				"pgen2/CGen2.java",
+				"package pgen2;\n" +
+				"public class CGen2 {\n" +
+				"	public String get2(Exception in) { return in.toString(); }\n" +
+				"}\n"
+			},
+			new String[] {
+				"pgen2/CGen2.eea",
+				"class pgen2/CGen2\n" +
+				"\n" +
+				"get2\n" +
+				" (Ljava/lang/Exception;)Ljava/lang/String;\n" +
+				" (L1java/lang/Exception;)L1java/lang/String;\n",
+			},
+			projectLoc+"/lib/prj2.jar",
+			"1.8");
+		entry = JavaCore.newLibraryEntry(
+				new Path("/PrjTest/lib/prj2.jar"),
+				null/*access rules*/,
+				null,
+				false/*exported*/);
+		env.addEntry(project.getPath(), entry);
+		project.getProject().refreshLocal(IResource.DEPTH_INFINITE, null);
+
+		env.addFolder(project.getPath(), "src/p");
+		env.addFile(project.getPath().append("src").append("p"), "Use.java",
+				"package p;\n" +
+				"import pgen.CGen;\n" +
+				"import pgen2.CGen2;\n" +
+				"import org.eclipse.jdt.annotation.NonNull;\n" +
+				"public class Use {\n" +
+				"	public @NonNull String test(CGen c) {\n" +
+				"		String s = c.get(null);\n" +
+				"		return s;\n" +
+				"	}\n" +
+				"	public @NonNull String test2(CGen2 c) {\n" +
+				"		String s = c.get2(null);\n" +
+				"		return s;\n" +
+				"	}\n" +
+				"}\n");
+		project.getProject().build(IncrementalProjectBuilder.FULL_BUILD, null);
+		writeReadAndCompareExternalAnnotationLocations(project.getProject());
+	}
 
 	private void writeReadAndCompareTestBinaryLocations(IPath projectPath)
 			throws JavaModelException, IOException, CoreException {
@@ -161,6 +242,22 @@ public class StateTest extends BuilderTests {
 			ClasspathLocation[] b) {
 		assertEquals(a.length, b.length);
 		assertArrayEquals(a, b);
+	}
+
+	private void writeReadAndCompareExternalAnnotationLocations(IProject project)
+			throws JavaModelException, IOException, CoreException {
+		JavaModelManager javaModelManager = JavaModelManager.getJavaModelManager();
+		PerProjectInfo info = javaModelManager.getPerProjectInfoCheckExistence(project);
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		State savedState = (State) info.savedState;
+		JavaBuilder.writeState(savedState, new DataOutputStream(outputStream));
+		byte[] bytes = outputStream.toByteArray();
+		State readState = JavaBuilder.readState(project, new DataInputStream(new ByteArrayInputStream(bytes)));
+		assertArrayEquals(savedState.binaryLocations, readState.binaryLocations);
+		// beyond this point we know that both arrays have the same length
+		for (int i=0; i < savedState.binaryLocations.length; i++) {
+			assertTrue("comparing eea locations of "+savedState.binaryLocations[i], savedState.binaryLocations[i].externalAnnotationsEquals(readState.binaryLocations[i]));
+		}
 	}
 
 	private void writeReadAndCompareReferences(IPath projectPath)

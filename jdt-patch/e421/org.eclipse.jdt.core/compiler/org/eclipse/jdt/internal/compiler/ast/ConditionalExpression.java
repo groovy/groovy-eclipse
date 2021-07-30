@@ -456,8 +456,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	}
 	@Override
 	public void collectPatternVariablesToScope(LocalVariableBinding[] variables, BlockScope scope) {
-		this.valueIfFalse.collectPatternVariablesToScope(null, scope);
-		this.valueIfTrue.collectPatternVariablesToScope(null, scope);
+		// Introduce preceding variables introduced into the scope if this expression is actually evaluated
+		this.condition.collectPatternVariablesToScope(variables, scope);
+		this.valueIfFalse.collectPatternVariablesToScope(variables, scope);
+		this.valueIfTrue.collectPatternVariablesToScope(variables, scope);
 		if (this.valueIfFalse.containsPatternVariable() && this.valueIfTrue.containsPatternVariable() ) {
 			LocalVariableBinding[] first = this.valueIfTrue.patternVarsWhenTrue;
 			LocalVariableBinding[] second = this.valueIfFalse.patternVarsWhenTrue;

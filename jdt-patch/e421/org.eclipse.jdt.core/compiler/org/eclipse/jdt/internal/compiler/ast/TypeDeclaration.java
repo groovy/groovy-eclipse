@@ -620,7 +620,7 @@ public AbstractMethodDeclaration declarationOf(MethodBinding methodBinding) {
  */
 public RecordComponent declarationOf(RecordComponentBinding recordComponentBinding) {
 	if (recordComponentBinding != null && this.recordComponents != null) {
-		for (int i = 0, max = this.fields.length; i < max; i++) {
+		for (int i = 0, max = this.recordComponents.length; i < max; i++) {
 			RecordComponent recordComponent;
 			if ((recordComponent = this.recordComponents[i]).binding == recordComponentBinding)
 				return recordComponent;
@@ -841,7 +841,10 @@ public boolean hasErrors() {
  *	Common flow analysis for all types
  */
 private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
-	checkYieldUsage();
+	if (CharOperation.equals(this.name, TypeConstants.YIELD)) {
+		this.scope.problemReporter().validateRestrictedKeywords(this.name, this);
+	}
+
 	if (!this.binding.isUsed() && this.binding.isOrEnclosedByPrivateType()) {
 		if (!this.scope.referenceCompilationUnit().compilationResult.hasSyntaxError) {
 			this.scope.problemReporter().unusedPrivateType(this);
@@ -961,18 +964,6 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 	// enable enum support ?
 	if (this.binding.isEnum() && !this.binding.isAnonymousType()) {
 		this.enumValuesSyntheticfield = this.binding.addSyntheticFieldForEnumValues();
-	}
-}
-
-private void checkYieldUsage() {
-	long sourceLevel = this.scope.compilerOptions().sourceLevel;
-	if (sourceLevel < ClassFileConstants.JDK14 || this.name == null ||
-			!("yield".equals(new String(this.name)))) //$NON-NLS-1$
-		return;
-	if (sourceLevel >= ClassFileConstants.JDK14) {
-		this.scope.problemReporter().switchExpressionsYieldTypeDeclarationError(this);
-	} else {
-		this.scope.problemReporter().switchExpressionsYieldTypeDeclarationWarning(this);
 	}
 }
 

@@ -301,20 +301,20 @@ public void testAfterEmptyAnonymous() {
 		// completeBehind:
 		"fred(new Runnable() {}, ",
 		// expectedCompletionNodeToString:
-		"<CompleteOnMessageSend:this.fred(new Runnable() {\n})>",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    <CompleteOnMessageSend:this.fred(new Runnable() {\n" +
-		"})>;\n" +
+		"    this.fred(new Runnable() {\n" +
+		"}, <CompleteOnName:>, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
 		"",
 		// expectedReplacedSource:
-		"fred(new Runnable() {}, ",
+		"",
 		// test name
 		"<completion just before second parameter, the first parameter being an empty anonymous class>"
 	);
@@ -364,19 +364,19 @@ public void testBeforeFirstParameter() {
 		// completeBehind:
 		"fred(",
 		// expectedCompletionNodeToString:
-		"<CompleteOnMessageSend:this.fred()>",
+		"<CompleteOnMessageSend:this.fred(<CompleteOnName:>, 2, i)>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    <CompleteOnMessageSend:this.fred()>;\n" +
+		"    <CompleteOnMessageSend:this.fred(<CompleteOnName:>, 2, i)>;\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
 		"",
 		// expectedReplacedSource:
-		"fred(",
+		"fred(1, 2, i)",
 		// test name
 		"<completion just before first parameter>"
 	);
@@ -426,19 +426,19 @@ public void testBeforeSecondParameter() {
 		// completeBehind:
 		"fred(1, ",
 		// expectedCompletionNodeToString:
-		"<CompleteOnMessageSend:this.fred(1)>",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    <CompleteOnMessageSend:this.fred(1)>;\n" +
+		"    this.fred(1, <CompleteOnName:>, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
 		"",
 		// expectedReplacedSource:
-		"fred(1, ",
+		"",
 		// test name
 		"<completion just before second parameter>"
 	);
@@ -652,19 +652,19 @@ public void testSpaceThenFirstParameter() {
 		// completeBehind:
 		"fred( ",
 		// expectedCompletionNodeToString:
-		"<CompleteOnMessageSend:this.fred()>",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    <CompleteOnMessageSend:this.fred()>;\n" +
+		"    this.fred(<CompleteOnName:>, 2, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
 		"",
 		// expectedReplacedSource:
-		"fred( ",
+		"",
 		// test name
 		"<completion just before first parameter with a space after open parenthesis>"
 	);

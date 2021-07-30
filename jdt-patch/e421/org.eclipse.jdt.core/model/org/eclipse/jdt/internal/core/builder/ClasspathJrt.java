@@ -25,13 +25,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.zip.ZipFile;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
-import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationDecorator;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
@@ -48,12 +46,8 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 //private HashMap<String, SimpleSet> packagesInModule = null;
 protected static HashMap<String, HashMap<String, SimpleSet>> PackageCache = new HashMap<>();
 protected static HashMap<String, HashMap<String, IModule>> ModulesCache = new HashMap<>();
-String externalAnnotationPath;
-protected ZipFile annotationZipFile;
 String zipFilename; // keep for equals
 File jrtFile;
-AccessRuleSet accessRuleSet;
-
 static final Set<String> NO_LIMIT_MODULES = new HashSet<>();
 
 /*
@@ -61,11 +55,12 @@ static final Set<String> NO_LIMIT_MODULES = new HashSet<>();
  */
 protected ClasspathJrt() {
 }
-public ClasspathJrt(String zipFilename, AccessRuleSet accessRuleSet, IPath externalAnnotationPath) {
+public ClasspathJrt(String zipFilename, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, Collection<ClasspathLocation> allLocationsForEEA) {
 	setZipFile(zipFilename);
 	this.accessRuleSet = accessRuleSet;
 	if (externalAnnotationPath != null)
 		this.externalAnnotationPath = externalAnnotationPath.toString();
+	this.allLocationsForEEA = allLocationsForEEA;
 	loadModules(this);
 }
 
@@ -215,32 +210,12 @@ public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPa
 	try {
 		String fileNameWithoutExtension = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length() - SuffixConstants.SUFFIX_CLASS.length);
 		IBinaryType reader = ClassFileReader.readFromModule(this.jrtFile, moduleName, qualifiedBinaryFileName, moduleNameFilter);
-		return createAnswer(fileNameWithoutExtension, reader);
+		if (reader != null)
+			return createAnswer(fileNameWithoutExtension, reader, reader.getModule());
 	} catch (ClassFormatException | IOException e) { // treat as if class file is missing
 	}
 	return null;
 }
-protected NameEnvironmentAnswer createAnswer(String fileNameWithoutExtension, IBinaryType reader) {
-	if (reader != null) {
-		if (this.externalAnnotationPath != null) {
-			try {
-				if (this.annotationZipFile == null) {
-					this.annotationZipFile = ExternalAnnotationDecorator.getAnnotationZipFile(this.externalAnnotationPath, null);
-				}
-				reader = ExternalAnnotationDecorator.create(reader, this.externalAnnotationPath, fileNameWithoutExtension, this.annotationZipFile);
-			} catch (IOException e) {
-				// don't let error on annotations fail class reading
-			}
-		}
-		if (this.accessRuleSet == null)
-			return new NameEnvironmentAnswer(reader, null, reader.getModule());
-		return new NameEnvironmentAnswer(reader,
-				this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()),
-				reader.getModule());
-	}
-	return null;
-}
-
 @Override
 public IPath getProjectRelativePath() {
 	return null;

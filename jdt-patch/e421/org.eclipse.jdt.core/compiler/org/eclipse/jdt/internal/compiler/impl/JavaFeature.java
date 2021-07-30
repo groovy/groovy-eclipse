@@ -33,6 +33,11 @@ import org.eclipse.jdt.internal.compiler.util.Messages;
  */
 public enum JavaFeature {
 
+	SWITCH_EXPRESSIONS(ClassFileConstants.JDK14,
+			Messages.bind(Messages.switch_expression),
+			new char[][] {TypeConstants.YIELD},
+			false),
+
 	TEXT_BLOCKS(ClassFileConstants.JDK15,
 			Messages.bind(Messages.text_block),
 			new char[][] {},

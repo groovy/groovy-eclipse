@@ -224,7 +224,6 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 							required[j] = null;
 							if (--numRequired == 0)
 								return true;
-							break;
 						}
 					}
 				}

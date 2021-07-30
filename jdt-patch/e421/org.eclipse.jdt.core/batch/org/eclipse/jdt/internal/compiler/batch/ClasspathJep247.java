@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystemAlreadyExistsException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -120,7 +121,11 @@ public class ClasspathJep247 extends ClasspathJrt {
 		}
 		if (this.fs == null) {
 			HashMap<String, ?> env = new HashMap<>();
-			this.fs = FileSystems.newFileSystem(uri, env);
+			try {
+				this.fs = FileSystems.newFileSystem(uri, env);
+			} catch (FileSystemAlreadyExistsException e) {
+				this.fs = FileSystems.getFileSystem(uri);
+			}
 		}
 		this.releasePath = this.fs.getPath("/"); //$NON-NLS-1$
 		if (!Files.exists(this.fs.getPath(this.releaseInHex))) {
@@ -261,15 +266,7 @@ public class ClasspathJep247 extends ClasspathJrt {
 		}
 		return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
 	}
-	@Override
-	public void reset() {
-		try {
-			super.reset();
-			this.fs.close();
-		} catch (IOException e) {
-			// Move on
-		}
-	}
+
 	@Override
 	public String toString() {
 		return "Classpath for JEP 247 for JDK " + this.file.getPath(); //$NON-NLS-1$

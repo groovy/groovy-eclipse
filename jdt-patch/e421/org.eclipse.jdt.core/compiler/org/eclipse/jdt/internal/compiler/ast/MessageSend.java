@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -284,13 +284,9 @@ private void yieldQualifiedCheck(BlockScope currentScope) {
 	long sourceLevel = currentScope.compilerOptions().sourceLevel;
 	if (sourceLevel < ClassFileConstants.JDK14 || !this.receiverIsImplicitThis())
 		return;
-	if (this.selector == null || !("yield".equals(new String(this.selector)))) //$NON-NLS-1$
+	if (!CharOperation.equals(this.selector, TypeConstants.YIELD))
 		return;
-	if (sourceLevel >= ClassFileConstants.JDK14) {
-		currentScope.problemReporter().switchExpressionsYieldUnqualifiedMethodError(this);
-	} else {
-		currentScope.problemReporter().switchExpressionsYieldUnqualifiedMethodWarning(this);
-	}
+	currentScope.problemReporter().switchExpressionsYieldUnqualifiedMethodError(this);
 }
 private void recordCallingClose(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, Expression closeTarget) {
 	FakedTrackingVariable trackingVariable = FakedTrackingVariable.getCloseTrackingVariable(closeTarget, flowInfo, flowContext);

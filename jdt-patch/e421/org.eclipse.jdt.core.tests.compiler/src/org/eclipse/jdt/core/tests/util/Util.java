@@ -1458,15 +1458,14 @@ public static void writeToFile(String contents, String destinationFilePath) {
 }
 public static void zip(File rootDir, String zipPath) throws IOException {
     ZipOutputStream zip = null;
+    long lastModified=0;
+    File zipFile = new File(zipPath);
     try {
-        File zipFile = new File(zipPath);
-        if (zipFile.exists()) {
+		lastModified = zipFile.lastModified();
+		if (lastModified != 0) { // zipFile.exists()
         	if (!delete(zipFile)) {
 				Files.deleteIfExists(zipFile.toPath());
 			}
-        	// ensure the new zip file has a different timestamp than the previous one
-        	int timeToWait = 1000; // some platform (like Linux) have a 1s granularity)
-            waitAtLeast(timeToWait);
         } else {
         	zipFile.getParentFile().mkdirs();
         }
@@ -1477,6 +1476,10 @@ public static void zip(File rootDir, String zipPath) throws IOException {
             zip.close();
         }
     }
+	if (lastModified != 0 && lastModified == zipFile.lastModified()) {
+		// ensure the new zip file has a different timestamp than the previous one
+		zipFile.setLastModified(lastModified + 1000);
+	}
 }
 private static void zip(File dir, ZipOutputStream zip, int rootPathLength) throws IOException {
     File[] files = dir.listFiles();

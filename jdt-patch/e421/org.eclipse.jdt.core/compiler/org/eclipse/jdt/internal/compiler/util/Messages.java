@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -117,6 +117,7 @@ public final class Messages {
 	public static String constant_cannotCastedInto;
 	public static String constant_cannotConvertedTo;
 
+	public static String switch_expression;
 	public static String text_block;
 	public static String pattern_matching_instanceof;
 	public static String records;

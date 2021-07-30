@@ -58,6 +58,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1482,6 +1483,9 @@ public RecordComponentBinding[] components() {
 				if (smb.purpose == SyntheticMethodBinding.RecordCanonicalConstructor) {
 					for (int i = 0, l = smb.parameters.length; i < l; ++i) {
 						smb.parameters[i] = this.components[i].type;
+					}
+					if (this.isVarArgs == true) {
+						smb.modifiers |= ClassFileConstants.AccVarargs;
 					}
 				}
 			}
@@ -3406,15 +3410,16 @@ public SyntheticMethodBinding[] syntheticMethods() {
 		}
 	}
 	// sort them in according to their own indexes
-	int length;
-	SyntheticMethodBinding[] sortedBindings = new SyntheticMethodBinding[length = bindings.length];
-	for (int i = 0; i < length; i++){
-		SyntheticMethodBinding binding = bindings[i];
-		sortedBindings[binding.index] = binding;
-	}
-	return sortedBindings;
-}
+	Arrays.sort(bindings, new Comparator<>() {
+		@Override
+		public int compare(SyntheticMethodBinding o1, SyntheticMethodBinding o2) {
+			return o1.index - o2.index;
+		}
+	});
 
+
+	return bindings;
+}
 /**
  * Answers the collection of synthetic fields to append into the classfile.
  */

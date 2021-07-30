@@ -1123,7 +1123,7 @@ private static IModuleDescription getModuleDescription(IPackageFragment pack) {
 	if (javaProject != null && isComplianceJava11OrHigher(javaProject)) {
 		if (pack.isReadOnly()) {
 			IPackageFragmentRoot root= (IPackageFragmentRoot) pack.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
-			if (root != null) {
+			if (root instanceof JrtPackageFragmentRoot) {
 				moduleDescription= root.getModuleDescription();
 			}
 		} else {

@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -401,6 +401,7 @@ protected void consumeInstanceOfExpression() {
 		InstanceOfExpression expression = (InstanceOfExpression) this.expressionStack[this.expressionPtr];
 		this.patternLocator.match(expression.type, this.nodeSet);
 	}
+	matchPatternVariable();
 }
 @Override
 protected void consumeInstanceOfExpressionWithName() {
@@ -408,6 +409,18 @@ protected void consumeInstanceOfExpressionWithName() {
 	if ((this.patternFineGrain & IJavaSearchConstants.INSTANCEOF_TYPE_REFERENCE) != 0) {
 		InstanceOfExpression expression = (InstanceOfExpression) this.expressionStack[this.expressionPtr];
 		this.patternLocator.match(expression.type, this.nodeSet);
+	}
+	matchPatternVariable();
+}
+
+private void matchPatternVariable() {
+	if (this.patternFineGrain == 0) {
+		InstanceOfExpression expression = (InstanceOfExpression) this.expressionStack[this.expressionPtr];
+		LocalDeclaration elementVariable = expression.elementVariable;
+		if (elementVariable != null) {
+			// if pattern variable present, match that
+			this.patternLocator.match(elementVariable, this.nodeSet);
+		}
 	}
 }
 @Override
