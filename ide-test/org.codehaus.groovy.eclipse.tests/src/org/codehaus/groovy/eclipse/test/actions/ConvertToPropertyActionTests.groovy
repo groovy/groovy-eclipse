@@ -144,6 +144,12 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     }
 
     @Test
+    void testImplicitGetterToProperty2() {
+        convertToProperty "def getX(){0}\n[x:1].with { get${CARET}X() }"
+        assertEditorContents 'def getX(){0}\n[x:1].with { this.x }'
+    }
+
+    @Test
     void testImplicitIsserToProperty() {
         addGroovySource 'class Foo { static void isSomething() {} }', 'Foo'
         convertToProperty "Foo.isSome${CARET}thing()"
@@ -154,6 +160,12 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     void testImplicitSetterToProperty() {
         convertToProperty "new Date().with { set${CARET}Time(1234L) }"
         assertEditorContents 'new Date().with { time = 1234L }'
+    }
+
+    @Test
+    void testImplicitSetterToProperty2() {
+        convertToProperty "void setX(x){}\n[x:1].with { set${CARET}X(0) }"
+        assertEditorContents 'void setX(x){}\n[x:1].with { this.x = 0 }'
     }
 
     @Test

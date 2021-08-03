@@ -41,6 +41,9 @@ import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.groovy.search.ITypeRequestor;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
+import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.ITextSelection;
@@ -108,7 +111,14 @@ public class ConvertToPropertyAction extends Action {
                     String propertyName = match.group(1);
 
                     // replace "getPropertyName()" with "propertyName"
-                    return new ReplaceEdit(offset, length, decapitalize(propertyName));
+                    TextEdit edit = new ReplaceEdit(offset, length, decapitalize(propertyName));
+
+                    // implicit-this call may require qualifier to retain its semantics
+                    if (call.getReceiver().getEnd() < 1 && isTypeChange(gcu, edit, node)) {
+                        edit = new ReplaceEdit(offset, length, call.getReceiver().getText() + "." + decapitalize(propertyName));
+                    }
+
+                    return edit;
 
                 } else if (args.getExpressions().size() == 1 && (match = compile("set(\\p{javaJavaIdentifierPart}+)").matcher(call.getMethodAsString())).matches()) {
                     int offset = node.getStart(), length = args.getStart() - offset;
@@ -116,7 +126,7 @@ public class ConvertToPropertyAction extends Action {
 
                     // replace "setPropertyName(value_expression)" or "setPropertyName value_expression"
                     // with "propertyName = value_expression" (check prefs for spaces around assignment)
-                    MultiTextEdit edits = new MultiTextEdit();
+                    MultiTextEdit edit = new MultiTextEdit();
                     Map<String, String> options = gcu.getJavaProject().getOptions(true);
                     StringBuilder replacement = new StringBuilder(decapitalize(propertyName));
                     if (JavaCore.INSERT.equals(options.get(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR))) {
@@ -129,19 +139,56 @@ public class ConvertToPropertyAction extends Action {
                     if (args.getExpression(0) instanceof NamedArgumentListExpression) {
                         replacement.append('[');
                     }
-                    edits.addChild(new ReplaceEdit(offset, length, replacement.toString()));
+                    edit.addChild(new ReplaceEdit(offset, length, replacement.toString()));
 
                     boolean rparen = (args.getEnd() < gcu.getContents().length && gcu.getContents()[args.getEnd()] == ')');
                     if (args.getExpression(0) instanceof NamedArgumentListExpression) {
-                        edits.addChild(rparen ? new ReplaceEdit(args.getEnd(), 1, "]") : new InsertEdit(args.getEnd(), "]"));
+                        edit.addChild(rparen ? new ReplaceEdit(args.getEnd(), 1, "]") : new InsertEdit(args.getEnd(), "]"));
                     } else if (rparen) {
-                        edits.addChild(new DeleteEdit(args.getEnd(), 1));
+                        edit.addChild(new DeleteEdit(args.getEnd(), 1));
                     }
 
-                    return edits;
+                    // implicit-this call may require qualifier to retain its semantics
+                    if (call.getReceiver().getEnd() < 1 && isTypeChange(gcu, edit, node)) {
+                        edit.removeChild(0); // add qualifier to the property name
+                        replacement.insert(0, call.getReceiver().getText() + ".");
+                        edit.addChild(new ReplaceEdit(offset, length, replacement.toString()));
+                    }
+
+                    return edit;
                 }
             }
         }
         return null;
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static boolean isTypeChange(final GroovyCompilationUnit gcu, final TextEdit edit, final ASTNode node) {
+        try {
+            TypeLookupResult before = inferNodeType(node, gcu);
+            TextEdit undo = gcu.applyTextEdit(edit.copy(), null);
+            TypeLookupResult after = inferNodeType(new ASTNodeFinder(new Region(node.getStart(), 0)).doVisit(gcu.getModuleNode()), gcu);
+            gcu.applyTextEdit(undo, null);
+
+            if (!before.declaringType.equals(after.declaringType)) {
+                return true;
+            }
+        } catch (Exception e) {
+            GroovyPlugin.getDefault().logError("Failure in convert to property type inference", e);
+        }
+        return false;
+    }
+
+    private static TypeLookupResult inferNodeType(final ASTNode node, final GroovyCompilationUnit unit) {
+        TypeLookupResult[] result = new TypeLookupResult[1];
+        new TypeInferencingVisitorFactory().createVisitor(unit).visitCompilationUnit((n, r, x) -> {
+            if (n == node) {
+                result[0] = r;
+                return ITypeRequestor.VisitStatus.STOP_VISIT;
+            }
+            return ITypeRequestor.VisitStatus.CONTINUE;
+        });
+        return result[0];
     }
 }
