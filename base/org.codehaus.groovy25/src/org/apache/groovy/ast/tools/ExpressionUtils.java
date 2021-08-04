@@ -263,7 +263,7 @@ public final class ExpressionUtils {
                             // GRECLIPSE end
                             return ce3;
                         }
-                    } catch(Exception e) {
+                    } catch (Exception | LinkageError e) {
                         // ignore, leave property expression in place and we'll report later
                     }
                 }

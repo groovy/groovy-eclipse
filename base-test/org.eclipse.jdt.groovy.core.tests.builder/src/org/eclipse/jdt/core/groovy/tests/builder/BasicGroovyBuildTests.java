@@ -1731,11 +1731,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         //@formatter:off
         env.addGroovyClass(paths[1], "com.demo", "MyAnnotation",
-            "package com.demo\r\n" +
-            "\r\n" +
-            "@groovy.transform.AnnotationCollector\r\n" +
-            "@Deprecated\r\n" +
-            "@interface MyAnnotation {}\r\n");
+            "package com.demo\n" +
+            "\n" +
+            "@groovy.transform.AnnotationCollector\n" +
+            "@Deprecated\n" +
+            "@interface MyAnnotation {}\n");
         //@formatter:on
 
         IPath annotationProject = paths[0];
@@ -1747,10 +1747,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         //@formatter:off
         env.addGroovyClass(paths[1], "com.demo", "Widget",
-            "package com.demo\r\n" +
-            "\r\n" +
-            "@MyAnnotation\r\n" +
-            "class Widget {}\r\n");
+            "package com.demo\n" +
+            "\n" +
+            "@MyAnnotation\n" +
+            "class Widget {}\n");
         //@formatter:on
 
         fullBuild();
@@ -1820,6 +1820,38 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingCompiledClasses("Book");
         expectingNoProblems();
         executeClass(paths[0], "Book", "@NotNull()\n@Length()\n", "");
+    }
+
+    @Test // GROOVY-10191
+    public void testInlineConstantMultiProject() throws Exception {
+        IPath[] paths = createSimpleProject("One", true);
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "pack", "Type",
+            "package pack\n" +
+            "class Type {\n" +
+            "  public static final CONST = 'value'\n" +
+            "  static {\n" +
+            "    throw new NoSuchMethodError('simulate complex field init')\n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
+
+        IPath one = paths[0];
+        incrementalBuild(one);
+        paths = createSimpleProject("Two", true);
+        env.addRequiredProjectWithoutTestCode(paths[0], one);
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "", "Main",
+            "class Main {\n" +
+            "  static final prop = pack.Type.CONST\n" +
+            "}\n");
+        //@formatter:on
+
+        incrementalBuild();
+        expectingNoProblems();
+        expectingCompiledClasses("Main");
     }
 
     @Test
