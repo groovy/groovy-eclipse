@@ -988,6 +988,75 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testStaticProperty12() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print Type.pi\n" +
+            "print Type.xx\n",
+
+            "Type.groovy",
+            "interface Type {\n" +
+            "  BigDecimal pi = 3.14\n" +
+            "  BigInteger xx = 1592\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "3.141592");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1289
+    public void testStaticProperty13() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(Type.pi);\n" +
+            "    System.out.print(Type.xx);\n" +
+            "  }\n" +
+            "}\n",
+
+            "Type.groovy",
+            "interface Type {\n" +
+            "  BigDecimal pi = 3.14\n" +
+            "  BigInteger xx = 1592\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "3.141592");
+    }
+
+    @Test
+    public void testStaticProperty14() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(Pogo.TOO_MANY_DIGITS);\n" +
+            "  }\n" +
+            "}\n",
+
+            "Pogo.groovy",
+            "final class Pogo {\n" +
+            "  public static final double TOO_MANY_DIGITS = -3.14159_26535_89793_23846_26433_83279_50288_41971_69399_37510\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Pogo.groovy (at line 2)\n" +
+            "\tpublic static final double TOO_MANY_DIGITS = -3.14159_26535_89793_23846_26433_83279_50288_41971_69399_37510\n" +
+            "\t                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The literal -3.14159265358979323846264338327950288419716939937510 of type double is out of range \n" +
+            "----------\n");
+    }
+
+    @Test
     public void testClash_GRE1076() {
         //@formatter:off
         String[] sources = {

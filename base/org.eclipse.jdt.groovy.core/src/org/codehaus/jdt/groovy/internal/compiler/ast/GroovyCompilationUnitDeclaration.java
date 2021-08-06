@@ -109,6 +109,7 @@ import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
@@ -856,45 +857,41 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
      */
     private class TraitHelper {
 
-        private boolean lookForTraitAlias;
-        private boolean toBeInitialized = true;
+        private Boolean checkTraitAlias;
 
-        private void initialize() {
-            if (imports != null) {
-                for (ImportReference i : imports) {
-                    String importedType = i.toString();
-                    if ("groovy.transform.Trait".equals(importedType)) {
-                        lookForTraitAlias = true;
-                        break;
-                    }
-                    if (importedType.endsWith(".Trait")) {
-                        lookForTraitAlias = false;
-                        break;
-                    }
-                    if ("groovy.transform.*".equals(importedType)) {
-                        lookForTraitAlias = true;
-                    }
-                }
-                toBeInitialized = true;
-            }
-        }
-
-        private boolean isTrait(ClassNode classNode) {
+        private boolean isTrait(final ClassNode classNode) {
             if (classNode == null) {
                 return false;
             }
-            if (toBeInitialized) {
-                initialize();
+            if (checkTraitAlias == null) {
+                for (ImportReference i : imports) {
+                    String importSpec = i.toString();
+
+                    if ("groovy.transform.Trait".equals(importSpec)) {
+                        checkTraitAlias = Boolean.TRUE;
+                        break;
+                    }
+                    if (importSpec.endsWith(".Trait")) {
+                        checkTraitAlias = Boolean.FALSE;
+                        break;
+                    }
+                    if ("groovy.transform.*".equals(importSpec)) {
+                        checkTraitAlias = Boolean.TRUE;
+                    }
+                }
+                if (checkTraitAlias == null) {
+                    checkTraitAlias = Boolean.FALSE;
+                }
             }
-            List<AnnotationNode> annotations = classNode.getAnnotations();
-            if (!annotations.isEmpty()) {
-                for (AnnotationNode annotation : annotations) {
-                    if ("groovy.transform.Trait".equals(annotation.getClassNode().getName())) {
-                        return true;
-                    }
-                    if (lookForTraitAlias && "Trait".equals(annotation.getClassNode().getName())) {
-                        return true;
-                    }
+
+            for (AnnotationNode annotation : classNode.getAnnotations()) {
+                String annotationType = annotation.getClassNode().getName();
+
+                if ("groovy.transform.Trait".equals(annotationType)) {
+                    return true;
+                }
+                if (Boolean.TRUE.equals(checkTraitAlias) && "Trait".equals(annotationType)) {
+                    return true;
                 }
             }
             return false;
@@ -951,6 +948,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private void createImportDeclarations(ModuleNode moduleNode) {
+            // ensure BigDecimal and BigInteger are recorded
+            unitDeclaration.imports = new ImportReference[0];
+
             List<ImportNode> importNodes = moduleNode.getImports();
             List<ImportNode> importPackages = moduleNode.getStarImports();
             Map<String, ImportNode> importStatics = moduleNode.getStaticImports();
@@ -1090,7 +1090,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 if (!importReferences.isEmpty()) {
-                    ImportReference[] refs = importReferences.values().toArray(new ImportReference[0]);
+                    ImportReference[] refs = importReferences.values().toArray(unitDeclaration.imports);
                     for (ImportReference ref : refs) {
                         if (ref.declarationSourceStart > 0 && (ref.declarationEnd - ref.declarationSourceStart + 1) < 0) {
                             throw new IllegalStateException(String.format(
@@ -1730,6 +1730,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 case "int":
                 case "java.lang.Integer":
+                    if (type != null && type.getName().endsWith("BigInteger")) break;
                     switch (chars[0]) {
                     case '+':
                     case '-':
@@ -1789,11 +1790,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                 case "java.math.BigDecimal":
+                    if (type != null && !ClassHelper.isPrimitiveType(type)) break;
                     return new DoubleLiteral(value.toString().toCharArray(), start, until);
 
                 case "java.math.BigInteger":
-                    chars[chars.length - 1] = 'L'; // replace 'g' or 'G' with 'L'
-                    return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
+                    AllocationExpression alloc = new AllocationExpression();
+                    alloc.type = createTypeReferenceForClassNode(ClassHelper.BigInteger_TYPE);
+                    alloc.arguments = new org.eclipse.jdt.internal.compiler.ast.Expression[2];
+                    alloc.arguments[1] = IntLiteral.buildIntLiteral("10".toCharArray(), 0, 0);
+                    alloc.arguments[0] = new StringLiteral(value.toString().toCharArray(), start, until, expr.getLineNumber());
+                    return alloc;
 
                 case "byte":
                 case "java.lang.Byte":
@@ -1888,7 +1894,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             char[] typeName = name.substring(0, pos + 2).toCharArray();
 
-            if (unitDeclaration.imports != null) {
+            if (unitDeclaration.imports.length > 0) {
                 char[][] compoundName = CharOperation.splitOn('.', typeName);
                 for (ImportReference importReference : unitDeclaration.imports) {
                     if (isAliasForType(importReference, compoundName[0])) {
@@ -1935,7 +1941,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 char[] typeName = name.toCharArray();
 
-                if (unitDeclaration.imports != null) {
+                if (unitDeclaration.imports.length > 0) {
                     char[][] compoundName = CharOperation.splitOn('.', typeName);
                     for (ImportReference importReference : unitDeclaration.imports) {
                         if (isAliasForType(importReference, compoundName[0])) {
@@ -2584,7 +2590,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // start and end of the entire declaration including Javadoc and ending at the last close bracket
                 Javadoc doc = findJavadoc(classNode.getLineNumber());
                 if (doc != null) {
-                    if (unitDeclaration.imports != null && unitDeclaration.imports.length > 0) {
+                    if (unitDeclaration.imports.length > 0) {
                         if (doc.sourceStart < unitDeclaration.imports[unitDeclaration.imports.length - 1].sourceStart) {
                             // ignore the doc if it should be associated with and import statement
                             doc = null;

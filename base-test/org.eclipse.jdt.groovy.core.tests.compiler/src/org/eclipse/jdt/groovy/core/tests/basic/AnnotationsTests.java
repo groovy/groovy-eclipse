@@ -698,10 +698,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator#createExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Main.groovy (at line 2)\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\tclass Main {\n" +
+            "\t^\n" +
+            "Type mismatch: cannot convert from BigInteger to long\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 2)\n" +
             "\t@Min(0G)\n" +
             "\t     ^^\n" +
             "Groovy:Attribute 'value' should have type 'java.lang.Long'; but found type 'java.math.BigInteger' in @Min\n" +
@@ -727,7 +731,6 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator#createExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +

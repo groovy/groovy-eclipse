@@ -1933,6 +1933,54 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(paths[0], "Launch", "12345678", "");
     }
 
+    @Test // JDT assumes no explicit (non-star) imports
+    public void testDefaultImports() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "Face",
+            "interface Face {\n" +
+            "  BigDecimal xx = 3.14\n" +
+            "  BigInteger yy = 1592\n" +
+            "}\n");
+        env.addClass(paths[1], "Main",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(Face.xx);\n" +
+            "    System.out.print(Face.yy);\n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
+        expectingCompiledClasses("Face", "Main");
+        executeClass(paths[0], "Main", "3.141592", null);
+    }
+
+    @Test
+    public void testGenericMethods() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        //@formatter:off
+        env.addClass(paths[1], "Foo",
+            "public class Foo<T> {\n" +
+            "   public void m() {\n" +
+            "      Bar.agent(null);\n" +
+            "   }\n" +
+            "}\n");
+        env.addGroovyClass(paths[1], "Bar",
+            "class Bar {\n" +
+            "   public static <PP> void agent(PP state) {\n" +
+            "   }\n" +
+            "}\n");
+        //@formatter:on
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
+        expectingCompiledClasses("Foo", "Bar");
+    }
+
     @Test
     public void testSpock_GRE558() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
@@ -2063,69 +2111,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         incrementalBuild(paths[0]);
         expectingNoProblems();
         expectingCompiledClasses("Foobar", "FoobarSpec");
-    }
-
-    @Test
-    public void testGenericMethods() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-
-        //@formatter:off
-        env.addClass(paths[1], "", "Foo",
-            "public class Foo<T> {\n" +
-            "   public void m() {\n" +
-            "      Bar.agent(null);\n" +
-            "   }\n" +
-            "}\n");
-        //@formatter:on
-
-        //@formatter:off
-        env.addGroovyClass(paths[1], "Bar",
-            "class Bar {\n" +
-            "   public static <PP> void agent(PP state) {\n" +
-            "   }\n" +
-            "}\n");
-        //@formatter:on
-
-        incrementalBuild(paths[0]);
-        expectingCompiledClasses("Foo", "Bar");
-        expectingNoProblems();
-    }
-
-    @Test
-    public void testPropertyAccessorLocationChecks() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-
-        //@formatter:off
-        env.addGroovyClass(paths[1], "p1", "Hello",
-            "package p1;\n" +
-            "class Hello {\n" +
-            "  int color;\n" +
-            "   static void main(String[] args) {\n" +
-            "      print \"Hello Groovy world\"\n" +
-            "   }\n" +
-            "}\n");
-        //@formatter:on
-
-        incrementalBuild(paths[0]);
-        expectingCompiledClasses("p1.Hello");
-        expectingNoProblems();
-        executeClass(paths[0], "p1.Hello", "Hello Groovy world", null);
-    }
-
-    @Test
-    public void testBuildGroovy2() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-
-        //@formatter:off
-        env.addGroovyClass(paths[1], "p1", "Hello",
-            "package p1;\n" +
-            "interface Hello extends java.util.List {\n" +
-            "}\n");
-        //@formatter:on
-
-        incrementalBuild(paths[0]);
-        expectingCompiledClasses("p1.Hello");
-        expectingNoProblems();
     }
 
     @Test
