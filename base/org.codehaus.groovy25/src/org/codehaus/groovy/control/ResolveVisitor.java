@@ -979,6 +979,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
                 Tuple2<StringBuilder, Boolean> classNameInfo = makeClassName(doInitialClassTest, name, propertyPart);
                 name = classNameInfo.getFirst();
+                // GRECLIPSE add -- GROOVY-10188
+                if (name == null) return null;
+                // GRECLIPSE end
                 doInitialClassTest = classNameInfo.getSecond();
             }
         }

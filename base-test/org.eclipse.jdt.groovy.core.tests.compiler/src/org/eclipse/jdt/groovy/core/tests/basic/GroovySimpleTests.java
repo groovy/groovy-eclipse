@@ -446,6 +446,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "Outer");
     }
 
+    @Test // GROOVY-10188
+    public void testClosureScope9() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "List<Integer> numbers = [1,2,3]\n" +
+            "numbers.each { Number -> print Number.xxx }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: xxx for class: java.lang.Integer");
+    }
+
     @Test
     public void testClosureSyntax() {
         //@formatter:off

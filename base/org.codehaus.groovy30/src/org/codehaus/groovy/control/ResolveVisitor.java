@@ -885,9 +885,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private static String lookupClassName(final PropertyExpression pe) {
         boolean doInitialClassTest = true;
         StringBuilder name = new StringBuilder(32);
-        // this loop builds a name from right to left each name part
-        // separated by "."
-        for (Expression expr = pe; expr != null; expr = ((PropertyExpression) expr).getObjectExpression()) {
+        // this loop builds a name from right to left each name part separated by "."
+        for (Expression expr = pe; expr != null && name != null; expr = ((PropertyExpression) expr).getObjectExpression()) {
             if (expr instanceof VariableExpression) {
                 VariableExpression ve = (VariableExpression) expr;
                 // stop at super and this
