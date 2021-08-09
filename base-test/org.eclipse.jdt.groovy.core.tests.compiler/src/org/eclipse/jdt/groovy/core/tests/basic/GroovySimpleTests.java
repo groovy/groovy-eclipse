@@ -1069,6 +1069,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
+    @Test // GROOVY-10159
+    public void testStaticProperty15() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "public class Main {\n" +
+            "  static final String foo = 1 + 1\n" +
+            "  static main(args) {\n" +
+            "    print(foo);\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "2");
+    }
+
     @Test
     public void testClash_GRE1076() {
         //@formatter:off

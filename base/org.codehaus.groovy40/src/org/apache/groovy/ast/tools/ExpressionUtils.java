@@ -76,6 +76,9 @@ public final class ExpressionUtils {
                 Expression left = transformInlineConstants(be.getLeftExpression(), targetType);
                 Expression right = transformInlineConstants(be.getRightExpression(), targetType);
                 if (left instanceof ConstantExpression && right instanceof ConstantExpression) {
+                    // GRECLIPSE add -- GROOVY-10159
+                    if (((ConstantExpression) left).getValue() instanceof String)
+                    // GRECLIPSE end
                     return configure(be, new ConstantExpression((String) ((ConstantExpression) left).getValue() + ((ConstantExpression) right).getValue()));
                 }
             }
