@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,17 +33,17 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
             "  String id\n" +
             "  String hidden = '456'\n" +
             "  \n" +
-            "  static void main(String[] args) {\n" +
+            "  static main(args) {\n" +
             "    print(new Type(id:'123'))\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "Alias.groovy",
             "import groovy.transform.*\n" +
             "@AnnotationCollector\n" +
             "@EqualsAndHashCode\n" +
             "@ToString\n" +
-            "@interface Alias { }",
+            "@interface Alias { }\n",
         };
         //@formatter:on
 
@@ -60,23 +60,44 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
             "  String id\n" +
             "  String hidden = '456'\n" +
             "  \n" +
-            "  static void main(String[] args) {\n" +
+            "  static main(args) {\n" +
             "    print(new Type(id:'123'))\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "Alias.groovy",
             "import groovy.transform.*\n" +
             "@AnnotationCollector([EqualsAndHashCode, ToString])\n" +
-            "@interface Alias { }",
+            "@interface Alias { }\n",
         };
         //@formatter:on
 
         runConformTest(sources, "Type(123)");
     }
 
-    @Test
+    @Test // GROOVY-10121
     public void testAnnotationCollector3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print(Alias.classes*.name)\n" +
+            "  }\n" +
+            "}\n",
+
+            "Alias.groovy",
+            "import groovy.transform.*\n" +
+            "@AnnotationCollector()\n" +
+            "@interface Alias { }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Alias$CollectorHelper]");
+    }
+
+    @Test
+    public void testAnnotationCollector4() {
         //@formatter:off
         String[] sources = {
             "Book.groovy",
