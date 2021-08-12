@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,14 @@ import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Test;
 
 /**
- * Test cases for user-defined AST transformations. The required library (aka
- * <tt>astTransformations/transforms.jar</tt>) is added to compiler classpath
- * in {@link GroovyCompilerTestSuite}.
+ * Test cases for user-defined AST transformations.
  */
 public final class UserDefinedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testWithLogging() throws Exception {
-        cpAdditions = new String[] {
-            FileLocator.toFileURL(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getPath()
-        };
+        java.net.URL bundleEntry = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar");
+        cpAdditions = new String[] {FileLocator.toFileURL(bundleEntry).getPath()};
 
         //@formatter:off
         String[] sources = {

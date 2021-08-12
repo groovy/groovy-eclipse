@@ -17,6 +17,8 @@ package org.eclipse.jdt.groovy.core.tests.xform;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Test;
 
@@ -92,6 +94,27 @@ public final class ASTTestTests extends GroovyCompilerTestSuite {
             "@groovy.transform.ASTTest(value={\n" +
             "  assert node instanceof ClassNode\n" +
             "  assert node.name == 'Main'\n" +
+            "})\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // GROOVY-10199
+    public void testASTTest5() throws Exception {
+        java.net.URL bundleEntry = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar");
+        cpAdditions = new String[] {FileLocator.toFileURL(bundleEntry).getPath()};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.ASTTest(value={\n" +
+            "  print examples.local.LoggingExample\n" + // Cannot get property 'local' on null object
             "})\n" +
             "class Main {\n" +
             "  static main(args) {\n" +

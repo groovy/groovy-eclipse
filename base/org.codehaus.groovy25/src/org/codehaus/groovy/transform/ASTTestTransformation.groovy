@@ -124,7 +124,7 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
                     binding['compilationUnit'] = compilationUnit
                     binding['compilePhase'] = CompilePhase.fromPhaseNumber(phaseRef)
 
-                    GroovyShell shell = new GroovyShell(binding, config)
+                    GroovyShell shell = new GroovyShell(/*GRECLIPSE add*/compilationUnit.transformLoader,/**/binding, config)
 
                     source.AST.imports.each {
                         customizer.addImport(it.alias, it.type.name)
