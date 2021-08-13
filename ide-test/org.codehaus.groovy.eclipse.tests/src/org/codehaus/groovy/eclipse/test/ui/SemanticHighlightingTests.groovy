@@ -1773,7 +1773,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testEnumInner() {
+    void testEnumInner1() {
         String contents = '''\
             |import groovy.transform.*
             |@CompileStatic
@@ -1804,6 +1804,26 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('Number'), 6, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.indexOf('val'), 3, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('meth'), 4, METHOD))
+    }
+
+    @Test
+    void testEnumInner2() {
+        String contents = '''\
+            |enum X {
+            |  WHY {
+            |    final int value = 1
+            |  }
+            |  def getValue() { -1 }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('WHY'), 3, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('getValue'), 8, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('-1'), 2, NUMBER))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1004

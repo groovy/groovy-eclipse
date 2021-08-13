@@ -631,6 +631,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     visitMethodInternal(method);
                 }
             }
+            for (FieldNode field : node.getFields()) {
+                if (field.getEnd() > 0) {
+                    enclosingElement = ((IType) enumConstant.getChildren()[0]).getField(field.getName());
+                    visitFieldInternal(field);
+                }
+            }
         } catch (JavaModelException e) {
             log(e, "Error visiting children of %s", enclosingDeclarationNode);
         } finally {

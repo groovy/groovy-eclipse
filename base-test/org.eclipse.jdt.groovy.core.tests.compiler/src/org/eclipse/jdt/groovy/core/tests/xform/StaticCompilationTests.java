@@ -6327,4 +6327,25 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[[id:x, name:null, count:1]]");
     }
+
+    @Test
+    public void testCompileStatic10197() {
+        for (String override : new String[]{"int getBaz() {1}", "final int baz = 1"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.CompileStatic\n" +
+                "enum Foo {\n" +
+                "  BAR {\n" +
+                "    " + override + "\n" +
+                "  }\n" +
+                "  int getBaz() { -1 }\n" +
+                "}\n" +
+                "print Foo.BAR.baz\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "1");
+        }
+    }
 }

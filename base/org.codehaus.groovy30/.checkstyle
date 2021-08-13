@@ -66,6 +66,7 @@
         <file-match-pattern match-pattern="groovy/transform/DelegateASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/FieldASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/LogASTTransformation.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/TupleConstructorASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|MethodCall)ExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/AbstractExtensionMethodCache.java" include-pattern="false" />
