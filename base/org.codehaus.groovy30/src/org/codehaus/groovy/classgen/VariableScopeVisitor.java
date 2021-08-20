@@ -236,6 +236,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             ClassNode node = scope.getClassScope();
             if (node != null) {
                 Variable member = findClassMember(node, name);
+                /* GRECLIPSE edit -- GROOVY-5364, GROOVY-10200
                 while (member == null && node.getOuterClass() != null && !isAnonymous(node)) {
                     crossingStaticContext = (crossingStaticContext || isStatic(node.getModifiers()));
                     member = findClassMember((node = node.getOuterClass()), name);
@@ -243,16 +244,24 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                 if (member != null) {
                     boolean staticScope = (crossingStaticContext || inSpecialConstructorCall), staticMember = member.isInStaticContext();
                     // prevent a static context (e.g. a static method) from accessing a non-static variable (e.g. a non-static field)
-                    /* GRECLIPSE edit -- GROOVY-5364
                     if (!(staticScope && !staticMember)) {
-                    */
-                    if (!(staticScope ? !staticMember : node.isScript())) {
-                    // GRECLIPSE end
                         variable = member;
                     }
                 }
-                // GROOVY-5961
-                if (!isAnonymous(scope.getClassScope())) break;
+                */
+                boolean requireStatic = (crossingStaticContext || inSpecialConstructorCall);
+                while (member == null && node.getOuterClass() != null && !isAnonymous(node)) {
+                    requireStatic = requireStatic || isStatic(node.getModifiers());
+                    member = findClassMember((node = node.getOuterClass()), name);
+                }
+                if (member != null) {
+                    // prevent a static context (e.g. a static method) from accessing a non-static member (e.g. a non-static field)
+                    if (requireStatic ? member.isInStaticContext() : !node.isScript()) {
+                        variable = member;
+                    }
+                }
+                // GRECLIPSE end
+                if (!isAnonymous(scope.getClassScope())) break; // GROOVY-5961
             }
             scope = scope.getParent();
         }

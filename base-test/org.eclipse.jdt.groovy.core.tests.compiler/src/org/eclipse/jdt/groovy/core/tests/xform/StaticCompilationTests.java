@@ -2893,11 +2893,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 6)\n" +
             "\tprint value\n" +
             "\t      ^^^^^\n" +
-            "Groovy:Apparent variable 'value' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
-            "----------\n" +
-            "2. ERROR in Main.groovy (at line 6)\n" +
-            "\tprint value\n" +
-            "\t      ^^^^^\n" +
             "Groovy:[Static type checking] - The variable [value] is undeclared.\n" +
             "----------\n");
     }
