@@ -151,8 +151,14 @@ public class JavaProject
 
 	/**
 	 * Whether the underlying file system is case sensitive.
+	 * @deprecated case sensitivity is not a constant but can be configured at runtime for individual folders (see bug 571614#c8)
 	 */
-	protected static final boolean IS_CASE_SENSITIVE = !new File("Temp").equals(new File("temp")); //$NON-NLS-1$ //$NON-NLS-2$
+	@Deprecated
+	private static final boolean IS_CASE_SENSITIVE = !new File("Temp").equals(new File("temp")); //$NON-NLS-1$ //$NON-NLS-2$
+	/**
+	 * ignore case insensitivity by default (see bug 571614#c8)
+	 */
+	static final boolean RESOLVE_ACTUAL_PACKAGEFRAGMENT_NAME = Boolean.getBoolean("org.eclipse.jdt.resolve_actual_packagefragment_name"); //$NON-NLS-1$
 
 	/**
 	 * An empty array of strings indicating that a project doesn't have any prerequesite projects.
@@ -311,20 +317,47 @@ public class JavaProject
 	}
 
 	/**
+	 * Does nothing by default. With system flag org.eclipse.jdt.resolve_actual_packagefragment_name=true it tries to find the actual filename
+	 */
+	public static IPath createPackageFragementKey(IPath externalPath) {
+		if (RESOLVE_ACTUAL_PACKAGEFRAGMENT_NAME) { //disabled by default
+			return capitailzePath(externalPath);
+		} else {
+			// trust the UI to already have resolved the actual capitalization:
+			return externalPath;  // do nothing
+		}
+	}
+
+	/**
 	 * Returns a canonicalized path from the given external path.
 	 * Note that the return path contains the same number of segments
 	 * and it contains a device only if the given path contained one.
 	 * @param externalPath IPath
-	 * @see java.io.File for the definition of a canonicalized path
 	 * @return IPath
+	 * @deprecated This method may not do what you expect from its name (see bug 571614):
+	 *             <p> On Linux/Mac (CASE_SENSITIVE by default) it does nothing - even when pointing to a case insensitive filesystem.
+	 *             <p> On Windows (CASE_INSENSITIVE by default) it will find the actual capitalization of all path segments.
+	 *             On Windows it will also resolve 8.3 filenames to its long names.
+	 *             On Windows this results in slow system calls for every segment of the path since JDK 12
+	 *             (see https://bugs.openjdk.java.net/browse/JDK-8207005) - even when the filesystem is configured to
+	 *             be case sensitive and 8.3 name resolving is disabled.
+	 *             <p> ALTERNATIVES:
+	 *             <p> For package fragments use {@link #createPackageFragementKey}
+	 *             <p> For comparing files use {@link java.nio.file.Files#isSameFile}
+	 *         	   <p> For getting the actual capitalization use {@link java.nio.file.Path#toRealPath}
 	 */
+	@Deprecated
 	public static IPath canonicalizedPath(IPath externalPath) {
+		return capitailzePath(externalPath);
+	}
+
+    private static IPath capitailzePath(IPath externalPath) {
 
 		if (externalPath == null)
 			return null;
 
-		if (IS_CASE_SENSITIVE) {
-			return externalPath;
+		if (IS_CASE_SENSITIVE) { // if Linux/Mac
+			return externalPath; // do nothing
 		}
 
 		// if not external path, return original path
@@ -1583,7 +1616,7 @@ public class JavaProject
 	public IPackageFragment findPackageFragment(IPath path)
 		throws JavaModelException {
 
-		return findPackageFragment0(JavaProject.canonicalizedPath(path));
+		return findPackageFragment0(createPackageFragementKey(path));
 	}
 	/*
 	 * non path canonicalizing version
@@ -1602,7 +1635,7 @@ public class JavaProject
 	public IPackageFragmentRoot findPackageFragmentRoot(IPath path)
 		throws JavaModelException {
 
-		return findPackageFragmentRoot0(JavaProject.canonicalizedPath(path));
+		return findPackageFragmentRoot0(createPackageFragementKey(path));
 	}
 	/*
 	 * no path canonicalization
@@ -2332,7 +2365,7 @@ public class JavaProject
 	 */
 	@Override
 	public IPackageFragmentRoot getPackageFragmentRoot(String externalLibraryPath) {
-		return getPackageFragmentRoot0(JavaProject.canonicalizedPath(new Path(externalLibraryPath)), null);
+		return getPackageFragmentRoot0(createPackageFragementKey(new Path(externalLibraryPath)), null);
 	}
 
 	/*

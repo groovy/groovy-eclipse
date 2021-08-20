@@ -8,6 +8,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ASTNode.java" type="org.eclipse.jdt.core.dom.ASTNode">
+        <filter comment="To fix the mistake and considering nodes added till 107 in BETA Branch" id="388194388">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.ASTNode"/>
+                <message_argument value="MODULE_QUALIFIED_NAME"/>
+                <message_argument value="103"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="dom/org/eclipse/jdt/core/dom/Annotation.java" type="org.eclipse.jdt.core.dom.Annotation">
         <filter id="576725006">
             <message_arguments>

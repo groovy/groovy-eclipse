@@ -12,8 +12,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import java.io.IOException;
 import java.util.Map;
 
+import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.core.util.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 import junit.framework.Test;
@@ -3875,5 +3878,90 @@ public class PatternMatching16Test extends AbstractRegressionTest {
                 },
                 "true",
                 options);
+    }
+    public void testBug575035() throws ClassFormatException, IOException {
+        Map<String, String> options = getCompilerOptions(false);
+    	String source =
+    			"import java.lang.annotation.ElementType;\n" +
+    			"import java.lang.annotation.Retention;\n" +
+    			"import java.lang.annotation.RetentionPolicy;\n" +
+    			"import java.lang.annotation.Target;\n" +
+    			" \n" +
+    			"public class Test {\n" +
+    			"    @Target({ ElementType.LOCAL_VARIABLE})\n" +
+    			"    @Retention(RetentionPolicy.RUNTIME)\n" +
+    			"    @interface Var {}\n" +
+    			"    @Target({ ElementType.TYPE_USE})\n" +
+    			"    @Retention(RetentionPolicy.RUNTIME)\n" +
+    			"    @interface Type {}\n" +
+    			"    public static void main(String[] args) {" +
+    			"        @Var @Type String y = \"OK: \";\n" +
+    			"        if (((Object)\"local\") instanceof @Var @Type String x) {\n" +
+    			"            System.out.println(y + x);\n" +
+    			"        }\n" +
+    		    "    }\n" +
+    			"}";
+    	String expectedOutput = ""
+    			+ "  // Method descriptor #15 ([Ljava/lang/String;)V\n"
+    			+ "  // Stack: 4, Locals: 4\n"
+    			+ "  public static void main(String[] args);\n"
+    			+ "     0  ldc <String \"OK: \"> [16]\n"
+    			+ "     2  astore_1 [y]\n"
+    			+ "     3  ldc <String \"local\"> [18]\n"
+    			+ "     5  astore_3 [ instanceOfPatternExpressionValue]\n"
+    			+ "     6  aload_3 [ instanceOfPatternExpressionValue]\n"
+    			+ "     7  instanceof String [20]\n"
+    			+ "    10  ifeq 50\n"
+    			+ "    13  aload_3 [ instanceOfPatternExpressionValue]\n"
+    			+ "    14  checkcast String [20]\n"
+    			+ "    17  dup\n"
+    			+ "    18  astore_2\n"
+    			+ "    19  aload_3\n"
+    			+ "    20  checkcast String [20]\n"
+    			+ "    23  if_acmpne 50\n"
+    			+ "    26  getstatic System.out : PrintStream [22]\n"
+    			+ "    29  new StringBuilder [28]\n"
+    			+ "    32  dup\n"
+    			+ "    33  aload_1 [y]\n"
+    			+ "    34  invokestatic String.valueOf(Object) : String [30]\n"
+    			+ "    37  invokespecial StringBuilder(String) [34]\n"
+    			+ "    40  aload_2 [x]\n"
+    			+ "    41  invokevirtual StringBuilder.append(String) : StringBuilder [37]\n"
+    			+ "    44  invokevirtual StringBuilder.toString() : String [41]\n"
+    			+ "    47  invokevirtual PrintStream.println(String) : void [45]\n"
+    			+ "    50  return\n"
+    			+ "      Line numbers:\n"
+    			+ "        [pc: 0, line: 13]\n"
+    			+ "        [pc: 3, line: 14]\n"
+    			+ "        [pc: 26, line: 15]\n"
+    			+ "        [pc: 50, line: 17]\n"
+    			+ "      Local variable table:\n"
+    			+ "        [pc: 0, pc: 51] local: args index: 0 type: String[]\n"
+    			+ "        [pc: 3, pc: 51] local: y index: 1 type: String\n"
+    			+ "        [pc: 26, pc: 50] local: x index: 2 type: String\n"
+    			+ "        [pc: 6, pc: 20] local:  instanceOfPatternExpressionValue index: 3 type: Object\n"
+    			+ "      Stack map table: number of frames 1\n"
+    			+ "        [pc: 50, append: {String}]\n"
+    			+ "    RuntimeVisibleTypeAnnotations: \n"
+    			+ "      #59 @Type(\n"
+    			+ "        target type = 0x40 LOCAL_VARIABLE\n"
+    			+ "        local variable entries:\n"
+    			+ "          [pc: 3, pc: 51] index: 1\n"
+    			+ "      )\n"
+    			+ "      #59 @Type(\n"
+    			+ "        target type = 0x40 LOCAL_VARIABLE\n"
+    			+ "        local variable entries:\n"
+    			+ "          [pc: 26, pc: 50] index: 2\n"
+    			+ "      )\n"
+    			+ "\n";
+    	checkClassFile("Test", source, expectedOutput, ClassFileBytesDisassembler.DETAILED | ClassFileBytesDisassembler.COMPACT);
+        runConformTest(
+                new String[] {
+                        "Test.java",
+                        source,
+                },
+                "OK: local",
+                options);
+
     }
 }

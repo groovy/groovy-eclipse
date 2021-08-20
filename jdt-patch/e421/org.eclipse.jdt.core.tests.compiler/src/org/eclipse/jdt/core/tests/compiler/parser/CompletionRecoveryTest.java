@@ -758,6 +758,7 @@ public void test18() {
 		"      int hello() {\n" +
 		"      }\n" +
 		"    }\n" +
+		"    <CompleteOnName:>;\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:

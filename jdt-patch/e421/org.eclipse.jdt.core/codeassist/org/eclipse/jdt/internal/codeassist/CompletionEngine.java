@@ -68,8 +68,9 @@ import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeDetector;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeFound;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnAnnotationOfType;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnArgumentName;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnBranchStatementLabel;
+import org.eclipse.jdt.internal.codeassist.complete.CompletionOnBreakStatement;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnClassLiteralAccess;
+import org.eclipse.jdt.internal.codeassist.complete.CompletionOnContinueStatement;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnExplicitConstructorCall;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnFieldName;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnFieldType;
@@ -2020,8 +2021,10 @@ public final class CompletionEngine
 			completionOnMarkerAnnotationName(astNode, qualifiedBinding, scope);
 		} else if (astNode instanceof CompletionOnMemberValueName) {
 			completionOnMemberValueName(astNode, astNodeParent, scope, insideTypeAnnotation);
-		} else if(astNode instanceof CompletionOnBranchStatementLabel) {
-			completionOnBranchStatementLabel(astNode);
+		} else if(astNode instanceof CompletionOnBreakStatement) {
+			completionOnBreakStatement((CompletionOnBreakStatement) astNode);
+		} else if(astNode instanceof CompletionOnContinueStatement) {
+			completionOnContinueStatement((CompletionOnContinueStatement) astNode);
 		} else if(astNode instanceof CompletionOnMessageSendName) {
 			completionOnMessageSendName(astNode, qualifiedBinding, scope);
 		} else if (astNode instanceof CompletionOnReferenceExpressionName) {
@@ -2608,11 +2611,17 @@ public final class CompletionEngine
 		}
 	}
 
-	private void completionOnBranchStatementLabel(ASTNode astNode) {
+	private void completionOnBreakStatement(CompletionOnBreakStatement astNode) {
 		if (!this.requestor.isIgnored(CompletionProposal.LABEL_REF)) {
-			CompletionOnBranchStatementLabel label = (CompletionOnBranchStatementLabel) astNode;
-			this.completionToken = label.label;
-			findLabels(this.completionToken, label.possibleLabels);
+			this.completionToken = astNode.label;
+			findLabels(this.completionToken, astNode.possibleLabels);
+		}
+	}
+
+	private void completionOnContinueStatement(CompletionOnContinueStatement astNode) {
+		if (!this.requestor.isIgnored(CompletionProposal.LABEL_REF)) {
+			this.completionToken = astNode.label;
+			findLabels(this.completionToken, astNode.possibleLabels);
 		}
 	}
 
@@ -3240,6 +3249,7 @@ public final class CompletionEngine
 			if (messageSend.nextIsCast) {
 				// optionalPrefix|((String) s) was mistaken as a messageSend(?). Treat like beginning of statement.
 				findVariablesAndMethods(this.completionToken, scope, messageSend, scope, false, false);
+				findTypesAndPackages(this.completionToken, scope, true, false, new ObjectVector());
 				return;
 			}
 
@@ -3694,6 +3704,17 @@ public final class CompletionEngine
 				}
 			}
 		} else if (qualifiedBinding instanceof ReferenceBinding && !(qualifiedBinding instanceof TypeVariableBinding)) {
+			ReferenceBinding receiverType = (ReferenceBinding) qualifiedBinding;
+			if (astNodeParent instanceof LocalDeclaration && ref.nextToken == TerminalTokens.TokenNameLPAREN && !this.assistNodeIsConstructor) {
+				// the subsequent '(' makes the interpretation as LocalDeclaration illegal (unless it's "new prefix.token()").
+				// therefore we assume that "name(" (where name is LocalDeclaration.name) is the start of a new statement,
+				// and propose *everything* that can be referenced via the receiverType:
+				findMethods(this.completionToken, null, null, receiverType, scope, new ObjectVector(), true/*onlyStatic*/, false,
+						FakeInvocationSite, scope, false, false, false, null, null, null, false, null, -1, -1);
+				findFields(this.completionToken, receiverType, scope, new ObjectVector(), new ObjectVector(), true/*onlyStatic*/,
+						FakeInvocationSite, scope, false, false, null, null, null, false, null, -1, -1);
+				// fall through to propose member types
+			}
 			if (!this.requestor.isIgnored(CompletionProposal.TYPE_REF)) {
 				setSourceAndTokenRange((int) (completionPosition >>> 32), (int) completionPosition);
 
@@ -3702,7 +3723,7 @@ public final class CompletionEngine
 				if (this.assistNodeIsException && astNodeParent instanceof TryStatement) {
 					findExceptionFromTryStatement(
 							this.completionToken,
-							(ReferenceBinding)qualifiedBinding,
+							receiverType,
 							scope.enclosingSourceType(),
 							(BlockScope)scope,
 							typesFound);
@@ -3712,7 +3733,7 @@ public final class CompletionEngine
 
 				findMemberTypes(
 					this.completionToken,
-					(ReferenceBinding) qualifiedBinding,
+					receiverType,
 					scope,
 					scope.enclosingSourceType(),
 					false,
@@ -3731,12 +3752,22 @@ public final class CompletionEngine
 			findTypesAndSubpackages(this.completionToken, (PackageBinding) qualifiedBinding, scope);
 		}
 		ASTNode parentNode = this.parser.assistNodeParent;
-		if (ref.tokens.length == 1 && parentNode instanceof LocalDeclaration && ((LocalDeclaration) parentNode).type == ref) {
+		if (ref.tokens.length > 0 && parentNode instanceof LocalDeclaration && ((LocalDeclaration) parentNode).type == ref) {
 			// additionally check if 'prefix.' should be interpreted as a variable receiver rather then part of a type reference:
 			Binding variable = scope.getBinding(ref.tokens[0], Binding.VARIABLE, FakeInvocationSite, true);
-			if (variable instanceof VariableBinding) {
+			lookupViaVariable: if (variable instanceof VariableBinding) {
 				TypeBinding receiverType = ((VariableBinding) variable).type;
-				if (receiverType != null && receiverType.isValidBinding()) {
+				int len = ref.tokens.length;
+				for (int i=1; i<len; i++) {
+					// lookup subsequent fields in 'prefix.q.r.'
+					if (!(receiverType instanceof ReferenceBinding && receiverType.isValidBinding()))
+						break lookupViaVariable;
+					FieldBinding field = scope.getField(receiverType, ref.tokens[i], FakeInvocationSite);
+					if (!field.isValidBinding())
+						break lookupViaVariable;
+					receiverType = field.type;
+				}
+				if (receiverType instanceof ReferenceBinding && receiverType.isValidBinding()) {
 					findFieldsAndMethods(this.completionToken, receiverType, scope, new ObjectVector(), new ObjectVector(), FakeInvocationSite, scope, false, false, null, null, null, false, null, ref.sourceStart, (int)ref.sourcePositions[0]);
 				}
 			}
@@ -3897,8 +3928,15 @@ public final class CompletionEngine
 			if (receiverType != null && receiverType.isValidBinding()) {
 				findVariablesAndMethods(this.completionToken, scope, FakeInvocationSite, scope, false, false);
 			}
+			// ... or a keyword (possibly starting a new statement):
+			if (!this.requestor.isIgnored(CompletionProposal.KEYWORD)) {
+				if (this.completionToken != null && this.completionToken.length != 0) {
+					findKeywords(this.completionToken, singleRef.possibleKeywords, false, false);
+				} else {
+					findTrueOrFalseKeywords(singleRef.possibleKeywords);
+				}
+			}
 		}
-
 	}
 
 	private void completionOnProvidesInterfacesSingleTypeReference(ASTNode astNode, ASTNode astNodeParent, Binding qualifiedBinding, Scope scope) {

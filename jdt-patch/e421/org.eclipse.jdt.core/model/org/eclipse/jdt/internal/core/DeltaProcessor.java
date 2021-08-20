@@ -139,7 +139,7 @@ public class DeltaProcessor {
 			if (target instanceof IResource) {
 				tRoot = this.project.getPackageFragmentRoot((IResource)target, this.rootPath, this.extraAttributes);
 			} else {
-				IPath canonicalizedPath = JavaProject.canonicalizedPath(new Path(this.rootPath.toOSString()));
+				IPath canonicalizedPath = JavaProject.createPackageFragementKey(new Path(this.rootPath.toOSString()));
 				tRoot = this.project.getPackageFragmentRoot0(canonicalizedPath, this.extraAttributes);
 			}
 			return tRoot;

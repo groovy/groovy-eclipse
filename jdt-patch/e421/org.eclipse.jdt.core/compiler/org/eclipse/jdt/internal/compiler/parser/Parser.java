@@ -4562,6 +4562,9 @@ private LocalDeclaration getInstanceOfVar(TypeReference type) {
 	this.identifierLengthPtr--;
 
 	local.declarationSourceStart = type.sourceStart;
+	// Move annotations from type reference to LocalDeclaration
+	local.annotations = type.annotations != null && type.annotations.length > 0 ? type.annotations[0] : null;
+	type.annotations = null;
 	local.type = type;
 	problemReporter().validateJavaFeatureSupport(JavaFeature.PATTERN_MATCHING_IN_INSTANCEOF, type.sourceStart, local.declarationEnd);
 	local.modifiers |= ClassFileConstants.AccFinal;

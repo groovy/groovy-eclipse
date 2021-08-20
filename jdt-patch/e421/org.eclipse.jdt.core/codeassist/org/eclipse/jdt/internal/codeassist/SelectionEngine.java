@@ -49,6 +49,7 @@ import org.eclipse.jdt.internal.codeassist.select.SelectionNodeFound;
 import org.eclipse.jdt.internal.codeassist.select.SelectionOnPackageVisibilityReference;
 import org.eclipse.jdt.internal.codeassist.select.SelectionOnImportReference;
 import org.eclipse.jdt.internal.codeassist.select.SelectionOnLocalName;
+import org.eclipse.jdt.internal.codeassist.select.SelectionOnMessageSend;
 import org.eclipse.jdt.internal.codeassist.select.SelectionOnPackageReference;
 import org.eclipse.jdt.internal.codeassist.select.SelectionOnQualifiedTypeReference;
 import org.eclipse.jdt.internal.codeassist.select.SelectionOnSingleTypeReference;
@@ -64,6 +65,7 @@ import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.PackageVisibilityStatement;
@@ -1425,6 +1427,12 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		// for traversing the parse tree, the parser assist identifier is necessary for identitiy checks
 		final char[] assistIdentifier = getParser().assistIdentifier();
 		if (assistIdentifier == null) return;
+		final BlockScope nodeScope;
+		if (node instanceof AbstractMethodDeclaration) {
+			nodeScope = ((AbstractMethodDeclaration)node).scope;
+		} else {
+			nodeScope = null;
+		}
 
 		class Visitor extends ASTVisitor {
 			@Override
@@ -1485,6 +1493,19 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 						if (methodDeclaration.scope != null) {
 							throw new SelectionNodeFound(new MethodBinding(methodDeclaration.modifiers, methodDeclaration.selector, null, null, null, methodDeclaration.scope.referenceType().binding));
 						}
+					}
+				}
+				return true;
+			}
+			@Override
+			public boolean visit(MessageSend messageSend, BlockScope scope) {
+				if (messageSend.selector == assistIdentifier && messageSend instanceof SelectionOnMessageSend) {
+					if (scope == null) {
+						scope = nodeScope;
+					}
+					if (scope != null) {
+						messageSend.resolve(scope);
+						throw new SelectionNodeFound(messageSend.binding);
 					}
 				}
 				return true;

@@ -212,7 +212,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		if (cache != null) {
 			for (IPackageFragmentRoot root : cache.allPkgFragmentRootsCache) {
 				IJavaProject rootProject = root.getJavaProject();
-				if (rootProject != this && !rootProject.exists()) {
+				if (rootProject != project && !rootProject.exists()) {
 					cache = null; // force rebuilding
 					break;
 				}

@@ -13,10 +13,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.complete;
 
+import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
 import org.eclipse.jdt.internal.compiler.ast.NormalAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class CompletionOnAnnotationMemberValuePair extends NormalAnnotation {
@@ -56,5 +58,17 @@ public class CompletionOnAnnotationMemberValuePair extends NormalAnnotation {
 		output.append(')');
 
 		return output;
+	}
+
+	@Override
+	public void traverse(ASTVisitor visitor, ClassScope scope) {
+		super.traverse(visitor, scope);
+		this.completedMemberValuePair.traverse(visitor, scope);
+	}
+
+	@Override
+	public void traverse(ASTVisitor visitor, BlockScope scope) {
+		super.traverse(visitor, scope);
+		this.completedMemberValuePair.traverse(visitor, scope);
 	}
 }

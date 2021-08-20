@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -40,6 +40,8 @@ private int kind = K_TYPE;
 public boolean isCompletionNode;
 public boolean isConstructorType;
 public CompletionOnFieldType fieldTypeCompletionNode;
+public char[][] possibleKeywords;
+public boolean canBeExplicitConstructor;
 
 public CompletionOnSingleTypeReference(char[] source, long pos) {
 	this(source, pos, K_TYPE);
@@ -48,6 +50,11 @@ public CompletionOnSingleTypeReference(char[] source, long pos, int kind) {
 	super(source, pos);
 	this.isCompletionNode = true;
 	this.kind = kind;
+}
+public CompletionOnSingleTypeReference(char[] assistName, long position, char[][] keywords, boolean canBeSuperCall) {
+	this(assistName, position);
+	this.possibleKeywords = keywords;
+	this.canBeExplicitConstructor = canBeSuperCall;
 }
 @Override
 public void aboutToResolve(Scope scope) {

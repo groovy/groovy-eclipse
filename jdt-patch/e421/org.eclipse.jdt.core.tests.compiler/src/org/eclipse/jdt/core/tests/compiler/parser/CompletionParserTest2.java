@@ -7346,7 +7346,7 @@ public void test0112_Method(){
 	String expectedCompletionNodeToString = "<CompleteOnName:zzz>";
 	String expectedParentNodeToString = "(1 == <CompleteOnName:zzz>)";
 	String completionIdentifier = "zzz";
-	String expectedReplacedSource = "(zzz)";
+	String expectedReplacedSource = "zzz";
 	String expectedUnitDisplayString =
 			"package p;\n" +
 			"public class X {\n" +

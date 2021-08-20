@@ -987,15 +987,6 @@ public abstract class ASTNode {
 	 */
 	public static final int RECORD_DECLARATION = 103;
 
-
-	/**
-	 * Node type constant indicating a node of type
-	 * <code>ModuleQualifiedName</code>.
-	 * @see ModuleQualifiedName
-	 * @since 3.24
-	 */
-	public static final int MODULE_QUALIFIED_NAME = 103;
-
 	/**
 	 * Node type constant indicating a node of type
 	 * <code>PatternInstanceofExpression</code>.
@@ -1003,6 +994,14 @@ public abstract class ASTNode {
 	 * @since 3.26
 	 */
 	public static final int PATTERN_INSTANCEOF_EXPRESSION = 104;
+
+	/**
+	 * Node type constant indicating a node of type
+	 * <code>ModuleQualifiedName</code>.
+	 * @see ModuleQualifiedName
+	 * @since 3.24
+	 */
+	public static final int MODULE_QUALIFIED_NAME = 105;
 
 	/**
 	 * Returns the node class for the corresponding node type.
@@ -1124,6 +1123,8 @@ public abstract class ASTNode {
 				return ModuleDeclaration.class;
 			case MODULE_MODIFIER :
 				return ModuleModifier.class;
+			case MODULE_QUALIFIED_NAME :
+				return ModuleQualifiedName.class;
 			case NAME_QUALIFIED_TYPE :
 				return NameQualifiedType.class;
 			case NORMAL_ANNOTATION :

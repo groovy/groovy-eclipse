@@ -24,6 +24,28 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
  */
 public class CompletionNodeDetector extends ASTVisitor {
 
+	static class FindAny extends GenericAstVisitor {
+		private ASTNode searchFor;
+		boolean found;
+
+		public FindAny(ASTNode searchFor) {
+			this.searchFor = searchFor;
+		}
+
+		@Override
+		protected boolean visitNode(ASTNode node) {
+			if (node == this.searchFor) {
+				this.found = true;
+			}
+			return !this.found;
+		}
+	}
+	public static boolean findAny(CompilationUnitDeclaration unit, ASTNode searchFor) {
+		FindAny visitor = new FindAny(searchFor);
+		unit.traverse(visitor, (CompilationUnitScope)null, false);
+		return visitor.found;
+	}
+
 	@SuppressWarnings("serial")
 	static class StopTraversal extends RuntimeException { /* no details */}
 

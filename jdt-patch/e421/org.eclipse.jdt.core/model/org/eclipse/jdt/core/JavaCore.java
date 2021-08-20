@@ -5219,7 +5219,7 @@ public final class JavaCore extends Plugin {
 		return new ClasspathEntry(
 			IPackageFragmentRoot.K_BINARY,
 			IClasspathEntry.CPE_LIBRARY,
-			hasDotDot ? path : JavaProject.canonicalizedPath(path),
+			hasDotDot ? path : JavaProject.createPackageFragementKey(path),
 			ClasspathEntry.INCLUDE_ALL, // inclusion patterns
 			ClasspathEntry.EXCLUDE_NONE, // exclusion patterns
 			sourceAttachmentPath,
