@@ -36,7 +36,6 @@ import org.codehaus.groovy.classgen.ExtendedVerifier;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.classgen.InnerClassCompletionVisitor;
 import org.codehaus.groovy.classgen.InnerClassVisitor;
-import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.io.InputStreamReaderSource;
@@ -582,12 +581,12 @@ public class CompilationUnit extends ProcessingUnit {
         throughPhase = Math.min(throughPhase, Phases.ALL);
 
         while (throughPhase >= phase && phase <= Phases.ALL) {
-
+            /* GRECLIPSE edit -- GROOVY-4386, et al.
             if (phase == Phases.SEMANTIC_ANALYSIS) {
                 doPhaseOperation(resolve);
                 if (dequeued()) continue;
             }
-
+            */
             processPhaseOperations(phase);
             // Grab processing may have brought in new AST transforms into various phases, process them as well
             processNewPhaseOperations(phase);
@@ -689,9 +688,10 @@ public class CompilationUnit extends ProcessingUnit {
         public void call(SourceUnit source) throws CompilationFailedException {
             List<ClassNode> classes = source.ast.getClasses();
             for (ClassNode node : classes) {
+                /* GRECLIPSE edit -- GROOVY-4386, et al.
                 VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(source);
                 scopeVisitor.visitClass(node);
-
+                */
                 resolveVisitor.setClassNodeResolver(classNodeResolver);
                 resolveVisitor.startResolving(node, source);
             }

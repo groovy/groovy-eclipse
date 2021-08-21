@@ -39,7 +39,6 @@ import org.codehaus.groovy.classgen.ExtendedVerifier;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.classgen.InnerClassCompletionVisitor;
 import org.codehaus.groovy.classgen.InnerClassVisitor;
-import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.io.InputStreamReaderSource;
@@ -629,25 +628,21 @@ public class CompilationUnit extends ProcessingUnit {
         throughPhase = Math.min(throughPhase, Phases.ALL);
 
         while (throughPhase >= phase && phase <= Phases.ALL) {
-            // GRECLIPSE add
-            if (phase == Phases.CONVERSION) {
-                if (sources.size() > 1 && Boolean.TRUE.equals(configuration.getOptimizationOptions().get(CompilerConfiguration.PARALLEL_PARSE))) {
-                    sources.values().parallelStream().forEach(SourceUnit::buildAST);
-                } else {
-                    sources.values().forEach(SourceUnit::buildAST);
-                }
-            } else
-            // GRECLIPSE end
+            /* GRECLIPSE edit -- GROOVY-4386, et al.
             if (phase == Phases.SEMANTIC_ANALYSIS) {
                 resolve.doPhaseOperation(this);
                 if (dequeued()) continue;
             }
-            /* GRECLIPSE edit
             if (phase == Phases.CONVERSION) {
                 buildASTs();
             }
             */
-
+            if (phase == Phases.CONVERSION) {
+                for (SourceUnit source : sources.values()) {
+                    source.buildAST();
+                }
+            }
+            // GRECLIPSE end
             processPhaseOperations(phase);
             // Grab processing may have brought in new AST transforms into various phases, process them as well
             processNewPhaseOperations(phase);
@@ -749,9 +744,10 @@ public class CompilationUnit extends ProcessingUnit {
      */
     private final ISourceUnitOperation resolve = (final SourceUnit source) -> {
         for (ClassNode classNode : source.getAST().getClasses()) {
+            /* GRECLIPSE edit -- GROOVY-4386, et al.
             GroovyClassVisitor visitor = new VariableScopeVisitor(source);
             visitor.visitClass(classNode);
-
+            */
             resolveVisitor.setClassNodeResolver(classNodeResolver);
             resolveVisitor.startResolving(classNode, source);
         }

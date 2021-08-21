@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class InnerClassTests extends GroovyCompilerTestSuite {
@@ -213,7 +214,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass2a() {
+    public void testInnerClass3() {
         //@formatter:off
         String[] sources = {
             "Outer.groovy",
@@ -234,7 +235,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass3() {
+    public void testInnerClass4() {
         //@formatter:off
         String[] sources = {
             "WithInnerClass.groovy",
@@ -253,8 +254,28 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
+    @Test // GROOVY-4287
+    public void testInnerClass5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import static p.Outer.Inner\n" +
+            "new Inner()\n",
+
+            "p/Outer.groovy",
+            "package p\n" +
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/708
-    public void testInnerClass4() {
+    public void testInnerClass6() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -281,7 +302,51 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass5() {
+    public void testInnerClass7() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.TupleConstructor(defaults=false)\n" +
+            "  class Inner {\n" +
+            "    int p\n" +
+            "  }\n" +
+            "  static m(int n) {\n" +
+            "    new Inner(new Outer(), n)\n" +
+            "  }\n" +
+            "}\n" +
+            "print Outer.m(4).p\n" +
+            "print new Outer.Inner(new Outer(), 2).p\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Ignore @Test // GROOVY-8947
+    public void testInnerClass8() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.TupleConstructor(defaults=false)\n" +
+            "  class Inner {\n" +
+            "    int p\n" +
+            "  }\n" +
+            "  static m(int n) {\n" +
+            "    new Outer().(new Inner(n))\n" + // TODO: no parens
+            "  }\n" +
+            "}\n" +
+            "print Outer.m(4).p\n" +
+            "print new Outer().(new Outer.Inner(2)).p\n", // TODO: no parens, no qualifier
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testInnerClass9() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1589,6 +1654,25 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "new C().obj\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // GROOVY-6977
+    public void testAnonymousInnerClass33() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  def <T> List<T> foo() {\n" +
+            "    new ArrayList<T>() {}\n" +
+            "  }\n" +
+            "}\n" +
+            "def longList = new C().<Long>foo()\n" +
+            "assert longList != null\n" +
+            "assert longList.empty\n",
         };
         //@formatter:on
 

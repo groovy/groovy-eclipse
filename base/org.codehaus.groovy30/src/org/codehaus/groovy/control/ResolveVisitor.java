@@ -41,7 +41,6 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -61,6 +60,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -70,6 +70,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -110,7 +111,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private boolean inPropertyExpression = false;
     private boolean inClosure = false;
 
-    private final Map<ClassNode, ClassNode> possibleOuterClassNodeMap = new HashMap<>();
     private Map<GenericsTypeName, GenericsType> genericParameterNames = new HashMap<>();
     private final Set<FieldNode> fieldTypesChecked = new HashSet<>();
     // GRECLIPSE add
@@ -437,12 +437,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // GROOVY-4043: Do this check up the hierarchy, if needed.
         for (ClassNode classToCheck : findHierClasses(currentClass).values()) {
             if (setRedirect(type, classToCheck)) return true;
-        }
-
-        // GROOVY-8947: Resolve non-static inner class outside of outer class.
-        ClassNode possibleOuterClassNode = possibleOuterClassNodeMap.get(type);
-        if (possibleOuterClassNode != null) {
-            if (setRedirect(type, possibleOuterClassNode)) return true;
         }
 
         // Another case we want to check here is if we are in a
@@ -1211,12 +1205,15 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     protected Expression transformConstructorCallExpression(final ConstructorCallExpression cce) {
-        findPossibleOuterClassNodeForNonStaticInnerClassInstantiation(cce);
-
+        /* GRECLIPSE edit -- GROOVY-4386, et al.
         ClassNode type = cce.getType();
         if (cce.isUsingAnonymousInnerClass()) { // GROOVY-9642
             resolveOrFail(type.getUnresolvedSuperClass(false), type);
         } else {
+        */
+        if (!cce.isUsingAnonymousInnerClass()) {
+            ClassNode type = cce.getType();
+        // GRECLIPSE end
             resolveOrFail(type, cce);
             if (type.isAbstract()) {
                 addError("You cannot create an instance from the abstract " + getDescription(type) + ".", cce);
@@ -1224,28 +1221,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
 
         return cce.transformExpression(this);
-    }
-
-    private void findPossibleOuterClassNodeForNonStaticInnerClassInstantiation(final ConstructorCallExpression cce) {
-        // GROOVY-8947: Fail to resolve non-static inner class outside of outer class
-        // `new Computer().new Cpu(4)` will be parsed to `new Cpu(new Computer(), 4)`
-        // so non-static inner class instantiation expression's first argument is a constructor call of outer class
-        // but the first argument is constructor call can not be non-static inner class instantiation expression, e.g.
-        // `new HashSet(new ArrayList())`, so we add "possible" to the variable name
-        Expression argumentExpression = cce.getArguments();
-        if (argumentExpression instanceof ArgumentListExpression) {
-            ArgumentListExpression argumentListExpression = (ArgumentListExpression) argumentExpression;
-            List<Expression> expressionList = argumentListExpression.getExpressions();
-            if (!expressionList.isEmpty()) {
-                Expression firstExpression = expressionList.get(0);
-
-                if (firstExpression instanceof ConstructorCallExpression) {
-                    ConstructorCallExpression constructorCallExpression = (ConstructorCallExpression) firstExpression;
-                    ClassNode possibleOuterClassNode = constructorCallExpression.getType();
-                    possibleOuterClassNodeMap.put(cce.getType(), possibleOuterClassNode);
-                }
-            }
-        }
     }
 
     private static String getDescription(final ClassNode node) {
@@ -1407,7 +1382,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (Modifier.isStatic(node.getModifiers())) {
                 genericParameterNames = new HashMap<>();
             }
-
+            /* GRECLIPSE edit -- GROOVY-4386, et al.
             InnerClassNode innerClassNode = (InnerClassNode) node;
             if (innerClassNode.isAnonymous()) {
                 MethodNode enclosingMethod = innerClassNode.getEnclosingMethod();
@@ -1415,6 +1390,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     resolveGenericsHeader(enclosingMethod.getGenericsTypes());
                 }
             }
+            */
         } else {
             genericParameterNames = new HashMap<>();
         }
@@ -1495,6 +1471,19 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
             }
         }
+        // VariableScopeVisitor visits anon. inner class body inline, so resolve now
+        for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
+            InnerClassNode cn = it.next();
+            if (cn.isAnonymous()) {
+                MethodNode enclosingMethod = cn.getEnclosingMethod();
+                if (enclosingMethod != null) {
+                    resolveGenericsHeader(enclosingMethod.getGenericsTypes()); // GROOVY-6977
+                }
+                resolveOrFail(cn.getUnresolvedSuperClass(false), cn); // GROOVY-9642
+            }
+        }
+        // initialize scopes/variables now that imports and super types are resolved
+        new VariableScopeVisitor(source).visitClass(node);
         // GRECLIPSE end
         super.visitClass(node);
 

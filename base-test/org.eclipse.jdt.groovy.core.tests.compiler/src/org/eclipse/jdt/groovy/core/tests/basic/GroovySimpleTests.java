@@ -788,19 +788,41 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testStaticProperty4() {
         //@formatter:off
         String[] sources = {
-            "Super.groovy",
-            "class Super {\n" +
-            "  def static getSql() { 'sql' }\n" +
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  static getB() { 'bee' }\n" +
             "}\n" +
-            "class Sub extends Super {\n" +
-            "  def static m() {\n" +
-            "    sql.charAt(0)\n" +
+            "class C extends A {\n" +
+            "  static m() {\n" +
+            "    print b.charAt(0)\n" +
             "  }\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "b");
+    }
+
+    @Test
+    public void testStaticProperty4a() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C extends A {\n" +
+            "  static main(args) {\n" +
+            "    print b.charAt(0)\n" +
+            "  }\n" +
+            "}\n",
+
+            "A.groovy",
+            "abstract class A {\n" +
+            "  static getB() { 'bee' }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "");
+        runConformTest(sources, "b");
     }
 
     @Test // GRECLIPSE-364
