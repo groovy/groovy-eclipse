@@ -3500,6 +3500,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 } else {
                     throw createParsingFailedException("Unsupported arguments", arguments); // should never reach here
                 }
+                // GRECLIPSE add -- GROOVY-8947
+                if (enclosingInstanceExpression instanceof ConstructorCallExpression && classNode.getName().indexOf('.') < 0) {
+                    classNode.setName(enclosingInstanceExpression.getType().getName() + '.' + classNode.getName());
+                }
+                // GRECLIPSE end
             }
 
             if (asBoolean(ctx.anonymousInnerClassDeclaration())) {

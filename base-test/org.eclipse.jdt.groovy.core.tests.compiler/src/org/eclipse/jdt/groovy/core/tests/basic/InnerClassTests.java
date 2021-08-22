@@ -15,7 +15,9 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import org.junit.Ignore;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
+import static org.junit.Assume.assumeTrue;
+
 import org.junit.Test;
 
 public final class InnerClassTests extends GroovyCompilerTestSuite {
@@ -323,8 +325,10 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "42");
     }
 
-    @Ignore @Test // GROOVY-8947
+    @Test // GROOVY-8947
     public void testInnerClass8() {
+        assumeTrue(isParrotParser());
+
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -334,11 +338,11 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    int p\n" +
             "  }\n" +
             "  static m(int n) {\n" +
-            "    new Outer().(new Inner(n))\n" + // TODO: no parens
+            "    new Outer().new Inner(n)\n" +
             "  }\n" +
             "}\n" +
             "print Outer.m(4).p\n" +
-            "print new Outer().(new Outer.Inner(2)).p\n", // TODO: no parens, no qualifier
+            "print new Outer().new Inner(2).p\n",
         };
         //@formatter:on
 

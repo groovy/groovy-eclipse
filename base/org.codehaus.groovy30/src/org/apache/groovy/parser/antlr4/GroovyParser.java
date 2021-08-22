@@ -9512,13 +9512,13 @@ public class GroovyParser extends AbstractParser {
 		public NlsContext nls(int i) {
 			return getRuleContext(NlsContext.class,i);
 		}
-		public NamePartContext namePart() {
-			return getRuleContext(NamePartContext.class,0);
-		}
 		public TerminalNode DOT() { return getToken(GroovyParser.DOT, 0); }
 		public TerminalNode NEW() { return getToken(GroovyParser.NEW, 0); }
 		public CreatorContext creator() {
 			return getRuleContext(CreatorContext.class,0);
+		}
+		public NamePartContext namePart() {
+			return getRuleContext(NamePartContext.class,0);
 		}
 		public ClosureOrLambdaExpressionContext closureOrLambdaExpression() {
 			return getRuleContext(ClosureOrLambdaExpressionContext.class,0);
@@ -9571,7 +9571,21 @@ public class GroovyParser extends AbstractParser {
 				switch ( getInterpreter().adaptivePredict(_input,150,_ctx) ) {
 				case 1:
 					{
-					setState(1456);
+					setState(1446);
+					match(DOT);
+					setState(1447);
+					nls();
+					setState(1448);
+					match(NEW);
+					setState(1449);
+					creator(1);
+					 _localctx.t =  6; 
+					}
+					break;
+
+				case 2:
+					{
+					setState(1462);
 					_errHandler.sync(this);
 					switch (_input.LA(1)) {
 					case SPREAD_DOT:
@@ -9579,7 +9593,7 @@ public class GroovyParser extends AbstractParser {
 					case SAFE_CHAIN_DOT:
 					case DOT:
 						{
-						setState(1446);
+						setState(1452);
 						_la = _input.LA(1);
 						if ( !(((((_la - 62)) & ~0x3f) == 0 && ((1L << (_la - 62)) & ((1L << (SPREAD_DOT - 62)) | (1L << (SAFE_DOT - 62)) | (1L << (SAFE_CHAIN_DOT - 62)) | (1L << (DOT - 62)))) != 0)) ) {
 						_errHandler.recoverInline(this);
@@ -9591,20 +9605,20 @@ public class GroovyParser extends AbstractParser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(1447);
+						setState(1453);
 						nls();
-						setState(1450);
+						setState(1456);
 						_errHandler.sync(this);
 						switch (_input.LA(1)) {
 						case AT:
 							{
-							setState(1448);
+							setState(1454);
 							match(AT);
 							}
 							break;
 						case LT:
 							{
-							setState(1449);
+							setState(1455);
 							nonWildcardTypeArguments();
 							}
 							break;
@@ -9672,40 +9686,26 @@ public class GroovyParser extends AbstractParser {
 						break;
 					case METHOD_POINTER:
 						{
-						setState(1452);
+						setState(1458);
 						match(METHOD_POINTER);
-						setState(1453);
+						setState(1459);
 						nls();
 						}
 						break;
 					case METHOD_REFERENCE:
 						{
-						setState(1454);
+						setState(1460);
 						match(METHOD_REFERENCE);
-						setState(1455);
+						setState(1461);
 						nls();
 						}
 						break;
 					default:
 						throw new NoViableAltException(this);
 					}
-					setState(1458);
+					setState(1464);
 					namePart();
 					 _localctx.t =  1; 
-					}
-					break;
-
-				case 2:
-					{
-					setState(1461);
-					match(DOT);
-					setState(1462);
-					nls();
-					setState(1463);
-					match(NEW);
-					setState(1464);
-					creator(1);
-					 _localctx.t =  6; 
 					}
 					break;
 
@@ -12797,7 +12797,7 @@ public class GroovyParser extends AbstractParser {
 		"u\u0578\13u\3v\3v\3v\3v\3v\3v\3v\3v\3v\3v\5v\u0584\nv\3w\3w\3w\3w\5w\u058a"+
 		"\nw\3w\7w\u058d\nw\fw\16w\u0590\13w\3x\3x\6x\u0594\nx\rx\16x\u0595\3x"+
 		"\5x\u0599\nx\3y\3y\3y\5y\u059e\ny\3y\3y\3y\7y\u05a3\ny\fy\16y\u05a6\13"+
-		"y\3z\3z\3z\3z\3z\5z\u05ad\nz\3z\3z\3z\3z\5z\u05b3\nz\3z\3z\3z\3z\3z\3"+
+		"y\3z\3z\3z\3z\3z\3z\3z\3z\3z\3z\3z\5z\u05b3\nz\3z\3z\3z\3z\5z\u05b9\n"+
 		"z\3z\3z\3z\3z\3z\3z\5z\u05c1\nz\3z\3z\3z\3z\3z\3z\3z\3z\3z\5z\u05cc\n"+
 		"z\3{\3{\3{\3{\5{\u05d2\n{\3|\3|\5|\u05d6\n|\3}\5}\u05d9\n}\3}\3}\5}\u05dd"+
 		"\n}\3}\3}\3~\5~\u05e2\n~\3~\3~\3~\5~\u05e7\n~\3~\3~\3\177\3\177\5\177"+
@@ -13284,16 +13284,16 @@ public class GroovyParser extends AbstractParser {
 		"\u059d\u059a\3\2\2\2\u059d\u059b\3\2\2\2\u059e\u05a4\3\2\2\2\u059f\u05a0"+
 		"\5\u00f2z\2\u05a0\u05a1\by\1\2\u05a1\u05a3\3\2\2\2\u05a2\u059f\3\2\2\2"+
 		"\u05a3\u05a6\3\2\2\2\u05a4\u05a2\3\2\2\2\u05a4\u05a5\3\2\2\2\u05a5\u00f1"+
-		"\3\2\2\2\u05a6\u05a4\3\2\2\2\u05a7\u05c0\5\u0142\u00a2\2\u05a8\u05a9\t"+
-		"\23\2\2\u05a9\u05ac\5\u0142\u00a2\2\u05aa\u05ad\7~\2\2\u05ab\u05ad\5\u0122"+
-		"\u0092\2\u05ac\u05aa\3\2\2\2\u05ac\u05ab\3\2\2\2\u05ac\u05ad\3\2\2\2\u05ad"+
-		"\u05b3\3\2\2\2\u05ae\u05af\7D\2\2\u05af\u05b3\5\u0142\u00a2\2\u05b0\u05b1"+
-		"\7E\2\2\u05b1\u05b3\5\u0142\u00a2\2\u05b2\u05a8\3\2\2\2\u05b2\u05ae\3"+
-		"\2\2\2\u05b2\u05b0\3\2\2\2\u05b3\u05b4\3\2\2\2\u05b4\u05b5\5\u00f4{\2"+
-		"\u05b5\u05b6\bz\1\2\u05b6\u05c1\3\2\2\2\u05b7\u05b8\7X\2\2\u05b8\u05b9"+
-		"\5\u0142\u00a2\2\u05b9\u05ba\7\'\2\2\u05ba\u05bb\5\u0118\u008d\2\u05bb"+
+		"\3\2\2\2\u05a6\u05a4\3\2\2\2\u05a7\u05c0\5\u0142\u00a2\2\u05a8\u05a9\7"+
+		"X\2\2\u05a9\u05aa\5\u0142\u00a2\2\u05aa\u05ab\7\'\2\2\u05ab\u05ac\5\u0118"+
+		"\u008d\2\u05ac\u05ad\bz\1\2\u05ad\u05c1\3\2\2\2\u05ae\u05af\t\23\2\2\u05af"+
+		"\u05b2\5\u0142\u00a2\2\u05b0\u05b3\7~\2\2\u05b1\u05b3\5\u0122\u0092\2"+
+		"\u05b2\u05b0\3\2\2\2\u05b2\u05b1\3\2\2\2\u05b2\u05b3\3\2\2\2\u05b3\u05b9"+
+		"\3\2\2\2\u05b4\u05b5\7D\2\2\u05b5\u05b9\5\u0142\u00a2\2\u05b6\u05b7\7"+
+		"E\2\2\u05b7\u05b9\5\u0142\u00a2\2\u05b8\u05ae\3\2\2\2\u05b8\u05b4\3\2"+
+		"\2\2\u05b8\u05b6\3\2\2\2\u05b9\u05ba\3\2\2\2\u05ba\u05bb\5\u00f4{\2\u05bb"+
 		"\u05bc\bz\1\2\u05bc\u05c1\3\2\2\2\u05bd\u05be\5\u0086D\2\u05be\u05bf\b"+
-		"z\1\2\u05bf\u05c1\3\2\2\2\u05c0\u05b2\3\2\2\2\u05c0\u05b7\3\2\2\2\u05c0"+
+		"z\1\2\u05bf\u05c1\3\2\2\2\u05c0\u05a8\3\2\2\2\u05c0\u05b8\3\2\2\2\u05c0"+
 		"\u05bd\3\2\2\2\u05c1\u05cc\3\2\2\2\u05c2\u05c3\5\u0126\u0094\2\u05c3\u05c4"+
 		"\bz\1\2\u05c4\u05cc\3\2\2\2\u05c5\u05c6\5\u00f8}\2\u05c6\u05c7\bz\1\2"+
 		"\u05c7\u05cc\3\2\2\2\u05c8\u05c9\5\u00fa~\2\u05c9\u05ca\bz\1\2\u05ca\u05cc"+
@@ -13413,7 +13413,7 @@ public class GroovyParser extends AbstractParser {
 		"\u041e\u0435\u0439\u043d\u0441\u044a\u0450\u0459\u0466\u0475\u047b\u0487"+
 		"\u0492\u049c\u04a1\u04a9\u04b5\u04b9\u04bd\u04c4\u04c8\u04cc\u04d0\u04e3"+
 		"\u04e7\u04ed\u04f3\u0506\u0521\u0524\u0564\u0574\u0576\u0583\u0589\u058e"+
-		"\u0595\u0598\u059d\u05a4\u05ac\u05b2\u05c0\u05cb\u05d1\u05d5\u05d8\u05dc"+
+		"\u0595\u0598\u059d\u05a4\u05b2\u05b8\u05c0\u05cb\u05d1\u05d5\u05d8\u05dc"+
 		"\u05e1\u05e6\u05ec\u05fb\u0601\u0606\u060b\u060f\u0612\u0619\u061c\u0625"+
 		"\u062d\u063a\u0646\u0652\u0656\u065a\u065e\u0664\u0669\u066e\u0670\u0675"+
 		"\u067e\u0688\u068a\u0695\u0699\u069c\u06a7\u06b1\u06bb\u06c0\u06c4\u06c9"+
