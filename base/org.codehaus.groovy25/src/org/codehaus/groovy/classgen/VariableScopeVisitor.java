@@ -193,9 +193,13 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                 }
             }
 
-            for (ClassNode face : cn.getAllInterfaces()) {
-                FieldNode fn = face.getDeclaredField(name);
+            for (ClassNode in : cn.getAllInterfaces()) {
+                FieldNode fn = in.getDeclaredField(name);
                 if (fn != null) return fn;
+                // GRECLIPSE add -- GROOVY-9678
+                PropertyNode pn = in.getProperty(name);
+                if (pn != null) return pn;
+                // GRECLIPSE end
             }
         }
 

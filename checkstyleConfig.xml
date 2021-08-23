@@ -861,20 +861,6 @@
         <property name="fileExtensions" value="groovy,java" />
         <property name="id" value="disabledTestCase" />
     </module>
-    <!--module name="RegexpMultiline">
-        <property name="message" value="Assertions.assertThat should be used instead of plain JUnit or Hamcrest asserts" />
-        <property name="format" value="\b(?:org\.junit\.\s*)?Assert\s*\.\s*assert" />
-        <property name="fileExtensions" value="java" />
-        <property name="id" value="festAssertions" />
-        <property name="severity" value="warning" />
-    </module>
-    <module name="RegexpMultiline">
-        <property name="message" value="Keyword ''assert'' should be used instead of plain JUnit or Hamcrest asserts" />
-        <property name="format" value="\b(?:org\.junit\.\s*)?Assert\s*\.\s*assert" />
-        <property name="fileExtensions" value="groovy" />
-        <property name="id" value="groovyAssertions" />
-        <property name="severity" value="warning" />
-    </module-->
 
 
     <!-- Copyright statement check -->

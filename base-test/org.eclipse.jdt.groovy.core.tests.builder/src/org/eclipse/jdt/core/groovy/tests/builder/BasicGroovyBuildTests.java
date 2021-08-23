@@ -28,6 +28,7 @@ import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -2937,7 +2938,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test // GRECLIPSE-1727
-    public void testTraitBasics() throws Exception {
+    public void testTraitBasics1() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
         //@formatter:off
@@ -2953,8 +2954,33 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1267
+    @Test // GROOVY-9678
     public void testTraitBasics2() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        //@formatter:off
+        IPath c = env.addGroovyClass(paths[1], "C",
+            "class C implements T {\n" +
+            "  static void m() {\n" +
+            "    p = 2\n" +
+            "    p += 1\n" +
+            "    print p\n" +
+            "  }\n" +
+            "}\n");
+        env.addGroovyClass(paths[1], "T",
+            "trait T {\n" +
+            "  static p = 1\n" +
+            "}\n");
+        //@formatter:on
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
+        assertEquals(Collections.emptySet(), ReconcilerUtils.reconcile(env.getUnit(c)));
+        expectingCompiledClasses("C", "T", "T$Trait$FieldHelper", "T$Trait$Helper", "T$Trait$StaticFieldHelper");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1267
+    public void testTraitBasics3() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
         //@formatter:off
@@ -2977,11 +3003,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "}\n");
         //@formatter:on
 
-        incrementalBuild(paths[0]);
-
-        expectingCompiledClasses("p.C", "p.D", "p.T", "p.T$Trait$Helper");
-        assertTrue(ReconcilerUtils.reconcile(env.getUnit(d)).isEmpty());
+        fullBuild(paths[0]);
         expectingNoProblems();
+        expectingCompiledClasses("p.C", "p.D", "p.T", "p.T$Trait$Helper");
+        assertEquals(Collections.emptySet(), ReconcilerUtils.reconcile(env.getUnit(d)));
     }
 
     @Test
@@ -3551,8 +3576,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         bin.getLocation().toFile().delete(); // remove output folder
         env.getProject(paths[0]).refreshLocal(1, null);
 
-        assertTrue(ReconcilerUtils.reconcile(env.getUnit(main)).isEmpty());
         expectingNoProblems();
+        assertEquals(Collections.emptySet(), ReconcilerUtils.reconcile(env.getUnit(main)));
     }
 
     @Test
