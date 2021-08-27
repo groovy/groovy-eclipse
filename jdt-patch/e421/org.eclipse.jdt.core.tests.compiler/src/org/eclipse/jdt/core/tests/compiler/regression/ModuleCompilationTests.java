@@ -5537,4 +5537,99 @@ public void testBug521362_emptyFile() {
 	     "",
 	     true);
 	}
+	public void _testBug574097() { // GROOVY no APT
+		Util.flushDirectoryContent(new File(OUTPUT_DIR));
+		String outDir = OUTPUT_DIR + File.separator + "bin";
+		String srcDir = OUTPUT_DIR + File.separator + "src";
+		File modDir = new File(OUTPUT_DIR + File.separator + "mod");
+		String moduleLoc = srcDir + File.separator + "mod.one";
+		List<String> files = new ArrayList<>();
+		writeFileCollecting(files, moduleLoc, "module-info.java",
+						"module mod.one { \n" +
+						"	exports p;\n" +
+						"	requires transitive java.compiler;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "TestProcessor.java",
+						"package p;\n"
+						+ "import java.util.Set;\n"
+						+ "import javax.annotation.processing.AbstractProcessor;\n"
+						+ "import javax.annotation.processing.RoundEnvironment;\n"
+						+ "import javax.lang.model.element.TypeElement;\n"
+						+ "public class TestProcessor extends AbstractProcessor {\n"
+						+ "	@Override\n"
+						+ "	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {\n"
+						+ "		return false;\n"
+						+ "	}\n"
+						+ "}");
+
+		StringBuilder buffer = new StringBuilder();
+		buffer.append("-d " + outDir )
+		.append(" -9 ")
+		.append(" --module-path \"")
+		.append(Util.getJavaClassLibsAsString())
+		.append("\" ")
+		.append(" --module-source-path " + "\"" + srcDir + "\"");
+		for (String fileName : files)
+			buffer.append(" \"").append(fileName).append("\"");
+
+		runConformTest(new String[]{},
+			buffer.toString(),
+			"",
+			"",
+			false);
+		String jarName = modDir + File.separator + "mod.one.jar";
+		try {
+			Util.zip(new File(outDir + File.separator + "mod.one"),
+								jarName);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (!modDir.exists()) {
+			if (!modDir.mkdirs()) {
+				fail("Coult not create folder " + modDir);
+			}
+		}
+		Util.flushDirectoryContent(new File(srcDir));
+		files = new ArrayList<>();
+		moduleLoc = srcDir + File.separator + "mod.two";
+		writeFileCollecting(files, moduleLoc, "module-info.java",
+						"module mod.two { \n" +
+						"	exports q;\n" +
+						"	requires java.base;\n" +
+						"	requires mod.one;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "q", "A.java",
+						"package q;\n" +
+						"public class A {\n" +
+						"   p.TestProcessor prc = null;\n" +
+						"}");
+		buffer = new StringBuilder();
+		buffer.append("-d " + outDir )
+		.append(" -9 ")
+		.append(" --module-path \"")
+		.append(Util.getJavaClassLibsAsString())
+		.append("\" ")
+		.append(" --module-source-path " + "\"" + srcDir + "\"")
+		.append(" --processor-module-path " + "\"" + jarName + "\"");
+		for (String name : files)
+			buffer.append(" \"").append(name).append("\"");
+
+		runNegativeTest(new String[]{},
+			buffer.toString(),
+			"",
+			"----------\n" +
+			"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.two/module-info.java (at line 4)\n" +
+			"	requires mod.one;\n" +
+			"	         ^^^^^^^\n" +
+			"mod.one cannot be resolved to a module\n" +
+			"----------\n" +
+			"----------\n" +
+			"2. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.two/q/A.java (at line 3)\n" +
+			"	p.TestProcessor prc = null;\n" +
+			"	^\n" +
+			"p cannot be resolved to a type\n" +
+			"----------\n" +
+			"2 problems (2 errors)\n",
+			false);
+	}
 }
