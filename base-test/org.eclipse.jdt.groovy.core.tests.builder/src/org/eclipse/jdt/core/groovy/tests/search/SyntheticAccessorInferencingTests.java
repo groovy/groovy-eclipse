@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.eclipse.jdt.core.groovy.tests.search;
-
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
 import org.junit.Test;
 
@@ -64,11 +62,7 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  }\n" +
             "}\n";
 
-        if (!isAtLeastGroovy(40)) {
-            assertUnknown(contents, "isBar");
-        } else {
-            assertKnown(contents, "isBar", "Foo");
-        }
+        assertKnown(contents, "isBar", "Foo");
         assertKnown(contents, "getBar", "Foo");
         assertKnown(contents, "setBar", "Foo");
     }

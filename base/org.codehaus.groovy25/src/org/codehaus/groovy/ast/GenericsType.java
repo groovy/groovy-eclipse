@@ -275,7 +275,6 @@ public class GenericsType extends ASTNode {
                         }
                         return false;
                     }
-                    
                 }
                 return genericsTypes[0].getName().equals(name);
                 */
@@ -438,7 +437,7 @@ public class GenericsType extends ASTNode {
                     GenericsTypeName name = new GenericsTypeName(classNodeType.getName());
                     if (redirectBoundType.isPlaceholder()) {
                         GenericsTypeName gtn = new GenericsTypeName(redirectBoundType.getName());
-                        match = name.equals(gtn)
+                        match = name.equals(gtn) // GRECLIPSE add
                                 || name.equals(new GenericsTypeName("#" + redirectBoundType.getName()));
                         if (!match) {
                             GenericsType genericsType = boundPlaceHolders.get(gtn);

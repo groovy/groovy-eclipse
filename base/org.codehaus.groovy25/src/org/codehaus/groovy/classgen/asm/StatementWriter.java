@@ -100,6 +100,21 @@ public class StatementWriter {
         controller.getOperandStack().popDownTo(mark);
     }
 
+    /* GRECLIPSE edit
+    private boolean isMethodOrConstructorNonEmptyBlock(BlockStatement block) {
+        MethodNode methodNode = controller.getMethodNode();
+        if (null == methodNode) {
+            methodNode = controller.getConstructorNode();
+        }
+
+        if (null == methodNode || block != methodNode.getCode()) { // check if the block is method/constructor's code
+            return false;
+        }
+
+        return !block.getStatements().isEmpty();
+    }
+    */
+
     public void writeForStatement(ForStatement loop) {
         Parameter loopVar = loop.getVariable();
         if (loopVar == ForStatement.FOR_LOOP_DUMMY) {
@@ -310,6 +325,7 @@ public class StatementWriter {
         ifElse.getIfBlock().visit(controller.getAcg());
         /* GRECLIPSE edit
         controller.getCompileStack().pop();
+
         if (ifElse.getElseBlock() instanceof EmptyStatement) {
         */
         if (ifElse.getElseBlock().isEmpty()) {

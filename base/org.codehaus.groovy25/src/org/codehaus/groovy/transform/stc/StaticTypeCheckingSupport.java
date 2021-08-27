@@ -704,8 +704,8 @@ public abstract class StaticTypeCheckingSupport {
         }
 
         /* GRECLIPSE edit -- GROOVY-8983
-        if (rightRedirect == VOID_TYPE || rightRedirect == void_WRAPPER_TYPE) {
-            return leftRedirect == VOID_TYPE || leftRedirect == void_WRAPPER_TYPE;
+        if (right == VOID_TYPE || right == void_WRAPPER_TYPE) {
+            return left == VOID_TYPE || left == void_WRAPPER_TYPE;
         }
         */
         if (rightRedirect == void_WRAPPER_TYPE) return leftRedirect == VOID_TYPE;
@@ -1594,7 +1594,7 @@ public abstract class StaticTypeCheckingSupport {
         boolean failure = false;
 
         // correct receiver for inner class
-        // we assume the receiver is an instance of the declaring class of the 
+        // we assume the receiver is an instance of the declaring class of the
         // candidate method, but findMethod returns also outer class methods
         // for that receiver. For now we skip receiver based checks in that case
         // TODO: correct generics for when receiver is to be skipped
@@ -1615,7 +1615,7 @@ public abstract class StaticTypeCheckingSupport {
 
         // we have here different generics contexts we have to deal with.
         // There is firstly the context given through the class, and the method.
-        // The method context may hide generics given through the class, but use 
+        // The method context may hide generics given through the class, but use
         // the non-hidden ones.
         Map<GenericsTypeName, GenericsType> resolvedMethodGenerics = new HashMap<GenericsTypeName, GenericsType>();
         if (!skipBecauseOfInnerClassNotReceiver) {
@@ -1631,9 +1631,9 @@ public abstract class StaticTypeCheckingSupport {
         }
         // the outside context parts till now define placeholder we are not allowed to
         // generalize, thus we save that for later use...
-        // extension methods are special, since they set the receiver as 
+        // extension methods are special, since they set the receiver as
         // first parameter. While we normally allow generalization for the first
-        // parameter, in case of an extension method we must not. 
+        // parameter, in case of an extension method we must not.
         Set<GenericsTypeName> fixedGenericsPlaceHolders = extractResolvedPlaceHolders(resolvedMethodGenerics);
 
         for (int i = 0; i < arguments.length; i++) {
@@ -1688,7 +1688,7 @@ public abstract class StaticTypeCheckingSupport {
         // information. This way the method level information slowly turns
         // into information for the callsite
         applyGenericsConnections(connections, resolvedMethodGenerics);
-        // since it is possible that the callsite uses some generics as well, 
+        // since it is possible that the callsite uses some generics as well,
         // we may have to add additional elements here
         addMissingEntries(connections, resolvedMethodGenerics);
         // to finally see if the parameter and the argument fit together,
@@ -1971,7 +1971,7 @@ public abstract class StaticTypeCheckingSupport {
                 extractGenericsConnections(connections, superClass, target);
                 // GRECLIPSE end
             } else {
-                // if we reach here, we have an unhandled case 
+                // if we reach here, we have an unhandled case
                 throw new GroovyBugError("The type " + type + " seems not to normally extend " + target + ". Sorry, I cannot handle this.");
             }
         }
@@ -1992,7 +1992,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     private static void extractGenericsConnections(Map<GenericsTypeName, GenericsType> connections, GenericsType[] usage, GenericsType[] declaration) {
-        // if declaration does not provide generics, there is no connection to make 
+        // if declaration does not provide generics, there is no connection to make
         if (usage == null || declaration == null || declaration.length == 0) return;
         if (usage.length != declaration.length) return;
 
@@ -2250,9 +2250,9 @@ public abstract class StaticTypeCheckingSupport {
         return gt;
     }
 
-    public static boolean isUnboundedWildcard(GenericsType gt) {
+    public static boolean isUnboundedWildcard(final GenericsType gt) {
         if (gt.isWildcard() && gt.getLowerBound() == null) {
-            ClassNode[] upperBounds = gt.getUpperBounds(); // GRECLIPSE add -- not placeholder
+            ClassNode[] upperBounds = gt.getUpperBounds();
             return (upperBounds == null || upperBounds.length == 0 || (upperBounds.length == 1
                     && upperBounds[0].equals(OBJECT_TYPE) && !upperBounds[0].isGenericsPlaceHolder()));
         }

@@ -28,7 +28,6 @@ import org.codehaus.groovy.ast.expr.ExpressionTransformer;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
 import org.codehaus.groovy.classgen.asm.WriterController;
 import org.codehaus.groovy.syntax.Token;
-import org.codehaus.groovy.syntax.Types;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;

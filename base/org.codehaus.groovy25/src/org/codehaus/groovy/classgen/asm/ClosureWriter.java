@@ -30,22 +30,19 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.classgen.Verifier;
+import org.codehaus.groovy.transform.stc.StaticTypesMarker;
+
 import groovyjarjarasm.asm.MethodVisitor;
 
 import java.util.HashMap;
@@ -54,7 +51,16 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
-import static org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_RETURN_TYPE;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callThisX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorSuperX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
 import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
 import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
@@ -123,8 +129,8 @@ public class ClosureWriter {
             Parameter param = localVariableParams[i];
             String name = param.getName();
             loadReference(name, controller);
-            if (param.getNodeMetaData(ClosureWriter.UseExistingReference.class)==null) {
-                param.setNodeMetaData(ClosureWriter.UseExistingReference.class,Boolean.TRUE);
+            if (param.getNodeMetaData(ClosureWriter.UseExistingReference.class) == null) {
+                param.setNodeMetaData(ClosureWriter.UseExistingReference.class, Boolean.TRUE);
             }
         }
 
@@ -198,10 +204,10 @@ public class ClosureWriter {
             parameters = Parameter.EMPTY_ARRAY;
         } else if (parameters.length == 0) {
             // let's create a default 'it' parameter
-            Parameter it = new Parameter(ClassHelper.OBJECT_TYPE, "it", new ConstantExpression(null));
+            Parameter it = param(ClassHelper.OBJECT_TYPE, "it", nullX());
             parameters = new Parameter[]{it};
             Variable ref = expression.getVariableScope().getDeclaredVariable("it");
-            if (ref!=null) it.setClosureSharedVariable(ref.isClosureSharedVariable());
+            if (ref != null) it.setClosureSharedVariable(ref.isClosureSharedVariable());
         }
 
         Parameter[] localVariableParams = getClosureSharedVariables(expression);
@@ -219,7 +225,7 @@ public class ClosureWriter {
             answer.setScriptBody(true);
         }
         // GRECLIPSE add -- GROOVY-9971: closure return type is mapped to Groovy cast by classgen
-        ClassNode returnType = expression.getNodeMetaData(INFERRED_RETURN_TYPE);
+        ClassNode returnType = expression.getNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE);
         if (returnType == null) returnType = ClassHelper.OBJECT_TYPE; // not STC or unknown path
         else if (returnType.isPrimaryClassNode()) returnType = returnType.getPlainNodeReference();
         else if (ClassHelper.isPrimitiveType(returnType)) returnType = ClassHelper.getWrapper(returnType);
@@ -240,21 +246,16 @@ public class ClosureWriter {
                 || (parameters.length == 1
                 && parameters[0].getType() != null
                 && parameters[0].getType() != ClassHelper.OBJECT_TYPE
-                && !ClassHelper.OBJECT_TYPE.equals(parameters[0].getType().getComponentType())))
-        {
-
+                && !ClassHelper.OBJECT_TYPE.equals(parameters[0].getType().getComponentType()))) {
             // let's add a typesafe call method
-            MethodNode call = answer.addMethod(
+            MethodNode call = new MethodNode(
                     "call",
                     ACC_PUBLIC,
                     returnType,
                     parameters,
                     ClassNode.EMPTY_ARRAY,
-                    new ReturnStatement(
-                            new MethodCallExpression(
-                                    VariableExpression.THIS_EXPRESSION,
-                                    "doCall",
-                                    new ArgumentListExpression(parameters))));
+                    returnS(callThisX("doCall", args(parameters))));
+            addGeneratedMethod(answer, call, true);
             call.setSourcePosition(expression);
         }
 
@@ -269,17 +270,13 @@ public class ClosureWriter {
         thisObject.setSourcePosition(expression);
         block.getVariableScope().putReferencedLocalVariable(thisObject);
         TupleExpression conArgs = new TupleExpression(outer, thisObject);
-        block.addStatement(
-                new ExpressionStatement(
-                        new ConstructorCallExpression(
-                                ClassNode.SUPER,
-                                conArgs)));
+        block.addStatement(stmt(ctorSuperX(conArgs)));
 
         // let's assign all the parameter fields from the outer context
         for (Parameter param : localVariableParams) {
             String paramName = param.getName();
             ClassNode type = param.getType();
-            VariableExpression initialValue = new VariableExpression(paramName);
+            VariableExpression initialValue = varX(paramName);
             initialValue.setAccessedVariable(param);
             initialValue.setUseReferenceDirectly(true);
             ClassNode realType = type;
@@ -291,21 +288,21 @@ public class ClosureWriter {
             String methodName = Verifier.capitalize(paramName);
 
             // let's add a getter & setter
-            Expression fieldExp = new FieldExpression(paramField);
+            Expression fieldExp = fieldX(paramField);
             markAsGenerated(answer,
-                answer.addMethod(
-                    "get" + methodName,
-                    ACC_PUBLIC,
-                    realType.getPlainNodeReference(),
-                    Parameter.EMPTY_ARRAY,
-                    ClassNode.EMPTY_ARRAY,
-                    new ReturnStatement(fieldExp)),
-                true);
+                    answer.addMethod(
+                            "get" + methodName,
+                            ACC_PUBLIC,
+                            realType.getPlainNodeReference(),
+                            Parameter.EMPTY_ARRAY,
+                            ClassNode.EMPTY_ARRAY,
+                            returnS(fieldExp)),
+                    true);
         }
 
         Parameter[] params = new Parameter[2 + localVariableParams.length];
-        params[0] = new Parameter(ClassHelper.OBJECT_TYPE, "_outerInstance");
-        params[1] = new Parameter(ClassHelper.OBJECT_TYPE, "_thisObject");
+        params[0] = param(ClassHelper.OBJECT_TYPE, "_outerInstance");
+        params[1] = param(ClassHelper.OBJECT_TYPE, "_thisObject");
         System.arraycopy(localVariableParams, 0, params, 2, localVariableParams.length);
 
         ASTNode sn = answer.addConstructor(ACC_PUBLIC, params, ClassNode.EMPTY_ARRAY, block);
@@ -343,7 +340,7 @@ public class ClosureWriter {
     private static void removeInitialValues(Parameter[] params) {
         for (int i = 0; i < params.length; i++) {
             if (params[i].hasInitialExpression()) {
-                Parameter p = new Parameter(params[i].getType(), params[i].getName());
+                Parameter p = param(params[i].getType(), params[i].getName());
                 p.setOriginType(p.getOriginType());
                 params[i] = p;
             }
@@ -361,14 +358,15 @@ public class ClosureWriter {
         mv.visitVarInsn(ALOAD, 0);
         ClassNode callNode = classNode.getSuperClass();
         TupleExpression arguments = (TupleExpression) call.getArguments();
-        if (arguments.getExpressions().size()!=2) throw new GroovyBugError("expected 2 arguments for closure constructor super call, but got"+arguments.getExpressions().size());
+        if (arguments.getExpressions().size() != 2)
+            throw new GroovyBugError("expected 2 arguments for closure constructor super call, but got" + arguments.getExpressions().size());
         arguments.getExpression(0).visit(acg);
         operandStack.box();
         arguments.getExpression(1).visit(acg);
         operandStack.box();
-        //TODO: replace with normal String, p not needed
-        Parameter p = new Parameter(ClassHelper.OBJECT_TYPE,"_p");
-        String descriptor = BytecodeHelper.getMethodDescriptor(ClassHelper.VOID_TYPE, new Parameter[]{p,p});
+        // TODO: replace with normal String, p not needed
+        Parameter p = param(ClassHelper.OBJECT_TYPE, "_p");
+        String descriptor = BytecodeHelper.getMethodDescriptor(ClassHelper.VOID_TYPE, new Parameter[]{p, p});
         mv.visitMethodInsn(INVOKESPECIAL, BytecodeHelper.getClassInternalName(callNode), "<init>", descriptor, false);
         operandStack.remove(2);
         return true;
@@ -380,7 +378,7 @@ public class ClosureWriter {
         int index = 0;
         for (Iterator iter = scope.getReferencedLocalVariablesIterator(); iter.hasNext();) {
             Variable element = (org.codehaus.groovy.ast.Variable) iter.next();
-            Parameter p = new Parameter(element.getType(), element.getName());
+            Parameter p = param(element.getType(), element.getName());
             p.setOriginType(element.getOriginType());
             p.setClosureSharedVariable(element.isClosureSharedVariable());
             ret[index] = p;

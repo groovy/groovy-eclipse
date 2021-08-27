@@ -100,14 +100,6 @@ public class BinaryExpressionTransformer {
                 }
             }
         }
-        /* GRECLIPSE edit -- GROOVY-9653, GROOVY-9700
-        if (operationType == Types.EQUAL && leftExpression instanceof PropertyExpression) {
-            MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-            if (directMCT != null) {
-                return transformPropertyAssignmentToSetterCall((PropertyExpression) leftExpression, rightExpression, directMCT);
-            }
-        }
-        */
         if (operationType == Types.ASSIGN) {
             MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             if (directMCT != null) {
@@ -138,9 +130,7 @@ public class BinaryExpressionTransformer {
                     );
                 }
             }
-        } else
-        // GRECLIPSE end
-        if (operationType == Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
+        } else if (operationType == Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
             // let's check if one of the operands is the null constant
             CompareToNullExpression compareToNullExpression = null;
             if (isNullConstant(leftExpression)) {
@@ -205,12 +195,8 @@ public class BinaryExpressionTransformer {
             BinaryExpression optimized = tryOptimizeCharComparison(left, right, bin);
             if (optimized != null) {
                 optimized.removeNodeMetaData(StaticCompilationMetadataKeys.BINARY_EXP_TARGET);
-                /* GRECLIPSE edit -- GROOVY-9652
-                return transformBinaryExpression(optimized);
-                */
                 optimized.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                 return optimized;
-                // GRECLIPSE end
             }
             /* GRECLIPSE edit
             call = new MethodCallExpression(
@@ -474,22 +460,13 @@ public class BinaryExpressionTransformer {
         throw new IllegalArgumentException("Unsupported conversion");
     }
 
-    /* GRECLIPSE edit
-    private Expression transformPropertyAssignmentToSetterCall(final PropertyExpression leftExpression, final Expression rightExpression, final MethodNode directMCT) {
-        // transform "a.x = b" into "def tmp = b; a.setX(tmp); tmp"
-        Expression arg = staticCompilationTransformer.transform(rightExpression);
-        return StaticPropertyAccessHelper.transformToSetterCall(
-                leftExpression.getObjectExpression(),
-                directMCT,
-                arg,
-                false,
-                leftExpression.isSafe(),
-                false,
-                true, // to be replaced with a proper test whether a return value should be used or not
-                leftExpression
-        );
+    protected static boolean isNullConstant(final Expression expression) {
+        return org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant(expression);
     }
-    */
+
+    /**
+     * Adapter for {@link StaticPropertyAccessHelper#transformToSetterCall}.
+     */
     private static Expression transformAssignmentToSetterCall(
             final Expression receiver,
             final MethodNode setterMethod,
@@ -512,10 +489,5 @@ public class BinaryExpressionTransformer {
                 true, // TODO: replace with a proper test whether a return value is required or not
                 pos
         );
-    }
-    // GRECLIPSE end
-
-    protected static boolean isNullConstant(final Expression expression) {
-        return expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression();
     }
 }

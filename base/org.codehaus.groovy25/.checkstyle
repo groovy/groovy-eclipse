@@ -46,18 +46,14 @@
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/BinaryExpressionHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/BytecodeHelper.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/CallSiteWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/ClosureWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/InvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/StatementMetaTypeChooser.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/(Optimizing)?StatementWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesBinaryExpressionMultiTypeDispatcher.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypes(CallSite|Closure)Writer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesTypeChooser.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesUnaryExpressionHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/ErrorCollector.java" include-pattern="false" />
@@ -81,7 +77,7 @@
         <file-match-pattern match-pattern="groovy/transform/NewifyASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/TupleConstructorASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|MethodCall|Variable)ExpressionTransformer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|MethodCall)ExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/ConstructorCallTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/CompareToNullExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingSupport.java" include-pattern="false" />

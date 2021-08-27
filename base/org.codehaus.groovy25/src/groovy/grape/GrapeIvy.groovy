@@ -761,8 +761,9 @@ class GrapeIvy implements GrapeEngine {
                 m2compatible: (boolean) (args.m2Compatible ?: true),
                 settings: (ResolverSettings) settings)
 
-        // GRECLIPSE edit -- GROOVY-9376
-        //chainResolver.add(resolver)
+        /* GRECLIPSE edit -- GROOVY-9376
+        chainResolver.add(resolver)
+        */
         chainResolver.resolvers.add(0, resolver)
         // GRECLIPSE end
 

@@ -86,6 +86,7 @@ import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.chooseBestMethod;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
@@ -133,42 +134,13 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             makeDynamicGetProperty(receiver, propertyName, safe);
             return;
         }
-        TypeChooser typeChooser = controller.getTypeChooser();
-        ClassNode classNode = controller.getClassNode();
-        ClassNode receiverType = receiver.getNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER);
-        if (receiverType==null) {
-            receiverType = typeChooser.resolveType(receiver, classNode);
-        }
-        Object type = receiver.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
-        if (type==null && receiver instanceof VariableExpression) {
-            Variable variable = ((VariableExpression) receiver).getAccessedVariable();
-            if (variable instanceof Expression) {
-                type = ((Expression) variable).getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
-            }
-        }
-        if (type!=null) {
-            // in case a "flow type" is found, it is preferred to use it instead of
-            // the declaration type
-            receiverType = (ClassNode) type;
-        }
-        boolean isClassReceiver = false;
-        if (isClassClassNodeWrappingConcreteType(receiverType)) {
-            isClassReceiver = true;
-            receiverType = receiverType.getGenericsTypes()[0].getType();
-        }
-
-        if (isPrimitiveType(receiverType)) {
-            // GROOVY-6590: wrap primitive types
-            receiverType = getWrapper(receiverType);
-        }
-
-        MethodVisitor mv = controller.getMethodVisitor();
-
-        if (receiverType.isArray() && propertyName.equals("length")) {
+        boolean[] isClassReceiver = new boolean[1];
+        ClassNode receiverType = getPropertyOwnerType(receiver, isClassReceiver);
+        if (receiverType.isArray() && "length".equals(propertyName)) {
             receiver.visit(controller.getAcg());
-            ClassNode arrayGetReturnType = typeChooser.resolveType(receiver, classNode);
+            ClassNode arrayGetReturnType = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
             controller.getOperandStack().doGroovyCast(arrayGetReturnType);
-            mv.visitInsn(ARRAYLENGTH);
+            controller.getMethodVisitor().visitInsn(ARRAYLENGTH);
             controller.getOperandStack().replace(int_TYPE);
             return;
         } else if (
@@ -191,7 +163,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
 
         if (!isStaticProperty && (receiverType.implementsInterface(MAP_TYPE) || MAP_TYPE.equals(receiverType))) {
             // for maps, replace map.foo with map.get('foo')
-            writeMapDotProperty(receiver, propertyName, mv, safe);
+            writeMapDotProperty(receiver, propertyName, safe);
             return;
         }
         if (makeGetPropertyWithGetter(receiver, receiverType, propertyName, safe, implicitThis)) return;
@@ -201,7 +173,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             if (makeGetPropertyWithGetter(receiver, receiver.getType(), propertyName, safe, implicitThis)) return;
             if (makeGetPrivateFieldWithBridgeMethod(receiver, receiver.getType(), propertyName, safe, implicitThis)) return;
         }
-        if (isClassReceiver) {
+        if (isClassReceiver[0]) {
             // we are probably looking for a property of the class
             if (makeGetPropertyWithGetter(receiver, CLASS_Type, propertyName, safe, implicitThis)) return;
             if (makeGetField(receiver, CLASS_Type, propertyName, safe, false)) return;
@@ -263,8 +235,8 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             }
         }
 
-        if (!isStaticProperty && (receiverType.implementsInterface(LIST_TYPE) || LIST_TYPE.equals(receiverType))) {
-            writeListDotProperty(receiver, propertyName, mv, safe);
+        if (!isStaticProperty && isOrImplements(receiverType, LIST_TYPE)) {
+            writeListDotProperty(receiver, propertyName, safe);
             return;
         }
 
@@ -286,8 +258,10 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         mce.visit(controller.getAcg());
     }
 
-    private void writeMapDotProperty(final Expression receiver, final String methodName, final MethodVisitor mv, final boolean safe) {
+    private void writeMapDotProperty(final Expression receiver, final String propertyName, final boolean safe) {
         receiver.visit(controller.getAcg()); // load receiver
+
+        MethodVisitor mv = controller.getMethodVisitor();
 
         Label exit = new Label();
         if (safe) {
@@ -300,7 +274,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             receiver.visit(controller.getAcg());
         }
 
-        mv.visitLdcInsn(methodName); // load property name
+        mv.visitLdcInsn(propertyName);
         mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);
         if (safe) {
             mv.visitLabel(exit);
@@ -308,7 +282,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         controller.getOperandStack().replace(OBJECT_TYPE);
     }
 
-    private void writeListDotProperty(final Expression receiver, final String methodName, final MethodVisitor mv, final boolean safe) {
+    private void writeListDotProperty(final Expression receiver, final String propertyName, final boolean safe) {
         ClassNode componentType = receiver.getNodeMetaData(StaticCompilationMetadataKeys.COMPONENT_TYPE);
         if (componentType==null) {
             componentType = OBJECT_TYPE;
@@ -318,6 +292,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         // for (e in list) { result.add (e.foo) }
         // result
         CompileStack compileStack = controller.getCompileStack();
+        MethodVisitor mv = controller.getMethodVisitor();
 
         Label exit = new Label();
         if (safe) {
@@ -374,7 +349,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             public ClassNode getType() {
                 return finalComponentType;
             }
-        }, methodName);
+        }, propertyName);
         pexp.visit(controller.getAcg());
         controller.getOperandStack().box();
         controller.getOperandStack().remove(1);
@@ -442,28 +417,17 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
     }
 
     @Override
-    public void makeGroovyObjectGetPropertySite(final Expression receiver, final String methodName, final boolean safe, final boolean implicitThis) {
-        TypeChooser typeChooser = controller.getTypeChooser();
-        ClassNode classNode = controller.getClassNode();
-        /* GRECLIPSE edit -- GROOVY-9967
-        ClassNode receiverType = typeChooser.resolveType(receiver, classNode);
-        if (receiver instanceof VariableExpression && ((VariableExpression) receiver).isThisExpression() && !controller.isInClosure()) {
-            receiverType = classNode;
-        }
-        */
+    public void makeGroovyObjectGetPropertySite(final Expression receiver, final String propertyName, final boolean safe, final boolean implicitThis) {
         ClassNode receiverType = controller.getClassNode();
-        if (!isThisExpression(receiver) || controller.isInClosure()) {
-            receiverType = getPropertyOwnerType(receiver);
+        if (!AsmClassGenerator.isThisExpression(receiver) || controller.isInClosure()) {
+            receiverType = getPropertyOwnerType(receiver); // GROOVY-9967, et al.
         }
-        // GRECLIPSE edit
 
-        String propertyName = methodName;
         if (implicitThis) {
             if (controller.getInvocationWriter() instanceof StaticInvocationWriter) {
                 MethodCallExpression currentCall = ((StaticInvocationWriter) controller.getInvocationWriter()).getCurrentCall();
                 if (currentCall != null && currentCall.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER) != null) {
-                    propertyName = currentCall.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
-                    String[] props = propertyName.split("\\.");
+                    String[] props = currentCall.<String>getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER).split("\\.");
                     BytecodeExpression thisLoader = new BytecodeExpression() {
                         @Override
                         public void visit(final MethodVisitor mv) {
@@ -569,23 +533,16 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
     boolean makeGetField(final Expression receiver, final ClassNode receiverType, final String fieldName, final boolean safe, final boolean implicitThis) {
         /* GRECLIPSE edit -- GROOVY-7039, GROOVY-9791
         FieldNode field = receiverType.getField(fieldName);
-        // direct access is allowed if we are in the same class as the declaring class
-        // or we are in an inner class
-        if (field != null && isDirectAccessAllowed(field, controller.getClassNode())) {
         */
         FieldNode field = org.apache.groovy.ast.tools.ClassNodeUtils.getField(receiverType, fieldName);
-        if (field != null && AsmClassGenerator.isValidFieldNodeForByteCodeAccess(field, controller.getClassNode())) {
         // GRECLIPSE end
+        if (field != null && AsmClassGenerator.isFieldDirectlyAccessible(field, controller.getClassNode())) {
             CompileStack compileStack = controller.getCompileStack();
             MethodVisitor mv = controller.getMethodVisitor();
             ClassNode replacementType = field.getOriginType();
             OperandStack operandStack = controller.getOperandStack();
             if (field.isStatic()) {
-                /* GRECLIPSE edit -- GROOVY-9955
-                mv.visitFieldInsn(GETSTATIC, BytecodeHelper.getClassInternalName(field.getOwner()), fieldName, BytecodeHelper.getTypeDescription(replacementType));
-                */
                 mv.visitFieldInsn(GETSTATIC, BytecodeHelper.getClassInternalName(receiverType), fieldName, BytecodeHelper.getTypeDescription(replacementType));
-                // GRECLIPSE end
                 operandStack.push(replacementType);
             } else {
                 if (implicitThis) {
@@ -634,29 +591,6 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         */
         return false;
     }
-
-    /* GRECLIPSE edit -- GROOVY-9791
-    private static boolean isDirectAccessAllowed(FieldNode field, ClassNode receiver) {
-        ClassNode declaringClass = field.getDeclaringClass().redirect();
-        ClassNode receiverType = receiver.redirect();
-
-        // first, direct access from within the class
-        if (declaringClass.equals(receiverType)) return true;
-        if (field.isPrivate()) return false;
-
-        // now, inner class node access to outer class fields
-        receiverType = receiverType.getOuterClass();
-        while (receiverType != null) {
-            if (declaringClass.equals(receiverType)) {
-                return true;
-            }
-            receiverType = receiverType.getOuterClass();
-        }
-
-        // finally public and visible
-        return field.isPublic() || samePackages(receiver.getPackageName(), declaringClass.getPackageName());
-    }
-    */
 
     @Override
     public void makeSiteEntry() {
@@ -755,11 +689,11 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
                 boolean acceptAnyMethod =
                         MAP_TYPE.equals(rType) || rType.implementsInterface(MAP_TYPE)
                         || LIST_TYPE.equals(rType) || rType.implementsInterface(LIST_TYPE);
-                List<MethodNode> nodes = StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(), rType, message, args);
+                List<MethodNode> nodes = findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(), rType, message, args);
                 if (nodes.isEmpty()) {
                     // retry with raw types
                     rType = rType.getPlainNodeReference();
-                    nodes = StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(), rType, message, args);
+                    nodes = findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(), rType, message, args);
                 }
                 nodes = StaticTypeCheckingSupport.chooseBestMethod(rType, nodes, args);
                 if (nodes.size()==1 || nodes.size()>1 && acceptAnyMethod) {
@@ -935,8 +869,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         super.fallbackAttributeOrPropertySite(expression, objectExpression, name, adapter);
     }
 
-    // GRECLIPSE add -- GROOVY-9955, GROOVY-9967
-    private ClassNode getPropertyOwnerType(final Expression receiver) {
+    private ClassNode getPropertyOwnerType(final Expression receiver, final boolean... isClassReceiver) {
         Object inferredType = receiver.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
         if (inferredType == null && receiver instanceof VariableExpression) {
             Variable variable = ((VariableExpression) receiver).getAccessedVariable();
@@ -955,6 +888,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             }
         }
         if (isClassClassNodeWrappingConcreteType(receiverType)) {
+            if (isClassReceiver.length > 0) isClassReceiver[0] = true;
             receiverType = receiverType.getGenericsTypes()[0].getType();
         }
         if (isPrimitiveType(receiverType)) {
@@ -963,34 +897,29 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         }
         return receiverType;
     }
-    // GRECLIPSE end
 
     // this is just a simple set field handling static and non-static, but not Closure and inner classes
-    private boolean setField(PropertyExpression expression, Expression objectExpression, ClassNode rType, String name) {
+    private boolean setField(final PropertyExpression expression, final Expression objectExpression, final ClassNode receiverType, final String name) {
         if (expression.isSafe()) return false;
-        FieldNode fn = AsmClassGenerator.getDeclaredFieldOfCurrentClassOrAccessibleFieldOfSuper(controller.getClassNode(), rType, name, false);
-        if (fn==null) return false;
+        FieldNode fn = AsmClassGenerator.getDeclaredFieldOfCurrentClassOrAccessibleFieldOfSuper(controller.getClassNode(), receiverType, name, false);
+        if (fn == null) return false;
         OperandStack stack = controller.getOperandStack();
         stack.doGroovyCast(fn.getType());
 
         MethodVisitor mv = controller.getMethodVisitor();
-        String ownerName = BytecodeHelper.getClassInternalName(fn.getOwner());
         if (!fn.isStatic()) {
             controller.getCompileStack().pushLHS(false);
             objectExpression.visit(controller.getAcg());
             controller.getCompileStack().popLHS();
-            if (!rType.equals(stack.getTopOperand())) {
-                BytecodeHelper.doCast(mv, rType);
-                stack.replace(rType);
+            if (!receiverType.equals(stack.getTopOperand())) {
+                BytecodeHelper.doCast(mv, receiverType);
+                stack.replace(receiverType);
             }
             stack.swap();
-            mv.visitFieldInsn(PUTFIELD, ownerName, name, BytecodeHelper.getTypeDescription(fn.getType()));
+            mv.visitFieldInsn(PUTFIELD, BytecodeHelper.getClassInternalName(fn.getOwner()), name, BytecodeHelper.getTypeDescription(fn.getType()));
             stack.remove(1);
         } else {
-            // GRECLIPSE add -- GROOVY-9955
-            ownerName = BytecodeHelper.getClassInternalName(rType);
-            // GRECLIPSE end
-            mv.visitFieldInsn(PUTSTATIC, ownerName, name, BytecodeHelper.getTypeDescription(fn.getType()));
+            mv.visitFieldInsn(PUTSTATIC, BytecodeHelper.getClassInternalName(receiverType), name, BytecodeHelper.getTypeDescription(fn.getType()));
         }
 
         //mv.visitInsn(ACONST_NULL);

@@ -838,57 +838,33 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     /**
-     * @return the field node on the outer class or null if this is not an
-     *         inner class
+     * @return outer class field or {@code null} if not found or this is not an inner class
      */
-    public FieldNode getOuterField(String name) {
-        // GRECLIPSE add
+    public FieldNode getOuterField(final String name) {
         if (redirect != null) {
-            return redirect().getOuterField(name);
+            return redirect.getOuterField(name);
         }
-        // GRECLIPSE end
         return null;
     }
 
-    /**
-     * Helper method to avoid casting to inner class
-     */
     public ClassNode getOuterClass() {
-        // GRECLIPSE add
         if (redirect != null) {
-            return redirect().getOuterClass();
+            return redirect.getOuterClass();
         }
-        // GRECLIPSE end
         return null;
     }
 
     public List<ClassNode> getOuterClasses() {
-        /* GRECLIPSE edit
-        if (!(this instanceof InnerClassNode)) {
-            return Collections.emptyList();
-        }
-
-        List<ClassNode> result = new LinkedList<>();
-        ClassNode outestClass = ((InnerClassNode) this).getOuterMostClass();
-        ClassNode cn = this;
-
-        do {
-            result.add(cn = cn.getOuterClass());
-        } while (!cn.equals(outestClass));
-
-        return result;
-        */
         ClassNode outer = getOuterClass();
         if (outer == null) {
             return Collections.emptyList();
         }
-        List<ClassNode> result = new LinkedList<>();
+        List<ClassNode> result = new /*Array*/LinkedList<>();
         do {
             result.add(outer);
         } while ((outer = outer.getOuterClass()) != null);
 
         return result;
-        // GRECLIPSE end
     }
 
     /**
@@ -919,7 +895,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
         return method;
     }
-    
+
     public void addStaticInitializerStatements(List<Statement> staticStatements, boolean fieldInit) {
         MethodNode method = getOrAddStaticConstructorNode();
         BlockStatement block = null;
@@ -1223,7 +1199,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
                 // has the most specific and exact return type of the two. Picking the bridge method results in loss of
                 // type information, as it down-casts the return type to the lower bound of the generic parameter.
-                if (getterMethod == null || (getterMethod.getModifiers() & (ACC_BRIDGE | ACC_SYNTHETIC)) != 0) {
+                if (getterMethod == null || (getterMethod.getModifiers() & ACC_SYNTHETIC) != 0) {
                     getterMethod = method;
                 }
             }
@@ -1335,7 +1311,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
 
         for (ClassNode cn = this; cn != null; cn = cn.getSuperClass()) {
-            for (MethodNode mn : cn.getDeclaredMethods(name)) { //GROOVY-9737
+            for (MethodNode mn : cn.getDeclaredMethods(name)) {
                 if (!mn.isStatic() && hasCompatibleNumberOfArgs(mn, count)) {
                     return true;
                 }
@@ -1395,13 +1371,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     private boolean hasExactMatchingCompatibleType(MethodNode current, MethodNode newCandidate, int i) {
         int lastParamIndex = newCandidate.getParameters().length - 1;
-        /* GRECLIPSE edit -- GROOVY-9906
-        return current.getParameters()[i].getType().equals(newCandidate.getParameters()[i].getType())
-                || (isPotentialVarArg(newCandidate, lastParamIndex) && i >= lastParamIndex && current.getParameters()[i].getType().equals(newCandidate.getParameters()[lastParamIndex].getType().componentType));
-        */
         return (i <= lastParamIndex && current.getParameters()[i].getType().equals(newCandidate.getParameters()[i].getType()))
                 || (i >= lastParamIndex && isPotentialVarArg(newCandidate, lastParamIndex) && current.getParameters()[i].getType().equals(newCandidate.getParameters()[lastParamIndex].getType().getComponentType()));
-        // GRECLIPSE end
     }
 
     private boolean hasCompatibleType(TupleExpression args, MethodNode method, int i) {

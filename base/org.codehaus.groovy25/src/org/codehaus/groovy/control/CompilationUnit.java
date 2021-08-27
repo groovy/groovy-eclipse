@@ -304,7 +304,7 @@ public class CompilationUnit extends ProcessingUnit {
      * Returns the class loader for loading AST transformations.
      */
     public GroovyClassLoader getTransformLoader() {
-        return Optional.ofNullable(astTransformationsContext.getTransformLoader()).orElse(getClassLoader());
+        return Optional.ofNullable(astTransformationsContext.getTransformLoader()).orElseGet(() -> getClassLoader());
     }
 
     public void addPhaseOperation(SourceUnitOperation op, int phase) {
@@ -1265,6 +1265,7 @@ public class CompilationUnit extends ProcessingUnit {
         ASTTransformationVisitor.addPhaseOperations(this);
     }
 
+    @Override
     public String toString() {
         if (sources != null && !sources.isEmpty()) {
             String source = sources.keySet().iterator().next();

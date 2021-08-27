@@ -950,7 +950,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 resultType = completedType;
             }
             */
-
             if (isArrayOp(op)
                     && !lType.isArray()
                     && enclosingBinaryExpression != null
@@ -1023,32 +1022,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 */
 
-                // if we are in an if/else branch, keep track of assignment
-                if (typeCheckingContext.ifElseForWhileAssignmentTracker != null && leftExpression instanceof VariableExpression
-                        && !isNullConstant(rightExpression)) {
+                // track conditional assignment
+                if (!isNullConstant(rightExpression)
+                        && leftExpression instanceof VariableExpression
+                        && typeCheckingContext.ifElseForWhileAssignmentTracker != null) {
                     Variable accessedVariable = ((VariableExpression) leftExpression).getAccessedVariable();
                     if (accessedVariable instanceof Parameter) {
                         accessedVariable = new ParameterVariableExpression((Parameter) accessedVariable);
                     }
                     if (accessedVariable instanceof VariableExpression) {
-                        /* GRECLIPSE edit -- GROOVY-9786
-                        VariableExpression var = (VariableExpression) accessedVariable;
-                        List<ClassNode> types = typeCheckingContext.ifElseForWhileAssignmentTracker.get(var);
-                        if (types == null) {
-                            types = new LinkedList<ClassNode>();
-                            ClassNode type = var.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
-                            types.add(type);
-                            typeCheckingContext.ifElseForWhileAssignmentTracker.put(var, types);
-                        }
-                        types.add(resultType);
-                        */
                         recordAssignment((VariableExpression) accessedVariable, resultType);
-                        // GRECLIPSE end
                     }
                 }
+
                 storeType(leftExpression, resultType);
 
-                // if right expression is a ClosureExpression, store parameter type information
+                // propagate closure parameter type information
                 if (leftExpression instanceof VariableExpression) {
                     if (rightExpression instanceof ClosureExpression) {
                         Parameter[] parameters = ((ClosureExpression) rightExpression).getParameters();
@@ -1120,7 +1109,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * @param leftExpression  left expression of the assignment
      * @param rightExpression right expression of the assignment
      * @param setterInfo      possible setters
-     * @return true if type checking passed
+     * @return {@code false} if valid setter found or {@code true} if type checking error created
      */
     private boolean ensureValidSetter(final Expression expression, final Expression leftExpression, final Expression rightExpression, final SetterInfo setterInfo) {
         // for expressions like foo = { ... }
@@ -1778,8 +1767,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (receiverType.isArray() && "length".equals(propertyName)) {
                 storeType(pexp, int_TYPE);
                 if (visitor != null) {
-                    PropertyNode length = new PropertyNode("length", Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, int_TYPE, receiverType, null, null, null);
-                    visitor.visitProperty(length);
+                    FieldNode length = new FieldNode("length", Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, int_TYPE, receiverType, null);
+                    length.setDeclaringClass(receiverType);
+                    visitor.visitField(length);
                 }
                 return true;
             }
@@ -1819,7 +1809,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     staticOnly = staticOnlyAccess;
                 }
                 field = allowStaticAccessToMember(field, staticOnly);
-
+                /* GRECLIPSE edit
+                // GROOVY-9288, GROOVY-9292, GROOVY-9293
+                if (null != field) {
+                    int fieldModifiers = field.getModifiers();
+                    if (Modifier.isProtected(fieldModifiers) || isPackagePrivate(fieldModifiers)) {
+                        if (null != typeCheckingContext.getEnclosingClosure() && CLOSURE_IMPLICIT_VARIABLE_SET.contains(objectExpression.getText())) {
+                            objectExpression.putNodeMetaData(RECEIVER_OF_DYNAMIC_PROPERTY, OBJECT_TYPE);
+                        }
+                    }
+                }
+                */
                 // skip property/accessor checks for "x.@field"
                 if (storeField(field, isAttributeExpression, pexp, receiverType, visitor, receiver.getData(), !readMode)) {
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
@@ -1872,9 +1872,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 for (MethodNode setter : setters) {
                                     // visiting setter will not infer the property type since return type is void, so visit a dummy field instead
                                     FieldNode virtual = new FieldNode(propertyName, 0, setter.getParameters()[0].getOriginType(), current, null);
-                                    // GRECLIPSE add -- GROOVY-9653
                                     virtual.setDeclaringClass(setter.getDeclaringClass());
-                                    // GRECLIPSE end
                                     visitor.visitField(virtual);
                                 }
                             }
@@ -2238,7 +2236,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             currentField = node;
             /* GRECLIPSE edit -- GROOVY-9882, GROOVY-9977, GROOVY-9995
             super.visitField(node);
-            visitAnnotations(node);
             Expression init = node.getInitialExpression();
             if (init != null) {
                 FieldExpression left = new FieldExpression(node);
@@ -2249,7 +2246,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 );
                 bexp.setSourcePosition(init);
                 typeCheckAssignment(bexp, left, node.getOriginType(), init, getType(init));
-                ClassNode lType = node.getOriginType(), rType = getType(init);
                 if (init instanceof ConstructorCallExpression) {
                     inferDiamondType((ConstructorCallExpression) init, node.getOriginType());
                 }
@@ -2716,10 +2712,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void addClosureReturnType(ClassNode returnType) {
-        // GRECLIPSE add -- GROOVY-8202
-        if (returnType != null && !returnType.equals(VOID_TYPE))
-        // GRECLIPSE end
-        typeCheckingContext.getEnclosingClosure().addReturnType(returnType);
+        if (returnType != null && !returnType.equals(VOID_TYPE)) // GROOVY-8202
+            typeCheckingContext.getEnclosingClosure().addReturnType(returnType);
     }
 
     @Override
@@ -2868,19 +2862,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
     */
     private ClassNode getInferredTypeFromTempInfo(final Expression expression, final ClassNode expressionType) {
-        Map<Object, List<ClassNode>> info = (!typeCheckingContext.temporaryIfBranchTypeInformation.empty() ? typeCheckingContext.temporaryIfBranchTypeInformation.peek() : null);
-        if (expression instanceof VariableExpression && info != null) {
+        if (expression instanceof VariableExpression && !typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) {
             List<ClassNode> tempTypes = getTemporaryTypesForExpression(expression);
             if (tempTypes != null && !tempTypes.isEmpty()) {
-                List<ClassNode> types = new ArrayList<ClassNode>(tempTypes.size() + 1);
+                List<ClassNode> types = new ArrayList<>(tempTypes.size() + 1);
                 if (expressionType != null && !expressionType.equals(ClassHelper.OBJECT_TYPE) // GROOVY-7333
-                        && tempTypes.stream().noneMatch(t -> implementsInterfaceOrIsSubclassOf(t, expressionType))) {
+                        && noneMatch(tempTypes, expressionType)) { // GROOVY-9769
                     types.add(expressionType);
                 }
                 types.addAll(tempTypes);
 
                 if (types.isEmpty()) {
-                    return ClassHelper.OBJECT_TYPE;
+                    return OBJECT_TYPE;
                 } else if (types.size() == 1) {
                     return types.get(0);
                 } else {
@@ -2890,7 +2883,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         return expressionType;
     }
-    // GRECLIPSE end
+
+    private static boolean noneMatch(final List<ClassNode> types, final ClassNode type) {
+        for (ClassNode t : types) {
+            if (implementsInterfaceOrIsSubclassOf(t, type)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     @Override
     public void visitClosureExpression(final ClosureExpression expression) {
@@ -3526,8 +3527,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClosureSignatureHint hintInstance = hint.getDeclaredConstructor().newInstance();
             closureSignatures = hintInstance.getClosureSignatures(
                     selectedMethod instanceof ExtensionMethodNode ? ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode() : selectedMethod,
-                    typeCheckingContext.source,
-                    typeCheckingContext.compilationUnit,
+                    typeCheckingContext.getSource(),
+                    typeCheckingContext.getCompilationUnit(),
                     convertToStringArray(options), expression);
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
@@ -3547,8 +3548,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     arguments,
                     expression,
                     selectedMethod instanceof ExtensionMethodNode ? ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode() : selectedMethod,
-                    typeCheckingContext.source,
-                    typeCheckingContext.compilationUnit,
+                    typeCheckingContext.getSource(),
+                    typeCheckingContext.getCompilationUnit(),
                     convertToStringArray(options));
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
@@ -3826,7 +3827,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                     }
                     if (expression.getNodeMetaData(StaticTypesMarker.DELEGATION_METADATA) == null) {
-                        addError("Not enough arguments found for a @DelegatesTo method call. Please check that you either use an explicit class or @DelegatesTo.Target with a correct id", annotation);
+                        addError("Not enough arguments found for a @DelegatesTo method call. Please check that you either use an explicit class or @DelegatesTo.Target with a correct id", annotation); // GRECLIPSE edit
                     }
                 }
             }
@@ -4140,14 +4141,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 returnType = md.getType();
                             }
                         }
-                        // GRECLIPSE add -- GROOVY-7106, GROOVY-7274, GROOVY-8909, GROOVY-8961, GROOVY-9734, GROOVY-9844
+                        // GRECLIPSE add -- GROOVY-7106, GROOVY-7274, GROOVY-8909, GROOVY-9844
                         Parameter[] parameters = directMethodCallCandidate.getParameters();
                         if (chosenReceiver.getType().getGenericsTypes() != null && !directMethodCallCandidate.isStatic() && !(directMethodCallCandidate instanceof ExtensionMethodNode)) {
                             Map<GenericsTypeName, GenericsType> context = extractPlaceHolders(null, chosenReceiver.getType(), getDeclaringClass(directMethodCallCandidate, argumentList));
                             parameters = Arrays.stream(parameters).map(param -> new Parameter(applyGenericsContext(context, param.getType()), param.getName())).toArray(Parameter[]::new);
                         }
-                        resolvePlaceholdersFromImplicitTypeHints(args, argumentList, parameters);
                         // GRECLIPSE end
+                        // GROOVY-8961, GROOVY-9734
+                        resolvePlaceholdersFromImplicitTypeHints(args, argumentList, parameters);
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, directMethodCallCandidate, call)) {
                             returnType = adjustWithTraits(directMethodCallCandidate, chosenReceiver.getType(), args, returnType);
 
@@ -4195,7 +4197,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // now that a method has been chosen, we are allowed to visit the closures
             /* GRECLIPSE edit
             if (!callArgsVisited) {
-                MethodNode mn = (MethodNode) call.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                MethodNode mn = (MethodNode) call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
                 visitMethodCallArguments(receiver, argumentList, true, mn);
                 // GROOVY-6219
                 if (mn != null) {
@@ -4208,7 +4210,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         if (CLOSURE_TYPE.equals(pType) && CLOSURE_TYPE.equals(aType)) {
                             if (!isAssignableTo(aType, pType)) {
                                 addNoMatchingMethodError(receiver, name, getArgumentTypes(argumentList), call);
-                                call.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                                call.removeNodeMetaData(DIRECT_METHOD_CALL_TARGET);
                             }
                         }
                     }
@@ -4519,19 +4521,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 visitEmptyStatement((EmptyStatement) elseBlock);
             } else {
                 elseBlock.visit(this);
-                // GRECLIPSE add -- GROOVY-9786
-                Map<VariableExpression, ClassNode> updates =
-                    elseBlock.getNodeMetaData("assignments");
-                if (updates != null) {
-                    updates.forEach(this::recordAssignment);
+            }
+
+            // GROOVY-9786: if chaining: "if (...) x=?; else if (...) x=?;"
+            Map<VariableExpression, ClassNode> updates = elseBlock.getNodeMetaData("assignments");
+            if (updates != null) {
+                /* GRECLIPSE edit
+                for (Map.Entry<VariableExpression, ClassNode> entry : updates.entrySet()) {
+                    recordAssignment(entry.getKey(), entry.getValue());
                 }
+                */
+                updates.forEach(this::recordAssignment);
                 // GRECLIPSE end
             }
         } finally {
-            // GRECLIPSE add -- GROOVY-9786
-            ifElse.putNodeMetaData("assignments",
-            // GRECLIPSE end
-            popAssignmentTracking(oldTracker));
+            ifElse.putNodeMetaData("assignments", popAssignmentTracking(oldTracker));
         }
 
         if (!typeCheckingContext.enclosingBlocks.isEmpty()) {
@@ -4552,7 +4556,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         pushInstanceOfTypeInfo(be.getLeftExpression(), be.getRightExpression());
     }
-
 
     @Override
     public void visitBlockStatement(BlockStatement block) {
@@ -4636,16 +4639,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         restoreTypeBeforeConditional();
     }
 
-    // GRECLIPSE add -- GROOVY-9786
     private void recordAssignment(final VariableExpression lhsExpr, final ClassNode rhsType) {
+        /* GRECLIPSE edit
+        List<ClassNode> types = typeCheckingContext.ifElseForWhileAssignmentTracker.get(lhsExpr);
+        if (types == null) {
+            types = new LinkedList<>();
+            ClassNode lhsType = lhsExpr.getNodeMetaData(INFERRED_TYPE);
+            types.add(lhsType);
+            typeCheckingContext.ifElseForWhileAssignmentTracker.put(lhsExpr, types);
+        }
+        types.add(rhsType);
+        */
         typeCheckingContext.ifElseForWhileAssignmentTracker.computeIfAbsent(lhsExpr, lhs -> {
             ClassNode lhsType = lhs.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
             List<ClassNode> types = new ArrayList<>(2);
             types.add(lhsType);
             return types;
         }).add(rhsType);
+        // GRECLIPSE end
     }
-    // GRECLIPSE end
 
     private void restoreTypeBeforeConditional() {
         Set<Map.Entry<VariableExpression, List<ClassNode>>> entries = typeCheckingContext.ifElseForWhileAssignmentTracker.entrySet();
@@ -4684,18 +4696,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return oldTracker;
     }
 
+    // GRECLIPSE add -- GROOVY-9985, GROOVY-9994
     @Override
     public void visitArrayExpression(final ArrayExpression expression) {
         super.visitArrayExpression(expression);
-        // GRECLIPSE add -- GROOVY-9985, GROOVY-9994
         if (expression.getSizeExpression() != null) {
             expression.getSizeExpression().forEach(sizeExpr -> {
                 if (!checkCompatibleAssignmentTypes(int_TYPE, getType(sizeExpr), sizeExpr, false))
                     addStaticTypeError("Cannot convert from " + prettyPrintType(getType(sizeExpr)) + " to int", sizeExpr);
             });
         }
-        // GRECLIPSE end
     }
+    // GRECLIPSE end
 
     @Override
     public void visitCastExpression(final CastExpression expression) {
@@ -4996,16 +5008,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             VariableExpression var = (VariableExpression) exp;
             final Variable accessedVariable = var.getAccessedVariable();
             if (accessedVariable != exp && accessedVariable instanceof VariableExpression) {
-                storeType((VariableExpression) accessedVariable, cn);
+                storeType((Expression) accessedVariable, cn);
             }
-            if (accessedVariable instanceof Parameter) {
-                ((Parameter) accessedVariable).putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, cn);
+            if (accessedVariable instanceof Parameter
+                    || (accessedVariable instanceof PropertyNode
+                        && ((PropertyNode) accessedVariable).getField().isSynthetic())) {
+                ((ASTNode) accessedVariable).putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, cn);
             }
-            // GRECLIPSE add -- GROOVY-9863
-            else if (accessedVariable instanceof PropertyNode && ((PropertyNode) accessedVariable).getField().isSynthetic()) {
-                ((PropertyNode) accessedVariable).putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, cn);
-            }
-            // GRECLIPSE end
             if (var.isClosureSharedVariable() && cn != null) {
                 List<ClassNode> assignedTypes = typeCheckingContext.closureSharedVariablesAssignmentTypes.get(var);
                 if (assignedTypes == null) {
@@ -5834,7 +5843,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return null;
     }
 
-    private ClassNode makeSuper() { // GRECLIPSE edit -- GROOVY-6938
+    private ClassNode makeSuper() {
         return makeType(typeCheckingContext.getEnclosingClassNode().getUnresolvedSuperClass(), typeCheckingContext.isInStaticContext);
     }
 
@@ -5848,7 +5857,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         Traits.collectSelfTypes(ret, selfTypes);
         if (!selfTypes.isEmpty()) {
             selfTypes.add(ret);
-            ret = new UnionTypeClassNode(selfTypes.toArray(new ClassNode[selfTypes.size()]));
+            ret = new UnionTypeClassNode(selfTypes.toArray(ClassNode.EMPTY_ARRAY));
         }
         return ret;
     }
@@ -6265,10 +6274,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             for (GenericsType placeholder : aNode.getGenericsTypes()) {
                 for (Map.Entry<GenericsTypeName, GenericsType> e : source.entrySet()) {
                     if (e.getValue().getNodeMetaData(GenericsType.class) == placeholder) {
-                        Optional.ofNullable(target.get(e.getKey()))
-                            // skip "f(g())" for "f(T<String>)" and "<U extends Number> U g()"
-                            .filter(gt -> isAssignableTo(gt.getType(), placeholder.getType()))
-                            .ifPresent(gt -> linked.put(new GenericsTypeName(e.getValue().getName()), gt));
+                        GenericsType gt = target.get(e.getKey());
+                        // skip "f(g())" for "f(T<String>)" and "<U extends Number> U g()"
+                        if (gt != null && isAssignableTo(gt.getType(), placeholder.getType())) {
+                            linked.put(new GenericsTypeName(e.getValue().getName()), gt);
+                        }
                         break;
                     }
                 }
@@ -6382,7 +6392,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
             // the return type of the SAM method exactly corresponds to the inferred return type
             ClassNode samReturnType = sam.getReturnType();
-            ClassNode closureReturnType = expression.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+            ClassNode closureReturnType = expression.getNodeMetaData(INFERRED_TYPE);
             if (closureReturnType != null && closureReturnType.isUsingGenerics()) {
                 ClassNode unwrapped = closureReturnType.getGenericsTypes()[0].getType();
                 extractGenericsConnections(placeholders, unwrapped, samReturnType);
@@ -6390,14 +6400,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 placeholders.put(new GenericsTypeName(samReturnType.getGenericsTypes()[0].getName()), closureType.getGenericsTypes()[0]);
             }
 
-            // repeat the same for each parameter given in the ClosureExpression
-            if (parameters.length > 0 && expression instanceof ClosureExpression) {
+            // now repeat the same for each parameter given in the ClosureExpression
+            if (expression instanceof ClosureExpression && sam.getParameters().length > 0) {
                 List<ClassNode[]> genericsToConnect = new LinkedList<ClassNode[]>();
                 Parameter[] closureParams = ((ClosureExpression) expression).getParameters();
                 ClassNode[] closureParamTypes = extractTypesFromParameters(closureParams);
                 if (expression.getNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS) != null) {
                     closureParamTypes = expression.getNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS);
                 }
+                final Parameter[] parameters = sam.getParameters();
                 for (int i = 0; i < parameters.length; i++) {
                     final Parameter parameter = parameters[i];
                     if (parameter.getOriginType().isUsingGenerics() && closureParamTypes.length > i) {

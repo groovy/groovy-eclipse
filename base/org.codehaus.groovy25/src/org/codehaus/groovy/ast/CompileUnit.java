@@ -176,32 +176,24 @@ public class CompileUnit {
         classNameToSource.put(node.getName(), location);
     }
 
-    public SourceUnit getScriptSourceLocation(String className) {
-        return classNameToSource.get(className);
-    }
-
-    public boolean hasClassNodeToCompile() {
-        return !classesToCompile.isEmpty();
-    }
-
     public Iterator<String> iterateClassNodeToCompile() {
         return classesToCompile.keySet().iterator();
     }
 
-    public InnerClassNode getGeneratedInnerClass(String name) {
-        return generatedInnerClasses.get(name);
-    }
-    
     public void addGeneratedInnerClass(InnerClassNode icn) {
         generatedInnerClasses.put(icn.getName(), icn);
+    }
+
+    public InnerClassNode getGeneratedInnerClass(String name) {
+        return generatedInnerClasses.get(name);
     }
 
     public Map<String, InnerClassNode> getGeneratedInnerClasses() {
         return Collections.unmodifiableMap(generatedInnerClasses);
     }
 
-    public Map<String, ClassNode> getClassesToCompile() {
-        return classesToCompile;
+    public SourceUnit getScriptSourceLocation(String scriptClassName) {
+        return classNameToSource.get(scriptClassName);
     }
 
     /**

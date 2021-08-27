@@ -94,7 +94,6 @@ import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -313,7 +312,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
             @Override
             public void variableNotAlwaysInitialized(final VariableExpression var) {
-                if (Modifier.isFinal(var.getAccessedVariable().getModifiers()))
+                if (isFinal(var.getAccessedVariable().getModifiers()))
                     throw new RuntimeParserException("The variable [" + var.getName() + "] may be uninitialized", var);
             }
         };
@@ -1007,8 +1006,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (getterBlock == null) {
             MethodNode getter = classNode.getGetterMethod(getterName, !node.isStatic());
             if (getter == null && ClassHelper.boolean_TYPE == node.getType()) {
-                String secondGetterName = "is" + capitalize(name);
-                getter = classNode.getGetterMethod(secondGetterName);
+                getter = classNode.getGetterMethod("is" + capitalize(name));
             }
             if (!node.isPrivate() && methodNeedsReplacement(getter)) {
                 getterBlock = createGetterBlock(node, field);
@@ -1026,14 +1024,13 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         int getterModifiers = accessorModifiers;
         // don't make static accessors final
         if (node.isStatic()) {
-            getterModifiers = ~Modifier.FINAL & getterModifiers;
+            getterModifiers &= ~ACC_FINAL;
         }
         if (getterBlock != null) {
             visitGetter(node, getterBlock, getterModifiers, getterName);
 
-            if (ClassHelper.boolean_TYPE == node.getType() || ClassHelper.Boolean_TYPE == node.getType()) {
-                String secondGetterName = "is" + capitalize(name);
-                visitGetter(node, getterBlock, getterModifiers, secondGetterName);
+            if (ClassHelper.boolean_TYPE == node.getType() || ClassHelper.Boolean_TYPE.equals(node.getType())) {
+                visitGetter(node, getterBlock, getterModifiers, "is" + capitalize(name));
             }
         }
         if (setterBlock != null) {
@@ -1049,9 +1046,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
     }
 
-    private void visitGetter(PropertyNode node, Statement getterBlock, int getterModifiers, String secondGetterName) {
+    private void visitGetter(PropertyNode node, Statement getterBlock, int getterModifiers, String getterName) {
         MethodNode getter =
-                new MethodNode(secondGetterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+                new MethodNode(getterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
         // GRECLIPSE add
         node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(getter::addAnnotation);
         // GRECLIPSE end

@@ -411,11 +411,19 @@ public class AsmClassGenerator extends ClassGenerator {
     protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
         controller.resetLineNumber();
         Parameter[] parameters = node.getParameters();
+        /* GRECLIPSE edit
+        String methodType = BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters);
+        String signature = BytecodeHelper.getGenericsMethodSignature(node);
+        int modifiers = node.getModifiers();
+        if (isVargs(node.getParameters())) modifiers |= Opcodes.ACC_VARARGS;
+        MethodVisitor mv = cv.visitMethod(modifiers, node.getName(), methodType, signature, buildExceptions(node.getExceptions()));
+        */
         MethodVisitor mv = cv.visitMethod(
                 node.getModifiers() | (isVargs(parameters) ? Opcodes.ACC_VARARGS : 0), node.getName(),
                 BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters),
                 BytecodeHelper.getGenericsMethodSignature(node),
                 buildExceptions(node.getExceptions()));
+        // GRECLIPSE end
         controller.setMethodVisitor(mv);
 
         visitAnnotations(node, mv);
@@ -427,7 +435,7 @@ public class AsmClassGenerator extends ClassGenerator {
         // add parameter names to the MethodVisitor (JDK8+)
         if (getCompileUnit().getConfig().getParameters()) {
             for (int i = 0; i < nParameters; i += 1) {
-                mv.visitParameter(parameters[i].getName(), parameters[i].getModifiers());
+                mv.visitParameter(parameters[i].getName(), parameters[i].getModifiers()); // GRECLIPSE edit
             }
         }
 
@@ -541,6 +549,24 @@ public class AsmClassGenerator extends ClassGenerator {
         controller.getCompileStack().clear();
         // GRECLIPSE end
     }
+
+    /* GRECLIPSE edit
+    private boolean checkIfLastStatementIsReturnOrThrow(Statement code) {
+        if (code instanceof BlockStatement) {
+            BlockStatement blockStatement = (BlockStatement) code;
+            List<Statement> statementList = blockStatement.getStatements();
+            int statementCnt = statementList.size();
+            if (statementCnt > 0) {
+                Statement lastStatement = statementList.get(statementCnt - 1);
+                if (lastStatement instanceof ReturnStatement || lastStatement instanceof ThrowStatement) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    */
 
     void visitAnnotationDefaultExpression(AnnotationVisitor av, ClassNode type, Expression exp) {
         if (exp instanceof ClosureExpression) {
@@ -950,38 +976,44 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     public static boolean samePackages(final String pkg1, final String pkg2) {
-        return (
-                (pkg1 ==null && pkg2 ==null)
-                        || pkg1 !=null && pkg1.equals(pkg2)
-        );
+        return Objects.equals(pkg1, pkg2);
     }
 
-    // GRECLIPSE edit -- private->public
-    public static boolean isValidFieldNodeForByteCodeAccess(FieldNode fn, ClassNode accessingNode) {
-        if (fn == null) return false;
-        ClassNode declaringClass = fn.getDeclaringClass();
-        // same class is always allowed access
-        if (Modifier.isPublic(fn.getModifiers()) || declaringClass.equals(accessingNode)) return true;
-        boolean samePackages = samePackages(declaringClass.getPackageName(), accessingNode.getPackageName());
-        // protected means same class or same package, or subclass
-        if (Modifier.isProtected(fn.getModifiers()) && (samePackages || accessingNode.isDerivedFrom(declaringClass))) {
-            return true;
-        }
-        if (!fn.isPrivate()) {
-            // package private is the only modifier left. It means  same package is allowed, subclass not, same class is
-            return samePackages;
-        }
+    /**
+     * Determines if the given class can directly access the given field (via
+     * {@code GETFIELD}, {@code GETSTATIC}, etc. bytecode instructions).
+     */
+    public static boolean isFieldDirectlyAccessible(final FieldNode field, final ClassNode clazz) {
+        if (field == null) return false;
+
+        // a public field is accessible from anywhere
+        if (field.isPublic()) return true;
+
+        ClassNode declaringClass = field.getDeclaringClass();
+
+        // any field is accessible from the declaring class
+        if (clazz.equals(declaringClass)) return true;
+
+        // a private field isn't accessible beyond the declaring class
+        if (field.isPrivate()) return false;
+
+        // a protected field is accessible from any subclass of the declaring class
+        if (field.isProtected() && clazz.isDerivedFrom(declaringClass)) return true;
+
+        // a protected or package-private field is accessible from the declaring package
+        if (Objects.equals(clazz.getPackageName(), declaringClass.getPackageName())) return true;
+
         return false;
     }
 
-    public static FieldNode getDeclaredFieldOfCurrentClassOrAccessibleFieldOfSuper(ClassNode accessingNode, ClassNode current, String name, boolean skipCurrent) {
+    public static FieldNode getDeclaredFieldOfCurrentClassOrAccessibleFieldOfSuper(final ClassNode accessingNode, final ClassNode current, final String fieldName, final boolean skipCurrent) {
         if (!skipCurrent) {
-            FieldNode currentClassField = current.getDeclaredField(name);
-            if (isValidFieldNodeForByteCodeAccess(currentClassField, accessingNode)) return currentClassField;
+            FieldNode fn = current.getDeclaredField(fieldName);
+            if (isFieldDirectlyAccessible(fn, accessingNode)) return fn;
         }
-        for (ClassNode node = current.getSuperClass(); node!=null; node = node.getSuperClass()) {
-            FieldNode fn = node.getDeclaredField(name);
-            if (isValidFieldNodeForByteCodeAccess(fn, accessingNode)) return fn;
+        for (ClassNode cn = current.getSuperClass(); cn != null; cn = cn.getSuperClass()) {
+            FieldNode fn = cn.getDeclaredField(fieldName);
+            if (isFieldDirectlyAccessible(fn, accessingNode)) return fn;
         }
         return null;
     }
@@ -1050,7 +1082,7 @@ public class AsmClassGenerator extends ClassGenerator {
                             }
                         }
                     }
-                    if (field == null && !isValidFieldNodeForByteCodeAccess(classNode.getField(name), classNode)) {
+                    if (field == null && !isFieldDirectlyAccessible(classNode.getField(name), classNode)) {
                         // GROOVY-5259, GROOVY-9501, GROOVY-9569
                         if (checkStaticOuterField(expression, name)) return;
                     }
@@ -1265,6 +1297,7 @@ public class AsmClassGenerator extends ClassGenerator {
         return false;
     }
 
+    // GRECLIPSE static->non-static
     private boolean isGroovyObject(Expression objectExpression) {
         /* GRECLIPSE edit -- GROOVY-9195, GROOVY-9288, et al.
         return ExpressionUtils.isThisExpression(objectExpression) || objectExpression.getType().isDerivedFromGroovyObject() && !(objectExpression instanceof ClassExpression);
@@ -1457,20 +1490,17 @@ public class AsmClassGenerator extends ClassGenerator {
 
     private void processClassVariable(VariableExpression expression) {
         if (passingParams && controller.isInScriptBody()) {
-            //TODO: check if this part is actually used
             MethodVisitor mv = controller.getMethodVisitor();
-            // let's create a ScriptReference to pass into the closure
             mv.visitTypeInsn(NEW, "org/codehaus/groovy/runtime/ScriptReference");
             mv.visitInsn(DUP);
-
             loadThisOrOwner();
             mv.visitLdcInsn(expression.getName());
-
             mv.visitMethodInsn(INVOKESPECIAL, "org/codehaus/groovy/runtime/ScriptReference", "<init>", "(Lgroovy/lang/Script;Ljava/lang/String;)V", false);
         } else {
             PropertyExpression pexp = new PropertyExpression(new VariableExpression("this"), expression.getName());
             pexp.getObjectExpression().setSourcePosition(expression);
             pexp.getProperty().setSourcePosition(expression);
+            pexp.copyNodeMetaData(expression);
             pexp.setImplicitThis(true);
             visitPropertyExpression(pexp);
         }
@@ -1845,11 +1875,9 @@ public class AsmClassGenerator extends ClassGenerator {
         List<Expression> expressions = expression.getExpressions();
         final int size = expressions.size();
         // init declarations
-//        LinkedList<DeclarationExpression> declarations = new LinkedList<DeclarationExpression>();
         for (int i = 0; i < size; i++) {
             Expression expr = expressions.get(i);
             if (expr instanceof DeclarationExpression) {
-//                declarations.add((DeclarationExpression) expr);
                 DeclarationExpression de = (DeclarationExpression) expr;
                 BinaryExpression be = new BinaryExpression(
                         de.getLeftExpression(),

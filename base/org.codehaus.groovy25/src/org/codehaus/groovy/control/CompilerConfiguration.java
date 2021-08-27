@@ -950,7 +950,7 @@ public class CompilerConfiguration {
 
     private void setTargetBytecodeIfValid(String version) {
         /* GRECLIPSE edit
-        if (JDK_TO_BYTECODE_VERSION_MAP.containsKey(version)) {
+        if (JDK_TO_BYTECODE_VERSION_MAP.keySet().contains(version)) {
             this.targetBytecode = version;
         }
         */

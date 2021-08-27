@@ -46,6 +46,7 @@
                 <exclude name=".options"/>
                 <exclude name="about_files/**"/>
                 <exclude name="ant_tasks/**"/>
+                <exclude name="module-info.class"/>
                 <exclude name="package-list"/>
                 <exclude name="plugin.*"/>
                 <exclude name="script.js"/>
@@ -59,7 +60,7 @@
                 <exclude name="META-INF/*.SF"/>
             </fileset>
             <manifest>
-                <attribute name="Implementation-Version" value="${version}"/>
+                <attribute name="Implementation-Version" value="${version}${jdt.patch.target}"/>
                 <attribute name="Implementation-Vendor" value="Pivotal Software, Inc."/>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main"/>
             </manifest>

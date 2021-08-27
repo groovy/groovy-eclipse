@@ -174,7 +174,7 @@ public class EnumCompletionVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    private static void addMapConstructors(ClassNode enumClass) {
+    private static void addMapConstructors(ClassNode enumClass) { // GRECLIPSE edit
         TupleConstructorASTTransformation.addSpecialMapConstructors(ACC_PRIVATE, enumClass, "One of the enum constants for enum " + enumClass.getName() +
                 " was initialized with null. Please use a non-null value or define your own constructor.", true);
     }

@@ -62,7 +62,6 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
-import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
@@ -364,6 +363,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (resolve(type)) return;
         if (resolveToInner(type)) return;
         /* GRECLIPSE edit
+        if (resolveToOuterNested(type)) return;
+
         addError("unable to resolve class " + type.getName() + " " + msg, node);
         */
         addError("unable to resolve class " + type.toString(false) + msg, type.getEnd() > 0 ? type : node);
@@ -494,7 +495,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // after the first step already. In case of for example
             // A.B.C.D.E.F and accessing E from F we test A$E=failed,
             // A$B$E=failed, A$B$C$E=fail, A$B$C$D$E=success
-
             for (ListIterator<ClassNode> it = outerClasses.listIterator(outerClasses.size()); it.hasPrevious();) {
                 ClassNode outerClass = it.previous();
                 if (setRedirect(type, outerClass)) return true;
@@ -643,7 +643,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     /* GRECLIPSE edit
-    private static final Map<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new ConcurrentCommonCache<>();
+    private static final EvictableCache<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new ConcurrentCommonCache<>();
     */
 
     private boolean resolveFromDefaultImports(final ClassNode type, final String[] packagePrefixes) {
@@ -664,7 +664,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 type.setRedirect(tmp.redirect());
                 /* GRECLIPSE edit
                 if (DEFAULT_IMPORTS == packagePrefixes) { // Only the non-cached type and packages should be cached
-                    Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.computeIfAbsent(typeName, key -> new HashSet<>(2));
+                    Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.getAndPut(typeName, new ConcurrentCommonCache.ValueProvider<String, Set<String>>() {
+                        @Override
+                        public Set<String> provide(String key) {
+                            return new HashSet<>(2);
+                        }
+                    });
                     packagePrefixSet.add(packagePrefix);
                 }
                 */
@@ -909,7 +914,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         if (currentClass.getModule().hasPackageName() && name.indexOf('.') == -1) return false;
 
-        LookupResult lr = classNodeResolver.resolveName(name, compilationUnit);
+        ClassNodeResolver.LookupResult lr = classNodeResolver.resolveName(name, compilationUnit);
         if (lr != null) {
             if (lr.isSourceUnit()) {
                 SourceUnit su = lr.getSourceUnit();
@@ -919,6 +924,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
             return true;
         }
+
         return false;
     }
 
@@ -981,9 +987,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
                 Tuple2<StringBuilder, Boolean> classNameInfo = makeClassName(doInitialClassTest, name, propertyPart);
                 name = classNameInfo.getFirst();
-                // GRECLIPSE add -- GROOVY-10188
                 if (name == null) return null;
-                // GRECLIPSE end
                 doInitialClassTest = classNameInfo.getSecond();
             }
         }
@@ -1638,23 +1642,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         } finally {
         if (currentClass == node)
         // GRECLIPSE end
+        /* GRECLIPSE edit
+        resolveOuterNestedClassFurther(node);
+        */
         currentClass = oldNode;
         // GRECLIPSE add
         }
         // GRECLIPSE end
-    }
-
-    // GRECLIPSE add
-    /**
-     * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
-     */
-    protected boolean commencingResolution() {
-        // template method
-        return true;
-    }
-
-    protected void finishedResolution() {
-        // template method
     }
 
     /* GRECLIPSE edit -- GROOVY-10113
@@ -1663,18 +1657,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if(parentToCompare == null) return;
             if(originalNode == parentToCompare.redirect()) {
                 addError("Cyclic inheritance involving " + parentToCompare.getName() + " in class " + originalNode.getName(), originalNode);
-                // GRECLIPSE add
-                originalNode.redirect().setHasInconsistentHierarchy(true);
-                // GRECLIPSE end
                 return;
             }
             if(interfacesToCompare != null && interfacesToCompare.length > 0) {
                 for(ClassNode intfToCompare : interfacesToCompare) {
                     if(originalNode == intfToCompare.redirect()) {
                         addError("Cycle detected: the type " + originalNode.getName() + " cannot implement itself" , originalNode);
-                        // GRECLIPSE add
-                        originalNode.redirect().setHasInconsistentHierarchy(true);
-                        // GRECLIPSE end
                         return;
                     }
                 }
@@ -1687,9 +1675,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 for(ClassNode intfToCompare : interfacesToCompare) {
                     if(originalNode == intfToCompare.redirect()) {
                         addError("Cyclic inheritance involving " + intfToCompare.getName() + " in interface " + originalNode.getName(), originalNode);
-                        // GRECLIPSE add
-                        originalNode.redirect().setHasInconsistentHierarchy(true);
-                        // GRECLIPSE end
                         return;
                     }
                 }
@@ -1729,6 +1714,18 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 todo.add(next.getOuterClass());
             } while (!todo.isEmpty());
         }
+    }
+
+    /**
+     * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
+     */
+    protected boolean commencingResolution() {
+        // template method
+        return true;
+    }
+
+    protected void finishedResolution() {
+        // template method
     }
     // GRECLIPSE end
 

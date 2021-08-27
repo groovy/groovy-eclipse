@@ -82,11 +82,11 @@ public final class ExpressionUtils {
                 Expression left = transformInlineConstants(be.getLeftExpression(), targetType);
                 Expression right = transformInlineConstants(be.getRightExpression(), targetType);
                 if (left instanceof ConstantExpression && right instanceof ConstantExpression) {
-                    // GRECLIPSE add -- GROOVY-10159
-                    if (((ConstantExpression) left).getValue() instanceof String)
-                    // GRECLIPSE end
-                    return configure(be, new ConstantExpression((String) ((ConstantExpression) left).getValue() +
-                            ((ConstantExpression) right).getValue()));
+                    Object leftV = ((ConstantExpression) left).getValue();
+                    if (leftV == null) leftV = "null";
+                    if (leftV instanceof String) {
+                        return configure(be, new ConstantExpression(((String)leftV) + ((ConstantExpression) right).getValue()));
+                    }
                 }
             }
         } else if (isNumberOrArrayOfNumber(wrapperType, false)) {
@@ -266,7 +266,7 @@ public final class ExpressionUtils {
                             // GRECLIPSE end
                             return ce3;
                         }
-                    } catch (Exception | LinkageError e) {
+                    } catch (Exception | LinkageError e) { // GRECLIPSE add
                         // ignore, leave property expression in place and we'll report later
                     }
                 }

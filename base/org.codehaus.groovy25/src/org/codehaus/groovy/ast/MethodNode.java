@@ -188,8 +188,9 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
      * @return true if this method is the run method from a script
      */
     public boolean isScriptBody() {
-        // GRECLIPSE edit
-        //return getNodeMetaData(SCRIPT_BODY_METHOD_KEY) != null;
+        /* GRECLIPSE edit
+        return getNodeMetaData(SCRIPT_BODY_METHOD_KEY) != null;
+        */
         return getDeclaringClass() != null &&
             getDeclaringClass().isScript() &&
             getName().equals("run") &&

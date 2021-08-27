@@ -2764,9 +2764,8 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
 
-        boolean is3 = isAtLeastGroovy(30);
         int offset = contents.lastIndexOf("method");
-        assertDeclaration(contents, offset - (is3 ? 0 : 5), offset + (is3 ? 6 : 8), "C", "method", DeclarationKind.METHOD);
+        assertDeclaration(contents, offset, offset + 6, "C", "method", DeclarationKind.METHOD);
 
         offset = contents.lastIndexOf("missing");
         assertDeclaration(contents, offset, offset + 7, "C", "$static_methodMissing", DeclarationKind.METHOD);

@@ -73,7 +73,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PRIVATE_BRIDGE_METHODS;
 import static groovyjarjarasm.asm.Opcodes.ACONST_NULL;
@@ -315,9 +314,13 @@ public class StaticInvocationWriter extends InvocationWriter {
             String owner = BytecodeHelper.getClassInternalName(node.getDeclaringClass());
             String desc = BytecodeHelper.getMethodDescriptor(target.getReturnType(), parameters);
             mv.visitMethodInsn(INVOKESTATIC, owner, methodName, desc, false);
-            // GRECLIPSE edit -- GROOVY-8840
+            /* GRECLIPSE edit -- GROOVY-8840
+            ClassNode ret = target.getReturnType().redirect();
+            if (ret == ClassHelper.VOID_TYPE) {
+            */
             ClassNode ret = target.getReturnType();
             if (ClassHelper.VOID_TYPE.equals(ret)) {
+            // GRECLIPSE end
                 ret = ClassHelper.OBJECT_TYPE;
                 mv.visitInsn(ACONST_NULL);
             }
@@ -718,11 +721,10 @@ public class StaticInvocationWriter extends InvocationWriter {
         private final Expression receiver;
         private final MethodNode target;
 
-        private ClassNode resolvedType;
-
         public CheckcastReceiverExpression(final Expression receiver, final MethodNode target) {
             this.receiver = receiver;
             this.target = target;
+            setType(null);
         }
 
         @Override
@@ -756,37 +758,33 @@ public class StaticInvocationWriter extends InvocationWriter {
 
         @Override
         public ClassNode getType() {
-            if (resolvedType!=null) {
-                return resolvedType;
+            ClassNode type = super.getType();
+            if (type == null) {
+                if (target instanceof ExtensionMethodNode) {
+                    type = ((ExtensionMethodNode) target).getExtensionMethodNode().getDeclaringClass();
+                } else {
+                    type = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
+                    if (ClassHelper.isPrimitiveType(type)) {
+                        type = ClassHelper.getWrapper(type);
+                    }
+                    ClassNode declaringClass = target.getDeclaringClass();
+                    if (type.getClass() != ClassNode.class
+                            && type.getClass() != InnerClassNode.class
+                            && type.getClass() != DecompiledClassNode.class) {
+                        type = declaringClass; // ex: LUB type
+                    }
+                    if (ClassHelper.OBJECT_TYPE.equals(declaringClass)) {
+                        // checkcast not necessary because Object never evolves
+                        // and it prevents a potential ClassCastException if the
+                        // delegate of a closure is changed in a SC closure
+                        type = ClassHelper.OBJECT_TYPE;
+                    } else if (ClassHelper.OBJECT_TYPE.equals(type)) {
+                        // can happen for compiler rewritten code, where type information is missing
+                        type = declaringClass;
+                    }
+                }
+                setType(type);
             }
-            ClassNode type;
-            if (target instanceof ExtensionMethodNode) {
-                type = ((ExtensionMethodNode) target).getExtensionMethodNode().getDeclaringClass();
-            } else {
-                /* GRECLIPSE edit -- GROOVY-9955
-                type = getWrapper(controller.getTypeChooser().resolveType(receiver, controller.getClassNode()));
-                */
-                type = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
-                if (ClassHelper.isPrimitiveType(type)) type = ClassHelper.getWrapper(type);
-                // GRECLIPSE end
-                ClassNode declaringClass = target.getDeclaringClass();
-                if (type.getClass() != ClassNode.class
-                        && type.getClass() != InnerClassNode.class
-                        && type.getClass() != DecompiledClassNode.class) {
-                    type = declaringClass; // ex: LUB type
-                }
-                if (OBJECT_TYPE.equals(type) && !OBJECT_TYPE.equals(declaringClass)) {
-                    // can happen for compiler rewritten code, where type information is missing
-                    type = declaringClass;
-                }
-                if (OBJECT_TYPE.equals(declaringClass)) {
-                    // check cast not necessary because Object never evolves
-                    // and it prevents a potential ClassCastException if the delegate of a closure
-                    // is changed in a statically compiled closure
-                    type = OBJECT_TYPE;
-                }
-            }
-            resolvedType = type;
             return type;
         }
     }

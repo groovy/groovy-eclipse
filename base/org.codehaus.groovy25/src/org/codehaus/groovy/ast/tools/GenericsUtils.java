@@ -272,6 +272,7 @@ public class GenericsUtils {
             }
             return target;
         }
+        // GRECLIPSE add -- GROOVY-8984, GROOVY-9891
         if (hint.isGenericsPlaceHolder()) {
             ClassNode bound = hint.redirect();
             return parameterizeType(bound, target);
@@ -279,6 +280,7 @@ public class GenericsUtils {
         if (target.redirect().getGenericsTypes() == null) {
             return target;
         }
+        // GRECLIPSE end
         if (!target.equals(hint) && implementsInterfaceOrIsSubclassOf(target, hint)) {
             ClassNode nextSuperClass = ClassHelper.getNextSuperClass(target, hint);
             if (!hint.equals(nextSuperClass)) {
@@ -533,9 +535,10 @@ public class GenericsUtils {
                     type.setRedirect(redirect);
                     ret.put(name, type);
                 } else {
-                */
                     ret.put(name, sgt.getType());
-                //}
+                }
+                */
+                ret.put(name, sgt.getType());
                 // GRECLIPSE end
             }
         }
@@ -565,7 +568,7 @@ public class GenericsUtils {
                 ClassNode corrected = getCorrectedClassNode(type, superClass, false);
                 extractSuperClassGenerics(corrected, target, spec);
             } else {
-                // if we reach here, we have an unhandled case 
+                // if we reach here, we have an unhandled case
                 throw new GroovyBugError("The type " + type + " seems not to normally extend " + target + ". Sorry, I cannot handle this.");
             }
         }
@@ -593,7 +596,7 @@ public class GenericsUtils {
     }
 
     private static void extractSuperClassGenerics(GenericsType[] usage, GenericsType[] declaration, Map<String, ClassNode> spec) {
-        // if declaration does not provide generics, there is no connection to make 
+        // if declaration does not provide generics, there is no connection to make
         if (declaration == null || declaration.length == 0) return;
 
         // if usage is a raw type, remove type parameters from spec
@@ -801,51 +804,12 @@ public class GenericsUtils {
      * @param actualType the actual type
      * @return the parameterized type
      */
-    public static ClassNode findParameterizedType(ClassNode genericsClass, ClassNode actualType) {
+    public static ClassNode findParameterizedType(final ClassNode genericsClass, final ClassNode actualType) {
         return findParameterizedType(genericsClass, actualType, false);
     }
 
-    // Backported from 3.0.0
-    private static ClassNode findParameterizedType(ClassNode genericsClass, ClassNode actualType, boolean tryToFindExactType) {
-        /* GRECLIPSE edit -- GROOVY-9945
-        ClassNode parameterizedType = null;
-
-        if (null == genericsClass.getGenericsTypes()) {
-            return parameterizedType;
-        }
-
-        GenericsType[] declaringGenericsTypes = genericsClass.getGenericsTypes();
-
-        List<ClassNode> classNodeList = new LinkedList<>(getAllSuperClassesAndInterfaces(actualType));
-        classNodeList.add(0, actualType);
-
-        LinkedList<ClassNode> parameterizedTypeCandidateList = new LinkedList<>();
-
-        for (ClassNode cn : classNodeList) {
-            if (cn == genericsClass) {
-                continue;
-            }
-
-            if (tryToFindExactType && cn.getGenericsTypes() != null && hasNonPlaceHolders(cn)) {
-                parameterizedTypeCandidateList.add(cn);
-            }
-
-            if (!(genericsClass.equals(cn.redirect()))) {
-                continue;
-            }
-
-            if (isGenericsTypeArraysLengthEqual(declaringGenericsTypes, cn.getGenericsTypes())) {
-                parameterizedType = cn;
-                break;
-            }
-        }
-
-        if (parameterizedType == null && !parameterizedTypeCandidateList.isEmpty()) {
-            parameterizedType = parameterizedTypeCandidateList.getLast();
-        }
-
-        return parameterizedType;
-        */
+    // Backported from 3.0.8
+    private static ClassNode findParameterizedType(final ClassNode genericsClass, final ClassNode actualType, final boolean tryToFindExactType) {
         final GenericsType[] genericsTypes = genericsClass.getGenericsTypes();
         if (genericsTypes == null || genericsClass.isGenericsPlaceHolder()) {
             return null;
@@ -883,37 +847,37 @@ public class GenericsUtils {
         }
 
         return null;
-        // GRECLIPSE end
     }
 
-    /* GRECLIPSE edit
-    private static boolean isGenericsTypeArraysLengthEqual(GenericsType[] declaringGenericsTypes, GenericsType[] actualGenericsTypes) {
-        return null != actualGenericsTypes && declaringGenericsTypes.length == actualGenericsTypes.length;
-    }
-
-    private static List<ClassNode> getAllSuperClassesAndInterfaces(ClassNode actualReceiver) {
-        List<ClassNode> superClassAndInterfaceList = new LinkedList<>();
-        List<ClassNode> allSuperClassNodeList = getAllUnresolvedSuperClasses(actualReceiver);
-        superClassAndInterfaceList.addAll(allSuperClassNodeList);
-        superClassAndInterfaceList.addAll(actualReceiver.getAllInterfaces());
-
-        for (ClassNode superClassNode : allSuperClassNodeList) {
-            superClassAndInterfaceList.addAll(superClassNode.getAllInterfaces());
+    /**
+     * Checks for any placeholder (aka unresolved) generics.
+     * <p>
+     * Backported from 3.0.8
+     */
+    public static boolean hasUnresolvedGenerics(final ClassNode type) {
+        if (type.isGenericsPlaceHolder()) return true;
+        if (type.isArray()) {
+            return hasUnresolvedGenerics(type.getComponentType());
         }
-
-        return superClassAndInterfaceList;
-    }
-
-    private static List<ClassNode> getAllUnresolvedSuperClasses(ClassNode actualReceiver) {
-        List<ClassNode> superClassNodeList = new LinkedList<>();
-
-        for (ClassNode cn = actualReceiver.getUnresolvedSuperClass(); null != cn && ClassHelper.OBJECT_TYPE != cn; cn = cn.getUnresolvedSuperClass()) {
-            superClassNodeList.add(cn);
+        GenericsType[] genericsTypes = type.getGenericsTypes();
+        if (genericsTypes != null) {
+            for (GenericsType genericsType : genericsTypes) {
+                if (genericsType.isPlaceholder()) return true;
+                ClassNode lowerBound = genericsType.getLowerBound();
+                ClassNode[] upperBounds = genericsType.getUpperBounds();
+                if (lowerBound != null) {
+                    if (hasUnresolvedGenerics(lowerBound)) return true;
+                } else if (upperBounds != null) {
+                    for (ClassNode upperBound : upperBounds) {
+                        if (hasUnresolvedGenerics(upperBound)) return true;
+                    }
+                } else {
+                    if (hasUnresolvedGenerics(genericsType.getType())) return true;
+                }
+            }
         }
-
-        return superClassNodeList;
+        return false;
     }
-    */
 
     private static final EvictableCache<ParameterizedTypeCacheKey, SoftReference<ClassNode>> PARAMETERIZED_TYPE_CACHE = new ConcurrentSoftCache<>(64);
 
@@ -1015,6 +979,10 @@ public class GenericsUtils {
         return result;
     }
 
+    public static boolean hasPlaceHolders(final ClassNode parameterizedType) {
+        return checkPlaceHolders(parameterizedType, GenericsType::isPlaceholder);
+    }
+
     private static boolean checkPlaceHolders(final ClassNode parameterizedType, final java.util.function.Predicate<GenericsType> p) {
         if (parameterizedType == null) return false;
 
@@ -1030,46 +998,6 @@ public class GenericsUtils {
 
         return false;
     }
-
-    public static boolean hasPlaceHolders(final ClassNode parameterizedType) {
-        return checkPlaceHolders(parameterizedType, genericsType -> genericsType.isPlaceholder());
-    }
-
-    /* GRECLIPSE edit
-    private static boolean hasNonPlaceHolders(final ClassNode parameterizedType) {
-        return checkPlaceHolders(parameterizedType, genericsType -> !genericsType.isPlaceholder());
-    }
-    */
-
-    // GRECLIPSE add
-    /**
-     * Checks for any placeholder (aka unresolved) generics.
-     */
-    public static boolean hasUnresolvedGenerics(final ClassNode type) {
-        if (type.isGenericsPlaceHolder()) return true;
-        if (type.isArray()) {
-            return hasUnresolvedGenerics(type.getComponentType());
-        }
-        GenericsType[] genericsTypes = type.getGenericsTypes();
-        if (genericsTypes != null) {
-            for (GenericsType genericsType : genericsTypes) {
-                if (genericsType.isPlaceholder()) return true;
-                ClassNode lowerBound = genericsType.getLowerBound();
-                ClassNode[] upperBounds = genericsType.getUpperBounds();
-                if (lowerBound != null) {
-                    if (hasUnresolvedGenerics(lowerBound)) return true;
-                } else if (upperBounds != null) {
-                    for (ClassNode upperBound : upperBounds) {
-                        if (hasUnresolvedGenerics(upperBound)) return true;
-                    }
-                } else {
-                    if (hasUnresolvedGenerics(genericsType.getType())) return true;
-                }
-            }
-        }
-        return false;
-    }
-    // GRECLIPSE end
 
     private static Map<GenericsType, GenericsType> makePlaceholderAndParameterizedTypeMap(ClassNode declaringClass) {
         if (declaringClass == null) {

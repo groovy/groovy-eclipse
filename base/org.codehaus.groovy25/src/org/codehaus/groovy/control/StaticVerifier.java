@@ -36,26 +36,6 @@ import java.util.List;
  * Checks for dynamic variables in static contexts.
  */
 public class StaticVerifier extends ClassCodeVisitorSupport {
-    /* GRECIPSE edit -- GROOVY-9168
-    private boolean inSpecialConstructorCall;
-    private boolean inPropertyExpression; // TODO use it or lose it
-    private boolean inClosure;
-    private MethodNode currentMethod;
-    private SourceUnit source;
-
-    public void visitClass(ClassNode node, SourceUnit source) {
-        this.source = source;
-        super.visitClass(node);
-    }
-
-    @Override
-    public void visitVariableExpression(VariableExpression ve) {
-        Variable v = ve.getAccessedVariable();
-        if (v instanceof DynamicVariable) {
-            if (!inPropertyExpression || inSpecialConstructorCall) addStaticVariableError(ve);
-        }
-    }
-    */
     private boolean inClosure, inSpecialConstructorCall;
     private MethodNode methodNode;
     private SourceUnit sourceUnit;
@@ -69,7 +49,6 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
         sourceUnit = unit;
         visitClass(node);
     }
-    // GRECLIPSE end
 
     @Override
     public void visitClosureExpression(ClosureExpression ce) {
@@ -82,8 +61,9 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
     @Override
     public void visitConstructorCallExpression(ConstructorCallExpression cce) {
         boolean oldIsSpecialConstructorCall = inSpecialConstructorCall;
-        // GRECIPSE edit -- GROOVY-9168
-        //inSpecialConstructorCall = cce.isSpecialCall();
+        /* GRECIPSE edit -- GROOVY-9168
+        inSpecialConstructorCall = cce.isSpecialCall();
+        */
         inSpecialConstructorCall |= cce.isSpecialCall();
         // GRECLIPSE end
         super.visitConstructorCallExpression(cce);
@@ -93,11 +73,11 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
     /* GRECIPSE edit -- GROOVY-9168
     @Override
     public void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
-        MethodNode oldCurrentMethod = currentMethod;
-        currentMethod = node;
+        MethodNode oldMethodNode = methodNode;
+        methodNode = node;
         super.visitConstructorOrMethod(node, isConstructor);
         if (isConstructor) {
-            final Set<String> exceptions = new HashSet<String>();
+            final Set<String> exceptions = new HashSet<>();
             for (final Parameter param : node.getParameters()) {
                 exceptions.add(param.getName());
                 if (param.hasInitialExpression()) {
@@ -131,12 +111,12 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
                 }
             }
         }
-        currentMethod = oldCurrentMethod;
+        methodNode = oldMethodNode;
     }
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression mce) {
-        if (inSpecialConstructorCall && !isInnerClass(currentMethod.getDeclaringClass())) {
+        if (inSpecialConstructorCall && !isInnerClass(methodNode.getDeclaringClass())) {
             Expression objectExpression = mce.getObjectExpression();
             if (objectExpression instanceof VariableExpression) {
                 VariableExpression ve = (VariableExpression) objectExpression;
@@ -149,48 +129,26 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
         super.visitMethodCallExpression(mce);
     }
 
-    @Override
+    @Override // TODO: dead code?
     public void visitPropertyExpression(PropertyExpression pe) {
-        if (!inSpecialConstructorCall) checkStaticScope(pe);
-    }
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return source;
-    }
-
-    private void checkStaticScope(PropertyExpression pe) {
-        if (inClosure) return;
-        for (Expression it = pe; it != null; it = ((PropertyExpression) it).getObjectExpression()) {
-            if (it instanceof PropertyExpression) continue;
-            if (it instanceof VariableExpression) {
-                addStaticVariableError((VariableExpression) it);
+        if (!inClosure && !inSpecialConstructorCall) {
+            for (Expression it = pe; it != null; it = ((PropertyExpression) it).getObjectExpression()) {
+                if (it instanceof PropertyExpression) continue;
+                if (it instanceof VariableExpression) {
+                    VariableExpression ve = (VariableExpression) it;
+                    if (ve.isThisExpression() || ve.isSuperExpression()) return;
+                    if (!inSpecialConstructorCall && (inClosure || !ve.isInStaticContext())) return;
+                    if (methodNode != null && methodNode.isStatic()) {
+                        FieldNode fieldNode = getDeclaredOrInheritedField(methodNode.getDeclaringClass(), ve.getName());
+                        if (fieldNode != null && fieldNode.isStatic()) return;
+                    }
+                    Variable v = ve.getAccessedVariable();
+                    if (v != null && !(v instanceof DynamicVariable) && v.isInStaticContext()) return;
+                    addVariableError(ve);
+                }
+                return;
             }
-            return;
         }
-    }
-
-    private void addStaticVariableError(VariableExpression ve) {
-        // closures are always dynamic
-        // propertyExpressions will handle the error a bit differently
-        if (!inSpecialConstructorCall && (inClosure || !ve.isInStaticContext())) return;
-        if (ve.isThisExpression() || ve.isSuperExpression()) return;
-        Variable v = ve.getAccessedVariable();
-        if (currentMethod != null && currentMethod.isStatic()) {
-            FieldNode fieldNode = getDeclaredOrInheritedField(currentMethod.getDeclaringClass(), ve.getName());
-            if (fieldNode != null && fieldNode.isStatic()) return;
-        }
-        if (v != null && !(v instanceof DynamicVariable) && v.isInStaticContext()) return;
-        addVariableError(ve);
-    }
-
-    private void addVariableError(VariableExpression ve) {
-        addError("Apparent variable '" + ve.getName() + "' was found in a static scope but doesn't refer" +
-                " to a local variable, static field or class. Possible causes:\n" +
-                "You attempted to reference a variable in the binding or an instance variable from a static context.\n" +
-                "You misspelled a classname or statically imported field. Please check the spelling.\n" +
-                "You attempted to use a method '" + ve.getName() +
-                "' but left out brackets in a place not allowed by the grammar.", ve);
     }
     */
     @Override
@@ -211,26 +169,28 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
         }
         methodNode = oldMethodNode;
     }
+    // GRECLIPSE end
 
     @Override
     public void visitVariableExpression(VariableExpression ve) {
-        /* GRECLIPSE edit -- GROOVY-9591
-        if (ve.getAccessedVariable() instanceof DynamicVariable
-                && (inSpecialConstructorCall || (!inClosure && ve.isInStaticContext()))) {
-        */
         if (ve.getAccessedVariable() instanceof DynamicVariable && (ve.isInStaticContext() || inSpecialConstructorCall) && !inClosure) {
-        // GRECLIPSE end
+            // GROOVY-5687: interface constants not visible to implementing sub-class in static context
             if (methodNode != null && methodNode.isStatic()) {
                 FieldNode fieldNode = getDeclaredOrInheritedField(methodNode.getDeclaringClass(), ve.getName());
                 if (fieldNode != null && fieldNode.isStatic()) return;
             }
-            addError("Apparent variable '" + ve.getName() + "' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
-                    "You attempted to reference a variable in the binding or an instance variable from a static context.\n" +
-                    "You misspelled a classname or statically imported field. Please check the spelling.\n" +
-                    "You attempted to use a method '" + ve.getName() + "' but left out brackets in a place not allowed by the grammar.", ve);
+            addVariableError(ve);
         }
     }
-    // GRECLIPSE end
+
+    private void addVariableError(VariableExpression ve) {
+        addError("Apparent variable '" + ve.getName() + "' was found in a static scope but doesn't refer" +
+                " to a local variable, static field or class. Possible causes:\n" +
+                "You attempted to reference a variable in the binding or an instance variable from a static context.\n" +
+                "You misspelled a classname or statically imported field. Please check the spelling.\n" +
+                "You attempted to use a method '" + ve.getName() +
+                "' but left out brackets in a place not allowed by the grammar.", ve);
+    }
 
     private static FieldNode getDeclaredOrInheritedField(ClassNode cn, String fieldName) {
         ClassNode node = cn;
