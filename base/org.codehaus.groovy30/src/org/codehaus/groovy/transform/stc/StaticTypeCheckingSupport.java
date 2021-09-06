@@ -666,6 +666,10 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     public static boolean checkCompatibleAssignmentTypes(final ClassNode left, final ClassNode right, final Expression rightExpression, final boolean allowConstructorCoercion) {
+        if (!isPrimitiveType(left) && isNullConstant(rightExpression)) {
+            return true;
+        }
+
         ClassNode leftRedirect = left.redirect();
         ClassNode rightRedirect = right.redirect();
         if (leftRedirect == rightRedirect) return true;
@@ -705,26 +709,13 @@ public abstract class StaticTypeCheckingSupport {
             }
         }
 
-        // if rightExpression is null and leftExpression is not a primitive type, it's ok
-        boolean rightExpressionIsNull = isNullConstant(rightExpression);
-        if (rightExpressionIsNull && !isPrimitiveType(left)) {
-            return true;
-        }
+        // anything can be assigned to an Object, String, [Bb]oolean or Class receiver; except null to boolean
+        if (isWildcardLeftHandSide(leftRedirect) && !(boolean_TYPE.equals(left) && isNullConstant(rightExpression))) return true;
 
-        // on an assignment everything that can be done by a GroovyCast is allowed
-
-        // anything can be assigned to an Object, String, Boolean or Class typed variable
-        if (isWildcardLeftHandSide(leftRedirect) && !(boolean_TYPE.equals(left) && rightExpressionIsNull)) return true;
-
-        // char as left expression
-        if (leftRedirect == char_TYPE && rightRedirect == STRING_TYPE) {
-            if (rightExpression instanceof ConstantExpression) {
-                String value = rightExpression.getText();
-                return value.length() == 1;
-            }
-        }
-        if (leftRedirect == Character_TYPE && (rightRedirect == STRING_TYPE || rightExpressionIsNull)) {
-            return rightExpressionIsNull || (rightExpression instanceof ConstantExpression && rightExpression.getText().length() == 1);
+        if (leftRedirect == char_TYPE && rightRedirect == Character_TYPE) return true;
+        if (leftRedirect == Character_TYPE && rightRedirect == char_TYPE) return true;
+        if ((leftRedirect == char_TYPE || leftRedirect == Character_TYPE) && rightRedirect == STRING_TYPE) {
+            return rightExpression instanceof ConstantExpression && rightExpression.getText().length() == 1;
         }
 
         // if left is Enum and right is String or GString we do valueOf
@@ -1479,27 +1470,6 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     protected static boolean typeCheckMethodsWithGenerics(final ClassNode receiver, final ClassNode[] argumentTypes, final MethodNode candidateMethod) {
-        /* GRECLIPSE edit -- GROOVY-10075
-        boolean isExtensionMethod = candidateMethod instanceof ExtensionMethodNode;
-        if (!isExtensionMethod
-                && receiver.isUsingGenerics()
-                && receiver.equals(CLASS_Type)
-                && !candidateMethod.getDeclaringClass().equals(CLASS_Type)) {
-            return typeCheckMethodsWithGenerics(receiver.getGenericsTypes()[0].getType(), argumentTypes, candidateMethod);
-        }
-        // both candidate method and receiver have generic information so a check is possible
-        GenericsType[] genericsTypes = candidateMethod.getGenericsTypes();
-        boolean methodUsesGenerics = (genericsTypes != null && genericsTypes.length > 0);
-        if (isExtensionMethod && methodUsesGenerics) {
-            ClassNode[] dgmArgs = new ClassNode[argumentTypes.length + 1];
-            dgmArgs[0] = receiver;
-            System.arraycopy(argumentTypes, 0, dgmArgs, 1, argumentTypes.length);
-            MethodNode extensionMethodNode = ((ExtensionMethodNode) candidateMethod).getExtensionMethodNode();
-            return typeCheckMethodsWithGenerics(extensionMethodNode.getDeclaringClass(), dgmArgs, extensionMethodNode, true);
-        } else {
-            return typeCheckMethodsWithGenerics(receiver, argumentTypes, candidateMethod, false);
-        }
-        */
         if (candidateMethod instanceof ExtensionMethodNode) {
             ClassNode[] realTypes = new ClassNode[argumentTypes.length + 1];
             realTypes[0] = receiver; // object expression is implicit argument
@@ -1515,7 +1485,6 @@ public abstract class StaticTypeCheckingSupport {
         }
 
         return typeCheckMethodsWithGenerics(receiver, argumentTypes, candidateMethod, false);
-        // GRECLIPSE end
     }
 
     private static boolean typeCheckMethodsWithGenerics(final ClassNode receiver, final ClassNode[] argumentTypes, final MethodNode candidateMethod, final boolean isExtensionMethod) {

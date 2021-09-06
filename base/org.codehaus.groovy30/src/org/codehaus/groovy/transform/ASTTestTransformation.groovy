@@ -140,11 +140,12 @@ class ASTTestTransformation implements ASTTransformation, CompilationUnitAware {
 
                     def config = new CompilerConfiguration()
                     config.addCompilationCustomizers(customizer)
-                    /* GRECLIPSE edit
-                    new GroovyShell(binding, config).evaluate(testSource)
-                    */
+                    // GRECLIPSE add
                     try {
-                        new GroovyShell(compilationUnit.transformLoader, binding, config).evaluate(testSource)
+                    // GRECLIPSE end
+                    def loader = compilationUnit.transformLoader
+                    new GroovyShell(loader, binding, config).evaluate(testSource)
+                    // GRECLIPSE add
                     } catch (Throwable t) {
                         source.addErrorAndContinue(new SyntaxException(" ASTTest exception: $t.message", t,
                             annotationNode.lineNumber, annotationNode.columnNumber, annotationNode.classNode.lastLineNumber, annotationNode.classNode.lastColumnNumber

@@ -36,7 +36,7 @@ public class RangeExpression extends Expression {
         this.from = from;
         this.to = to;
         this.inclusive = inclusive;
-        setType(ClassHelper.RANGE_TYPE);
+        setType(ClassHelper.RANGE_TYPE.getPlainNodeReference());
     }
 
     public void visit(final GroovyCodeVisitor visitor) {

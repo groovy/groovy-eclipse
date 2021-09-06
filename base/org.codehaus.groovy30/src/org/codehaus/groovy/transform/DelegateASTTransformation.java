@@ -141,7 +141,7 @@ public class DelegateASTTransformation extends AbstractASTTransformation {
                         ". Delegation to own type not supported. Please use a different type.", parent);
                 return;
             }
-            final List<MethodNode> delegateMethods = new java.util.LinkedList<>(getAllMethods(delegate.type));
+            final List<MethodNode> delegateMethods = getAllMethods(delegate.type);
             // GRECLIPSE add -- GROOVY-4320, GROOVY-4516
             for (java.util.ListIterator<MethodNode> it = delegateMethods.listIterator(); it.hasNext();) {
                 MethodNode next = it.next();

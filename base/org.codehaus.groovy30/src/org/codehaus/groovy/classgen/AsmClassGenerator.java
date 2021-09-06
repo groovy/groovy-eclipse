@@ -116,6 +116,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -373,11 +374,19 @@ public class AsmClassGenerator extends ClassGenerator {
     @Override
     protected void visitConstructorOrMethod(final MethodNode node, final boolean isConstructor) {
         Parameter[] parameters = node.getParameters();
+        /* GRECLIPSE edit
+        String methodType = BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters);
+        String signature = BytecodeHelper.getGenericsMethodSignature(node);
+        int modifiers = node.getModifiers();
+        if (isVargs(node.getParameters())) modifiers |= ACC_VARARGS;
+        MethodVisitor mv = classVisitor.visitMethod(modifiers, node.getName(), methodType, signature, buildExceptions(node.getExceptions()));
+        */
         MethodVisitor mv = classVisitor.visitMethod(
                 node.getModifiers() | (isVargs(parameters) ? ACC_VARARGS : 0), node.getName(),
                 BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters),
                 BytecodeHelper.getGenericsMethodSignature(node),
                 buildExceptions(node.getExceptions()));
+        // GRECLIPSE end
         controller.setMethodVisitor(mv);
         controller.resetLineNumber();
 
@@ -390,7 +399,7 @@ public class AsmClassGenerator extends ClassGenerator {
         if (Optional.ofNullable(controller.getClassNode().getCompileUnit())
                 .orElseGet(context::getCompileUnit).getConfig().getParameters()) {
             for (Parameter parameter : parameters) {
-                mv.visitParameter(parameter.getName(), parameter.getModifiers());
+                mv.visitParameter(parameter.getName(), parameter.getModifiers()); // GRECLIPSE edit
             }
         }
 
@@ -501,6 +510,24 @@ public class AsmClassGenerator extends ClassGenerator {
         controller.getCompileStack().clear();
         // GRECLIPSE end
     }
+
+    /* GRECLIPSE edit
+    private boolean checkIfLastStatementIsReturnOrThrow(Statement code) {
+        if (code instanceof BlockStatement) {
+            BlockStatement blockStatement = (BlockStatement) code;
+            List<Statement> statementList = blockStatement.getStatements();
+            int statementCnt = statementList.size();
+            if (statementCnt > 0) {
+                Statement lastStatement = statementList.get(statementCnt - 1);
+                if (lastStatement instanceof ReturnStatement || lastStatement instanceof ThrowStatement) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    */
 
     private void visitAnnotationDefaultExpression(final AnnotationVisitor av, final ClassNode type, final Expression exp) {
         if (exp instanceof ClosureExpression) {
@@ -769,20 +796,9 @@ public class AsmClassGenerator extends ClassGenerator {
 
     @Override
     public void visitSpreadMapExpression(final SpreadMapExpression expression) {
-        /* GRECLIPSE edit -- GROOVY-3421 (take 2)
-        Expression subExpression = expression.getExpression();
-        // to not record the underlying MapExpression twice,
-        // we disable the assertion tracker
-        // see https://issues.apache.org/jira/browse/GROOVY-3421
-        controller.getAssertionWriter().disableTracker();
-        subExpression.visit(this);
-        controller.getOperandStack().box();
-        spreadMap.call(controller.getMethodVisitor());
-        controller.getAssertionWriter().reenableTracker();
-        */
-        callX(ClassHelper.make(java.util.Collections.class), "emptyMap").visit(this);
-        spreadMap.call(controller.getMethodVisitor());
-        // GRECLIPSE end
+        // GROOVY-3421: SpreadMapExpression is key expression and contains value
+        callX(ClassHelper.make(Collections.class), "emptyMap").visit(this);
+        spreadMap.call(controller.getMethodVisitor()); // dummy SpreadMap
         controller.getOperandStack().replace(ClassHelper.OBJECT_TYPE);
     }
 

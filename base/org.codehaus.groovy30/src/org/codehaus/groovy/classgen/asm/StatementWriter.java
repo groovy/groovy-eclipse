@@ -104,6 +104,16 @@ public class StatementWriter {
         controller.getOperandStack().popDownTo(mark);
     }
 
+    /* GRECLIPSE edit
+    private boolean isMethodOrConstructorNonEmptyBlock(final BlockStatement block) {
+        MethodNode methodNode = controller.getMethodNode();
+        if (methodNode == null) {
+            methodNode = controller.getConstructorNode();
+        }
+        return (methodNode != null && methodNode.getCode() == block && !block.isEmpty());
+    }
+    */
+
     public void writeForStatement(final ForStatement statement) {
         if (statement.getVariable() == ForStatement.FOR_LOOP_DUMMY) {
             writeForLoopWithClosureList(statement);

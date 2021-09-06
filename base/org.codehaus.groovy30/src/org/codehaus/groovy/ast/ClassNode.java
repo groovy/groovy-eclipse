@@ -1192,7 +1192,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
                 // has the most specific and exact return type of the two. Picking the bridge method results in loss of
                 // type information, as it down-casts the return type to the lower bound of the generic parameter.
-                if (getterMethod == null || (getterMethod.getModifiers() & (ACC_BRIDGE | ACC_SYNTHETIC)) != 0) {
+                if (getterMethod == null || (getterMethod.getModifiers() & ACC_SYNTHETIC) != 0) {
                     getterMethod = method;
                 }
             }

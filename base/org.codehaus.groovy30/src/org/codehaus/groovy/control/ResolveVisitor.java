@@ -349,7 +349,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         if (resolve(type)) return;
         if (resolveToInner(type)) return;
-
+        /* GRECLIPSE edit
+        if (resolveToOuterNested(type)) return;
+        */
         addError("unable to resolve class " + type.toString(false) + msg, /*GRECLIPSE add*/type.getEnd() > 0 ? type : /*GRECLIPSE end*/node);
     }
 
@@ -438,6 +440,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         for (ClassNode classToCheck : findHierClasses(currentClass).values()) {
             if (setRedirect(type, classToCheck)) return true;
         }
+
+        /* GRECLIPSE edit
+        ClassNode possibleOuterClassNode = possibleOuterClassNodeMap.get(type);
+        if (possibleOuterClassNode != null) {
+            if (setRedirect(type, possibleOuterClassNode)) return true;
+        }
+        */
 
         // Another case we want to check here is if we are in a
         // nested class A$B$C and want to access B without
@@ -1206,6 +1215,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     protected Expression transformConstructorCallExpression(final ConstructorCallExpression cce) {
         /* GRECLIPSE edit -- GROOVY-4386, et al.
+        findPossibleOuterClassNodeForNonStaticInnerClassInstantiation(cce);
         ClassNode type = cce.getType();
         if (cce.isUsingAnonymousInnerClass()) { // GROOVY-9642
             resolveOrFail(type.getUnresolvedSuperClass(false), type);
@@ -1222,6 +1232,30 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         return cce.transformExpression(this);
     }
+
+    /* GRECLIPSE edit
+    private void findPossibleOuterClassNodeForNonStaticInnerClassInstantiation(final ConstructorCallExpression cce) {
+        // GROOVY-8947: Fail to resolve non-static inner class outside of outer class
+        // `new Computer().new Cpu(4)` will be parsed to `new Cpu(new Computer(), 4)`
+        // so non-static inner class instantiation expression's first argument is a constructor call of outer class
+        // but the first argument is constructor call can not be non-static inner class instantiation expression, e.g.
+        // `new HashSet(new ArrayList())`, so we add "possible" to the variable name
+        Expression argumentExpression = cce.getArguments();
+        if (argumentExpression instanceof ArgumentListExpression) {
+            ArgumentListExpression argumentListExpression = (ArgumentListExpression) argumentExpression;
+            List<Expression> expressionList = argumentListExpression.getExpressions();
+            if (!expressionList.isEmpty()) {
+                Expression firstExpression = expressionList.get(0);
+
+                if (firstExpression instanceof ConstructorCallExpression) {
+                    ConstructorCallExpression constructorCallExpression = (ConstructorCallExpression) firstExpression;
+                    ClassNode possibleOuterClassNode = constructorCallExpression.getType();
+                    possibleOuterClassNodeMap.put(cce.getType(), possibleOuterClassNode);
+                }
+            }
+        }
+    }
+    */
 
     private static String getDescription(final ClassNode node) {
         return (node.isInterface() ? "interface" : "class") + " '" + node.getName() + "'";
@@ -1450,14 +1484,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
 
         ClassNode sn = node.getUnresolvedSuperClass();
-        if (sn != null) resolveOrFail(sn, "", node, true);
-
-        for (ClassNode anInterface : node.getInterfaces()) {
-            resolveOrFail(anInterface, "", node, true);
+        if (sn != null) {
+            resolveOrFail(sn, "", node, true);
         }
-        /* GRECLIPSE edit -- GRECLIPSE-531, GROOVY-10113, GROOVY-10125, et al.
-        checkCyclicInheritance(node, node.getUnresolvedSuperClass(), node.getInterfaces());
-        */
+        for (ClassNode in : node.getInterfaces()) {
+            resolveOrFail(in, "", node, true);
+        }
+
         if (sn != null) checkCyclicInheritance(node, sn);
         for (ClassNode in : node.getInterfaces()) {
             checkCyclicInheritance(node, in);
@@ -1466,11 +1499,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (GenericsType gt : node.getGenericsTypes()) {
                 if (gt != null && gt.getUpperBounds() != null) {
                     for (ClassNode variant : gt.getUpperBounds()) {
-                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType());
+                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType()); // GRECLIPSE edit -- GROOVY-10113, GROOVY-10125
                     }
                 }
             }
         }
+        // GRECLIPSE add
         // VariableScopeVisitor visits anon. inner class body inline, so resolve now
         for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
             InnerClassNode cn = it.next();
@@ -1492,6 +1526,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         } finally {
         if (currentClass == node)
         // GRECLIPSE end
+        /* GRECLIPSE edit
+        resolveOuterNestedClassFurther(node);
+        */
         currentClass = oldNode;
         // GRECLIPSE add
         }
@@ -1512,55 +1549,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
     // GRECLIPSE end
 
-    /* GRECLIPSE edit -- GROOVY-10113
-    private void checkCyclicInheritance(final ClassNode originalNode, final ClassNode parentToCompare, final ClassNode[] interfacesToCompare) {
-        if (!originalNode.isInterface()) {
-            if (parentToCompare == null) return;
-            if (originalNode == parentToCompare.redirect()) {
-                addError("Cyclic inheritance involving " + parentToCompare.getName() + " in class " + originalNode.getName(), originalNode);
-                // GRECLIPSE add
-                originalNode.redirect().setHasInconsistentHierarchy(true);
-                // GRECLIPSE end
-                return;
-            }
-            if (interfacesToCompare != null && interfacesToCompare.length > 0) {
-                for (ClassNode intfToCompare : interfacesToCompare) {
-                    if (originalNode == intfToCompare.redirect()) {
-                        addError("Cycle detected: the type " + originalNode.getName() + " cannot implement itself" , originalNode);
-                        // GRECLIPSE add
-                        originalNode.redirect().setHasInconsistentHierarchy(true);
-                        // GRECLIPSE end
-                        return;
-                    }
-                }
-            }
-            if (parentToCompare == ClassHelper.OBJECT_TYPE) return;
-            checkCyclicInheritance(originalNode, parentToCompare.getUnresolvedSuperClass(), null);
-        } else {
-            if (interfacesToCompare != null && interfacesToCompare.length > 0) {
-                // check interfaces at this level first
-                for (ClassNode intfToCompare : interfacesToCompare) {
-                    if(originalNode == intfToCompare.redirect()) {
-                        addError("Cyclic inheritance involving " + intfToCompare.getName() + " in interface " + originalNode.getName(), originalNode);
-                        // GRECLIPSE add
-                        originalNode.redirect().setHasInconsistentHierarchy(true);
-                        // GRECLIPSE end
-                        return;
-                    }
-                }
-                // check next level of interfaces
-                for (ClassNode intf : interfacesToCompare) {
-                    checkCyclicInheritance(originalNode, null, intf.getInterfaces());
-                }
-            }
-        }
-    }
-    */
     private void checkCyclicInheritance(final ClassNode node, final ClassNode type) {
         if (type.redirect() == node || type.getOuterClasses().contains(node)) {
             addError("Cycle detected: the type " + node.getName() + " cannot extend/implement itself or one of its own member types", type);
+            // GRECLIPSE add
             node.setHasInconsistentHierarchy(true);
-
+            // GRECLIPSE end
         } else if (type != ClassHelper.OBJECT_TYPE) {
             Set<ClassNode> done = new HashSet<>();
             done.add(ClassHelper.OBJECT_TYPE);
@@ -1576,7 +1570,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (next.redirect() == node) {
                     ClassNode cn = type; while (cn.getOuterClass() != null) cn = cn.getOuterClass();
                     addError("Cycle detected: a cycle exists in the type hierarchy between " + node.getName() + " and " + cn.getName(), type);
+                    // GRECLIPSE add
                     node.setHasInconsistentHierarchy(true);
+                    // GRECLIPSE end
                     return;
                 }
                 Collections.addAll(todo, next.getInterfaces());
@@ -1585,9 +1581,40 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             } while (!todo.isEmpty());
         }
     }
-    // GRECLIPSE end
 
+    /* GRECLIPSE edit
     @Override
+    private void resolveOuterNestedClassFurther(final ClassNode node) {
+        CompileUnit compileUnit = currentClass.getCompileUnit();
+
+        if (null == compileUnit) return;
+
+        Map<String, ConstructedOuterNestedClassNode> classesToResolve = compileUnit.getClassesToResolve();
+        List<String> resolvedInnerClassNameList = new LinkedList<>();
+
+        for (Map.Entry<String, ConstructedOuterNestedClassNode> entry : classesToResolve.entrySet()) {
+            String innerClassName = entry.getKey();
+            ConstructedOuterNestedClassNode constructedOuterNestedClass = entry.getValue();
+
+            // When the outer class is resolved, all inner classes are resolved too
+            if (node.getName().equals(constructedOuterNestedClass.getEnclosingClassNode().getName())) {
+                ClassNode innerClassNode = compileUnit.getClass(innerClassName); // find the resolved inner class
+
+                if (null == innerClassNode) {
+                    return; // "unable to resolve class" error can be thrown already, no need to `addError`, so just return
+                }
+
+                constructedOuterNestedClass.setRedirect(innerClassNode);
+                resolvedInnerClassNameList.add(innerClassName);
+            }
+        }
+
+        for (String innerClassName : resolvedInnerClassNameList) {
+            classesToResolve.remove(innerClassName);
+        }
+    }
+    */
+
     public void visitCatchStatement(final CatchStatement cs) {
         resolveOrFail(cs.getExceptionType(), cs);
         if (cs.getExceptionType() == ClassHelper.DYNAMIC_TYPE) {

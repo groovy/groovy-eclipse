@@ -267,11 +267,7 @@ public class WideningCategories {
             ClassNode t1 = agt[i].getType();
             ClassNode t2 = bgt[i].getType();
             ClassNode basicType;
-            /* GRECLIPSE edit -- GROOVY-8111
-            if (areEqualWithGenerics(t1, a) && areEqualWithGenerics(t2,b)) {
-            */
             if (areEqualWithGenerics(t1, isPrimitiveType(a)?getWrapper(a):a) && areEqualWithGenerics(t2, isPrimitiveType(b)?getWrapper(b):b)) {
-            // GRECLIPSE end
                 // we are facing a self referencing type !
                 basicType = fallback;
             } else {
@@ -662,10 +658,7 @@ public class WideningCategories {
 
         @Override
         public int hashCode() {
-            int result = super.hashCode();
-//            result = 31 * result + (compileTimeClassNode != null ? compileTimeClassNode.hashCode() : 0);
-            result = 31 * result + (name != null ? name.hashCode() : 0);
-            return result;
+            return 31 * super.hashCode() + (name != null ? name.hashCode() : 0);
         }
 
         @Override
@@ -722,9 +715,6 @@ public class WideningCategories {
                 GenericsType ga = gta[i];
                 GenericsType gb = gtb[i];
                 boolean result = ga.isPlaceholder()==gb.isPlaceholder() && ga.isWildcard()==gb.isWildcard();
-                /* GRECLIPSE edit -- GROOVY-8111
-                result = result && ga.isResolved() && gb.isResolved();
-                */
                 result = result && ga.getName().equals(gb.getName());
                 result = result && areEqualWithGenerics(ga.getType(), gb.getType());
                 result = result && areEqualWithGenerics(ga.getLowerBound(), gb.getLowerBound());

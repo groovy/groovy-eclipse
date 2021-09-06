@@ -44,9 +44,10 @@ options {
 }
 
 @members {
-    private long tokenIndex     = 0;
-    private int  lastTokenType  = 0;
-    private int  invalidDigitCount = 0;
+    private boolean errorIgnored;
+    private long tokenIndex;
+    private int  lastTokenType;
+    private int  invalidDigitCount;
 
     /**
      * Record the index and token type of the current token while emitting tokens.
@@ -67,29 +68,27 @@ options {
         super.emit(token);
     }
 
-    private static final int[] REGEX_CHECK_ARRAY =
-                                    /* GRECLIPSE edit
-                                    IntStream.of(
-                                    */
-                                    {
-                                    // GRECLIPSE end
-                                        Identifier, CapitalizedIdentifier, NullLiteral, BooleanLiteral, THIS, RPAREN, RBRACK, RBRACE,
-                                        IntegerLiteral, FloatingPointLiteral, StringLiteral, GStringEnd, INC, DEC
-                                    /* GRECLIPSE edit
-                                    ).sorted().toArray();
-                                    */
-                                    };
-        static {
-            Arrays.sort(REGEX_CHECK_ARRAY);
-        }
-        // GRECLIPSE end
+    private static final int[] REGEX_CHECK_ARRAY = {
+        DEC,
+        INC,
+        THIS,
+        RBRACE,
+        RBRACK,
+        RPAREN,
+        GStringEnd,
+        NullLiteral,
+        StringLiteral,
+        BooleanLiteral,
+        IntegerLiteral,
+        FloatingPointLiteral,
+        Identifier, CapitalizedIdentifier
+    };
+    static {
+        Arrays.sort(REGEX_CHECK_ARRAY);
+    }
 
     private boolean isRegexAllowed() {
-        if (Arrays.binarySearch(REGEX_CHECK_ARRAY, this.lastTokenType) >= 0) {
-            return false;
-        }
-
-        return true;
+        return (Arrays.binarySearch(REGEX_CHECK_ARRAY, this.lastTokenType) < 0);
     }
 
     /**
@@ -240,23 +239,28 @@ options {
     private static boolean isJavaIdentifierPartAndNotIdentifierIgnorable(int codePoint) {
         return Character.isJavaIdentifierPart(codePoint) && !Character.isIdentifierIgnorable(codePoint);
     }
+
+    public boolean isErrorIgnored() {
+        return errorIgnored;
+    }
+
+    public void setErrorIgnored(boolean errorIgnored) {
+        this.errorIgnored = errorIgnored;
+    }
 }
 
 
 // §3.10.5 String Literals
 StringLiteral
-    :   GStringQuotationMark    DqStringCharacter* GStringQuotationMark
-    |   SqStringQuotationMark   SqStringCharacter* SqStringQuotationMark
+    :   GStringQuotationMark  DqStringCharacter*  GStringQuotationMark
+    |   SqStringQuotationMark  SqStringCharacter*  SqStringQuotationMark
+    |   Slash { this.isRegexAllowed() && _input.LA(1) != '*' }?  SlashyStringCharacter+  Slash
 
-    |   Slash      { this.isRegexAllowed() && _input.LA(1) != '*' }?
-                 SlashyStringCharacter+       Slash
-
-    |   TdqStringQuotationMark  TdqStringCharacter*    TdqStringQuotationMark
-    |   TsqStringQuotationMark  TsqStringCharacter*    TsqStringQuotationMark
-    |   DollarSlashyGStringQuotationMarkBegin   DollarSlashyStringCharacter+   DollarSlashyGStringQuotationMarkEnd
+    |   TdqStringQuotationMark  TdqStringCharacter*  TdqStringQuotationMark
+    |   TsqStringQuotationMark  TsqStringCharacter*  TsqStringQuotationMark
+    |   DollarSlashyGStringQuotationMarkBegin  DollarSlashyStringCharacter+  DollarSlashyGStringQuotationMarkEnd
     ;
 
-// Groovy gstring
 GStringBegin
     :   GStringQuotationMark DqStringCharacter* Dollar -> pushMode(DQ_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE)
     ;
@@ -376,9 +380,9 @@ fragment SlashyStringCharacter
     |   ~[/$\u0000]
     ;
 
-// character in the collar slashy string. e.g. $/a/$
+// character in the dollar slashy string. e.g. $/a/$
 fragment DollarSlashyStringCharacter
-    :   SlashEscape | DollarSlashEscape | DollarDollarEscape
+    :   DollarSlashEscape | DollarDollarEscape
     |   Slash { _input.LA(1) != '$' }?
     |   Dollar { !isFollowedByJavaLetterInGString(_input) }?
     |   ~[/$\u0000]
@@ -491,10 +495,10 @@ IntegerLiteral
         |   HexIntegerLiteral
         |   OctalIntegerLiteral
         |   BinaryIntegerLiteral
-        ) (Underscore { require(false, "Number ending with underscores is invalid", -1, true); })?
+        ) (Underscore { require(errorIgnored, "Number ending with underscores is invalid", -1, true); })?
 
     // !!! Error Alternative !!!
-    |   Zero ([0-9] { invalidDigitCount++; })+ { require(false, "Invalid octal number", -(invalidDigitCount + 1), true); } IntegerTypeSuffix?
+    |   Zero ([0-9] { invalidDigitCount++; })+ { require(errorIgnored, "Invalid octal number", -(invalidDigitCount + 1), true); } IntegerTypeSuffix?
     ;
 
 fragment
@@ -633,12 +637,12 @@ BinaryDigitOrUnderscore
 FloatingPointLiteral
     :   (   DecimalFloatingPointLiteral
         |   HexadecimalFloatingPointLiteral
-        ) (Underscore { require(false, "Number ending with underscores is invalid", -1, true); })?
+        ) (Underscore { require(errorIgnored, "Number ending with underscores is invalid", -1, true); })?
     ;
 
 fragment
 DecimalFloatingPointLiteral
-    :   Digits Dot Digits ExponentPart? FloatTypeSuffix?
+    :   Digits? Dot Digits ExponentPart? FloatTypeSuffix?
     |   Digits ExponentPart FloatTypeSuffix?
     |   Digits FloatTypeSuffix
     ;
@@ -800,7 +804,7 @@ DollarSlashyGStringQuotationMarkEnd
 
 fragment
 DollarSlashEscape
-    :   '$/$'
+    :   '$/'
     ;
 
 fragment
@@ -980,10 +984,10 @@ SL_COMMENT
 // Script-header comments.
 // The very first characters of the file may be "#!".  If so, ignore the first line.
 SH_COMMENT
-    :   '#!' { require(0 == this.tokenIndex, "Shebang comment should appear at the first line", -2, true); } ShCommand (LineTerminator '#!' ShCommand)* -> skip
+    :   '#!' { require(errorIgnored || 0 == this.tokenIndex, "Shebang comment should appear at the first line", -2, true); } ShCommand (LineTerminator '#!' ShCommand)* -> skip
     ;
 
 // Unexpected characters will be handled by groovy parser later.
 UNEXPECTED_CHAR
-    :   .
+    :   . { require(errorIgnored, "Unexpected character: '" + getText().replace("'", "\\'") + "'", -1, false); }
     ;

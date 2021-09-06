@@ -40,6 +40,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.classgen.Verifier;
@@ -221,11 +222,11 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             }
         }
 
-        // GRECLIPSE add -- GROOVY-10106
+        // add fields
         for (FieldNode field : fields) {
             processField(field, initializer, staticInitializer, fieldHelper, helper, staticFieldHelper, cNode, fieldNames);
         }
-        // GRECLIPSE end
+
         // add methods
         List<MethodNode> methods = new ArrayList<>(cNode.getMethods());
         List<MethodNode> nonPublicAPIMethods = new LinkedList<>();
@@ -263,13 +264,6 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         // GRECLIPSE add
         cNode.putNodeMetaData("trait.methods", nonPublicAPIMethods);
         // GRECLIPSE end
-
-        // add fields
-        /* GRECLIPSE edit
-        for (FieldNode field : fields) {
-            processField(field, initializer, staticInitializer, fieldHelper, helper, staticFieldHelper, cNode, fieldNames);
-        }
-        */
 
         // copy statements from static and instance init blocks
         if (staticInitStatements != null) {
@@ -642,10 +636,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         ClassNode type;
         if (isStatic) {
             // Class<TraitClass>
-            type = ClassHelper.CLASS_Type.getPlainNodeReference();
-            type.setGenericsTypes(new GenericsType[]{
-                    new GenericsType(rawType)
-            });
+            type = GenericsUtils.makeClassSafe0(ClassHelper.CLASS_Type, new GenericsType(rawType));
         } else {
             // TraitClass
             type = rawType;

@@ -449,13 +449,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             // parsing have to wait util clearing is complete.
             AtnManager.READ_LOCK.lock();
             try {
-                result = buildCST(PredictionMode.SLL);
-            } catch (Throwable t) {
-                // if some syntax error occurred in the lexer, no need to retry the powerful LL mode
-                if (t instanceof GroovySyntaxError && GroovySyntaxError.LEXER == ((GroovySyntaxError) t).getSource()) {
-                    throw t;
-                }
-
                 result = buildCST(PredictionMode.LL);
             } finally {
                 AtnManager.READ_LOCK.unlock();
@@ -469,14 +462,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private GroovyParserRuleContext buildCST(PredictionMode predictionMode) {
         parser.getInterpreter().setPredictionMode(predictionMode);
-
+        /* GRECLIPSE edit
         if (PredictionMode.SLL.equals(predictionMode)) {
             this.removeErrorListeners();
         } else {
             parser.getInputStream().seek(0);
+        */
             this.addErrorListeners();
-        }
-
+        /*}*/
+        // GRECLIPSE end
         return parser.compilationUnit();
     }
 
