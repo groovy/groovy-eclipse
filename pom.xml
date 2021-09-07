@@ -126,7 +126,7 @@
 				<repository>
 					<id>2021-09-M3</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.21-I-builds/I20210825-1800</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.21-I-builds/I20210901-1800</url>
 				</repository>
 			</repositories>
 			<modules>
