@@ -228,7 +228,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         }
 
         // "def " or "var " or "final " something
-        if (node == ClassHelper.DYNAMIC_TYPE && length >= 3 && String.valueOf(contents, start, length).matches("def|var|final")) {
+        if (length >= 3 && String.valueOf(contents, start, length).matches("def|var|final")) {
             return true;
         }
 

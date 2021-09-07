@@ -957,7 +957,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O(aa: 1, bb:8)";
+            "new O(aa: 1, bb:8)\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -977,7 +977,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O([aa: 1, bb:8])";
+            "new O([aa: 1, bb:8])\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -997,7 +997,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O([8: 1, bb:8])";
+            "new O([8: 1, bb:8])\n";
 
         int start = contents.lastIndexOf("bb");
         int end = start + "bb".length();
@@ -1012,7 +1012,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O([aa: 1, bb:8], 9)";
+            "new O([aa: 1, bb:8], 9)\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -1032,7 +1032,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O(9, [aa: 1, bb:8])";
+            "new O(9, [aa: 1, bb:8])\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -1052,7 +1052,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "def g = [aa: 1, bb:8]";
+            "def g = [aa: 1, bb:8]\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -1072,8 +1072,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  C() {\n" +
             "    this()\n" +
             "  }\n" +
-            "}";
-
+            "}\n";
         assertType(contents, "this()", "java.lang.Void");
         assertDeclaringType(contents, "this()", "C");
     }
@@ -1085,8 +1084,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  C() {\n" +
             "    super()\n" +
             "  }\n" +
-            "}";
-
+            "}\n";
         assertType(contents, "super()", "java.lang.Void");
         assertDeclaringType(contents, "super()", "java.util.HashMap");
     }
@@ -1099,7 +1097,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "    this\n" +
             "    super\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "this", "java.lang.Class<A>");
         assertType(contents, "super", "java.lang.Object");
     }
@@ -1114,7 +1112,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "    this\n" +
             "    super\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "this", "java.lang.Class<B>");
         assertType(contents, "super", "java.lang.Class<A>");
     }
@@ -1129,7 +1127,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1143,7 +1141,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    this.field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1157,7 +1155,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    this.@field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1171,7 +1169,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    super.field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1185,7 +1183,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    super.@field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1199,7 +1197,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1213,7 +1211,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    this.field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1227,7 +1225,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    this.@field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1241,7 +1239,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    super.field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1255,7 +1253,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    super.@field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "field", "java.lang.Number");
     }
 
@@ -1269,7 +1267,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "field");
     }
 
@@ -1283,7 +1281,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    this.field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "field");
     }
 
@@ -1297,7 +1295,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    this.@field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "field");
     }
 
@@ -1311,7 +1309,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    super.field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "field");
     }
 
@@ -1325,7 +1323,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    super.@field\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "field");
     }
 
@@ -1339,7 +1337,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def x() {\n" +
             "    FIRST\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "FIRST", "java.lang.Integer");
     }
 
@@ -1358,7 +1356,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "  Baz(int num) {\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "CONST", "java.lang.Integer");
     }
 
@@ -1377,7 +1375,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  Baz() {\n" +
             "    super(CONST)\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "CONST", "java.lang.Integer");
     }
 
@@ -1398,7 +1396,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "  private static int select(int one, int two) {\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "CONST", "java.lang.Integer");
     }
 
@@ -1412,7 +1410,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    value\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "value", "java.lang.Number");
     }
 
@@ -1426,7 +1424,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    this.value\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "value", "java.lang.Number");
     }
 
@@ -1440,7 +1438,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    this.@value\n" + // no such field
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "value");
     }
 
@@ -1454,7 +1452,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    super.value\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "value", "java.lang.Number");
     }
 
@@ -1468,7 +1466,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def method() {\n" +
             "    super.@value\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "value");
     }
 
@@ -1484,9 +1482,10 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  void test() {\n" +
                 "    " + qual + "value\n" +
                 "  }\n" +
-                "}";
+                "}\n";
             int offset = contents.lastIndexOf("value");
-            assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
+            assertDeclaration(contents, offset, offset + 5, "A", qual.startsWith("super") ? "getValue" : "isValue", DeclarationKind.METHOD);
+            // TODO: GROOVY-6097                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         }
     }
 
@@ -1498,16 +1497,16 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  boolean isValue() {}\n" +
                 "}\n" +
                 "class B extends A {\n" +
-                "  boolean getValue() {}\n" +
+                "  boolean getValue() {}\n" + // TODO: warning
                 "  void test() {\n" +
                 "    " + qual + "value\n" +
                 "  }\n" +
-                "}";
+                "}\n";
             int offset = contents.lastIndexOf("value");
             if (qual.startsWith("super")) {
                 assertUnknownConfidence(contents, offset, offset + 5);
             } else {
-                assertDeclaration(contents, offset, offset + 5, "B", "getValue", DeclarationKind.METHOD);
+                assertDeclaration(contents, offset, offset + 5, "A", "isValue", DeclarationKind.METHOD);
             }
         }
     }
@@ -1520,17 +1519,13 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  boolean value\n" +
                 "}\n" +
                 "class B extends A {\n" +
-                "  boolean getValue() {}\n" +
+                "  boolean getValue() {}\n" + // TODO: warning
                 "  void test() {\n" +
                 "    " + qual + "value\n" +
                 "  }\n" +
-                "}";
+                "}\n";
             int offset = contents.lastIndexOf("value");
-            if (qual.startsWith("super")) {
-                assertDeclaration(contents, offset, offset + 5, "A", "value", DeclarationKind.PROPERTY);
-            } else {
-                assertDeclaration(contents, offset, offset + 5, "B", "getValue", DeclarationKind.METHOD);
-            }
+            assertDeclaration(contents, offset, offset + 5, "A", "value", DeclarationKind.PROPERTY);
         }
     }
 
@@ -1546,7 +1541,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  void test() {\n" +
                 "    " + qual + "value\n" +
                 "  }\n" +
-                "}";
+                "}\n";
             int offset = contents.lastIndexOf("value");
             assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
         }
@@ -1565,7 +1560,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 "    " + qual + "value\n" +
                 "    " + qual + "isValue()\n" +
                 "  }\n" +
-                "}";
+                "}\n";
             assertUnknown(contents, "isValue");
             int offset = contents.lastIndexOf("value");
             assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
@@ -1585,7 +1580,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 "    " + qual + "value\n" +
                 "    " + qual + "getValue()\n" +
                 "  }\n" +
-                "}";
+                "}\n";
             assertUnknown(contents, "getValue");
             if (qual.startsWith("super")) {
                 assertUnknown(contents, "value");
@@ -1609,7 +1604,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 "    " + qual + "value\n" +
                 "    " + qual + "getValue()\n" +
                 "  }\n" +
-                "}";
+                "}\n";
             int offset = contents.lastIndexOf("value");
             assertDeclaration(contents, offset, offset + 5, "A", "value", DeclarationKind.PROPERTY);
             /**/offset = contents.lastIndexOf("getValue");
@@ -1652,7 +1647,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertDeclaringType(contents, "method", "A");
     }
 
@@ -1666,7 +1661,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "method");
     }
 
@@ -1680,7 +1675,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    this.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertUnknown(contents, "method");
     }
 
@@ -1694,7 +1689,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    super.method()\n" + // this is ok
             "  }\n" +
-            "}";
+            "}\n";
         assertDeclaringType(contents, "method", "A");
     }
 
@@ -1708,7 +1703,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    super.&method\n" + // GROOVY-8999: resolves to MethodClosure, but it NPEs when called
             "  }\n" +
-            "}";
+            "}\n";
         assertDeclaringType(contents, "method", "A");
     }
 
@@ -1721,7 +1716,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "      super.intValue()\n" + // resolve "super" from non-static scope within static scope
             "    }\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertType(contents, "super", "java.lang.Number");
         assertDeclaringType(contents, "intValue", "java.lang.Number");
     }
@@ -1736,7 +1731,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "      super.hashCode()\n" +
             "    }\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertDeclaringType(contents, "run", "java.lang.Runnable");
         assertType(contents, "super", "java.lang.Runnable");
         assertDeclaringType(contents, "hashCode", "java.lang.Object");
@@ -1751,7 +1746,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "      super.hashCode()\n" +
             "    }\n" +
             "  }\n" +
-            "}";
+            "}\n";
         assertDeclaringType(contents, "hashCode", "java.lang.Object");
         assertType(contents, "super", "groovy.lang.GroovyObject");
     }
@@ -2497,7 +2492,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-5136
-    public void testCategoryMethod() {
+    public void testCategoryMethod1() {
         String contents =
             "class Cat {\n" +
             "  static int f(String self, int x) {}\n" +
@@ -2523,7 +2518,25 @@ public final class InferencingTests extends InferencingTestSuite {
             "  'x'.notWorking\n" +
             "}\n";
         assertType(contents, "working", "java.lang.Boolean");
-        assertUnknown(contents, "notWorking"); // TODO: assertType(contents, "notWorking", "java.lang.Boolean");
+        if (isAtLeastGroovy(40)) {
+            assertType(contents, "notWorking", "java.lang.Boolean");
+        } else {
+            assertUnknown(contents, "notWorking");
+        }
+    }
+
+    @Test // GROOVY-5245, GROOVY-10133
+    public void testCategoryMethod3() {
+        String contents =
+            "class Cat {\n" +
+            "  static boolean isAbc(self) {}\n" +
+            "  static boolean getAbc(self) {}\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  abc\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("abc");
+        assertDeclaration(contents, offset, offset + 3, "Cat", isAtLeastGroovy(40) ? "isAbc" : "getAbc", DeclarationKind.METHOD);
     }
 
     @Test // GROOVY-5609

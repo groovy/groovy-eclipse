@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -669,12 +670,12 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(offset, match.getOffset());
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1027
+    @Test
     public void testExplicitPropertyGetterSearch4() throws Exception {
         GroovyCompilationUnit bar = createUnit("foo", "Bar",
             "package foo\n" +
             "class Bar {\n" +
-            "//static Boolean bool\n" + //TODO
+            "//static Boolean bool\n" +
             "  static Boolean isBool() {}\n" +
             "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
@@ -683,18 +684,18 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "import static foo.Bar.isBool as isXy\n" + // exact
             "flag = Bar.isBool()\n" + // exact
             "flag = Bar.'isBool'()\n" + // exact
-            "flag = Bar.bool\n" + // exact
+            "flag = Bar.bool\n" +
             "flag = Bar.@bool\n" +
-            "func = Bar.&isBool\n" + // potential (may evaluate as category method)
+            "func = Bar.&isBool\n" + // potential (may evaluate category method)
             "flag = blah()\n" + // exact
-            "flag = xy\n"); // exact
+            "flag = xy\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
         List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
             SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
-        assertEquals(8, matches.size());
+        assertEquals(isAtLeastGroovy(40) ? 6 : 7, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("isBool as blah"), matches.get(0).getOffset());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
@@ -704,14 +705,10 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("'isBool'"), matches.get(3).getOffset());
 
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(4).getAccuracy());
-        assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.bool") + 4, matches.get(4).getOffset());
-        assertEquals(SearchMatch.A_INACCURATE, matches.get(5).getAccuracy());
-        assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.&isBool") + 5, matches.get(5).getOffset());
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(6).getAccuracy());
-        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("blah"), matches.get(6).getOffset());
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(7).getAccuracy());
-        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("xy"), matches.get(7).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(4).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.&isBool") + 5, matches.get(4).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(5).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("blah"), matches.get(5).getOffset());
     }
 
     @Test

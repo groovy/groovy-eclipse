@@ -69,6 +69,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.codehaus.groovy.ast.ClassHelper.isClassType;
+import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
@@ -118,7 +120,7 @@ public abstract class TraitComposer {
 
     private static void checkTraitAllowed(final ClassNode bottomTrait, final SourceUnit unit) {
         ClassNode superClass = bottomTrait.getSuperClass();
-        if (superClass==null || ClassHelper.OBJECT_TYPE.equals(superClass)) return;
+        if (superClass==null || isObjectType(superClass)) return;
         if (!Traits.isTrait(superClass)) {
             unit.addError(new SyntaxException("A trait can only inherit from another trait", superClass.getLineNumber(), superClass.getColumnNumber()));
         }
@@ -340,7 +342,7 @@ public abstract class TraitComposer {
         Expression forwardExpression = noCastRequired ? mce : new CastExpression(fixedReturnType,mce);
         // we could rely on the first parameter name ($static$self) but that information is not
         // guaranteed to be always present
-        boolean isHelperForStaticMethod = helperMethodParams[0].getOriginType().equals(ClassHelper.CLASS_Type);
+        boolean isHelperForStaticMethod = isClassType(helperMethodParams[0].getOriginType());
         if (helperMethod.isPrivate() && !isHelperForStaticMethod) {
             // GROOVY-7213: do not create forwarder for private methods
             return;
@@ -549,7 +551,7 @@ public abstract class TraitComposer {
                 args
         );
         Statement result;
-        if (ClassHelper.VOID_TYPE.equals(forwarderMethod.getReturnType())) {
+        if (forwarderMethod.isVoidMethod()) {
             BlockStatement stmt = new BlockStatement();
             stmt.addStatement(new ExpressionStatement(delegateCall));
             stmt.addStatement(new ReturnStatement(new ConstantExpression(null)));

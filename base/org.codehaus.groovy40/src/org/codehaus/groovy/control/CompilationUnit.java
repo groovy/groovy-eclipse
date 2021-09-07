@@ -279,8 +279,7 @@ public class CompilationUnit extends ProcessingUnit {
 
             // create the file and write out the data
             try (FileOutputStream stream = new FileOutputStream(path)) {
-                byte[] bytes = groovyClass.getBytes();
-                stream.write(bytes, 0, bytes.length);
+                stream.write(groovyClass.getBytes());
             } catch (IOException e) {
                 getErrorCollector().addError(Message.create(e.getMessage(), this));
             }

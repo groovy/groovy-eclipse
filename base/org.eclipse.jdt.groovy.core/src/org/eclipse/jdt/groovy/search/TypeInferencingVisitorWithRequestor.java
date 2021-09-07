@@ -307,6 +307,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (!node.isEnum()) {
                 visitGenericTypes(node);
                 visitClassReference(node.getUnresolvedSuperClass());
+                node.getPermittedSubclasses().forEach(this::visitClassReference);
             }
             for (ClassNode face : node.getInterfaces()) {
                 visitClassReference(face);
@@ -601,9 +602,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VisitStatus status = notifyRequestor(type, requestor, result);
         switch (status) {
         case CONTINUE:
-            if (!type.isEnum()) {
-                visitGenericTypes(type);
-            }
+            if (!type.isEnum()) visitGenericTypes(type);
+            visitAnnotations(type.getTypeAnnotations());
             // fall through
         case CANCEL_BRANCH:
             return;

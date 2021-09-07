@@ -224,7 +224,7 @@ class StaticConstantExpression extends ConstantExpression {
 
     @Override
     public void setType(ClassNode type) {
-        if (!isNullExpression() && getType() == ClassHelper.DYNAMIC_TYPE) {
+        if (!isNullExpression() && ClassHelper.isDynamicTyped(getType())) {
             super.setType(type); // allow one-time initialization
         } else {
             throw new GroovyBugError("Attempt to change static constant expression: " + getText());

@@ -1438,6 +1438,31 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('p'), 1, PARAMETER))
     }
 
+    @Test
+    void testSealedClass() {
+        assumeTrue(isAtLeastGroovy(40) && isParrotParser())
+
+        String contents = '''\
+            |sealed class Foo permits Bar,Baz {
+            |}
+            |non-sealed class Bar extends Foo {
+            |}
+            |class Baz {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Baz'), 3, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Bar'), 3, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Baz'), 3, CLASS)/*,
+            new HighlightedTypedPosition(contents.indexOf('sealed'), 6, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('permits'), 7, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('non-sealed'), 10, RESERVED)*/)
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-9630
     void testVarKeyword0() {
         String contents = '''\

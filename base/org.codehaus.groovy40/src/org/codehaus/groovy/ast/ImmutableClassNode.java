@@ -84,6 +84,12 @@ public class ImmutableClassNode extends ClassNode {
     // ClassNode overrides:
 
     @Override
+    public void addTypeAnnotation(AnnotationNode an) {}
+
+    @Override
+    public void addTypeAnnotations(List<AnnotationNode> l) {}
+
+    @Override
     public List<MethodNode> getDeclaredMethods(String name) {
         if (lazyInitDone && !writeProtected) {
             synchronized (methods) {
@@ -134,6 +140,9 @@ public class ImmutableClassNode extends ClassNode {
 
     @Override
     public void setNameStart2(int i) {}
+
+    //@Override
+    public void setPermittedSubclasses(List<ClassNode> l) {}
 
     //public void setRedirect(ClassNode cn) {}
 

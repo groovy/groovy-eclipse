@@ -270,6 +270,7 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
     }
 
     private static String getPrintName(ClassNode cn) {
+        /* GRECLIPSE edit
         StringBuilder ret = new StringBuilder(cn.getName());
         GenericsType[] gts = cn.getGenericsTypes();
         if (gts != null) {
@@ -281,5 +282,8 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
             ret.append(">");
         }
         return ret.toString();
+        */
+        return cn.toString(false);
+        // GRECLIPSE end
     }
 }

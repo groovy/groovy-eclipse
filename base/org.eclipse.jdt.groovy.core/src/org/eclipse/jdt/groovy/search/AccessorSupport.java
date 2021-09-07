@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.eclipse.jdt.groovy.core.util.GroovyUtils;
  * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
  */
 public enum AccessorSupport {
-    GETTER("get"), SETTER("set"), ISSER("is"), NONE("");
+    ISSER("is"), GETTER("get"), SETTER("set"), NONE("");
 
     AccessorSupport(String prefix) {
         this.prefix = prefix;
@@ -52,9 +52,9 @@ public enum AccessorSupport {
         case GETTER:
             return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && !node.isVoidMethod();
         case SETTER:
-            return parameters != null && parameters.length == (!isCategory ? 1 : 2) && (!isCategory || !isVargs(parameters));
+            return (parameters != null && parameters.length == (!isCategory ? 1 : 2)) && (!isCategory || !isVargs(parameters));
         case ISSER:
-            return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && ClassHelper.boolean_TYPE == ClassHelper.getUnwrapper(node.getReturnType());
+            return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && node.getReturnType().equals(ClassHelper.boolean_TYPE);
         default:
             return false;
         }
@@ -89,7 +89,7 @@ public enum AccessorSupport {
     }
 
     public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory) {
-        return findAccessorMethodForPropertyName(name, declaringType, isCategory, GETTER, ISSER, SETTER);
+        return findAccessorMethodForPropertyName(name, declaringType, isCategory, ISSER, GETTER, SETTER);
     }
 
     public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport... kinds) {

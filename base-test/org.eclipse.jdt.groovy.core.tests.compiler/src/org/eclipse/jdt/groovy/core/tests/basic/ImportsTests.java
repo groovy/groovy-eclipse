@@ -380,6 +380,44 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testStaticImport5() {
+        for (String kind : new String[] {"get", "is"}) {
+            //@formatter:off
+            String[] sources = {
+                "script.groovy",
+                "import static a.B." + kind + "C\n" +
+                "print c\n", // converted to accessor
+
+                "a/B.groovy",
+                "package a\n" +
+                "class B {\n" +
+                "  static boolean c = true\n" +
+                "}",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "true");
+        }
+
+        //@formatter:off
+        String[] sources = {
+            "script.groovy",
+            "import static a.B.setC\n" +
+            "c = true\n" +
+            "print a.B.c\n",
+
+            "a/B.groovy",
+            "package a\n" +
+            "class B {\n" +
+            "  static boolean c\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test
     public void testStaticImports_JtoG() {
         //@formatter:off
         String[] sources = {

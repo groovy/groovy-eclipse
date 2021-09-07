@@ -50,9 +50,12 @@ import java.util.Set;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
+import static org.codehaus.groovy.ast.ClassHelper.SEALED_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveBoolean;
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveVoid;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_ANNOTATION;
-import static groovyjarjarasm.asm.Opcodes.ACC_BRIDGE;
 import static groovyjarjarasm.asm.Opcodes.ACC_ENUM;
 import static groovyjarjarasm.asm.Opcodes.ACC_INTERFACE;
 import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
@@ -167,6 +170,8 @@ public class ClassNode extends AnnotatedNode {
     private ClassNode superClass;
     protected boolean isPrimaryNode;
     protected List<InnerClassNode> innerClasses;
+    private List<ClassNode> permittedSubclasses = new ArrayList<>(4);
+    private List<AnnotationNode> typeAnnotations = Collections.emptyList();
 
     /**
      * The AST Transformations to be applied during compilation.
@@ -431,6 +436,24 @@ public class ClassNode extends AnnotatedNode {
             redirect.setInterfaces(interfaces);
         } else {
             this.interfaces = interfaces;
+        }
+    }
+
+    /**
+     * @return permitted subclasses of sealed type
+     */
+    public List<ClassNode> getPermittedSubclasses() {
+        if (redirect != null)
+            return redirect.getPermittedSubclasses();
+        lazyClassInit();
+        return permittedSubclasses;
+    }
+
+    public void setPermittedSubclasses(List<ClassNode> permittedSubclasses) {
+        if (redirect != null) {
+            redirect.setPermittedSubclasses(permittedSubclasses);
+        } else {
+            this.permittedSubclasses = permittedSubclasses;
         }
     }
 
@@ -844,7 +867,7 @@ public class ClassNode extends AnnotatedNode {
     }
 
     private MethodNode getOrAddStaticConstructorNode() {
-        MethodNode method = null;
+        MethodNode method;
         List<MethodNode> declaredMethods = getDeclaredMethods("<clinit>");
         if (declaredMethods.isEmpty()) {
             method = addMethod("<clinit>", ACC_STATIC, ClassHelper.VOID_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, new BlockStatement());
@@ -963,10 +986,10 @@ public class ClassNode extends AnnotatedNode {
      * @return true if this node is derived from the given ClassNode
      */
     public boolean isDerivedFrom(ClassNode type) {
-        if (this.equals(ClassHelper.VOID_TYPE)) {
-            return type.equals(ClassHelper.VOID_TYPE);
+        if (isPrimitiveVoid(this)) {
+            return isPrimitiveVoid(type);
         }
-        if (type.equals(ClassHelper.OBJECT_TYPE)) {
+        if (isObjectType(type)) {
             return true;
         }
         ClassNode node = this;
@@ -1194,14 +1217,13 @@ public class ClassNode extends AnnotatedNode {
         MethodNode getterMethod = null;
         boolean booleanReturnOnly = getterName.startsWith("is");
         for (MethodNode method : getDeclaredMethods(getterName)) {
-            if (getterName.equals(method.getName())
-                    && method.getParameters().length == 0 && !method.isVoidMethod()
-                    && (!booleanReturnOnly || ClassHelper.Boolean_TYPE.equals(ClassHelper.getWrapper(method.getReturnType())))) {
+            if (method.getName().equals(getterName) && method.getParameters().length == 0
+                    && (booleanReturnOnly ? isPrimitiveBoolean(method.getReturnType()) : !method.isVoidMethod())) {
                 // GROOVY-7363: There can be multiple matches for a getter returning a generic parameter type, due to
                 // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
                 // has the most specific and exact return type of the two. Picking the bridge method results in loss of
                 // type information, as it down-casts the return type to the lower bound of the generic parameter.
-                if (getterMethod == null || (getterMethod.getModifiers() & (ACC_BRIDGE | ACC_SYNTHETIC)) != 0) {
+                if (getterMethod == null || (getterMethod.getModifiers() & ACC_SYNTHETIC) != 0) {
                     getterMethod = method;
                 }
             }
@@ -1272,26 +1294,20 @@ public class ClassNode extends AnnotatedNode {
         return toString(true);
     }
 
-    public String toString(boolean showRedirect) {
+    public String toString(final boolean showRedirect) {
         if (isArray()) {
             return getComponentType().toString(showRedirect) + "[]";
         }
         boolean placeholder = isGenericsPlaceHolder();
         StringBuilder ret = new StringBuilder(!placeholder ? getName() : getUnresolvedName());
         GenericsType[] genericsTypes = getGenericsTypes();
-        if (!placeholder && genericsTypes != null && genericsTypes.length > 0) {
-            /* GRECLIPSE edit -- GROOVY-9800
-            ret.append(" <");
-            ret.append(stream(genericsTypes).map(this::genericTypeAsString).collect(joining(", ")));
-            ret.append(">");
-             */
+        if (!placeholder && genericsTypes != null) {
             ret.append('<');
             for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
                 if (i != 0) ret.append(", ");
                 ret.append(genericsTypes[i]);
             }
             ret.append('>');
-            // GRECLIPSE end
         }
         if (showRedirect && redirect != null) {
             ret.append(" -> ").append(redirect);
@@ -1418,6 +1434,10 @@ public class ClassNode extends AnnotatedNode {
         return (getModifiers() & ACC_ABSTRACT) != 0;
     }
 
+    public boolean isSealed() {
+        return !getAnnotations(SEALED_TYPE).isEmpty() || !getPermittedSubclasses().isEmpty();
+    }
+
     public boolean isResolved() {
         if (clazz != null) return true;
         if (redirect != null) return redirect.isResolved();
@@ -1500,8 +1520,8 @@ public class ClassNode extends AnnotatedNode {
         this.usesGenerics = usesGenerics;
     }
 
-    public ClassNode getPlainNodeReference() {
-        if (ClassHelper.isPrimitiveType(this)) return this;
+    public ClassNode getPlainNodeReference(boolean skipPrimitives) {
+        if (skipPrimitives && ClassHelper.isPrimitiveType(this)) return this;
         ClassNode n = new ClassNode(name, modifiers, superClass, null, null);
         n.isPrimaryNode = false;
         n.setRedirect(redirect());
@@ -1509,6 +1529,10 @@ public class ClassNode extends AnnotatedNode {
             n.componentType = redirect().getComponentType();
         }
         return n;
+    }
+
+    public ClassNode getPlainNodeReference() {
+        return getPlainNodeReference(true);
     }
 
     public boolean isAnnotationDefinition() {
@@ -1585,6 +1609,35 @@ public class ClassNode extends AnnotatedNode {
     @Override
     public String getText() {
         return getName();
+    }
+
+    public List<AnnotationNode> getTypeAnnotations() {
+        return typeAnnotations;
+    }
+
+    public List<AnnotationNode> getTypeAnnotations(ClassNode type) {
+        List<AnnotationNode> ret = new ArrayList<>(typeAnnotations.size());
+        for (AnnotationNode node : typeAnnotations) {
+            if (type.equals(node.getClassNode())) {
+                ret.add(node);
+            }
+        }
+        return ret;
+    }
+
+    public void addTypeAnnotation(AnnotationNode annotation) {
+        if (annotation != null) {
+            if (typeAnnotations == Collections.EMPTY_LIST) {
+                typeAnnotations = new ArrayList<>(3);
+            }
+            typeAnnotations.add(annotation);
+        }
+    }
+
+    public void addTypeAnnotations(List<AnnotationNode> annotations) {
+        for (AnnotationNode annotation : annotations) {
+            addTypeAnnotation(annotation);
+        }
     }
 
     // GRECLIPSE add

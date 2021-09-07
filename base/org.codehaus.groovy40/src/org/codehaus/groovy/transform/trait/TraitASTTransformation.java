@@ -40,6 +40,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.classgen.Verifier;
@@ -63,6 +64,8 @@ import java.util.Set;
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 import static org.apache.groovy.util.BeanUtils.capitalize;
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveBoolean;
+import static org.codehaus.groovy.ast.ClassHelper.isWrapperBoolean;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.block;
@@ -76,7 +79,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.transform.trait.SuperCallTraitTransformer.UNRESOLVED_HELPER_CLASS;
-
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
 import static groovyjarjarasm.asm.Opcodes.ACC_INTERFACE;
@@ -101,7 +103,8 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     public static final String POST_TYPECHECKING_REPLACEMENT = TraitReceiverTransformer.class + ".replacement";
 
     private static final ClassNode INVOKERHELPER_CLASSNODE = ClassHelper.make(InvokerHelper.class);
-    private static final ClassNode OVERRIDE_CLASSNODE = ClassHelper.make(Override.class);
+    private static final ClassNode OVERRIDE_CLASSNODE = ClassHelper.OVERRIDE_TYPE;
+    private static final ClassNode SEALED_CLASSNODE = ClassHelper.SEALED_TYPE;
 
     private SourceUnit sourceUnit;
     private CompilationUnit compilationUnit;
@@ -229,11 +232,11 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             }
         }
 
-        // GRECLIPSE add -- GROOVY-10106
+        // add fields
         for (FieldNode field : fields) {
             processField(field, initializer, staticInitializer, fieldHelper, helper, staticFieldHelper, cNode, fieldNames);
         }
-        // GRECLIPSE end
+
         // add methods
         List<MethodNode> methods = new ArrayList<>(cNode.getMethods());
         List<MethodNode> nonPublicAPIMethods = new LinkedList<>();
@@ -271,13 +274,6 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         // GRECLIPSE add
         cNode.putNodeMetaData("trait.methods", nonPublicAPIMethods);
         // GRECLIPSE end
-
-        // add fields
-        /* GRECLIPSE edit
-        for (FieldNode field : fields) {
-            processField(field, initializer, staticInitializer, fieldHelper, helper, staticFieldHelper, cNode, fieldNames);
-        }
-        */
 
         // copy statements from static and instance init blocks
         if (staticInitStatements != null) {
@@ -385,7 +381,8 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     private static void copyClassAnnotations(final ClassNode cNode, final ClassNode helper) {
         List<AnnotationNode> annotations = cNode.getAnnotations();
         for (AnnotationNode annotation : annotations) {
-            if (!annotation.getClassNode().equals(Traits.TRAIT_CLASSNODE)) {
+            if (!annotation.getClassNode().equals(Traits.TRAIT_CLASSNODE)
+                    && !annotation.getClassNode().equals(SEALED_CLASSNODE)) {
                 helper.addAnnotation(annotation);
             }
         }
@@ -420,7 +417,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         Statement getterBlock = node.getGetterBlock();
         if (getterBlock == null) {
             MethodNode getter = cNode.getGetterMethod(getterName);
-            if (getter == null && node.getType().equals(ClassHelper.boolean_TYPE)) {
+            if (getter == null && isPrimitiveBoolean(node.getType())) {
                 getter = cNode.getGetterMethod("is" + capitalize(name));
             }
             if (!node.isPrivate() && methodNeedsReplacement(cNode, getter)) {
@@ -446,7 +443,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             getter.setSynthetic(true);
             cNode.addMethod(getter);
 
-            if (node.getGetterName() == null && getterName.startsWith("get") && (node.getType().equals(ClassHelper.boolean_TYPE) || node.getType().equals(ClassHelper.Boolean_TYPE))) {
+            if (node.getGetterName() == null && getterName.startsWith("get") && (isPrimitiveBoolean(node.getType()) || isWrapperBoolean(node.getType()))) {
                 MethodNode secondGetter = new MethodNode("is" + capitalize(name), propNodeModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
                 if (methodNeedsReplacement(cNode, secondGetter)) {
                     // GRECLIPSE add
@@ -645,10 +642,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         ClassNode type;
         if (isStatic) {
             // Class<TraitClass>
-            type = ClassHelper.CLASS_Type.getPlainNodeReference();
-            type.setGenericsTypes(new GenericsType[]{
-                    new GenericsType(rawType)
-            });
+            type = GenericsUtils.makeClassSafe0(ClassHelper.CLASS_Type, new GenericsType(rawType));
         } else {
             // TraitClass
             type = rawType;

@@ -90,7 +90,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                     if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) &&
                             hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType()) &&
                             (isStatic || !GeneralUtils.isOrImplements(selfType, VariableScope.MAP_CLASS_NODE)) &&
-                            (isDefaultCategory || !methodName.startsWith("is"))) { // GROOVY-5245
+                            (isDefaultCategory || !methodName.startsWith("is") || // GROOVY-5245
+                                GroovyUtils.getGroovyVersion().getMajor() > 3)) {
                         // add property variant of accessor category method
                         CategoryPropertyProposal proposal = new CategoryPropertyProposal(method);
                         proposal.setRelevanceMultiplier(tweakRelevance(method, selfType));

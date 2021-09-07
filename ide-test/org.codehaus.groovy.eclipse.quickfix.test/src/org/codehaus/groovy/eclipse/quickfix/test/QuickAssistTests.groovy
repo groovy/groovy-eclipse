@@ -20,6 +20,7 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
+import static org.junit.Assume.assumeTrue
 
 import groovy.transform.NotYetImplemented
 
@@ -464,11 +465,15 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testReplaceDef2() {
+        assumeTrue(isParrotParser())
+
         assertConversion(
-            'int bar = 1; def foo = bar',
+            'int bar = 1; var foo = bar',
             'int bar = 1; int foo = bar',
-            16, 0, new ReplaceDefWithStaticTypeProposal())
+            13, 0, new ReplaceDefWithStaticTypeProposal())
     }
+
+    // TODO: retain comments, modifiers, and annotations
 
     @Test
     void testReplaceDef3() {

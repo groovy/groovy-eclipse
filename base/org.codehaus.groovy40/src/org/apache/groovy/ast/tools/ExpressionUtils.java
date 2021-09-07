@@ -35,6 +35,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
+import static org.codehaus.groovy.ast.ClassHelper.isStringType;
+import static org.codehaus.groovy.ast.ClassHelper.isWrapperByte;
+import static org.codehaus.groovy.ast.ClassHelper.isWrapperCharacter;
+import static org.codehaus.groovy.ast.ClassHelper.isWrapperDouble;
+import static org.codehaus.groovy.ast.ClassHelper.isWrapperFloat;
+import static org.codehaus.groovy.ast.ClassHelper.isWrapperInteger;
+import static org.codehaus.groovy.ast.ClassHelper.isWrapperLong;
+import static org.codehaus.groovy.ast.ClassHelper.isWrapperShort;
 import static org.codehaus.groovy.syntax.Types.BITWISE_AND;
 import static org.codehaus.groovy.syntax.Types.BITWISE_OR;
 import static org.codehaus.groovy.syntax.Types.BITWISE_XOR;
@@ -76,10 +84,11 @@ public final class ExpressionUtils {
                 Expression left = transformInlineConstants(be.getLeftExpression(), targetType);
                 Expression right = transformInlineConstants(be.getRightExpression(), targetType);
                 if (left instanceof ConstantExpression && right instanceof ConstantExpression) {
-                    // GRECLIPSE add -- GROOVY-10159
-                    if (((ConstantExpression) left).getValue() instanceof String)
-                    // GRECLIPSE end
-                    return configure(be, new ConstantExpression((String) ((ConstantExpression) left).getValue() + ((ConstantExpression) right).getValue()));
+                    Object leftV = ((ConstantExpression) left).getValue();
+                    if (leftV == null) leftV = "null";
+                    if (leftV instanceof String) {
+                        return configure(be, new ConstantExpression(((String)leftV) + ((ConstantExpression) right).getValue()));
+                    }
                 }
             }
         } else if (isNumberOrArrayOfNumber(wrapperType, false)) {
@@ -129,22 +138,22 @@ public final class ExpressionUtils {
                             break;
                     }
                     if (result != null) {
-                        if (ClassHelper.Byte_TYPE.equals(wrapperType)) {
+                        if (isWrapperByte(wrapperType)) {
                             return configure(be, new ConstantExpression(result.byteValue(), true));
                         }
-                        if (ClassHelper.Short_TYPE.equals(wrapperType)) {
+                        if (isWrapperShort(wrapperType)) {
                             return configure(be, new ConstantExpression(result.shortValue(), true));
                         }
-                        if (ClassHelper.Long_TYPE.equals(wrapperType)) {
+                        if (isWrapperLong(wrapperType)) {
                             return configure(be, new ConstantExpression(result.longValue(), true));
                         }
-                        if (ClassHelper.Integer_TYPE.equals(wrapperType) || ClassHelper.Character_TYPE.equals(wrapperType)) {
+                        if (isWrapperInteger(wrapperType) || isWrapperCharacter(wrapperType)) {
                             return configure(be, new ConstantExpression(result.intValue(), true));
                         }
-                        if (ClassHelper.Float_TYPE.equals(wrapperType)) {
+                        if (isWrapperFloat(wrapperType)) {
                             return configure(be, new ConstantExpression(result.floatValue(), true));
                         }
-                        if (ClassHelper.Double_TYPE.equals(wrapperType)) {
+                        if (isWrapperDouble(wrapperType)) {
                             return configure(be, new ConstantExpression(result.doubleValue(), true));
                         }
                         return configure(be, new ConstantExpression(result, true));
@@ -300,7 +309,7 @@ public final class ExpressionUtils {
                 Expression transformed = transformInlineConstants(e, attrType);
                 newList.addExpression(transformed);
                 if (transformed != e) changed = true;
-            } catch(Exception ignored) {
+            } catch (Exception ignored) {
                 newList.addExpression(e);
             }
         }
@@ -344,7 +353,7 @@ public final class ExpressionUtils {
             Expression lhs = transformInlineConstants(be.getLeftExpression());
             Expression rhs = transformInlineConstants(be.getRightExpression());
             if (be.getOperation().getType() == PLUS && lhs instanceof ConstantExpression && rhs instanceof ConstantExpression &&
-                    lhs.getType().equals(ClassHelper.STRING_TYPE) && rhs.getType().equals(ClassHelper.STRING_TYPE)) {
+                    isStringType(lhs.getType()) && isStringType(rhs.getType())) {
                 // GROOVY-9855: inline string concat
                 return configure(be, new ConstantExpression(lhs.getText() + rhs.getText()));
             }

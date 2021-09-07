@@ -1551,7 +1551,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             node = node.getNextSibling();
         }
 
-        ClassNode type = ClassHelper.DYNAMIC_TYPE;
+        ClassNode type = ClassHelper.dynamicType();
         if (isType(TYPE, node)) {
             type = makeTypeWithArguments(node);
             if (variableParameterDef)
@@ -1891,7 +1891,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             AST variableNode = inNode.getFirstChild();
             AST collectionNode = variableNode.getNextSibling();
 
-            ClassNode type = ClassHelper.OBJECT_TYPE;
+            ClassNode type = ClassHelper.dynamicType();
             if (isType(VARIABLE_DEF, variableNode)) {
                 AST node = variableNode.getFirstChild();
                 // skip the final modifier if it's present
@@ -2173,7 +2173,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // catch (e)
                 // catch (def e)
                 String variable = identifier(multicatches);
-                Parameter catchParameter = new Parameter(ClassHelper.DYNAMIC_TYPE, variable);
+                Parameter catchParameter = new Parameter(ClassHelper.dynamicType(), variable);
                 // GRECLIPSE add
                 configureAST(catchParameter, multicatches);
                 catchParameter.setNameStart(catchParameter.getStart());
@@ -3644,7 +3644,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected ClassNode makeType(AST typeNode) {
-        ClassNode answer = ClassHelper.DYNAMIC_TYPE;
+        ClassNode answer = ClassHelper.dynamicType();
         AST node = typeNode.getFirstChild();
         if (node != null) {
             if (isType(ARRAY_DECLARATOR, node) || isType(INDEX_OP, node)) {

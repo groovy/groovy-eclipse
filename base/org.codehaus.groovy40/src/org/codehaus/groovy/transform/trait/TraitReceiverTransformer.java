@@ -241,12 +241,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
     private Expression transformFieldReference(final Expression exp, final FieldNode fn, final boolean isStatic) {
         Expression receiver = createFieldHelperReceiver();
         if (isStatic) {
-            /* GRECLIPSE edit
-            Expression isClass = binX(receiver, INSTANCEOF, classX(ClassHelper.CLASS_Type));
-            receiver = ternaryX(isClass, receiver, callX(receiver, "getClass"));
-            */
             receiver = asClass(receiver);
-            // GRECLIPSE end
         }
 
         MethodCallExpression mce = callX(receiver, Traits.helperGetterName(fn));
@@ -268,7 +263,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
 
     private static FieldNode tryGetFieldNode(final ClassNode weavedType, final String fieldName) {
         FieldNode fn = weavedType.getDeclaredField(fieldName);
-        if (fn == null && ClassHelper.CLASS_Type.equals(weavedType)) {
+        if (fn == null && ClassHelper.isClassType(weavedType)) {
             GenericsType[] genericsTypes = weavedType.getGenericsTypes();
             if (genericsTypes != null && genericsTypes.length == 1) {
                 // for static properties
@@ -298,48 +293,32 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         } else {
             superCallArgs.addExpression(arguments);
         }
-        MethodCallExpression transformed = new MethodCallExpression(
+        MethodCallExpression newCall = callX(
                 weaved,
                 Traits.getSuperTraitMethodName(traitClass, method),
                 superCallArgs
         );
         /* GRECLIPSE edit
-        transformed.setSourcePosition(call);
+        newCall.setSourcePosition(call);
         */
-        transformed.getMethod().setSourcePosition(call.getMethod());
+        newCall.getMethod().setSourcePosition(call.getMethod());
         // GRECLIPSE end
-        transformed.setSafe(call.isSafe());
-        transformed.setSpreadSafe(call.isSpreadSafe());
-        transformed.setImplicitThis(false);
-        return transformed;
+        newCall.setSafe(call.isSafe());
+        newCall.setSpreadSafe(call.isSpreadSafe());
+        newCall.setImplicitThis(false);
+        return newCall;
     }
 
     private Expression transformMethodCallOnThis(final MethodCallExpression call) {
         Expression method = call.getMethod();
         Expression arguments = call.getArguments();
-        /* GRECLIPSE edit -- GROOVY-10106
-        if (method instanceof ConstantExpression) {
-            String methodName = method.getText();
-            List<MethodNode> methods = traitClass.getMethods(methodName);
-            for (MethodNode methodNode : methods) {
-                if (methodName.equals(methodNode.getName()) && methodNode.isPrivate()) {
-                    if (inClosure) {
-                        return transformPrivateMethodCallOnThisInClosure(call, arguments, methodName);
-                    }
-                    return transformPrivateMethodCallOnThis(call, arguments, methodName);
-                }
-            }
-        }
-        if (inClosure) {
-            return transformMethodCallOnThisInClosure(call);
-        }
-        return transformMethodCallOnThisFallBack(call, method, arguments);
-        */
+        Expression objectExpr = call.getObjectExpression();
+
         if (method instanceof ConstantExpression) {
             String methodName = call.getMethodAsString();
             for (MethodNode methodNode : traitClass.getMethods(methodName)) {
                 if (methodName.equals(methodNode.getName()) && (methodNode.isStatic() || methodNode.isPrivate())) {
-                    ArgumentListExpression newArgs = createArgumentList(methodNode.isStatic() ? asClass(call.getObjectExpression()) : weaved, arguments);
+                    ArgumentListExpression newArgs = createArgumentList(methodNode.isStatic() ? asClass(objectExpr) : weaved, arguments);
                     MethodCallExpression newCall = callX(inClosure ? classX(traitHelperClass) : varX("this"), methodName, newArgs);
                     newCall.setImplicitThis(true);
                     newCall.setSafe(call.isSafe());
@@ -350,87 +329,14 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             }
         }
 
-        MethodCallExpression newCall = callX(inClosure ? call.getObjectExpression() : weaved, method, transform(arguments));
+        MethodCallExpression newCall = callX(inClosure ? objectExpr : weaved, method, transform(arguments));
         newCall.setImplicitThis(inClosure ? call.isImplicitThis() : false);
         newCall.setSafe(call.isSafe());
         newCall.setSourcePosition(call);
         newCall.setSpreadSafe(call.isSpreadSafe());
         return newCall;
-        // GRECLIPSE end
     }
 
-    /* GRECLIPSE edit
-    private Expression transformMethodCallOnThisFallBack(final MethodCallExpression call,
-                                                         final Expression method, final Expression arguments) {
-        MethodCallExpression transformed = new MethodCallExpression(
-                weaved,
-                method,
-                transform(arguments)
-        );
-        transformed.setSourcePosition(call);
-        transformed.setSafe(call.isSafe());
-        transformed.setSpreadSafe(call.isSpreadSafe());
-        transformed.setImplicitThis(false);
-        return transformed;
-    }
-
-    private Expression transformMethodCallOnThisInClosure(final MethodCallExpression call) {
-        MethodCallExpression transformed = new MethodCallExpression(
-                (Expression) call.getReceiver(),
-                call.getMethod(),
-                transform(call.getArguments())
-        );
-        transformed.setSourcePosition(call);
-        transformed.setSafe(call.isSafe());
-        transformed.setSpreadSafe(call.isSpreadSafe());
-        transformed.setImplicitThis(call.isImplicitThis());
-        return transformed;
-    }
-
-    private Expression transformPrivateMethodCallOnThis(final MethodCallExpression call,
-                                                        final Expression arguments, final String methodName) {
-        ArgumentListExpression newArgs = createArgumentList(arguments);
-        MethodCallExpression transformed = new MethodCallExpression(
-                new VariableExpression("this"),
-                methodName,
-                newArgs
-        );
-        transformed.setSourcePosition(call);
-        transformed.setSafe(call.isSafe());
-        transformed.setSpreadSafe(call.isSpreadSafe());
-        transformed.setImplicitThis(true);
-        return transformed;
-    }
-
-    private Expression transformPrivateMethodCallOnThisInClosure(final MethodCallExpression call,
-                                                                 final Expression arguments, final String methodName) {
-        ArgumentListExpression newArgs = createArgumentList(arguments);
-        MethodCallExpression transformed = new MethodCallExpression(
-                new ClassExpression(traitHelperClass),
-                methodName,
-                newArgs
-        );
-        transformed.setSourcePosition(call);
-        transformed.setSafe(call.isSafe());
-        transformed.setSpreadSafe(call.isSpreadSafe());
-        transformed.setImplicitThis(true);
-        return transformed;
-    }
-
-    private ArgumentListExpression createArgumentList(final Expression origCallArgs) {
-        ArgumentListExpression newArgs = new ArgumentListExpression();
-        newArgs.addExpression(new VariableExpression(weaved));
-        if (origCallArgs instanceof TupleExpression) {
-            List<Expression> expressions = ((TupleExpression) origCallArgs).getExpressions();
-            for (Expression expression : expressions) {
-                newArgs.addExpression(transform(expression));
-            }
-        } else {
-            newArgs.addExpression(origCallArgs);
-        }
-        return newArgs;
-    }
-    */
     private ArgumentListExpression createArgumentList(final Expression self, final Expression arguments) {
         ArgumentListExpression newArgs = new ArgumentListExpression();
         newArgs.addExpression(self);
@@ -444,13 +350,12 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         return newArgs;
     }
 
-    private static Expression asClass(final Expression e) {
+    private Expression createFieldHelperReceiver() {
+        return ClassHelper.isClassType(weaved.getOriginType()) ? weaved : castX(fieldHelper, weaved);
+    }
+
+    private Expression asClass(final Expression e) {
         ClassNode rawClass = ClassHelper.CLASS_Type.getPlainNodeReference();
         return ternaryX(isInstanceOfX(e, rawClass), e, callX(e, "getClass"));
-    }
-    // GRECLIPSE end
-
-    private Expression createFieldHelperReceiver() {
-        return weaved.getOriginType().equals(ClassHelper.CLASS_Type) ? weaved : castX(fieldHelper, weaved);
     }
 }

@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -629,6 +630,45 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[a:1, b:2]");
     }
 
+    @Test // GROOVY-5245
+    public void testBooleanCategoryMethod1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Cat {\n" +
+            "  static boolean isFoo(self) { true }\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  print foo\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "true");
+        } else {
+            runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: foo for class: Script");
+        }
+    }
+
+    @Test // GROOVY-10133
+    public void testBooleanCategoryMethod2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Cat {\n" +
+            "  static boolean isFoo(self) { true }\n" +
+            "  static boolean getFoo(self) { false }\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  print foo\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, isAtLeastGroovy(40) ? "true" : "false");
+    }
+
     @Test // GROOVY-5609 (STC of extensions)
     public void testVariadicCategoryMethods() {
         //@formatter:off
@@ -765,7 +805,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testStaticProperty3() {
         //@formatter:off
         String[] sources = {
-            "X.groovy",
+            "Script.groovy",
             "class A {\n" +
             "  static protected p\n" +
             "  static getP() { -1 }\n" +

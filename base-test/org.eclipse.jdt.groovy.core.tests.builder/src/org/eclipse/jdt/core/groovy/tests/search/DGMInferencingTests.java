@@ -1015,7 +1015,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGMDeclaring7() {
         String contents = "['x','y','z'].stream().toList()";
         float version = Float.parseFloat(System.getProperty("java.specification.version"));
-        assertDeclType(contents, "toList", version > 15 ? "java.util.stream.Stream<java.lang.String>" : "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
+        assertDeclType(contents, "toList", version > 15 ? "java.util.stream.Stream<java.lang.String>"
+            : isAtLeastGroovy(40) ? "org.codehaus.groovy.runtime.StreamGroovyMethods" : "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002

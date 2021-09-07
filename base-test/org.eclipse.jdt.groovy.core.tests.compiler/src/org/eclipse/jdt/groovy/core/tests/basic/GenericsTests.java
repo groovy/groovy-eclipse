@@ -61,7 +61,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 2)\n" +
             "\tpublic List<String,String> bar\n" +
             "\t       ^^^^\n" +
-            "Groovy:The class java.util.List<String,String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
+            "Groovy:The class java.util.List<java.lang.String, java.lang.String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
             "----------\n");
     }
 
@@ -95,7 +95,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 2)\n" +
             "\tpublic List<String,String>[] bar\n" +
             "\t       ^^^^\n" +
-            "Groovy:The class java.util.List<String,String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
+            "Groovy:The class java.util.List<java.lang.String, java.lang.String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
             "----------\n");
     }
 
@@ -129,7 +129,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 2)\n" +
             "\tpublic void m(List<String,String> bar) {}\n" +
             "\t              ^^^^\n" +
-            "Groovy:The class java.util.List<String,String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
+            "Groovy:The class java.util.List<java.lang.String, java.lang.String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
             "----------\n");
     }
 
@@ -149,7 +149,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 2)\n" +
             "\tFoo(List<String,String> bar) {}\n" +
             "\t    ^^^^\n" +
-            "Groovy:The class java.util.List<String,String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
+            "Groovy:The class java.util.List<java.lang.String, java.lang.String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
             "----------\n");
     }
 
@@ -183,7 +183,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 2)\n" +
             "\tvoid m(List<String,String>[] bar, Object baz) {}\n" +
             "\t       ^^^^\n" +
-            "Groovy:The class java.util.List<String,String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
+            "Groovy:The class java.util.List<java.lang.String, java.lang.String> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
             "----------\n");
     }
 
@@ -221,7 +221,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 1)\n" +
             "\tMap<String> m = null\n" +
             "\t^^^\n" +
-            "Groovy:The class java.util.Map<String> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n");
     }
 
@@ -239,7 +239,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 1)\n" +
             "\tdef x = new Map<String>[0][0]\n" +
             "\t            ^^^\n" +
-            "Groovy:The class java.util.Map<String> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n");
     }
 
@@ -261,7 +261,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 3)\n" +
             "\tMap<String> m = null\n" +
             "\t^^^\n" +
-            "Groovy:The class java.util.Map<String> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n");
     }
 
@@ -283,7 +283,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 3)\n" +
             "\tMap<String> m = null\n" +
             "\t^^^\n" +
-            "Groovy:The class java.util.Map<String> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n");
     }
 
@@ -305,7 +305,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 3)\n" +
             "\tMap<String> m = null\n" +
             "\t^^^\n" +
-            "Groovy:The class java.util.Map<String> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n");
     }
 
@@ -327,7 +327,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 3)\n" +
             "\tdef (Map<String> m, int n) = [ [:], 42 ]\n" +
             "\t     ^^^\n" +
-            "Groovy:The class java.util.Map<String> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n");
     }
 
@@ -345,7 +345,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 1)\n" +
             "\tdef map = (Map<String>) null\n" +
             "\t           ^^^\n" +
-            "Groovy:The class java.util.Map<String> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n");
     }
 
@@ -363,7 +363,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 1)\n" +
             "\tdef map = null as Map<String>\n" +
             "\t                  ^^^\n" +
-            "Groovy:The class java.util.Map<String> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n");
     }
 
@@ -386,17 +386,17 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 1)\n" +
             "\tgroovy.lang.Tuple2<Object> tooFew\n" +
             "\t^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:The class groovy.lang.Tuple2<Object> (supplied with 1 type parameter) refers to the class groovy.lang.Tuple2<T1,T2> which takes 2 parameters\n" +
+            "Groovy:The class groovy.lang.Tuple2<java.lang.Object> (supplied with 1 type parameter) refers to the class groovy.lang.Tuple2<T1, T2> which takes 2 parameters\n" +
             "----------\n" +
             "2. ERROR in Script.groovy (at line 2)\n" +
             "\tjava.util.List<Object,Object> tooMany\n" +
             "\t^^^^^^^^^^^^^^\n" +
-            "Groovy:The class java.util.List<Object,Object> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
+            "Groovy:The class java.util.List<java.lang.Object, java.lang.Object> (supplied with 2 type parameters) refers to the class java.util.List<E> which takes 1 parameter\n" +
             "----------\n" +
             "3. ERROR in Script.groovy (at line 4)\n" +
             "\tjava.util.Map<Object> tooFew2,\n" +
             "\t^^^^^^^^^^^^^\n" +
-            "Groovy:The class java.util.Map<Object> (supplied with 1 type parameter) refers to the class java.util.Map<K,V> which takes 2 parameters\n" +
+            "Groovy:The class java.util.Map<java.lang.Object> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
             "----------\n" +
             "4. ERROR in Script.groovy (at line 5)\n" +
             "\tjava.lang.Object<Object> tooMany2\n" +

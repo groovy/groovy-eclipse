@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertTrue;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -926,7 +927,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 4)\n" +
             "\tx++\n" +
             "\t ^\n" +
-            "Groovy:Postfix expressions on trait fields/properties  are not supported in traits.\n" +
+            "Groovy:Postfix expressions on trait fields/properties " + (!isAtLeastGroovy(40) ? " " : "") + "are not supported in traits.\n" +
             "----------\n" +
             "2. ERROR in Script.groovy (at line 7)\n" +
             "\t--x\n" +

@@ -54,6 +54,8 @@ import org.junit.runners.Suite
     org.eclipse.jdt.groovy.core.tests.xform.NamedVariantTests,
     org.eclipse.jdt.groovy.core.tests.xform.NullCheckTests,
     org.eclipse.jdt.groovy.core.tests.xform.PackageScopeTests,
+    org.eclipse.jdt.groovy.core.tests.xform.RecordTypeTests,
+    org.eclipse.jdt.groovy.core.tests.xform.SealedTests,
     org.eclipse.jdt.groovy.core.tests.xform.SingletonTests,
     org.eclipse.jdt.groovy.core.tests.xform.SortableTests,
     org.eclipse.jdt.groovy.core.tests.xform.StaticCompilationTests,

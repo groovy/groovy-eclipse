@@ -419,6 +419,16 @@ public class ClassHelper {
         return false;
     }
 
+    // GRECLIPSE add
+    public static ClassNode dynamicType() {
+        return DYNAMIC_TYPE;
+    }
+
+    public static boolean isDynamicTyped(ClassNode type) {
+        return type == DYNAMIC_TYPE;
+    }
+    // GRECLIPSE end
+
     static class ClassHelperCache {
         static ManagedConcurrentMap<Class, SoftReference<ClassNode>> classCache = new ManagedConcurrentMap<Class, SoftReference<ClassNode>>(ReferenceBundle.getWeakBundle());
     }

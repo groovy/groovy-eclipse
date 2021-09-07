@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -830,8 +832,27 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, offset, offset + "wasSomething".length(), DEFAULT_UNIT_NAME);
     }
 
-    @Test
+    @Test // GROOVY-9382, GROOVY-10133
     public void testStaticImport16() {
+        createUnit("p", "A", "package p\nclass A {\nstatic Boolean isBoolean() {}\n}");
+        createUnit("p", "B", "package p\nclass B {\nstatic Integer isNumeric() {}\n}");
+
+        String contents =
+            "import static p.A.isBoolean as isUnknown1\n" +
+            "import static p.B.isNumeric as isUnknown2\n" +
+            "unknown1\n" +
+            "unknown2\n";
+        if (isAtLeastGroovy(40)) {
+            assertUnknown(contents, "unknown1");
+            assertUnknown(contents, "unknown2");
+        } else {
+            assertDeclaringType(contents, "unknown1", "p.A");
+            assertDeclaringType(contents, "unknown2", "p.B");
+        }
+    }
+
+    @Test
+    public void testStaticImport17() {
         String contents =
             "import static javax.swing.text.html.HTML.NULL_ATTRIBUTE_VALUE\n" +
             "NULL_ATTRIBUTE_VALUE\n";
@@ -839,7 +860,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport17() {
+    public void testStaticImport18() {
         String contents =
             "import static javax.swing.text.html.HTML.getAttributeKey\n" +
             "getAttributeKey('')\n";
@@ -847,7 +868,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport18() {
+    public void testStaticImport19() {
         String contents =
             "import static javax.swing.text.html.HTML.*\n" +
             "NULL_ATTRIBUTE_VALUE\n";
@@ -855,7 +876,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport19() {
+    public void testStaticImport20() {
         String contents =
             "import static javax.swing.text.html.HTML.*\n" +
             "getAttributeKey('')\n";

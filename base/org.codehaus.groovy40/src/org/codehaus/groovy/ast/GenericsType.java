@@ -28,6 +28,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static org.codehaus.groovy.ast.ClassHelper.isGroovyObjectType;
+import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
+
 /**
  * This class is used to describe generic type signatures for ClassNodes.
  *
@@ -225,43 +228,29 @@ public class GenericsType extends ASTNode {
             return true; // diamond always matches
         }
         if (classNode.isGenericsPlaceHolder()) {
-            // if the compare type is a generics placeholder (like <E>) then we
-            // only need to check that the names are equal
             if (genericsTypes == null) {
                 return true;
             }
-            /* GRECLIPSE edit -- GROOVY-10067
-            if (isWildcard()) {
-                if (getLowerBound() != null) {
-                    ClassNode lowerBound = getLowerBound();
-                    return genericsTypes[0].name.equals(lowerBound.getUnresolvedName());
-                }
-                if (getUpperBounds() != null) {
-                    for (ClassNode upperBound : getUpperBounds()) {
-                        if (genericsTypes[0].name.equals(upperBound.getUnresolvedName())) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }
-            return genericsTypes[0].name.equals(name);
-            */
-            String name0 = genericsTypes[0].getName();
+            String name = genericsTypes[0].name;
             if (!isWildcard()) {
-                return name0.equals(getName());
+                return this.name.equals(name);
             }
             if (getLowerBound() != null) {
-                if (name0.equals(getLowerBound().getUnresolvedName())) {
+                // check for "? super T" vs "T"
+                ClassNode lowerBound = getLowerBound();
+                if (lowerBound.getUnresolvedName().equals(name)) {
                     return true;
                 }
             } else if (getUpperBounds() != null) {
-                if (name0.equals(getUpperBounds()[0].getUnresolvedName())) {
-                    return true;
+                // check for "? extends T & I" vs "T" or "I"
+                for (ClassNode upperBound : getUpperBounds()) {
+                    if (upperBound.getUnresolvedName().equals(name)) {
+                        return true;
+                    }
                 }
             }
+            // check for "? extends/super X" vs "T extends/super X"
             return checkGenerics(classNode);
-            // GRECLIPSE end
         }
         if (isWildcard() || isPlaceholder()) {
             // if the generics spec is a wildcard or a placeholder then check the bounds
@@ -302,7 +291,7 @@ public class GenericsType extends ASTNode {
                 || type.implementsInterface(superOrInterface)) {
             return true;
         }
-        if (ClassHelper.GROOVY_OBJECT_TYPE.equals(superOrInterface) && type.getCompileUnit() != null) {
+        if (isGroovyObjectType(superOrInterface) && type.getCompileUnit() != null) {
             // type is being compiled so it will implement GroovyObject later
             return true;
         }
@@ -388,7 +377,7 @@ public class GenericsType extends ASTNode {
                     return true;
                 }
             }
-            if (classNode.equals(ClassHelper.OBJECT_TYPE)) {
+            if (isObjectType(classNode)) {
                 return false;
             }
             ClassNode superClass = classNode.getUnresolvedSuperClass();
@@ -509,15 +498,15 @@ public class GenericsType extends ASTNode {
     }
 
     /**
-     * Represents GenericsType name
-     * TODO In order to distinguish GenericsType with same name(See GROOVY-8409), we should add a property to keep the declaring class.
-     *
-     * fixing GROOVY-8409 steps:
-     * 1) change the signature of constructor GenericsTypeName to `GenericsTypeName(String name, ClassNode declaringClass)`
-     * 2) try to fix all compilation errors(if `GenericsType` has declaringClass property, the step would be a bit easy to fix...)
-     * 3) run all tests to see whether the change breaks anything
-     * 4) if all tests pass, congratulations! but if some tests are broken, try to debug and find why...
-     *
+     * Represents {@link GenericsType} name.
+     * <p>
+     * TODO: In order to distinguish GenericsType with same name, we should add a property to keep the declaring class.
+     * <ol>
+     * <li> change the signature of constructor GenericsTypeName to `GenericsTypeName(String name, ClassNode declaringClass)`
+     * <li> try to fix all compilation errors(if `GenericsType` has declaringClass property, the step would be a bit easy to fix...)
+     * <li> run all tests to see whether the change breaks anything
+     * <li> if all tests pass, congratulations! but if some tests are broken, try to debug and find why...
+     * </ol>
      * We should find a way to set declaring class for `GenericsType` first, it can be completed at the resolving phase.
      */
     public static class GenericsTypeName {

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,15 +55,15 @@ public class ReplaceDefWithStaticTypeProposal extends GroovyQuickAssistProposal2
     @Override
     public int getRelevance() {
         if (sloc == null) {
-            if (context.getCoveredNode() == ClassHelper.DYNAMIC_TYPE) {
+            ASTNode node = context.getCoveredNode();
+            if (node instanceof ClassNode && ClassHelper.isDynamicTyped((ClassNode) node)) {
                 IDocument d = context.newTempDocument();
                 sloc = JavaWordFinder.findWord(d, context.getSelectionOffset());
                 if (sloc != null && sloc.getLength() == 0)
                     sloc = JavaWordFinder.findWord(d, context.getSelectionOffset() - 1);
-                if (sloc != null && sloc.getLength() == 3 && "def".equals(
-                        String.valueOf(context.getCompilationUnit().getContents(), sloc.getOffset(), sloc.getLength()))) {
+                if (sloc != null && sloc.getLength() == 3 && String.valueOf(context.getCompilationUnit().getContents(), sloc.getOffset(), sloc.getLength()).matches("def|var")) {
                     // find variable declaration that contains this occurrence of the 'def' keyword
-                    final IRegion r = JavaWordFinder.findWord(d, sloc.getOffset() + sloc.getLength() + 1);
+                    IRegion r = JavaWordFinder.findWord(d, sloc.getOffset() + sloc.getLength() + 1);
                     if (r != null) {
                         context.visitCompilationUnit((ASTNode n, TypeLookupResult tlr, IJavaElement e) -> {
                             if (n instanceof DeclarationExpression && !((DeclarationExpression) n).isMultipleAssignmentDeclaration()) {

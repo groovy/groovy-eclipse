@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveVoid;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
@@ -436,8 +438,8 @@ public class ModuleNode extends ASTNode {
                     ClassNode argType = node.getParameters()[0].getType();
                     ClassNode retType = node.getReturnType();
 
-                    argTypeMatches = (argType.equals(ClassHelper.OBJECT_TYPE) || argType.getName().contains("String[]"));
-                    retTypeMatches = (retType == ClassHelper.VOID_TYPE || retType == ClassHelper.OBJECT_TYPE);
+                    argTypeMatches = (isObjectType(argType) || argType.getName().contains("String[]"));
+                    retTypeMatches = (isPrimitiveVoid(retType) || isObjectType(retType));
                     if (retTypeMatches && argTypeMatches) {
                         if (found) {
                             throw new RuntimeException("Repetitive main method found.");

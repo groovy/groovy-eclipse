@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
+
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -107,8 +109,8 @@ final class OtherCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo.ba'))
+        proposalExists(proposals, 'bar', isAtLeastGroovy(40) ? 1 : 0)
         proposalExists(proposals, 'isBar()', 1)
-        proposalExists(proposals, 'bar', 0)
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -221,16 +221,17 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
             if (result != null) {
                 return result;
             }
-            for (ClassNode inter : target.getUnresolvedInterfaces(false)) {
-                result = findResolvedType(inter, toResolve);
-                if (result != null) {
-                    return result;
+            ClassNode[] interfaces = target.getUnresolvedInterfaces(false);
+            if (interfaces != null) {
+                for (ClassNode cn : interfaces) {
+                    result = findResolvedType(cn, toResolve);
+                    if (result != null) {
+                        return result;
+                    }
                 }
             }
-
-            ClassNode redirect = target.redirect();
-            if (redirect != target) {
-                return findResolvedType(redirect, toResolve);
+            if (target.isRedirectNode()) {
+                return findResolvedType(target.redirect(), toResolve);
             }
         }
         return null;

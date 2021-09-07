@@ -74,7 +74,7 @@ public class Parameter extends AnnotatedNode implements Variable {
 
     public void setType(ClassNode type) {
         this.type = type;
-        dynamicTyped = (dynamicTyped || type == ClassHelper.DYNAMIC_TYPE);
+        dynamicTyped = dynamicTyped || ClassHelper.isDynamicTyped(type);
     }
 
     @Override

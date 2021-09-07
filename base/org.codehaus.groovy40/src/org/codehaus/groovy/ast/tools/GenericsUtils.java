@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -139,67 +140,68 @@ public class GenericsUtils {
         return gt;
     }
 
-    public static Map<GenericsType.GenericsTypeName, GenericsType> extractPlaceholders(ClassNode cn) {
-        Map<GenericsType.GenericsTypeName, GenericsType> ret = new HashMap<>();
-        extractPlaceholders(cn, ret);
-        return ret;
+    public static Map<GenericsType.GenericsTypeName, GenericsType> extractPlaceholders(final ClassNode type) {
+        Map<GenericsType.GenericsTypeName, GenericsType> placeholders = new HashMap<>();
+        extractPlaceholders(type, placeholders);
+        return placeholders;
     }
 
     /**
      * For a given classnode, fills in the supplied map with the parameterized
      * types it defines.
      *
-     * @param node the class node to check
-     * @param map the generics type information collector
+     * @param type the class node to check
+     * @param placeholders the generics type information collector
      */
-    public static void extractPlaceholders(ClassNode node, Map<GenericsType.GenericsTypeName, GenericsType> map) {
-        if (node == null) return;
+    public static void extractPlaceholders(final ClassNode type, final Map<GenericsType.GenericsTypeName, GenericsType> placeholders) {
+        if (type == null) return;
 
-        if (node.isArray()) {
-            extractPlaceholders(node.getComponentType(), map);
+        if (type.isArray()) {
+            extractPlaceholders(type.getComponentType(), placeholders);
             return;
         }
 
-        if (!node.isUsingGenerics() || !node.isRedirectNode()) return;
-        GenericsType[] parameterized = node.getGenericsTypes();
+        if (!type.isUsingGenerics() || !type.isRedirectNode()) return;
+        GenericsType[] parameterized = type.getGenericsTypes();
         if (parameterized == null || parameterized.length == 0) return;
-        // GRECLIPSE add -- GROOVY-10067
-        if (node.isGenericsPlaceHolder()) {
-            GenericsType gt = parameterized[0];
-            map.put(new GenericsType.GenericsTypeName(gt.getName()), gt);
+
+        Consumer<GenericsType> extractor = (GenericsType gt) -> {
             ClassNode lowerBound = gt.getLowerBound();
             if (lowerBound != null) {
-                extractPlaceholders(lowerBound, map);
+                extractPlaceholders(lowerBound, placeholders);
             }
             ClassNode[] upperBounds = gt.getUpperBounds();
             if (upperBounds != null) {
                 for (ClassNode upperBound : upperBounds) {
-                    extractPlaceholders(upperBound, map);
+                    extractPlaceholders(upperBound, placeholders);
                 }
             }
+        };
+
+        // GROOVY-8609, GROOVY-10067
+        if (type.isGenericsPlaceHolder()) {
+            GenericsType gt = parameterized[0];
+            placeholders.put(new GenericsType.GenericsTypeName(gt.getName()), gt);
+            extractor.accept(gt);
             return;
         }
-        // GRECLIPSE end
-        GenericsType[] redirectGenericsTypes = node.redirect().getGenericsTypes();
-        if (redirectGenericsTypes == null ||
-                (node.isGenericsPlaceHolder() && redirectGenericsTypes.length != parameterized.length) /* GROOVY-8609 */ ) {
-            redirectGenericsTypes = parameterized;
-        }
-        if (redirectGenericsTypes.length != parameterized.length) {
+
+        GenericsType[] redirectGenericsTypes = type.redirect().getGenericsTypes();
+        if (redirectGenericsTypes == null) redirectGenericsTypes = parameterized;
+        else if (redirectGenericsTypes.length != parameterized.length) {
             throw new GroovyBugError("Expected earlier checking to detect generics parameter arity mismatch" +
-                    "\nExpected: " + node.getName() + toGenericTypesString(redirectGenericsTypes) +
-                    "\nSupplied: " + node.getName() + toGenericTypesString(parameterized));
+                    "\nExpected: " + type.getName() + toGenericTypesString(redirectGenericsTypes) +
+                    "\nSupplied: " + type.getName() + toGenericTypesString(parameterized));
         }
 
         List<GenericsType> valueList = new LinkedList<>();
-        for (int i = 0; i < redirectGenericsTypes.length; i++) {
-            GenericsType redirectType = redirectGenericsTypes[i];
-            if (redirectType.isPlaceholder()) {
-                GenericsType.GenericsTypeName name = new GenericsType.GenericsTypeName(redirectType.getName());
-                if (!map.containsKey(name)) {
+        for (int i = 0, n = redirectGenericsTypes.length; i < n; i += 1) {
+            GenericsType rgt = redirectGenericsTypes[i];
+            if (rgt.isPlaceholder()) {
+                GenericsType.GenericsTypeName name = new GenericsType.GenericsTypeName(rgt.getName());
+                if (!placeholders.containsKey(name)) {
                     GenericsType value = parameterized[i];
-                    map.put(name, value);
-
+                    placeholders.put(name, value);
                     valueList.add(value);
                 }
             }
@@ -207,18 +209,9 @@ public class GenericsUtils {
 
         for (GenericsType value : valueList) {
             if (value.isWildcard()) {
-                ClassNode lowerBound = value.getLowerBound();
-                if (lowerBound != null) {
-                    extractPlaceholders(lowerBound, map);
-                }
-                ClassNode[] upperBounds = value.getUpperBounds();
-                if (upperBounds != null) {
-                    for (ClassNode upperBound : upperBounds) {
-                        extractPlaceholders(upperBound, map);
-                    }
-                }
+                extractor.accept(value);
             } else if (!value.isPlaceholder()) {
-                extractPlaceholders(value.getType(), map);
+                extractPlaceholders(value.getType(), placeholders);
             }
         }
     }
@@ -404,7 +397,7 @@ public class GenericsUtils {
                 // GRECLIPSE end
             }
         }
-        if (type == null) type = ClassHelper.OBJECT_TYPE;
+        if (type == null) type = ClassHelper.OBJECT_TYPE.getPlainNodeReference();
         GenericsType[] oldgTypes = type.getGenericsTypes();
         GenericsType[] newgTypes = EMPTY_GENERICS_ARRAY;
         if (oldgTypes != null) {
@@ -474,7 +467,7 @@ public class GenericsUtils {
                 return correctToGenericsSpec(genericsSpec, type);
             }
         }
-        if (type == null) type = ClassHelper.OBJECT_TYPE;
+        if (type == null) type = ClassHelper.OBJECT_TYPE.getPlainNodeReference();
         return type;
     }
 

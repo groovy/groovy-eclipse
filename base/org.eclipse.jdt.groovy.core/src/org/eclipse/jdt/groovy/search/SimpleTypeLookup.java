@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import groovy.lang.Closure;
-import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -421,10 +420,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     } else if (method.isPrivate() && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                         // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (method.getName().startsWith("is") && !name.startsWith("is") && isSuperObjectExpression(scope)) {
+                    } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope)) {
                         // GROOVY-1736, GROOVY-6097: "super.name" => "super.getName()" in AsmClassGenerator
-                        confidence = TypeConfidence.UNKNOWN;
-                        declaration = null;
+                        String newName = "get" + MetaClassHelper.capitalize(name);
+                        scope.setMethodCallArgumentTypes(Collections.emptyList());
+                        return findTypeForNameWithKnownObjectExpression(newName, type, declaringType, scope, isLhsExpression, isStaticObjectExpression);
                     } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters()) &&
                             !(isStaticObjectExpression && isStaticReferenceToUnambiguousMethod(scope, name, declaringType)) &&
                             !(AccessorSupport.isGetter(method) && !scope.isMethodCall() && scope.getEnclosingNode() instanceof PropertyExpression)) {
@@ -548,7 +548,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         if (variableInfo != null) {
-            type = variableInfo.type != null ? variableInfo.type : VariableScope.OBJECT_CLASS_NODE;
+            type = Optional.ofNullable(variableInfo.type).orElseGet(ClassHelper::dynamicType);
             resolvedDeclaringType = getMorePreciseType(declaringType, variableInfo);
             if (VariableScope.isThisOrSuper(var)) decl = type;
             confidence = TypeConfidence.INFERRED;
@@ -885,7 +885,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     //--------------------------------------------------------------------------
     // TODO: Can any of these be relocated for reuse?
 
-    protected static final AccessorSupport[] READER = {AccessorSupport.GETTER, AccessorSupport.ISSER};
+    protected static final AccessorSupport[] READER = {AccessorSupport.ISSER, AccessorSupport.GETTER};
     protected static final AccessorSupport[] WRITER = {AccessorSupport.SETTER};
 
     protected static MethodNode closer(final MethodNode next, final MethodNode last, final List<ClassNode> args) {
@@ -1090,8 +1090,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static boolean isStaticReferenceToInstanceMethod(final VariableScope scope) {
         if (scope.getEnclosingNode() instanceof MethodPointerExpression && scope.getCurrentNode() instanceof ConstantExpression) {
             // "Type.&instanceMethod" and "Type::instanceMethod" are supported starting in Groovy 3
-            int majorVersion = Integer.parseInt(GroovySystem.getVersion().split("\\.")[0]);
-            return (majorVersion >= 3);
+            return (GroovyUtils.getGroovyVersion().getMajor() >= 3);
         }
         return false;
     }

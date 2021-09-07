@@ -1606,5 +1606,13 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             setNameStart2(((ClassNode) node).getNameStart2());
         }
     }
+
+    public List<AnnotationNode> getTypeAnnotations() {
+        return Collections.emptyList();
+    }
+
+    public List<ClassNode> getPermittedSubclasses() {
+        return Collections.emptyList();
+    }
     // GRECLIPSE end
 }

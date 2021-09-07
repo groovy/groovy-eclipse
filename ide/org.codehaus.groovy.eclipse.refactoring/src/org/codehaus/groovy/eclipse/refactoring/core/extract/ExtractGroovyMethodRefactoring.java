@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -322,7 +322,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
      */
     public String getMethodCall() {
         List<Expression> arguments = originalParametersBeforeRename.stream().map(p ->
-            varX(p.getName(), Optional.ofNullable(p.getOriginType()).orElse(VariableScope.OBJECT_CLASS_NODE))
+            varX(p.getName(), Optional.ofNullable(p.getOriginType()).orElseGet(ClassHelper::dynamicType))
         ).collect(Collectors.toList());
         Expression newMethodCall = callThisX(newMethodName, args(arguments));
 
@@ -361,7 +361,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             if (!returnParameters.isEmpty()) {
                 returnType = inferredReturnTypes.get(0);
             } else {
-                returnType = VariableScope.OBJECT_CLASS_NODE;
+                returnType = ClassHelper.dynamicType();
             }
             newMethod = new MethodNode(newMethodName, 0, returnType, params, null, block);
 
@@ -441,27 +441,30 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         for (Variable variable : actualParameters) {
             ClassNode type = Optional.ofNullable(inferredTypes.get(variable)).filter(t -> !VariableScope.isVoidOrObject(t))
                 .map(ExtractGroovyMethodRefactoring::normalizeInferredType)
-                .orElse(VariableScope.OBJECT_CLASS_NODE);
+                .orElseGet(ClassHelper::dynamicType);
             inferredTypeOfActualParameters.add(type);
         }
 
         for (Variable variable : returnParameters) {
             ClassNode type = Optional.ofNullable(inferredTypes.get(variable))
                 .map(ExtractGroovyMethodRefactoring::normalizeInferredType)
-                .orElse(VariableScope.OBJECT_CLASS_NODE);
+                .orElseGet(ClassHelper::dynamicType);
             inferredReturnTypes.add(type);
         }
     }
 
     private static ClassNode normalizeInferredType(final ClassNode t) {
-        if (t.equals(VariableScope.GSTRING_CLASS_NODE)) {
-            return VariableScope.STRING_CLASS_NODE;
-        }
-        if (VariableScope.isVoidOrObject(t)) {
-            return t.redirect();
+        if (ClassHelper.isDynamicTyped(t)) {
+            return null;
         }
         if (ClassHelper.isPrimitiveType(t)) {
-            return t;
+            return t.redirect();
+        }
+        if (t.equals(VariableScope.OBJECT_CLASS_NODE)) {
+            return VariableScope.OBJECT_CLASS_NODE;
+        }
+        if (t.equals(VariableScope.GSTRING_CLASS_NODE)) {
+            return VariableScope.STRING_CLASS_NODE;
         }
         return ClassHelper.getUnwrapper(t).getPlainNodeReference();
     }

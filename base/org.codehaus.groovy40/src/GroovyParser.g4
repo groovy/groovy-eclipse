@@ -45,6 +45,7 @@ options {
 }
 
 @members {
+    private int inSwitchExpressionLevel = 0;
 
     public static class GroovyParserRuleContext extends ParserRuleContext implements NodeMetaDataHandler {
         private Map metaDataMap = null;
@@ -161,6 +162,8 @@ classOrInterfaceModifier
           |   PRIVATE    // class or interface
           |   STATIC     // class or interface
           |   ABSTRACT   // class or interface
+          |   SEALED     // class or interface
+          |   NON_SEALED // class or interface
           |   FINAL      // class only -- does not apply to interfaces
           |   STRICTFP   // class or interface
           |   DEFAULT    // interface only -- does not apply to classes
@@ -199,7 +202,7 @@ typeParameters
     ;
 
 typeParameter
-    :   className (EXTENDS nls typeBound)?
+    :   annotationsOpt className (EXTENDS nls typeBound)?
     ;
 
 typeBound
@@ -226,6 +229,7 @@ locals[ int t ]
         (nls typeParameters)?
         (nls EXTENDS nls scs=typeList)?
         (nls IMPLEMENTS nls is=typeList)?
+        (nls PERMITS nls ps=typeList)?
         nls classBody[$t]
     ;
 
@@ -614,6 +618,11 @@ breakStatement
         identifier?
     ;
 
+yieldStatement
+    :   YIELD
+        expression
+    ;
+
 tryCatchStatement
     :   TRY resources? nls block
         (nls catchClause)*
@@ -634,6 +643,8 @@ statement
     |   THROW expression                                                                                    #throwStmtAlt
     |   breakStatement                                                                                      #breakStmtAlt
     |   continueStatement                                                                                   #continueStmtAlt
+    |   { inSwitchExpressionLevel > 0 }?
+        yieldStatement                                                                                      #yieldStmtAlt
     |   identifier COLON nls statement                                                                      #labeledStmtAlt
     |   assertStatement                                                                                     #assertStmtAlt
     |   localVariableDeclaration                                                                            #localVariableDeclarationStmtAlt
@@ -717,7 +728,7 @@ expressionInPar
     ;
 
 expressionList[boolean canSpread]
-    :   expressionListElement[$canSpread] (COMMA expressionListElement[$canSpread])*
+    :   expressionListElement[$canSpread] (COMMA nls expressionListElement[$canSpread])*
     ;
 
 expressionListElement[boolean canSpread]
@@ -737,12 +748,34 @@ postfixExpression
     :   pathExpression op=(INC | DEC)?
     ;
 
+switchExpression
+@init {
+    inSwitchExpressionLevel++;
+}
+@after {
+    inSwitchExpressionLevel--;
+}
+    :   SWITCH expressionInPar nls LBRACE nls switchBlockStatementExpressionGroup* nls RBRACE
+    ;
+
+switchBlockStatementExpressionGroup
+    :   (switchExpressionLabel nls)+ blockStatements
+    ;
+
+switchExpressionLabel
+    :   (   CASE expressionList[true]
+        |   DEFAULT
+        ) ac=(ARROW | COLON)
+    ;
+
 expression
     // must come before postfixExpression to resovle the ambiguities between casting and call on parentheses expression, e.g. (int)(1 / 2)
     :   castParExpression castOperandExpression                                             #castExprAlt
 
     // qualified names, array expressions, method invocation, post inc/dec
     |   postfixExpression                                                                   #postfixExprAlt
+
+    |   switchExpression                                                                    #switchExprAlt
 
     // ~(BNOT)/!(LNOT) (level 1)
     |   (BITNOT | NOT) nls expression                                                       #unaryNotExprAlt
@@ -1136,14 +1169,6 @@ options { baseContext = enhancedArgumentListInPar; }
         )*
     ;
 
-enhancedArgumentList
-options { baseContext = enhancedArgumentListInPar; }
-    :   firstEnhancedArgumentListElement
-        (   COMMA nls
-            enhancedArgumentListElement
-        )*
-    ;
-
 enhancedArgumentListInPar
     :   enhancedArgumentListElement
         (   COMMA nls
@@ -1161,13 +1186,6 @@ argumentListElement
 options { baseContext = enhancedArgumentListElement; }
     :   expressionListElement[true]
     |   namedPropertyArg
-    ;
-
-firstEnhancedArgumentListElement
-options { baseContext = enhancedArgumentListElement; }
-    :   expressionListElement[true]
-    |   standardLambdaExpression
-    |   namedArg
     ;
 
 enhancedArgumentListElement
@@ -1192,6 +1210,8 @@ identifier
 //  |   DEF
     |   TRAIT
     |   AS
+    |   YIELD
+    |   PERMITS
     ;
 
 builtInType
@@ -1227,8 +1247,11 @@ keywords
     |   INTERFACE
     |   NATIVE
     |   NEW
+    |   NON_SEALED
     |   PACKAGE
+    |   PERMITS
     |   RETURN
+    |   SEALED
     |   STATIC
     |   STRICTFP
     |   SUPER
@@ -1244,6 +1267,7 @@ keywords
     |   VAR
     |   VOLATILE
     |   WHILE
+    |   YIELD
 
     |   NullLiteral
     |   BooleanLiteral

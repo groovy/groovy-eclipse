@@ -26,8 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import groovy.lang.GroovySystem;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -79,7 +77,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                             for (MethodNode method : category.getMethods(methodName)) {
                                 if (kind.isAccessorKind(method, true) && isCompatibleCategoryMethod(method, selfType, scope) &&
                                         // GROOVY-5245: isPropName() methods cannot be used for bean-style property expressions
-                                        (kind != AccessorSupport.ISSER || isDefaultGroovyMethod(method, scope) || isDefaultGroovyStaticMethod(method, scope))) {
+                                        (kind != AccessorSupport.ISSER || isDefaultGroovyMethod(method, scope) || isDefaultGroovyStaticMethod(method, scope) || GroovyUtils.getGroovyVersion().getMajor() > 3)) {
                                     candidates.add(method);
                                 }
                             }
@@ -129,7 +127,7 @@ public class CategoryTypeLookup implements ITypeLookup {
             ASTNode enclosingNode = scope.getEnclosingNode();
             if (!(enclosingNode instanceof AttributeExpression || (enclosingNode instanceof MethodPointerExpression &&
                                                                     VariableScope.CLASS_CLASS_NODE.equals(selfType) &&
-                                                                    Integer.parseInt(GroovySystem.getVersion().split("\\.")[0]) < 3))) {
+                                                                    GroovyUtils.getGroovyVersion().getMajor() < 3))) {
                 return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
             }
         }

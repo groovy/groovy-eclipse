@@ -161,6 +161,14 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitPostfixExprAlt(@NotNull GroovyParser.PostfixExprAltContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code switchExprAlt}
+	 * labeled alternative in {@link GroovyParser#expression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitSwitchExprAlt(@NotNull GroovyParser.SwitchExprAltContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code unaryNotExprAlt}
 	 * labeled alternative in {@link GroovyParser#castOperandExpression}.
 	 * @param ctx the parse tree
@@ -367,6 +375,14 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitContinueStmtAlt(@NotNull GroovyParser.ContinueStmtAltContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code yieldStmtAlt}
+	 * labeled alternative in {@link GroovyParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitYieldStmtAlt(@NotNull GroovyParser.YieldStmtAltContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code labeledStmtAlt}
@@ -1043,6 +1059,13 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitBreakStatement(@NotNull GroovyParser.BreakStatementContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link GroovyParser#yieldStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitYieldStatement(@NotNull GroovyParser.YieldStatementContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link GroovyParser#tryCatchStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -1209,6 +1232,27 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitPostfixExpression(@NotNull GroovyParser.PostfixExpressionContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#switchExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitSwitchExpression(@NotNull GroovyParser.SwitchExpressionContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#switchBlockStatementExpressionGroup}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitSwitchBlockStatementExpressionGroup(@NotNull GroovyParser.SwitchBlockStatementExpressionGroupContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#switchExpressionLabel}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitSwitchExpressionLabel(@NotNull GroovyParser.SwitchExpressionLabelContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#expression}.

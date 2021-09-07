@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,7 +97,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     public void visitClass(ClassNode node) {
         if (node.getNameEnd() > 0) {
             checkNameRange(node); // also checks generics
-            checkSupers(node); // extends and implements
+            checkHeader(node); // extends, implements and permits
         }
 
         super.visitClass(node);
@@ -384,9 +385,9 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     /**
-     * Checks if the extends or implements clause covers the selection.
+     * Checks if the extends, implements or permits clause covers the selection.
      */
-    private void checkSupers(ClassNode node) {
+    private void checkHeader(ClassNode node) {
         // supers can only appear after the name
         if (!(sloc.getOffset() > node.getNameEnd())) {
             return;
@@ -451,6 +452,38 @@ public class ASTNodeFinder extends DepthFirstVisitor {
 
                     check(superTypes[i], offset + a, offset + b);
                 }
+            }
+        }
+
+        List<ClassNode> subTypes = node.getPermittedSubclasses();
+        for (int i = 0, n = subTypes.size(); i < n; i += 1) {
+            // only check types that appear in the source code
+            String name = GroovyUtils.splitName(subTypes.get(i))[1];
+            if (source.indexOf(name) > 0) {
+                int a = endIndexOf(source, Pattern.compile("\\bpermits\\s+")),
+                    b = source.length(); // TODO: Set to source.indexOf(name) + name.length()?
+                char c;
+                // use prev and next to further constrain
+                for (int j = i - 1; j >= 0; j -= 1) {
+                    if (subTypes.get(j).getEnd() > 0) {
+                        a = (subTypes.get(j).getEnd()) - offset;
+                        while ((c = source.charAt(a)) == ',' || Character.isWhitespace(c)) {
+                            a += 1;
+                        }
+                        break;
+                    }
+                }
+                for (int j = i + 1; j < n; j += 1) {
+                    if (subTypes.get(j).getStart() > 0) {
+                        b = (subTypes.get(j).getStart() - 1) - offset;
+                        while ((c = source.charAt(b - 1)) == ',' || Character.isWhitespace(c)) {
+                            b -= 1;
+                        }
+                        break;
+                    }
+                }
+
+                check(subTypes.get(i), offset + a, offset + b);
             }
         }
     }

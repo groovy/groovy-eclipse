@@ -58,6 +58,7 @@ import java.util.function.BiConsumer;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllProperties;
 
 /**
  * Initializes the variable scopes for an AST.
@@ -169,12 +170,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     private Variable findClassMember(final ClassNode node, final String name) {
         final boolean abstractType = node.isAbstract();
 
-        for (ClassNode cn = node; cn != null && !cn.equals(ClassHelper.OBJECT_TYPE); cn = cn.getSuperClass()) {
-            /* GRECLIPSE edit -- GROOVY-5364
-            if (cn.isScript()) {
-                return new DynamicVariable(name, false);
-            }
-            */
+        for (ClassNode cn = node; cn != null && !ClassHelper.isObjectType(cn); cn = cn.getSuperClass()) {
             for (FieldNode fn : cn.getFields()) {
                 if (name.equals(fn.getName())) return fn;
             }
@@ -185,12 +181,18 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
             for (MethodNode mn : cn.getMethods()) {
                 if ((abstractType || !mn.isAbstract()) && name.equals(getPropertyName(mn))) {
-                    FieldNode fn = new FieldNode(name, mn.getModifiers() & 0xF, ClassHelper.OBJECT_TYPE, cn, null);
+                    // check for super property before returning a pseudo-property
+                    for (PropertyNode pn : getAllProperties(cn.getSuperClass())) {
+                        if (name.equals(pn.getName())) return pn;
+                    }
+
+                    FieldNode fn = new FieldNode(name, mn.getModifiers() & 0xF, ClassHelper.dynamicType(), cn, null);
                     fn.setHasNoRealSourcePosition(true);
                     fn.setDeclaringClass(cn);
                     fn.setSynthetic(true);
 
                     PropertyNode pn = new PropertyNode(fn, fn.getModifiers(), null, null);
+                    pn.putNodeMetaData("access.method", mn);
                     pn.setDeclaringClass(cn);
                     return pn;
                 }
@@ -240,19 +242,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             ClassNode node = scope.getClassScope();
             if (node != null) {
                 Variable member = findClassMember(node, name);
-                /* GRECLIPSE edit -- GROOVY-5364, GROOVY-10200
-                while (member == null && node.getOuterClass() != null && !isAnonymous(node)) {
-                    crossingStaticContext = (crossingStaticContext || isStatic(node.getModifiers()));
-                    member = findClassMember((node = node.getOuterClass()), name);
-                }
-                if (member != null) {
-                    boolean staticScope = (crossingStaticContext || inSpecialConstructorCall), staticMember = member.isInStaticContext();
-                    // prevent a static context (e.g. a static method) from accessing a non-static variable (e.g. a non-static field)
-                    if (!(staticScope && !staticMember)) {
-                        variable = member;
-                    }
-                }
-                */
                 boolean requireStatic = (crossingStaticContext || inSpecialConstructorCall);
                 while (member == null && node.getOuterClass() != null && !isAnonymous(node)) {
                     requireStatic = requireStatic || isStatic(node.getModifiers());
@@ -264,7 +253,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                         variable = member;
                     }
                 }
-                // GRECLIPSE end
+
                 if (!isAnonymous(scope.getClassScope())) break; // GROOVY-5961
             }
             scope = scope.getParent();
@@ -485,7 +474,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                 declare(parameter, expression);
             }
         } else if (expression.getParameters() != null) {
-            Parameter var = new Parameter(ClassHelper.OBJECT_TYPE, "it");
+            Parameter var = new Parameter(ClassHelper.dynamicType(), "it");
             var.setInStaticContext(currentScope.isInStaticContext());
             currentScope.putDeclaredVariable(var);
         }

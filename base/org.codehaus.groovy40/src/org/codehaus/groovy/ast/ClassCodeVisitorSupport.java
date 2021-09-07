@@ -58,36 +58,28 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     }
 
     public void visitAnnotations(AnnotatedNode node) {
-        /* GRECLIPSE edit
-        for (AnnotationNode annotation : node.getAnnotations()) {
-            // skip built-in properties
-            if (!annotation.isBuiltIn()) {
-                visitAnnotation(annotation);
-            }
-        }
-        */
         visitAnnotations(node.getAnnotations());
-        // GRECLIPSE end
     }
 
-    // GRECLIPSE add
-    protected void visitAnnotations(Iterable<AnnotationNode> nodes) {
+    protected final void visitAnnotations(Iterable<AnnotationNode> nodes) {
         Set<AnnotationNode> aliases = null;
         for (AnnotationNode node : nodes) {
             // skip built-in properties
-            if (node.isBuiltIn()) continue;
-
-            visitAnnotation(node);
-
-            Iterable<AnnotationNode> original = node.getNodeMetaData("AnnotationCollector");
-            if (original != null) {
-                if (aliases == null) aliases = new HashSet<>();
-                original.forEach(aliases::add);
+            if (!node.isBuiltIn()) {
+                visitAnnotation(node);
+                // GRECLIPSE add
+                Iterable<AnnotationNode> original = node.getNodeMetaData("AnnotationCollector");
+                if (original != null) {
+                    if (aliases == null) aliases = new HashSet<>();
+                    original.forEach(aliases::add);
+                }
+                // GRECLIPSE end
             }
         }
+        // GRECLIPSE add
         if (aliases != null) visitAnnotations(aliases);
+        // GRECLIPSE end
     }
-    // GRECLIPSE end
 
     protected void visitAnnotation(AnnotationNode node) {
         for (Expression expr : node.getMembers().values()) {

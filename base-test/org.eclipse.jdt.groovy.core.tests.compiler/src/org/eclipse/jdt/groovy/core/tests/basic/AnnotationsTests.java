@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -2411,12 +2413,16 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\Main.groovy (at line 3)\n" +
-            "\tvoid m(@Anno('x') String s) {}\n" +
-            "\t       ^^^^^\n" +
-            "Groovy:Annotation @p.Anno is not allowed on element PARAMETER\n" +
-            "----------\n");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "x");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in p\\Main.groovy (at line 3)\n" +
+                "\tvoid m(@Anno('x') String s) {}\n" +
+                "\t       ^^^^^\n" +
+                "Groovy:Annotation @p.Anno is not allowed on element PARAMETER\n" +
+                "----------\n");
+        }
     }
 }

@@ -75,6 +75,10 @@ import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isThisOrSuper;
+import static org.codehaus.groovy.ast.ClassHelper.isGStringType;
+import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveVoid;
+import static org.codehaus.groovy.ast.ClassHelper.isStringType;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
@@ -312,7 +316,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             mv.visitMethodInsn(INVOKESTATIC, owner, target.getName(), desc, false);
             controller.getOperandStack().remove(argumentList.size());
 
-            if (ClassHelper.VOID_TYPE.equals(returnType)) {
+            if (isPrimitiveVoid(returnType)) {
                 returnType = ClassHelper.OBJECT_TYPE;
                 mv.visitInsn(ACONST_NULL);
             }
@@ -370,7 +374,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                     && !classNode.isDerivedFrom(target.getDeclaringClass())
                     && !classNode.implementsInterface(target.getDeclaringClass())) {
                 ClassNode thisType = controller.getThisType();
-                if (isTrait(thisType.getOuterClass())) thisType = ClassHelper.DYNAMIC_TYPE; // GROOVY-7242
+                if (isTrait(thisType.getOuterClass())) thisType = ClassHelper.dynamicType(); // GROOVY-7242
 
                 fixedReceiver = varX("thisObject", thisType);
                 // account for multiple levels of inner types
@@ -437,7 +441,7 @@ public class StaticInvocationWriter extends InvocationWriter {
         if (lastPrmType.isArray() && (nArgs > nPrms || nArgs == nPrms - 1
                 || (nArgs == nPrms && !lastArgType.isArray()
                     && (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(lastArgType, lastPrmType.getComponentType())
-                        || ClassHelper.GSTRING_TYPE.equals(lastArgType) && ClassHelper.STRING_TYPE.equals(lastPrmType.getComponentType())))
+                        || isGStringType(lastArgType) && isStringType(lastPrmType.getComponentType())))
         )) {
             OperandStack operandStack = controller.getOperandStack();
             int stackLength = operandStack.getStackLength() + nArgs;
@@ -632,7 +636,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             newMCE.visit(controller.getAcg());
             compileStack.removeVar(slot.getIndex());
             ClassNode returnType = operandStack.getTopOperand();
-            if (ClassHelper.isPrimitiveType(returnType) && !ClassHelper.VOID_TYPE.equals(returnType)) {
+            if (ClassHelper.isPrimitiveType(returnType) && !isPrimitiveVoid(returnType)) {
                 operandStack.box();
             }
             Label endof = compileStack.createLocalLabel("endof_" + counter);
@@ -707,7 +711,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             if (visitor instanceof AsmClassGenerator) {
                 ClassNode topOperand = controller.getOperandStack().getTopOperand();
                 ClassNode type = getType();
-                if (ClassHelper.GSTRING_TYPE.equals(topOperand) && ClassHelper.STRING_TYPE.equals(type)) {
+                if (isGStringType(topOperand) && isStringType(type)) {
                     // perform regular type conversion
                     controller.getOperandStack().doGroovyCast(type);
                     return;
@@ -742,12 +746,12 @@ public class StaticInvocationWriter extends InvocationWriter {
                             && type.getClass() != DecompiledClassNode.class) {
                         type = declaringClass; // ex: LUB type
                     }
-                    if (ClassHelper.OBJECT_TYPE.equals(declaringClass)) {
+                    if (isObjectType(declaringClass)) {
                         // checkcast not necessary because Object never evolves
                         // and it prevents a potential ClassCastException if the
                         // delegate of a closure is changed in a SC closure
                         type = ClassHelper.OBJECT_TYPE;
-                    } else if (ClassHelper.OBJECT_TYPE.equals(type)) {
+                    } else if (isObjectType(type)) {
                         // can happen for compiler rewritten code, where type information is missing
                         type = declaringClass;
                     }

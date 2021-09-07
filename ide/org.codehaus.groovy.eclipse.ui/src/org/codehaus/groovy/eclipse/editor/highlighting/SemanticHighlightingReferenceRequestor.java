@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.util.regex.PatternSyntaxException;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -135,7 +136,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                     acceptASTNode(outer, new TypeLookupResult(outer, outer, outer, TypeLookupResult.TypeConfidence.EXACT, result.scope), enclosingElement);
                 });
             }
-            if (!(enclosingElement instanceof IImportDeclaration || ((ClassNode) node).isScriptBody())) {
+            if (!(enclosingElement instanceof IImportDeclaration || ClassHelper.isPrimitiveType((ClassNode) node) || ((ClassNode) node).isScriptBody())) {
                 pos = handleClassReference((ClassNode) node, result.type);
             }
 

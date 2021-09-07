@@ -40,6 +40,9 @@ import org.codehaus.groovy.syntax.Types;
 import java.util.List;
 import java.util.function.Function;
 
+import static org.codehaus.groovy.ast.ClassHelper.isClassType;
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveBoolean;
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveVoid;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.thisPropX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
@@ -107,7 +110,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                                     new ClassExpression(helperType),
                                     setterName,
                                     new ArgumentListExpression(
-                                            parameters[0].getType().equals(ClassHelper.CLASS_Type)
+                                            isClassType(parameters[0].getType())
                                                 ? thisPropX(false, "class") : varX("this"),
                                             bin.getRightExpression()
                                     )
@@ -146,7 +149,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                             new ClassExpression(helperType),
                             methodNode.getName(),
                             new ArgumentListExpression(
-                                    methodNode.getParameters()[0].getType().equals(ClassHelper.CLASS_Type)
+                                    isClassType(methodNode.getParameters()[0].getType())
                                         ? thisPropX(false, "class") : varX("this")
                             )
                     );
@@ -162,7 +165,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                 for (MethodNode method : helperType.getMethods(getterName)) {
                     if (method.isStatic() && method.getParameters().length == 1
                             && isSelfType(method.getParameters()[0], traitType)
-                            && !method.getReturnType().equals(ClassHelper.VOID_TYPE)) {
+                            && !isPrimitiveVoid(method.getReturnType())) {
                         return xform.apply(method);
                     }
                 }
@@ -171,7 +174,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                 for (MethodNode method : helperType.getMethods(isserName)) {
                     if (method.isStatic() && method.getParameters().length == 1
                             && isSelfType(method.getParameters()[0], traitType)
-                            && method.getReturnType().equals(ClassHelper.boolean_TYPE)) {
+                            && isPrimitiveBoolean(method.getReturnType())) {
                         return xform.apply(method);
                     }
                 }
@@ -189,7 +192,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
 
             List<MethodNode> targets = helperType.getMethods(exp.getMethodAsString());
             boolean isStatic = !targets.isEmpty() && targets.stream().map(MethodNode::getParameters)
-                .allMatch(params -> params.length > 0 && params[0].getType().equals(ClassHelper.CLASS_Type));
+                .allMatch(params -> params.length > 0 && isClassType(params[0].getType()));
 
             ArgumentListExpression newArgs = new ArgumentListExpression(
                     isStatic ? thisPropX(false, "class") : varX("this"));
@@ -252,7 +255,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
     private static boolean isSelfType(final Parameter parameter, final ClassNode traitType) {
         ClassNode paramType = parameter.getType();
         if (paramType.equals(traitType)) return true;
-        return paramType.equals(ClassHelper.CLASS_Type)
+        return isClassType(paramType)
                 && paramType.getGenericsTypes() != null
                 && paramType.getGenericsTypes()[0].getType().equals(traitType);
     }
