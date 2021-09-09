@@ -879,14 +879,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 lType = getType(leftExpression);
             } else {
-                // GRECLIPSE add -- GROOVY-9977, GROOVY-9995
-                lType = getType(leftExpression);
+                // GRECLIPSE add -- GROOVY-9953, GROOVY-9977, GROOVY-9995, GROOVY-10089, GROOVY-10217
                 if (op == ASSIGN) {
+                    lType = getOriginalDeclarationType(leftExpression);
                     if (isFunctionalInterface(lType)) {
                         processFunctionalInterfaceAssignment(lType, rightExpression);
                     } else if (isClosureWithType(lType) && rightExpression instanceof ClosureExpression) {
                         storeInferredReturnType(rightExpression, getCombinedBoundType(lType.getGenericsTypes()[0]));
                     }
+                } else if (leftExpression instanceof VariableExpression && hasInferredReturnType(leftExpression)) {
+                    lType = getInferredReturnType(leftExpression);
+                } else {
+                    lType = getType(leftExpression);
                 }
                 // GRECLIPSE end
                 rightExpression.visit(this);

@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
@@ -595,6 +596,28 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "0f1f2f3f4f");
+    }
+
+    @Test // GROOVY-9790
+    public void testLambdaTypes1() {
+        assumeTrue(isParrotParser());
+
+        for (Object sig : Stream.of("i", "(int i)", "(Integer i)").skip(isAtLeastGroovy(40) ? 0 : 1).toArray()) { // bare name not supported until Groovy 3.0.10
+            //@formatter:off
+            String[] sources = {
+                "Script.groovy",
+                "@groovy.transform.CompileStatic\n" +
+                "void test() {\n" +
+                "  java.util.stream.IntStream.range(0, 2).forEach(\n" +
+                "    " + sig + " -> { assert i >= 0 && i < 2 }\n" +
+                "  )\n" +
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+        }
     }
 
     @Test

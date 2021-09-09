@@ -2949,6 +2949,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10089() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def test(... attributes) {\n" +
+            "  List one = [\n" +
+            "    [id:'x', options:[count:42]]\n" +
+            "  ]\n" +
+            "  List two = attributes.collect {\n" +
+            "    def node = Collections.singletonMap('children', one)\n" +
+            "    if (node) {\n" +
+            "      node = node.get('children').find { child -> child['id'] == 'x' }\n" +
+            "    }\n" +
+            "    [id: it['id'], name: node['name'], count: node['options']['count']]\n" +
+            "  }\n" + //                                   ^^^^^^^^^^^^^^^ GroovyCastException (map ctor for Collection)
+            "}\n" +
+            "print test( [id:'x'] ).first().count\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testTypeChecked10091() {
         //@formatter:off
         String[] sources = {
@@ -3093,5 +3118,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "a1b2c3.14");
+    }
+
+    @Test
+    public void testTypeChecked10217() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Object o) {\n" +
+            "  if (o instanceof List) {\n" +
+            "    print o[0]\n" +
+            "    def x = (List) o\n" +
+            "    print x[0]\n" +
+            "  }\n" +
+            "}\n" +
+            "test([1])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "11");
     }
 }

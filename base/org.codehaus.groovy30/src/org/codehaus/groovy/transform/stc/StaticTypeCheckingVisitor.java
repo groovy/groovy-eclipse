@@ -651,6 +651,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode inferredType = localVariable.getNodeMetaData(INFERRED_TYPE);
             inferredType = getInferredTypeFromTempInfo(localVariable, inferredType);
             if (inferredType != null && !inferredType.equals(OBJECT_TYPE)) {
+                // GRECLIPSE add -- GROOVY-9790, GROOVY-10217
+                if (!inferredType.equals(accessedVariable.getType()))
+                // GRECLIPSE end
                 vexp.putNodeMetaData(INFERRED_RETURN_TYPE, inferredType);
             }
         }
@@ -766,6 +769,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 lType = getType(leftExpression);
             } else {
                 if (op != ASSIGN && op != ELVIS_EQUAL) {
+                    // GRECLIPSE add -- GROOVY-10217
+                    if (leftExpression instanceof VariableExpression && hasInferredReturnType(leftExpression)) {
+                        lType = getInferredReturnType(leftExpression);
+                    } else
+                    // GRECLIPSE end
                     lType = getType(leftExpression);
                 } else {
                     lType = getOriginalDeclarationType(leftExpression);

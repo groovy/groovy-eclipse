@@ -587,10 +587,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         final Variable accessedVariable = vexp.getAccessedVariable();
         final TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
 
-        if (accessedVariable == null) {
-            return;
-        }
-
         if (accessedVariable instanceof DynamicVariable) {
             // a dynamic variable is either a closure property, a class member referenced from a closure, or an undeclared variable
 
@@ -657,18 +653,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
-        } else {
+        } else if (accessedVariable != null) {
             VariableExpression localVariable;
             if (accessedVariable instanceof Parameter) {
-                Parameter parameter = (Parameter) accessedVariable;
-                localVariable = new ParameterVariableExpression(parameter);
+                Parameter prm = (Parameter) accessedVariable;
+                localVariable = new ParameterVariableExpression(prm);
             } else {
                 localVariable = (VariableExpression) accessedVariable;
             }
 
             ClassNode inferredType = localVariable.getNodeMetaData(INFERRED_TYPE);
             inferredType = getInferredTypeFromTempInfo(localVariable, inferredType);
-            if (inferredType != null && !isObjectType(inferredType)) {
+            if (inferredType != null && !isObjectType(inferredType) && !inferredType.equals(accessedVariable.getType())) {
                 vexp.putNodeMetaData(INFERRED_RETURN_TYPE, inferredType);
             }
         }
@@ -784,6 +780,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 lType = getType(leftExpression);
             } else {
                 if (op != ASSIGN && op != ELVIS_EQUAL) {
+                    // GRECLIPSE add -- GROOVY-10217
+                    if (leftExpression instanceof VariableExpression && hasInferredReturnType(leftExpression)) {
+                        lType = getInferredReturnType(leftExpression);
+                    } else
+                    // GRECLIPSE end
                     lType = getType(leftExpression);
                 } else {
                     lType = getOriginalDeclarationType(leftExpression);
