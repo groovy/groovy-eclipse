@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
@@ -2344,6 +2345,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         typeCheckingContext.pushEnclosingMethod(node);
         if (!isSkipMode(node) && !shouldSkipMethodNode(node)) {
             super.visitConstructorOrMethod(node, isConstructor);
+            // GRECLIPSE add
+            if (node.hasDefaultValue())
+            for (Parameter parameter : node.getParameters()) {
+                if (!parameter.hasInitialExpression()) continue;
+                // GROOVY-10094: visit param default argument expression
+                visitInitialExpression(parameter.getInitialExpression(), varX(parameter), parameter);
+                // GROOVY-10104: remove direct target setting to prevent errors
+                parameter.getInitialExpression().visit(new CodeVisitorSupport() {
+                    @Override
+                    public void visitMethodCallExpression(final MethodCallExpression mce) {
+                        mce.setMethodTarget(null); super.visitMethodCallExpression(mce);
+                    }
+                });
+            }
+            // GRECLIPSE end
         }
         if (!isConstructor) {
             returnAdder.visitMethod(node); // return statement added after visitConstructorOrMethod finished... we can not count these auto-generated return statements(GROOVY-7753), see `typeCheckingContext.pushEnclosingReturnStatement`

@@ -6288,6 +6288,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  c = { p, q = 'baz' -> '' + p + q }\n" +
             "  assert c('foo', 'bar') == 'foobar'\n" +
             "  assert c('foo') == 'foobaz'\n" +
+            "  c = { p, q = p.toString() -> '' + p + q }\n" +
+            "  assert c('foo', 'bar') == 'foobar'\n" +
+            "  assert c('foo') == 'foofoo'\n" +
             "}\n" +
             "test()\n",
         };

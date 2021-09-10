@@ -3001,6 +3001,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10094() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(int i = 'error') {}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
+            "\tvoid test(int i = 'error') {}\n" +
+            "\t                  ^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.lang.String to variable of type int\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10098() {
         //@formatter:off
         String[] sources = {
