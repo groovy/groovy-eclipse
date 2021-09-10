@@ -795,6 +795,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7753() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.Field\n" +
+            "String x = 'X'\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "public List<String> getStrings() {\n" +
+            "  x ? [x] : Collections.emptyList()\n" +
+            "}\n" +
+            "print strings\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[X]");
+    }
+
+    @Test
     public void testTypeChecked7804() {
         //@formatter:off
         String[] sources = {
@@ -3098,6 +3116,45 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10166() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "abstract class A<T extends C> {\n" +
+            "  T getC() {\n" +
+            "  }\n" +
+            "  Map toMap() {\n" +
+            "    c.getMap(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "class C<T extends A> {\n" +
+            "  Map getMap(T a) {\n" +
+            "  }\n" +
+            "  T getObj(Map m) {\n" +
+            "    A a = null\n" +
+            "    a.c.get(1)\n" +
+            "  }\n" +
+            "  T get(int i) {\n" +
+            "  }\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 17)\n" +
+            "\ta.c.get(1)\n" +
+            "\t^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method A#get(int). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
     }
 
     @Test
