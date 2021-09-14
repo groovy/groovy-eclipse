@@ -6346,4 +6346,33 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             runConformTest(sources, "1");
         }
     }
+
+    @Test
+    public void testCompileStatic10229() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  Map<String,?> a() {\n" +
+            "  }\n" +
+            "  Map<String,List<?>> b() {\n" +
+            "    def c = { ->\n" +
+            "      [\n" +
+            "        a(), a()\n" +
+            "      ]\n" +
+            "    }\n" +
+            "    c()\n" +
+            "    null\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().b()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null");
+
+        checkDisassemblyFor("C$_b_closure1.class",
+            "  // Signature: ()Ljava/util/List<Ljava/util/Map<Ljava/lang/String;+Ljava/lang/Object;>;>;\n"); // not L?;
+    }
 }
