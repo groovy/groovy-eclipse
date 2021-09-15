@@ -123,11 +123,6 @@
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.21</url>
 				</repository>
-				<repository>
-					<id>2021-09-M3</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.21-I-builds/I20210906-0500</url>
-				</repository>
 			</repositories>
 			<modules>
 				<module>jdt-patch/e421/org.eclipse.jdt.core</module>

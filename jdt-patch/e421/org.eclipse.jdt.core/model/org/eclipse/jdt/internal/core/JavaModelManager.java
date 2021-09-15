@@ -3402,11 +3402,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			}
 			return null;
 		}
-		long now = System.currentTimeMillis();
-
+		//long now = System.currentTimeMillis();
+		if (invalidArchiveInfo.reason != ArchiveValidity.VALID) // GROOVY add
 		// If the TTL for this cache entry has expired, directly check whether the archive is still invalid.
 		// If it transitioned to being valid, remove it from the cache and force an update to project caches.
-		if (now > invalidArchiveInfo.evictionTimestamp) {
+		if (System.currentTimeMillis() > invalidArchiveInfo.evictionTimestamp) {
 			try {
 				ZipFile zipFile = getZipFile(path, false);
 				closeZipFile(zipFile);
