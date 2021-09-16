@@ -364,6 +364,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new Order<Pogo, Comparable>({Pogo p -> p.s})\n" + // No such property s for class Object
+            "}\n" +
+            "test()\n",
+
+            "Order.groovy",
+            "class Order<T, U extends Comparable<? super U>> {\n" +
+            "  Order(java.util.function.Function<? super T, ? extends U> keyExtractor) {\n" +
+            "  }\n" +
+            "}\n",
+
+            "Pogo.groovy",
+            "@groovy.transform.Canonical\n" +
+            "class Pogo {\n" +
+            "  Number n\n" +
+            "  String s\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked17() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
             "def <T,U extends Configurable<T>> U configure(Class<U> type, @DelegatesTo(type='T',strategy=Closure.DELEGATE_FIRST) Closure<?> spec) {\n" +
             "  Configurable<T> obj = (Configurable<T>) type.newInstance()\n" +
             "  obj.configure(spec)\n" +
@@ -1077,6 +1106,44 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method Main#m(java.util.List<java.lang.Integer>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked8917() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def test() {\n" +
+            "  [1, 2, 3].stream().reduce(7) { r, e -> r + e }\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "13");
+    }
+
+    @Test
+    public void testTypeChecked8917a() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def test() {\n" +
+            "  [1, 2, 3].stream().<String>map{i -> null}.limit(1).toList()\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[null]");
     }
 
     @Test
@@ -2643,12 +2710,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "def <X /*extends Number*/> Set<X> generateNumbers(Class<X> type) {\n" +
-            "  return Collections.singleton(type.newInstance(42))\n" +
-            "}\n" +
             "@groovy.transform.TypeChecked\n" +
-            "def <Y extends Number> void printNumbers(Class<Y> numberType) {\n" +
-            "  generateNumbers(numberType).stream()\n" +
+            "def <T extends Number> void printNumbers(Class<T> numberType) {\n" +
+            "  Collections.singleton(numberType.newInstance(42)).stream()\n" +
             "    .filter { n -> n.intValue() > 0 }\n" +
             "    .forEach { n -> print n }\n" +
             "}\n" +

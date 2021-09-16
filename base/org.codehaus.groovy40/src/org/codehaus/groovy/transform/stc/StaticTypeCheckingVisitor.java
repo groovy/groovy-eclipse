@@ -274,9 +274,9 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDG
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsForClassNode;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findSetters;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findTargetVariable;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.fullyResolve;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.fullyResolveType;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getCombinedBoundType;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getCorrectedClassNode;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getGenericsWithoutArray;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getOperationName;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
@@ -2916,8 +2916,77 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
         } else if (isSAMType(param.getOriginType())) {
-            // SAM coercion
+            /* GRECLIPSE edit -- GROOVY-8917, GROOVY-10049
             inferSAMType(param, receiver, selectedMethod, InvocationWriter.makeArgumentList(arguments), expression);
+            */
+            Map<GenericsTypeName, GenericsType> context = selectedMethod.isStatic() ? new HashMap<>() : extractPlaceHolders(null, receiver, getDeclaringClass(selectedMethod, arguments));
+            GenericsType[] typeParameters = selectedMethod instanceof ConstructorNode ? selectedMethod.getDeclaringClass().getGenericsTypes() : applyGenericsContext(context, selectedMethod.getGenericsTypes());
+
+            if (typeParameters != null) {
+                boolean typeParametersResolved = false;
+                // first check for explicit type arguments
+                Expression emc = typeCheckingContext.getEnclosingMethodCall();
+                if (emc instanceof MethodCallExpression) {
+                    MethodCallExpression mce = (MethodCallExpression) emc;
+                    if (mce.getArguments() == arguments) {
+                        GenericsType[] typeArguments = mce.getGenericsTypes();
+                        if (typeArguments != null) {
+                            int n = typeParameters.length;
+                            if (n == typeArguments.length) {
+                                typeParametersResolved = true;
+                                for (int i = 0; i < n; i += 1) {
+                                    context.put(new GenericsTypeName(typeParameters[i].getName()), typeArguments[i]);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!typeParametersResolved) {
+                    // check for implicit type arguments
+                    int i = -1; Parameter[] p = selectedMethod.getParameters();
+                    for (Expression argument : (ArgumentListExpression) arguments) { i += 1;
+                        if (argument instanceof ClosureExpression || isNullConstant(argument)) continue;
+
+                        ClassNode pType = p[Math.min(i, p.length - 1)].getType();
+                        Map<GenericsTypeName, GenericsType> gc = new HashMap<>();
+                        extractGenericsConnections(gc, wrapTypeIfNecessary(getType(argument)), pType);
+
+                        gc.forEach((key, gt) -> {
+                            for (GenericsType tp : typeParameters) {
+                                if (tp.getName().equals(key.getName())) {
+                                    context.putIfAbsent(key, gt); // TODO: merge
+                                    break;
+                                }
+                            }
+                        });
+                    }
+
+                    for (GenericsType tp : typeParameters) {
+                        context.computeIfAbsent(new GenericsTypeName(tp.getName()), x -> fullyResolve(tp, context));
+                    }
+                }
+            }
+
+            ClassNode[] samParamTypes = GenericsUtils.parameterizeSAM(applyGenericsContext(context, param.getType())).getV1();
+
+            ClassNode[] paramTypes = expression.getNodeMetaData(CLOSURE_ARGUMENTS);
+            if (paramTypes == null) {
+                int n; Parameter[] p = expression.getParameters();
+                if (p == null) {
+                    // zero parameters
+                    paramTypes = ClassNode.EMPTY_ARRAY;
+                } else if ((n = p.length) == 0) {
+                    // implicit parameter(s)
+                    paramTypes = samParamTypes;
+                } else {
+                    paramTypes = new ClassNode[n];
+                    for (int i = 0; i < n; i += 1) {
+                        paramTypes[i] = i < samParamTypes.length ? samParamTypes[i] : null;
+                    }
+                }
+                expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
+            }
+            // GRECLIPSE end
         }
     }
 
@@ -2931,6 +3000,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * the same time the SAM class is used in the target method parameter,
      * providing a connection from the SAM type and the target method's class.
      */
+    /* GRECLIPSE edit
     private void inferSAMType(final Parameter param, final ClassNode receiver, final MethodNode methodWithSAMParameter, final ArgumentListExpression originalMethodCallArguments, final ClosureExpression openBlock) {
         // first we try to get as much information about the declaration class through the receiver
         Map<GenericsTypeName, GenericsType> targetMethodConnections = new HashMap<>();
@@ -3035,6 +3105,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private static ClassNode typeOrNull(final ClassNode[] parameterTypesForSAM, final int i) {
         return i < parameterTypesForSAM.length ? parameterTypesForSAM[i] : null;
     }
+    */
 
     private List<ClassNode[]> getSignaturesFromHint(final ClosureExpression expression, final MethodNode selectedMethod, final Expression hintClass, final Expression options) {
         // initialize hints
