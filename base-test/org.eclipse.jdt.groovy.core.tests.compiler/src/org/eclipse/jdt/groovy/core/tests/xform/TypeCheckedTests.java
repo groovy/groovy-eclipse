@@ -3280,4 +3280,62 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "11");
     }
+
+    @Test
+    public void testTypeChecked10239() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(List<C> list) {\n" +
+            "  def result = list.findAll {\n" +
+            "    it.e !in [E.X]\n" + // Cannot cast object 'true' with class 'java.lang.Boolean' to class 'Enum10239'
+            "  }\n" +
+            "  print result.size()\n" +
+            "}\n" +
+            "test([new C(E.X), new C(E.Y), new C(null)])\n",
+
+            "Types.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C {\n" +
+            "  E e\n" +
+            "}\n" +
+            "enum E {\n" +
+            "  X, Y\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "2");
+    }
+
+    @Test
+    public void testTypeChecked10239a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(List<C> list) {\n" +
+            "  def result = list.findAll {\n" +
+            "    !(it.e in [E.X])\n" +
+            "  }\n" +
+            "  print result.size()\n" +
+            "}\n" +
+            "test([new C(E.X), new C(E.Y), new C(null)])\n",
+
+            "Types.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C {\n" +
+            "  E e\n" +
+            "}\n" +
+            "enum E {\n" +
+            "  X, Y\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "2");
+    }
 }

@@ -797,6 +797,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     ? getResultType(rType, op, lType, reversedBinaryExpression)
                     : getResultType(lType, op, rType, expression);
             if (op == KEYWORD_IN || op == COMPARE_NOT_IN) {
+                // GRECLIPSE add -- GROOVY-10239
+                if (resultType == null) resultType = boolean_TYPE;
+                // GRECLIPSE end
                 // in case of the "in" operator, the receiver and the arguments are reversed
                 // so we use the reversedExpression and get the target method from it
                 storeTargetMethod(expression, reversedBinaryExpression.getNodeMetaData(DIRECT_METHOD_CALL_TARGET));
