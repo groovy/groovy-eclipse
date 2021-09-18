@@ -525,7 +525,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "Supplier<String> s = () -> 'hello'\n" +
             "print s.get()\n" +
             "\n" +
-            "Consumer<String> c = x -> print(x)\n" +
+            "Consumer<String> c = (x -> print x)\n" + // GROOVY-10236
             "c.accept(' ')\n" +
             "\n" +
             "Function<Integer, String> f = (Integer i) -> { 'world' }\n" +

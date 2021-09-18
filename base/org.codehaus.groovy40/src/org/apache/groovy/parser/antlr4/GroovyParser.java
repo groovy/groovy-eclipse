@@ -4622,8 +4622,8 @@ public class GroovyParser extends AbstractParser {
 		public BlockContext block() {
 			return getRuleContext(BlockContext.class,0);
 		}
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class,0);
+		public StatementExpressionContext statementExpression() {
+			return getRuleContext(StatementExpressionContext.class,0);
 		}
 		public LambdaBodyContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -4656,7 +4656,7 @@ public class GroovyParser extends AbstractParser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(869);
-				expression(0);
+				statementExpression();
 				}
 				break;
 			}
@@ -13420,7 +13420,7 @@ public class GroovyParser extends AbstractParser {
 		"\5\u0146\u00a4\2\u035e\u035f\5\u0082B\2\u035f}\3\2\2\2\u0360\u0361\5^"+
 		"\60\2\u0361\177\3\2\2\2\u0362\u0365\5^\60\2\u0363\u0365\5@!\2\u0364\u0362"+
 		"\3\2\2\2\u0364\u0363\3\2\2\2\u0365\u0081\3\2\2\2\u0366\u0369\5\u009eP"+
-		"\2\u0367\u0369\5\u00f0y\2\u0368\u0366\3\2\2\2\u0368\u0367\3\2\2\2\u0369"+
+		"\2\u0367\u0369\5\u00e6t\2\u0368\u0366\3\2\2\2\u0368\u0367\3\2\2\2\u0369"+
 		"\u0083\3\2\2\2\u036a\u0373\7Y\2\2\u036b\u036f\5\u0146\u00a4\2\u036c\u036d"+
 		"\5`\61\2\u036d\u036e\5\u0146\u00a4\2\u036e\u0370\3\2\2\2\u036f\u036c\3"+
 		"\2\2\2\u036f\u0370\3\2\2\2\u0370\u0371\3\2\2\2\u0371\u0372\7T\2\2\u0372"+
