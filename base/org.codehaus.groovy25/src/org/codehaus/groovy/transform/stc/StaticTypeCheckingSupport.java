@@ -78,6 +78,7 @@ import java.util.regex.Matcher;
 
 import static java.lang.Math.min;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
+import static org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant;
 import static org.codehaus.groovy.ast.ClassHelper.BigDecimal_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.BigInteger_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Boolean_TYPE;
@@ -695,6 +696,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     public static boolean checkCompatibleAssignmentTypes(ClassNode left, ClassNode right, Expression rightExpression, boolean allowConstructorCoercion) {
+        /* GRECLIPSE edit -- GROOVY-8983, GROOVY-10107
         ClassNode leftRedirect = left.redirect();
         ClassNode rightRedirect = right.redirect();
         if (leftRedirect == rightRedirect) return true;
@@ -703,13 +705,14 @@ public abstract class StaticTypeCheckingSupport {
             return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType(), rightExpression, false);
         }
 
-        /* GRECLIPSE edit -- GROOVY-8983
         if (right == VOID_TYPE || right == void_WRAPPER_TYPE) {
             return left == VOID_TYPE || left == void_WRAPPER_TYPE;
         }
         */
-        if (rightRedirect == void_WRAPPER_TYPE) return leftRedirect == VOID_TYPE;
-        if (rightRedirect == VOID_TYPE) return leftRedirect == void_WRAPPER_TYPE;
+        boolean rightExpressionIsNull = isNullConstant(rightExpression);
+        if (rightExpressionIsNull && !isPrimitiveType(left)) {
+            return true;
+        }
 
         if (left.isArray()) {
             if (right.isArray()) {
@@ -722,6 +725,13 @@ public abstract class StaticTypeCheckingSupport {
                     //  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GROOVY-8984: "? super T" is only compatible with an Object[] target
             }
         }
+
+        ClassNode leftRedirect = left.redirect();
+        ClassNode rightRedirect = right.redirect();
+        if (leftRedirect == rightRedirect) return true;
+
+        if (rightRedirect == void_WRAPPER_TYPE) return leftRedirect == VOID_TYPE;
+        if (rightRedirect == VOID_TYPE) return leftRedirect == void_WRAPPER_TYPE;
         // GRECLIPSE end
 
         if (isNumberType(rightRedirect) || WideningCategories.isNumberCategory(rightRedirect)) {
@@ -734,13 +744,13 @@ public abstract class StaticTypeCheckingSupport {
                         rightRedirect.isDerivedFrom(BigInteger_TYPE);
             }
         }
-
+        /* GRECLIPSE edit -- GROOVY-10107
         // if rightExpression is null and leftExpression is not a primitive type, it's ok
         boolean rightExpressionIsNull = rightExpression instanceof ConstantExpression && ((ConstantExpression) rightExpression).getValue() == null;
         if (rightExpressionIsNull && !isPrimitiveType(left)) {
             return true;
         }
-
+        */
         // on an assignment everything that can be done by a GroovyCast is allowed
 
         // anything can be assigned to an Object, String, Boolean
@@ -802,9 +812,11 @@ public abstract class StaticTypeCheckingSupport {
             }
         }
 
-        // GROOVY-7316 : it is an apparently legal thing to allow this. It's not type safe,
-        // but it is allowed...
+        /* GRECLIPSE edit -- GROOVY-7316, GROOVY-10256
         return right.isGenericsPlaceHolder();
+        */
+        return right.isGenericsPlaceHolder() && right.asGenericsType().isCompatibleWith(left);
+        // GRECLIPSE end
     }
 
     private static boolean isGroovyConstructorCompatible(final Expression rightExpression) {

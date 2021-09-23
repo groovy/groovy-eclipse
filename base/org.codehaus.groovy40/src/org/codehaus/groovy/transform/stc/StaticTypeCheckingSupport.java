@@ -673,15 +673,6 @@ public abstract class StaticTypeCheckingSupport {
             return true;
         }
 
-        // GROOVY-7307, GROOVY-9952, et al.
-        if (left.isGenericsPlaceHolder()) {
-            GenericsType[] genericsTypes = left.getGenericsTypes();
-            // should always be the case, but better safe than sorry
-            if (genericsTypes != null && genericsTypes.length == 1) {
-                return genericsTypes[0].isCompatibleWith(right);
-            }
-        }
-
         if (left.isArray()) {
             if (right.isArray()) {
                 return checkCompatibleAssignmentTypes(left.getComponentType(), right.getComponentType(), rightExpression, false);
@@ -755,8 +746,14 @@ public abstract class StaticTypeCheckingSupport {
             return true;
         }
 
-        // GROOVY-7316: It is an apparently legal thing to allow this. It's not type safe, but it is allowed...
+        /* GRECLIPSE edit -- GROOVY-7307, GROOVY-7316, GROOVY-10256
         return right.isGenericsPlaceHolder();
+        */
+        if (left.isGenericsPlaceHolder()) {
+            return left.getGenericsTypes()[0].isCompatibleWith(right);
+        }
+        return right.isGenericsPlaceHolder() && right.asGenericsType().isCompatibleWith(left);
+        // GRECLIPSE end
     }
 
     private static boolean isGroovyConstructorCompatible(final Expression rightExpression) {

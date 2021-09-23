@@ -670,11 +670,11 @@ public abstract class StaticTypeCheckingSupport {
             return true;
         }
 
+        /* GRECLIPSE edit -- GROOVY-8983
         ClassNode leftRedirect = left.redirect();
         ClassNode rightRedirect = right.redirect();
         if (leftRedirect == rightRedirect) return true;
 
-        /* GRECLIPSE edit -- GROOVY-8983
         if (leftRedirect.isArray() && rightRedirect.isArray()) {
             return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType(), rightExpression, false);
         }
@@ -683,9 +683,6 @@ public abstract class StaticTypeCheckingSupport {
             return left == VOID_TYPE || left == void_WRAPPER_TYPE;
         }
         */
-        if (rightRedirect == void_WRAPPER_TYPE) return leftRedirect == VOID_TYPE;
-        if (rightRedirect == VOID_TYPE) return leftRedirect == void_WRAPPER_TYPE;
-
         if (left.isArray()) {
             if (right.isArray()) {
                 return checkCompatibleAssignmentTypes(left.getComponentType(), right.getComponentType(), rightExpression, false);
@@ -697,6 +694,13 @@ public abstract class StaticTypeCheckingSupport {
                     //  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ GROOVY-8984: "? super T" is only compatible with an Object[] target
             }
         }
+
+        ClassNode leftRedirect = left.redirect();
+        ClassNode rightRedirect = right.redirect();
+        if (leftRedirect == rightRedirect) return true;
+
+        if (rightRedirect == void_WRAPPER_TYPE) return leftRedirect == VOID_TYPE;
+        if (rightRedirect == VOID_TYPE) return leftRedirect == void_WRAPPER_TYPE;
         // GRECLIPSE end
 
         if (isNumberType(rightRedirect) || WideningCategories.isNumberCategory(rightRedirect)) {
@@ -710,7 +714,7 @@ public abstract class StaticTypeCheckingSupport {
         }
 
         // anything can be assigned to an Object, String, [Bb]oolean or Class receiver; except null to boolean
-        if (isWildcardLeftHandSide(leftRedirect) && !(boolean_TYPE.equals(left) && isNullConstant(rightExpression))) return true;
+        if (isWildcardLeftHandSide(left) && !(leftRedirect == boolean_TYPE && isNullConstant(rightExpression))) return true;
 
         if (leftRedirect == char_TYPE && rightRedirect == Character_TYPE) return true;
         if (leftRedirect == Character_TYPE && rightRedirect == char_TYPE) return true;
@@ -759,8 +763,11 @@ public abstract class StaticTypeCheckingSupport {
             }
         }
 
-        // GROOVY-7316: It is an apparently legal thing to allow this. It's not type safe, but it is allowed...
+        /* GRECLIPSE edit -- GROOVY-7316, GROOVY-10256
         return right.isGenericsPlaceHolder();
+        */
+        return right.isGenericsPlaceHolder() && right.asGenericsType().isCompatibleWith(left);
+        // GRECLIPSE end
     }
 
     private static boolean isGroovyConstructorCompatible(final Expression rightExpression) {

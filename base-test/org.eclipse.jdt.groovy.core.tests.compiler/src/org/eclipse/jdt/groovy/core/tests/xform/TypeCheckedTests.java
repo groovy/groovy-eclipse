@@ -66,9 +66,10 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
             "void method(String message) {\n" +
-            "  List<Integer> ls = new ArrayList<Integer>()\n" +
-            "  ls.add(123)\n" +
-            "  ls.add('abc')\n" +
+            "  List<Integer> ints = new ArrayList<>()\n" +
+            "  ints.add(12345)\n" +
+            "  ints.add('abc')\n" +
+            "  ints << 'def'\n" +
             "}\n",
         };
         //@formatter:on
@@ -76,9 +77,15 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 5)\n" +
-            "\tls.add(\'abc\')\n" +
+            "\tints.add(\'abc\')\n" +
+            "\t^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)." +
+            " Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 6)\n" +
+            "\tints << 'def'\n" +
             "\t^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot call <T> java.util.ArrayList#leftShift(T) with arguments [java.lang.String]\n" +
             "----------\n");
     }
 
@@ -484,6 +491,23 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked6455() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class IntegerList {\n" +
+            "  @Delegate List<Integer> delegate = new ArrayList<Integer>()\n" +
+            "}\n" +
+            "def list = new IntegerList()\n" +
+            "assert list == []\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked6786() {
         //@formatter:off
         String[] sources = {
@@ -772,6 +796,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked7316() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T blank() {\n" +
+            "}\n" +
+            "def <T extends Iterable<?>> T iter() {\n" +
+            "}\n" +
+            "def <T extends CharSequence> T seq() {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "List<?> test() {\n" +
+            "  blank()\n" +
+            "  iter()\n" +
+            "  seq()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 11)\n" +
+            "\tseq()\n" +
+            "\t^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot return value of type #T on method returning type java.util.List<?>\n" +
+            "----------\n");
     }
 
     @Test
@@ -1856,7 +1909,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked9915() {
-        for (String type : new String[] {"List", "Iterable", "Collection"}) {
+        for (String type : new String[] {"List", "Collection", "Iterable"}) {
             //@formatter:off
             String[] sources = {
                 "Main.groovy",
@@ -1874,6 +1927,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             //@formatter:on
 
             runConformTest(sources, "[]");
+        }
+    }
+
+    @Test
+    public void testTypeChecked9915a() {
+        for (String type : new String[] {"Set", "Collection", "Iterable"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.TypeChecked\n" +
+                "class C {\n" +
+                  type + "<String> strings = Collections.emptySet()\n" +
+                "}\n" +
+                "new C()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
         }
     }
 
@@ -2554,6 +2625,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "null");
+    }
+
+    @Test
+    public void testTypeChecked10002() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  List<String> list = ['a','b',3]\n" +
+            "  Deque<String> deque = ['x','y']\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tList<String> list = ['a','b',3]\n" +
+            "\t                    ^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types." +
+            " Cannot assign java.util.ArrayList<java.io.Serializable<? extends java.lang.Object>> to: java.util.List<java.lang.String>\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 4)\n" +
+            "\tDeque<String> deque = ['x','y']\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.List<java.lang.String> to variable of type java.util.Deque<java.lang.String>\n" +
+            "----------\n");
     }
 
     @Test
@@ -3279,6 +3378,95 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "11");
+    }
+
+    @Test
+    public void testTypeChecked10220() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<S, T extends Number> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class D<T> {\n" +
+            "  C<? extends T, Integer> f\n" +
+            "  D(C<? extends T, Integer> p) {\n" +
+            "    f = p\n" +
+            "  }\n" +
+            "}\n" +
+            "print(new D<String>(null).f)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null");
+    }
+
+    @Test
+    public void testTypeChecked10222() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C<T> {\n" +
+            "  def <X> X m() {\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    T x = m()\n" + // Cannot assign value of type #X to variable of type T
+            "    print x\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null");
+    }
+
+    @Test
+    public void testTypeChecked10222a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Task {\n" +
+            "  def <T> T exec(args) {\n" +
+            "    args\n" +
+            "  }\n" +
+            "}\n" +
+            "class Test {\n" +
+            "  Task task\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  def <T> T exec(args) {\n" +
+            "    task.exec(args)\n" + // Cannot return value of type #T on method returning type T
+            "  }\n" +
+            "}\n" +
+            "print(new Test(task: new Task()).exec('works'))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTypeChecked10235() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Set<Integer> integers = java.util.concurrent.ConcurrentHashMap.newKeySet()\n" +
+            "  printSet(integers)\n" + // Cannot call printSet(Set<Integer>) with arguments [KeySetView<Object,Object>]
+            "}\n" +
+            "void printSet(Set<Integer> integers) {\n" +
+            "  println(integers)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[]");
     }
 
     @Test

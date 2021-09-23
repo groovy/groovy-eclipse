@@ -1805,17 +1805,21 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "static <M extends Map> M merge(M to, Map from) {\n" +
-            "  !from ? to : to.with {\n" +
-            "    one = from['one']\n" +
-            "    two = from['two']\n" +
-            "    return it\n" +
+            "static <P extends Pogo> P merge(P pogo, Map spec) {\n" +
+            "  !spec ? pogo : pogo.tap {\n" +
+            "    one = spec['one']\n" +
+            "    two = spec['two']\n" +
             "  }\n" +
             "}\n" +
-            "def map = [:]\n" +
-            "def result = merge(map, [one: 1, two: 2.0])\n" +
-            "assert result == [one: 1, two: 2.0]\n" +
-            "assert result.is(map)\n",
+            "def pogo = new Pogo()\n" +
+            "def result = merge(pogo, [one: 1, two: 2.0])\n" +
+            "assert result.one == 1 && result.two == 2.0\n" +
+            "assert result.is(pogo)\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  def one, two\n" +
+            "}\n",
         };
         //@formatter:on
 

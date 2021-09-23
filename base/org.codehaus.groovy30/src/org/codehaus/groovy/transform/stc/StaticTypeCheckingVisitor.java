@@ -829,8 +829,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 typeCheckingContext.secondPassExpressions.add(new SecondPassExpression(expression));
             }
 
-            boolean isAssignment = isAssignment(expression.getOperation().getType());
             /* GRECLIPSE edit -- GROOVY-8974, et al.
+            boolean isAssignment = isAssignment(expression.getOperation().getType());
             if (isAssignment && lType.isUsingGenerics() && missesGenericsTypes(resultType)) {
                 // unchecked assignment
                 // examples:
@@ -866,7 +866,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             boolean isEmptyDeclaration = (expression instanceof DeclarationExpression && rightExpression instanceof EmptyExpression);
-            if (isAssignment && !isEmptyDeclaration) {
+            if (isAssignment(op) && !isEmptyDeclaration) {
                 if (rightExpression instanceof ConstructorCallExpression) {
                     inferDiamondType((ConstructorCallExpression) rightExpression, lType);
                 }
@@ -874,8 +874,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (lType.isUsingGenerics() && missesGenericsTypes(resultType)) {
                     // the inferred type of the binary expression is the type of the RHS
                     // "completed" with generics type information available from the LHS
-                    if (!resultType.isGenericsPlaceHolder()) // plain reference loses information
-                    resultType = GenericsUtils.parameterizeType(lType, resultType.getPlainNodeReference());
+                    if (lType.equals(resultType)) {
+                        if (!lType.isGenericsPlaceHolder()) resultType = lType;
+                    } else {
+                        Map<GenericsTypeName, GenericsType> gt = new HashMap<>();
+                        extractGenericsConnections(gt, resultType, resultType.redirect());
+                        extractGenericsConnections(gt, lType, getNextSuperClass(resultType, lType));
+
+                        resultType = applyGenericsContext(gt, resultType.redirect());
+                    }
                 }
                 // GRECLIPSE end
                 ClassNode originType = getOriginalDeclarationType(leftExpression);
