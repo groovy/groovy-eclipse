@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assume.assumeTrue;
 
@@ -251,6 +252,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
+            "class C<T extends Object> {\n" +
+            "  public T f\n" +
+            "  C(T p) {\n" +
+            "    f = p\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C<String>('works').f\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTypeChecked12() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
             "@SuppressWarnings('rawtypes')\n" +
             "void test(Map args) {\n" +
             "  Set<String> keys = args.keySet()\n" +
@@ -262,7 +282,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked12() {
+    public void testTypeChecked13() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -291,7 +311,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked13() {
+    public void testTypeChecked14() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -311,7 +331,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked14() {
+    public void testTypeChecked15() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -335,7 +355,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked15() {
+    public void testTypeChecked16() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -367,7 +387,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked16() {
+    public void testTypeChecked17() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -396,7 +416,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked17() {
+    public void testTypeChecked18() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -533,6 +553,42 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked6787() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T extends List<? extends CharSequence>> void foo(T list) {\n" +
+            "}\n" +
+            "def <T extends List<? super CharSequence>> void bar(T list) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <T extends List<Object>> void one(T list) {\n" +
+            "  foo(list)\n" + // no!
+            "  bar(list)\n" + // yes
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <T extends List<String>> void two(T list) {\n" +
+            "  foo(list)\n" + // yes
+            "  bar(list)\n" + // no!
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
+            "\tfoo(list)\n" +
+            "\t^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call <T extends java.util.List<? extends java.lang.CharSequence>> Main#foo(T) with arguments [java.util.List<java.lang.Object>]\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 13)\n" +
+            "\tbar(list)\n" +
+            "\t^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call <T extends java.util.List<? super java.lang.CharSequence>> Main#bar(T) with arguments [java.util.List<java.lang.String>]\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked6882() {
         //@formatter:off
         String[] sources = {
@@ -651,6 +707,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "null");
+    }
+
+    @Test
+    public void testTypeChecked7003() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.desktop/java.beans=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.beans.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  static PropertyChangeListener listener = { PropertyChangeEvent event ->\n" +
+            "    print \"${event.oldValue} -> ${event.newValue}\"\n" +
+            "  }\n" +
+            "}\n" +
+            "C.getListener().propertyChange(new PropertyChangeEvent(new Object(), 'foo', 'bar', 'baz'))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "bar -> baz");
     }
 
     @Test
@@ -874,6 +952,37 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked7582() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface A<T> {\n" +
+            "  void x(T t)\n" +
+            "}\n" +
+            "interface B {\n" +
+            "  void x()\n" +
+            "}\n" +
+            "class C {\n" +
+            "  void m(A a) { print 'fails' }\n" +
+            "  void m(B b) { print 'hello'; b.x() } \n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def c = new C()\n" +
+            "  c.m { -> print ' world' }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "hello world");
+        } else {
+            runConformTest(sources, "", "groovy.lang.GroovyRuntimeException: Ambiguous method overloading for method C#m");
+        }
     }
 
     @Test

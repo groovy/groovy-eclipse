@@ -610,6 +610,33 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "1");
     }
 
+    @Test // StaticTypeCheckingSupport#typeCheckMethodsWithGenerics checks receiver derivation
+    public void testCompileStatic23() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "abstract class A {\n" +
+            "  public    void foo() { print 'hello' }\n" +
+            "  protected void bar(ArrayList list) { print(' '); baz(list) }\n" +
+            "  private   void baz(List list, String s = 'abc') { print 'world' }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Outer extends A {\n" +
+            "  class Inner {\n" +
+            "    void m() {\n" +
+            "      foo()\n" + // receiver is Outer$Inner
+            "      bar(new ArrayList())\n" + // same here
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new Outer.Inner(new Outer()).m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hello world");
+    }
+
     @Test
     public void testCompileStatic1505() {
         //@formatter:off
