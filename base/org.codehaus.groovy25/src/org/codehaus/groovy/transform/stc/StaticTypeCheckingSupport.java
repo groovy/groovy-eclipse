@@ -802,6 +802,11 @@ public abstract class StaticTypeCheckingSupport {
         if (leftRedirect.equals(GROOVY_OBJECT_TYPE) && isBeingCompiled(right)) {
             return true;
         }
+        // GRECLIPSE add -- GROOVY-10254
+        if (right.isDerivedFrom(CLOSURE_TYPE) && isSAMType(left)) {
+            return true;
+        }
+        // GRECLIPSE end
 
         if (left.isGenericsPlaceHolder()) {
             // GROOVY-7307

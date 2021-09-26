@@ -3635,4 +3635,20 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "2");
     }
+
+    @Test
+    public void testTypeChecked10254() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "java.util.function.Supplier<Integer> test() {\n" +
+            "  { -> 42 }\n" + // should coerce without "as Supplier<Integer>"
+            "}\n" +
+            "print(test().get())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
 }
