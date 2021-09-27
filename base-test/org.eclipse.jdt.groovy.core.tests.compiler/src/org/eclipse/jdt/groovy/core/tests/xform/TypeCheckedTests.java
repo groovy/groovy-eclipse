@@ -3556,6 +3556,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10225() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T m(T t) {\n" +
+            "  print t\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <N extends Number, X extends N> void test() {\n" +
+            "  X x = (X) null\n" +
+            "  m(false ? x : (X) null)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null");
+    }
+
+    @Test
     public void testTypeChecked10235() {
         if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
             vmArguments = new String[] {"--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED"};
