@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,8 +92,29 @@ public final class NullCheckTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "", "java.lang.IllegalArgumentException: whatever cannot be null");
     }
 
-    @Test
+    @Test // GROOVY-10178
     public void testNullCheck3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "new Pogo().test(null)\n",
+
+            "Pogo.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Pogo {\n" +
+            "  @groovy.transform.NullCheck\n" +
+            "  void test(whatever) {\n" +
+            "    print whatever\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "java.lang.IllegalArgumentException: whatever cannot be null");
+    }
+
+    @Test
+    public void testNullCheck4() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
