@@ -3576,6 +3576,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10234() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T getBean(Class<T> beanType) {\n" +
+            "  { obj, Class target -> Optional.of(obj.toString()) } as Service\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  print getBean(Service).convert(new ArrayList(), String).get()\n" +
+            "}\n" +
+            "test()\n",
+
+            "Service.java",
+            "import java.util.Optional;\n" +
+            "import java.util.function.*;\n" +
+            "@SuppressWarnings(\"rawtypes\")" +
+            "public interface Service<Impl extends Service> {\n" +
+            "  <T> Optional<T> convert(Object object, Class<T> targetType);\n" +
+            "  <S, T> Impl addConverter(Class<S> sourceType, Class<T> targetType, Function<S, T> typeConverter);\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[]");
+    }
+
+    @Test
     public void testTypeChecked10235() {
         if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
             vmArguments = new String[] {"--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED"};
