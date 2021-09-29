@@ -95,6 +95,7 @@ public class JDTResolver extends ResolveVisitor {
         commonTypes.put("java.lang.Short", ClassHelper.Short_TYPE);
         commonTypes.put("java.lang.Void", ClassHelper.void_WRAPPER_TYPE);
 
+        commonTypes.put("java.lang.Number", ClassHelper.Number_TYPE);
         commonTypes.put("java.lang.Object", ClassHelper.OBJECT_TYPE);
         commonTypes.put("java.lang.String", ClassHelper.STRING_TYPE);
 
@@ -269,7 +270,20 @@ public class JDTResolver extends ResolveVisitor {
             }
         }
 
-        int i = name.indexOf('<');
+        int i = 0;
+        while (name.charAt(i) == '[') {
+            i += 1;
+        }
+        if (i > 0) { // resolve "name" from "[[Lname;" then make dims
+            name = name.substring(i + 1, name.length() - 1);
+            ClassNode type = resolve(name);
+            for (; i > 0; i -= 1) {
+                type = type.makeArray();
+            }
+            return type;
+        }
+
+        i = name.indexOf('<');
         if (i > 0) {
             name = name.substring(0, i);
         }

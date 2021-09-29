@@ -2979,8 +2979,35 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingCompiledClasses("C", "T", "T$Trait$FieldHelper", "T$Trait$Helper", "T$Trait$StaticFieldHelper");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1267
+    @Test // GROOVY-10249
     public void testTraitBasics3() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "C",
+            "class C implements T {\n" +
+            "  static main(args) {\n" +
+            "    setP()\n" +
+            "    print p\n" +
+            "    setP(1)\n" +
+            "    print p\n" +
+            "    setP(1,2)\n" +
+            "    print p\n" +
+            "  }\n" +
+            "}\n");
+        env.addGroovyClass(paths[1], "T",
+            "trait T {\n" +
+            "  static Number[] p\n" +
+            "}\n");
+        //@formatter:on
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
+        executeClass(paths[0], "C", "[][1][1, 2]", "");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1267
+    public void testTraitBasics4() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
         //@formatter:off

@@ -387,7 +387,8 @@ public class GroovyClassScope extends ClassScope {
             TypeBinding[] parameterTypes = {Scope.getBaseType(propertyNode.getType().getName().toCharArray())};
             return asGenerated(new MethodBinding(modifiers, nameChars, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
         }
-        return asGenerated(new LazilyResolvedMethodBinding(false, propertyNode.getName(), modifiers, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        int va = (propertyNode.getType().isArray() ? Flags.AccVarargs : 0); // GROOVY-10249: see AsmClassGenerator#visitConstructorOrMethod
+        return asGenerated(new LazilyResolvedMethodBinding(false, propertyNode.getName(), modifiers | va, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding));
     }
 
     @Override
