@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -78,14 +77,14 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK14 = (58L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK15 = (59L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK16 = (60L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16));
+    protected static final long JDK17 = (60L << 17) + ClassFileConstants.MINOR_VERSION_0;
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
         long javaSpec = CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version"));
         List<Object[]> params = new ArrayList<>();
-        for (long jdk : JDKs) {
-            if (jdk <= javaSpec) {
+        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17}) {
+            if (jdk == javaSpec || (jdk < javaSpec && (jdk == JDK8 || jdk == JDK11))) { // current and LTS
                 params.add(new Object[] {jdk, CompilerOptions.versionFromJdkLevel(jdk)});
             }
         }
