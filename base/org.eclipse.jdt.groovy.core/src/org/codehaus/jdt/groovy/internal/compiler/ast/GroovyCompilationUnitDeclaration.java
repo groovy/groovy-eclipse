@@ -1143,7 +1143,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 boolean isEnum = classNode.isEnum();
-                configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
+                if (!isEnum && !isTrait(classNode)) configureSuperClass(typeDeclaration, classNode.getSuperClass());
                 configureSuperInterfaces(typeDeclaration, classNode);
                 typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
@@ -1546,15 +1546,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         //----------------------------------------------------------------------
 
-        private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum, boolean isTrait) {
-            if ((isEnum && superclass.getName().equals("java.lang.Enum")) || isTrait) {
-                // Don't wire it in, JDT will do it
-                typeDeclaration.superclass = null;
-            } else {
-                // If the start position is 0 the superclass wasn't actually declared, it was added by Groovy
-                if (!(superclass.getStart() == 0 && superclass.equals(ClassHelper.OBJECT_TYPE))) {
-                    typeDeclaration.superclass = createTypeReferenceForClassNode(superclass);
-                }
+        private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass) {
+            if (!(superclass.getStart() == 0 && superclass.equals(ClassHelper.OBJECT_TYPE))) {
+                typeDeclaration.superclass = createTypeReferenceForClassNode(superclass);
             }
         }
 

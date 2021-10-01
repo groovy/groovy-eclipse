@@ -1601,7 +1601,10 @@ protected static class JavacTestOptions {
 	}
 
 	protected INameEnvironment[] getClassLibs(boolean useDefaultClasspaths) {
-		String encoding = getCompilerOptions().get(CompilerOptions.OPTION_Encoding);
+		return getClassLibs(useDefaultClasspaths, null);
+	}
+	protected INameEnvironment[] getClassLibs(boolean useDefaultClasspaths, Map<String, String> options) {
+		String encoding = (options != null ? options : getCompilerOptions()).get(CompilerOptions.OPTION_Encoding);
 		if ("".equals(encoding))
 			encoding = null;
 		if (useDefaultClasspaths && encoding == null)

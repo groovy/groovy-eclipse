@@ -1451,7 +1451,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             this.hackMixins(classNode);
 
         } else if (isEnum) {
+            /* GRECLIPSE edit -- EnumHelper#makeEnumNode does this
             classNode.setModifiers(classNode.getModifiers() | Opcodes.ACC_ENUM | Opcodes.ACC_FINAL);
+            */
             classNode.setInterfaces(this.visitTypeList(ctx.is));
             this.initUsingGenerics(classNode);
 
@@ -3657,7 +3659,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         InnerClassNode anonymousInnerClass;
         if (1 == ctx.t) { // anonymous enum
-            anonymousInnerClass = new EnumConstantClassNode(outerClass, innerClassName, superClass.getModifiers() | Opcodes.ACC_FINAL, superClass.getPlainNodeReference());
+            anonymousInnerClass = new EnumConstantClassNode(outerClass, innerClassName, Opcodes.ACC_ENUM | Opcodes.ACC_FINAL, superClass.getPlainNodeReference());
             // and remove the final modifier from classNode to allow the sub class
             superClass.setModifiers(superClass.getModifiers() & ~Opcodes.ACC_FINAL);
         } else { // anonymous inner class

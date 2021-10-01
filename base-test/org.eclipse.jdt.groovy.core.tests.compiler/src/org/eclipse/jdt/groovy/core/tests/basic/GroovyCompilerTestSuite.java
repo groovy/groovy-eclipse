@@ -77,7 +77,7 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK14 = (58L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK15 = (59L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK16 = (60L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final long JDK17 = (60L << 17) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final long JDK17 = (61L << 16) + ClassFileConstants.MINOR_VERSION_0;
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
@@ -170,8 +170,12 @@ public abstract class GroovyCompilerTestSuite {
 
             @Override
             protected INameEnvironment getNameEnvironment(final String[] testFiles, final String[] classPaths) {
-                this.classpaths = (classPaths == null ? getDefaultClassPaths() : classPaths);
-                return new InMemoryNameEnvironment(testFiles, getClassLibs(false));
+                return getNameEnvironment(testFiles, classPaths, null);
+            }
+
+            protected INameEnvironment getNameEnvironment(final String[] testFiles, final String[] classPaths, final Map<String, String> options) {
+                this.classpaths = (classPaths != null ? classPaths : getDefaultClassPaths());
+                return new InMemoryNameEnvironment(testFiles, getClassLibs(false, options));
             }
 
             private String resolve(final URL jarRef) throws IOException {

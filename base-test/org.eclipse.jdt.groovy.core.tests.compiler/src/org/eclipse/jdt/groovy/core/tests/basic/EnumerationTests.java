@@ -658,7 +658,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "}\n" +
             "\n" +
             "class A {\n" +
-            "  public enum C2{\n" +
+            "  enum C2{\n" +
             "    TEST_C2\n" +
             "  }\n" +
             "}\n",
@@ -699,6 +699,26 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+
+        checkGCUDeclaration("A.groovy",
+            "package be.flow;\n" +
+            "public enum C1 {\n" +
+            "  TEST_C1,\n" +
+            "  private @groovy.transform.Generated C1() {\n" +
+            "  }\n" +
+            "}\n" +
+            "public class A {\n" +
+            "  public static enum C2 {\n" +
+            "    TEST_C2,\n" +
+            "    private @groovy.transform.Generated C2() {\n" +
+            "    }\n" +
+            "  }\n" +
+            "  public @groovy.transform.Generated A() {\n" +
+            "  }\n" +
+            "}");
+
+        checkDisassemblyFor("be/flow/A$C2.class",
+            "public static final enum be.flow.A$C2 implements ");
     }
 
     @Test
@@ -914,6 +934,9 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public abstract int foo();\n" +
             "}");
+
+        checkDisassemblyFor("Good.class", "public abstract enum Good ");
+        checkDisassemblyFor("Good$1.class", "\nfinal enum Good$1 {\n ");
     }
 
     @Test

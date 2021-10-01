@@ -20,11 +20,11 @@
 
         <!-- Useful references:
           https://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
-          https://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
+          https://www.eclipse.org/tycho/sitedocs/tycho-surefire-plugin/test-mojo.html
         -->
         <configuration>
           <argLine>-Xmx1G -XX:-OmitStackTraceInFastThrow</argLine>
-          <forkedProcessTimeoutInSeconds>9000</forkedProcessTimeoutInSeconds>
+          <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <testFailureIgnore>true</testFailureIgnore>
           <useUIHarness>true</useUIHarness>
