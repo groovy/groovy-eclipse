@@ -775,14 +775,19 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
     }
 
-    public boolean equals(Object o) {
-        // GRECLIPSE add
-        if (o==null) return false;
-        // GRECLIPSE end
+    public boolean equals(final Object that) {
+        /* GRECLIPSE edit -- GROOVY-10249, et al.
         if (redirect!=null) return redirect().equals(o);
         if (!(o instanceof ClassNode)) return false;
         ClassNode cn = (ClassNode) o;
         return (cn.getText().equals(getText()));
+        */
+        if (that == this) return true;
+        if (!(that instanceof ClassNode)) return false;
+        if (redirect != null) return redirect.equals(that);
+        if (componentType != null) return componentType.equals(((ClassNode) that).componentType);
+        return ((ClassNode) that).getText().equals(getText()); // arrays could be "T[]" or "[LT;"
+        // GRECLIPSE end
     }
 
     public int hashCode() {
