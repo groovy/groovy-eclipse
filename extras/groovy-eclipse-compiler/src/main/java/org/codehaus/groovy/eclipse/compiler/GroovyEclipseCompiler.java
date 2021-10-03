@@ -15,6 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.compiler;
 
+import static org.codehaus.plexus.util.FileUtils.fileWrite;
+import static org.codehaus.plexus.util.StringUtils.isBlank;
+import static org.codehaus.plexus.util.StringUtils.isNotBlank;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -54,10 +58,8 @@ import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
 import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
-import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
-import org.codehaus.plexus.util.cli.Commandline;
 
 /**
  * Allows the use of the Groovy-Eclipse compiler through Maven.
@@ -361,7 +363,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     private CompilerResult compileOutOfProcess(final CompilerConfiguration config, final String executable, final String groovyEclipseLocation, final String[] args) throws CompilerException {
-        Commandline cli = new Commandline();
+        org.codehaus.plexus.util.cli.Commandline cli = new org.codehaus.plexus.util.cli.Commandline();
         cli.setWorkingDirectory(config.getWorkingDirectory().getAbsolutePath());
         cli.setExecutable(executable);
 
@@ -397,7 +399,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         if (getLogger().isDebugEnabled()) {
             File commandLineFile = new File(config.getOutputLocation(), "greclipse." + (Os.isFamily(Os.FAMILY_WINDOWS) ? "bat" : "sh"));
             try {
-                FileUtils.fileWrite(commandLineFile.getAbsolutePath(), cli.toString().replaceAll("'", ""));
+                fileWrite(commandLineFile.getAbsolutePath(), cli.toString().replaceAll("'", ""));
                 if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                     Runtime.getRuntime().exec(new String[] {"chmod", "a+x", commandLineFile.getAbsolutePath()});
                 }
@@ -417,10 +419,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         List<CompilerMessage> messages = parseMessages(returnCode, out.getOutput(), config.isShowWarnings() || config.isVerbose());
         if (returnCode != 0 && messages.isEmpty()) {
-            if (isBlank(err.getOutput())) {
-                throw new CompilerException("Unknown error trying to execute the external compiler: " + EOL + cli.toString());
-            } else {
+            if (isNotBlank(err.getOutput())) {
                 messages.add(new CompilerMessage("Failure executing groovy-eclipse compiler:" + EOL + err.getOutput(), Kind.ERROR));
+            } else {
+                throw new CompilerException("Unknown error trying to execute the external compiler: " + EOL + cli.toString());
             }
         } else if (isNotBlank(err.getOutput())) {
             getLogger().warn("Error output from groovy-eclipse compiler:" + EOL + err.getOutput());
@@ -600,10 +602,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         File javaPath;
         if (Os.isName("AIX")) {
             javaPath = new File(javaHome + File.separator + ".." + File.separator + "sh", javaCommand);
-        } else if (Os.isName("Mac OS X")) {
-            javaPath = new File(javaHome + File.separator + "bin", javaCommand);
         } else {
-            javaPath = new File(javaHome + File.separator + ".." + File.separator + "bin", javaCommand);
+            javaPath = new File(javaHome + File.separator + "bin", javaCommand);
         }
         if (javaPath.isFile()) {
             return javaPath.getAbsolutePath();
@@ -646,13 +646,5 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         return argsList.toArray(new String[0]);
-    }
-
-    private static boolean isBlank(final String str) {
-        return str == null || str.trim().length() == 0;
-    }
-
-    private static boolean isNotBlank(final String str) {
-        return !isBlank(str);
     }
 }

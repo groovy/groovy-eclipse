@@ -47,10 +47,7 @@
                 <exclude name="about_files/**"/>
                 <exclude name="ant_tasks/**"/>
                 <exclude name="module-info.class"/>
-                <exclude name="package-list"/>
                 <exclude name="plugin.*"/>
-                <exclude name="script.js"/>
-                <exclude name="stylesheet.css"/>
                 <exclude name="systembundle.properties"/>
                 <exclude name="META-INF/*.properties"/>
                 <exclude name="META-INF/eclipse.inf"/>
@@ -60,8 +57,8 @@
                 <exclude name="META-INF/*.SF"/>
             </fileset>
             <manifest>
-                <attribute name="Implementation-Version" value="${version}${jdt.patch.target}"/>
                 <attribute name="Implementation-Vendor" value="Pivotal Software, Inc."/>
+                <attribute name="Implementation-Version" value="${version} (${jdt.patch.target})"/>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main"/>
             </manifest>
         </jar>
@@ -153,6 +150,7 @@
 
         <fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
             <include name="${groovy.folder}/lib/groovy*.jar"/>
+            <exclude name="${groovy.folder}/lib/*-javadoc.jar"/>
             <exclude name="${groovy.folder}/lib/groovy-test*.jar"/>
             <!-- include the non-locking classloader w/ sources -->
             <include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
