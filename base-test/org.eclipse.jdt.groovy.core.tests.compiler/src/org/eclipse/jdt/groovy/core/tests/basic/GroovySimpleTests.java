@@ -3053,7 +3053,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testSwitchCases1() {
         //@formatter:off
         String[] sources = {
-            "X.groovy",
+            "Main.groovy",
             "def foo(p) {\n" +
             "  switch (p) {\n" +
             "   case 1:\n" +
@@ -3083,7 +3083,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testSwitchCases2() {
         //@formatter:off
         String[] sources = {
-            "X.groovy",
+            "Main.groovy",
             "def foo(p) {\n" +
             "  switch (p) {\n" +
             "   case 1:\n" +
@@ -3110,7 +3110,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testSwitchCases3() {
         //@formatter:off
         String[] sources = {
-            "X.groovy",
+            "Main.groovy",
             "def foo(x,y) {\n" +
             "  switch (x) {\n" +
             "  case 'x1':\n" +
@@ -3132,11 +3132,115 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "r1");
     }
 
+    @Test // GROOVY-9272
+    public void testSwitchCases4() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def s = 'Bar'\n" +
+            "int yield = switch (s) {\n" +
+            "  case 'Foo':\n" +
+            "    yield 1\n" +
+            "  case 'Bar':\n" +
+            "    print 2\n" +
+            "  case 'Baz':\n" +
+            "    yield 3\n" +
+            "  default:\n" +
+            "    yield 0\n" +
+            "}\n" +
+            "print yield\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "23");
+    }
+
+    @Test // GROOVY-9272
+    public void testSwitchCases5() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.time.DayOfWeek\n" +
+            "import static java.time.DayOfWeek.*\n" +
+            "\n" +
+            "void test(DayOfWeek day) {\n" +
+            "  int letterCount = switch (day) {\n" +
+            "    case MONDAY, FRIDAY, SUNDAY -> 6\n" +
+            "    case TUESDAY                -> 7\n" +
+            "    case THURSDAY, SATURDAY     -> { 8 }\n" +
+            "    case WEDNESDAY              -> { yield 9 }\n" +
+            "    default                     -> throw new IllegalStateException(\"Invalid day: $day\")\n" +
+            "  }\n" +
+            "  print letterCount\n" +
+            "}\n" +
+            "test(WEDNESDAY)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "9");
+    }
+
+    @Test // GROOVY-9272
+    public void testSwitchCases6() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.time.DayOfWeek\n" +
+            "import static java.time.DayOfWeek.*\n" +
+            "\n" +
+            "void test(DayOfWeek day) {\n" +
+            "  int letterCount = switch (day) {\n" +
+            "    case MONDAY, FRIDAY, SUNDAY: yield 6\n" +
+            "    case TUESDAY               : yield 7\n" +
+            "    case THURSDAY, SATURDAY    : yield 8\n" +
+            "    case WEDNESDAY             : { yield 9 }\n" +
+            "    default                    : throw new IllegalStateException(\"Invalid day: $day\")\n" +
+            "  }\n" +
+            "  print letterCount\n" +
+            "}\n" +
+            "test(WEDNESDAY)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "9");
+    }
+
+    @Test // GROOVY-9272
+    public void testSwitchCases7() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.time.DayOfWeek\n" +
+            "import static java.time.DayOfWeek.*\n" +
+            "\n" +
+            "void test(DayOfWeek day) {\n" +
+            "  print(switch (day) {\n" +
+            "    case MONDAY..FRIDAY    : yield 'work day'\n" +
+            "    case [SATURDAY, SUNDAY]: yield 'weekend'\n" +
+            "  })\n" +
+            "}\n" +
+            "test(SUNDAY)\n" +
+            "print ' '\n" +
+            "test(WEDNESDAY)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "weekend work day");
+    }
+
     @Test // GROOVY-9880
     public void testBreakAfterIf() {
         //@formatter:off
         String[] sources = {
-            "X.groovy",
+            "Main.groovy",
             "switch ('value') {\n" +
             " case 'value':\n" +
             "  print 'foo'\n" +
