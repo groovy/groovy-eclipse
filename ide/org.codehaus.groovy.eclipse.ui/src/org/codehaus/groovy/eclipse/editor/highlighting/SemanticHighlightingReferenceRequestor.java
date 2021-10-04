@@ -46,6 +46,7 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -103,7 +104,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         // ignore statements or nodes with invalid source locations
-        if (!(node instanceof AnnotatedNode) || node instanceof ImportNode || endOffset(node, result) < 1) {
+        if (!(node instanceof AnnotatedNode || node instanceof ReturnStatement) || node instanceof ImportNode || endOffset(node, result) < 1) {
             if (DEBUG) System.err.println("skipping: " + node);
             return VisitStatus.CONTINUE;
         }
@@ -220,6 +221,9 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             if (var != null) {
                 pos = new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED);
             }
+        } else if (node instanceof ReturnStatement && node.getNodeMetaData("_IS_YIELD_STATEMENT") != null) {
+            pos = new HighlightedTypedPosition(new Position(node.getStart(), 5), HighlightKind.KEYWORD);
+
         } else if (DEBUG) {
             String type = node.getClass().getSimpleName();
             if (!type.matches("(Class|Binary|ArgumentList|Closure(List)?|Property|List|Map)Expression"))

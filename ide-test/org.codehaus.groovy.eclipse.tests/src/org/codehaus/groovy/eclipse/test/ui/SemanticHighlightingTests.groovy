@@ -3801,6 +3801,83 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testSwitch1() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |int yield = switch (x) {
+            |  case 'Foo':
+            |    yield 1
+            |  case 'Bar':
+            |    print 2
+            |  case 'Baz':
+            |    yield 3
+            |  default: {
+            |    yield 0
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('yield'), 5, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('yield', 40), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('print'), 5, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('yield', 80), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('3'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('yield'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER))
+    }
+
+    @Test
+    void testSwitch2() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |import java.time.DayOfWeek
+            |import static java.time.DayOfWeek.*
+            |
+            |void test(DayOfWeek day) {
+            |  int letterCount = switch (day) {
+            |    case MONDAY, FRIDAY, SUNDAY -> 6
+            |    case TUESDAY                -> { 7 }
+            |    case THURSDAY, SATURDAY     -> { yield 8 }
+            |    case WEDNESDAY              -> { if (true) yield 9; else 0 }
+            |    default                     -> throw new IllegalStateException("Invalid day: $day")
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('DayOfWeek'), 9, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('day'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('letterCount'), 11, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('(day') + 1, 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('MONDAY'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('FRIDAY'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('SUNDAY'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('6'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('TUESDAY'), 7, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('7'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('THURSDAY'), 8, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('SATURDAY'), 8, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('yield'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('8'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('WEDNESDAY'), 9, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('yield'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('9'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('IllegalStateException'), 'IllegalStateException'.length(), CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('IllegalStateException'), 'IllegalStateException'.length(), CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"Invalid day: $day"'.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('"') + 1, 'Invalid day: '.length(), STRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('day'), 3, PARAMETER))
+    }
+
+    @Test
     void testTraits1() {
         String contents = '''\
             |trait Whatever {
