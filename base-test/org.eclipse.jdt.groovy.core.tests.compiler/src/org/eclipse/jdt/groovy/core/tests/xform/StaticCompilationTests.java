@@ -6406,4 +6406,23 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         checkDisassemblyFor("C$_b_closure1.class",
             "  // Signature: ()Ljava/util/List<Ljava/util/Map<Ljava/lang/String;+Ljava/lang/Object;>;>;\n"); // not L?;
     }
+
+    @Test // BiFunction and BinaryOperator with same type parameter
+    public void testCompileStatic10282() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "String f() {\n" +
+            "  def integers = java.util.stream.IntStream.range(0, 10).boxed()\n" +
+            "  integers.reduce('', (s, i) -> s + '-', String::concat)\n" +
+            "}\n" +
+            "print f()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "----------");
+    }
 }

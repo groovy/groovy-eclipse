@@ -847,9 +847,14 @@ public class GenericsUtils {
      * @since 3.0.0
      */
     public static Map<GenericsType, GenericsType> makeDeclaringAndActualGenericsTypeMapOfExactType(final ClassNode declaringClass, final ClassNode actualReceiver) {
+        /* GRECLIPSE edit -- GROOVY-10282
         return makeDeclaringAndActualGenericsTypeMapOfExactType(declaringClass, actualReceiver, new HashSet<>());
+        */
+        return doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, true).getV1();
+        // GRECLIPSE end
     }
 
+    /* GRECLIPSE edit
     private static Map<GenericsType, GenericsType> makeDeclaringAndActualGenericsTypeMapOfExactType(final ClassNode declaringClass, final ClassNode actualReceiver, final Set<ClassNode> parameterizedTypes) {
         Tuple2<Map<GenericsType, GenericsType>, ClassNode> tuple = doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, true);
         Map<GenericsType, GenericsType> result = tuple.getV1();
@@ -862,6 +867,7 @@ public class GenericsUtils {
 
         return result;
     }
+    */
 
     private static Tuple2<Map<GenericsType, GenericsType>, ClassNode> doMakeDeclaringAndActualGenericsTypeMap(final ClassNode declaringClass, final ClassNode actualReceiver, final boolean tryToFindExactType) {
         ClassNode parameterizedType = findParameterizedTypeFromCache(declaringClass, actualReceiver, tryToFindExactType);
@@ -914,7 +920,6 @@ public class GenericsUtils {
 
         return result;
     }
-    */
 
     private static Map<GenericsType, GenericsType> connectGenericsTypes(final Map<GenericsType, GenericsType> genericsTypeMap) {
         Map<GenericsType, GenericsType> result = new LinkedHashMap<>();
@@ -939,6 +944,7 @@ public class GenericsUtils {
 
         return result;
     }
+    */
 
     /**
      * Checks if the type has any non-placeholder (aka resolved) generics.

@@ -918,13 +918,18 @@ public class GenericsUtils {
      * @since 2.5.9
      */
     public static Map<GenericsType, GenericsType> makeDeclaringAndActualGenericsTypeMapOfExactType(ClassNode declaringClass, ClassNode actualReceiver) {
+        /* GRECLIPSE edit -- GROOVY-10282
         List<ClassNode> parameterizedTypeList = new LinkedList<>();
 
         Map<GenericsType, GenericsType> result = makeDeclaringAndActualGenericsTypeMapOfExactType(declaringClass, actualReceiver, parameterizedTypeList);
 
         return connectGenericsTypes(result);
+        */
+        return doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, true).getFirst();
+        // GRECLIPSE end
     }
 
+    /* GRECLIPSE edit
     private static Map<GenericsType, GenericsType> makeDeclaringAndActualGenericsTypeMapOfExactType(ClassNode declaringClass, ClassNode actualReceiver, List<ClassNode> parameterizedTypeList) {
         Tuple2<Map<GenericsType, GenericsType>, ClassNode> resultAndParameterizedTypeTuple = doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, true);
         ClassNode parameterizedType = resultAndParameterizedTypeTuple.getSecond();
@@ -937,6 +942,7 @@ public class GenericsUtils {
 
         return connectGenericsTypes(result);
     }
+    */
 
     private static Tuple2<Map<GenericsType, GenericsType>, ClassNode> doMakeDeclaringAndActualGenericsTypeMap(ClassNode declaringClass, ClassNode actualReceiver, boolean tryToFindExactType) {
         ClassNode parameterizedType = findParameterizedTypeFromCache(declaringClass, actualReceiver, tryToFindExactType);
@@ -970,6 +976,7 @@ public class GenericsUtils {
         // GRECLIPSE end
     }
 
+    /* GRECLIPSE edit
     private static Map<GenericsType, GenericsType> connectGenericsTypes(Map<GenericsType, GenericsType> genericsTypeMap) {
         Map<GenericsType, GenericsType> result = new LinkedHashMap<>();
 
@@ -993,6 +1000,7 @@ public class GenericsUtils {
 
         return result;
     }
+    */
 
     public static boolean hasPlaceHolders(final ClassNode parameterizedType) {
         return checkPlaceHolders(parameterizedType, GenericsType::isPlaceholder);
