@@ -562,12 +562,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "def <T extends List<? super CharSequence>> void bar(T list) {\n" +
             "}\n" +
             "@groovy.transform.TypeChecked\n" +
-            "def <T extends List<Object>> void one(T list) {\n" +
+            "def <U extends List<Object>> void one(U list) {\n" +
             "  foo(list)\n" + // no!
             "  bar(list)\n" + // yes
             "}\n" +
             "@groovy.transform.TypeChecked\n" +
-            "def <T extends List<String>> void two(T list) {\n" +
+            "def <U extends List<String>> void two(U list) {\n" +
             "  foo(list)\n" + // yes
             "  bar(list)\n" + // no!
             "}\n",
@@ -579,12 +579,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tfoo(list)\n" +
             "\t^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call <T extends java.util.List<? extends java.lang.CharSequence>> Main#foo(T) with arguments [java.util.List<java.lang.Object>]\n" +
+            "Groovy:[Static type checking] - Cannot call <T extends java.util.List<? extends java.lang.CharSequence>> Main#foo(T) with arguments [U]\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 13)\n" +
             "\tbar(list)\n" +
             "\t^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call <T extends java.util.List<? super java.lang.CharSequence>> Main#bar(T) with arguments [java.util.List<java.lang.String>]\n" +
+            "Groovy:[Static type checking] - Cannot call <T extends java.util.List<? super java.lang.CharSequence>> Main#bar(T) with arguments [U]\n" +
             "----------\n");
     }
 
@@ -660,6 +660,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  assert b instanceof HashSet\n" +
             "  LinkedHashSet c = []\n" +
             "  assert c instanceof LinkedHashSet\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked6919() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I1 {\n" +
+            "  String getFoo()\n" +
+            "}\n" +
+            "interface I2 {\n" +
+            "  String getBar()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <T extends I1 & I2> void test(T obj) {\n" +
+            "  obj?.foo\n" +
+            "  obj?.bar\n" +
             "}\n" +
             "test()\n",
         };
@@ -3425,7 +3448,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 17)\n" +
             "\ta.c.get(1)\n" +
             "\t^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method A#get(int). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method T#get(int). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 

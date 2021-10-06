@@ -3960,15 +3960,35 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 addTraitType(staticType, owners); // T in Class<T$Trait$Helper>
                 owners.add(Receiver.make(receiver)); // Class<Type>
             } else {
+                /* GRECLIPSE edit -- GROOVY-6919
                 owners.add(Receiver.make(receiver));
+                */
+                addBoundType(receiver, owners);
                 addSelfTypes(receiver, owners);
                 addTraitType(receiver, owners);
-                if (receiver.isInterface()) {
+                if (receiver.redirect().isInterface()) {
                     owners.add(Receiver.make(OBJECT_TYPE));
                 }
             }
         }
         return owners;
+    }
+
+    private static void addBoundType(final ClassNode receiver, final List<Receiver<String>> owners) {
+        if (!receiver.isGenericsPlaceHolder() || receiver.getGenericsTypes() == null) {
+            owners.add(Receiver.make(receiver));
+            return;
+        }
+
+        GenericsType gt = receiver.getGenericsTypes()[0];
+        if (gt.getLowerBound() == null && gt.getUpperBounds() != null) {
+            for (ClassNode cn : gt.getUpperBounds()) { // T extends C & I
+                addBoundType(cn, owners);
+                addSelfTypes(cn, owners);
+            }
+        } else {
+            owners.add(Receiver.make(OBJECT_TYPE)); // T or T super Type
+        }
     }
 
     private static void addSelfTypes(final ClassNode receiver, final List<Receiver<String>> owners) {
@@ -6074,14 +6094,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ParameterVariableExpression(final Parameter parameter) {
             super(parameter);
             this.parameter = parameter;
+            /* GRECLIPSE edit -- GROOVY-6919
             ClassNode inferred = parameter.getNodeMetaData(INFERRED_TYPE);
             if (inferred == null) {
                 inferred = infer(parameter);
 
                 parameter.setNodeMetaData(INFERRED_TYPE, inferred);
             }
+            */
+            parameter.getNodeMetaData(INFERRED_TYPE, x -> parameter.getOriginType());
+            // GRECLIPSE end
         }
 
+        /* GRECLIPSE edit
         private static ClassNode infer(final Variable variable) {
             ClassNode originType = variable.getOriginType();
 
@@ -6140,6 +6165,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         public boolean equals(final Object other) {
             return parameter.equals(other);
         }
+        */
+        @Override
+        public Map getMetaDataMap() {
+            return parameter.getMetaDataMap();
+        }
+        @Override
+        public void setMetaDataMap(final Map map) {
+            parameter.setMetaDataMap(map);
+        }
+        // GRECLIPSE end
     }
 
     protected class VariableExpressionTypeMemoizer extends ClassCodeVisitorSupport {

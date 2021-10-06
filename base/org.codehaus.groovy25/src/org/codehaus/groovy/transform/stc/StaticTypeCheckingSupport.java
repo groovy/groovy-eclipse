@@ -960,7 +960,7 @@ public abstract class StaticTypeCheckingSupport {
         if (type.isArray()) {
             return prettyPrintTypeName(type.getComponentType()) + "[]";
         }
-        return type.getText();
+        return type.isGenericsPlaceHolder() ? type.getUnresolvedName() : type.getText();
     }
 
     public static boolean implementsInterfaceOrIsSubclassOf(ClassNode type, ClassNode superOrInterface) {

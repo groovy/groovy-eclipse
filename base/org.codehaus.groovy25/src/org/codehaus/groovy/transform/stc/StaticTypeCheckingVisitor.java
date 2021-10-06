@@ -4500,7 +4500,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             addTraitType(staticType, owners); // T in Class<T$Trait$Helper>
             owners.add(Receiver.make(receiver)); // Class<Type>
         } else {
-            owners.add(Receiver.make(receiver));
+            addBoundType(receiver, owners);
             addSelfTypes(receiver, owners);
             addTraitType(receiver, owners);
             if (receiver.isInterface()) {
@@ -4510,6 +4510,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // GRECLIPSE end
         return owners;
     }
+
+    // GRECLIPSE add
+    private static void addBoundType(final ClassNode receiver, final List<Receiver<String>> owners) {
+        if (!receiver.isGenericsPlaceHolder() || receiver.getGenericsTypes() == null) {
+            owners.add(Receiver.make(receiver));
+            return;
+        }
+
+        GenericsType gt = receiver.getGenericsTypes()[0];
+        if (gt.getLowerBound() == null && gt.getUpperBounds() != null) {
+            for (ClassNode cn : gt.getUpperBounds()) { // T extends C & I
+                addBoundType(cn, owners);
+                addSelfTypes(cn, owners);
+            }
+        } else {
+            owners.add(Receiver.make(OBJECT_TYPE)); // T or T super Type
+        }
+    }
+    // GRECLIPSE end
 
     private static void addSelfTypes(final ClassNode receiver, final List<Receiver<String>> owners) {
         LinkedHashSet<ClassNode> selfTypes = new LinkedHashSet<ClassNode>();
@@ -6806,7 +6825,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (isClassClassNodeWrappingConcreteType(receiver)) {
             receiver = receiver.getGenericsTypes()[0].getType();
         }
-        addStaticTypeError("Cannot find matching method " + receiver.getText() + "#" + toMethodParametersString(name, args) + ". Please check if the declared type is correct and if the method exists.", call);
+        addStaticTypeError("Cannot find matching method " + prettyPrintTypeName(receiver) + "#" + toMethodParametersString(name, args) + ". Please check if the declared type is correct and if the method exists.", call);
     }
 
     protected void addAmbiguousErrorMessage(final List<MethodNode> foundMethods, final String name, final ClassNode[] args, final Expression expr) {
@@ -6992,12 +7011,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ParameterVariableExpression(Parameter parameter) {
             super(parameter);
             this.parameter = parameter;
+            /* GRECLIPSE edit -- GROOVY-6919
             ClassNode inferred = parameter.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
             if (inferred == null) {
                 inferred = infer(parameter);
 
                 parameter.setNodeMetaData(StaticTypesMarker.INFERRED_TYPE, inferred);
             }
+            */
+            parameter.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE, x -> parameter.getOriginType());
+            // GRECLIPSE end
         }
 
         @Override
@@ -7030,6 +7053,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             parameter.setNodeMetaData(key, value);
         }
 
+        /* GRECLIPSE edit
         @Override
         public int hashCode() {
             return parameter.hashCode();
@@ -7039,8 +7063,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         public boolean equals(Object other) {
             return parameter.equals(other);
         }
+        */
+        @Override
+        public <T> T getNodeMetaData(Object key, java.util.function.Function<?, ? extends T> valFn) {
+            return parameter.getNodeMetaData(key, valFn);
+        }
+        // GRECLIPSE end
     }
 
+    /* GRECLIPSE edit
     private static ClassNode infer(Variable variable) {
         ClassNode originType = variable.getOriginType();
 
@@ -7059,4 +7090,5 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         return variable.getOriginType();
     }
+    */
 }
