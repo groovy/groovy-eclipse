@@ -637,6 +637,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "hello world");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1191
+    public void testCompileStatic24() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void m(java.util.function.Function<String, Integer> f) {\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  m(Object::sleep)\n" + // NPE while processing Main.groovy
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tm(Object::sleep)\n" +
+            "\t  ^^^^^^^^^^^^^\n" +
+            "Groovy:Failed to find the expected method[sleep(java.lang.String)] in the type[java.lang.Object]\n" +
+            "----------\n");
+    }
+
     @Test
     public void testCompileStatic1505() {
         //@formatter:off
@@ -733,31 +758,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic1191() {
-        assumeTrue(isParrotParser());
-
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "void m(java.util.function.Function<String, Integer> f) {\n" +
-            "}\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "void test() {\n" +
-            "  m(Object::sleep)\n" + // NPE while processing Main.groovy
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 5)\n" +
-            "\tm(Object::sleep)\n" +
-            "\t  ^^^^^^^^^^^^^\n" +
-            "Groovy:Failed to find the expected method[sleep(java.lang.String)] in the type[java.lang.Object]\n" +
-            "----------\n");
-    }
-
-    @Test
     public void testCompileStatic6095() {
         //@formatter:off
         String[] sources = {
@@ -850,6 +850,71 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic6802() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Boolean b = [false]\n" +
+            "  print b\n" +
+            "  b = [true];\n" +
+            "  print b\n" +
+            "  b = [];\n" +
+            "  print b\n" +
+            "  b = [:]\n" +
+            "  print b\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "truetruefalsefalse");
+    }
+
+    @Test
+    public void testCompileStatic6802a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Class<?> c = []\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tClass<?> c = []\n" +
+            "\t^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - No matching constructor found: java.lang.Class()\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic6803() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  String s = ['foo']\n" +
+            "  print s\n" +
+            "  s = [];\n" +
+            "  print s\n" +
+            "  s = [:]\n" +
+            "  print s\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo][]" + (isAtLeastGroovy(40) ? "[:]" : "{}"));
     }
 
     @Test
