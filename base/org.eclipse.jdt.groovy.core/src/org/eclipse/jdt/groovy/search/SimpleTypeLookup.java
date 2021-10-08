@@ -724,6 +724,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
+        if (!isMethodCall && isOrImplements(declaringType, ClassHelper.METACLASS_TYPE)) {
+            try {
+                if ("constructor".equals(name)) {
+                    return createDynamicProperty(name, ClassHelper.make(Class.forName("groovy.lang.ExpandoMetaClass$ExpandoMetaConstructor")), declaringType, false);
+                } else if ("static".equals(name)) {
+                    return createDynamicProperty(name, ClassHelper.make(Class.forName("groovy.lang.ExpandoMetaClass$ExpandoMetaProperty")), declaringType, false);
+                }
+            } catch (Exception ignore) {
+            }
+        }
+
         if (methodCallArgumentTypes == null || methodCallArgumentTypes == UNKNOWN_TYPES) {
             // reference may be in static import or method pointer; look for method as last resort
             return findMethodDeclaration(name, declaringType, methodCallArgumentTypes, isStaticExpression);

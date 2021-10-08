@@ -762,6 +762,29 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testMetaClassProperty1() {
+        String contents = 'String.metaClass.constructor << { p1, p2 -> "foo" }'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('constructor'), 11, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('p1'), 2, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('p2'), 2, PARAMETER))
+    }
+
+    @Test
+    void testMetaClassProperty2() {
+        String contents = 'String.metaClass.static.hello = { -> "world" }'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('static'), 6, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('hello'), 5, MAP_KEY))
+    }
+
+    @Test
     void testNotCategoryMethod1() {
         String contents = 'def x = "equals"' // equals is a DGM and had been improperly identified by CategoryTypeLookup
 
