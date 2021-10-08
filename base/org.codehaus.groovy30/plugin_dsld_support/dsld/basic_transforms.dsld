@@ -177,6 +177,8 @@ contribute(isScript() & currentType(subType(Script) & bind(fields: fields(not(is
     }
 }
 
+//@groovy.transform.Immutable, et al.
+
 //@groovy.transform.IndexedProperty
 contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
     provider = '{@link groovy.transform.IndexedProperty IndexedProperty} AST transform'
@@ -200,8 +202,6 @@ contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
         method name: 'set' + propertyName, type: void, params: [index: int, element: type]
     }
 }
-
-//@groovy.transform.Immutable
 
 //@groovy.transform.InheritConstructors
 
@@ -242,6 +242,8 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | ha
 }
 
 //@groovy.transform.NotYetImplemented
+
+//@groovy.transform.NullCheck
 
 //@groovy.transform.PackageScope
 
