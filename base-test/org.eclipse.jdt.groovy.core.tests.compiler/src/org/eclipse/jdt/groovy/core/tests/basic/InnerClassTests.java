@@ -372,6 +372,33 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "xy");
     }
 
+    @Test // GROOVY-10289
+    public void testInnerClass10() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  static class StaticInner {\n" +
+            "    void test() {\n" +
+            "      throw new NonStaticInner()\n" +
+            "    }\n" +
+            "  }\n" +
+            "  class NonStaticInner extends RuntimeException {\n" +
+            "  }\n" +
+            "}\n" +
+            "Outer.StaticInner.test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 4)\n" +
+            "\tthrow new NonStaticInner()\n" +
+            "\t          ^^^^^^^^^^^^^^\n" +
+            "Groovy:No enclosing instance passed in constructor call of a non-static inner class\n" +
+            "----------\n");
+    }
+
     @Test
     public void testAnonymousInnerClass1() {
         //@formatter:off

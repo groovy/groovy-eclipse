@@ -34,7 +34,6 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
@@ -45,8 +44,14 @@ import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
+import static org.codehaus.groovy.ast.tools.GeneralUtils.attrX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 
 public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcodes {
 
@@ -170,7 +175,7 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
             // add one parameter for each expression in the constructor call
             Parameter param = new Parameter(ClassHelper.OBJECT_TYPE, "p" + additionalParamCount + i);
             parameters.add(param);
-            // add the corresponding argument to the super constructor call
+            // add the corresponsing argument to the super constructor call
             superCallArguments.add(new VariableExpression(param));
         }
 
@@ -220,14 +225,13 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
         innerClass.addConstructor(ACC_SYNTHETIC, parameters.toArray(Parameter.EMPTY_ARRAY), ClassNode.EMPTY_ARRAY, block);
     }
 
-    private boolean isStatic(InnerClassNode innerClass, VariableScope scope, final ConstructorCallExpression call) {
+    private boolean isStatic(InnerClassNode innerClass, VariableScope scope, ConstructorCallExpression call) {
         boolean isStatic = innerClass.isStaticClass();
         if (!isStatic) {
             if (currentMethod != null) {
                 if (currentMethod instanceof ConstructorNode) {
+                    boolean[] precedesSuperOrThisCall = new boolean[1];
                     ConstructorNode ctor = (ConstructorNode) currentMethod;
-                    final boolean[] precedesSuperOrThisCall = new boolean[1];
-
                     GroovyCodeVisitor visitor = new CodeVisitorSupport() {
                         @Override
                         public void visitConstructorCallExpression(ConstructorCallExpression cce) {
@@ -238,14 +242,8 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
                             }
                         }
                     };
-                    if (ctor.firstStatementIsSpecialConstructorCall()) {
-                        currentMethod.getFirstStatement().visit(visitor);
-                    }
-                    for (Parameter param : ctor.getParameters()) {
-                        if (param.hasInitialExpression()) {
-                            param.getInitialExpression().visit(visitor);
-                        }
-                    }
+                    if (ctor.firstStatementIsSpecialConstructorCall()) currentMethod.getFirstStatement().visit(visitor);
+                    Arrays.stream(ctor.getParameters()).filter(Parameter::hasInitialExpression).forEach(p -> p.getInitialExpression().visit(visitor));
 
                     isStatic = precedesSuperOrThisCall[0];
                 } else {
@@ -305,19 +303,20 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
         // if constructor call is not in outer class, don't pass 'this' implicitly. Return.
         if (parent == null) return;
 
-        //add this parameter to node
-        Expression argsExp = call.getArguments();
-        if (argsExp instanceof TupleExpression) {
-            TupleExpression argsListExp = (TupleExpression) argsExp;
-            Expression this0 = VariableExpression.THIS_EXPRESSION;
+        Expression args = call.getArguments();
+        if (args instanceof TupleExpression) {
+            Expression this0 = varX("this"); // bypass closure
             for (int i = 0; i != level; ++i) {
-                this0 = new PropertyExpression(this0, "this$0");
-                // GRECLIPSE add -- GROOVY-8104
-                if (i == 0 && classNode.getDeclaredField("this$0").getType().equals(ClassHelper.CLOSURE_TYPE))
-                    this0 = new MethodCallExpression(this0, "getThisObject", MethodCallExpression.NO_ARGUMENTS);
-                // GRECLIPSE end
+                this0 = attrX(this0, constX("this$0"));
+                // GROOVY-8104: an anonymous inner class may still have closure nesting
+                if (i == 0 && classNode.getDeclaredField("this$0").getType().equals(ClassHelper.CLOSURE_TYPE)) {
+                    MethodCallExpression getThis = callX(this0, "getThisObject");
+                    getThis.setImplicitThis(false);
+                    this0 = getThis;
+                }
             }
-            argsListExp.getExpressions().add(0, this0);
+
+            ((TupleExpression) args).getExpressions().add(0, this0);
         }
     }
 }
