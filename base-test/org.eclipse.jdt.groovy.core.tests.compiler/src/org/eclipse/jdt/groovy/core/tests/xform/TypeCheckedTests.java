@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -465,7 +464,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "    assert node.getNodeMetaData(INFERRED_TYPE) == make(File)\n" +
             "  })\n" +
             "  File file = path ? null : null\n" + // edge case
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -1550,6 +1549,147 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9074() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class Main {\n" +
+            "  private static Collection<?> c = new ArrayList<String>()\n" +
+            "  static main(args) {\n" +
+            "    c.add(new Object())\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+        /*
+        runNegativeTest(sources, "The method add(capture#1-of ?) in the type Collection<capture#1-of ?> is not applicable for the arguments (Object)");
+        */
+    }
+
+    @Test
+    public void testTypeChecked9074a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.awt.Canvas\n" +
+            "abstract class Shape {\n" +
+            "  abstract void draw(Canvas c)\n" +
+            "}\n" +
+            "class Circle extends Shape {\n" +
+            "  private int x, y, radius\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "class Rectangle extends Shape {\n" +
+            "  private int x, y, width, height\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void addRectangle(List<? extends Shape> shapes) {\n" +
+            "  shapes.add(0, new Rectangle()) // TODO: compile-time error!\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+        /*
+        runNegativeTest(sources, "The method add(capture#1-of ?) in the type List<capture#1-of ?> is not applicable for the arguments (Rectangle)");
+        */
+    }
+
+    @Test
+    public void testTypeChecked9074b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.awt.Canvas\n" +
+            "abstract class Shape {\n" +
+            "  abstract void draw(Canvas c)\n" +
+            "}\n" +
+            "class Circle extends Shape {\n" +
+            "  private int x, y, radius\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "class Rectangle extends Shape {\n" +
+            "  private int x, y, width, height\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void addRectangle(List<? super Shape> shapes) {\n" +
+            "  shapes.add(0, new Rectangle())\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked9074c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Factory {\n" +
+            "  public <T> T make(Class<T> type, ... args) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Factory fact, Rule rule) {\n" +
+            "  Type bean = fact.make(rule.type)\n" +
+            "}\n",
+
+            "Rule.java",
+            "public class Rule {\n" +
+            "  public Class<? extends Type> getType() {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n",
+
+            "Type.java",
+            "public interface Type {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked9074d() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Factory {\n" +
+            "  public <T> T make(Class<T> type, ... args) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Factory fact, Rule rule) {\n" +
+            "  Type bean = fact.make(rule.type)\n" +
+            "}\n",
+
+            "Rule.java",
+            "public class Rule {\n" +
+            "  public Class<? super Type> getType() {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n",
+
+            "Type.java",
+            "public interface Type {}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+        /*
+        runNegativeTest(sources, "cannot convert from capture#1-of ? super Type to Type");
+        */
+    }
+
+    @Test
     public void testTypeChecked9412() {
         //@formatter:off
         String[] sources = {
@@ -1867,7 +2007,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[key:val][key:val]");
     }
 
-    @Ignore @Test
+    @Test(expected = AssertionError.class)
     public void testTypeChecked9873() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(CompilerOptions.InvokeDynamic));
@@ -3708,6 +3848,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10253() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def <N extends Number> void test(List<N> list) {\n" +
+            "  List<Integer> ints = list\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+        /*
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tList<Integer> ints = list\n" +
+            "\t                     ^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.List<N> to: java.util.List<java.lang.Integer>\n" +
+            "----------\n");
+        */
+    }
+
+    @Test
     public void testTypeChecked10254() {
         //@formatter:off
         String[] sources = {
@@ -3721,5 +3885,63 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testTypeChecked10280() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Test<T> {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  T test() {\n" +
+            "    @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "      def type = node.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+            "      assert type.toString(false) == 'T'\n" +
+            "    })\n" +
+            "    def t = new Foo<T>().x.y.z\n" + // 'T' not propagated
+            "  }\n" +
+            "}\n" +
+            "class Foo<X> {\n" +
+            "  Bar<X> x = new Bar<>()\n" +
+            "}\n" +
+            "class Bar<T> {\n" +
+            "  Baz<T> y = new Baz<>()\n" +
+            "}\n" +
+            "class Baz<Z> {\n" +
+            "  Z z\n" +
+            "}\n" +
+            "new Test().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10283() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T1, T2> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class B<T1 extends Number, T2 extends A<C, ? extends T1>> {\n" +
+            "  protected T2 f\n" +
+            "  B(T2 f) {\n" +
+            "    this.f  = f\n" +
+            "  }\n" +
+            "}\n" +
+            "class C {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new B<Integer,A<C,Integer>>(new A<>())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }

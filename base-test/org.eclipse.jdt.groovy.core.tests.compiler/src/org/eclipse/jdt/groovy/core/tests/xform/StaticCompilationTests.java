@@ -20,7 +20,6 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -3567,138 +3566,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "5");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9074")
-    public void testCompileStatic9074() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "class Main {\n" +
-            "  private static Collection<?> c = new ArrayList<String>()\n" +
-            "  static main(args) {\n" +
-            "    c.add(new Object())\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "The method add(capture#1-of ?) in the type Collection<capture#1-of ?> is not applicable for the arguments (Object)");
-    }
-
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9074")
-    public void testCompileStatic9074a() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "import java.awt.Canvas\n" +
-            "abstract class Shape {\n" +
-            "  abstract void draw(Canvas c)\n" +
-            "}\n" +
-            "class Circle extends Shape {\n" +
-            "  private int x, y, radius\n" +
-            "  @Override void draw(Canvas c) {}\n" +
-            "}\n" +
-            "class Rectangle extends Shape {\n" +
-            "  private int x, y, width, height\n" +
-            "  @Override void draw(Canvas c) {}\n" +
-            "}\n" +
-            "\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "void addRectangle(List<? extends Shape> shapes) {\n" +
-            "  shapes.add(0, new Rectangle()) // TODO: compile-time error!\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "The method add(capture#1-of ?) in the type List<capture#1-of ?> is not applicable for the arguments (Rectangle)");
-    }
-
-    @Test
-    public void testCompileStatic9074b() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "import java.awt.Canvas\n" +
-            "abstract class Shape {\n" +
-            "  abstract void draw(Canvas c)\n" +
-            "}\n" +
-            "class Circle extends Shape {\n" +
-            "  private int x, y, radius\n" +
-            "  @Override void draw(Canvas c) {}\n" +
-            "}\n" +
-            "class Rectangle extends Shape {\n" +
-            "  private int x, y, width, height\n" +
-            "  @Override void draw(Canvas c) {}\n" +
-            "}\n" +
-            "\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "void addRectangle(List<? super Shape> shapes) {\n" +
-            "  shapes.add(0, new Rectangle())\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test
-    public void testCompileStatic9074c() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "class Factory {\n" +
-            "  public <T> T make(Class<T> type, ... args) {}\n" +
-            "}\n" +
-            "\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "void test(Factory fact, Rule rule) {\n" +
-            "  Type bean = fact.make(rule.type)\n" +
-            "}\n",
-
-            "Rule.java",
-            "public class Rule {\n" +
-            "  public Class<? extends Type> getType() {\n" +
-            "    return null;\n" +
-            "  }\n" +
-            "}\n",
-
-            "Type.java",
-            "public interface Type {}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9074")
-    public void testCompileStatic9074d() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "class Factory {\n" +
-            "  public <T> T make(Class<T> type, ... args) {}\n" +
-            "}\n" +
-            "\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "void test(Factory fact, Rule rule) {\n" +
-            "  Type bean = fact.make(rule.type)\n" +
-            "}\n",
-
-            "Rule.java",
-            "public class Rule {\n" +
-            "  public Class<? super Type> getType() {\n" +
-            "    return null;\n" +
-            "  }\n" +
-            "}\n",
-
-            "Type.java",
-            "public interface Type {}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "cannot convert from capture#1-of ? super Type to Type");
-    }
-
     @Test
     public void testCompileStatic9086() {
         //@formatter:off
@@ -5627,7 +5494,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "str");
     }
 
-    @Test @Ignore
+    @Test(expected = AssertionError.class)
     public void testCompileStatic9737b() {
         //@formatter:off
         String[] sources = {

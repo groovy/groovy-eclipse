@@ -1803,6 +1803,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     public static ClassNode resolveClassNodeGenerics(Map<GenericsTypeName, GenericsType> resolvedPlaceholders, final Map<GenericsTypeName, GenericsType> placeholdersFromContext, ClassNode currentType) {
+        /* GRECLIPSE edit -- GROOVY-10280
         ClassNode target = currentType.redirect();
         resolvedPlaceholders = new HashMap<GenericsTypeName, GenericsType>(resolvedPlaceholders);
         applyContextGenerics(resolvedPlaceholders, placeholdersFromContext);
@@ -1812,6 +1813,12 @@ public abstract class StaticTypeCheckingSupport {
         applyGenericsConnections(connections, resolvedPlaceholders);
         currentType = applyGenericsContext(resolvedPlaceholders, currentType);
         return currentType;
+        */
+        ClassNode type = currentType;
+        type = applyGenericsContext(resolvedPlaceholders, type);
+        type = applyGenericsContext(placeholdersFromContext, type);
+        return type;
+        // GRECLIPSE end
     }
 
     static void applyGenericsConnections(
@@ -2204,6 +2211,7 @@ public abstract class StaticTypeCheckingSupport {
         return genericsType.getType();
     }
 
+    /* GRECLIPSE edit
     private static void applyContextGenerics(Map<GenericsTypeName, GenericsType> resolvedPlaceholders, Map<GenericsTypeName, GenericsType> placeholdersFromContext) {
         if (placeholdersFromContext == null) return;
         for (Entry<GenericsTypeName, GenericsType> entry : resolvedPlaceholders.entrySet()) {
@@ -2216,6 +2224,7 @@ public abstract class StaticTypeCheckingSupport {
             }
         }
     }
+    */
 
     private static Map<GenericsTypeName, GenericsType> getGenericsParameterMapOfThis(ClassNode cn) {
         if (cn == null) return null;
