@@ -1785,6 +1785,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode receiverType = receiver.getType();
 
             if (receiverType.isArray() && "length".equals(propertyName)) {
+                // GRECLIPSE edit -- GROOVY-5450
+                pexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
+                // GRECLIPSE end
                 storeType(pexp, int_TYPE);
                 if (visitor != null) {
                     FieldNode length = new FieldNode("length", Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, int_TYPE, receiverType, null);
@@ -1842,7 +1845,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 */
                 // skip property/accessor checks for "x.@field"
                 if (storeField(field, isAttributeExpression, pexp, receiverType, visitor, receiver.getData(), !readMode)) {
+                    /* GRECLIPSE edit -- GROOVY-5450
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
+                    */
                     return true;
                 } else if (isAttributeExpression) {
                     continue;
@@ -1850,7 +1855,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                 // skip property/accessor checks for "field", "this.field", "this.with { field }", etc. in declaring class of field
                 if (storeField(field, enclosingTypes.contains(current), pexp, receiverType, visitor, receiver.getData(), !readMode)) {
+                    /* GRECLIPSE edit -- GROOVY-5450
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
+                    */
                     return true;
                 }
 
@@ -1907,12 +1914,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             pexp.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
                         }
                         return true;
+                    /* GRECLIPSE edit -- GROOVY-9127
                     } else if (propertyNode == null) {
                         if (field != null && hasAccessToField(typeCheckingContext.getEnclosingClassNode(), field)) {
                             pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
                         } else if (getter != null) {
                             pexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
                         }
+                    */
+                    } else if (getter != null && field == null) {
+                        pexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
+                    // GRECLIPSE end
                     }
                 }
                 foundGetterOrSetter = (foundGetterOrSetter || !setters.isEmpty() || getter != null);
@@ -2156,9 +2168,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitField(field);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
         // GRECLIPSE add
+        Expression objectExpression = expressionToStoreOn.getObjectExpression();
+        boolean accessible = hasAccessToField(objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isSuperExpression() ? typeCheckingContext.getEnclosingClassNode() : receiver, field);
         if (expressionToStoreOn instanceof AttributeExpression) {
-            Expression objectExpression = expressionToStoreOn.getObjectExpression();
-            if (!hasAccessToField(objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isSuperExpression() ? typeCheckingContext.getEnclosingClassNode() : receiver, field)) {
+            if (!accessible) {
                 addStaticTypeError("The field " + field.getDeclaringClass().getNameWithoutPackage() + "." + field.getName() + " is not accessible", expressionToStoreOn.getProperty());
             }
         }
@@ -2167,6 +2180,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (delegationData != null) {
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
         }
+        // GRECLIPSE add -- GROOVY-5450
+        if (field.isFinal()) {
+            MethodNode enclosing = typeCheckingContext.getEnclosingMethod();
+            if (enclosing == null || !enclosing.getName().endsWith("init>"))
+                expressionToStoreOn.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
+        } else if (accessible) {
+            expressionToStoreOn.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
+        }
+        // GRECLIPSE end
         return true;
     }
 
@@ -2177,6 +2199,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (delegationData != null) {
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
         }
+        // GRECLIPSE add -- GROOVY-5450
+        if (Modifier.isFinal(property.getModifiers())) {
+            expressionToStoreOn.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
+        } else {
+            expressionToStoreOn.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
+        }
+        // GRECLIPSE end
         return true;
     }
 
@@ -2650,6 +2679,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     // GRECLIPSE add
+    @Override
+    protected void visitObjectInitializerStatements(final ClassNode node) {
+        // GROOVY-5450: create fake constructor node so final field analysis can allow write within non-static initializer block(s)
+        ConstructorNode init = new ConstructorNode(0, null, null, new BlockStatement(node.getObjectInitializerStatements(), null));
+        typeCheckingContext.pushEnclosingMethod(init);
+        super.visitObjectInitializerStatements(node);
+        typeCheckingContext.popEnclosingMethod();
+    }
+
     @Override
     public void visitExpressionStatement(ExpressionStatement statement) {
         typeCheckingContext.pushTemporaryTypeInfo();
@@ -5666,7 +5704,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         property = curNode.getProperty(pname);
                         curNode = curNode.getSuperClass();
                     }
-                    if (property != null) {
+                    if (property != null && !Modifier.isFinal(property.getModifiers())) { // GRECLIPSE add
                         ClassNode type = property.getOriginType();
                         if (implementsInterfaceOrIsSubclassOf(wrapTypeIfNecessary(args[0]), wrapTypeIfNecessary(type))) {
                             int mods = Opcodes.ACC_PUBLIC | (property.isStatic() ? Opcodes.ACC_STATIC : 0);

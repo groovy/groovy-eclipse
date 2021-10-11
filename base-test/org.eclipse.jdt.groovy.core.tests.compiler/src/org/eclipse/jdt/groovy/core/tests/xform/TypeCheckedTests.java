@@ -419,6 +419,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
+            "class C {\n" +
+            "  boolean b\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  print(new Pogo().isFlag())\n" +
+            "}\n" +
+            "test()\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  final boolean flag = true\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testTypeChecked19() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
             "def <T,U extends Configurable<T>> U configure(Class<U> type, @DelegatesTo(type='T',strategy=Closure.DELEGATE_FIRST) Closure<?> spec) {\n" +
             "  Configurable<T> obj = (Configurable<T>) type.newInstance()\n" +
             "  obj.configure(spec)\n" +
@@ -449,6 +473,51 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "test");
+    }
+
+    @Test
+    public void testTypeChecked5450() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  public final f\n" +
+            "  C() { f = 'yes' }\n" +
+            "  C(C that) { this.f = that.f }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def test(C c) {\n" +
+            "  c.f = 'x'\n" +
+            "  c.@f = 'x'\n" +
+            "  c.setF('x')\n" +
+            "  c.with {f  = 'x'}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 9)\n" +
+            "\tc.f = 'x'\n" +
+            "\t^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "Groovy:[Static type checking] - Cannot set read-only property: f\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 10)\n" +
+            "\tc.@f = 'x'\n" +
+            "\t^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "Groovy:[Static type checking] - Cannot set read-only property: f\n" +
+            "----------\n" +
+            "3. ERROR in Main.groovy (at line 11)\n" +
+            "\tc.setF('x')\n" +
+            "\t^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method C#setF(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n" +
+            "4. ERROR in Main.groovy (at line 12)\n" +
+            "\tc.with {f  = 'x'}\n" +
+            "\t        ^\n" +
+            "Groovy:[Static type checking] - Cannot set read-only property: f\n" +
+            "----------\n");
     }
 
     @Test
@@ -1687,6 +1756,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         /*
         runNegativeTest(sources, "cannot convert from capture#1-of ? super Type to Type");
         */
+    }
+
+    @Test
+    public void testTypeChecked9127() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Foo {\n" +
+            "  private String x = 'foo'\n" +
+            "  String getX() { return x }\n" +
+            "}\n" +
+            "class Bar extends Foo {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void writeField() {\n" +
+            "    x = 'bar'\n" +
+            "  }\n" +
+            "  @Override\n" +
+            "  String getX() { return 'baz' }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 8)\n" +
+            "\tx = 'bar'\n" +
+            "\t^\n" +
+            "Groovy:[Static type checking] - Cannot set read-only property: x\n" +
+            "----------\n");
     }
 
     @Test
