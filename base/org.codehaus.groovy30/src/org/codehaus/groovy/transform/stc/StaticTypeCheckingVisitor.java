@@ -2439,6 +2439,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         returnListener.returnStatementAdded(statement);
     }
 
+    /* GRECLIPSE edit
     private ClassNode infer(final ClassNode target, final ClassNode source) {
         DeclarationExpression virtualDecl = new DeclarationExpression(
                 varX("{target}", target),
@@ -2450,6 +2451,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         return !missesGenericsTypes(newlyInferred) ? newlyInferred : null;
     }
+    */
 
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
@@ -2479,14 +2481,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
         if (enclosingMethod != null && !enclosingMethod.isVoidMethod()) {
+            ClassNode returnType = enclosingMethod.getReturnType();
             if (!isNullConstant(expression)
                     && !type.equals(VOID_TYPE)
                     && !type.equals(void_WRAPPER_TYPE)
-                    && !checkCompatibleAssignmentTypes(enclosingMethod.getReturnType(), type, null, false)) {
+                    && !checkCompatibleAssignmentTypes(returnType, type, null, false)) {
                 if (!extension.handleIncompatibleReturnType(statement, type)) {
-                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " on method returning type " + prettyPrintType(enclosingMethod.getReturnType()), expression);
+                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " on method returning type " + prettyPrintType(returnType), expression);
                 }
             } else {
+                /* GRECLIPSE edit -- GROOVY-10295
                 ClassNode previousType = getInferredReturnType(enclosingMethod);
                 ClassNode inferred = previousType == null ? type : lowestUpperBound(type, previousType);
                 if (implementsInterfaceOrIsSubclassOf(inferred, enclosingMethod.getReturnType())) {
@@ -2501,6 +2505,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else {
                     return enclosingMethod.getReturnType();
                 }
+                */
+                if (implementsInterfaceOrIsSubclassOf(type, returnType)) {
+                    BinaryExpression dummy = assignX(varX("{target}", returnType), expression, statement);
+                    ClassNode resultType = getResultType(returnType, ASSIGN, type, dummy);
+                    checkTypeGenerics(returnType, resultType, expression);
+                }
+                // GRECLIPSE end
             }
         }
         return type;

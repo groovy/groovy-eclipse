@@ -215,7 +215,6 @@ import static org.codehaus.groovy.syntax.Types.COMPARE_NOT_EQUAL;
 import static org.codehaus.groovy.syntax.Types.COMPARE_TO;
 import static org.codehaus.groovy.syntax.Types.DIVIDE;
 import static org.codehaus.groovy.syntax.Types.DIVIDE_EQUAL;
-import static org.codehaus.groovy.syntax.Types.EQUAL;
 import static org.codehaus.groovy.syntax.Types.FIND_REGEX;
 import static org.codehaus.groovy.syntax.Types.INTDIV;
 import static org.codehaus.groovy.syntax.Types.INTDIV_EQUAL;
@@ -1625,9 +1624,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (!isAssignableTo(valueType, toBeAssignedTo)
                     */
                     Expression valueExpression = entryExpression.getValueExpression();
-                    BinaryExpression assign = new BinaryExpression(keyExpr, GeneralUtils.ASSIGN, valueExpression);
-                    assign.setSourcePosition(entryExpression);
-                    ClassNode resultType = getResultType(toBeAssignedTo, ASSIGN, valueType, assign);
+                    BinaryExpression dummy = assignX(keyExpr, valueExpression, entryExpression);
+                    ClassNode resultType = getResultType(toBeAssignedTo, ASSIGN, valueType, dummy);
                     if (!checkCompatibleAssignmentTypes(toBeAssignedTo, resultType, valueExpression)
                     // GRECLIPSE end
                             && !extension.handleIncompatibleAssignment(toBeAssignedTo, valueType, entryExpression)) {
@@ -2707,6 +2705,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    /* GRECLIPSE edit
     private ClassNode infer(ClassNode target, ClassNode source) {
         DeclarationExpression virtualDecl = new DeclarationExpression(
                 varX("{target}", target),
@@ -2718,6 +2717,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         return !missesGenericsTypes(newlyInferred) ? newlyInferred : null;
     }
+    */
 
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
@@ -2753,16 +2753,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         // GRECLIPSE end
         MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
-        if (enclosingMethod != null) {
-            if (!enclosingMethod.isVoidMethod()
-                    && !type.equals(void_WRAPPER_TYPE)
+        if (enclosingMethod != null && !enclosingMethod.isVoidMethod()) {
+            ClassNode returnType = enclosingMethod.getReturnType();
+            if (!isNullConstant(expression)
                     && !type.equals(VOID_TYPE)
-                    && !checkCompatibleAssignmentTypes(enclosingMethod.getReturnType(), type, null, false)
-                    && !(isNullConstant(expression))) {
+                    && !type.equals(void_WRAPPER_TYPE)
+                    && !checkCompatibleAssignmentTypes(returnType, type, null, false)) {
                 if (!extension.handleIncompatibleReturnType(statement, type)) {
-                    addStaticTypeError("Cannot return value of type " + type.toString(false) + " on method returning type " + enclosingMethod.getReturnType().toString(false), expression);
+                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " on method returning type " + prettyPrintType(returnType), expression);
                 }
-            } else if (!enclosingMethod.isVoidMethod()) {
+            } else {
+                /* GRECLIPSE edit -- GROOVY-10295
                 ClassNode previousType = getInferredReturnType(enclosingMethod);
                 ClassNode inferred = previousType == null ? type : lowestUpperBound(type, previousType);
                 if (implementsInterfaceOrIsSubclassOf(inferred, enclosingMethod.getReturnType())) {
@@ -2779,6 +2780,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else {
                     return enclosingMethod.getReturnType();
                 }
+                */
+                if (implementsInterfaceOrIsSubclassOf(type, returnType)) {
+                    BinaryExpression dummy = assignX(varX("{target}", returnType), expression, statement);
+                    ClassNode resultType = getResultType(returnType, ASSIGN, type, dummy);
+                    checkTypeGenerics(returnType, resultType, expression);
+                }
+                // GRECLIPSE end
             }
         }
         return type;

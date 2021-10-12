@@ -2245,18 +2245,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         returnListener.returnStatementAdded(statement);
     }
 
-    private ClassNode infer(final ClassNode target, final ClassNode source) {
-        DeclarationExpression virtualDecl = new DeclarationExpression(
-                varX("{target}", target),
-                Token.newSymbol(EQUAL, -1, -1),
-                varX("{source}", source)
-        );
-        virtualDecl.visit(this);
-        ClassNode newlyInferred = virtualDecl.getNodeMetaData(INFERRED_TYPE);
-
-        return !missesGenericsTypes(newlyInferred) ? newlyInferred : null;
-    }
-
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
         ClassNode type;
@@ -2280,31 +2268,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             return type;
         }
+
         MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
-        if (enclosingMethod != null && !enclosingMethod.isVoidMethod()) {
-            if (!isNullConstant(expression) && !isPrimitiveVoid(getUnwrapper(type))
-                    && !checkCompatibleAssignmentTypes(enclosingMethod.getReturnType(), type, null, false)) {
+        if (enclosingMethod != null && !enclosingMethod.isVoidMethod() && !enclosingMethod.isDynamicReturnType()) {
+            ClassNode returnType = enclosingMethod.getReturnType();
+            if (!isPrimitiveVoid(getUnwrapper(type)) && !checkCompatibleAssignmentTypes(returnType, type, null, false)) {
                 if (!extension.handleIncompatibleReturnType(statement, type)) {
-                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " on method returning type " + prettyPrintType(enclosingMethod.getReturnType()), expression);
+                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " on method returning type " + prettyPrintType(returnType), expression);
                 }
-            } else {
-                ClassNode previousType = getInferredReturnType(enclosingMethod);
-                ClassNode inferred = previousType == null ? type : lowestUpperBound(type, previousType);
-                if (implementsInterfaceOrIsSubclassOf(inferred, enclosingMethod.getReturnType())) {
-                    if (missesGenericsTypes(inferred)) {
-                        ClassNode newlyInferred = infer(enclosingMethod.getReturnType(), type);
-                        if (newlyInferred != null) {
-                            type = newlyInferred;
-                        }
-                    } else {
-                        checkTypeGenerics(enclosingMethod.getReturnType(), inferred, expression);
-                    }
-                } else {
-                    return enclosingMethod.getReturnType();
-                }
+            } else if (implementsInterfaceOrIsSubclassOf(type, returnType)) {
+                BinaryExpression dummy = assignX(varX("{target}", returnType), expression, statement);
+                ClassNode resultType = getResultType(returnType, ASSIGN, type, dummy); // GROOVY-10295
+                checkTypeGenerics(returnType, resultType, expression);
             }
         }
-        return type;
+        return null;
     }
 
     protected void addClosureReturnType(final ClassNode returnType) {
@@ -4577,7 +4555,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (leftExpression instanceof VariableExpression) {
                 ClassNode initialType = getOriginalDeclarationType(leftExpression);
 
-                if (isPrimitiveType(right) && initialType.isDerivedFrom(Number_TYPE)) {
+                if (isPrimitiveType(rightRedirect) && initialType.isDerivedFrom(Number_TYPE)) {
                     return getWrapper(right);
                 }
 
