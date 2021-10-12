@@ -3818,7 +3818,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 methodReferenceParamIndexList.add(i);
             }
         }
-
+        // GRECLIPSE add -- GROOVY-10269
+        if (methodReferenceParamIndexList.isEmpty()) return;
+        // GRECLIPSE end
         visitMethodCallArguments(receiver, args(newArgumentExpressionList), true, selectedMethod);
 
         for (int index : methodReferenceParamIndexList) {

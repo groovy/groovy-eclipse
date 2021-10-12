@@ -3986,6 +3986,37 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10269() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Consumer\n" +
+            "void foo(Integer y) {\n" +
+            "}\n" +
+            "void bar(Consumer<Integer> x) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def baz = { Consumer<Integer> x -> }\n" +
+            "  bar(this::foo)\n" +
+            "  baz(this::foo)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 10)\n" +
+            "\tbaz(this::foo)\n" +
+            "\t    ^^^^^^^^^\n" +
+            "Groovy:The argument is a method reference, but the parameter type is not a functional interface\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10280() {
         //@formatter:off
         String[] sources = {
