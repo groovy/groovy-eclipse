@@ -5010,6 +5010,41 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9500() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "trait Entity<D> {\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic @SuppressWarnings('rawtypes')\n" +
+            "abstract class Path<F extends Entity, T extends Entity> implements Iterable<Path.Segment<F,T>> {\n" +
+            "  interface Segment<F, T> {\n" +
+            "    F start()\n" +
+            "    T end()\n" +
+            "  }\n" +
+            "  abstract F start()\n" +
+            "  T end\n" +
+            "  T end() {\n" +
+            "    end\n" + // Cannot return value of type Path$Segment<F,T> on method returning type T
+            "  }\n" +
+            "  @Override\n" +
+            "  void forEach(java.util.function.Consumer<? super Segment<F, T>> action) {\n" +
+            "  }\n" +
+            "  @Override\n" +
+            "  Spliterator<Segment<F, T>> spliterator() {\n" +
+            "  }\n" +
+            "  @Override\n" +
+            "  Iterator<Segment<F, T>> iterator() {\n" +
+            "  }\n" +
+            "}\n" +
+            "null\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic9517() {
         //@formatter:off
         String[] sources = {
