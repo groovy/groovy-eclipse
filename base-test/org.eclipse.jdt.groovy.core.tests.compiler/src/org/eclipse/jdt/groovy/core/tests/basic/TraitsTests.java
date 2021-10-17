@@ -2873,4 +2873,35 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testTraits10312() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T1 {\n" +
+            "  static void staticMethod(input) {\n" +
+            "    print input\n" +
+            "  }\n" +
+            "}\n" +
+            "trait T2 extends T1 {\n" +
+            "  static void staticMethodWithDefaultArgument(String string = 'x') {\n" +
+            "    staticMethod(string)\n" + // MissingMethodException
+            "  }\n" +
+            "}\n" +
+            "class X implements T2 {\n" +
+            "  static test1() {\n" +
+            "    staticMethodWithDefaultArgument()\n" +
+            "  }\n" +
+            "  void test2() {\n" +
+            "    staticMethodWithDefaultArgument()\n" +
+            "  }\n" +
+            "}\n" +
+            "X.test1()\n" +
+            "new X().test2()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "xx");
+    }
 }

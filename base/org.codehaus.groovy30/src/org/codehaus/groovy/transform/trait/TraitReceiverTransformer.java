@@ -318,6 +318,16 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             String methodName = call.getMethodAsString();
             for (MethodNode methodNode : traitClass.getMethods(methodName)) {
                 if (methodName.equals(methodNode.getName()) && (methodNode.isStatic() || methodNode.isPrivate())) {
+                    // GRECLIPSE add -- GROOVY-10312
+                    if (!inClosure && methodNode.isStatic()) {
+                        MethodCallExpression newCall = callX(varX(weaved), methodName, transform(arguments));
+                        newCall.setImplicitThis(false);
+                        newCall.setSafe(false);
+                        newCall.setSourcePosition(call);
+                        newCall.setSpreadSafe(call.isSpreadSafe());
+                        return newCall;
+                    }
+                    // GRECLIPSE end
                     ArgumentListExpression newArgs = createArgumentList(methodNode.isStatic() ? asClass(objectExpr) : weaved, arguments);
                     MethodCallExpression newCall = callX(inClosure ? classX(traitHelperClass) : varX("this"), methodName, newArgs);
                     newCall.setImplicitThis(true);

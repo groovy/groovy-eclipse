@@ -385,12 +385,19 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             String methodName = call.getMethodAsString();
             for (MethodNode methodNode : traitClass.getMethods(methodName)) {
                 if (methodName.equals(methodNode.getName()) && (methodNode.isStatic() || methodNode.isPrivate())) {
-                    ArgumentListExpression newArgs = createArgumentList(methodNode.isStatic() ? asClass(call.getObjectExpression()) : weaved, arguments);
-                    MethodCallExpression newCall = callX(inClosure ? classX(traitHelperClass) : varX("this"), methodName, newArgs);
-                    newCall.setImplicitThis(true);
-                    newCall.setSafe(call.isSafe());
-                    newCall.setSourcePosition(call);
+                    MethodCallExpression newCall;
+                    if (!inClosure && methodNode.isStatic()) { // GROOVY-10312: $self or $static$self.staticMethod(...)
+                        newCall = callX(varX(weaved), methodName, transform(arguments));
+                        newCall.setImplicitThis(false);
+                        newCall.setSafe(false);
+                    } else {
+                        ArgumentListExpression newArgs = createArgumentList(methodNode.isStatic() ? asClass(varX("this")) : weaved, arguments);
+                        newCall = callX(inClosure ? classX(traitHelperClass) : call.getObjectExpression(), methodName, newArgs);
+                        newCall.setImplicitThis(true);
+                        newCall.setSafe(call.isSafe());
+                    }
                     newCall.setSpreadSafe(call.isSpreadSafe());
+                    newCall.setSourcePosition(call);
                     return newCall;
                 }
             }
