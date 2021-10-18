@@ -94,7 +94,8 @@ public class GenericsMapper {
             if (n > 0 && rgts.length == 0) {
                 rgts = new GenericsType[n]; // assume rCandidate is a raw type
                 for (int i = 0; i < n; i += 1) {
-                    rgts[i] = new GenericsType(Optional.ofNullable(ugts[i].getUpperBounds()).map(bounds -> bounds[0]).orElse(VariableScope.OBJECT_CLASS_NODE));
+                    rgts[i] = new GenericsType(Optional.ofNullable(ugts[i].getUpperBounds()).map(bounds -> bounds[0])
+                        .orElse(ugts[i].getType().redirect()).getPlainNodeReference()); // GROOVY-10055, GROOVY-10166
                 }
             }
             assert rgts.length == ugts.length;

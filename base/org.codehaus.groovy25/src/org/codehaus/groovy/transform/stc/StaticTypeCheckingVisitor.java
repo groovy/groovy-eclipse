@@ -6715,7 +6715,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return cn.isGenericsPlaceHolder();
     }
 
-
     private static Map<GenericsTypeName, GenericsType> extractPlaceHolders(MethodNode method, ClassNode receiver, ClassNode declaringClass) {
         if (declaringClass.equals(OBJECT_TYPE)) {
             Map<GenericsTypeName, GenericsType> resolvedPlaceholders = new HashMap<GenericsTypeName, GenericsType>();
@@ -6737,8 +6736,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode current = item;
             while (current != null) {
                 boolean continueLoop = true;
-                //extract the place holders
+                // extract the place holders
                 Map<GenericsTypeName, GenericsType> currentPlaceHolders = new HashMap<GenericsTypeName, GenericsType>();
+                // GRECLIPSE add -- GROOVY-10055, GROOVY-10166
+                if (current.getGenericsTypes() != null
+                        ? current.getGenericsTypes().length == 0
+                        : current.redirect().getGenericsTypes() != null) {
+                    for (GenericsType gt : current.redirect().getGenericsTypes()) {
+                        ClassNode cn = gt.getUpperBounds() != null ? gt.getUpperBounds()[0] : gt.getType().redirect();
+                        currentPlaceHolders.put(new GenericsTypeName(gt.getName()), cn.getPlainNodeReference().asGenericsType());
+                    }
+                }
+                // GRECLIPSE end
                 if (isGenericsPlaceHolderOrArrayOf(declaringClass) || declaringClass.equals(current)) {
                     extractGenericsConnections(currentPlaceHolders, current, declaringClass);
                     if (method != null) addMethodLevelDeclaredGenerics(method, currentPlaceHolders);
@@ -6769,6 +6778,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     // the actual receiver is Foo and declaringClass is Class
                     current = declaringClass;
                 }
+                // GRECLIPSE add -- GROOVY-10055, GROOVY-10166
+                else current = applyGenericsContext(currentPlaceHolders, current);
+                // GRECLIPSE end
             }
         }
         if (resolvedPlaceholders == null) {

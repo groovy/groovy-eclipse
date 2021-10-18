@@ -277,7 +277,13 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tSet<String> keys = args.keySet()\n" +
+            "\t                   ^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.Set<java.lang.Object> to: java.util.Set<java.lang.String>\n" +
+            "----------\n");
     }
 
     @Test
@@ -3281,6 +3287,38 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10055() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new C<>().foo('x').bar('y').baz('z')\n" +
+            "}\n",
+
+            "Types.groovy",
+            "abstract class A<Self extends A<Self>> {\n" +
+            "  Self foo(inputs) {\n" +
+            "    this\n" +
+            "  }\n" +
+            "}\n" +
+            "abstract class B<Self extends B<Self>> extends A<Self> {\n" +
+            "  Self bar(inputs) {\n" +
+            "    this\n" +
+            "  }\n" +
+            "}\n" +
+            "class C<Self extends C<Self>> extends B<Self> {\n" +
+            "  Self baz(inputs) {\n" +
+            "    this\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked10056() {
         //@formatter:off
         String[] sources = {
@@ -3681,13 +3719,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 17)\n" +
-            "\ta.c.get(1)\n" +
-            "\t^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method T#get(int). Please check if the declared type is correct and if the method exists.\n" +
-            "----------\n");
+        runConformTest(sources);
     }
 
     @Test
