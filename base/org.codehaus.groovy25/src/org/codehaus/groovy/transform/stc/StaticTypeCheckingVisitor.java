@@ -5557,6 +5557,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * @return the methods that are defined on the receiver completed with stubs for future methods
      */
     protected List<MethodNode> findMethodsWithGenerated(ClassNode receiver, String name) {
+        // GRECLIPSE add -- GROOVY-10319
+        if (receiver.isArray()) {
+            if (name.equals("clone")) {
+                MethodNode clone = new MethodNode("clone", Opcodes.ACC_PUBLIC, OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+                clone.setDeclaringClass(OBJECT_TYPE); // retain Object for declaringClass and returnType
+                clone.setNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE, receiver);
+                return Collections.singletonList(clone);
+            } else {
+                return OBJECT_TYPE.getMethods(name);
+            }
+        }
+        // GRECLIPSE end
         List<MethodNode> methods = receiver.getMethods(name);
         // GRECLIPSE add -- GROOVY-9890
         if (receiver.isAbstract()) {

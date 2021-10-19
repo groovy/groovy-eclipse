@@ -6392,4 +6392,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "----------");
     }
+
+    @Test
+    public void testCompileStatic10319() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "@groovy.transform.ToString(includeFields=true)\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C implements Cloneable {\n" +
+            "  private int[] array = [1]\n" +
+            "  @Override\n" +
+            "  C clone() {\n" +
+            "    C c = (C) super.clone()\n" +
+            "    c.array = array.clone()\n" +
+            "    return c\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().clone()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "p.C([1])");
+    }
 }
