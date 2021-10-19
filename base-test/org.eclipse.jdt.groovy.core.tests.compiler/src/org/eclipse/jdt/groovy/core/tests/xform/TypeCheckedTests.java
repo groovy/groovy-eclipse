@@ -4126,4 +4126,39 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10320() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I<T extends I> {\n" +
+            "  T plus(T t_aka_i)\n" +
+            "}\n" +
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C implements I<C> {\n" +
+            "  final BigDecimal n\n" +
+            "  @Override\n" +
+            "  C plus(C c) {\n" +
+            "    if (!c) return this\n" +
+            "    new C((n ?: 0.0) + (c.n ?: 0.0))\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <X extends I> X test(List<X> items) {\n" +
+            "  X total = null\n" +
+            "  for (it in items) {\n" +
+            "    if (!total)\n" +
+            "      total = it\n" +
+            "    else\n" +
+            "      total += it\n" + // Cannot call X#plus(T) with arguments [X]
+            "  }\n" +
+            "  total\n" +
+            "}\n" +
+            "print(test([new C(1.1), new C(2.2)]).n)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "3.3");
+    }
 }
