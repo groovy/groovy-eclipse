@@ -1558,6 +1558,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9006() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.sql/java.sql=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.sql.Timestamp\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Timestamp timestamp) {\n" +
+            "  if (timestamp != null) {\n" + // Reference to method is ambiguous
+            "    print 'works'\n" +
+            "  }\n" +
+            "}\n" +
+            "test(new Timestamp(new Date().getTime()))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testTypeChecked9033() {
         //@formatter:off
         String[] sources = {

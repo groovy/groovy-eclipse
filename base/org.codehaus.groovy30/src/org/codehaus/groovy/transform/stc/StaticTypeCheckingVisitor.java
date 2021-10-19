@@ -4963,7 +4963,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (mathResultType != null) {
             return mathResultType;
         }
-
+        // GRECLIPSE add -- GROOVY-9006: compare to null for equals overloads
+        if ("equals".equals(operationName) && (left == UNKNOWN_PARAMETER_TYPE
+                                            || right == UNKNOWN_PARAMETER_TYPE)) {
+            return boolean_TYPE;
+        }
+        // GRECLIPSE end
         // GROOVY-5890
         // do not mix Class<Foo> with Foo
         if (leftExpression instanceof ClassExpression) {
