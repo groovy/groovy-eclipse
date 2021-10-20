@@ -2593,15 +2593,22 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             completeExpressionStack.getLast().visit(new GroovyCodeVisitorAdapter() {
 
                 @Override public void visitBinaryExpression(final BinaryExpression expression) {
+                    Expression lhs = expression.getLeftExpression();
+                    Expression rhs = expression.getRightExpression();
+                    if (lhs instanceof TemporaryVariableExpression) {
+                        lhs = ReflectionUtils.getPrivateField(TemporaryVariableExpression.class, "expression", lhs);
+                    }
+                    if (rhs instanceof TemporaryVariableExpression) {
+                        rhs = ReflectionUtils.getPrivateField(TemporaryVariableExpression.class, "expression", rhs);
+                    }
                     // both sides of the binary expression are primary since we need
                     // access to both of them when inferring binary expression types
-                    if (expr == expression.getLeftExpression() || expr == expression.getRightExpression()) {
+                    if (expr == lhs || expr == rhs) {
                         result[0] = true;
-                    } else if (!(expr instanceof TupleExpression) && expression.getRightExpression() instanceof ListOfExpressionsExpression) {
+                    } else if (!(expr instanceof TupleExpression) && rhs instanceof ListOfExpressionsExpression) {
                         // statically-compiled assignment chains need a little help
-                        List<Expression> list = ReflectionUtils.getPrivateField(
-                            ListOfExpressionsExpression.class, "expressions", expression.getRightExpression());
-                        // list.get(0) should be TemporaryVariableExpression
+                        List<Expression> list = ReflectionUtils.getPrivateField(ListOfExpressionsExpression.class, "expressions", rhs);
+                        // list.get(0) should be TemporaryVariableExpression (skip)
                         result[0] = (expr != list.get(1) && list.get(1) instanceof MethodCallExpression);
                     }
                 }

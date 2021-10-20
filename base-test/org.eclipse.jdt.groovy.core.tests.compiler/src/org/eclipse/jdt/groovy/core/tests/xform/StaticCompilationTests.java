@@ -757,6 +757,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic5746() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+
+            "@Field int i = 0\n" +
+            "int getIndex() { i++ }\n" +
+            "@CompileStatic void test() {\n" +
+            "  def list = ['x','y','z']\n" +
+            "  print(list[index] += '!')\n" +
+            "  print(list[index] += '!')\n" +
+            "  print(list)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x!y![x!, y!, z]");
+    }
+
+    @Test
     public void testCompileStatic6095() {
         //@formatter:off
         String[] sources = {

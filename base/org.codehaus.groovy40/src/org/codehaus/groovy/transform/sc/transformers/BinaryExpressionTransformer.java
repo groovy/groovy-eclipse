@@ -40,6 +40,7 @@ import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
+import org.codehaus.groovy.transform.sc.TemporaryVariableExpression;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 
@@ -213,82 +214,87 @@ public class BinaryExpressionTransformer {
                 return expr;
             }
 
-            Expression optimized = tryOptimizeCharComparison(left, right, bin);
-            if (optimized != null) {
-                optimized.removeNodeMetaData(StaticCompilationMetadataKeys.BINARY_EXP_TARGET);
-                optimized.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                return optimized;
+            Expression expr = tryOptimizeCharComparison(left, right, bin);
+            if (expr != null) {
+                expr.removeNodeMetaData(StaticCompilationMetadataKeys.BINARY_EXP_TARGET);
+                expr.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                return expr;
             }
 
-            String name = (String) list[1];
-            MethodNode node = (MethodNode) list[0];
-            boolean isAssignment = Types.isAssignment(operationType);
-            // GRECLIPSE edit
-            Expression expr = !isAssignment ? left : new ExpressionTransformer() {
-                @Override
-                public Expression transform(final Expression expression) {
-                    if (expression == null) return null;
-                    Expression transformed = expression.transformExpression(this);
-                    if (transformed.getEnd() > 0 || transformed.getLineNumber() > 0) {
-                        if (transformed != expression) {
-                            transformed.setStart(0);
-                            transformed.setEnd( -1);
-                            transformed.setNameStart(0);
-                            transformed.setNameEnd( -1);
-                            transformed.setLineNumber(-1);
-                            transformed.setColumnNumber(-1);
-                            transformed.setLastLineNumber(-1);
-                            transformed.setLastColumnNumber(-1);
-                        } else if (expression instanceof ConstantExpression) { ConstantExpression ce = (ConstantExpression) expression;
-                            ConstantExpression copy = new ConstantExpression(ce.getValue());
-                            copy.setConstantName(ce.getConstantName());
-                            copy.setDeclaringClass(ce.getDeclaringClass());
-                            copy.setSynthetic(ce.isSynthetic());
-                            copy.setType(ce.getType());
-                            copy.copyNodeMetaData(ce);
-                            transformed = copy;
-                        } else if (expression instanceof VariableExpression) { VariableExpression ve = (VariableExpression) expression;
-                            VariableExpression copy = new VariableExpression(ve.getName(), ve.getOriginType());
-                            copy.setAccessedVariable(ve.getAccessedVariable());
-                            copy.setClosureSharedVariable(ve.isClosureSharedVariable());
-                            copy.setDeclaringClass(ve.getDeclaringClass());
-                            if (ve.isDynamicTyped()) copy.setType(ClassHelper.dynamicType());
-                            copy.setInStaticContext(ve.isInStaticContext());
-                            copy.setModifiers(ve.getModifiers());
-                            copy.setSynthetic(ve.isSynthetic());
-                            copy.setType(ve.getType());
-                            copy.setUseReferenceDirectly(ve.isUseReferenceDirectly());
-                            copy.copyNodeMetaData(ve);
-                            transformed = copy;
-                        }
-                    }
-                    return transformed;
-                }
-            }.transform(left);
-            // GRECLIPSE end
+            // replace the binary expression with a method call to ScriptBytecodeAdapter or something else
             MethodNode adapter = StaticCompilationTransformer.BYTECODE_BINARY_ADAPTERS.get(operationType);
             if (adapter != null) {
                 Expression sba = classX(StaticCompilationTransformer.BYTECODE_ADAPTER_CLASS);
-                call = callX(sba, adapter.getName(), args(expr, right));
+                call = callX(sba, adapter.getName(), args(left, right));
                 call.setMethodTarget(adapter);
             } else {
-                call = callX(expr, name, args(right));
-                call.setMethodTarget(node);
+                call = callX(left, (String) list[1], args(right));
+                call.setMethodTarget((MethodNode) list[0]);
             }
             call.setImplicitThis(false);
-            if (!isAssignment) {
-                call.setSourcePosition(bin);
-                return call;
+            if (Types.isAssignment(operationType)) { // +=, -=, /=, ...
+                // GRECLIPSE add -- GROOVY-5746, et al.
+                if (left instanceof BinaryExpression) {
+                    BinaryExpression be = (BinaryExpression) left;
+                    if (be.getOperation().getType() == Types.LEFT_SQUARE_BRACKET) {
+                        be.setLeftExpression(new TemporaryVariableExpression(be.getLeftExpression()));
+                        be.setRightExpression(new TemporaryVariableExpression(be.getRightExpression()));
+                    }
+                }
+                // clone repeat occurrence of left sans source offsets
+                call.setObjectExpression(new ExpressionTransformer() {
+                    @Override
+                    public Expression transform(final Expression expression) {
+                        Expression transformed = expression.transformExpression(this);
+                        if (transformed.getEnd() > 0 || transformed.getLineNumber() > 0) {
+                            if (transformed != expression) {
+                                transformed.setStart(0);
+                                transformed.setEnd( -1);
+                                transformed.setNameStart(0);
+                                transformed.setNameEnd( -1);
+                                transformed.setLineNumber(-1);
+                                transformed.setColumnNumber(-1);
+                                transformed.setLastLineNumber(-1);
+                                transformed.setLastColumnNumber(-1);
+                            } else if (expression instanceof ConstantExpression) { ConstantExpression ce = (ConstantExpression) expression;
+                                ConstantExpression copy = new ConstantExpression(ce.getValue());
+                                copy.setConstantName(ce.getConstantName());
+                                copy.setDeclaringClass(ce.getDeclaringClass());
+                                copy.setSynthetic(ce.isSynthetic());
+                                copy.setType(ce.getType());
+                                copy.copyNodeMetaData(ce);
+                                transformed = copy;
+                            } else if (expression instanceof VariableExpression) { VariableExpression ve = (VariableExpression) expression;
+                                VariableExpression copy = new VariableExpression(ve.getName(), ve.getOriginType());
+                                copy.setAccessedVariable(ve.getAccessedVariable());
+                                copy.setClosureSharedVariable(ve.isClosureSharedVariable());
+                                copy.setDeclaringClass(ve.getDeclaringClass());
+                                if (ve.isDynamicTyped()) copy.setType(ClassHelper.dynamicType());
+                                copy.setInStaticContext(ve.isInStaticContext());
+                                copy.setModifiers(ve.getModifiers());
+                                copy.setSynthetic(ve.isSynthetic());
+                                copy.setType(ve.getType());
+                                copy.setUseReferenceDirectly(ve.isUseReferenceDirectly());
+                                copy.copyNodeMetaData(ve);
+                                transformed = copy;
+                            }
+                        }
+                        return transformed;
+                    }
+                }.transform(call.getObjectExpression()));
+                // GRECLIPSE end
+                // call handles the operation, so we must add the assignment now
+                expr = binX(left, Token.newSymbol(Types.ASSIGN, operation.getStartLine(), operation.getStartColumn()), call);
+                // GRECLIPSE add
+                expr.putNodeMetaData("original.operator", operation);
+                // GRECLIPSE end
+            } else {
+                expr = call;
             }
-            // case of +=, -=, /=, ...
-            // the method represents the operation type only, and we must add an assignment
-            expr = binX(left, Token.newSymbol(Types.ASSIGN, operation.getStartLine(), operation.getStartColumn()), call);
-            // GRECLIPSE add
-            expr.putNodeMetaData("original.operator", operation);
-            // GRECLIPSE end
             expr.setSourcePosition(bin);
             return expr;
         }
+
         if (operationType == Types.ASSIGN && leftExpression instanceof TupleExpression && rightExpression instanceof ListExpression) {
             // multiple assignment
             ListOfExpressionsExpression cle = new ListOfExpressionsExpression();

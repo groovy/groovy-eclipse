@@ -38,6 +38,7 @@ import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
+import org.codehaus.groovy.transform.sc.TemporaryVariableExpression;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 
@@ -256,6 +257,17 @@ public class BinaryExpressionTransformer {
                 return call;
             }
             // case of +=, -=, /=, ...
+            // GRECLIPSE add -- GROOVY-5746
+            if (left instanceof BinaryExpression) {
+                BinaryExpression be = (BinaryExpression) left;
+                if (be.getOperation().getType() == Types.LEFT_SQUARE_BRACKET) {
+                    be.setLeftExpression(new TemporaryVariableExpression(be.getLeftExpression()));
+                    be.setRightExpression(new TemporaryVariableExpression(be.getRightExpression()));
+                                ((BinaryExpression) expr).setLeftExpression(be.getLeftExpression());
+                                ((BinaryExpression) expr).setRightExpression(be.getRightExpression());
+                }
+            }
+            // GRECLIPSE end
             // the method represents the operation type only, and we must add an assignment
             expr = binX(left, Token.newSymbol(Types.EQUAL, operation.getStartLine(), operation.getStartColumn()), call);
             // GRECLIPSE add
