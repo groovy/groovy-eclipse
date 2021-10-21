@@ -1281,6 +1281,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7526() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "boolean check(String s) { true }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Pogo pogo) {\n" +
+            "  if (check(pogo?.field)) {\n" + // VerifyError: Bad type on operand stack
+            "    print 'works'\n" +
+            "  }\n" +
+            "}\n" +
+            "test(new Pogo())\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  public String field\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic7549() {
         //@formatter:off
         String[] sources = {
@@ -5136,42 +5160,24 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9558() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "void test() {\n" +
-            "  def config = new org.codehaus.groovy.control.CompilerConfiguration()\n" +
-            "  config.tap {\n" +
-            "    optimizationOptions['indy'] = true\n" + // Cannot cast object '...' with class 'CompilerConfiguration' to class 'Map'
-            "    optimizationOptions.indy = true\n" +
-            "  }\n" +
-            "}\n" +
-            "test()\n",
-        };
-        //@formatter:on
+        for (String dgm : new String[] {"tap", "with"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.CompileStatic\n" +
+                "void test() {\n" +
+                "  def config = new org.codehaus.groovy.control.CompilerConfiguration()\n" +
+                "  config." + dgm + " {\n" +
+                "    optimizationOptions['indy'] = true\n" + // Cannot cast object '...' with class 'CompilerConfiguration' to class 'Map'
+                "    optimizationOptions.indy = true\n" +
+                "  }\n" +
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
 
-        runConformTest(sources, "");
-    }
-
-    @Test
-    public void testCompileStatic9558a() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "void test() {\n" +
-            "  def config = new org.codehaus.groovy.control.CompilerConfiguration()\n" +
-            "  config.with {\n" +
-            "    optimizationOptions['indy'] = true\n" + // Cannot cast object '...' with class 'CompilerConfiguration' to class 'Map'
-            "    optimizationOptions.indy = true\n" +
-            "  }\n" +
-            "}\n" +
-            "test()\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "");
+            runConformTest(sources);
+        }
     }
 
     @Test
@@ -5272,7 +5278,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -6348,7 +6354,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic10197() {
-        for (String override : new String[]{"int getBaz() {1}", "final int baz = 1"}) {
+        for (String override : new String[] {"int getBaz() {1}", "final int baz = 1"}) {
             //@formatter:off
             String[] sources = {
                 "Main.groovy",
