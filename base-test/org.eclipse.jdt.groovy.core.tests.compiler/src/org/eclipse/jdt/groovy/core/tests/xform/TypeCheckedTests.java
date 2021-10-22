@@ -4183,4 +4183,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "3.3");
     }
+
+    @Test
+    public void testTypeChecked10325() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<String,Object> map) {\n" +
+            "  @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def type = node.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+            "    assert type.toString(false) == 'java.util.List<java.lang.Object>'\n" + // should not change
+            "  })\n" +
+            "  def values = map*.value\n" +
+            "  map.entrySet()[0].value = 'baz'\n" +
+            "  map*.value = 'baz!'\n" + // Cannot assign java.util.List<java.lang.String> to: java.util.List<java.lang.Object>
+            "  print map\n" +
+            "}\n" +
+            "test(foo:'bar')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo:baz!]");
+    }
 }

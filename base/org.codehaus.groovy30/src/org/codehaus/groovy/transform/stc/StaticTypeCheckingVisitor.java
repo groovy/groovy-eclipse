@@ -1982,9 +1982,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     keyList.setGenericsTypes(new GenericsType[]{gts[0]});
                     return keyList;
                 case "value":
+                    /* GRECLIPSE edit
                     ClassNode valueList = LIST_TYPE.getPlainNodeReference();
                     valueList.setGenericsTypes(new GenericsType[]{gts[1]});
                     return valueList;
+                    */
+                    GenericsType v = gts[1];
+                    if (!v.isWildcard()
+                            && !Modifier.isFinal(v.getType().getModifiers())
+                            && typeCheckingContext.isTargetOfEnclosingAssignment(pexp)) {
+                        v = GenericsUtils.buildWildcardType(v.getType()); // GROOVY-10325
+                    }
+                    return GenericsUtils.makeClassSafe0(LIST_TYPE, v);
+                    // GRECLIPSE end
                 default:
                     addStaticTypeError("Spread operator on map only allows one of [key,value]", pexp);
                 }

@@ -2105,9 +2105,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 listKey.setGenericsTypes(new GenericsType[]{types[0]});
                 return listKey;
             } else if ("value".equals(pexp.getPropertyAsString())) {
+                /* GRECLIPSE edit -- GROOVY-10325
                 ClassNode listValue = LIST_TYPE.getPlainNodeReference();
                 listValue.setGenericsTypes(new GenericsType[]{types[1]});
                 return listValue;
+                */
+                GenericsType v = types[1];
+                if (!v.isWildcard() && !Modifier.isFinal(v.getType().getModifiers()) && isLHSOfEnclosingAssignment(pexp)) {
+                    v = GenericsUtils.buildWildcardType(v.getType());
+                }
+                return GenericsUtils.makeClassSafe0(LIST_TYPE, v);
+                // GRECLIPSE end
             } else {
                 addStaticTypeError("Spread operator on map only allows one of [key,value]", pexp);
             }
