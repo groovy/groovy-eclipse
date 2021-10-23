@@ -1780,10 +1780,13 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources);
-        /*
-        runNegativeTest(sources, "cannot convert from capture#1-of ? super Type to Type");
-        */
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
+            "\tType bean = fact.make(rule.type)\n" +
+            "\t            ^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.lang.Object to variable of type Type\n" +
+            "----------\n");
     }
 
     @Test
@@ -4227,5 +4230,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
             "Groovy:[Static type checking] - Cannot set read-only property: key\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10327() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<String,? super String> map) {\n" +
+            "  @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def type = node.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+            "    assert type == org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE\n" +
+            "  })\n" +
+            "  def foo = map.foo\n" +
+            "}\n" +
+            "test(foo:'bar')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }

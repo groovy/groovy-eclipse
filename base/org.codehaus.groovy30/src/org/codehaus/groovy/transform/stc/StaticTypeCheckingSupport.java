@@ -1896,8 +1896,8 @@ public abstract class StaticTypeCheckingSupport {
                 if (ui.isWildcard()) {
                     extractGenericsConnections(connections, ui.getLowerBound(), di.getLowerBound());
                     extractGenericsConnections(connections, ui.getUpperBounds(), di.getUpperBounds());
+                /* GRECLIPSE edit -- GROOVY-9998, GROOVY-10327
                 } else {
-                    /* GRECLIPSE edit -- GROOVY-9998
                     ClassNode cu = ui.getType();
                     extractGenericsConnections(connections, cu, di.getLowerBound());
                     ClassNode[] upperBounds = di.getUpperBounds();
@@ -1906,8 +1906,10 @@ public abstract class StaticTypeCheckingSupport {
                             extractGenericsConnections(connections, cu, cn);
                         }
                     }
-                    */
-                    ClassNode boundType = getCombinedBoundType(di);
+                }
+                */
+                } else if (!isUnboundedWildcard(di)) {
+                    ClassNode boundType = di.getLowerBound() != null ? di.getLowerBound() : di.getUpperBounds()[0];
                     if (boundType.isGenericsPlaceHolder()) {
                         String placeholderName = boundType.getUnresolvedName();
                         ui = new GenericsType(ui.getType()); ui.setPlaceHolder(false); ui.setWildcard(true);
@@ -1915,8 +1917,8 @@ public abstract class StaticTypeCheckingSupport {
                     } else { // di like "? super Collection<T>" and ui like "List<Type>"
                         extractGenericsConnections(connections, ui.getType(), boundType);
                     }
-                    // GRECLIPSE end
                 }
+                // GRECLIPSE end
             } else {
                 extractGenericsConnections(connections, ui.getType(), di.getType());
             }
@@ -2080,7 +2082,7 @@ public abstract class StaticTypeCheckingSupport {
         // representing the combination of all bounds. The code here, just picks
         // something out to be able to proceed and is not actually correct
         if (hasNonTrivialBounds(genericsType)) {
-            if (genericsType.getLowerBound() != null) return genericsType.getLowerBound();
+            if (genericsType.getLowerBound() != null) return OBJECT_TYPE; // GROOVY-10327
             if (genericsType.getUpperBounds() != null) return genericsType.getUpperBounds()[0];
         }
         return genericsType.getType();

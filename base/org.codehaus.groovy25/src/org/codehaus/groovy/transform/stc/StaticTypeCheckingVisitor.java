@@ -3850,12 +3850,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             dummyMN.setGenericsTypes(orig.getGenericsTypes());
         }
         ClassNode classNode = inferReturnTypeGenerics(receiver, dummyMN, arguments);
+        /* GRECLIPSE edit -- GROOVY-10327
         ClassNode[] inferred = new ClassNode[classNode.getGenericsTypes().length];
         for (int i = 0; i < classNode.getGenericsTypes().length; i++) {
             GenericsType genericsType = classNode.getGenericsTypes()[i];
             ClassNode value = createUsableClassNodeFromGenericsType(genericsType);
             inferred[i] = value;
         }
+        */
+        GenericsType[] returnTypeGenerics = classNode.getGenericsTypes();
+        ClassNode[] inferred = new ClassNode[returnTypeGenerics.length];
+        for (int i = 0, n = returnTypeGenerics.length; i < n; i += 1) {
+            GenericsType genericsType = returnTypeGenerics[i];
+            inferred[i] = getCombinedBoundType(genericsType);
+        }
+        // GRECLIPSE end
         return inferred;
     }
 
@@ -3865,14 +3874,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * @param genericsType a {@link org.codehaus.groovy.ast.GenericsType} representing either a type, a placeholder or a wildcard
      * @return a class node usable as an inferred type
      */
+    /* GRECLIPSE edit
     private static ClassNode createUsableClassNodeFromGenericsType(final GenericsType genericsType) {
         ClassNode value = genericsType.getType();
         if (genericsType.isPlaceholder()) {
-            // GRECLIPSE add -- GROOVY-9968
-            if (value.isRedirectNode())
-                value = value.redirect();
-            else
-            // GRECLIPSE end
             value = OBJECT_TYPE;
         }
         ClassNode lowerBound = genericsType.getLowerBound();
@@ -3886,6 +3891,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         return value;
     }
+    */
 
     private static String[] convertToStringArray(final Expression options) {
         if (options == null) {
@@ -4159,7 +4165,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             */
                             if (genericsTypes != null && genericsTypes.length == 1
                                     && genericsTypes[0].getLowerBound() == null) {
-                                type = getCombinedBoundType(genericsTypes[0]);
+                                type = genericsTypes[0].getType();
                             } else {
                                 type = OBJECT_TYPE;
                             }
