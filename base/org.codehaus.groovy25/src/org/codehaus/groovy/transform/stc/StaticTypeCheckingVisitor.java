@@ -2095,12 +2095,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // GRECLIPSE end
         // 0 is the key, 1 is the value
         GenericsType[] types = intf.getGenericsTypes();
+        /* GRECLIPSE edit -- GROOVY-10326
         if (types == null || types.length != 2) return OBJECT_TYPE;
-
+        */
+        if (types == null || types.length != 2) types = new GenericsType[] {
+            OBJECT_TYPE.asGenericsType(), OBJECT_TYPE.asGenericsType()
+        };
+        // GRECLIPSE end
         if (pexp.isSpreadSafe()) {
             // map*.property syntax
             // only "key" and "value" are allowed
             if ("key".equals(pexp.getPropertyAsString())) {
+                // GRECLIPSE add -- GROOVY-10326
+                pexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
+                // GRECLIPSE end
                 ClassNode listKey = LIST_TYPE.getPlainNodeReference();
                 listKey.setGenericsTypes(new GenericsType[]{types[0]});
                 return listKey;

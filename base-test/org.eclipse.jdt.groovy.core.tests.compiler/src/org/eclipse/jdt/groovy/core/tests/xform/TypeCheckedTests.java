@@ -4206,4 +4206,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[foo:baz!]");
     }
+
+    @Test
+    public void testTypeChecked10326() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "void test(Map map) {\n" +
+            "  map*.key = null\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tmap*.key = null\n" +
+            "\t^^^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "Groovy:[Static type checking] - Cannot set read-only property: key\n" +
+            "----------\n");
+    }
 }
