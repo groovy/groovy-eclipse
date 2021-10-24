@@ -316,7 +316,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected static final List<MethodNode> EMPTY_METHODNODE_LIST = Collections.emptyList();
     protected static final ClassNode TYPECHECKED_CLASSNODE = ClassHelper.make(TypeChecked.class);
     protected static final ClassNode[] TYPECHECKING_ANNOTATIONS = new ClassNode[]{TYPECHECKED_CLASSNODE};
+    /* GRECLIPSE edit
     protected static final ClassNode TYPECHECKING_INFO_NODE = ClassHelper.make(TypeChecked.TypeCheckingInfo.class);
+    */
     protected static final ClassNode DGM_CLASSNODE = ClassHelper.make(DefaultGroovyMethods.class);
     protected static final int CURRENT_SIGNATURE_PROTOCOL_VERSION = 1;
     protected static final Expression CURRENT_SIGNATURE_PROTOCOL = new ConstantExpression(CURRENT_SIGNATURE_PROTOCOL_VERSION, true);
@@ -620,7 +622,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 // GROOVY-9454
                 ClassNode inferredType = getInferredTypeFromTempInfo(vexp, null);
                 if (inferredType != null && !inferredType.equals(OBJECT_TYPE)) {
-                    vexp.putNodeMetaData(INFERRED_RETURN_TYPE, inferredType);
+                    vexp.putNodeMetaData(INFERRED_TYPE, inferredType);
                 } else {
                     storeType(vexp, getType(vexp));
                 }
@@ -652,10 +654,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode inferredType = localVariable.getNodeMetaData(INFERRED_TYPE);
             inferredType = getInferredTypeFromTempInfo(localVariable, inferredType);
             if (inferredType != null && !inferredType.equals(OBJECT_TYPE)) {
-                // GRECLIPSE add -- GROOVY-9790, GROOVY-10217
+                // GRECLIPSE add -- GROOVY-9790, GROOVY-10102, GROOVY-10217
                 if (!inferredType.equals(accessedVariable.getType()))
                 // GRECLIPSE end
-                vexp.putNodeMetaData(INFERRED_RETURN_TYPE, inferredType);
+                vexp.putNodeMetaData(INFERRED_TYPE, inferredType);
             }
         }
     }
@@ -770,11 +772,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 lType = getType(leftExpression);
             } else {
                 if (op != ASSIGN && op != ELVIS_EQUAL) {
-                    // GRECLIPSE add -- GROOVY-10217
-                    if (leftExpression instanceof VariableExpression && hasInferredReturnType(leftExpression)) {
-                        lType = getInferredReturnType(leftExpression);
-                    } else
-                    // GRECLIPSE end
                     lType = getType(leftExpression);
                 } else {
                     lType = getOriginalDeclarationType(leftExpression);
@@ -2910,6 +2907,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         node.putNodeMetaData(ERROR_COLLECTOR, collector);
     }
 
+    /* GRECLIPSE edit
     protected void addTypeCheckingInfoAnnotation(final MethodNode node) {
         // TypeChecked$TypeCheckingInfo can not be applied on constructors
         if (node instanceof ConstructorNode) return;
@@ -2930,6 +2928,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
+    */
 
     @Override
     public void visitStaticMethodCallExpression(final StaticMethodCallExpression call) {

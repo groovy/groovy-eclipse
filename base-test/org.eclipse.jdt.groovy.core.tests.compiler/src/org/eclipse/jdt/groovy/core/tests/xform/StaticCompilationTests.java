@@ -6422,6 +6422,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic10308() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def x = { -> new C<String>() }\n" +
+            "  def y = x()\n" +
+            "  def z = y.p\n" +
+            "  y = null\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testCompileStatic10319() {
         //@formatter:off
         String[] sources = {
