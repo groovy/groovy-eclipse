@@ -480,8 +480,11 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             ImportNode importNode = importNodes.get(name);
             expression = findStaticMethod(importNode.getType(), importNode.getFieldName(), args);
             if (expression != null) return expression;
+            // GRECLIPSE add -- GROOVY-8389
+            if (isValidAccessorName(name)){
+            // GRECLIPSE end
             expression = findStaticPropertyAccessorGivenArgs(importNode.getType(), getPropNameForAccessor(importNode.getFieldName()), args);
-            if (expression != null) {
+            if (expression != null)
                 return newStaticMethodCallX(importNode.getType(), importNode.getFieldName(), args);
             }
         }
@@ -514,8 +517,11 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 starImportType = importNode == null ? null : importNode.getType();
                 expression = findStaticMethod(starImportType, name, args);
                 if (expression != null) return expression;
+                // GRECLIPSE add -- GROOVY-8389
+                if (isValidAccessorName(name)){
+                // GRECLIPSE end
                 expression = findStaticPropertyAccessorGivenArgs(starImportType, getPropNameForAccessor(name), args);
-                if (expression != null) {
+                if (expression != null)
                     return newStaticMethodCallX(starImportType, name, args);
                 }
             }

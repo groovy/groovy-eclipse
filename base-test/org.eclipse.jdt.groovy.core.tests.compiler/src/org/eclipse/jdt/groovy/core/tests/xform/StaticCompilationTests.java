@@ -1281,6 +1281,67 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7490() {
+        for (String imports : new String[] {"import static Pogo.callable_property; import static Pogo.closure_property", "import static Pogo.*"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                imports + "\n" +
+                "@groovy.transform.CompileStatic\n" +
+                "void test() {\n" +
+                "  print callable_property('hello')\n" +
+                "  print closure_property(' world')\n" +
+                "}\n" +
+                "test()\n",
+
+                "Pogo.groovy",
+                "class Pogo {\n" +
+                "  static final WithCall callable_property = new WithCall()\n" +
+                "  static final Closure closure_property = { return it }\n" +
+                "}\n",
+
+                "WithCall.groovy",
+                "class WithCall {\n" +
+                "  String call(String input) {\n" +
+                "    return input\n" +
+                "  }\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "hello world");
+        }
+    }
+
+    @Test
+    public void testCompileStatic7490a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print Pogo.callable_property.call('works')\n" + // TODO:5881,6324
+            "}\n" +
+            "test()\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  static final WithCall callable_property = new WithCall()\n" +
+            "}\n",
+
+            "WithCall.groovy",
+            "class WithCall {\n" +
+            "  String call(String input) {\n" +
+            "    return input\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic7526() {
         //@formatter:off
         String[] sources = {
@@ -2047,27 +2108,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8389a() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "import static Foo.bar\n" +
-            "import static Foo.baz\n" +
-            "class Foo {\n" +
-            "  static Closure<String> bar = { -> 'property' }\n" +
-            "  static Closure<String> baz = { -> 'property' }\n" +
-            "}\n" +
-            "String bar() {\n" +
-            "  'method'\n" +
-            "}\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "def test() {\n" +
-            "  bar() + ':' + baz.call()\n" + // TODO: Should this work without ".call"?
-            "}\n" +
-            "print test()\n",
-        };
-        //@formatter:on
+        for (String imports : new String[] {"import static Foo.bar; import static Foo.baz", "import static Foo.*"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                imports + "\n" +
+                "class Foo {\n" +
+                "  static Closure<String> bar = { -> 'property' }\n" +
+                "  static Closure<String> baz = { -> 'property' }\n" +
+                "}\n" +
+                "String bar() {\n" +
+                "  'method'\n" +
+                "}\n" +
+                "@groovy.transform.CompileStatic\n" +
+                "def test() {\n" +
+                "  bar() + ':' + baz()\n" +
+                "}\n" +
+                "print test()\n",
+            };
+            //@formatter:on
 
-        runConformTest(sources, "method:property");
+            runConformTest(sources, "method:property");
+        }
     }
 
     @Test
