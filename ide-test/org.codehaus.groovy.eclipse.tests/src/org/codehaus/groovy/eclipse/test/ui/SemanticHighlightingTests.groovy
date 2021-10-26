@@ -304,6 +304,28 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('CONST'), 5, STATIC_VALUE))
     }
 
+    @Test
+    void testStaticFinals5() {
+        addGroovySource '''\
+            |class C {
+            |  public static final CALLABLE = { -> }
+            |}
+            |'''.stripMargin(), 'C', 'p'
+
+        String contents = '''\
+            |import static p.C.CALLABLE
+            |CALLABLE.call()
+            |CALLABLE()
+            |'''.stripMargin()
+
+        int offset
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(offset = contents.indexOf('CALLABLE'), 8, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('CALLABLE', offset + 1), 8, STATIC_VALUE),
+            new HighlightedTypedPosition(offset = contents.indexOf('call'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('CALLABLE', offset + 1), 8, STATIC_VALUE))
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/905
     void testCtors() {
         String contents = '''\

@@ -522,6 +522,15 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     @Test
     void testRetainImport10() {
         String contents = '''\
+            |import java.util.regex.Pattern
+            |def parse = Pattern.&compile
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testRetainImport11() {
+        String contents = '''\
             |import groovy.transform.AnnotationCollector
             |import groovy.transform.EqualsAndHashCode
             |import groovy.transform.ToString
@@ -534,7 +543,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport11() {
+    void testRetainImport12() {
         String contents = '''\
             |import groovy.transform.AnnotationCollector
             |import groovy.transform.EqualsAndHashCode
@@ -550,113 +559,10 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport12() {
-        addJavaSource('interface I { static String NLS = "nls"; }', 'I', 'p')
-
-        String contents = '''\
-            |import static p.I.NLS
-            |class Foo {
-            |  @SuppressWarnings(NLS)
-            |  def method() {
-            |    System.getProperty('non.localized.string')
-            |  }
-            |}
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test
     void testRetainImport13() {
-        String contents = '''\
-            |import java.util.regex.Pattern
-            |def parse = Pattern.&compile
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test
-    void testRetainImport14() {
-        String contents = '''\
-            |import java.util.Map.*
-            |Entry entry
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test
-    void testRetainImport15() {
-        String contents = '''\
-            |import static java.util.Map.*
-            |Entry entry
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test
-    void testRetainImport16() {
         String contents = '''\
             |import p.T
             |def m(T t) {}
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test
-    void testRetainImport17() {
-        String contents = '''\
-            |import static p.T.f
-            |print f
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1243
-    void testRetainImport18() {
-        String contents = '''\
-            |import static p.T.m
-            |m('x')
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1243
-    void testRetainImport19() {
-        String contents = '''\
-            |import static p.T.m
-            |m 'x'
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
-    void testRetainImport20() {
-        addJavaSource('class C { static Object f }', 'C', '')
-
-        String contents = '''\
-            |import static C.f
-            |print f
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
-    void testRetainImport21() {
-        addJavaSource('class C { static void m() {} }', 'C', '')
-
-        String contents = '''\
-            |import static C.m
-            |m('x')
-            |'''
-        doContentsCompareTest(contents)
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
-    void testRetainImport22() {
-        addJavaSource('class C { static void m() {} }', 'C', '')
-
-        String contents = '''\
-            |import static C.m
-            |m 'x'
             |'''
         doContentsCompareTest(contents)
     }
@@ -1069,6 +975,24 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
+    void testInnerClass13() {
+        String contents = '''\
+            |import java.util.Map.*
+            |Entry entry
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testInnerClass14() {
+        String contents = '''\
+            |import static java.util.Map.*
+            |Entry entry
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
     void testStaticImport1() {
         String contents = '''\
             |import static java.lang.String.format
@@ -1221,6 +1145,129 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |}
             |'''
         doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testStaticImport15() {
+        addJavaSource('interface I { static String NLS = "nls"; }', 'I', 'p')
+
+        String contents = '''\
+            |import static p.I.NLS
+            |class Foo {
+            |  @SuppressWarnings(NLS)
+            |  def method() {
+            |    System.getProperty('non.localized.string')
+            |  }
+            |}
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testStaticImport16() {
+        String contents = '''\
+            |import static p.T.f
+            |print f
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1243
+    void testStaticImport17() {
+        String contents = '''\
+            |import static p.T.m
+            |m('x')
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1243
+    void testStaticImport18() {
+        String contents = '''\
+            |import static p.T.m
+            |m 'x'
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testStaticImport19() {
+        addJavaSource('class C { static Object f }', 'C', '')
+
+        String contents = '''\
+            |import static C.f
+            |print f
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testStaticImport20() {
+        addJavaSource('class C { static void m() {} }', 'C', '')
+
+        String contents = '''\
+            |import static C.m
+            |m('x')
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1244
+    void testStaticImport21() {
+        addJavaSource('class C { static void m() {} }', 'C', '')
+
+        String contents = '''\
+            |import static C.m
+            |m 'x'
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1309
+    void testStaticImport22() {
+        createGroovyType 'p', 'C', '''\
+            |class C {
+            |  static final callable_property = new C()
+            |  static final closure_property = { -> }
+            |  def call(... args) {
+            |  }
+            |}
+            |'''
+
+        for (tag in ['', '@groovy.transform.CompileStatic']) {
+            String contents = """\
+                |import static p.C.callable_property
+                |import static p.C.closure_property
+                |$tag
+                |void test() {
+                |  callable_property()
+                |  closure_property()
+                |}
+                |"""
+            doContentsCompareTest(contents)
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1309
+    void testStaticImport23() {
+        createGroovyType 'p', 'C', '''\
+            |class C {
+            |  static getClosure_property() {
+            |    return { -> }
+            |  }
+            |}
+            |'''
+
+        for (tag in ['', '@groovy.transform.CompileStatic']) {
+            String contents = """\
+                |import static p.C.closure_property
+                |$tag
+                |void test() {
+                |  closure_property()
+                |}
+                |"""
+            doContentsCompareTest(contents)
+        }
     }
 
     @Test
@@ -1433,6 +1480,30 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |}
             |'''
         doContentsCompareTest(contents, contents - ~/\|import static foo.Bar.isThing\s+/)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1309
+    void testStaticStarImport9() {
+        createGroovyType 'p', 'C', '''\
+            |class C {
+            |  static final callable_property = new C()
+            |  static final closure_property = { -> }
+            |  def call(... args) {
+            |  }
+            |}
+            |'''
+
+        for (tag in ['', '@groovy.transform.CompileStatic']) {
+            String contents = """\
+                |import static p.C.*
+                |$tag
+                |void test() {
+                |  callable_property()
+                |  closure_property()
+                |}
+                |"""
+            doContentsCompareTest(contents)
+        }
     }
 
     @Test // GRECLIPSE-1219

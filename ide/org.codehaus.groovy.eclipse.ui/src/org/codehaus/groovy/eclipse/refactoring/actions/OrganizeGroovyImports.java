@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import groovy.transform.Field;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -44,6 +45,7 @@ import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -548,15 +550,10 @@ public class OrganizeGroovyImports {
             if (expression.getEnd() > 0) {
                 if (expression.isImplicitThis()) {
                     MethodNode methodTarget = expression.getMethodTarget();
-                    if (methodTarget != null && methodTarget.isStatic()) {
-                        String staticImport = methodTarget.getDeclaringClass().getName().replace('$', '.') + "." + expression.getMethodAsString();
-                        Object alias = expression.getNodeMetaData("static.import.alias");
-                        if (alias != null && !alias.equals(expression.getMethodAsString())) {
-                            staticImport += " as " + alias;
-                        }
-                        doNotRemoveImport(staticImport);
-                    } else if (methodTarget == null) { // unresolved type?
+                    if (methodTarget == null) { // unresolved type or ???
                         checkRetainImport(expression.getMethodAsString());
+                    } else if (methodTarget.isStatic()) {
+                        handleStaticCall(methodTarget.getDeclaringClass(), expression);
                     }
                 } else if (isNotEmpty(expression.getGenericsTypes())) {
                     visitTypeParameters(expression.getGenericsTypes(), null);
@@ -583,12 +580,7 @@ public class OrganizeGroovyImports {
         @Override
         public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
             if (expression.getEnd() > 0) {
-                String staticImport = expression.getOwnerType().getName().replace('$', '.') + "." + expression.getMethod();
-                Object alias = expression.getNodeMetaData("static.import.alias");
-                if (alias != null && !alias.equals(expression.getMethod())) {
-                    staticImport += " as " + alias;
-                }
-                doNotRemoveImport(staticImport);
+                handleStaticCall(expression.getOwnerType(), expression);
             }
             super.visitStaticMethodCallExpression(expression);
         }
@@ -655,6 +647,19 @@ public class OrganizeGroovyImports {
                         }
                     }
                 }
+            }
+        }
+
+        private void handleStaticCall(ClassNode declaringClass, MethodCall call) {
+            String methodName = call.getMethodAsString();
+            String clazz = declaringClass.getName().replace('$', '.') + '.';
+            Object alias = ((ASTNode) call).getNodeMetaData("static.import.alias");
+
+            if (alias == null || alias.equals(methodName)) {
+                doNotRemoveImport(clazz + methodName);
+            } else {
+                doNotRemoveImport(clazz + alias); // property reference
+                doNotRemoveImport(clazz + methodName + " as " + alias);
             }
         }
 

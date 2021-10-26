@@ -253,9 +253,24 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 Expression result = findStaticMethodImportFromModule(method, args);
                 if (result != null) {
                     // GRECLIPSE add
-                    if (!((MethodCall) result).getMethodAsString().equals(method.getText())) {
-                        // store the identifier to facilitate organizing static imports
-                        result.putNodeMetaData("static.import.alias", method.getText());
+                    if (result instanceof MethodCallExpression) {
+                        Expression member = ((MethodCallExpression) result).getObjectExpression();
+                        member.putNodeMetaData("static.import.alias", name);
+                        setSourcePosition(member, method);
+
+                        result.setLastColumnNumber(mce.getLastColumnNumber());
+                        result.setLastLineNumber(mce.getLastLineNumber());
+                        result.setColumnNumber(mce.getColumnNumber());
+                        result.setLineNumber(mce.getLineNumber());
+                        result.setNameStart(method.getEnd());
+                        result.setNameEnd(method.getEnd());
+                        result.setStart(mce.getStart());
+                        result.setEnd(mce.getEnd());
+                        return result;
+                    }
+                    if (!((MethodCall) result).getMethodAsString().equals(name)) {
+                        // store the identifier to facilitate organizing imports
+                        result.putNodeMetaData("static.import.alias", name);
                     }
                     // GRECLIPSE end
                     setSourcePosition(result, mce);
@@ -510,9 +525,6 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 if (expression != null) { // assume name refers to a callable static field/property
                     MethodCallExpression call = new MethodCallExpression(expression, "call", args);
                     call.setImplicitThis(false);
-                    // GRECLIPSE add
-                    expression.setSourcePosition(method);
-                    // GRECLIPSE end
                     return call;
                 }
             }

@@ -267,11 +267,25 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 }
                 if (method instanceof ConstantExpression && !inLeftExpression) {
                     // could be a closure field
-                    String methodName = (String) ((ConstantExpression) method).getValue();
-                    result = findStaticFieldOrPropAccessorImportFromModule(methodName);
+                    result = findStaticFieldOrPropAccessorImportFromModule(method.getText());
                     if (result != null) {
+                        // GRECLIPSE add
+                        setSourcePosition(result, method);
+                        // GRECLIPSE end
                         result = new MethodCallExpression(result, "call", args);
+                        /* GRECLIPSE edit
                         result.setSourcePosition(mce);
+                        */
+                        ((MethodCallExpression) result).setImplicitThis(false);
+                        result.setLastColumnNumber(mce.getLastColumnNumber());
+                        result.setLastLineNumber(mce.getLastLineNumber());
+                        result.setColumnNumber(mce.getColumnNumber());
+                        result.setLineNumber(mce.getLineNumber());
+                        result.setNameStart(method.getEnd());
+                        result.setNameEnd(method.getEnd());
+                        result.setStart(mce.getStart());
+                        result.setEnd(mce.getEnd());
+                        // GRECLIPSE end
                         return result;
                     }
                 }
