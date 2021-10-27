@@ -440,7 +440,8 @@ public class SyntheticMethodBinding extends MethodBinding {
 		if (this.declaringClass.isStrictfp())
 			this.modifiers |= ClassFileConstants.AccStrictfp;
 		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
-		this.tagBits |= (TagBits.IsCanonicalConstructor | TagBits.isImplicit);
+		this.extendedTagBits |= ExtendedTagBits.IsCanonicalConstructor;
+		this.extendedTagBits |= ExtendedTagBits.isImplicit;
 		this.parameters = rcb.length == 0 ? Binding.NO_PARAMETERS : new TypeBinding[rcb.length];
 		for (int i = 0; i < rcb.length; i++) this.parameters[i] = TypeBinding.VOID; // placeholder
 		this.selector = TypeConstants.INIT;
@@ -448,7 +449,6 @@ public class SyntheticMethodBinding extends MethodBinding {
 		this.purpose = SyntheticMethodBinding.RecordCanonicalConstructor;
 		this.thrownExceptions = Binding.NO_EXCEPTIONS;
 		this.declaringClass = declaringSourceType;
-		this.tagBits |= TagBits.IsCanonicalConstructor;
 		this.index = nextSmbIndex();
 	}
 	public SyntheticMethodBinding(ReferenceBinding declaringClass, RecordComponentBinding rcb, int index) {

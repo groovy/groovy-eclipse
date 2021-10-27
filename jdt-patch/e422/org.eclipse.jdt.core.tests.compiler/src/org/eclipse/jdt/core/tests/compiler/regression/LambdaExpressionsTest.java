@@ -1046,7 +1046,10 @@ public void test039() {
 					"       try {\n" +
 					"		    X x = (X & I & J) o;\n" +
 					"       } catch (ClassCastException e) {\n" +
-					"           System.out.println(e.getMessage());\n" +
+					// Make assertion more robust by producing predictable output for Java 11+:
+					//   - Omit stack trace
+					//   - Cut off class loader name (e.g. 'java.net.URLClassLoader @f3f9f4b') for easier matching
+					"           System.out.println(e.getMessage().replaceFirst(\"(unnamed module of loader).*\", \"$1\"));\n" +
 					"       }\n" +
 					"	}\n" +
 					"}\n",

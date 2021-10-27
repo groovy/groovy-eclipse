@@ -2230,17 +2230,19 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 			new String[] {
 				"X.java",
 				"public class X {\n"+
-				" private static void foo(Object o) {\n"+
+				" public static void foo(Object o) {\n"+
 				"   switch (o) {\n"+
 				"     case null, Integer i  -> System.out.println(0);\n"+
 				"     default -> System.out.println(o);\n"+
 				"   }\n"+
+				" }\n"+
+				" public static void bar(Object o) {\n"+
 				"   Zork();\n"+
 				" }\n"+
 				"}",
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
+			"1. ERROR in X.java (at line 9)\n" +
 			"	Zork();\n" +
 			"	^^^^\n" +
 			"The method Zork() is undefined for the type X\n" +

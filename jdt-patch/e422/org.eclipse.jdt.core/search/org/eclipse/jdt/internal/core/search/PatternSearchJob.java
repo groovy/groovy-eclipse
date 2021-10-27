@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Microsoft Corporation - contribution for bug 575562 - improve completion search performance
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
@@ -53,6 +54,8 @@ protected SearchPattern pattern;
 protected IJavaSearchScope scope;
 protected SearchParticipant participant;
 protected IndexQueryRequestor requestor;
+protected boolean resolveDocumentForJar;
+protected boolean resolveDocumentForSourceFiles;
 protected boolean areIndexesReady;
 protected AtomicLong executionTime;
 boolean parallel;
@@ -61,12 +64,27 @@ public static final String ENABLE_PARALLEL_SEARCH = "enableParallelJavaIndexSear
 public static final boolean ENABLE_PARALLEL_SEARCH_DEFAULT = true;
 
 public PatternSearchJob(SearchPattern pattern, SearchParticipant participant, IJavaSearchScope scope, IndexQueryRequestor requestor) {
+	this(pattern, participant, scope, true, true, requestor);
+}
+
+/**
+ * Create a search job with the specified search pattern.
+ *
+ * @param resolveDocumentForJar whether to resolve the document name of a result entry
+ *                              if it comes to a JAR library.
+ * @param resolveDocumentForSourceFiles whether to resolve the document name of a result entry
+ *                                      if it comes from a project's source files.
+ */
+public PatternSearchJob(SearchPattern pattern, SearchParticipant participant, IJavaSearchScope scope, final boolean resolveDocumentForJar, final boolean resolveDocumentForSourceFiles, IndexQueryRequestor requestor) {
 	this.executionTime = new AtomicLong(0);
 	this.pattern = pattern;
 	this.participant = participant;
 	this.scope = scope;
 	this.requestor = requestor;
+	this.resolveDocumentForJar = resolveDocumentForJar;
+	this.resolveDocumentForSourceFiles = resolveDocumentForSourceFiles;
 }
+
 @Override
 public boolean belongsTo(String jobFamily) {
 	return true;
@@ -211,7 +229,16 @@ public boolean search(Index index, IndexQueryRequestor queryRequestor, IProgress
 			searchPattern = clone(searchPattern);
 			searchScope = clone(searchScope);
 		}
-		MatchLocator.findIndexMatches(searchPattern, index, queryRequestor, this.participant, searchScope, progressMonitor);
+
+		boolean isFromJar = index.isIndexForJar();
+		boolean resolveDocumentName = (isFromJar && this.resolveDocumentForJar)
+			|| (!isFromJar && this.resolveDocumentForSourceFiles);
+		if (resolveDocumentName) {
+			// fall back to the default behavior in case some pattern implementation doesn't adapt to the new index search API.
+			MatchLocator.findIndexMatches(searchPattern, index, queryRequestor, this.participant, searchScope, progressMonitor);
+		} else {
+			MatchLocator.findIndexMatches(searchPattern, index, queryRequestor, this.participant, searchScope, false, progressMonitor);
+		}
 		this.executionTime.addAndGet(System.currentTimeMillis() - start);
 		return COMPLETE;
 	} catch (IOException e) {

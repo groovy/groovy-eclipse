@@ -49,7 +49,7 @@ public void testPrimarySuper() {
 		// completeBehind:
 		"super(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnExplicitConstructorCall:primary().super(1, 2)>;",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  public class InnerBar {\n" +
@@ -58,7 +58,7 @@ public void testPrimarySuper() {
 		"  }\n" +
 		"  public class SubInnerBar extends InnerBar {\n" +
 		"    SubInnerBar(Bar x) {\n" +
-		"      <CompleteOnExplicitConstructorCall:primary().super(1, 2)>;\n" +
+		"      primary().super(1, 2, <CompleteOnName:>, i);\n" +
 		"    }\n" +
 		"  }\n" +
 		"  static Bar x;\n" +
@@ -98,7 +98,7 @@ public void testPrimaryThis() {
 		// completeBehind:
 		"this(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnExplicitConstructorCall:primary().this(1, 2)>;",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  public class InnerBar {\n" +
@@ -107,7 +107,7 @@ public void testPrimaryThis() {
 		"  }\n" +
 		"  public class SubInnerBar extends InnerBar {\n" +
 		"    SubInnerBar(Bar x) {\n" +
-		"      <CompleteOnExplicitConstructorCall:primary().this(1, 2)>;\n" +
+		"      primary().this(1, 2, <CompleteOnName:>, i);\n" +
 		"    }\n" +
 		"  }\n" +
 		"  static Bar x;\n" +
@@ -140,11 +140,11 @@ public void testSuper() {
 		// completeBehind:
 		"super(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnExplicitConstructorCall:super(1, 2)>;",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
-		"    <CompleteOnExplicitConstructorCall:super(1, 2)>;\n" +
+		"    super(1, 2, <CompleteOnName:>, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -171,11 +171,11 @@ public void testThis() {
 		// completeBehind:
 		"this(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnExplicitConstructorCall:this(1, 2)>;",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
-		"    <CompleteOnExplicitConstructorCall:this(1, 2)>;\n" +
+		"    this(1, 2, <CompleteOnName:>, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.debug.ui;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -45,9 +44,9 @@ public class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
         // first remove the JDI adapter if one exists
         try {
             List<IAdapterFactory> factories = ((AdapterManager) Platform.getAdapterManager()).getFactories().get("org.eclipse.jdt.debug.core.IJavaStackFrame");
-            for (Iterator<IAdapterFactory> iterator = factories.iterator(); iterator.hasNext();) {
-                if (iterator.next().getClass().getName().equals("org.eclipse.core.internal.adapter.AdapterFactoryProxy")) {
-                    iterator.remove();
+            for (IAdapterFactory factory : factories) {
+                if (factory.getClass().getName().equals("org.eclipse.core.internal.adapter.AdapterFactoryProxy")) {
+                    factories.remove(factory);
                     break;
                 }
             }

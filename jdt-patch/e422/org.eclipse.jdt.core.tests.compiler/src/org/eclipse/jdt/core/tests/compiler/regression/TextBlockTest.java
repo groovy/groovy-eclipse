@@ -1550,4 +1550,36 @@ public class TextBlockTest extends AbstractRegressionTest {
 				getCompilerOptions(),
 				new String[] {"--enable-preview"});
 	}
+	public void testBug575953() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n" +
+						"    public static void main(String[] args)  {\n" +
+						"    	String TEXT_BLOCK = \"\"\"\n" +
+						"           public class A {\n" +
+						"               public void foo() {\\s\n" +
+						"                   String k = \\\"\"\"\n" +
+						"                       abcdefg\n" +
+						"                       \\\"\"\"\n" +
+						"                   System.out.pri\\\n" +
+						"           ntln(\"abc\");\\s\n" +
+						"               }\n" +
+						"           }\\\n" +
+						"           \"\"\";\n" +
+						"        System.out.println(TEXT_BLOCK);\n" +
+						"    }\n" +
+						"}\n"
+				},
+				"public class A {\n" +
+				"    public void foo() { \n" +
+				"        String k = \"\"\"\n" +
+				"            abcdefg\n" +
+				"            \"\"\"\n" +
+				"        System.out.println(\"abc\"); \n" +
+				"    }\n" +
+				"}",
+				getCompilerOptions(),
+				new String[] {"--enable-preview"});
+	}
 }

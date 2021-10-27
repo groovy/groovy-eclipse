@@ -938,6 +938,7 @@ public class InternalCompletionProposal extends CompletionProposal {
 					break;
 				case METHOD_REF:
 				case METHOD_REF_WITH_CASTED_RECEIVER:
+				case LAMBDA_EXPRESSION:
 					try {
 						this.parameterNames = findMethodParameterNames(
 								this.declarationPackageName,
@@ -1136,6 +1137,9 @@ public class InternalCompletionProposal extends CompletionProposal {
 				break;
 			case CompletionProposal.ANONYMOUS_CLASS_CONSTRUCTOR_INVOCATION :
 				buffer.append("ANONYMOUS_CLASS_CONSTRUCTOR_INVOCATION"); //$NON-NLS-1$
+				break;
+			case CompletionProposal.LAMBDA_EXPRESSION :
+				buffer.append("LAMBDA_EXPRESSION"); //$NON-NLS-1$
 				break;
 			default :
 				buffer.append("PROPOSAL"); //$NON-NLS-1$

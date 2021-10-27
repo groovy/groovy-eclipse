@@ -30,7 +30,7 @@ public class ClasspathAccessRule extends AccessRule implements IAccessRule {
 	}
 
 	public ClasspathAccessRule(char[] pattern, int problemId) {
-		super(pattern, problemId);
+		super(JavaModelManager.getJavaModelManager().intern(pattern), problemId);
 	}
 
 	private static int toProblemId(int kind) {

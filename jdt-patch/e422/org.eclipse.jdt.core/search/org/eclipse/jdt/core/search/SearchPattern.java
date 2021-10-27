@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Microsoft Corporation - contribution for bug 575562 - improve completion search performance
  *******************************************************************************/
 package org.eclipse.jdt.core.search;
 
@@ -362,6 +363,7 @@ public SearchPattern(int matchRule) {
 		this.matchRule &= ~R_PREFIX_MATCH;
 	}
 }
+
 /**
  * @noreference This method is not intended to be referenced by clients.
  * @nooverride This method is not intended to be re-implemented or extended by clients.
@@ -2474,6 +2476,30 @@ public void decodeIndexKey(char[] key) {
  * @nooverride This method is not intended to be re-implemented or extended by clients.
  */
 public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor monitor) throws IOException {
+	findIndexMatches(index, requestor, participant, scope, true, monitor);
+}
+
+/**
+ * Query a given index for matching entries. Assumes the sender has
+ * opened the index and will close when finished.
+ *
+ * This API provides a flag to control whether to skip resolving
+ * document name for the matching entries. If a SearchPattern subclass
+ * has a different implementation of index matching, they have to
+ * override this API to support document name resolving feature.
+ *
+ * @param index the target index to query
+ * @param requestor the search requestor
+ * @param participant the search participant
+ * @param scope the search scope where the search results should be found
+ * @param resolveDocumentName whether to skip the document name resolving
+ *                            for the matching entries
+ * @param monitor a progress monitor
+ *
+ * @noreference This method is not intended to be referenced by clients.
+ * @nooverride This method is not intended to be re-implemented or extended by clients.
+ */
+public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, boolean resolveDocumentName, IProgressMonitor monitor) throws IOException {
 	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
 	try {
 		index.startQuery();
@@ -2490,10 +2516,15 @@ public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchP
 			SearchPattern decodedResult = pattern.getBlankPattern();
 			decodedResult.decodeIndexKey(entry.getWord());
 			if (pattern.matchesDecodedKey(decodedResult)) {
-				// TODO (kent) some clients may not need the document names
-				String[] names = entry.getDocumentNames(index);
-				for (int j = 0, n = names.length; j < n; j++)
-					acceptMatch(names[j], containerPath, separator, decodedResult, requestor, participant, scope, monitor);
+				// Since resolve document name is expensive, leave the decision to the search client
+				// to decide whether to do so.
+				if (resolveDocumentName) {
+					String[] names = entry.getDocumentNames(index);
+					for (int j = 0, n = names.length; j < n; j++)
+						acceptMatch(names[j], containerPath, separator, decodedResult, requestor, participant, scope, monitor);
+				} else {
+					acceptMatch("", containerPath, separator, decodedResult, requestor, participant, scope, monitor); //$NON-NLS-1$
+				}
 			}
 		}
 	} finally {

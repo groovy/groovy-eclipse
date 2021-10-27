@@ -13,6 +13,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
  *								Bug 377883 - NPE on open Call Hierarchy
+ *     Microsoft Corporation - Contribution for bug 575562 - improve completion search performance
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
@@ -305,6 +306,13 @@ public static IBinaryType classFileReader(IType type) {
  */
 public static void findIndexMatches(SearchPattern pattern, Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor monitor) throws IOException {
 	pattern.findIndexMatches(index, requestor, participant, scope, monitor);
+}
+
+/**
+ * Query a given index for matching entries. Assumes the sender has opened the index and will close when finished.
+ */
+public static void findIndexMatches(SearchPattern pattern, Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, boolean resolveDocumentName, IProgressMonitor monitor) throws IOException {
+	pattern.findIndexMatches(index, requestor, participant, scope, resolveDocumentName, monitor);
 }
 
 public static IJavaElement getProjectOrJar(IJavaElement element) {

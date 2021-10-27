@@ -73,10 +73,13 @@ public FlowInfo analyseCode(
 	FlowContext flowContext,
 	FlowInfo flowInfo) {
 	if (this.constantExpressions != null) {
+		int nullPatternCount = 0;
 		for(int i=0; i < this.constantExpressions.length; i++) {
 			Expression e = this.constantExpressions[i];
+			nullPatternCount +=  e instanceof NullLiteral ? 1 : 0;
 			if (i > 0 && (e instanceof Pattern)) {
-				currentScope.problemReporter().IllegalFallThroughToPattern(e);
+				if (!(i == nullPatternCount && e instanceof TypePattern))
+					currentScope.problemReporter().IllegalFallThroughToPattern(e);
 			}
 			analyseConstantExpression(currentScope, flowContext, flowInfo, e);
 		}

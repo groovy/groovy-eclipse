@@ -28,7 +28,40 @@ public static Test suite() {
 /*
  * Completion inside an if statement.
  */
-public void testInIfStatement() {
+public void testInIfStatement1() {
+	this.runTestCheckMethodParse(
+		// compilationUnit:
+		"class Bar {								\n" +
+		"	void foo() {							\n" +
+		"		if (true) {							\n" +
+		"			new z.y.X(1, 2, i);				\n" +
+		"		}									\n" +
+		"	}										\n" +
+		"}\n",
+		// completeBehind:
+		"X(",
+		// expectedCompletionNodeToString:
+		"<CompleteOnAllocationExpression:new z.y.X(<CompleteOnName:>, 2, i)>",
+		// expectedUnitDisplayString:
+		"class Bar {\n" +
+		"  Bar() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    if (true)\n" +
+		"        {\n" +
+		"          <CompleteOnAllocationExpression:new z.y.X(<CompleteOnName:>, 2, i)>;\n" +
+		"        }\n" +
+		"  }\n" +
+		"}\n",
+		// expectedCompletionIdentifier:
+		"",
+		// expectedReplacedSource:
+		"new z.y.X(1, 2, i)",
+		// test name
+		"<complete inside an if statement>"
+	);
+}
+public void testInIfStatement2() {
 	this.runTestCheckMethodParse(
 		// compilationUnit:
 		"class Bar {								\n" +
@@ -41,15 +74,16 @@ public void testInIfStatement() {
 		// completeBehind:
 		"X(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnAllocationExpression:new z.y.X(1, 2)>",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    {\n" +
-		"      <CompleteOnAllocationExpression:new z.y.X(1, 2)>;\n" +
-		"    }\n" +
+		"    if (true)\n" +
+		"        {\n" +
+		"          new z.y.X(1, 2, <CompleteOnName:>, i);\n" +
+		"        }\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -66,7 +100,35 @@ public void testInIfStatement() {
  * ie. ClassInstanceCreationExpression ::= 'new' ClassType '(' ArgumentListopt ')' ClassBodyopt
  *		where ClassType is a qualified type name
  */
-public void testNoQualificationQualifiedTypeName() {
+public void testNoQualificationQualifiedTypeName1() {
+	this.runTestCheckMethodParse(
+		// compilationUnit:
+		"class Bar {								\n" +
+		"	void foo() {							\n" +
+		"		new z.y.X(1, 2, i);					\n" +
+		"	}										\n" +
+		"}\n",
+		// completeBehind:
+		"X(",
+		// expectedCompletionNodeToString:
+		"<CompleteOnAllocationExpression:new z.y.X()>",
+		// expectedUnitDisplayString:
+		"class Bar {\n" +
+		"  Bar() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    <CompleteOnAllocationExpression:new z.y.X()>;\n" +
+		"  }\n" +
+		"}\n",
+		// expectedCompletionIdentifier:
+		"",
+		// expectedReplacedSource:
+		"",
+		// test name
+		"<complete on non qualified instance creation with qualified type name>"
+	);
+}
+public void testNoQualificationQualifiedTypeName2() {
 	this.runTestCheckMethodParse(
 		// compilationUnit:
 		"class Bar {								\n" +
@@ -77,13 +139,13 @@ public void testNoQualificationQualifiedTypeName() {
 		// completeBehind:
 		"X(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnAllocationExpression:new z.y.X(1, 2)>",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    <CompleteOnAllocationExpression:new z.y.X(1, 2)>;\n" +
+		"    new z.y.X(1, 2, <CompleteOnName:>, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -100,7 +162,35 @@ public void testNoQualificationQualifiedTypeName() {
  * ie. ClassInstanceCreationExpression ::= 'new' ClassType '(' ArgumentListopt ')' ClassBodyopt
  *		where ClassType is a simple type name
  */
-public void testNoQualificationSimpleTypeName() {
+public void testNoQualificationSimpleTypeName1() {
+	this.runTestCheckMethodParse(
+		// compilationUnit:
+		"class Bar {								\n" +
+		"	void foo() {							\n" +
+		"		new X(1, 2, i);						\n" +
+		"	}										\n" +
+		"}\n",
+		// completeBehind:
+		"X(",
+		// expectedCompletionNodeToString:
+		"<CompleteOnAllocationExpression:new X()>",
+		// expectedUnitDisplayString:
+		"class Bar {\n" +
+		"  Bar() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    <CompleteOnAllocationExpression:new X()>;\n" +
+		"  }\n" +
+		"}\n",
+		// expectedCompletionIdentifier:
+		"",
+		// expectedReplacedSource:
+		"",
+		// test name
+		"<complete on non qualified instance creation with simple type name>"
+	);
+}
+public void testNoQualificationSimpleTypeName2() {
 	this.runTestCheckMethodParse(
 		// compilationUnit:
 		"class Bar {								\n" +
@@ -111,13 +201,13 @@ public void testNoQualificationSimpleTypeName() {
 		// completeBehind:
 		"X(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnAllocationExpression:new X(1, 2)>",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    <CompleteOnAllocationExpression:new X(1, 2)>;\n" +
+		"    new X(1, 2, <CompleteOnName:>, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -133,7 +223,35 @@ public void testNoQualificationSimpleTypeName() {
  *
  * ie. ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' SimpleName '(' ArgumentListopt ')' ClassBodyopt
  */
-public void testQualifiedWithName() {
+public void testQualifiedWithName1() {
+	this.runTestCheckMethodParse(
+		// compilationUnit:
+		"class Bar {\n" +
+		"	void foo() {							\n" +
+		"		Buz.x.new X(1, 2, i);				\n" +
+		"	}										\n" +
+		"}\n",
+		// completeBehind:
+		"X(",
+		// expectedCompletionNodeToString:
+		"<CompleteOnQualifiedAllocationExpression:Buz.x.new X(<CompleteOnName:>, 2, i)>",
+		// expectedUnitDisplayString:
+		"class Bar {\n" +
+		"  Bar() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    <CompleteOnQualifiedAllocationExpression:Buz.x.new X(<CompleteOnName:>, 2, i)>;\n" +
+		"  }\n" +
+		"}\n",
+		// expectedCompletionIdentifier:
+		"",
+		// expectedReplacedSource:
+		"Buz.x.new X(1, 2, i)",
+		// test name
+		"<complete on name qualified instance creation>"
+	);
+}
+public void testQualifiedWithName2() {
 	this.runTestCheckMethodParse(
 		// compilationUnit:
 		"class Bar {\n" +
@@ -144,13 +262,13 @@ public void testQualifiedWithName() {
 		// completeBehind:
 		"X(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnQualifiedAllocationExpression:Buz.x.new X(1, 2)>",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    <CompleteOnQualifiedAllocationExpression:Buz.x.new X(1, 2)>;\n" +
+		"    Buz.x.new X(1, 2, <CompleteOnName:>, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
@@ -166,7 +284,35 @@ public void testQualifiedWithName() {
  *
  * ie. ClassInstanceCreationExpression ::= Primary '.' 'new' SimpleName '(' ArgumentListopt ')' ClassBodyopt
  */
-public void testQualifiedWithPrimary() {
+public void testQualifiedWithPrimary1() {
+	this.runTestCheckMethodParse(
+		// compilationUnit:
+		"class Bar {								\n" +
+		"	void foo() {							\n" +
+		"		primary().new X(1, 2, i);			\n" +
+		"	}										\n" +
+		"}\n",
+		// completeBehind:
+		"X(",
+		// expectedCompletionNodeToString:
+		"<CompleteOnQualifiedAllocationExpression:primary().new X(<CompleteOnName:>, 2, i)>",
+		// expectedUnitDisplayString:
+		"class Bar {\n" +
+		"  Bar() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    <CompleteOnQualifiedAllocationExpression:primary().new X(<CompleteOnName:>, 2, i)>;\n" +
+		"  }\n" +
+		"}\n",
+		// expectedCompletionIdentifier:
+		"",
+		// expectedReplacedSource:
+		"primary().new X(1, 2, i)",
+		// test name
+		"<complete on primary qualified instance creation>"
+	);
+}
+public void testQualifiedWithPrimary2() {
 	this.runTestCheckMethodParse(
 		// compilationUnit:
 		"class Bar {								\n" +
@@ -177,13 +323,13 @@ public void testQualifiedWithPrimary() {
 		// completeBehind:
 		"X(1, 2,",
 		// expectedCompletionNodeToString:
-		"<CompleteOnQualifiedAllocationExpression:primary().new X(1, 2)>",
+		"<CompleteOnName:>",
 		// expectedUnitDisplayString:
 		"class Bar {\n" +
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    <CompleteOnQualifiedAllocationExpression:primary().new X(1, 2)>;\n" +
+		"    primary().new X(1, 2, <CompleteOnName:>, i);\n" +
 		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:

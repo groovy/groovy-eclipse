@@ -658,7 +658,7 @@ public void resolveStatements() {
 			this.constructorCall = null;
 		} else if (sourceType.isRecord() &&
 				!(this instanceof CompactConstructorDeclaration) && // compact constr should be marked as canonical?
-				(this.binding != null && (this.binding.tagBits & TagBits.IsCanonicalConstructor) == 0) &&
+				(this.binding != null && !this.binding.isCanonicalConstructor()) &&
 				this.constructorCall.accessMode != ExplicitConstructorCall.This) {
 			this.scope.problemReporter().recordMissingExplicitConstructorCallInNonCanonicalConstructor(this);
 			this.constructorCall = null;

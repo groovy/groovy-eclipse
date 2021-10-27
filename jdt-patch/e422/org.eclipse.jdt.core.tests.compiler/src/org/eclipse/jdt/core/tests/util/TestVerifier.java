@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,6 +10,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Alexander Kriegisch - bug 286316: Set classpath for forked test JVM via
+ *       DataOutputStream instead of JVM parameter; improve file deletion logic
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.util;
 
@@ -17,7 +19,10 @@ import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.eclipse.jdt.core.tests.runtime.*;
 import java.io.*;
 import java.net.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * Verifies that the .class files resulting from a compilation can be loaded
  * in a VM and that they can be run.
@@ -125,208 +130,95 @@ public String getExecutionOutput(){
 public String getExecutionError(){
 	return this.errorBuffer.toString();
 }
+
 /**
- * Returns the code of the VerifyTests class.
- *
+ * Default value for {@link VerifyTests} source code, copied and regularly refreshed from original source code
+ * <p>
  * IMPORTANT NOTE: DO NOTE EDIT BUT GENERATE INSTEAD (see below)
- *
- * To generate:
- * - export VerifyTests.java to d:/temp
- * - inspect org.eclipse.jdt.core.tests.util.Util.fileContentToDisplayString("d:/temp/VerifyTests.java", 2, true)
+ * <p>
+ * To generate:<ul>
+ *   <li>export VerifyTests.java to d:/temp</li>
+ *   <li>inspect org.eclipse.jdt.core.tests.util.Util.fileContentToDisplayString("d:/temp/VerifyTests.java", 2, true)</li>
+ * </ul><p>
  */
-private String getVerifyTestsCode() {
-	return
+static final String VERIFY_TEST_CODE_DEFAULT;
+
+static {
+	// Use static initialiser block instead of direct field initialisation, because it permits for code folding in IDEs,
+	// i.e. this huge string can easily be folded away, which minimises scrolling.
+	VERIFY_TEST_CODE_DEFAULT =
 		"/*******************************************************************************\n" +
-		" * Copyright (c) 2000, 2017 IBM Corporation and others.\n" +
-		" * All rights reserved. This program and the accompanying materials\n" +
-		" * are made available under the terms of the Eclipse Public License v1.0\n" +
+		" * Copyright (c) 2000, 2021 IBM Corporation and others.\n" +
+		" *\n" +
+		" * This program and the accompanying materials\n" +
+		" * are made available under the terms of the Eclipse Public License 2.0\n" +
 		" * which accompanies this distribution, and is available at\n" +
-		" * http://www.eclipse.org/legal/epl-v10.html\n" +
+		" * https://www.eclipse.org/legal/epl-2.0/\n" +
+		" *\n" +
+		" * SPDX-License-Identifier: EPL-2.0\n" +
 		" *\n" +
 		" * Contributors:\n" +
 		" *     IBM Corporation - initial API and implementation\n" +
+		" *     Alexander Kriegisch - bug 286316: Get classpath via DataInputStream and\n" +
+		" *         use it in an isolated URLClassLoader, enabling formerly locked\n" +
+		" *         classpath JARs to be closed on Windows\n" +
 		" *******************************************************************************/\n" +
 		"package org.eclipse.jdt.core.tests.util;\n" +
 		"\n" +
 		"import java.io.DataInputStream;\n" +
 		"import java.io.DataOutputStream;\n" +
 		"import java.io.File;\n" +
-		"import java.io.FileInputStream;\n" +
-		"import java.io.FileNotFoundException;\n" +
 		"import java.io.IOException;\n" +
-		"import java.io.InputStream;\n" +
 		"import java.lang.reflect.InvocationTargetException;\n" +
 		"import java.lang.reflect.Method;\n" +
+		"import java.net.MalformedURLException;\n" +
 		"import java.net.Socket;\n" +
-		"import java.util.StringTokenizer;\n" +
+		"import java.net.URL;\n" +
+		"import java.net.URLClassLoader;\n" +
 		"\n" +
-		"/******************************************************\n" +
-		" *\n" +
-		" * IMPORTANT NOTE: If modifying this class, copy the source to TestVerifier#getVerifyTestsCode()\n" +
-		" * (see this method for details)\n" +
-		" *\n" +
-		" ******************************************************/\n" +
-		"\n" +
+		"/**\n" +
+		" * <b>IMPORTANT NOTE:</b> When modifying this class, please copy the source into the static initialiser block for field\n" +
+		" * {@link TestVerifier#VERIFY_TEST_CODE_DEFAULT}. See also {@link TestVerifier#READ_VERIFY_TEST_FROM_FILE}, if you want\n" +
+		" * to dynamically load the source code directly from this file when running tests, which is a convenient way to test if\n" +
+		" * changes in this class work as expected, without the need to update the hard-coded default value every single time\n" +
+		" * during an ongoing refactoring.\n" +
+		" * <p>\n" +
+		" * In order to make the copying job easier, keep this class compatible with Java 5 language level. You may however use\n" +
+		" * things like {@code @Override} for interfaces, {@code assert} (if in a single line), {@code @SuppressWarnings},\n" +
+		" * because {@link TestVerifier#getVerifyTestsCode()} can filter them out dynamically. You should however avoid things\n" +
+		" * like diamonds, multi-catch, catch-with-resources and more recent Java features.\n" +
+		" */\n" +
+		"@SuppressWarnings({ \"unchecked\", \"rawtypes\" })\n" +
 		"public class VerifyTests {\n" +
 		"	int portNumber;\n" +
 		"	Socket socket;\n" +
 		"\n" +
-		"/**\n" +
-		" * NOTE: Code copied from junit.util.TestCaseClassLoader.\n" +
-		" *\n" +
-		" * A custom class loader which enables the reloading\n" +
-		" * of classes for each test run. The class loader\n" +
-		" * can be configured with a list of package paths that\n" +
-		" * should be excluded from loading. The loading\n" +
-		" * of these packages is delegated to the system class\n" +
-		" * loader. They will be shared across test runs.\n" +
-		" * <p>\n" +
-		" * The list of excluded package paths is specified in\n" +
-		" * a properties file \"excluded.properties\" that is located in\n" +
-		" * the same place as the TestCaseClassLoader class.\n" +
-		" * <p>\n" +
-		" * <b>Known limitation:</b> the VerifyClassLoader cannot load classes\n" +
-		" * from jar files.\n" +
-		" */\n" +
-		"\n" +
-		"\n" +
-		"public class VerifyClassLoader extends ClassLoader {\n" +
-		"	/** scanned class path */\n" +
-		"	private String[] pathItems;\n" +
-		"\n" +
-		"	/** excluded paths */\n" +
-		"	private String[] excluded= {\"groovy\",\"org.codehaus.groovy\"};\n" +
-		"\n" +
-		"	/**\n" +
-		"	 * Constructs a VerifyClassLoader. It scans the class path\n" +
-		"	 * and the excluded package paths\n" +
-		"	 */\n" +
-		"	public VerifyClassLoader() {\n" +
-		"		super();\n" +
-		"		String classPath= System.getProperty(\"java.class.path\");\n" +
-		"		String separator= System.getProperty(\"path.separator\");\n" +
-		"\n" +
-		"		// first pass: count elements\n" +
-		"		StringTokenizer st= new StringTokenizer(classPath, separator);\n" +
-		"		int i= 0;\n" +
-		"		while (st.hasMoreTokens()) {\n" +
-		"			st.nextToken();\n" +
-		"			i++;\n" +
-		"		}\n" +
-		"		// second pass: split\n" +
-		"		this.pathItems= new String[i];\n" +
-		"		st= new StringTokenizer(classPath, separator);\n" +
-		"		i= 0;\n" +
-		"		while (st.hasMoreTokens()) {\n" +
-		"			this.pathItems[i++]= st.nextToken();\n" +
-		"		}\n" +
-		"\n" +
+		"private static URL[] classPathToURLs(String[] classPath) throws MalformedURLException {\n" +
+		"	URL[] urls = new URL[classPath.length];\n" +
+		"	for (int i = 0; i < classPath.length; i++) {\n" +
+		"		urls[i] = new File(classPath[i]).toURI().toURL();\n" +
 		"	}\n" +
-		"	public java.net.URL getResource(String name) {\n" +
-		"		return ClassLoader.getSystemResource(name);\n" +
-		"	}\n" +
-		"	public InputStream getResourceAsStream(String name) {\n" +
-		"		return ClassLoader.getSystemResourceAsStream(name);\n" +
-		"	}\n" +
-		"	protected boolean isExcluded(String name) {\n" +
-		"		// exclude the \"java\" packages.\n" +
-		"		// They always need to be excluded so that they are loaded by the system class loader\n" +
-		"		if (name.startsWith(\"java\") || name.startsWith(\"[Ljava\"))\n" +
-		"			return true;\n" +
-		"\n" +
-		"		// exclude the user defined package paths\n" +
-		"		for (int i= 0; i < this.excluded.length; i++) {\n" +
-		"			if (name.startsWith(this.excluded[i])) {\n" +
-		"				return true;\n" +
-		"			}\n" +
-		"		}\n" +
-		"		return false;\n" +
-		"	}\n" +
-		"	public synchronized Class loadClass(String name, boolean resolve)\n" +
-		"		throws ClassNotFoundException {\n" +
-		"\n" +
-		"		Class c= findLoadedClass(name);\n" +
-		"		if (c != null)\n" +
-		"			return c;\n" +
-		"		//\n" +
-		"		// Delegate the loading of excluded classes to the\n" +
-		"		// standard class loader.\n" +
-		"		//\n" +
-		"		if (isExcluded(name)) {\n" +
-		"			try {\n" +
-		"				c= findSystemClass(name);\n" +
-		"				return c;\n" +
-		"			} catch (ClassNotFoundException e) {\n" +
-		"				// keep searching\n" +
-		"			}\n" +
-		"		}\n" +
-		"		File file= locate(name);\n" +
-		"		if (file == null)\n" +
-		"			throw new ClassNotFoundException(name);\n" +
-		"		byte data[]= loadClassData(file);\n" +
-		"		c= defineClass(name, data, 0, data.length);\n" +
-		"		if (resolve)\n" +
-		"			resolveClass(c);\n" +
-		"		return c;\n" +
-		"	}\n" +
-		"	private byte[] loadClassData(File f) throws ClassNotFoundException {\n" +
-		"		FileInputStream stream = null;\n" +
-		"		try {\n" +
-		"			//System.out.println(\"loading: \"+f.getPath());\n" +
-		"			stream = new FileInputStream(f);\n" +
-		"\n" +
-		"			try {\n" +
-		"				byte[] b= new byte[stream.available()];\n" +
-		"				stream.read(b);\n" +
-		"				return b;\n" +
-		"			}\n" +
-		"			catch (IOException e) {\n" +
-		"				throw new ClassNotFoundException();\n" +
-		"			}\n" +
-		"		}\n" +
-		"		catch (FileNotFoundException e) {\n" +
-		"			throw new ClassNotFoundException();\n" +
-		"		} finally {\n" +
-		"			if (stream != null) {\n" +
-		"				try {\n" +
-		"					stream.close();\n" +
-		"				} catch (IOException e) {\n" +
-		"					/* ignore */\n" +
-		"				}\n" +
-		"			}\n" +
-		"		}\n" +
-		"	}\n" +
-		"	/**\n" +
-		"	 * Locate the given file.\n" +
-		"	 * @return Returns null if file couldn't be found.\n" +
-		"	 */\n" +
-		"	private File locate(String fileName) {\n" +
-		"		if (fileName != null) {\n" +
-		"			fileName= fileName.replace('.', '/')+\".class\";\n" +
-		"			File path= null;\n" +
-		"			for (int i= 0; i < this.pathItems.length; i++) {\n" +
-		"				path= new File(this.pathItems[i], fileName);\n" +
-		"				if (path.exists())\n" +
-		"					return path;\n" +
-		"			}\n" +
-		"		}\n" +
-		"		return null;\n" +
-		"	}\n" +
+		"	return urls;\n" +
 		"}\n" +
 		"\n" +
-		"public void loadAndRun(String className) throws Throwable {\n" +
-		"	//System.out.println(\"Loading \" + className + \"...\");\n" +
-		"	Class testClass = new VerifyClassLoader().loadClass(className);\n" +
-		"	//System.out.println(\"Loaded \" + className);\n" +
+		"public void loadAndRun(String className, String[] classPath) throws Throwable {\n" +
+		"	URLClassLoader urlClassLoader = new URLClassLoader(classPathToURLs(classPath));\n" +
 		"	try {\n" +
-		"		Method main = testClass.getMethod(\"main\", new Class[] {String[].class});\n" +
-		"		//System.out.println(\"Running \" + className);\n" +
-		"		main.invoke(null, new Object[] {new String[] {}});\n" +
-		"		//System.out.println(\"Finished running \" + className);\n" +
-		"	} catch (NoSuchMethodException e) {\n" +
-		"		return;\n" +
-		"	} catch (InvocationTargetException e) {\n" +
-		"		throw e.getTargetException();\n" +
+		"		//System.out.println(\"Loading \" + className + \"...\");\n" +
+		"		Class testClass = urlClassLoader.loadClass(className);\n" +
+		"		//System.out.println(\"Loaded \" + className);\n" +
+		"		try {\n" +
+		"			Method main = testClass.getMethod(\"main\", new Class[] {String[].class});\n" +
+		"			//System.out.println(\"Running \" + className);\n" +
+		"			main.invoke(null, new Object[] {new String[] {}});\n" +
+		"			//System.out.println(\"Finished running \" + className);\n" +
+		"		} catch (NoSuchMethodException e) {\n" +
+		"			return;\n" +
+		"		} catch (InvocationTargetException e) {\n" +
+		"			throw e.getTargetException();\n" +
+		"		}\n" +
+		"	} finally {\n" +
+		"		urlClassLoader.close();\n" +
 		"	}\n" +
 		"}\n" +
 		"public static void main(String[] args) throws IOException {\n" +
@@ -342,57 +234,147 @@ private String getVerifyTestsCode() {
 		"	final DataOutputStream out = new DataOutputStream(this.socket.getOutputStream());\n" +
 		"	while (true) {\n" +
 		"		final String className = in.readUTF();\n" +
+		"		final int length = in.readInt();\n" +
+		"		final String[] classPath = new String[length];\n" +
+		"		for (int i = 0; i < length; i++) {\n" +
+		"			classPath[i] = in.readUTF();\n" +
+		"		}\n" +
 		"		Thread thread = new Thread() {\n" +
+		"			@Override\n" +
 		"			public void run() {\n" +
 		"				try {\n" +
-		"					loadAndRun(className);\n" +
+		"					loadAndRun(className, classPath);\n" +
 		"					out.writeBoolean(true);\n" +
-		"					System.err.println(VerifyTests.class.getName());\n" +
 		"					System.out.println(VerifyTests.class.getName());\n" +
+		"					System.err.println(VerifyTests.class.getName());\n" +
 		"				} catch (Throwable e) {\n" +
 		"					e.printStackTrace();\n" +
 		"					try {\n" +
-		"						System.err.println(VerifyTests.class.getName());\n" +
-		"						System.out.println(VerifyTests.class.getName());\n" +
 		"						out.writeBoolean(false);\n" +
+		"						System.out.println(VerifyTests.class.getName());\n" +
+		"						System.err.println(VerifyTests.class.getName());\n" +
 		"					} catch (IOException e1) {\n" +
 		"						e1.printStackTrace();\n" +
 		"					}\n" +
 		"				}\n" +
+		"				// Flush all streams, in case the test executor VM is shut down before\n" +
+		"				// the controlling VM receives the responses it depends on\n" +
 		"				try {\n" +
 		"					out.flush();\n" +
 		"				} catch (IOException e) {\n" +
 		"					e.printStackTrace();\n" +
 		"				}\n" +
+		"				System.out.flush();\n" +
+		"				System.err.flush();\n" +
 		"			}\n" +
 		"		};\n" +
 		"		thread.start();\n" +
 		"	}\n" +
 		"}\n" +
-		"}";
+		"}\n";
 }
-private String[] getVMArguments(String[] vmArguments) {
-	List<String> completeVmArguments = new ArrayList<String>();
 
-	if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.io=ALL-UNNAMED");
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.net=ALL-UNNAMED");
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang=ALL-UNNAMED");
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.math=ALL-UNNAMED");
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.text=ALL-UNNAMED");
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util=ALL-UNNAMED");
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util.regex=ALL-UNNAMED");
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED");
-		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED");
+/**
+ * Activate, if you want to read the {@link VerifyTests} source code directly from the file system in
+ * {@link #getVerifyTestsCode()}, e.g. during development while refactoring the source code.
+ */
+public static boolean READ_VERIFY_TEST_FROM_FILE = false;
+/**
+ * Adjust, if in {@link #READ_VERIFY_TEST_FROM_FILE} mode method {@link #getVerifyTestsCode()} cannot find
+ * the source file based on the current directory. In that case, set the correct JDT Core project base
+ * directory as PROJECT_BASE_DIR environment variable, so that the 'org.eclipse.jdt.core.tests.compiler/src'
+ * sub-directory can be found from there.
+ */
+public static String PROJECT_BASE_DIR = System.getenv("PROJECT_BASE_DIR");
+
+// Cached value for VerifyTests.java source code, read only once, either directly from the source code directory or
+// from VERIFY_TEST_CODE_DEFAULT
+private static String verifyTestCode;
+
+// Helper object for guarding 'verifyTestCode' with 'synchronized (verifyTestCodeLock)', in case tests are to be run in
+// parallel
+private static final Object verifyTestCodeLock = new Object();
+
+/**
+ * Returns {@link VerifyTests} source code, to be used as a boot-strapping class in forked test JVMs
+ * <p>
+ * Optionally, you can use {@link #READ_VERIFY_TEST_FROM_FILE} in order to read the source code from the project's
+ * source directory. If it is not found automatically, you may also adjust {@link #PROJECT_BASE_DIR}. Both values are
+ * public and writable during runtime.
+ * <p>
+ * <b>Caveat:</b> The return value is only lazily initialised once, then cached. If you change
+ * {@link #READ_VERIFY_TEST_FROM_FILE} after calling this method for the first time, the return value will not change
+ * anymore.
+ *
+ * @return {@link VerifyTests} source code, filtered by {@link #filterSourceCode(Stream)}
+ */
+String getVerifyTestsCode() {
+	synchronized (verifyTestCodeLock) {
+		if (verifyTestCode == null) {
+			if (READ_VERIFY_TEST_FROM_FILE) {
+				String sourceFile = "src/org/eclipse/jdt/core/tests/util/VerifyTests.java";
+				if (!new File(sourceFile).exists()) {
+					sourceFile = PROJECT_BASE_DIR + "/org.eclipse.jdt.core.tests.compiler/" + sourceFile;
+				}
+				try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
+					verifyTestCode = filterSourceCode(reader.lines());
+				}
+				catch (IOException e) {
+					System.out.println("WARNING: Cannot read & filter VerifyTests source code from file, using default value");
+					System.out.println("	- exception: " + e);
+				}
+			}
+		}
+		if (verifyTestCode == null) {
+			try (BufferedReader reader = new BufferedReader(new StringReader(VERIFY_TEST_CODE_DEFAULT))) {
+				verifyTestCode = filterSourceCode(reader.lines());
+			}
+			catch (IOException e) {
+				System.out.println("WARNING: Cannot filter VerifyTests source code default value, using unfiltered value");
+				System.out.println("	- exception: " + e);
+				verifyTestCode = VERIFY_TEST_CODE_DEFAULT;
+			}
+		}
+		return verifyTestCode;
 	}
-
-	if (vmArguments != null) {
-		Collections.addAll(completeVmArguments, vmArguments);
-	}
-	completeVmArguments.add("-verify");
-
-	return completeVmArguments.toArray(new String[0]);
 }
+
+/**
+ * Filter some elements incompatible with Java source level 1.5 from source code
+ * <p>
+ * This method cannot convert things like catch-with-resources or other language elements back to Java 1.5, you have to
+ * take care of keeping the source code backward compatible by yourself. But a few things you can still use in the
+ * source code, such as {@code @SuppressWarnings}, {@code @Override} in interfaces or single-line {@code assert}.
+ *
+ * @param sourceCodeLines stream of source code lines
+ * @return filtered source code file as a string
+ */
+private String filterSourceCode(Stream<String> sourceCodeLines) {
+	return sourceCodeLines
+		.filter(s -> !(s.contains("@SuppressWarnings") || s.contains("@Override") || s.contains("assert ")))
+		.collect(Collectors.joining("\n"));
+}
+
+/**
+ * Remove non-essential parts of the test JVM classpath
+ * <p>
+ * The classpath for the forked test JVM should only contain JDK paths and the 'verifier' subdirectory where the
+ * {@link VerifyTests} class boot-strapping the test resides, because those need to be present during JVM start-up.
+ * Other parts of the classpath are stripped off, because they are to be communicated to the forked JVM via direct
+ * socket communication.
+ *
+ * @param classPath full classpath
+ * @return minimal classpath necessary for forked test JVM boot-strapping
+ */
+private String[] getMinimalClassPath(String[] classPath) {
+return Arrays.stream(classPath)
+	.filter(s -> {
+		String path = s.replace('\\', '/');
+		return !path.contains("/comptest/") || path.endsWith("/verifier");
+	})
+	.toArray(String[]::new);
+}
+
 private void launchAndRun(String className, String[] classpaths, String[] programArguments, String[] vmArguments) {
 	// we won't reuse the vm, shut the existing one if running
 	if (this.vm != null) {
@@ -407,7 +389,14 @@ private void launchAndRun(String className, String[] classpaths, String[] progra
 	LocalVMLauncher launcher = LocalVMLauncher.getLauncher();
 	launcher.setClassPath(classpaths);
 	launcher.setVMPath(Util.getJREDirectory());
-	launcher.setVMArguments(getVMArguments(vmArguments));
+	if (vmArguments != null) {
+		String[] completeVmArguments = new String[vmArguments.length + 1];
+		System.arraycopy(vmArguments, 0, completeVmArguments, 1, vmArguments.length);
+		completeVmArguments[0] = "-verify";
+		launcher.setVMArguments(completeVmArguments);
+	} else {
+		launcher.setVMArguments(new String[] {"-verify"});
+	}
 	launcher.setProgramClass(className);
 	launcher.setProgramArguments(programArguments);
 	Thread outputThread;
@@ -490,9 +479,16 @@ private void launchVerifyTestsIfNeeded(String[] classpaths, String[] vmArguments
 	String verifierDir = Util.getOutputDirectory() + File.separator + "verifier";
 	compileVerifyTests(verifierDir);
 	cp[length] = verifierDir;
-	launcher.setClassPath(cp);
+	launcher.setClassPath(getMinimalClassPath(cp));
 	launcher.setVMPath(Util.getJREDirectory());
-	launcher.setVMArguments(getVMArguments(vmArguments));
+	if (vmArguments != null) {
+		String[] completeVmArguments = new String[vmArguments.length + 1];
+		System.arraycopy(vmArguments, 0, completeVmArguments, 1, vmArguments.length);
+		completeVmArguments[0] = "-verify";
+		launcher.setVMArguments(completeVmArguments);
+	} else {
+		launcher.setVMArguments(new String[] {"-verify"});
+	}
 	launcher.setProgramClass(VerifyTests.class.getName());
 	try (ServerSocket server = new ServerSocket(0)) {
 		int portNumber = server.getLocalPort();
@@ -573,11 +569,17 @@ private void launchVerifyTestsIfNeeded(String[] classpaths, String[] vmArguments
  * Loads and runs the given class.
  * Return whether no exception was thrown while running the class.
  */
-private boolean loadAndRun(String className) {
+private boolean loadAndRun(String className, String[] classPath) {
 	if (this.socket != null) {
 		try {
 			DataOutputStream out = new DataOutputStream(this.socket.getOutputStream());
 			out.writeUTF(className);
+				if (classPath == null)
+					classPath = new String[0];
+				out.writeInt(classPath.length);
+				for (String classpath : classPath) {
+					out.writeUTF(classpath);
+				}
 			DataInputStream in = new DataInputStream(this.socket.getInputStream());
 			try {
 				boolean result = in.readBoolean();
@@ -640,7 +642,7 @@ public boolean verifyClassFiles(String sourceFilePath, String className, String 
 	this.errorBuffer = new StringBuffer();
 	if (this.reuseVM && programArguments == null) {
 		launchVerifyTestsIfNeeded(classpaths, vmArguments);
-		loadAndRun(className);
+		loadAndRun(className, classpaths);
 	} else {
 		launchAndRun(className, classpaths, programArguments, vmArguments);
 	}

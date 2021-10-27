@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2020 GK Software AG, and others.
+ * Copyright (c) 2013, 2021 GK Software SE, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10322,6 +10322,42 @@ public void testBug508834_comment0() {
 				"  public void test2() {\n" +
 				"    var v = elements(\"a\", (Comparable<String> & Constable) null);\n" +
 				"  }\n" +
+				"}\n"
+			});
+	}
+	public void testBug576516() {
+		if (this.complianceLevel < ClassFileConstants.JDK11) return; // uses 'var'
+		runConformTest(
+			new String[] {
+				"lib/Base.java",
+				"package lib;\n" +
+				"public class Base {}\n",
+
+				"lib/ClassA.java",
+				"package lib;\n" +
+				"import lib.Holder.Tagging;\n" +
+				"public class ClassA extends Base implements Tagging { }\n",
+
+				"lib/ClassB.java",
+				"package lib;\n" +
+				"import lib.Holder.Tagging;\n" +
+				"public class ClassB extends Base implements Tagging { }\n",
+
+				"lib/Holder.java",
+				"package lib;\n" +
+				"public class Holder  {\n" +
+				"    interface Tagging { }\n" +
+				"}",
+
+				"Test.java",
+				"import java.util.stream.Stream;\n" +
+				"import lib.ClassA;\n" +
+				"import lib.ClassB;\n" +
+				"public class Test {\n" +
+				"\n" +
+				"    public static void main(String[] args) {\n" +
+				"        var builders = Stream.of(new ClassA(), new ClassB());\n" +
+				"    }\n" +
 				"}\n"
 			});
 	}

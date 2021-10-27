@@ -2165,36 +2165,6 @@ public void configure(String[] argv) {
 						continue;
 					}
 				}
-				if (currentArg.equals("-15") || currentArg.equals("-15.0")) { //$NON-NLS-1$ //$NON-NLS-2$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_15);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-16") || currentArg.equals("-16.0")) { //$NON-NLS-1$ //$NON-NLS-2$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_16);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-17") || currentArg.equals("-17.0")) { //$NON-NLS-1$ //$NON-NLS-2$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_16);
-					mode = DEFAULT;
-					continue;
-				}
 				if (currentArg.equals("-d")) { //$NON-NLS-1$
 					if (this.destinationPath != null) {
 						StringBuilder errorMessage = new StringBuilder();

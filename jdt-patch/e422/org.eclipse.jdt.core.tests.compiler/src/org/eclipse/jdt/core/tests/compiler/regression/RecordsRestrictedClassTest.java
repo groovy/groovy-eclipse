@@ -9089,5 +9089,24 @@ public void testBug574282_001() {
 			},
 		"0");
 }
+public void testBug576519_001() {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"class X extends Point{\n"+
+			"  public X(int x, int y){\n"+
+			"     \n" +
+			"  }\n"+
+			"}\n"+
+			"record Point(int x, int y){\n"+
+		"}",
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 1)\n" +
+		"	class X extends Point{\n" +
+		"	                ^^^^^\n" +
+		"The record Point cannot be the superclass of X; a record is final and cannot be extended\n" +
+		"----------\n");
+}
 
 }

@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -771,7 +771,7 @@ public class CompletionProposal {
 	 * @since 3.4
 	 */
 	public static final int FIELD_REF_WITH_CASTED_RECEIVER = 25;
-	
+
 	/**
 	 * Completion is a reference to a constructor.
 	 * This kind of completion might occur in a context like
@@ -803,11 +803,11 @@ public class CompletionProposal {
 	 *
 	 * @see #getKind()
 	 * @see CompletionRequestor#setAllowsRequiredProposals(int, int, boolean)
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int CONSTRUCTOR_INVOCATION = 26;
-	
+
 	/**
 	 * Completion is a reference of a constructor of an anonymous class.
 	 * This kind of completion might occur in a context like
@@ -843,7 +843,7 @@ public class CompletionProposal {
 	 *
 	 * @see #getKind()
 	 * @see CompletionRequestor#setAllowsRequiredProposals(int, int, boolean)
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int ANONYMOUS_CLASS_CONSTRUCTOR_INVOCATION = 27;
@@ -872,6 +872,20 @@ public class CompletionProposal {
 	 * @since 3.14
 	 */
 	public static final int MODULE_REF = 29;
+
+	/**
+	/**
+	 * Completion is a lambda expression.
+	 * This kind of completion might occur in a context like
+	 * <code>Consumer consumer = ^</code> and complete it to
+	 * <code>"Consumer consumer = c ->"</code> or in
+	 * <code> "to Consumer consumer = c -> {}"</code>
+	 *
+	 * @see #getKind()
+	 * @since 3.28
+	 */
+	public static final int LAMBDA_EXPRESSION = 30;
+
 	/**
 	 * First valid completion kind.
 	 *
@@ -884,7 +898,7 @@ public class CompletionProposal {
 	 *
 	 * @since 3.1
 	 */
-	protected static final int LAST_KIND = MODULE_REF;
+	protected static final int LAST_KIND = LAMBDA_EXPRESSION;
 
 	/**
 	 * Creates a basic completion proposal. All instance
@@ -1065,7 +1079,7 @@ public class CompletionProposal {
 	 * @param completion the completion string
 	 */
 	public void setCompletion(char[] completion) {
-		// default overridden by concrete implementation		
+		// default overridden by concrete implementation
 	}
 
 	/**
@@ -1180,9 +1194,9 @@ public class CompletionProposal {
 	 * 	<li><code>METHOD_DECLARATION</code> - type signature
 	 * of the type that declares the method that is being
 	 * implemented or overridden</li>
-	 * 	<li><code>MODULE_DECLARATION</code> - 
+	 * 	<li><code>MODULE_DECLARATION</code> -
 	 * possible name of the module that is being declared</li>
-	 * 	<li><code>MODULE_REF</code> - 
+	 * 	<li><code>MODULE_REF</code> -
 	 * name of the module that is referenced</li>
 	 * 	<li><code>PACKAGE_REF</code> - dot-based package
 	 * name of the package that is referenced</li>
@@ -1785,17 +1799,17 @@ public class CompletionProposal {
 		// default overridden by concrete implementation
 	}
 
-	/** 
+	/**
 	 * Returns whether it is safe to use the '<>' (diamond) operator in place of explicitly specifying
 	 * type arguments for this proposal.
-	 * 
+	 *
 	 * <p>
 	 * This is only relevant for source level 1.7 or greater.
 	 * </p>
-	 * 
+	 *
 	 * @param coreContext the completion context associated with the proposal
 	 * @since 3.7.1
-	 * @return <code>true</code> if it is safe to use the diamond operator for the constructor invocation, 
+	 * @return <code>true</code> if it is safe to use the diamond operator for the constructor invocation,
 	 * <code>false</code> otherwise. Also returns <code>false</code> for source levels below 1.7
 	 */
 	public boolean canUseDiamond(CompletionContext coreContext) {

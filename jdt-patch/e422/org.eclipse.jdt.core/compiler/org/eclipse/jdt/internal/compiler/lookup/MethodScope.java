@@ -475,8 +475,9 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 
 private void checkAndSetRecordCanonicalConsAndMethods(AbstractMethodDeclaration am) {
 	if (am.binding != null && (am.bits & ASTNode.IsImplicit) != 0) {
-		am.binding.tagBits |= TagBits.isImplicit;
-		am.binding.tagBits |= (am.bits & ASTNode.IsCanonicalConstructor) != 0 ? TagBits.IsCanonicalConstructor : 0;
+		am.binding.extendedTagBits |= ExtendedTagBits.isImplicit;
+		if ((am.bits & ASTNode.IsCanonicalConstructor) != 0)
+			am.binding.extendedTagBits |= ExtendedTagBits.IsCanonicalConstructor;
 	}
 }
 

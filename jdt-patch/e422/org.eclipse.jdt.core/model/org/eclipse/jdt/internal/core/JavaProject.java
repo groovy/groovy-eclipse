@@ -2813,38 +2813,46 @@ public class JavaProject
 	 */
 	@Override
 	public boolean isOnClasspath(IResource resource) {
-		IPath exactPath = resource.getFullPath();
-		IPath path = exactPath;
+		return findContainingClasspathEntry(resource) != null;
+	}
 
+	/*
+	 * @see IJavaProject
+	 */
+	@Override
+	public IClasspathEntry findContainingClasspathEntry(IResource resource) {
+		if (resource == null) {
+			return null;
+		}
+		final int resourceType = resource.getType();
 		// ensure that folders are only excluded if all of their children are excluded
-		int resourceType = resource.getType();
-		boolean isFolderPath = resourceType == IResource.FOLDER || resourceType == IResource.PROJECT;
-
+		final boolean isFolderPath = resourceType == IResource.FOLDER || resourceType == IResource.PROJECT;
 		IClasspathEntry[] classpath;
 		try {
 			classpath = this.getResolvedClasspath();
 		} catch(JavaModelException e){
-			return false; // not a Java project
+			return null; // not a Java project
 		}
+		final IPath path = resource.getFullPath();
 		for (int i = 0; i < classpath.length; i++) {
 			IClasspathEntry entry = classpath[i];
 			IPath entryPath = entry.getPath();
-			if (entryPath.equals(exactPath)) { // package fragment roots must match exactly entry pathes (no exclusion there)
-				return true;
+			if (entryPath.equals(path)) { // package fragment roots must match exactly entry pathes (no exclusion there)
+				return entry;
 			}
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=276373
 			// When a classpath entry is absolute, convert the resource's relative path to a file system path and compare
 			// e.g - /P/lib/variableLib.jar and /home/P/lib/variableLib.jar when compared should return true
 			if (entryPath.isAbsolute()
-					&& entryPath.equals(ResourcesPlugin.getWorkspace().getRoot().getLocation().append(exactPath))) {
-				return true;
+					&& entryPath.equals(ResourcesPlugin.getWorkspace().getRoot().getLocation().append(path))) {
+				return entry;
 			}
 			if (entryPath.isPrefixOf(path)
 					&& !Util.isExcluded(path, ((ClasspathEntry)entry).fullInclusionPatternChars(), ((ClasspathEntry)entry).fullExclusionPatternChars(), isFolderPath)) {
-				return true;
+				return entry;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	private boolean isOnClasspathEntry(IPath elementPath, boolean isFolderPath, boolean isPackageFragmentRoot, IClasspathEntry entry) {

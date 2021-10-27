@@ -1763,11 +1763,15 @@ class MetaIndexUpdateRequest implements IJob {
 					iterator.remove();
 				}
 			}
-			if(index == null) {
+			if (index == null) {
 				return true;
 			}
+			if (index.monitor == null) {
+				// index got deleted since acquired
+				continue;
+			}
 			File indexFile = index.getIndexFile();
-			if(indexFile == null) {
+			if (indexFile == null) {
 				continue;
 			}
 			if (VERBOSE) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Microsoft Corporation - adapt to the new index match API
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
@@ -30,6 +31,7 @@ public abstract class IntersectingPattern extends JavaSearchPattern {
 public IntersectingPattern(int patternKind, int matchRule) {
 	super(patternKind, matchRule);
 }
+
 @Override
 public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor progressMonitor) throws IOException {
 	if (progressMonitor != null && progressMonitor.isCanceled()) throw new OperationCanceledException();
@@ -77,6 +79,12 @@ public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchP
 		if (names[i] != null)
 			acceptMatch((String) names[i], containerPath, separator, null/*no pattern*/, requestor, participant, scope, progressMonitor); // AndPatterns cannot provide the decoded result
 }
+
+@Override
+public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, boolean resolveDocumentName, IProgressMonitor progressMonitor) throws IOException {
+	findIndexMatches(index, requestor, participant, scope, progressMonitor);
+}
+
 /**
  * Returns whether another query must be done.
  */

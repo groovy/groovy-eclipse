@@ -24,4 +24,9 @@ public interface ExtendedTagBits {
 	 *  Flag used to identify the annotation jdk.internal.ValueBased
 	 */
 	int AnnotationValueBased = ASTNode.Bit3;
+
+	// Java 16 Records
+	int IsCanonicalConstructor = ASTNode.Bit4; // constructor
+	int isImplicit  = ASTNode.Bit5; // constructor and method
+
 }

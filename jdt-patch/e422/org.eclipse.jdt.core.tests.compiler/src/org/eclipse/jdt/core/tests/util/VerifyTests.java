@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,192 +10,66 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Alexander Kriegisch - bug 286316: Get classpath via DataInputStream and
+ *         use it in an isolated URLClassLoader, enabling formerly locked
+ *         classpath JARs to be closed on Windows
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.util;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.Socket;
-import java.util.StringTokenizer;
+import java.net.URL;
+import java.net.URLClassLoader;
 
-/******************************************************
- *
- * IMPORTANT NOTE: If modifying this class, copy the source to TestVerifier#getVerifyTestsCode()
- * (see this method for details)
- *
- ******************************************************/
-
+/**
+ * <b>IMPORTANT NOTE:</b> When modifying this class, please copy the source into the static initialiser block for field
+ * {@link TestVerifier#VERIFY_TEST_CODE_DEFAULT}. See also {@link TestVerifier#READ_VERIFY_TEST_FROM_FILE}, if you want
+ * to dynamically load the source code directly from this file when running tests, which is a convenient way to test if
+ * changes in this class work as expected, without the need to update the hard-coded default value every single time
+ * during an ongoing refactoring.
+ * <p>
+ * In order to make the copying job easier, keep this class compatible with Java 5 language level. You may however use
+ * things like {@code @Override} for interfaces, {@code assert} (if in a single line), {@code @SuppressWarnings},
+ * because {@link TestVerifier#getVerifyTestsCode()} can filter them out dynamically. You should however avoid things
+ * like diamonds, multi-catch, catch-with-resources and more recent Java features.
+ */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class VerifyTests {
 	int portNumber;
 	Socket socket;
 
-/**
- * NOTE: Code copied from junit.util.TestCaseClassLoader.
- *
- * A custom class loader which enables the reloading
- * of classes for each test run. The class loader
- * can be configured with a list of package paths that
- * should be excluded from loading. The loading
- * of these packages is delegated to the system class
- * loader. They will be shared across test runs.
- * <p>
- * The list of excluded package paths is specified in
- * a properties file "excluded.properties" that is located in
- * the same place as the TestCaseClassLoader class.
- * <p>
- * <b>Known limitation:</b> the VerifyClassLoader cannot load classes
- * from jar files.
- */
-
-
-public class VerifyClassLoader extends ClassLoader {
-	/** scanned class path */
-	private String[] pathItems;
-
-	/** excluded paths */
-	private String[] excluded= {};
-
-	/**
-	 * Constructs a VerifyClassLoader. It scans the class path
-	 * and the excluded package paths
-	 */
-	public VerifyClassLoader() {
-		super();
-		String classPath= System.getProperty("java.class.path");
-		String separator= System.getProperty("path.separator");
-
-		// first pass: count elements
-		StringTokenizer st= new StringTokenizer(classPath, separator);
-		int i= 0;
-		while (st.hasMoreTokens()) {
-			st.nextToken();
-			i++;
-		}
-		// second pass: split
-		this.pathItems= new String[i];
-		st= new StringTokenizer(classPath, separator);
-		i= 0;
-		while (st.hasMoreTokens()) {
-			this.pathItems[i++]= st.nextToken();
-		}
-
+private static URL[] classPathToURLs(String[] classPath) throws MalformedURLException {
+	URL[] urls = new URL[classPath.length];
+	for (int i = 0; i < classPath.length; i++) {
+		urls[i] = new File(classPath[i]).toURI().toURL();
 	}
-	@Override
-	public java.net.URL getResource(String name) {
-		return ClassLoader.getSystemResource(name);
-	}
-	@Override
-	public InputStream getResourceAsStream(String name) {
-		return ClassLoader.getSystemResourceAsStream(name);
-	}
-	protected boolean isExcluded(String name) {
-		// exclude the "java" packages.
-		// They always need to be excluded so that they are loaded by the system class loader
-		if (name.startsWith("java") || name.startsWith("[Ljava"))
-			return true;
-
-		// exclude the user defined package paths
-		for (int i= 0; i < this.excluded.length; i++) {
-			if (name.startsWith(this.excluded[i])) {
-				return true;
-			}
-		}
-		return false;
-	}
-	@Override
-	public synchronized Class loadClass(String name, boolean resolve)
-		throws ClassNotFoundException {
-
-		Class c= findLoadedClass(name);
-		if (c != null)
-			return c;
-		//
-		// Delegate the loading of excluded classes to the
-		// standard class loader.
-		//
-		if (isExcluded(name)) {
-			try {
-				c= findSystemClass(name);
-				return c;
-			} catch (ClassNotFoundException e) {
-				// keep searching
-			}
-		}
-		File file= locate(name);
-		if (file == null)
-			throw new ClassNotFoundException();
-		byte data[]= loadClassData(file);
-		c= defineClass(name, data, 0, data.length);
-		if (resolve)
-			resolveClass(c);
-		return c;
-	}
-	private byte[] loadClassData(File f) throws ClassNotFoundException {
-		FileInputStream stream = null;
-		try {
-			//System.out.println("loading: "+f.getPath());
-			stream = new FileInputStream(f);
-
-			try {
-				byte[] b= new byte[stream.available()];
-				stream.read(b);
-				return b;
-			}
-			catch (IOException e) {
-				throw new ClassNotFoundException();
-			}
-		}
-		catch (FileNotFoundException e) {
-			throw new ClassNotFoundException();
-		} finally {
-			if (stream != null) {
-				try {
-					stream.close();
-				} catch (IOException e) {
-					/* ignore */
-				}
-			}
-		}
-	}
-	/**
-	 * Locate the given file.
-	 * @return Returns null if file couldn't be found.
-	 */
-	private File locate(String fileName) {
-		if (fileName != null) {
-			fileName= fileName.replace('.', '/')+".class";
-			File path= null;
-			for (int i= 0; i < this.pathItems.length; i++) {
-				path= new File(this.pathItems[i], fileName);
-				if (path.exists())
-					return path;
-			}
-		}
-		return null;
-	}
+	return urls;
 }
 
-public void loadAndRun(String className) throws Throwable {
-	//System.out.println("Loading " + className + "...");
-	Class testClass = new VerifyClassLoader().loadClass(className);
-	//System.out.println("Loaded " + className);
+public void loadAndRun(String className, String[] classPath) throws Throwable {
+	URLClassLoader urlClassLoader = new URLClassLoader(classPathToURLs(classPath));
 	try {
-		Method main = testClass.getMethod("main", new Class[] {String[].class});
-		//System.out.println("Running " + className);
-		main.invoke(null, new Object[] {new String[] {}});
-		//System.out.println("Finished running " + className);
-	} catch (NoSuchMethodException e) {
-		return;
-	} catch (InvocationTargetException e) {
-		throw e.getTargetException();
+		//System.out.println("Loading " + className + "...");
+		Class testClass = urlClassLoader.loadClass(className);
+		//System.out.println("Loaded " + className);
+		try {
+			Method main = testClass.getMethod("main", new Class[] {String[].class});
+			//System.out.println("Running " + className);
+			main.invoke(null, new Object[] {new String[] {}});
+			//System.out.println("Finished running " + className);
+		} catch (NoSuchMethodException e) {
+			return;
+		} catch (InvocationTargetException e) {
+			throw e.getTargetException();
+		}
+	} finally {
+		urlClassLoader.close();
 	}
 }
 public static void main(String[] args) throws IOException {
@@ -211,11 +85,16 @@ public void run() throws IOException {
 	final DataOutputStream out = new DataOutputStream(this.socket.getOutputStream());
 	while (true) {
 		final String className = in.readUTF();
+		final int length = in.readInt();
+		final String[] classPath = new String[length];
+		for (int i = 0; i < length; i++) {
+			classPath[i] = in.readUTF();
+		}
 		Thread thread = new Thread() {
 			@Override
 			public void run() {
 				try {
-					loadAndRun(className);
+					loadAndRun(className, classPath);
 					out.writeBoolean(true);
 					System.out.println(VerifyTests.class.getName());
 					System.err.println(VerifyTests.class.getName());

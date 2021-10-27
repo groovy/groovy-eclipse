@@ -65,10 +65,6 @@ public interface TagBits {
 	long MultiCatchParameter = ASTNode.Bit13; // local
 	long IsResource = ASTNode.Bit14; // local
 
-	// for java 14 Records Canonical constructor (preview)
-	long IsCanonicalConstructor = ASTNode.Bit12; // constructor
-	long isImplicit  = ASTNode.Bit13; // constructor and method
-
 	// have implicit null annotations been collected (inherited(?) & default)?
 	long IsNullnessKnown = ASTNode.Bit13; // method
 

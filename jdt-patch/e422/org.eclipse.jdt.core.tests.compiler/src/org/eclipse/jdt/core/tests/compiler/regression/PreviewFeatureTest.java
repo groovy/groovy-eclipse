@@ -22,12 +22,6 @@ import junit.framework.Test;
 
 public class PreviewFeatureTest extends AbstractRegressionTest9 {
 
-	static {
-//		TESTS_NUMBERS = new int [] { 40 };
-//		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "test001"};
-	}
-
 	public static Class<?> testClass() {
 		return PreviewFeatureTest.class;
 	}
@@ -49,7 +43,7 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 	 * Preview API, --enable-preview=false, SuppressWarning=No
 	 */
 	public void test001() {
-		if (isJRE17Plus) {
+		if (isJRE17Plus) { // GRECLIPSE edit
 			return;
 		}
 		Map<String, String> options = getCompilerOptions();

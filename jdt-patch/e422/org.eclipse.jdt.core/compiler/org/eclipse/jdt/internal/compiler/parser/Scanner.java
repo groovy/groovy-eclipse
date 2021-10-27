@@ -31,6 +31,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.JavaFeature;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.compiler.util.CharDeduplication;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 /**
@@ -154,41 +155,6 @@ public class Scanner implements TerminalTokens {
 	public static final String INVALID_UNDERSCORE = "Invalid_Underscore"; //$NON-NLS-1$
 	public static final String UNDERSCORES_IN_LITERALS_NOT_BELOW_17 = "Underscores_In_Literals_Not_Below_17"; //$NON-NLS-1$
 
-	//----------------optimized identifier managment------------------
-	static final char[] charArray_a = new char[] {'a'},
-		charArray_b = new char[] {'b'},
-		charArray_c = new char[] {'c'},
-		charArray_d = new char[] {'d'},
-		charArray_e = new char[] {'e'},
-		charArray_f = new char[] {'f'},
-		charArray_g = new char[] {'g'},
-		charArray_h = new char[] {'h'},
-		charArray_i = new char[] {'i'},
-		charArray_j = new char[] {'j'},
-		charArray_k = new char[] {'k'},
-		charArray_l = new char[] {'l'},
-		charArray_m = new char[] {'m'},
-		charArray_n = new char[] {'n'},
-		charArray_o = new char[] {'o'},
-		charArray_p = new char[] {'p'},
-		charArray_q = new char[] {'q'},
-		charArray_r = new char[] {'r'},
-		charArray_s = new char[] {'s'},
-		charArray_t = new char[] {'t'},
-		charArray_u = new char[] {'u'},
-		charArray_v = new char[] {'v'},
-		charArray_w = new char[] {'w'},
-		charArray_x = new char[] {'x'},
-		charArray_y = new char[] {'y'},
-		charArray_z = new char[] {'z'};
-
-	static final char[] initCharArray =
-		new char[] {'\u0000', '\u0000', '\u0000', '\u0000', '\u0000', '\u0000'};
-	static final int TableSize = 30, InternalTableSize = 6; //30*6 =210 entries
-
-	public static final int OptimizedLength = 6;
-	public /*static*/ final char[][][][] charArray_length =
-		new char[OptimizedLength - 1][TableSize][InternalTableSize][];
 	// support for detecting non-externalized string literals
 	public static final char[] TAG_PREFIX= "//$NON-NLS-".toCharArray(); //$NON-NLS-1$
 	public static final int TAG_PREFIX_LENGTH= TAG_PREFIX.length;
@@ -209,20 +175,6 @@ public class Scanner implements TerminalTokens {
 	// generic support
 	public boolean returnOnlyGreater = false;
 
-	/*static*/ {
-		for (int i = 0; i < OptimizedLength - 1; i++) {
-			for (int j = 0; j < TableSize; j++) {
-				for (int k = 0; k < InternalTableSize; k++) {
-					this.charArray_length[i][j][k] = initCharArray;
-				}
-			}
-		}
-	}
-	/*static*/ int newEntry2 = 0,
-		newEntry3 = 0,
-		newEntry4 = 0,
-		newEntry5 = 0,
-		newEntry6 = 0;
 	public boolean insideRecovery = false;
 	int lookBack[] = new int[2]; // fall back to spring forward.
 	protected int nextToken = TokenNameNotAToken; // allows for one token push back, only the most recent token can be reliably ungotten.
@@ -248,6 +200,8 @@ public class Scanner implements TerminalTokens {
 
 	//Java 15 - first _ keyword appears
 	Map<String, Integer> _Keywords = null;
+
+	private CharDeduplication deduplication = CharDeduplication.getThreadLocalInstance();
 
 public Scanner() {
 	this(false /*comment*/, false /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3 /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
@@ -506,24 +460,9 @@ public char[] getCurrentIdentifierSource() {
 	}
 	int length = this.currentPosition - this.startPosition;
 	if (length == this.eofPosition) return this.source;
-	switch (length) { // see OptimizedLength
-		case 1 :
-			return optimizedCurrentTokenSource1();
-		case 2 :
-			return optimizedCurrentTokenSource2();
-		case 3 :
-			return optimizedCurrentTokenSource3();
-		case 4 :
-			return optimizedCurrentTokenSource4();
-		case 5 :
-			return optimizedCurrentTokenSource5();
-		case 6 :
-			return optimizedCurrentTokenSource6();
-	}
-	char[] result = new char[length];
-	System.arraycopy(this.source, this.startPosition, result, 0, length);
-	return result;
+	return this.deduplication.sharedCopyOfRange(this.source, this.startPosition, this.currentPosition);
 }
+
 public int getCurrentTokenEndPosition(){
 	return this.currentPosition - 1;
 }
@@ -767,6 +706,9 @@ private boolean getLineContent(StringBuilder result, char[] line, int start, int
 					break;
 				case 's' :
 					result.append(' ');
+					break;
+				case '"':
+					result.append('"');
 					break;
 				case 'b' :
 					result.append('\b');
@@ -2202,12 +2144,17 @@ protected int scanForTextBlock() throws InvalidInputException {
 					case 'n' :
 					case 'r' :
 					case 'f' :
+					case 's' :
 						break outer;
 					case '\n' :
 					case '\r' :
 						this.currentCharacter = '\\';
 						this.currentPosition++;
 						break;
+					case '\"' :
+						this.currentPosition++;
+						this.currentCharacter = this.source[this.currentPosition++];
+						continue;
 					case '\\' :
 						this.currentPosition++;
 						break;
@@ -2458,7 +2405,7 @@ public final void jumpOverMethodBody() {
 										pushLineSeparator();
 										//$FALL-THROUGH$
 									default:
-										if (this.currentCharacter == '\\' && this.source[this.currentPosition++] == '"') {
+										if (this.currentCharacter == '\\' && this.source[this.currentPosition] == '"') {
 											this.currentPosition++;
 										}
 										this.currentCharacter = this.source[this.currentPosition++];
@@ -2764,241 +2711,6 @@ public final boolean jumpOverUnicodeWhiteSpace() throws InvalidInputException {
 	return CharOperation.isWhitespace(this.currentCharacter);
 }
 
-final char[] optimizedCurrentTokenSource1() {
-	//return always the same char[] build only once
-
-	//optimization at no speed cost of 99.5 % of the singleCharIdentifier
-	char charOne = this.source[this.startPosition];
-	switch (charOne) {
-		case 'a' :
-			return charArray_a;
-		case 'b' :
-			return charArray_b;
-		case 'c' :
-			return charArray_c;
-		case 'd' :
-			return charArray_d;
-		case 'e' :
-			return charArray_e;
-		case 'f' :
-			return charArray_f;
-		case 'g' :
-			return charArray_g;
-		case 'h' :
-			return charArray_h;
-		case 'i' :
-			return charArray_i;
-		case 'j' :
-			return charArray_j;
-		case 'k' :
-			return charArray_k;
-		case 'l' :
-			return charArray_l;
-		case 'm' :
-			return charArray_m;
-		case 'n' :
-			return charArray_n;
-		case 'o' :
-			return charArray_o;
-		case 'p' :
-			return charArray_p;
-		case 'q' :
-			return charArray_q;
-		case 'r' :
-			return charArray_r;
-		case 's' :
-			return charArray_s;
-		case 't' :
-			return charArray_t;
-		case 'u' :
-			return charArray_u;
-		case 'v' :
-			return charArray_v;
-		case 'w' :
-			return charArray_w;
-		case 'x' :
-			return charArray_x;
-		case 'y' :
-			return charArray_y;
-		case 'z' :
-			return charArray_z;
-		default :
-			return new char[] {charOne};
-	}
-}
-final char[] optimizedCurrentTokenSource2() {
-	//try to return the same char[] build only once
-
-	char[] src = this.source;
-	int start = this.startPosition;
-	char c0 , c1;
-	int hash = (((c0=src[start]) << 6) + (c1=src[start+1])) % TableSize;
-	char[][] table = this.charArray_length[0][hash];
-	int i = this.newEntry2;
-	while (++i < InternalTableSize) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0]) && (c1 == charArray[1]))
-			return charArray;
-	}
-	//---------other side---------
-	i = -1;
-	int max = this.newEntry2;
-	while (++i <= max) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0]) && (c1 == charArray[1]))
-			return charArray;
-	}
-	//--------add the entry-------
-	if (++max >= InternalTableSize) max = 0;
-	char[] r;
-	System.arraycopy(src, start, r= new char[2], 0, 2);
-	//newIdentCount++;
-	return table[this.newEntry2 = max] = r; //(r = new char[] {c0, c1});
-}
-final char[] optimizedCurrentTokenSource3() {
-	//try to return the same char[] build only once
-
-	char[] src = this.source;
-	int start = this.startPosition;
-	char c0, c1=src[start+1], c2;
-	int hash = (((c0=src[start])<< 6) + (c2=src[start+2])) % TableSize;
-//	int hash = ((c0 << 12) + (c1<< 6) + c2) % TableSize;
-	char[][] table = this.charArray_length[1][hash];
-	int i = this.newEntry3;
-	while (++i < InternalTableSize) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0]) && (c1 == charArray[1]) && (c2 == charArray[2]))
-			return charArray;
-	}
-	//---------other side---------
-	i = -1;
-	int max = this.newEntry3;
-	while (++i <= max) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0]) && (c1 == charArray[1]) && (c2 == charArray[2]))
-			return charArray;
-	}
-	//--------add the entry-------
-	if (++max >= InternalTableSize) max = 0;
-	char[] r;
-	System.arraycopy(src, start, r= new char[3], 0, 3);
-	//newIdentCount++;
-	return table[this.newEntry3 = max] = r; //(r = new char[] {c0, c1, c2});
-}
-final char[] optimizedCurrentTokenSource4() {
-	//try to return the same char[] build only once
-
-	char[] src = this.source;
-	int start = this.startPosition;
-	char c0, c1 = src[start+1], c2, c3 = src[start+3];
-	int hash = (((c0=src[start]) << 6) + (c2=src[start+2])) % TableSize;
-//	int hash = (int) (((((long) c0) << 18) + (c1 << 12) + (c2 << 6) + c3) % TableSize);
-	char[][] table = this.charArray_length[2][hash];
-	int i = this.newEntry4;
-	while (++i < InternalTableSize) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0])
-			&& (c1 == charArray[1])
-			&& (c2 == charArray[2])
-			&& (c3 == charArray[3]))
-			return charArray;
-	}
-	//---------other side---------
-	i = -1;
-	int max = this.newEntry4;
-	while (++i <= max) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0])
-			&& (c1 == charArray[1])
-			&& (c2 == charArray[2])
-			&& (c3 == charArray[3]))
-			return charArray;
-	}
-	//--------add the entry-------
-	if (++max >= InternalTableSize) max = 0;
-	char[] r;
-	System.arraycopy(src, start, r= new char[4], 0, 4);
-	//newIdentCount++;
-	return table[this.newEntry4 = max] = r; //(r = new char[] {c0, c1, c2, c3});
-}
-final char[] optimizedCurrentTokenSource5() {
-	//try to return the same char[] build only once
-
-	char[] src = this.source;
-	int start = this.startPosition;
-	char c0, c1 = src[start+1], c2, c3 = src[start+3], c4;
-	int hash = (((c0=src[start]) << 12) +((c2=src[start+2]) << 6) + (c4=src[start+4])) % TableSize;
-//	int hash = (int) (((((long) c0) << 24) + (((long) c1) << 18) + (c2 << 12) + (c3 << 6) + c4) % TableSize);
-	char[][] table = this.charArray_length[3][hash];
-	int i = this.newEntry5;
-	while (++i < InternalTableSize) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0])
-			&& (c1 == charArray[1])
-			&& (c2 == charArray[2])
-			&& (c3 == charArray[3])
-			&& (c4 == charArray[4]))
-			return charArray;
-	}
-	//---------other side---------
-	i = -1;
-	int max = this.newEntry5;
-	while (++i <= max) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0])
-			&& (c1 == charArray[1])
-			&& (c2 == charArray[2])
-			&& (c3 == charArray[3])
-			&& (c4 == charArray[4]))
-			return charArray;
-	}
-	//--------add the entry-------
-	if (++max >= InternalTableSize) max = 0;
-	char[] r;
-	System.arraycopy(src, start, r= new char[5], 0, 5);
-	//newIdentCount++;
-	return table[this.newEntry5 = max] = r; //(r = new char[] {c0, c1, c2, c3, c4});
-}
-final char[] optimizedCurrentTokenSource6() {
-	//try to return the same char[] build only once
-
-	char[] src = this.source;
-	int start = this.startPosition;
-	char c0, c1 = src[start+1], c2, c3 = src[start+3], c4, c5 = src[start+5];
-	int hash = (((c0=src[start]) << 12) +((c2=src[start+2]) << 6) + (c4=src[start+4])) % TableSize;
-//	int hash = (int)(((((long) c0) << 32) + (((long) c1) << 24) + (((long) c2) << 18) + (c3 << 12) + (c4 << 6) + c5) % TableSize);
-	char[][] table = this.charArray_length[4][hash];
-	int i = this.newEntry6;
-	while (++i < InternalTableSize) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0])
-			&& (c1 == charArray[1])
-			&& (c2 == charArray[2])
-			&& (c3 == charArray[3])
-			&& (c4 == charArray[4])
-			&& (c5 == charArray[5]))
-			return charArray;
-	}
-	//---------other side---------
-	i = -1;
-	int max = this.newEntry6;
-	while (++i <= max) {
-		char[] charArray = table[i];
-		if ((c0 == charArray[0])
-			&& (c1 == charArray[1])
-			&& (c2 == charArray[2])
-			&& (c3 == charArray[3])
-			&& (c4 == charArray[4])
-			&& (c5 == charArray[5]))
-			return charArray;
-	}
-	//--------add the entry-------
-	if (++max >= InternalTableSize) max = 0;
-	char[] r;
-	System.arraycopy(src, start, r= new char[6], 0, 6);
-	//newIdentCount++;
-	return table[this.newEntry6 = max] = r; //(r = new char[] {c0, c1, c2, c3, c4, c5});
-}
 public boolean isInModuleDeclaration() {
 	return this.fakeInModule || this.insideModuleInfo ||
 			(this.activeParser != null ? this.activeParser.isParsingModuleDeclaration() : false);

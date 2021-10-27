@@ -1640,6 +1640,18 @@ public void classExtendFinalClass(SourceTypeBinding type, TypeReference supercla
 		superclass.sourceStart,
 		superclass.sourceEnd);
 }
+public void classExtendFinalRecord(SourceTypeBinding type, TypeReference superclass, TypeBinding superTypeBinding) {
+	String name = new String(type.sourceName());
+	String superTypeFullName = new String(superTypeBinding.readableName());
+	String superTypeShortName = new String(superTypeBinding.shortReadableName());
+	if (superTypeShortName.equals(name)) superTypeShortName = superTypeFullName;
+	this.handle(
+		IProblem.ClassExtendFinalRecord,
+		new String[] {superTypeFullName, name},
+		new String[] {superTypeShortName, name},
+		superclass.sourceStart,
+		superclass.sourceEnd);
+}
 public void codeSnippetMissingClass(String missing, int start, int end) {
 	String[] arguments = new String[]{missing};
 	this.handle(

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Microsoft Corporation - adapt to the new index match API
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
@@ -64,6 +65,18 @@ public class OrPattern extends SearchPattern implements IIndexConstants, IParall
 			index.startQuery();
 			for (int i = 0, length = this.patterns.length; i < length; i++)
 				this.patterns[i].findIndexMatches(index, requestor, participant, scope, progressMonitor);
+		} finally {
+			index.stopQuery();
+		}
+	}
+
+	@Override
+	public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, boolean resolveDocumentName, IProgressMonitor progressMonitor) throws IOException {
+		// per construction, OR pattern can only be used with a PathCollector (which already gather results using a set)
+		try {
+			index.startQuery();
+			for (int i = 0, length = this.patterns.length; i < length; i++)
+				this.patterns[i].findIndexMatches(index, requestor, participant, scope, resolveDocumentName, progressMonitor);
 		} finally {
 			index.stopQuery();
 		}

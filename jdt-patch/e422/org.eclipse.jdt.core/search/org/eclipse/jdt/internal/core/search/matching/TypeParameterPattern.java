@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Microsoft Corporation - adapt to the new index match API
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
@@ -91,7 +92,7 @@ public class TypeParameterPattern extends JavaSearchPattern {
     	    IModuleDescription md = root.getModuleDescription();
             if(md != null) {
             	String module = md.getElementName();
-            	documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR 
+            	documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR
             			+ module + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + relativePath;
             } else {
             	documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + relativePath;
@@ -115,6 +116,11 @@ public class TypeParameterPattern extends JavaSearchPattern {
 			if (!requestor.acceptIndexMatch(documentPath, this, participant, null))
 				throw new OperationCanceledException();
 		}
+	}
+
+	@Override
+	public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, boolean resolveDocumentName, IProgressMonitor progressMonitor) {
+		findIndexMatches(index, requestor, participant, scope, progressMonitor);
 	}
 
 	@Override

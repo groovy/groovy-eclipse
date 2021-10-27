@@ -14474,7 +14474,10 @@ public void testBug536978_comment5() {
 			"		try {\n" +
 			"			OtherResult result = demo.test(new OtherResult());\n" +
 			"		} catch (ClassCastException e) {\n" +
-			"			System.out.println(e.getMessage());\n" + // omit the stack trace for test robustness
+			// Make assertion more robust by producing predictable output for Java 11+:
+			//   - Omit stack trace
+			//   - Cut off class loader name (e.g. 'java.net.URLClassLoader @f3f9f4b') for easier matching
+			"			System.out.println(e.getMessage().replaceFirst(\"(unnamed module of loader).*\", \"$1\"));\n" +
 			"		}\n" +
 			"	}\n" +
 			"}\n"

@@ -19,6 +19,7 @@
 package org.eclipse.jdt.internal.codeassist.complete;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /*
  * Parser able to build specific completion parse nodes, given a cursorLocation.
@@ -4020,11 +4021,22 @@ protected int fetchNextToken() throws InvalidInputException {
 	if (token != TerminalTokens.TokenNameEOF && this.scanner.currentPosition > this.cursorLocation) {
 		if (!this.diet || this.dietInt != 0) { // do this also when parsing field initializers:
 			if (this.currentToken == TerminalTokens.TokenNameIdentifier
-					&& this.identifierStack[this.identifierPtr].length == 0
-					&& Scanner.isLiteral(token))
-			{
-				// <emptyAssistIdentifier> <someLiteral> is illegal and most likely the literal should be replaced => discard it now
-				return fetchNextToken();
+					&& this.identifierStack[this.identifierPtr].length == 0) {
+				if (Scanner.isLiteral(token)) {
+					// <emptyAssistIdentifier> <someLiteral> is illegal and most likely the literal should be replaced => discard it now
+					return fetchNextToken();
+				}
+				if (token == TerminalTokens.TokenNameIdentifier) {
+					// empty completion identifier followed by another identifier likely means the 2nd id should start another parse node.
+					// To cleanly separate them find a suitable separator:
+					this.scanner.currentPosition = this.scanner.startPosition; // return to startPosition after this charade
+					if (this.unstackedAct < ERROR_ACTION) {
+						if ("LocalVariableDeclaration".equals(reduce(TokenNameSEMICOLON))) //$NON-NLS-1$
+							return TokenNameSEMICOLON; // send ';' to terminate a local variable declaration
+						if ("ArgumentList".equals(reduce(TokenNameCOMMA))) //$NON-NLS-1$
+							return TokenNameCOMMA; // send ',' to terminate an argument in the list
+					}
+				}
 			}
 		}
 		if (!this.diet) { // only when parsing a method body:
@@ -4042,6 +4054,47 @@ protected int fetchNextToken() throws InvalidInputException {
 		}
 	}
 	return token;
+}
+/*
+ * Variant of parse() without side effects that stops when another token would need to be fetched.
+ * Returns the name of the last reduced rule, or empty string if nothing reduced, or null if error was detected.
+ */
+String reduce(int token) {
+	int myStackTop = this.stateStackTop;
+	int[] myStack = Arrays.copyOf(this.stack, this.stack.length);
+	int act = this.unstackedAct;
+	String reduceName = ""; //$NON-NLS-1$
+	for (;;) {
+		int stackLength = myStack.length;
+		if (++myStackTop >= stackLength) {
+			System.arraycopy(
+				myStack, 0,
+				myStack = new int[stackLength + StackIncrement], 0,
+				stackLength);
+		}
+		myStack[myStackTop] = act;
+		act = tAction(act, token);
+		if (act == ERROR_ACTION)
+			return null;
+		if (act <= NUM_RULES) { // reduce
+			myStackTop--;
+		} else if (act > ERROR_ACTION) { // shift-reduce
+			return reduceName; // ready to accept the next token
+		} else {
+			if (act < ACCEPT_ACTION) { // shift
+				return reduceName; // ready to accept the next token
+			}
+			return reduceName; // ?
+		}
+		do {
+			reduceName = name[non_terminal_index[lhs[act]]];
+			myStackTop -= (rhs[act] - 1);
+			act = ntAction(myStack[myStackTop], lhs[act]);
+			if (act == ACCEPT_ACTION) {
+				return reduceName;
+			}
+		} while (act <= NUM_RULES);
+	}
 }
 @Override
 protected void consumeToken(int token) {
@@ -5062,7 +5115,7 @@ public TypeReference createQualifiedAssistTypeReference(char[][] previousIdentif
 			if (ref != null)
 				return ref;
 			return new CompletionOnQualifiedTypeReference(previousIdentifiers, assistName, positions,
-					CompletionOnQualifiedTypeReference.K_TYPE, this.currentToken);
+					CompletionOnQualifiedTypeReference.K_TYPE);
 	}
 }
 @Override
