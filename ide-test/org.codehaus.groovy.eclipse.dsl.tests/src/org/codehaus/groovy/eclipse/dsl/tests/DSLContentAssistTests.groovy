@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,10 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.FixMethodOrder
 import org.junit.Test
 
+@FixMethodOrder(org.junit.runners.MethodSorters.NAME_ASCENDING)
 final class DSLContentAssistTests extends CompletionTestSuite {
 
     @BeforeClass
@@ -1017,7 +1019,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HashM'))
         proposalExists(proposals, 'HashMap', 0)
     }
 
@@ -1033,7 +1035,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
@@ -1049,7 +1051,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 0)
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
@@ -1065,7 +1067,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
@@ -1081,7 +1083,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 0)
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
@@ -1093,7 +1095,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
 
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedH')))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedH'))
         proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
     }
 
@@ -1105,7 +1107,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
 
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedHashMap')))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedHashMap'))
         proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
     }
 
@@ -1129,7 +1131,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'str'))
         proposalExists(proposals, 'string', 1)
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'getStr')))
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getStr'))
         proposalExists(proposals, 'getString()', 1)
     }
 
@@ -1153,7 +1155,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'str'))
         proposalExists(proposals, 'string', 1)
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'getStr')))
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getStr'))
         proposalExists(proposals, 'getString()', 1)
     }
 
@@ -1186,7 +1188,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             |@Sortable class Foo {}
             |new Foo().com
             |'''.stripMargin()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'com')))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'com'))
         // contributed by built-in DLSD for @Sortable AST transform
         proposalExists(proposals, 'compareTo(Foo other) : int', 1)
     }

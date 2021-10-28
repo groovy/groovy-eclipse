@@ -26,11 +26,13 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
+import org.junit.FixMethodOrder
 import org.junit.Test
 
 /**
  * Tests type inferencing for DSL scripts included with Groovy plugin.
  */
+@FixMethodOrder(org.junit.runners.MethodSorters.NAME_ASCENDING)
 final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
 
     BuiltInDSLInferencingTests() {

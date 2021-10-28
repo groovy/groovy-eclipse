@@ -1347,13 +1347,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // add default constructor if no other constructors exist (and not anonymous/interface/trait)
             if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                try {
-                    constructorDecl.annotations = new Annotation[] {
-                        // TODO: Groovy 2.5+: Replace 'Class.forName("groovy.transform.Generated")' with 'groovy.transform.Generated.class'.
-                        new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(Class.forName("groovy.transform.Generated"))), -1),
-                    };
-                } catch (ClassNotFoundException ignore) {
-                }
+                constructorDecl.annotations = new Annotation[] {
+                    new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(groovy.transform.Generated.class)), -1)
+                };
                 LinkedList<Statement> initializerStatements = (LinkedList<Statement>) classNode.getObjectInitializerStatements();
                 if (initializerStatements.isEmpty()) {
                     constructorDecl.bits |= ASTNode.IsDefaultConstructor;
