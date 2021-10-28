@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Arrays;
 
@@ -67,12 +69,12 @@ public final class STCScriptsTests extends BuilderTestSuite {
             "    storeType(var, robotClass)\n" +
             "    handled = true\n" +
             "  }\n" +
-            "}");
+            "}\n");
         env.addGroovyClass(projPath.append("src"), "Robot",
             "@groovy.transform.TypeChecked(extensions = 'RobotMove.groovy')\n" +
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
-            "}");
+            "}\n");
         //@formatter:on
 
         env.fullBuild(projPath);
@@ -97,7 +99,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
             "    storeType(var, robotClass)\n" +
             "    handled = true\n" +
             "  }\n" +
-            "}");
+            "}\n");
         env.addGroovyClass(projPath.append("src"), "RobotScript",
             "import groovy.transform.TypeChecked\n" +
             "class Robot {\n" +
@@ -107,11 +109,52 @@ public final class STCScriptsTests extends BuilderTestSuite {
             "@TypeChecked(extensions = 'RobotMove.groovy')\n" +
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
-            "}");
+            "}\n");
         //@formatter:on
 
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);
         assertEquals("Should have found no problems in:\n" + Arrays.toString(problems), 0, problems.length);
+    }
+
+    @Test // GROOVY-6328
+    public void testStaticTypeCheckingDSL3() throws Exception { assumeTrue(isAtLeastGroovy(40));
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/*Checker.groovy,y");
+
+        IPath projPath = createGenericProject();
+        //@formatter:off
+        env.addGroovyClass(projPath.append("src"), "TypeChecker",
+            "onMethodSelection { expr, node ->\n" +
+            "  context.enclosingBinaryExpression.putNodeMetaData('notified', true)\n" +
+            "}\n");
+        //@formatter:on
+
+        for (String methods : new String[] {"", "void setS(String s) {this.s = s}"}) {
+            env.addGroovyClass(projPath.append("src"), "TestScript",
+                "import static org.codehaus.groovy.control.CompilePhase.INSTRUCTION_SELECTION\n" +
+                "class C {\n" +
+                "  String s\n" +
+                "  " + methods + "\n" +
+                "}\n" +
+                "C make(@DelegatesTo(value=C.class, strategy=Closure.DELEGATE_FIRST) Closure closure) {\n" +
+                "  new C().tap(closure)\n" +
+                "}\n" +
+                "@groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+                "  def assignment = lookup.call('here')[0].expression\n" +
+                "  assert assignment.getNodeMetaData('notified')\n" +
+                "})\n" +
+                "@groovy.transform.TypeChecked(extensions='TypeChecker.groovy')\n" +
+                "void test() {\n" +
+                "  def c = make {\n" +
+                "  here: s = 'foo'\n" + // expecting onMethodSelection for setter
+                "  }\n" +
+                "}\n");
+            //@formatter:on
+
+            env.fullBuild(projPath);
+            Problem[] problems = env.getProblemsFor(projPath);
+            assertEquals("Should have found no problems in:\n" + Arrays.toString(problems), 0, problems.length);
+        }
     }
 }

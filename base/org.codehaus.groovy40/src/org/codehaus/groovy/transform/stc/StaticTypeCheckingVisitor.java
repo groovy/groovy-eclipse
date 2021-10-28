@@ -1636,11 +1636,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                     }
                 }
-                foundGetterOrSetter = (foundGetterOrSetter || !setters.isEmpty() || getter != null);
 
-                if (property != null && storeProperty(property, pexp, receiverType, visitor, receiver.getData())) return true;
+                if (property != null && storeProperty(property, pexp, receiverType, visitor, receiver.getData(), !readMode)) return true;
 
                 if (field != null && storeField(field, pexp, receiverType, visitor, receiver.getData(), !readMode)) return true;
+
+                foundGetterOrSetter = (foundGetterOrSetter || !setters.isEmpty() || getter != null);
             }
 
             // GROOVY-5568: the property may be defined by DGM
@@ -1854,16 +1855,29 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return true;
     }
 
-    private boolean storeProperty(final PropertyNode property, final PropertyExpression expressionToStoreOn, final ClassNode receiver, final ClassCodeVisitorSupport visitor, final String delegationData) {
+    private boolean storeProperty(final PropertyNode property, final PropertyExpression expression, final ClassNode receiver, final ClassCodeVisitorSupport visitor, final String delegationData, final boolean lhsOfAssignment) {
         if (visitor != null) visitor.visitProperty(property);
-        storeWithResolve(property.getOriginType(), receiver, property.getDeclaringClass(), property.isStatic(), expressionToStoreOn);
+        ClassNode propertyType = property.getOriginType();
+
+        storeWithResolve(propertyType, receiver, property.getDeclaringClass(), property.isStatic(), expression);
+
         if (delegationData != null) {
-            expressionToStoreOn.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
+            expression.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
         }
         if (Modifier.isFinal(property.getModifiers())) {
-            expressionToStoreOn.putNodeMetaData(READONLY_PROPERTY, Boolean.TRUE);
+            expression.putNodeMetaData(READONLY_PROPERTY, Boolean.TRUE);
+            if (!lhsOfAssignment) {
+                MethodNode implicitGetter = new MethodNode(property.getGetterNameOrDefault(), Opcodes.ACC_PUBLIC, propertyType, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+                implicitGetter.setDeclaringClass(property.getDeclaringClass());
+                extension.onMethodSelection(expression, implicitGetter);
+            }
         } else {
-            expressionToStoreOn.removeNodeMetaData(READONLY_PROPERTY);
+            expression.removeNodeMetaData(READONLY_PROPERTY);
+            if (lhsOfAssignment) {
+                MethodNode implicitSetter = new MethodNode(property.getSetterNameOrDefault(), Opcodes.ACC_PUBLIC, VOID_TYPE, new Parameter[] {new Parameter(propertyType, "value")}, ClassNode.EMPTY_ARRAY, null);
+                implicitSetter.setDeclaringClass(property.getDeclaringClass());
+                extension.onMethodSelection(expression, implicitSetter);
+            }
         }
         return true;
     }
