@@ -2855,8 +2855,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = 'def map = [key: "value"]'
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), MAP_KEY))
+            new HighlightedTypedPosition(contents.indexOf('map'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('key'), 3, MAP_KEY))
     }
 
     @Test
@@ -2867,10 +2867,77 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('key)'), 'key'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('key2'), 'key2'.length(), MAP_KEY))
+            new HighlightedTypedPosition(contents.indexOf('key'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('map'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('key)'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('key2'), 4, MAP_KEY))
+    }
+
+    @Test
+    void testMapKey3() {
+        String contents = '''\
+            |void test(Map map) {
+            |  map.key = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Map '), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('map)'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('map'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('key'), 3, MAP_KEY))
+    }
+
+    @Test
+    void testMapKey4() {
+        String contents = '''\
+            |class C extends HashMap {
+            |  void test() {
+            |    key = null
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('test() '), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('key'), 3, MAP_KEY))
+    }
+
+    @Test
+    void testMapKey5() {
+        String contents = '''\
+            |abstract class A extends HashMap {
+            |  def one, two = { -> }
+            |}
+            |class C extends A {
+            |  def three
+            |  void test() {
+            |    one
+            |    two()
+            |    three
+            |    empty
+            |    isEmpty()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('isEmpty'), 7, METHOD_CALL))
     }
 
     @Test

@@ -477,6 +477,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             declaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass()));
 
         if ((accessedVar instanceof FieldNode && !(isDirectAccess && scope.isFieldAccessDirect())) ||
+                (accessedVar instanceof PropertyNode && isOrImplements(declaringType,VariableScope.MAP_CLASS_NODE)) ||
                 (isDirectAccess && resolveStrategy != Closure.OWNER_FIRST && resolveStrategy != Closure.OWNER_ONLY)) {
             // accessed variable was found using direct search; forget the reference
             accessedVar = new DynamicVariable(var.getName(), scope.isStatic());
@@ -619,9 +620,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, isStaticExpression, 0, methodCallArgumentTypes);
         }
 
-        boolean isMethodCall = (!isLhsExpression && methodCallArgumentTypes != null);
+        boolean isCallExpression = (!isLhsExpression && methodCallArgumentTypes != null);
 
-        if (isMethodCall) {
+        if (isCallExpression) {
             if (!isStaticExpression && declaringType.implementsInterface(ClassHelper.GROOVY_INTERCEPTABLE_TYPE)) {
                 return declaringType.getMethod("invokeMethod", new Parameter[] {new Parameter(VariableScope.STRING_CLASS_NODE, "name"), new Parameter(VariableScope.OBJECT_CLASS_NODE, "args")});
             }
@@ -633,22 +634,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // name may still map to something that is callable; keep looking
         }
 
-        if (!isMethodCall && !isStaticExpression && directFieldAccess == 0 && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE)) {
-            ClassNode resolvedType;
-            if (isLhsExpression) {
-                resolvedType = VariableScope.VOID_CLASS_NODE;
-            } else {
-                resolvedType = VariableScope.OBJECT_CLASS_NODE;
-                for (ClassNode face : GroovyUtils.getAllInterfaces(declaringType)) {
-                    if (face.equals(VariableScope.MAP_CLASS_NODE)) { // Map<K,V>
-                        GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
-                        if (generics.length == 2) resolvedType = generics[1].getType();
-                        break;
-                    }
-                }
-            }
+        boolean dynamicProperty = (!isCallExpression && !isStaticExpression && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE));
 
-            return createDynamicProperty(name, resolvedType, declaringType, isStaticExpression);
+        if (dynamicProperty && directFieldAccess == 0) {
+            return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 
         // look for canonical accessor method
@@ -659,6 +648,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         Set<ClassNode> typeHierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(declaringType, typeHierarchy, true);
+        boolean noIndirectAccessor = !(accessor.isPresent() || dynamicProperty);
 
         // look for property
         for (ClassNode type : typeHierarchy) {
@@ -667,7 +657,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 property = Optional.ofNullable(type.redirect().<List<PropertyNode>>getNodeMetaData("trait.properties"))
                     .flatMap(list -> list.stream().filter(prop -> prop.getName().equals(name)).findFirst()).orElse(null);
             }
-            if (isCompatible(property, isStaticExpression) && (!accessor.isPresent() ||
+            if (isCompatible(property, isStaticExpression) && (noIndirectAccessor ||
                     directFieldAccess == 1 && declaringType.equals(property.getDeclaringClass()))) {
                 return property;
             }
@@ -676,9 +666,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // look for field
         FieldNode field = declaringType.getField(name);
-        if (isCompatible(field, isStaticExpression) && (!accessor.isPresent() ||
+        if (isCompatible(field, isStaticExpression) && (noIndirectAccessor ||
                 directFieldAccess >= 1 && declaringType.equals(field.getDeclaringClass()) && (directFieldAccess == 1 || !field.isPrivate()))) {
             return field;
+        }
+
+        if (dynamicProperty) {
+            return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 
         if (accessor.isPresent()) {
@@ -708,7 +702,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }).findFirst();
             if (mopMethod.isPresent()) {
-                return mopMethod.map(mm -> !isMethodCall ? createDynamicProperty(name, VariableScope.OBJECT_CLASS_NODE, declaringType, isStaticExpression) : mm).get();
+                return mopMethod.map(mm -> !isCallExpression ? createDynamicProperty(name, VariableScope.OBJECT_CLASS_NODE, declaringType, isStaticExpression) : mm).get();
             }
         }
 
@@ -724,7 +718,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        if (!isMethodCall && isOrImplements(declaringType, ClassHelper.METACLASS_TYPE)) {
+        if (!isCallExpression && !isStaticExpression && isOrImplements(declaringType, ClassHelper.METACLASS_TYPE)) {
             try {
                 if ("constructor".equals(name)) {
                     return createDynamicProperty(name, ClassHelper.make(Class.forName("groovy.lang.ExpandoMetaClass$ExpandoMetaConstructor")), declaringType, false);
@@ -965,6 +959,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
         return declaringType;
+    }
+
+    /**
+     * @param mapType type that is or implements {@link java.util.Map}
+     */
+    protected static ClassNode getMapPropertyType(final ClassNode mapType) {
+        ClassNode propertyType = VariableScope.OBJECT_CLASS_NODE;
+        for (ClassNode face : GroovyUtils.getAllInterfaces(mapType)) {
+            if (face.equals(VariableScope.MAP_CLASS_NODE)) { // Map<K,V>
+                GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
+                if (generics.length == 2) propertyType = generics[1].getType();
+                break;
+            }
+        }
+        return propertyType;
     }
 
     protected static List<MethodNode> getMethods(final String name, final ClassNode type) {
