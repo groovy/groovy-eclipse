@@ -4231,6 +4231,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10323() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "}\n" +
+            "def <T,T> T m(C<T> c) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Number n = m(new C<>())\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tdef <T,T> T m(C<T> c) {\n" +
+            "\t       ^^\n" +
+            "Duplicate type parameter T\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10325() {
         //@formatter:off
         String[] sources = {
