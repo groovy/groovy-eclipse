@@ -2746,7 +2746,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (STRING_TYPE.equals(inferredReturnType) && StaticTypeCheckingSupport.isGStringOrGStringStringLUB(type)) {
                 type = STRING_TYPE; // implicit "toString()" before return
             } else if (inferredReturnType != null && !GenericsUtils.hasUnresolvedGenerics(inferredReturnType)
-                    && GenericsUtils.buildWildcardType(inferredReturnType).isCompatibleWith(type)) {
+                    && GenericsUtils.buildWildcardType(inferredReturnType).isCompatibleWith(wrapTypeIfNecessary(type))) {
                 type = inferredReturnType; // allow simple covariance
             }
             return type;

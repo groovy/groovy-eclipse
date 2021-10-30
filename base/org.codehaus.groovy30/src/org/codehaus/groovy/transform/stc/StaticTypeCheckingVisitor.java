@@ -2485,7 +2485,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             // GRECLIPSE add
             else if (inferredReturnType != null && !GenericsUtils.hasUnresolvedGenerics(inferredReturnType)
-                    && GenericsUtils.buildWildcardType(inferredReturnType).isCompatibleWith(type)) {
+                    && GenericsUtils.buildWildcardType(inferredReturnType).isCompatibleWith(wrapTypeIfNecessary(type))) {
                 type = inferredReturnType; // allow simple covariance
             }
             // GRECLIPSE end

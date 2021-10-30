@@ -3715,6 +3715,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10128() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  java.util.function.Function<String, Number> x = { s ->\n" +
+            "    long n = 1\n" +
+            "    return n\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10166() {
         //@formatter:off
         String[] sources = {
@@ -4150,6 +4169,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10306() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  byte p = 1\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  def test() {\n" +
+            "    byte v = 1\n" +
+            "    java.util.function.Supplier<Number> s1 = { -> v }\n" +
+            "    java.util.function.Supplier<Number> s2 = { -> p }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def self = this.newInstance()\n" +
+            "    print(self.test().get())\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
     }
 
     @Test
