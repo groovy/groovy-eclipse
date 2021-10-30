@@ -209,6 +209,9 @@ public class WideningCategories {
     public static ClassNode lowestUpperBound(ClassNode a, ClassNode b) {
         ClassNode lub = lowestUpperBound(a, b, null, null);
         if (lub==null || !lub.isUsingGenerics()) return lub;
+        // GRECLIPSE add -- GROOVY-10130
+        if (lub.isGenericsPlaceHolder()) return lub;
+        // GRECLIPSE end
         // types may be parameterized. If so, we must ensure that generic type arguments
         // are made compatible
 

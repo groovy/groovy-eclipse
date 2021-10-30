@@ -4294,4 +4294,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10330() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C<T> {\n" +
+            "  T y\n" +
+            "  void m(T x, java.util.function.Function<T, T> f) {\n" +
+            "    print f.apply(x)\n" +
+            "  }\n" +
+            "  void test(T x, java.util.function.Function<T, T> f) {\n" +
+            "    m(true ? x : y, f)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C<String>().test('WORKS', { it.toLowerCase() })\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
