@@ -4151,6 +4151,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10294() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "CharSequence test() {\n" +
+            "  def x = 'xx'\n" +
+            "  if (false) {\n" +
+            "    x = null\n" +
+            "  }\n" +
+            "  x\n" + // Cannot return value of type Object on method returning type CharSequence
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10295() {
         //@formatter:off
         String[] sources = {

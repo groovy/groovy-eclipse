@@ -1037,8 +1037,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 */
                 // track conditional assignment
-                if (!isNullConstant(rightExpression)
-                        && leftExpression instanceof VariableExpression
+                if (/*GRECLIPSE edit !isNullConstant(rightExpression)
+                        &&*/ leftExpression instanceof VariableExpression
                         && typeCheckingContext.ifElseForWhileAssignmentTracker != null) {
                     Variable accessedVariable = ((VariableExpression) leftExpression).getAccessedVariable();
                     if (accessedVariable instanceof Parameter) {
@@ -4832,8 +4832,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 // GROOVY-6099: First element of the list may be null, if no assignment was made before the branch
                 List<ClassNode> nonNullValues = new ArrayList<ClassNode>(allValues.size());
                 for (ClassNode value : allValues) {
+                    // GRECLIPSE add -- GROOVY-10294
+                    if (value != UNKNOWN_PARAMETER_TYPE)
+                    // GRECLIPSE end
                     if (value != null) nonNullValues.add(value);
                 }
+                // GRECLIPSE add
+                if (nonNullValues.isEmpty()) continue;
+                // GRECLIPSE end
                 ClassNode cn = lowestUpperBound(nonNullValues);
                 storeType(key, cn);
                 assignments.put(key, cn);

@@ -923,8 +923,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 */
 
                 // track conditional assignment
-                if (!isNullConstant(rightExpression)
-                        && leftExpression instanceof VariableExpression
+                if (/*GRECLIPSE edit !isNullConstant(rightExpression)
+                        &&*/ leftExpression instanceof VariableExpression
                         && typeCheckingContext.ifElseForWhileAssignmentTracker != null) {
                     Variable accessedVariable = ((VariableExpression) leftExpression).getAccessedVariable();
                     if (accessedVariable instanceof Parameter) {
@@ -4559,10 +4559,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected Map<VariableExpression, ClassNode> popAssignmentTracking(final Map<VariableExpression, List<ClassNode>> oldTracker) {
         Map<VariableExpression, ClassNode> assignments = new HashMap<>();
         typeCheckingContext.ifElseForWhileAssignmentTracker.forEach((var, types) -> {
+            /* GRECLIPSE edit -- GROOVY-10294
             ClassNode type = types.stream().filter(Objects::nonNull) // GROOVY-6099
                 .reduce(WideningCategories::lowestUpperBound).get();
             assignments.put(var, type);
             storeType(var, type);
+            */
+            types.stream().filter(t -> t != null && t != UNKNOWN_PARAMETER_TYPE)
+                    .reduce(WideningCategories::lowestUpperBound).ifPresent(type -> {
+                assignments.put(var, type);
+                storeType(var, type);
+            });
+            // GRECLIPSE end
         });
         typeCheckingContext.ifElseForWhileAssignmentTracker = oldTracker;
         return assignments;
