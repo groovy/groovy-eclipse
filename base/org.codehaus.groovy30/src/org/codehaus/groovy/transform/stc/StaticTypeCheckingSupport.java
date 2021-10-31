@@ -1719,8 +1719,15 @@ public abstract class StaticTypeCheckingSupport {
                     GenericsTypeName name = new GenericsTypeName(oldValue.getName());
                     GenericsType newValue = connections.get(name); // find "V" in T=V
                     if (newValue == oldValue) continue;
-                    // GRECLIPSE add -- GROOVY-10067
-                    if (name.getName().charAt(0) == '#') continue;
+                    // GRECLIPSE add -- GROOVY-10067, GROOVY-10315
+                    if (newValue == null) {
+                        newValue = connections.get(entry.getKey());
+                        if (newValue != null) {
+                            ClassNode o = GenericsUtils.makeClassSafe0(CLASS_Type, oldValue),
+                                      n = GenericsUtils.makeClassSafe0(CLASS_Type, newValue);
+                            newValue = WideningCategories.lowestUpperBound(o,n).getGenericsTypes()[0];
+                        }
+                    }
                     // GRECLIPSE end
                     if (newValue == null) {
                         entry.setValue(newValue = applyGenericsContext(connections, oldValue));

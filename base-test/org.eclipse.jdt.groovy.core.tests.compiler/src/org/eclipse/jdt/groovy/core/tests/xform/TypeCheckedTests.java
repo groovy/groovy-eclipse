@@ -4216,6 +4216,79 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10309() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class A<T,T2> {\n" +
+            "  T f1\n" +
+            "  T2 f2\n" +
+            "}\n" +
+            "class C<T,X> {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    new A<X,T>((X)null, (T)null)\n" + // Cannot call A#<init>(X, T) with arguments [X, T]
+            "  }\n" +
+            "}\n" +
+            "new C().test()",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10315() {
+        for (String args : new String[] {"m2(), c.m()", "c.m(), m2()"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "class C<T> {\n" +
+                "  def T m() {\n" +
+                "  }\n" +
+                "}\n" +
+                "def <X> X m2() {\n" +
+                "}\n" +
+                "def <Y> void m3(Y y1, Y y2) {\n" +
+                "}\n" +
+                "@groovy.transform.TypeChecked\n" +
+                "def <Z> void test(C<Z> c) {\n" +
+                "  m3(" + args + ")\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+        }
+    }
+
+    @Test
+    public void testTypeChecked10317() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T1,T2> {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test(T2 t2) {\n" +
+            "    def a = new A<T2,T2>()\n" +
+            "    a.foo(new B().bar(t2))\n" + // Cannot call A#foo(T2) with arguments [#X]
+            "  }\n" +
+            "  void foo(T1 t1) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class B {\n" +
+            "  def <X,Y> X bar(Y y) {\n" + // X is determined by target
+            "  }\n" +
+            "}\n" +
+            "new A<Object,Number>().test(42)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10320() {
         //@formatter:off
         String[] sources = {
