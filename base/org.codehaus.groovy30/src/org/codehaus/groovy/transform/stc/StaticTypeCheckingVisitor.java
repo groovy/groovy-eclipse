@@ -4064,6 +4064,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
 
         Parameter[] parameters = selectedMethod.getParameters();
+        final int nthParameter = parameters.length - 1;
 
         List<Integer> methodReferenceParamIndexList = new LinkedList<>();
         List<Expression> newArgumentExpressionList = new LinkedList<>();
@@ -4073,10 +4074,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 newArgumentExpressionList.add(argumentExpression);
                 continue;
             }
-
+            /* GRECLIPSE edit -- GROOVY-10336
             Parameter param = parameters[i];
             ClassNode paramType = param.getType();
-
+            */
+            Parameter param = parameters[Math.min(i, nthParameter)];
+            ClassNode paramType = param.getType();
+            if (i >= nthParameter && paramType.isArray())
+                paramType = paramType.getComponentType();
+            // GRECLIPSE end
             if (!isFunctionalInterface(paramType.redirect())) {
                 addError("The argument is a method reference, but the parameter type is not a functional interface", argumentExpression);
                 newArgumentExpressionList.add(argumentExpression);

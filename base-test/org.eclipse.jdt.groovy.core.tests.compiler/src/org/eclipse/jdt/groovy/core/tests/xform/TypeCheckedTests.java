@@ -4437,4 +4437,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testTypeChecked10336() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Supplier\n" +
+            "class C {\n" +
+            "  Integer m() { 1 }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Supplier<Long> outer = () -> {\n" +
+            "    Closure<Long> inner = (Object o, Supplier<Integer> s) -> 2L\n" +
+            "    inner(new Object(), new C()::m)\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 9)\n" +
+            "\tinner(new Object(), new C()::m)\n" +
+            "\t                    ^^^^^^^^^^\n" +
+            "Groovy:The argument is a method reference, but the parameter type is not a functional interface\n" +
+            "----------\n");
+    }
 }
