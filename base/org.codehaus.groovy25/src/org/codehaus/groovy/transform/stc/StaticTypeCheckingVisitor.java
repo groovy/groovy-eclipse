@@ -982,13 +982,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (rightExpression instanceof ConstructorCallExpression) {
                     inferDiamondType((ConstructorCallExpression) rightExpression, lType);
                 }
-                // GRECLIPSE add -- unchecked assignment
+                // GRECLIPSE add -- GROOVY-10051, GROOVY-10235, GROOVY-10324
                 if (lType.isUsingGenerics() && missesGenericsTypes(resultType)) {
                     // the inferred type of the binary expression is the type of the RHS
                     // "completed" with generics type information available from the LHS
                     if (lType.equals(resultType)) {
                         if (!lType.isGenericsPlaceHolder()) resultType = lType;
-                    } else {
+                    } else if (!resultType.isGenericsPlaceHolder()) {
                         Map<GenericsTypeName, GenericsType> gt = new HashMap<>();
                         extractGenericsConnections(gt, resultType, resultType.redirect());
                         extractGenericsConnections(gt, lType, getNextSuperClass(resultType, lType));
