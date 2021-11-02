@@ -4563,4 +4563,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Groovy:The argument is a method reference, but the parameter type is not a functional interface\n" +
             "----------\n");
     }
+
+    @Test
+    public void testTypeChecked10339() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T bar(T x, T y) {\n" +
+            "}\n" +
+            "String foo() {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Integer i = bar(foo(), 1)\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
+            "\tInteger i = bar(foo(), 1)\n" +
+            "\t            ^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.io.Serializable<? extends java.io.Serializable<java.lang.String>> to variable of type java.lang.Integer\n" +
+            "----------\n");
+    }
 }
