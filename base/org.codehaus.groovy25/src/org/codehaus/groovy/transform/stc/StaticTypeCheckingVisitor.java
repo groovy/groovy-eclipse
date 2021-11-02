@@ -1217,7 +1217,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // check if constructor call expression makes use of the diamond operator
         if (cceType.getGenericsTypes() != null && cceType.getGenericsTypes().length == 0) {
             ArgumentListExpression argumentListExpression = InvocationWriter.makeArgumentList(cce.getArguments());
-            /* GRECLIPSE edit -- GROOVY-9948, GROOVY-9983
+            /* GRECLIPSE edit -- GROOVY-9948, GROOVY-9983, GROOVY-10291
             if (argumentListExpression.getExpressions().isEmpty()) {
                 adjustGenerics(lType, cceType);
             } else {
@@ -1233,23 +1233,23 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (!argumentListExpression.getExpressions().isEmpty() && constructor != null) {
                 ClassNode type = GenericsUtils.parameterizeType(cceType, cceType);
                 type = inferReturnTypeGenerics(type, constructor, argumentListExpression);
-                if (type.isUsingGenerics()) {
-                    // GROOVY-6232, GROOVY-9956: if cce not assignment compatible, process target as additional type witness
-                    if (GenericsUtils.hasUnresolvedGenerics(type) || checkCompatibleAssignmentTypes(lType, type, cce) && !GenericsUtils.buildWildcardType(lType).isCompatibleWith(type)) {
-                        // allow covariance of each type parameter, but maintain semantics for nested generics
+                // process target as additional type witness, if ...
+                if (type.toString(false).indexOf('#') > 0 // unresolved generics
+                        // GROOVY-6232, GROOVY-9956: cce not assignment compatible
+                        || checkCompatibleAssignmentTypes(lType, type, cce) && !GenericsUtils.buildWildcardType(lType).isCompatibleWith(type)) {
+                    // allow covariance of each type parameter, but maintain semantics for nested generics
 
-                        ClassNode pType = GenericsUtils.parameterizeType(lType, type);
-                        GenericsType[] lhs = pType.getGenericsTypes(), rhs = type.getGenericsTypes();
-                        if (lhs == null || rhs == null || lhs.length != rhs.length) throw new GroovyBugError(
-                                "Parameterization failed: " + prettyPrintType(pType) + " ~ " + prettyPrintType(type));
+                    ClassNode pType = GenericsUtils.parameterizeType(lType, type);
+                    GenericsType[] lhs = pType.getGenericsTypes(), rhs = type.getGenericsTypes();
+                    if (lhs == null || rhs == null || lhs.length != rhs.length) throw new GroovyBugError(
+                            "Parameterization failed: " + prettyPrintType(pType) + " ~ " + prettyPrintType(type));
 
-                        if (java.util.stream.IntStream.range(0, lhs.length).allMatch(i ->
-                                GenericsUtils.buildWildcardType(getCombinedBoundType(lhs[i])).isCompatibleWith(getCombinedBoundType(rhs[i])))) {
-                            type = pType; // lType proved to be a viable type witness
-                        }
+                    if (java.util.stream.IntStream.range(0, lhs.length).allMatch(i ->
+                            GenericsUtils.buildWildcardType(getCombinedBoundType(lhs[i])).isCompatibleWith(getCombinedBoundType(rhs[i])))) {
+                        type = pType; // lType proved to be a viable type witness
                     }
-                    inferredType = type;
                 }
+                inferredType = type;
             }
             adjustGenerics(inferredType, cceType);
             storeType(cce, cceType);
@@ -1744,9 +1744,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         Expression objectExpression = pexp.getObjectExpression();
         ClassNode objectExpressionType = getType(objectExpression);
-        // GRECLIPSE add -- GROOVY-9963
+        // GRECLIPSE add -- GROOVY-9963, GROOVY-10291
         if (objectExpression instanceof ConstructorCallExpression) {
-            inferDiamondType((ConstructorCallExpression) objectExpression, objectExpressionType);
+            ClassNode rawType = objectExpressionType.getPlainNodeReference();
+            inferDiamondType((ConstructorCallExpression) objectExpression, rawType);
         }
         // GRECLIPSE end
         List<ClassNode> enclosingTypes = typeCheckingContext.getEnclosingClassNodes();

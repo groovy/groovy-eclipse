@@ -4151,6 +4151,32 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10291() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class A<X> {\n" +
+            "  X x\n" +
+            "}\n" +
+            "class B<Y> {\n" +
+            "  def method(Y y) { null }\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    def closure = { Y why -> null }\n" +
+            "    Y y = null\n" +
+            "    method(new A<>(y).x)\n" + // works
+            "    closure(new A<>(y).x)\n" + // fails
+            "  }\n" +
+            "}\n" +
+            "new B().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10294() {
         //@formatter:off
         String[] sources = {
