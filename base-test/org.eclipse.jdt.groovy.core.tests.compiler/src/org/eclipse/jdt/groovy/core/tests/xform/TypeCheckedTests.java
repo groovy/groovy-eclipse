@@ -3913,6 +3913,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10228() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C<T> {\n" +
+            "  T p\n" +
+            "}\n" +
+            "void m(Number n) {\n" +
+            "  print 'works'\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def x = 12345\n" +
+            "  m(new C<>(x).getP())\n" + // Cannot find matching method m(T)
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testTypeChecked10234() {
         //@formatter:off
         String[] sources = {
@@ -4257,7 +4281,33 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "    new A<X,T>((X)null, (T)null)\n" + // Cannot call A#<init>(X, T) with arguments [X, T]
             "  }\n" +
             "}\n" +
-            "new C().test()",
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10310() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class A<T> {\n" +
+            "  T t\n" +
+            "}\n" +
+            "class B<T> {\n" +
+            "}\n" +
+            "def <T> A<T> m(T t, B<? extends T> b_of_t) {\n" +
+            "  new A<>(t)\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def x = 'x'\n" +
+            "  m(x, new B<>())\n" + // Cannot call m(T,B<? extends T>) with arguments...
+            "}\n" +
+            "test()\n",
         };
         //@formatter:on
 

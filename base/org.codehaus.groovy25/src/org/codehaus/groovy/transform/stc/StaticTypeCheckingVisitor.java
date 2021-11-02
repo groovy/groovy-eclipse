@@ -1257,7 +1257,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    private void adjustGenerics(ClassNode from, ClassNode to) {
+    private void adjustGenerics(final ClassNode source, final ClassNode target) {
+        /* GRECLIPSE edit -- GROOVY-10055, GROOVY-10228, GROOVY-10310
         GenericsType[] genericsTypes = from.getGenericsTypes();
         if (genericsTypes == null) {
             // case of: def foo = new HashMap<>()
@@ -1273,6 +1274,28 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             );
         }
         to.setGenericsTypes(copy);
+        */
+        GenericsType[] genericsTypes = source.getGenericsTypes();
+        if (genericsTypes == null) { // Map foo = new HashMap<>()
+            genericsTypes = target.redirect().getGenericsTypes().clone();
+            for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
+                GenericsType gt = genericsTypes[i];
+                // GROOVY-10055: handle diamond or raw
+                ClassNode cn = gt.getUpperBounds() != null
+                        ? gt.getUpperBounds()[0] : gt.getType().redirect();
+                genericsTypes[i] = cn.getPlainNodeReference().asGenericsType();
+            }
+        } else {
+            genericsTypes = genericsTypes.clone();
+            for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
+                GenericsType gt = genericsTypes[i];
+                genericsTypes[i] = new GenericsType(gt.getType(),
+                        gt.getUpperBounds(), gt.getLowerBound());
+                genericsTypes[i].setWildcard(gt.isWildcard());
+            }
+        }
+        target.setGenericsTypes(genericsTypes);
+        // GRECLIPSE end
     }
 
     /**
@@ -4070,18 +4093,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         objectExpression.visit(this);
         call.getMethod().visit(this);
-
+        // GRECLIPSE add -- GROOVY-10228
+        ClassNode receiver = getType(objectExpression);
+        if (objectExpression instanceof ConstructorCallExpression) {
+            inferDiamondType((ConstructorCallExpression) objectExpression, receiver.getPlainNodeReference());
+        }
+        // GRECLIPSE end
         // if the call expression is a spread operator call, then we must make sure that
         // the call is made on a collection type
         if (call.isSpreadSafe()) {
-            //TODO check if this should not be change to iterator based call logic
-            ClassNode expressionType = getType(objectExpression);
-            if (!implementsInterfaceOrIsSubclassOf(expressionType, Collection_TYPE) && !expressionType.isArray()) {
+            if (!implementsInterfaceOrIsSubclassOf(receiver, Collection_TYPE) && !receiver.isArray()) {
                 addStaticTypeError("Spread operator can only be used on collection types", objectExpression);
                 return;
             } else {
                 // type check call as if it was made on component type
-                ClassNode componentType = inferComponentType(expressionType, int_TYPE);
+                ClassNode componentType = inferComponentType(receiver, int_TYPE);
                 MethodCallExpression subcall = callX(castX(componentType, EmptyExpression.INSTANCE), name, call.getArguments());
                 subcall.setLineNumber(call.getLineNumber());
                 subcall.setColumnNumber(call.getColumnNumber());
@@ -4105,8 +4131,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         checkForbiddenSpreadArgument(argumentList);
 
         // for arguments, we need to visit closures *after* the method has been chosen
-
+        /* GRECLIPSE edit
         ClassNode receiver = getType(objectExpression);
+        */
         visitMethodCallArguments(receiver, argumentList, false, null);
 
         ClassNode[] args = getArgumentTypes(argumentList);
