@@ -97,22 +97,19 @@ public class GenericsType extends ASTNode {
     }
 
     private static String nameOf(final ClassNode theType) {
-        StringBuilder ret = new StringBuilder();
         if (theType.isArray()) {
-            ret.append(nameOf(theType.getComponentType()));
-            ret.append("[]");
+            return nameOf(theType.getComponentType()) + "[]";
         } else {
-            ret.append(theType.getName());
+            return theType.isGenericsPlaceHolder() ? theType.getUnresolvedName() : theType.getName();
         }
-        return ret.toString();
     }
 
     private static String genericsBounds(final ClassNode theType, final Set<String> visited) {
         StringBuilder ret = new StringBuilder();
 
-        if (theType.isArray()) {
+        if (theType.getOuterClass() == null) {
             ret.append(nameOf(theType));
-        } else if (theType.getOuterClass() != null) {
+        } else {
             String parentClassNodeName = theType.getOuterClass().getName();
             if (Modifier.isStatic(theType.getModifiers()) || theType.isInterface()) {
                 ret.append(parentClassNodeName);
@@ -121,8 +118,6 @@ public class GenericsType extends ASTNode {
             }
             ret.append('.');
             ret.append(theType.getName(), parentClassNodeName.length() + 1, theType.getName().length());
-        } else {
-            ret.append(theType.getName());
         }
 
         GenericsType[] genericsTypes = theType.getGenericsTypes();

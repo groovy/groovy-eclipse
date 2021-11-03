@@ -1546,13 +1546,18 @@ public abstract class StaticTypeCheckingSupport {
         // first parameter. While we normally allow generalization for the first
         // parameter, in case of an extension method we must not.
         Set<GenericsTypeName> fixedGenericsPlaceHolders = extractResolvedPlaceHolders(resolvedMethodGenerics);
-
+        // GRECLIPSE add -- GROOVY-10337
+        if ("<init>".equals(candidateMethod.getName())) {
+            fixedGenericsPlaceHolders.addAll(resolvedMethodGenerics.keySet());
+        }
+        int nthParameter = parameters.length - 1;
+        // GRECLIPSE end
         for (int i = 0, n = argumentTypes.length; i < n; i += 1) {
-            int pindex = min(i, parameters.length - 1);
+            int pindex = Math.min(i, nthParameter);
             ClassNode wrappedArgument = argumentTypes[i];
             ClassNode type = parameters[pindex].getOriginType();
 
-            failure = failure || inferenceCheck(fixedGenericsPlaceHolders, resolvedMethodGenerics, type, wrappedArgument, i >= parameters.length - 1);
+            failure = failure || inferenceCheck(fixedGenericsPlaceHolders, resolvedMethodGenerics, type, wrappedArgument, i >= nthParameter);
 
             // set real fixed generics for extension methods
             if (isExtensionMethod && i == 0)
@@ -1589,6 +1594,9 @@ public abstract class StaticTypeCheckingSupport {
         extractGenericsConnections(connections, wrappedArgument, type);
         // each found connection must comply with already found connections
         boolean failure = !compatibleConnections(connections, resolvedMethodGenerics, fixedGenericsPlaceHolders);
+        // GRECLIPSE add -- GROOVY-10337
+        connections.keySet().removeAll(fixedGenericsPlaceHolders);
+        // GRECLIPSE end
         // and then apply the found information to refine the method level
         // information. This way the method level information slowly turns
         // into information for the callsite
@@ -1600,9 +1608,8 @@ public abstract class StaticTypeCheckingSupport {
         // we use the provided information to transform the parameter
         // into something that can exist in the callsite context
         type = applyGenericsContext(resolvedMethodGenerics, type);
-        // there of course transformed parameter type and argument must fit
-        failure = failure || !typeCheckMethodArgumentWithGenerics(type, wrappedArgument, lastArg);
-        return failure;
+        // then of course transformed parameter type and argument must fit
+        return failure || !typeCheckMethodArgumentWithGenerics(type, wrappedArgument, lastArg);
     }
 
     private static GenericsType buildWildcardType(final GenericsType origin) {

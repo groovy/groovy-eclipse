@@ -4565,6 +4565,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10337() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<X,Y> {\n" +
+            "  C(C<Y,? extends Y> c) {\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <T> void test() {\n" +
+            "  new C<Number,T>((C<T,T>)null)\n" + // cannot call ctor with argument C<T,T>
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testTypeChecked10339() {
         //@formatter:off
         String[] sources = {

@@ -98,35 +98,27 @@ public class GenericsType extends ASTNode {
     }
 
     private String nameOf(ClassNode theType) {
-        StringBuilder ret = new StringBuilder();
         if (theType.isArray()) {
-            ret.append(nameOf(theType.getComponentType()));
-            ret.append("[]");
+            return nameOf(theType.getComponentType()) + "[]";
         } else {
-            ret.append(theType.getName());
+            return theType.isGenericsPlaceHolder() ? theType.getUnresolvedName() : theType.getName();
         }
-        return ret.toString();
     }
 
     private String genericsBounds(ClassNode theType, Set<String> visited) {
-
         StringBuilder ret = new StringBuilder();
 
-        if (theType.isArray()) {
+        if (theType.getOuterClass() == null) {
             ret.append(nameOf(theType));
-        } else if (theType.redirect() instanceof InnerClassNode) {
-            InnerClassNode innerClassNode = (InnerClassNode) theType.redirect();
-            String parentClassNodeName = innerClassNode.getOuterClass().getName();
-            if (Modifier.isStatic(innerClassNode.getModifiers()) || innerClassNode.isInterface()) {
-                ret.append(innerClassNode.getOuterClass().getName());
-            } else {
-                ret.append(genericsBounds(innerClassNode.getOuterClass(), new HashSet<String>()));
-            }
-            ret.append(".");
-            String typeName = theType.getName();
-            ret.append(typeName.substring(parentClassNodeName.length() + 1));
         } else {
-            ret.append(theType.getName());
+            String parentClassNodeName = theType.getOuterClass().getName();
+            if (Modifier.isStatic(theType.getModifiers()) || theType.isInterface()) {
+                ret.append(parentClassNodeName);
+            } else {
+                ret.append(genericsBounds(theType.getOuterClass(), new HashSet<>()));
+            }
+            ret.append('.');
+            ret.append(theType.getName(), parentClassNodeName.length() + 1, theType.getName().length());
         }
 
         GenericsType[] genericsTypes = theType.getGenericsTypes();
