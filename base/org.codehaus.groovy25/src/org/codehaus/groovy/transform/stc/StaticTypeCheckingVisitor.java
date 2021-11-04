@@ -1217,7 +1217,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // check if constructor call expression makes use of the diamond operator
         if (cceType.getGenericsTypes() != null && cceType.getGenericsTypes().length == 0) {
             ArgumentListExpression argumentListExpression = InvocationWriter.makeArgumentList(cce.getArguments());
-            /* GRECLIPSE edit -- GROOVY-9948, GROOVY-9983, GROOVY-10291
+            /* GRECLIPSE edit -- GROOVY-9948, GROOVY-9983, GROOVY-10291, et al.
             if (argumentListExpression.getExpressions().isEmpty()) {
                 adjustGenerics(lType, cceType);
             } else {
@@ -1251,6 +1251,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 inferredType = type;
             }
+            if (inferredType.isGenericsPlaceHolder()) // GROOVY-10344: "T t = new C<>()"
+                inferredType = getCombinedBoundType(inferredType.getGenericsTypes()[0]);
+
             adjustGenerics(inferredType, cceType);
             storeType(cce, cceType);
             // GRECLIPSE end

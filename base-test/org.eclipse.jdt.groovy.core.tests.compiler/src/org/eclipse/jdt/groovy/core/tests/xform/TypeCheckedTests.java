@@ -3937,6 +3937,37 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10230() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class A {\n" +
+            "  def <T extends C<Number,Number>> T m(T t) {\n" +
+            "    return t\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class B extends A {\n" +
+            "  @Override\n" +
+            "  def <T extends C<Number,Number>> T m(T t) {\n" +
+            "    T x = null; super.m(true ? t : x)\n" +
+            "  }\n" +
+            "}\n" +
+            "class C<X,Y> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new B().m(new C<>())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10234() {
         //@formatter:off
         String[] sources = {
@@ -4606,5 +4637,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t            ^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot assign value of type java.io.Serializable<? extends java.io.Serializable<java.lang.String>> to variable of type java.lang.Integer\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10344() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<X,Y> {\n" +
+            "}\n" +
+            "def <T extends C<? extends Number, ? extends Number>> void m(T t1, T t2) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  m(new C<>(), new C<>())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }
