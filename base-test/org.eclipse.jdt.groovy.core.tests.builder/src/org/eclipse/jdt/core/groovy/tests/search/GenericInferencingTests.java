@@ -942,7 +942,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             String contents =
                 "class C<T> {\n" +
                 "  static <U> C<U> of(U item) {}\n" +
-                "  def <V> C<V> map(F<? super T, ? super V> func) {}\n" +
+                "  def <V> C<V> map(F<? super T, ? extends V> func) {}\n" +
                 "}\n" +
                 "class D {\n" +
                 "  static <W> Set<W> wrap(W o) {}\n" +

@@ -1907,9 +1907,10 @@ public abstract class StaticTypeCheckingSupport {
             if (di.isPlaceholder()) {
                 connections.put(new GenericsTypeName(di.getName()), ui);
             } else if (di.isWildcard()) {
+                ClassNode lowerBound = di.getLowerBound(), upperBounds[] = di.getUpperBounds();
                 if (ui.isWildcard()) {
-                    extractGenericsConnections(connections, ui.getLowerBound(), di.getLowerBound());
-                    extractGenericsConnections(connections, ui.getUpperBounds(), di.getUpperBounds());
+                    extractGenericsConnections(connections, ui.getLowerBound(), lowerBound);
+                    extractGenericsConnections(connections, ui.getUpperBounds(), upperBounds);
                 /* GRECLIPSE edit -- GROOVY-9998, GROOVY-10327
                 } else {
                     ClassNode cu = ui.getType();
@@ -1922,14 +1923,12 @@ public abstract class StaticTypeCheckingSupport {
                     }
                 }
                 */
-                } else if (!isUnboundedWildcard(di)) {
-                    ClassNode boundType = di.getLowerBound() != null ? di.getLowerBound() : di.getUpperBounds()[0];
-                    if (boundType.isGenericsPlaceHolder()) {
-                        String placeholderName = boundType.getUnresolvedName();
+                } else if (lowerBound == null && upperBounds != null && upperBounds.length == 1) { // GROOVY-10347
+                    if (upperBounds[0].isGenericsPlaceHolder()) {
                         ui = new GenericsType(ui.getType()); ui.setPlaceHolder(false); ui.setWildcard(true);
-                        connections.put(new GenericsTypeName(placeholderName), ui);
-                    } else { // di like "? super Collection<T>" and ui like "List<Type>"
-                        extractGenericsConnections(connections, ui.getType(), boundType);
+                        connections.put(new GenericsTypeName(upperBounds[0].getUnresolvedName()), ui);
+                    } else { // di like "? extends Iterable<T>" and ui like "Collection<Type>"
+                        extractGenericsConnections(connections, ui.getType(), upperBounds[0]);
                     }
                 }
                 // GRECLIPSE end

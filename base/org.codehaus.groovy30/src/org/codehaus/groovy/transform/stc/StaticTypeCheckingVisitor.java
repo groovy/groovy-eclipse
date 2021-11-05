@@ -3212,7 +3212,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
         } else if (isSAMType(param.getOriginType())) {
-            /* GRECLIPSE edit -- GROOVY-8917, GROOVY-10049
+            /* GRECLIPSE edit -- GROOVY-8917, GROOVY-10047, GROOVY-10049
             inferSAMType(param, receiver, selectedMethod, InvocationWriter.makeArgumentList(arguments), expression);
             */
             Map<GenericsTypeName, GenericsType> context = selectedMethod.isStatic() ? new HashMap<>() : extractPlaceHolders(null, receiver, getDeclaringClass(selectedMethod, arguments));
@@ -3277,7 +3277,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else {
                     paramTypes = new ClassNode[n];
                     for (int i = 0; i < n; i += 1) {
-                        paramTypes[i] = i < samParamTypes.length ? samParamTypes[i] : null;
+                        paramTypes[i] = !p[i].isDynamicTyped() ? p[i].getOriginType() : (i < samParamTypes.length ? samParamTypes[i] : null);
                     }
                 }
                 expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
@@ -6038,7 +6038,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         Map<GenericsTypeName, GenericsType> connections = new HashMap<>();
                         extractGenericsConnections(connections, wrapTypeIfNecessary(argumentType), paramType);
                         connections.forEach((gtn, gt) -> resolvedPlaceholders.merge(gtn, gt, (gt1, gt2) -> {
-                            // GRECLIPSE edit -- GROOVY-10339: incorporate additional witness
+                            // GRECLIPSE add -- GROOVY-10347
+                            if (gt1.toString().equals(gt2.toString()))
+                            // GRECLIPSE end
+                            return gt1;
+                            // GRECLIPSE add -- GROOVY-10339: incorporate additional witness
                             ClassNode cn1 = GenericsUtils.makeClassSafe0(CLASS_Type, gt1);
                             ClassNode cn2 = GenericsUtils.makeClassSafe0(CLASS_Type, gt2);
                             return lowestUpperBound(cn1,cn2).getGenericsTypes()[0];

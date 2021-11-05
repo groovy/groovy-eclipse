@@ -6336,7 +6336,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
             "  print(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), String::length)))\n" +
-            "}\n" +
+            "}\n" + // <T,K,U> Collector<T,?,Map<K,U>> toMap(Function<? super T,? extends K>,Function<? super T,? extends U>)
             "test()\n",
         };
         //@formatter:on

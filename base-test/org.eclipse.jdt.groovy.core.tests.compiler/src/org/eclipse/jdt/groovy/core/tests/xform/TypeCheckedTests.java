@@ -2162,7 +2162,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  static <U> C<U> of(U item) {\n" +
             "    new C<U>(item)\n" +
             "  }\n" +
-            "  def <V> C<V> map(F<? super T, ? super V> func) {\n" +
+            "  def <V> C<V> map(F<? super T, ? extends V> func) {\n" +
             "    new C<V>(func.apply(t))\n" +
             "  }\n" +
             "}\n" +
@@ -4657,5 +4657,52 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10347() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  String[] one = ['foo','bar'], two = ['baz']\n" +
+            "  Map<String,Integer> map = one.collectEntries{[it,1]} + two.collectEntries{[it,2]}\n" +
+            "  print map\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo:1, bar:1, baz:2]");
+    }
+
+    @Test
+    public void testTypeChecked10347a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Pogo[] pogos) {\n" +
+            "  List<String> strings = pogos.sort(true, new Sorter()).collect { Pogo pogo ->\n" + // static <T> T[] sort(T[], boolean, Comparator<? super T>)
+            "    pogo.x\n" +
+            "  }\n" +
+            "  print strings\n" +
+            "}\n" +
+            "test(new Pogo(x:'foo'),new Pogo(x:'bar'))\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  String x\n" +
+            "}\n",
+
+            "Sorter.groovy",
+            "class Sorter implements Comparator<Pogo>, Serializable {\n" +
+            "  int compare(Pogo p1, Pogo p2) { p1.x <=> p2.x }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[bar, foo]");
     }
 }
