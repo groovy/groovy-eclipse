@@ -52,6 +52,6 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "1Simple(n:1, s:x)");
+        runConformTest(sources, "1Simple[n=1, s=x]");
     }
 }

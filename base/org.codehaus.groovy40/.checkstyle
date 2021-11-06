@@ -36,11 +36,12 @@
         <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/(Expression|Generics)Utils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/WideningCategories.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum|InnerClass|VariableScope)Visitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum|VariableScope)Visitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/(Extended)?Verifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/WriterController.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypes(CallSite|MethodReferenceExpression)Writer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypes(MethodReferenceExpression)Writer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/ErrorCollector.java" include-pattern="false" />
@@ -55,7 +56,7 @@
         <file-match-pattern match-pattern="groovy/transform/ASTTestTransformation.groovy" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationCollectorCodeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationVisitor.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/(Field|Log|NullCheck)ASTTransformation.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/(Field|Log|NullCheck|RecordType|Sealed)ASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/NotYetImplemented.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/TemporaryVariableExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|MethodCall)ExpressionTransformer.java" include-pattern="false" />

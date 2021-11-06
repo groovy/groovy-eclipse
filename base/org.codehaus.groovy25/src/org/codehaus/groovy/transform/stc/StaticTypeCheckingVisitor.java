@@ -6844,33 +6844,63 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return resolvedPlaceholders;
     }
 
+    // GRECLIPSE add
+    private static Map<GenericsTypeName, GenericsType> extractPlaceHoldersVisibleToDeclaration(final ClassNode receiver, final MethodNode method, final Expression argument) {
+        Map<GenericsTypeName, GenericsType> result;
+        if (method.isStatic()) {
+            result = new HashMap<>();
+        } else {
+            result = extractPlaceHolders(null, receiver, getDeclaringClass(method, argument));
+            if (!result.isEmpty()) Optional.ofNullable(method.getGenericsTypes()).ifPresent(methodGenerics ->
+                Arrays.stream(methodGenerics).map(gt -> new GenericsTypeName(gt.getName())).forEach(result::remove));
+        }
+        return result;
+    }
+    // GRECLIPSE end
+
     protected boolean typeCheckMethodsWithGenericsOrFail(ClassNode receiver, ClassNode[] arguments, MethodNode candidateMethod, Expression location) {
         if (!typeCheckMethodsWithGenerics(receiver, arguments, candidateMethod)) {
+            /* GRECLIPSE edit -- GROOVY-9033, GROOVY-10010, et al.
             Map<GenericsTypeName, GenericsType> classGTs = GenericsUtils.extractPlaceholders(receiver);
-            // GRECLIPSE add -- GROOVY-9033
-            applyGenericsConnections(extractGenericsParameterMapOfThis(typeCheckingContext), classGTs);
-            addMethodLevelDeclaredGenerics(candidateMethod, classGTs);
-            // GRECLIPSE end
             ClassNode[] ptypes = new ClassNode[candidateMethod.getParameters().length];
             final Parameter[] parameters = candidateMethod.getParameters();
             for (int i = 0; i < parameters.length; i++) {
                 final Parameter parameter = parameters[i];
                 ClassNode type = parameter.getType();
                 ptypes[i] = fullyResolveType(type, classGTs);
-                // GRECLIPSE add -- GROOVY-10010
-                if (i < arguments.length && hasGStringStringError(ptypes[i], arguments[i], location)) {
-                    return false;
-                }
-                // GRECLIPSE end
             }
             addStaticTypeError("Cannot call " + toMethodGenericTypesString(candidateMethod) + prettyPrintTypeName(receiver) + "#" + // GRECLIPSE edit
                     toMethodParametersString(candidateMethod.getName(), ptypes) +
                     " with arguments " + formatArgumentList(arguments), location);
+            */
+            ClassNode r = receiver, at[] = arguments; MethodNode m = candidateMethod;
+            if (candidateMethod instanceof ExtensionMethodNode) {
+                m = ((ExtensionMethodNode) candidateMethod).getExtensionMethodNode();
+                r = m.getDeclaringClass();
+                at = new ClassNode[arguments.length + 1];
+                at[0] = receiver; // object expression is first argument
+                System.arraycopy(arguments, 0, at, 1, arguments.length);
+            }
+            Map<GenericsTypeName, GenericsType> spec = extractPlaceHoldersVisibleToDeclaration(r, m, null);
+            GenericsType[] gt = applyGenericsContext(spec, m.getGenericsTypes()); // class params in bounds
+            GenericsUtils.extractPlaceholders(GenericsUtils.makeClassSafe0(OBJECT_TYPE, gt), spec);
+
+            Parameter[] parameters = m.getParameters();
+            ClassNode[] paramTypes = new ClassNode[parameters.length];
+            for (int i = 0, n = parameters.length; i < n; i += 1) {
+                paramTypes[i] = fullyResolveType(parameters[i].getType(), spec);
+                if (i < at.length && hasGStringStringError(paramTypes[i], at[i], location)) {
+                    return false;
+                }
+            }
+            addStaticTypeError("Cannot call " + (gt == null ? "" : toGenericTypesString(gt)) + prettyPrintTypeName(r) +
+                "#" + toMethodParametersString(m.getName(), paramTypes) + " with arguments " + formatArgumentList(at), location);
             return false;
         }
         return true;
     }
 
+    /* GRECLIPSE edit
     private static String toMethodGenericTypesString(MethodNode node) {
         GenericsType[] genericsTypes = node.getGenericsTypes();
 
@@ -6879,6 +6909,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         return toGenericTypesString(genericsTypes);
     }
+    */
 
     protected static String formatArgumentList(ClassNode[] nodes) {
         if (nodes == null || nodes.length == 0) return "[]";

@@ -159,6 +159,7 @@ import static org.codehaus.groovy.ast.tools.PropertyNodeUtils.adjustPropertyModi
  *     <li>Uninitialized variables</li>
  *     <li>Bad code in object initializers or constructors</li>
  *     <li>Mismatches in modifiers or return types between implementations and interfaces/abstract classes</li>
+ *     <li>Invalid record component names</li>
  * </ul>
  *
  * Added code includes:
@@ -249,6 +250,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 !node.getAnnotations(ClassHelper.make(POJO.class)).isEmpty();
         this.classNode = node;
 
+        if (node.isRecord()) {
+            detectInvalidRecordComponentNames(node);
+            if (node.isAbstract()) {
+                throw new RuntimeParserException("Record '" + classNode.getNameWithoutPackage() + "' must not be abstract", classNode);
+            }
+        }
         if (Traits.isTrait(node) // maybe possible to have this true in joint compilation mode
                 || classNode.isInterface()) {
             //interfaces have no constructors, but this code expects one,
@@ -303,6 +310,16 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         addDetectedSealedClasses(node);
 
         checkFinalVariables(node);
+    }
+
+    private static final List<String> invalidNames = Arrays.asList("clone", "finalize", "getClass", "hashCode", "notify", "notifyAll", "toString", "wait");
+
+    private void detectInvalidRecordComponentNames(ClassNode node) {
+        for (FieldNode fn : node.getFields()) {
+            if (invalidNames.contains(fn.getName())) {
+                throw new RuntimeParserException("Illegal record component name '" + fn.getName() + "'", fn);
+            }
+        }
     }
 
     private void detectNonSealedClasses(ClassNode node) {
@@ -1045,6 +1062,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (node.isStatic()) {
             getterModifiers &= ~ACC_FINAL;
         }
+
         if (getterBlock != null) {
             visitGetter(node, field, getterBlock, getterModifiers, getterName);
 
@@ -1056,6 +1074,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 }
             }
         }
+
         if (setterBlock != null) {
             Parameter[] setterParameterTypes = {new Parameter(node.getType(), "value")};
             MethodNode setter = new MethodNode(setterName, accessorModifiers, ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);

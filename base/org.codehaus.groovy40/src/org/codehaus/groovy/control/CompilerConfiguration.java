@@ -42,6 +42,7 @@ import java.util.StringTokenizer;
 import static org.apache.groovy.util.SystemUtil.getBooleanSafe;
 import static org.apache.groovy.util.SystemUtil.getSystemPropertySafe;
 import static org.codehaus.groovy.runtime.StringGroovyMethods.isAtLeast;
+import static org.codehaus.groovy.vmplugin.VMPlugin.getJavaVersion;
 
 /**
  * Compilation control flags and coordination stuff.
@@ -445,7 +446,7 @@ public class CompilerConfiguration {
         sourceEncoding = getSystemPropertySafe("groovy.source.encoding",
             getSystemPropertySafe("file.encoding", DEFAULT_SOURCE_ENCODING));
         setTargetDirectorySafe(getSystemPropertySafe("groovy.target.directory"));
-        setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", JDK8));
+        setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", getJavaVersion()));
         defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
 
         optimizationOptions = new HashMap<>(4);
@@ -591,10 +592,10 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Checks if the specified bytecode version string represents a JDK 1.8+ compatible
+     * Checks if the specified bytecode version string represents a JDK 9+ compatible
      * bytecode version.
      * @param bytecodeVersion The parameter can take one of the values in {@link #ALLOWED_JDKS}.
-     * @return true if the bytecode version is JDK 9.0+
+     * @return true if the bytecode version is JDK 9+
      */
     public static boolean isPostJDK9(final String bytecodeVersion) {
         return isAtLeast(bytecodeVersion, JDK9);

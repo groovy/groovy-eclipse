@@ -85,7 +85,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "2. ERROR in Main.groovy (at line 6)\n" +
             "\tints << 'def'\n" +
             "\t^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call <T> java.util.ArrayList#leftShift(T) with arguments [java.lang.String]\n" +
+            "Groovy:[Static type checking] - Cannot call <T> org.codehaus.groovy.runtime.DefaultGroovyMethods#leftShift(java.util.List<T>, T) with arguments [java.util.ArrayList<java.lang.Integer>, java.lang.String]\n" +
             "----------\n");
     }
 
@@ -4431,6 +4431,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10322() {
+        assumeTrue(isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "  def <T> T m(T t) {\n" + // this T hides T from C<T>
+            "    return t\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  int x = new C<String>().m(1)\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. WARNING in Main.groovy (at line 2)\n" +
+            "\tdef <T> T m(T t) {\n" +
+            "\t     ^^\n" +
+            "The type parameter T is hiding the type T\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10323() {
         //@formatter:off
         String[] sources = {
@@ -4635,7 +4663,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tInteger i = bar(foo(), 1)\n" +
             "\t            ^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot assign value of type java.io.Serializable<? extends java.io.Serializable<java.lang.String>> to variable of type java.lang.Integer\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type " +
+            (isAtLeastGroovy(40) ? "java.lang.String" : "java.io.Serializable<? extends java.io.Serializable<java.lang.String>>") +
+            " to variable of type java.lang.Integer\n" +
             "----------\n");
     }
 

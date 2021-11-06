@@ -233,7 +233,7 @@ public class BinaryExpressionTransformer {
             }
             call.setImplicitThis(false);
             if (Types.isAssignment(operationType)) { // +=, -=, /=, ...
-                // GRECLIPSE add -- GROOVY-5746, et al.
+                // GROOVY-5746: one execution of receiver and subscript
                 if (left instanceof BinaryExpression) {
                     BinaryExpression be = (BinaryExpression) left;
                     if (be.getOperation().getType() == Types.LEFT_SQUARE_BRACKET) {

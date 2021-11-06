@@ -21,7 +21,6 @@ package org.codehaus.groovy.ast;
 import groovy.lang.GroovyClassLoader;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.SyntaxException;
 
 import java.security.CodeSource;
@@ -33,73 +32,39 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents the entire contents of a compilation step which consists of one or more
- * {@link ModuleNode} instances. There's one instance of this that's shared by all modules and
- * classes compiled during a single invocation of the compiler.
+ * Represents the entire contents of a compilation step which consists of one or
+ * more {@link ModuleNode} instances. There's one instance of this that's shared
+ * by all modules and classes compiled during a single invocation of the compiler.
  * <p>
- * It's attached to MethodNodes and ClassNodes and is used to find fully qualified names of classes,
- * resolve imports, and that sort of thing.
+ * It's attached to MethodNodes and ClassNodes and is used to find fully qualified
+ * names of classes, resolve imports, and that sort of thing.
  */
 public class CompileUnit implements NodeMetaDataHandler {
 
+    private final CompilerConfiguration config;
+    private final GroovyClassLoader loader;
+    private final CodeSource codeSource;
+    private Map metaDataMap;
+
     private final List<ModuleNode> modules = new ArrayList<>();
     private final Map<String, ClassNode> classes = new LinkedHashMap<>();
+    private final Map<String, ClassNode> classesToCompile = new LinkedHashMap<>();
+    private final Map<String, SourceUnit> classNameToSource = new LinkedHashMap<>();
+    private final Map<String, InnerClassNode> generatedInnerClasses = new LinkedHashMap<>();
     // GRECLIPSE add
     private List<ClassNode> sortedClasses;
     public void setSortedClasses(List<ClassNode> sortedClasses) { this.sortedClasses = sortedClasses; }
     public List<ClassNode> getSortedClasses() { return sortedClasses == null ? null : Collections.unmodifiableList(sortedClasses); }
     // GRECLIPSE end
-    private final CompilerConfiguration config;
-    private final GroovyClassLoader classLoader;
-    private final CodeSource codeSource;
-    private final Map<String, ClassNode> classesToCompile = new LinkedHashMap<>();
-    private final Map<String, SourceUnit> classNameToSource = new LinkedHashMap<>();
-    private final Map<String, InnerClassNode> generatedInnerClasses = new LinkedHashMap<>();
-    private Map metaDataMap;
 
-    public CompileUnit(GroovyClassLoader classLoader, CompilerConfiguration config) {
+    public CompileUnit(final GroovyClassLoader classLoader, final CompilerConfiguration config) {
         this(classLoader, null, config);
     }
 
-    public CompileUnit(GroovyClassLoader classLoader, CodeSource codeSource, CompilerConfiguration config) {
-        this.classLoader = classLoader;
-        this.config = config;
+    public CompileUnit(final GroovyClassLoader classLoader, final CodeSource codeSource, final CompilerConfiguration config) {
+        this.loader = classLoader;
         this.codeSource = codeSource;
-    }
-
-    public List<ModuleNode> getModules() {
-        return modules;
-    }
-
-    public void addModule(ModuleNode node) {
-        // node==null means a compilation error prevented
-        // groovy from building an ast
-        if (node == null) return;
-        modules.add(node);
-        node.setUnit(this);
-        addClasses(node.getClasses());
-    }
-
-    /**
-     * @return the ClassNode for the given qualified name or returns null if
-     *         the name does not exist in the current compilation unit
-     *         (ignoring the .class files on the classpath)
-     */
-    public ClassNode getClass(String name) {
-        ClassNode cn = classes.get(name);
-        if (cn != null) return cn;
-        return classesToCompile.get(name);
-    }
-
-    /**
-     * @return a list of all the classes in each module in the compilation unit
-     */
-    public List<ClassNode> getClasses() {
-        List<ClassNode> answer = new ArrayList<ClassNode>();
-        for (ModuleNode module : modules) {
-            answer.addAll(module.getClasses());
-        }
-        return answer;
+        this.config = config;
     }
 
     public CompilerConfiguration getConfig() {
@@ -107,19 +72,95 @@ public class CompileUnit implements NodeMetaDataHandler {
     }
 
     public GroovyClassLoader getClassLoader() {
-        return classLoader;
+        return loader;
     }
 
     public CodeSource getCodeSource() {
         return codeSource;
     }
 
+    @Override
+    public Map getMetaDataMap() {
+        return metaDataMap;
+    }
+
+    @Override
+    public void setMetaDataMap(final Map metaDataMap) {
+        this.metaDataMap = metaDataMap;
+    }
+
+    public List<ModuleNode> getModules() {
+        return modules;
+    }
+
     /**
-     * Appends all of the fully qualified class names in this
-     * module into the given map
+     * @return a list of all the classes in each module in the compilation unit
      */
-    void addClasses(List<ClassNode> classList) {
-        for (ClassNode node : classList) {
+    public List<ClassNode> getClasses() {
+        List<ClassNode> answer = new ArrayList<>();
+        for (ModuleNode module : modules) {
+            answer.addAll(module.getClasses());
+        }
+        return answer;
+    }
+
+    /**
+     * @return the ClassNode for the given qualified name or returns null if
+     *         the name does not exist in the current compilation unit
+     *         (ignoring the .class files on the classpath)
+     */
+    public ClassNode getClass(final String name) {
+        ClassNode cn = classes.get(name);
+        if (cn == null)
+            cn = classesToCompile.get(name);
+        return cn;
+    }
+
+    public Map<String, ClassNode> getClassesToCompile() {
+        return classesToCompile;
+    }
+
+    public SourceUnit getScriptSourceLocation(final String className) {
+        return classNameToSource.get(className);
+    }
+
+    public Map<String, InnerClassNode> getGeneratedInnerClasses() {
+        return Collections.unmodifiableMap(generatedInnerClasses);
+    }
+
+    public InnerClassNode getGeneratedInnerClass(final String name) {
+        return generatedInnerClasses.get(name);
+    }
+
+    //--------------------------------------------------------------------------
+
+    @Deprecated
+    public boolean hasClassNodeToCompile() {
+        return !classesToCompile.isEmpty();
+    }
+
+    @Deprecated
+    public Iterator<String> iterateClassNodeToCompile() {
+        return classesToCompile.keySet().iterator();
+    }
+
+    //--------------------------------------------------------------------------
+
+    public void addModule(final ModuleNode node) {
+        // null means a compilation error prevented groovy from building an AST
+        if (node != null) {
+            modules.add(node);
+            node.setUnit(this);
+            addClasses(node.getClasses());
+        }
+    }
+
+    /**
+     * Appends all of the fully-qualified class names in this
+     * module into the given map.
+     */
+    public void addClasses(final List<ClassNode> list) {
+        for (ClassNode node : list) {
             addClass(node);
         }
     }
@@ -148,20 +189,15 @@ public class CompileUnit implements NodeMetaDataHandler {
             } else {
                 txt += "The sources " + nodeSource.getName() + " and " + storedSource.getName() + " each contain a class with the name " + node.getName() + ".\n";
             }
-            nodeSource.getErrorCollector().addErrorAndContinue(
-                    new SyntaxErrorMessage(new SyntaxException(txt, node.getLineNumber(), node.getColumnNumber(), node.getLastLineNumber(), node.getLastColumnNumber()), nodeSource)
-            );
+            nodeSource.addErrorAndContinue(new SyntaxException(txt, node));
         }
         classes.put(name, node);
         // GRECLIPSE add
         sortedClasses = null;
         // GRECLIPSE end
 
-        ClassNode cn = classesToCompile.get(name);
-        if (null != cn) {
-            cn.setRedirect(node);
-            classesToCompile.remove(name);
-        }
+        ClassNode cn = classesToCompile.remove(name);
+        if (cn != null) cn.setRedirect(node);
     }
 
     /**
@@ -169,47 +205,13 @@ public class CompileUnit implements NodeMetaDataHandler {
      * a marker that this type has to be compiled by the CompilationUnit
      * at the end of a parse step no node should be be left.
      */
-    public void addClassNodeToCompile(ClassNode node, SourceUnit location) {
+    public void addClassNodeToCompile(final ClassNode node, final SourceUnit location) {
         String nodeName = node.getName();
         classesToCompile.put(nodeName, node);
         classNameToSource.put(nodeName, location);
     }
 
-    public SourceUnit getScriptSourceLocation(String className) {
-        return classNameToSource.get(className);
-    }
-
-    public boolean hasClassNodeToCompile() {
-        return !classesToCompile.isEmpty();
-    }
-
-    public Iterator<String> iterateClassNodeToCompile() {
-        return classesToCompile.keySet().iterator();
-    }
-
-    public InnerClassNode getGeneratedInnerClass(String name) {
-        return generatedInnerClasses.get(name);
-    }
-
-    public void addGeneratedInnerClass(InnerClassNode icn) {
+    public void addGeneratedInnerClass(final InnerClassNode icn) {
         generatedInnerClasses.put(icn.getName(), icn);
-    }
-
-    public Map<String, InnerClassNode> getGeneratedInnerClasses() {
-        return Collections.unmodifiableMap(generatedInnerClasses);
-    }
-
-    public Map<String, ClassNode> getClassesToCompile() {
-        return classesToCompile;
-    }
-
-    @Override
-    public Map getMetaDataMap() {
-        return metaDataMap;
-    }
-
-    @Override
-    public void setMetaDataMap(Map metaDataMap) {
-        this.metaDataMap = metaDataMap;
     }
 }

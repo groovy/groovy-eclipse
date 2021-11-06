@@ -87,7 +87,16 @@ public class ImmutableClassNode extends ClassNode {
     public void addTypeAnnotation(AnnotationNode an) {}
 
     @Override
-    public void addTypeAnnotations(List<AnnotationNode> l) {}
+    public void removeConstructor(ConstructorNode cn) {}
+
+    @Override
+    public void removeMethod(MethodNode mn) {}
+
+    @Override
+    public void removeField(String oldName) {}
+
+    @Override
+    public void renameField(String n0, String n1) {}
 
     @Override
     public List<MethodNode> getDeclaredMethods(String name) {
@@ -128,6 +137,9 @@ public class ImmutableClassNode extends ClassNode {
     //public void setInterfaces(ClassNode[] cn) {}
 
     @Override
+    public void setMixins(MixinNode[] mn) {}
+
+    @Override
     public void setModifiers(int bf) {}
 
     @Override
@@ -141,8 +153,11 @@ public class ImmutableClassNode extends ClassNode {
     @Override
     public void setNameStart2(int i) {}
 
-    //@Override
+    @Override
     public void setPermittedSubclasses(List<ClassNode> l) {}
+
+    @Override
+    public void setRecordComponentNodes(List<RecordComponentNode> l) {}
 
     //public void setRedirect(ClassNode cn) {}
 

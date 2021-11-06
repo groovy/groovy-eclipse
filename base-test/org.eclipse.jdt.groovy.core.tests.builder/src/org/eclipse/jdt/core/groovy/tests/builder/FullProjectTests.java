@@ -20,12 +20,10 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
-import org.eclipse.jdt.core.tests.builder.Problem;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -200,12 +198,11 @@ public final class FullProjectTests extends BuilderTestSuite {
 
         env.fullBuild(two);
         expectingNoProblemsFor(bar);
-        expectingSpecificProblemsFor(baz, new Problem[] {
-            new Problem("foo/Baz", "Groovy:[Static type checking] - Cannot call <CS extends java.lang.CharSequence> java.util.ArrayList#getSequence() with arguments []", baz, 106, 127, 60, IMarker.SEVERITY_ERROR),
-            new Problem("foo/Baz", "Groovy:[Static type checking] - Cannot call java.util.ArrayList#getString() with arguments []", baz, 132, 151, 60, IMarker.SEVERITY_ERROR),
-            new Problem("foo/Baz", "Groovy:[Static type checking] - No such property: sequence for class: java.util.ArrayList", baz, 156, 172, 60, IMarker.SEVERITY_ERROR),
-            new Problem("foo/Baz", "Groovy:[Static type checking] - No such property: string for class: java.util.ArrayList", baz, 177, 191, 60, IMarker.SEVERITY_ERROR),
-        });
+        expectingProblemsFor(baz, java.util.Arrays.asList(
+            "Problem : Groovy:[Static type checking] - Cannot call <CS extends java.lang.CharSequence> p.X#getSequence(##) with arguments [java.util.ArrayList<java.lang.Number>] ##",
+            "Problem : Groovy:[Static type checking] - Cannot call p.X#getString(##) with arguments [java.util.ArrayList<java.lang.Number>] ##",
+            "Problem : Groovy:[Static type checking] - No such property: sequence for class: java.util.ArrayList ##",
+            "Problem : Groovy:[Static type checking] - No such property: string for class: java.util.ArrayList ##"));
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/903

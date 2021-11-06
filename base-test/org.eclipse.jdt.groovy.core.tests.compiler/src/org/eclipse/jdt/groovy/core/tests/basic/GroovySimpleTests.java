@@ -3614,7 +3614,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "");
+        if (isAtLeastGroovy(40)) {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Foo.groovy (at line 2)\n" +
+                "\tpublic transient void foo() {}\n" +
+                "\t                      ^^^^^\n" +
+                "Groovy:The method 'void foo()' has an incorrect modifier transient.\n" +
+                "----------\n");
+        } else {
+            runNegativeTest(sources, "");
+        }
     }
 
     @Test // The getter for 'description' implements the interface

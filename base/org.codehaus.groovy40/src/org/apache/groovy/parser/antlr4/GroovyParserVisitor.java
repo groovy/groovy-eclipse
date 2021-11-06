@@ -639,6 +639,13 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitMethodDeclaration(@NotNull GroovyParser.MethodDeclarationContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link GroovyParser#compactConstructorDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitCompactConstructorDeclaration(@NotNull GroovyParser.CompactConstructorDeclarationContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link GroovyParser#methodName}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

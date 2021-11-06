@@ -272,6 +272,10 @@ public class WideningCategories {
         }
         int n = agt.length; GenericsType[] lubGTs = new GenericsType[n];
         for (int i = 0; i < n; i += 1) {
+            if (agt[i].toString().equals(bgt[i].toString())) {
+                lubGTs[i] = agt[i];
+                continue;
+            }
             /* GRECLIPSE edit -- GROOVY-10229
             ClassNode t1 = agt[i].getType();
             ClassNode t2 = bgt[i].getType();
@@ -281,13 +285,13 @@ public class WideningCategories {
             // GRECLIPSE end
             ClassNode basicType;
             if (areEqualWithGenerics(t1, isPrimitiveType(a)?getWrapper(a):a) && areEqualWithGenerics(t2, isPrimitiveType(b)?getWrapper(b):b)) {
-                // we are facing a self referencing type !
+                // we are facing a self-referencing type !
                 basicType = fallback;
             } else {
                 basicType = lowestUpperBound(t1, t2);
             }
-            if (t1.equals(t2)/*GRECLIPSE add*/&& !agt[i].isWildcard()/**/) {
-                lubGTs[i] = new GenericsType(basicType);
+            if (t1.equals(t2)) {
+                lubGTs[i] = basicType.asGenericsType();
             } else {
                 lubGTs[i] = GenericsUtils.buildWildcardType(basicType);
             }

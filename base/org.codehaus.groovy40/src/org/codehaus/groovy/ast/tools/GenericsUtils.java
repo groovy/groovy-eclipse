@@ -832,7 +832,7 @@ public class GenericsUtils {
      * so we need actual types:  T: String, S: Long
      */
     public static Map<GenericsType, GenericsType> makeDeclaringAndActualGenericsTypeMap(final ClassNode declaringClass, final ClassNode actualReceiver) {
-        return doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, false).getV1();
+        return doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, false);
     }
 
     /**
@@ -847,104 +847,26 @@ public class GenericsUtils {
      * @since 3.0.0
      */
     public static Map<GenericsType, GenericsType> makeDeclaringAndActualGenericsTypeMapOfExactType(final ClassNode declaringClass, final ClassNode actualReceiver) {
-        /* GRECLIPSE edit -- GROOVY-10282
-        return makeDeclaringAndActualGenericsTypeMapOfExactType(declaringClass, actualReceiver, new HashSet<>());
-        */
-        return doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, true).getV1();
-        // GRECLIPSE end
+        return doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, true);
     }
 
-    /* GRECLIPSE edit
-    private static Map<GenericsType, GenericsType> makeDeclaringAndActualGenericsTypeMapOfExactType(final ClassNode declaringClass, final ClassNode actualReceiver, final Set<ClassNode> parameterizedTypes) {
-        Tuple2<Map<GenericsType, GenericsType>, ClassNode> tuple = doMakeDeclaringAndActualGenericsTypeMap(declaringClass, actualReceiver, true);
-        Map<GenericsType, GenericsType> result = tuple.getV1();
-        ClassNode parameterizedType = tuple.getV2();
-
-        if (parameterizedTypes.add(parameterizedType) && hasPlaceHolders(parameterizedType)) {
-            result.putAll(makeDeclaringAndActualGenericsTypeMapOfExactType(parameterizedType, actualReceiver, parameterizedTypes));
-            result = connectGenericsTypes(result);
-        }
-
-        return result;
-    }
-    */
-
-    private static Tuple2<Map<GenericsType, GenericsType>, ClassNode> doMakeDeclaringAndActualGenericsTypeMap(final ClassNode declaringClass, final ClassNode actualReceiver, final boolean tryToFindExactType) {
+    private static Map<GenericsType, GenericsType> doMakeDeclaringAndActualGenericsTypeMap(final ClassNode declaringClass, final ClassNode actualReceiver, final boolean tryToFindExactType) {
+        Map<GenericsType, GenericsType> map = Collections.emptyMap();
         ClassNode parameterizedType = findParameterizedTypeFromCache(declaringClass, actualReceiver, tryToFindExactType);
-        /* GRECLIPSE edit -- GROOVY-10166
-        if (parameterizedType == null) {
-            return tuple(Collections.emptyMap(), parameterizedType);
-        }
-        Map<GenericsType, GenericsType> result = new LinkedHashMap<>();
-        result.putAll(makePlaceholderAndParameterizedTypeMap(declaringClass));
-        result.putAll(makePlaceholderAndParameterizedTypeMap(parameterizedType));
-
-        result = connectGenericsTypes(result);
-
-        return tuple(result, parameterizedType);
-        */
-        if (parameterizedType != null && parameterizedType.isRedirectNode() && !parameterizedType.isGenericsPlaceHolder()) {
-            // declaringClass may be "List<T> -> List<E>" and parameterizedType may be "List<String> -> List<E>"
+        if (parameterizedType != null && parameterizedType.isRedirectNode() && !parameterizedType.isGenericsPlaceHolder()) { // GROOVY-10166
+            // declaringClass may be "List<T> -> List<E>" and parameterizedType may be "List<String> -> List<E>" or "List<> -> List<E>"
             GenericsType[] targetGenericsTypes = parameterizedType.redirect().getGenericsTypes();
             if (targetGenericsTypes != null) {
                 GenericsType[] sourceGenericsTypes = parameterizedType.getGenericsTypes();
                 if (sourceGenericsTypes == null) sourceGenericsTypes = EMPTY_GENERICS_ARRAY;
-                Map<GenericsType, GenericsType> map = new LinkedHashMap<>();
+                map = new LinkedHashMap<>();
                 for (int i = 0, m = sourceGenericsTypes.length, n = targetGenericsTypes.length; i < n; i += 1) {
                     map.put(targetGenericsTypes[i], i < m ? sourceGenericsTypes[i] : targetGenericsTypes[i]);
                 }
-                return tuple(map, parameterizedType);
             }
         }
-        return tuple(Collections.emptyMap(), parameterizedType);
-        // GRECLIPSE end
+        return map;
     }
-
-    /* GRECLIPSE edit
-    private static Map<GenericsType, GenericsType> makePlaceholderAndParameterizedTypeMap(final ClassNode declaringClass) {
-        if (null == declaringClass) {
-            return Collections.emptyMap();
-        }
-
-        Map<GenericsType, GenericsType> result = new LinkedHashMap<>();
-
-        ClassNode redirectDeclaringClass = declaringClass.redirect();
-        GenericsType[] declaringGenericsTypes = declaringClass.getGenericsTypes();
-        GenericsType[] redirectDeclaringGenericsTypes = redirectDeclaringClass.getGenericsTypes();
-
-        if (null != declaringGenericsTypes && null != redirectDeclaringGenericsTypes) {
-            for (int i = 0, n = declaringGenericsTypes.length; i < n; i++) {
-                result.put(redirectDeclaringGenericsTypes[i], declaringGenericsTypes[i]);
-            }
-        }
-
-        return result;
-    }
-
-    private static Map<GenericsType, GenericsType> connectGenericsTypes(final Map<GenericsType, GenericsType> genericsTypeMap) {
-        Map<GenericsType, GenericsType> result = new LinkedHashMap<>();
-
-        outer:
-        for (Map.Entry<GenericsType, GenericsType> entry : genericsTypeMap.entrySet()) {
-            GenericsType key = entry.getKey();
-            GenericsType value = entry.getValue();
-
-            if (value.isPlaceholder()) {
-                for (Map.Entry<GenericsType, GenericsType> genericsTypeMapEntry : genericsTypeMap.entrySet()) {
-                    GenericsType genericsTypeMapEntryValue = genericsTypeMapEntry.getValue();
-                    if (!genericsTypeMapEntryValue.isPlaceholder() && (genericsTypeMapEntry.getKey().getName().equals(value.getName()))) {
-                        result.put(key, genericsTypeMapEntryValue); // connected to actual type
-                        continue outer;
-                    }
-                }
-            }
-
-            result.put(key, value);
-        }
-
-        return result;
-    }
-    */
 
     /**
      * Checks if the type has any non-placeholder (aka resolved) generics.
@@ -1034,8 +956,7 @@ public class GenericsUtils {
         Map<GenericsType, GenericsType> generics = makeDeclaringAndActualGenericsTypeMapOfExactType(abstractMethod.getDeclaringClass(), samType);
         Function<ClassNode, ClassNode> resolver = t -> {
             if (t.isGenericsPlaceHolder()) {
-                ClassNode type = findActualTypeByGenericsPlaceholderName(t.getUnresolvedName(), generics);
-                return type;
+                return findActualTypeByGenericsPlaceholderName(t.getUnresolvedName(), generics);
             }
             return t;
         };

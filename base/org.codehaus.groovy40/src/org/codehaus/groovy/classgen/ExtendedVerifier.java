@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.RecordComponentNode;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
@@ -61,6 +62,7 @@ import static org.codehaus.groovy.ast.AnnotationNode.LOCAL_VARIABLE_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.METHOD_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.PACKAGE_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.PARAMETER_TARGET;
+import static org.codehaus.groovy.ast.AnnotationNode.RECORD_COMPONENT_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.TYPE_PARAMETER_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.TYPE_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.TYPE_USE_TARGET;
@@ -116,12 +118,29 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         for (ClassNode anInterface : interfaces) {
             visitTypeAnnotations(anInterface);
         }
+        if (node.isRecord()) {
+            visitRecordComponents(node);
+        }
         node.visitContents(this);
+    }
+
+    private void visitRecordComponents(ClassNode node) {
+        for (RecordComponentNode recordComponentNode : node.getRecordComponentNodes()) {
+            visitAnnotations(recordComponentNode, RECORD_COMPONENT_TARGET);
+            visitTypeAnnotations(recordComponentNode.getType());
+            extractTypeUseAnnotations(recordComponentNode.getAnnotations(), recordComponentNode.getType(), RECORD_COMPONENT_TARGET);
+        }
     }
 
     @Override
     public void visitField(FieldNode node) {
         visitAnnotations(node, FIELD_TARGET);
+
+        if (!node.isStatic() && this.currentClass.isRecord()) {
+            // record's instance fields are created by compiler and reuse type instance of record components.
+            // return here to avoid processing type instance repeatedly.
+            return;
+        }
         visitTypeAnnotations(node.getType());
         extractTypeUseAnnotations(node.getAnnotations(), node.getType(), FIELD_TARGET);
     }
@@ -256,10 +275,6 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             return;
         }
         this.currentClass.setAnnotated(true);
-        if (!isAnnotationCompatible()) {
-            addError("Annotations are not supported in the current runtime. " + JVM_ERROR_MESSAGE, node);
-            return;
-        }
         Map<String, List<AnnotationNode>> nonSourceAnnotations = new LinkedHashMap<>();
         for (AnnotationNode unvisited : annotations) {
             AnnotationNode visited;
@@ -271,6 +286,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             }
 
             String name = visited.getClassNode().getName();
+            boolean skip = currentClass.isRecord() && skippableRecordAnnotation(node, visited);
             if (!visited.hasSourceRetention()) {
                 List<AnnotationNode> seen = nonSourceAnnotations.get(name);
                 if (seen == null) {
@@ -281,19 +297,26 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                 */
                 }
                 seen.add(visited);
-                nonSourceAnnotations.put(name, seen);
+                if (!skip) {
+                    nonSourceAnnotations.put(name, seen);
+                }
             }
 
             // Check if the annotation target is correct, unless it's the target annotating an annotation definition
             // defining on which target elements the annotation applies
             boolean isTargetAnnotation = name.equals("java.lang.annotation.Target");
-            if (!isTargetAnnotation && !visited.isTargetAllowed(target) && !isTypeUseScenario(visited, target)) {
+            if (!isTargetAnnotation && !skip && !visited.isTargetAllowed(target) && !isTypeUseScenario(visited, target)) {
                 addError("Annotation @" + name + " is not allowed on element " + AnnotationNode.targetToName(target), visited);
             }
             visitDeprecation(node, visited);
             visitOverride(node, visited);
         }
         processDuplicateAnnotationContainers(node, nonSourceAnnotations);
+    }
+
+    private boolean skippableRecordAnnotation(AnnotatedNode node, AnnotationNode visited) {
+        return (node instanceof ClassNode && !visited.isTargetAllowed(TYPE_TARGET) && !visited.isTargetAllowed(TYPE_USE_TARGET) && visited.isTargetAllowed(CONSTRUCTOR_TARGET))
+                || (node instanceof FieldNode && !visited.isTargetAllowed(FIELD_TARGET) && !visited.isTargetAllowed(TYPE_USE_TARGET));
     }
 
     /* GRECLIPSE edit
@@ -455,6 +478,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
      *
      * @return true if running on a 1.5+ runtime
      */
+    @Deprecated
     protected boolean isAnnotationCompatible() {
         return CompilerConfiguration.isPostJDK5(this.source.getConfiguration().getTargetBytecode());
     }

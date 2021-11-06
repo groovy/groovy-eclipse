@@ -61,7 +61,7 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
-import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
+import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
@@ -247,13 +247,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public ResolveVisitor(final CompilationUnit compilationUnit) {
         this.compilationUnit = compilationUnit;
-        // GRECLIPSE edit -- fix for NPE
-        setClassNodeResolver(new ClassNodeResolver() {
-            public LookupResult findClassNode(String name, CompilationUnit compilationUnit) {
-                return compilationUnit == null ? null : super.findClassNode(name, compilationUnit);
-            }
-        });
-        // GRECLIPSE end
+        // TODO: CompilationUnit.ClassNodeResolver?
+        setClassNodeResolver(new ClassNodeResolver());
     }
 
     public void setClassNodeResolver(final ClassNodeResolver classNodeResolver) {
@@ -839,11 +834,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         if (currentClass.getModule().hasPackageName() && name.indexOf('.') == -1) return false;
 
-        LookupResult lr = classNodeResolver.resolveName(name, compilationUnit);
+        ClassNodeResolver.LookupResult lr = classNodeResolver.resolveName(name, compilationUnit);
         if (lr != null) {
             if (lr.isSourceUnit()) {
-                SourceUnit su = lr.getSourceUnit();
-                currentClass.getCompileUnit().addClassNodeToCompile(type, su);
+                currentClass.getCompileUnit().addClassNodeToCompile(type, lr.getSourceUnit());
             } else {
                 type.setRedirect(lr.getClassNode());
             }
@@ -1212,18 +1206,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     protected Expression transformConstructorCallExpression(final ConstructorCallExpression cce) {
-        /* GRECLIPSE edit -- GROOVY-4386, et al.
-        ClassNode type = cce.getType();
-        if (cce.isUsingAnonymousInnerClass()) { // GROOVY-9642
-            resolveOrFail(type.getUnresolvedSuperClass(false), type);
-        } else {
-        */
-        if (!cce.isUsingAnonymousInnerClass()) {
-            ClassNode type = cce.getType();
-        // GRECLIPSE end
-            resolveOrFail(type, cce);
-            if (type.isAbstract()) {
-                addError("You cannot create an instance from the abstract " + getDescription(type) + ".", cce);
+        if (!cce.isUsingAnonymousInnerClass()) { // GROOVY-9642
+            ClassNode cceType = cce.getType();
+            resolveOrFail(cceType, cce);
+            if (cceType.isAbstract()) {
+                addError("You cannot create an instance from the abstract " + getDescription(cceType) + ".", cce);
             }
         }
 
@@ -1372,21 +1359,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (Modifier.isStatic(node.getModifiers())) {
                 genericParameterNames = new HashMap<>();
             }
-            /* GRECLIPSE edit
-            InnerClassNode innerClassNode = (InnerClassNode) node;
-            if (innerClassNode.isAnonymous()) {
-                MethodNode enclosingMethod = innerClassNode.getEnclosingMethod();
-                if (null != enclosingMethod) {
-                    resolveGenericsHeader(enclosingMethod.getGenericsTypes());
-                }
-            }
-            */
         } else {
             genericParameterNames = new HashMap<>();
         }
-        /* GRECLIPSE edit
-        visitTypeAnnotations(node);
-        */
+
         resolveGenericsHeader(node.getGenericsTypes());
 
         ModuleNode module = node.getModule();
@@ -1462,6 +1438,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
             }
         }
+
         // VariableScopeVisitor visits anon. inner class body inline, so resolve now
         for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
             InnerClassNode cn = it.next();
@@ -1475,8 +1452,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         // initialize scopes/variables now that imports and super types are resolved
         new VariableScopeVisitor(source).visitClass(node);
+
         visitTypeAnnotations(node);
-        // GRECLIPSE end
         super.visitClass(node);
 
         // GRECLIPSE add
@@ -1504,9 +1481,15 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
     // GRECLIPSE end
 
+    private void addFatalError(final String text, final ASTNode node) {
+        source.getErrorCollector().addFatalError(
+                org.codehaus.groovy.control.messages.Message.create(new SyntaxException(text, node), source)
+        );
+    }
+
     private void checkCyclicInheritance(final ClassNode node, final ClassNode type) {
         if (type.redirect() == node || type.getOuterClasses().contains(node)) {
-            addError("Cycle detected: the type " + node.getName() + " cannot extend/implement itself or one of its own member types", type);
+            addFatalError("Cycle detected: the type " + node.getName() + " cannot extend/implement itself or one of its own member types", type);
             // GRECLIPSE add
             node.setHasInconsistentHierarchy(true);
             // GRECLIPSE end
@@ -1524,7 +1507,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (!done.add(next)) continue;
                 if (next.redirect() == node) {
                     ClassNode cn = type; while (cn.getOuterClass() != null) cn = cn.getOuterClass();
-                    addError("Cycle detected: a cycle exists in the type hierarchy between " + node.getName() + " and " + cn.getName(), type);
+                    addFatalError("Cycle detected: a cycle exists in the type hierarchy between " + node.getName() + " and " + cn.getName(), type);
                     // GRECLIPSE add
                     node.setHasInconsistentHierarchy(true);
                     // GRECLIPSE end
@@ -1667,6 +1650,5 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             genericsType.setResolved(genericsType.getType().isResolved());
         }
         return genericsType.isResolved();
-
     }
 }
