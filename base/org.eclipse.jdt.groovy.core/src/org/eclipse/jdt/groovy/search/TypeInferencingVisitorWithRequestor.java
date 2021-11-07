@@ -381,6 +381,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 }
 
+                Object header = node.getNodeMetaData("_RECORD_HEADER");
+                if (header != null) { // visit default argument expressions
+                    for (Parameter recordComponent : (Parameter[]) header) {
+                        if (recordComponent.hasInitialExpression())
+                            recordComponent.getInitialExpression().visit(this);
+                    }
+                }
+
                 // TODO: Should all methods w/o peer in JDT model have their bodies visited?  Below are two cases in particular.
 
                 if (!node.isEnum() && !node.isScript()) {

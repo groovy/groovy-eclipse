@@ -1484,6 +1484,77 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testRecordType1() {
+        assumeTrue(isAtLeastGroovy(40) && isParrotParser())
+
+        String contents = '''\
+            |record Person(String name, Date dob = new Date()) {
+            |  boolean isBirthday(Date day) {
+            |    // ...
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('record'), 6, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('name'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('dob'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Date()'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date()'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('isBirthday'), 10, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('day'), 3, PARAMETER))
+    }
+
+    @Test
+    void testRecordType2() {
+        assumeTrue(isAtLeastGroovy(40) && isParrotParser())
+
+        String contents = '''\
+            |record Person(String name, Date dob) {
+            |  public Person {
+            |    assert name?.size() > 1
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('record'), 6, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('name'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('dob'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 6, CTOR),
+            new HighlightedTypedPosition(contents.lastIndexOf('name'), 4, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('size'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('1'), 1, NUMBER))
+    }
+
+    @Test
+    void testRecordType3() {
+        assumeTrue(isAtLeastGroovy(40) && isParrotParser())
+
+        String contents = '''\
+            |public record Person<T>(String s, T t) implements Serializable {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('record'), 6, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('s,'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('t)'), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Serializable'), 12, INTERFACE))
+    }
+
+    @Test
     void testSealedClass() {
         assumeTrue(isAtLeastGroovy(40) && isParrotParser())
 

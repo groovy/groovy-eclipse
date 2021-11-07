@@ -31,6 +31,8 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -2153,6 +2155,16 @@ public abstract class StaticTypeCheckingSupport {
      * @return the result of the expression
      */
     public static Object evaluateExpression(final Expression expr, final CompilerConfiguration config) {
+        // GRECLIPSE add
+        Expression ce = expr instanceof CastExpression ? ((CastExpression) expr).getExpression() : expr;
+        if (ce instanceof ConstantExpression) {
+            if (expr.getType().equals(ce.getType()))
+                return ((ConstantExpression) ce).getValue();
+        } else if (ce instanceof ListExpression) {
+            if (expr.getType().isArray() && expr.getType().getComponentType().equals(STRING_TYPE))
+                return ((ListExpression) ce).getExpressions().stream().map(e -> evaluateExpression(e, config)).toArray(String[]::new);
+        }
+        // GRECLIPSE end
         String className = "Expression$" + UUID.randomUUID().toString().replace('-', '$');
         ClassNode node = new ClassNode(className, Opcodes.ACC_PUBLIC, OBJECT_TYPE);
         ReturnStatement code = new ReturnStatement(expr);
@@ -2160,6 +2172,9 @@ public abstract class StaticTypeCheckingSupport {
         CompilerConfiguration copyConf = new CompilerConfiguration(config);
         // disable preview features so class can be inspected by this JVM
         copyConf.setPreviewFeatures(false);
+        // GRECLIPSE add
+        copyConf.setTargetBytecode(CompilerConfiguration.DEFAULT.getTargetBytecode());
+        // GRECLIPSE end
         CompilationUnit cu = new CompilationUnit(copyConf);
         try {
             cu.addClassNode(node);

@@ -136,6 +136,9 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 checkOuterClass(result.type, outer -> {
                     acceptASTNode(outer, new TypeLookupResult(outer, outer, outer, TypeLookupResult.TypeConfidence.EXACT, result.scope), enclosingElement);
                 });
+            } else if (node.getNodeMetaData("_RECORD_HEADER") != null && unitLength() > node.getEnd()) {
+                int offset = CharOperation.indexOf("record".toCharArray(), contents, true, node.getStart(), ((ClassNode) node).getNameStart());
+                if (offset >= 0) typedPositions.add(new HighlightedTypedPosition(offset, "record".length(), HighlightKind.KEYWORD));
             }
             if (!(enclosingElement instanceof IImportDeclaration || ClassHelper.isPrimitiveType((ClassNode) node) || ((ClassNode) node).isScriptBody())) {
                 pos = handleClassReference((ClassNode) node, result.type);

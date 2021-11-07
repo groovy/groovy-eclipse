@@ -1123,27 +1123,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(unitDeclaration.compilationResult, classNode);
                 typeDeclaration.annotations = createAnnotations(classNode.getAnnotations());
+                typeDeclaration.modifiers = getModifiers(classNode);
 
-                boolean isInner;
-                if (classNode.getOuterClass() != null) {
-                    isInner = true;
-                } else {
-                    isInner = false;
-                    typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
-                    if (!CharOperation.equals(typeDeclaration.name, mainName)) {
-                        typeDeclaration.bits |= ASTNode.IsSecondaryType;
-                    }
-                }
-
-                typeDeclaration.modifiers = getModifiers(classNode, isInner);
                 fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
+
                 GenericsType[] generics = classNode.getGenericsTypes();
                 if (generics != null && generics.length > 0) {
                     typeDeclaration.typeParameters = createTypeParametersForGenerics(classNode.getGenericsTypes());
                 }
 
                 boolean isEnum = classNode.isEnum();
-                if (!isEnum && !isTrait(classNode)) configureSuperClass(typeDeclaration, classNode.getSuperClass());
+                if (!isEnum && !isTrait(classNode)) configureSuperClass(typeDeclaration,
+                    isRecord(classNode) ? ClassHelper.make("java.lang.Record") : classNode.getSuperClass());
                 configureSuperInterfaces(typeDeclaration, classNode);
                 typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
@@ -1162,7 +1153,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                 }
 
-                if (isInner) {
+                if (classNode.getOuterClass() != null) {
                     InnerClassNode innerClassNode = (InnerClassNode) classNode;
                     ClassNode outerClassNode = innerClassNode.getOuterClass();
                     // record that we need to set the parent of this inner type later
@@ -1181,6 +1172,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         typeDeclaration.name = innerClassNode.getNameWithoutPackage().substring(outerClassNode.getNameWithoutPackage().length() + 1).toCharArray();
                     }
                 } else {
+                    typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
+                    if (!CharOperation.equals(typeDeclaration.name, mainName)) {
+                        typeDeclaration.bits |= ASTNode.IsSecondaryType;
+                    }
                     typeDeclarations.add(typeDeclaration);
                 }
                 fromClassNodeToDecl.put(classNode, typeDeclaration);
@@ -1344,8 +1339,26 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ctorName = classNode.getNameWithoutPackage().toCharArray();
             }
 
+            Parameter[] components = classNode.getNodeMetaData("_RECORD_HEADER");
+            if (components != null) {
+                if (classNode.getDeclaredConstructor(components) == null) {
+                    ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                    constructorDecl.arguments = createArguments(components);
+                    constructorDecl.bits |= /*ASTNode.IsCanonicalConstructor*/0x200;
+                  //constructorDecl.bits |= ASTNode.IsImplicit;
+                  //constructorDecl.constructorCall = SuperReference.implicitSuperConstructorCall();
+                    constructorDecl.modifiers = getModifiers(classNode) & ExtraCompilerModifiers.AccVisibilityMASK;
+                    constructorDecl.selector = ctorName;
+
+                    constructorDecl.declarationSourceStart = constructorDecl.sourceStart = constructorDecl.bodyStart = classNode.getNameStart();
+                    constructorDecl.declarationSourceEnd = constructorDecl.sourceEnd = constructorDecl.bodyEnd = classNode.getNameEnd();
+
+                    if (methodDeclarations.add(constructorDecl)) {
+                        unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);
+                    }
+                }
             // add default constructor if no other constructors exist (and not anonymous/interface/trait)
-            if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
+            } else if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
                 constructorDecl.annotations = new Annotation[] {
                     new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(groovy.transform.Generated.class)), -1)
@@ -1364,8 +1377,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (isEnum) {
                     constructorDecl.modifiers = Flags.AccPrivate;
                 } else {
-                    int modifiers = getModifiers(classNode, classNode.getOuterClass() != null);
-                    constructorDecl.modifiers = modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
+                    constructorDecl.modifiers = getModifiers(classNode) & ExtraCompilerModifiers.AccVisibilityMASK;
                 }
                 constructorDecl.selector = ctorName;
 
@@ -2344,9 +2356,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
         }
 
-        private int getModifiers(ClassNode node, boolean isInner) {
+        private int getModifiers(ClassNode node) {
             int modifiers = node.getModifiers();
-            if (isTrait(node)) {
+            if (isRecord(node)) {
+                modifiers |= /*3.26+:Flags.AccRecord*/0x1000000;
+            } else if (isTrait(node)) {
                 modifiers |= Flags.AccInterface;
             }
             if (node.isInterface()) {
@@ -2355,7 +2369,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (node.isEnum()) {
                 modifiers &= ~(Flags.AccAbstract | Flags.AccFinal);
             }
-            if (!isInner) {
+            if (!(node instanceof InnerClassNode)) {
                 modifiers &= ~(Flags.AccProtected | Flags.AccPrivate | Flags.AccStatic);
             } else if (((InnerClassNode) node).isAnonymous()) {
                 modifiers &= ~(Flags.AccEnum | Flags.AccPublic);
@@ -2370,6 +2384,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             int modifiers = node.getModifiers();
             if (node.getDeclaringClass().getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
                 modifiers &= ~Flags.AccPrivate;
+            } else if (isRecord(node.getDeclaringClass())) {
+                modifiers |= Flags.AccFinal;
             }
             return modifiers;
         }
@@ -2442,6 +2458,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return CharOperation.equals(importReference.getSimpleName(), typeName);
             }
             return false;
+        }
+
+        private boolean isRecord(ClassNode classNode) {
+            return classNode.getNodeMetaData("_RECORD_HEADER") != null;
         }
 
         private boolean isTrait(ClassNode classNode) {
@@ -2607,6 +2627,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 // start of the modifiers after the javadoc
                 typeDeclaration.modifiersSourceStart = classNode.getStart();
+                // start of the modifiers if "record" exists or after name if "permits"
+                if (isRecord(classNode)) {
+                    //typeDeclaration.restrictedIdentifierStart = classNode.getStart();
+                    ReflectionUtils.setPrivateField(TypeDeclaration.class, "restrictedIdentifierStart", typeDeclaration, classNode.getStart());
+                }
             }
         }
 
