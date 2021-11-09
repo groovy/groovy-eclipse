@@ -2073,9 +2073,13 @@ public abstract class StaticTypeCheckingSupport {
             ClassNode ui = usage[i];
             ClassNode di = declaration[i];
             if (di.isGenericsPlaceHolder()) {
+                /* GRECLIPSE edit -- GROOVY-10351
                 GenericsType gt = new GenericsType(di);
                 gt.setPlaceholder(di.isGenericsPlaceHolder());
                 connections.put(new GenericsTypeName(di.getGenericsTypes()[0].getName()), gt);
+                */
+                connections.put(new GenericsTypeName(di.getUnresolvedName()), new GenericsType(ui));
+                // GRECLIPSE end
             } else if (di.isUsingGenerics()) {
                 extractGenericsConnections(connections, ui.getGenericsTypes(), di.getGenericsTypes());
             }

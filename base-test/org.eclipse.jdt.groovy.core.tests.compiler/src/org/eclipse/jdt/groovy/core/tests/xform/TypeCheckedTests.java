@@ -4735,4 +4735,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[bar, foo]");
     }
+
+    @Test
+    public void testTypeChecked10351() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "  C(T one, D<T,? extends T> two) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class D<U,V> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  D<Integer,? extends Integer> x = null\n" +
+            "  C<Integer> y = new C<>(1,x)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }

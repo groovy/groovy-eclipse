@@ -887,14 +887,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure5a() {
+    public void testClosure6() {
         assumeTrue(isParrotParser());
         String contents = "def fn = String[]::new";
         assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
     }
 
     @Test
-    public void testClosure6() {
+    public void testClosure7() {
         String contents =
             "void test(List<String> list) {\n" +
             "  def array = list.stream().toArray {\n" +
@@ -905,7 +905,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure6a() {
+    public void testClosure8() {
         assumeTrue(isParrotParser());
         String contents =
             "void test(List<String> list) {\n" +
@@ -916,7 +916,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure6b() {
+    public void testClosure9() {
         assumeTrue(isAtLeastGroovy(30));
         String contents =
             "void test(List<String> list) {\n" +
@@ -927,7 +927,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // incorrect LHS type should not alter RHS type
-    public void testClosure6c() {
+    public void testClosure10() {
         String contents =
             "void test(List<String> list) {\n" +
             "  Number[] array = list.stream().toArray(String[].&new)\n" +
@@ -937,7 +937,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-9803
-    public void testClosure7() {
+    public void testClosure11() {
         for (String toSet : new String[] {"D.&wrap", "Collections.&singleton", "{x -> [x].toSet()}", "{Collections.singleton(it)}"}) {
             String contents =
                 "class C<T> {\n" +
@@ -963,27 +963,27 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1194
-    public void testClosure8() {
+    public void testClosure12() {
         String contents = "Optional.of(1).map(Arrays.&asList).map{x -> x.first()}\n";
         assertType(contents, "asList", "java.util.List<java.lang.Integer>");
         assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1194
-    public void testClosure9() {
+    public void testClosure13() {
         String contents = "Optional.of(1).map(Collections.&singletonList).map{x -> x.first()}\n";
         assertType(contents, "singletonList", "java.util.List<java.lang.Integer>");
         assertType(contents, "x", "java.util.List<java.lang.Integer>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1194
-    public void testClosure10() {
+    public void testClosure14() {
         String contents = "void test(Closure<List<Integer>> cl) {}\n" + "test(Arrays.&asList)\n";
         assertType(contents, "asList", "java.util.List<java.lang.Integer>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1194
-    public void testClosure11() {
+    public void testClosure15() {
         String contents = "import groovy.transform.stc.*\n" +
             "def m(@ClosureParams(value=SimpleType,options='java.lang.Integer') Closure c) {}\n" +
             "def <T> String test(T t) {}\n" +
@@ -996,7 +996,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1198
-    public void testClosure12() {
+    public void testClosure16() {
         assumeTrue(isParrotParser());
         String contents = "Optional.of(21).map(num -> num * 2).get()\n";
         assertType(contents, "get", "java.lang.Integer");
@@ -1004,14 +1004,17 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1199
-    public void testClosure13() {
+    public void testClosure17() {
         String contents = "java.util.function.Function<Integer, List<Integer>> f = Arrays.&asList\n";
         assertType(contents, "asList", "java.util.List<java.lang.Integer>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1199
-    public void testClosure14() {
-        String contents = "def <T> String test(T t) {}\n" + "java.util.function.Function<Integer, String> f = this.&test\n";
+    public void testClosure18() {
+        String contents =
+            "def <T> String test(T t) {}\n" +
+            "java.util.function.Function<Integer, String> f = this.&test\n";
+
         int offset = contents.lastIndexOf("test");
 
         MethodNode m = assertDeclaration(contents, offset, offset + 4, "Search", "test", DeclarationKind.METHOD);
@@ -1020,16 +1023,44 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1282
-    public void testClosure15() {
+    public void testClosure19() {
         String contents =
             "def <T> void test(Iterator<T> it) {\n" +
-            "  it.forEachRemaining{e->}\n" +
+            "  it.forEachRemaining{t->}\n" +
             "}\n";
-        assertType(contents, "e", "T");
+        assertType(contents, "t", "T");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1000
+    public void testClosure20() {
+        String contents =
+            "void test(Collection<Integer> c) {\n" +
+            "  boolean b = c.removeIf{i->false}\n" +
+            "}\n";
+        assertType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1000
+    public void testClosure21() {
+        assumeTrue(isParrotParser());
+        String contents =
+            "void test(Collection<Integer> c) {\n" +
+            "  boolean b = c.removeIf(i->false)\n" +
+            "}\n";
+        assertType(contents, "i", "java.lang.Integer");
     }
 
     @Test
-    public void testClosure16() {
+    public void testClosure22() {
+        String contents =
+            "void test(Collection<Integer> c) {\n" +
+            "  boolean b = c.removeIf{Number n->}\n" +
+            "}\n";
+        assertType(contents, "n", "java.lang.Number");
+    }
+
+    @Test
+    public void testClosure23() {
         String contents =
             "void test(List list) {\n" +
             "  list.stream().map{e->}\n" +
