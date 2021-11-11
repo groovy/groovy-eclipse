@@ -3610,7 +3610,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else {
                     paramTypes = new ClassNode[n];
                     for (int i = 0; i < n; i += 1) {
-                        paramTypes[i] = !p[i].isDynamicTyped() ? p[i].getOriginType() : (i < samParamTypes.length ? samParamTypes[i] : null);
+                        paramTypes[i] = i < samParamTypes.length ? samParamTypes[i] : null;
                     }
                 }
                 expression.putNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS, paramTypes);
@@ -6368,11 +6368,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         Map<GenericsTypeName, GenericsType> connections = new HashMap<>();
                         extractGenericsConnections(connections, wrapTypeIfNecessary(argumentType), paramType);
                         connections.forEach((gtn, gt) -> resolvedPlaceholders.merge(gtn, gt, (gt1, gt2) -> {
-                            // GRECLIPSE add -- GROOVY-10347
-                            if (gt1.toString().equals(gt2.toString()))
-                            // GRECLIPSE end
-                            return gt1;
-                            // GRECLIPSE add -- GROOVY-10339: incorporate additional witness
+                            // GRECLIPSE edit -- GROOVY-10339: incorporate another witness
                             ClassNode cn1 = GenericsUtils.makeClassSafe0(CLASS_Type, gt1);
                             ClassNode cn2 = GenericsUtils.makeClassSafe0(CLASS_Type, gt2);
                             return lowestUpperBound(cn1,cn2).getGenericsTypes()[0];

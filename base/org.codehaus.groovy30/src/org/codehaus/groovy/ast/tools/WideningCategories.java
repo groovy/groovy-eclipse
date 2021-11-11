@@ -255,6 +255,9 @@ public class WideningCategories {
      */
     private static ClassNode parameterizeLowestUpperBound(final ClassNode lub, final ClassNode a, final ClassNode b, final ClassNode fallback) {
         if (!lub.isUsingGenerics()) return lub;
+        // GRECLIPSE add -- GROOVY-10229, GROOVY-10347
+        if (a.toString(false).equals(b.toString(false))) return lub;
+        // GRECLIPSE end
         // a common super type exists, all we have to do is to parameterize
         // it according to the types provided by the two class nodes
         ClassNode holderForA = findGenericsTypeHolderForClass(a, lub);
@@ -267,13 +270,8 @@ public class WideningCategories {
         }
         GenericsType[] lubgt = new GenericsType[agt.length];
         for (int i = 0; i < agt.length; i++) {
-            /* GRECLIPSE edit -- GROOVY-10229
             ClassNode t1 = agt[i].getType();
             ClassNode t2 = bgt[i].getType();
-            */
-            ClassNode t1 = upperBound(agt[i]);
-            ClassNode t2 = upperBound(bgt[i]);
-            // GRECLIPSE end
             ClassNode basicType;
             if (areEqualWithGenerics(t1, isPrimitiveType(a)?getWrapper(a):a) && areEqualWithGenerics(t2, isPrimitiveType(b)?getWrapper(b):b)) {
                 // we are facing a self referencing type !
@@ -281,7 +279,7 @@ public class WideningCategories {
             } else {
                  basicType = lowestUpperBound(t1, t2);
             }
-            if (t1.equals(t2)/*GRECLIPSE add*/&& !agt[i].isWildcard()/**/) {
+            if (t1.equals(t2)) {
                 lubgt[i] = new GenericsType(basicType);
             } else {
                 lubgt[i] = GenericsUtils.buildWildcardType(basicType);
@@ -291,16 +289,6 @@ public class WideningCategories {
         plain.setGenericsTypes(lubgt);
         return plain;
     }
-
-    // GRECLIPSE add
-    private static ClassNode upperBound(final GenericsType gt) {
-        if (gt.isWildcard()) {
-            ClassNode[] ub = gt.getUpperBounds();
-            return ub != null ? ub[0] : OBJECT_TYPE;
-        }
-        return gt.getType();
-    }
-    // GRECLIPSE end
 
     private static ClassNode findGenericsTypeHolderForClass(ClassNode source, ClassNode type) {
         if (isPrimitiveType(source)) source = getWrapper(source);

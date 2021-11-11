@@ -4067,6 +4067,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9132() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Function\n" +
+            "def <R> R transform(Function<? super String, ? extends R> f) {\n" +
+            "  f.apply('foo')\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print(transform(String::length) * 3)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "9");
+    }
+
+    @Test
     public void testCompileStatic9136() {
         //@formatter:off
         String[] sources = {
@@ -5756,6 +5778,26 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
+    @Test(expected = AssertionError.class) // see GROOVY-10047
+    public void testCompileStatic9853() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static java.util.stream.Collectors.toMap\n" +
+            "import java.util.function.Function\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), CharSequence::length)))\n" +
+            "}\n" + // <T,K,U> Collector<T,?,Map<K,U>> toMap(Function<? super T,? extends K>,Function<? super T,? extends U>)
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[a:1, bc:2, def:3]");
+    }
+
     @Test
     public void testCompileStatic9855() {
         //@formatter:off
@@ -6328,6 +6370,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic10047() {
         assumeTrue(isParrotParser());
 
+        for (String value : new String[] {"String::length", "String.&length", "s -> s.length()", "{s -> s.length()}"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "import static java.util.stream.Collectors.toMap\n" +
+                "import java.util.function.Function\n" +
+                "@groovy.transform.CompileStatic\n" +
+                "void test() {\n" +
+                "  print(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), " + value + ")))\n" +
+                "}\n" + // <T,K,U> Collector<T,?,Map<K,U>> toMap(Function<? super T,? extends K>,Function<? super T,? extends U>)
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "[a:1, bc:2, def:3]");
+        }
+    }
+
+    @Test
+    public void testCompileStatic10047x() {
+        assumeTrue(isParrotParser());
+
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -6335,13 +6399,19 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "import java.util.function.Function\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  print(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), String::length)))\n" +
+            "  print(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), List::size)))\n" +
             "}\n" + // <T,K,U> Collector<T,?,Map<K,U>> toMap(Function<? super T,? extends K>,Function<? super T,? extends U>)
             "test()\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "[a:1, bc:2, def:3]");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tprint(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), List::size)))\n" +
+            "\t                                                                           ^^^^^^^^^^\n" +
+            "Groovy:Failed to find the expected method[size(java.lang.String)] in the type[java.util.List]\n" +
+            "----------\n");
     }
 
     @Test

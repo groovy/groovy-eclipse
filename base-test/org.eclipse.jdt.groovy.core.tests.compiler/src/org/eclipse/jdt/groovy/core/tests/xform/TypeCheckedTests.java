@@ -602,6 +602,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked6731() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Function\n" +
+            "def <I, O> void transform(Function<? super I, ? extends O> function) {\n" +
+            "  print(function.apply('hello'))\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  transform(new Function<String, String>() {\n" +
+            "    @Override\n" +
+            "    String apply(String input) {\n" +
+            "      input + ' world'\n" +
+            "    }\n" +
+            "  })\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hello world");
+    }
+
+    @Test
     public void testTypeChecked6786() {
         //@formatter:off
         String[] sources = {
@@ -1491,6 +1519,33 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  CharSequence[] one = m()\n" +
             "  CharSequence[] two = set\n" +
             "  print(one + two)\n" +
+            "}\n" +
+            "test(['bar'].toSet())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo, bar]");
+    }
+
+    @Test
+    public void testTypeChecked8983d() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  List<String> list = []\n" +
+            "  void setX(String[] array) {\n" +
+            "    Collections.addAll(list, array)\n" +
+            "  }\n" +
+            "}\n" +
+            "List<String> m() { ['foo'] }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Set<String> set) {\n" +
+            "  def c = new C()\n" +
+            "  c.x = m()" + (isAtLeastGroovy(40) ? "\n" : " as String[]\n") +
+            "  c.x = set" + (isAtLeastGroovy(40) ? "\n" : " as String[]\n") +
+            "  print(c.list)\n" +
             "}\n" +
             "test(['bar'].toSet())\n",
         };
@@ -4663,9 +4718,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tInteger i = bar(foo(), 1)\n" +
             "\t            ^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot assign value of type " +
-            (isAtLeastGroovy(40) ? "java.lang.String" : "java.io.Serializable<? extends java.io.Serializable<java.lang.String>>") +
-            " to variable of type java.lang.Integer\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.io.Serializable<? extends java.io.Serializable<java.lang.String>> to variable of type java.lang.Integer\n" +
             "----------\n");
     }
 
@@ -4714,9 +4767,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
             "void test(Pogo[] pogos) {\n" +
-            "  List<String> strings = pogos.sort(true, new Sorter()).collect { Pogo pogo ->\n" + // static <T> T[] sort(T[], boolean, Comparator<? super T>)
-            "    pogo.x\n" +
-            "  }\n" +
+            "  List<String> strings = pogos.sort(true, new Sorter())*.x\n" + // sort(T[],boolean,Comparator<? super T>)
             "  print strings\n" +
             "}\n" +
             "test(new Pogo(x:'foo'),new Pogo(x:'bar'))\n",

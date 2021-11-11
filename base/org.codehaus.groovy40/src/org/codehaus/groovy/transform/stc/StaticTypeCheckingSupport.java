@@ -1781,16 +1781,16 @@ public abstract class StaticTypeCheckingSupport {
             if (di.isPlaceholder()) {
                 connections.put(new GenericsTypeName(di.getName()), ui);
             } else if (di.isWildcard()) {
+                ClassNode lowerBound = di.getLowerBound(), upperBounds[] = di.getUpperBounds();
                 if (ui.isWildcard()) {
-                    extractGenericsConnections(connections, ui.getLowerBound(), di.getLowerBound());
-                    extractGenericsConnections(connections, ui.getUpperBounds(), di.getUpperBounds());
+                    extractGenericsConnections(connections, ui.getLowerBound(), lowerBound);
+                    extractGenericsConnections(connections, ui.getUpperBounds(), upperBounds);
                 } else if (!isUnboundedWildcard(di)) {
-                    ClassNode boundType = di.getLowerBound() != null ? di.getLowerBound() : di.getUpperBounds()[0];
-                    if (boundType.isGenericsPlaceHolder()) { // GROOVY-9998
-                        String placeholderName = boundType.getUnresolvedName();
-                        ui = new GenericsType(ui.getType()); ui.setWildcard(true);
-                        connections.put(new GenericsTypeName(placeholderName), ui);
-                    } else { // di like "? super Collection<T>" and ui like "List<Type>"
+                    ClassNode boundType = lowerBound != null ? lowerBound : upperBounds[0];
+                    if (boundType.isGenericsPlaceHolder()) { // GROOVY-9998: preserve the wildcard semantics
+                        ui = new GenericsType(ui.getType()); ui.setPlaceHolder(false); ui.setWildcard(true);
+                        connections.put(new GenericsTypeName(boundType.getUnresolvedName()), ui);
+                    } else { // di like "? super Iterable<T>" and ui like "Collection<Type>"
                         extractGenericsConnections(connections, ui.getType(), boundType);
                     }
                 }

@@ -1924,12 +1924,13 @@ public abstract class StaticTypeCheckingSupport {
                     }
                 }
                 */
-                } else if (lowerBound == null && upperBounds != null && upperBounds.length == 1) { // GROOVY-10347
-                    if (upperBounds[0].isGenericsPlaceHolder()) {
+                } else if (!isUnboundedWildcard(di)) {
+                    ClassNode boundType = lowerBound != null ? lowerBound : upperBounds[0];
+                    if (boundType.isGenericsPlaceHolder()) {
                         ui = new GenericsType(ui.getType()); ui.setPlaceHolder(false); ui.setWildcard(true);
-                        connections.put(new GenericsTypeName(upperBounds[0].getUnresolvedName()), ui);
-                    } else { // di like "? extends Iterable<T>" and ui like "Collection<Type>"
-                        extractGenericsConnections(connections, ui.getType(), upperBounds[0]);
+                        connections.put(new GenericsTypeName(boundType.getUnresolvedName()), ui);
+                    } else { // di like "? super Iterable<T>" and ui like "Collection<Type>"
+                        extractGenericsConnections(connections, ui.getType(), boundType);
                     }
                 }
                 // GRECLIPSE end
