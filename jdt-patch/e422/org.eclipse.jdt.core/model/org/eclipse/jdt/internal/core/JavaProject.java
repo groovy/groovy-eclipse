@@ -1441,8 +1441,7 @@ public class JavaProject
 	 */
 	protected String encodeClasspath(IClasspathEntry[] classpath, IClasspathEntry[] referencedEntries, IPath outputLocation, boolean indent, Map unknownElements) throws JavaModelException {
 		try {
-			ByteArrayOutputStream s = new ByteArrayOutputStream();
-			OutputStreamWriter writer = new OutputStreamWriter(s, "UTF8"); //$NON-NLS-1$
+			StringWriter writer = new StringWriter();
 			XMLWriter xmlWriter = new XMLWriter(writer, this, true/*print XML version*/);
 
 			xmlWriter.startTag(ClasspathEntry.TAG_CLASSPATH, indent);
@@ -1468,7 +1467,7 @@ public class JavaProject
 			xmlWriter.endTag(ClasspathEntry.TAG_CLASSPATH, indent, true/*insert new line*/);
 			writer.flush();
 			writer.close();
-			return s.toString("UTF8");//$NON-NLS-1$
+			return writer.toString();
 		} catch (IOException e) {
 			throw new JavaModelException(e, IJavaModelStatusConstants.IO_EXCEPTION);
 		}
@@ -1477,15 +1476,14 @@ public class JavaProject
 	@Override
 	public String encodeClasspathEntry(IClasspathEntry classpathEntry) {
 		try {
-			ByteArrayOutputStream s = new ByteArrayOutputStream();
-			OutputStreamWriter writer = new OutputStreamWriter(s, "UTF8"); //$NON-NLS-1$
+			StringWriter writer = new StringWriter();
 			XMLWriter xmlWriter = new XMLWriter(writer, this, false/*don't print XML version*/);
 
 			((ClasspathEntry)classpathEntry).elementEncode(xmlWriter, this.project.getFullPath(), true/*indent*/, true/*insert new line*/, null/*not interested in unknown elements*/, (classpathEntry.getReferencingEntry() != null));
 
 			writer.flush();
 			writer.close();
-			return s.toString("UTF8");//$NON-NLS-1$
+			return writer.toString();
 		} catch (IOException e) {
 			return null; // never happens since all is done in memory
 		}
@@ -2884,18 +2882,9 @@ public class JavaProject
 		if (projectMetaLocation != null) {
 			File prefFile = projectMetaLocation.append(PREF_FILENAME).toFile();
 			if (prefFile.exists()) { // load preferences from file
-				InputStream in = null;
-				try {
-					in = new BufferedInputStream(new FileInputStream(prefFile));
+				try (InputStream in = new BufferedInputStream(new FileInputStream(prefFile))){
 					preferences = Platform.getPreferencesService().readPreferences(in);
 				} catch (CoreException | IOException e) { // problems loading preference store - quietly ignore
-				} finally {
-					if (in != null) {
-						try {
-							in.close();
-						} catch (IOException e) { // ignore problems with close
-						}
-					}
 				}
 				// one shot read, delete old preferences
 				prefFile.delete();

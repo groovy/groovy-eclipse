@@ -23,12 +23,10 @@ package org.eclipse.jdt.internal.core;
 import static org.eclipse.jdt.internal.compiler.util.Util.UTF_8;
 import static org.eclipse.jdt.internal.compiler.util.Util.getInputStreamAsCharArray;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -505,18 +503,12 @@ public class ClasspathEntry implements IClasspathEntry {
 	}
 
 	private static void decodeUnknownNode(Node node, StringBuffer buffer, IJavaProject project) {
-		ByteArrayOutputStream s = new ByteArrayOutputStream();
-		OutputStreamWriter writer;
-		try {
-			writer = new OutputStreamWriter(s, "UTF8"); //$NON-NLS-1$
-			XMLWriter xmlWriter = new XMLWriter(writer, project, false/*don't print XML version*/);
-			decodeUnknownNode(node, xmlWriter, true/*insert new line*/);
-			xmlWriter.flush();
-			xmlWriter.close();
-			buffer.append(s.toString("UTF8")); //$NON-NLS-1$
-		} catch (UnsupportedEncodingException e) {
-			// ignore (UTF8 is always supported)
-		}
+		StringWriter writer = new StringWriter();
+		XMLWriter xmlWriter = new XMLWriter(writer, project, false/*don't print XML version*/);
+		decodeUnknownNode(node, xmlWriter, true/*insert new line*/);
+		xmlWriter.flush();
+		xmlWriter.close();
+		buffer.append(writer.toString());
 	}
 
 	private static void decodeUnknownNode(Node node, XMLWriter xmlWriter, boolean insertNewLine) {

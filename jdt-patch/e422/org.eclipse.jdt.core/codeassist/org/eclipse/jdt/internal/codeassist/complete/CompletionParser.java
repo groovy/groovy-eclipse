@@ -1317,8 +1317,8 @@ private Statement buildMoreCompletionEnclosingContext(Statement statement) {
 	// collect all if statements with instanceof expressions that enclose the completion node
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=304006
 	while (index >= 0) {
-		if (this.elementInfoStack[index] == IF && this.elementObjectInfoStack[index] instanceof InstanceOfExpression) {
-			InstanceOfExpression condition = (InstanceOfExpression)this.elementObjectInfoStack[index];
+		if (this.elementInfoStack[index] == IF && isInstanceOfGuard(this.elementObjectInfoStack[index])) {
+			Expression condition = (Expression)this.elementObjectInfoStack[index];
 			ifStatement =
 				new IfStatement(
 						condition,
@@ -1331,6 +1331,15 @@ private Statement buildMoreCompletionEnclosingContext(Statement statement) {
 	}
 	this.enclosingNode = ifStatement;
 	return ifStatement;
+}
+private boolean isInstanceOfGuard(Object object) {
+	if (object instanceof InstanceOfExpression)
+		return true;
+	if (object instanceof AND_AND_Expression) {
+		AND_AND_Expression expression = (AND_AND_Expression) object;
+		return isInstanceOfGuard(expression.left) || isInstanceOfGuard(expression.right);
+	}
+	return false;
 }
 private void buildMoreGenericsCompletionContext(ASTNode node, boolean consumeTypeArguments) {
 	int kind = topKnownElementKind(COMPLETION_OR_ASSIST_PARSER);

@@ -6115,4 +6115,25 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				},
 				"Success");
 	}
+	public void testBug576861_001() {
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"import java.util.Comparator;\n"+
+				"\n"+
+				"public class X {\n"+
+				" public static void foo(Comparator<? super Long> comparator) {}\n"+
+				"\n"+
+				" public static void main(String[] args) {\n"+
+				"   int someSwitchCondition = 10;\n"+
+				"   X.foo(switch (someSwitchCondition) {\n"+
+				"   case 10 -> Comparator.comparingLong(Long::longValue);\n"+
+				"   default -> throw new IllegalArgumentException(\"Unsupported\");\n"+
+				" });\n"+
+				"   System.out.println(\"hello\");\n"+
+				" }\n"+
+				"}"
+				},
+				"hello");
+	}
 }

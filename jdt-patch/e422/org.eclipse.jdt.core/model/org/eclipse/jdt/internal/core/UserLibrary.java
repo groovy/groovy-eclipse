@@ -14,10 +14,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.xml.parsers.DocumentBuilder;
@@ -101,8 +100,7 @@ public class UserLibrary {
 	}
 
 	public static String serialize(IClasspathEntry[] entries, boolean isSystemLibrary) throws IOException {
-		ByteArrayOutputStream s = new ByteArrayOutputStream();
-		OutputStreamWriter writer = new OutputStreamWriter(s, "UTF8"); //$NON-NLS-1$
+		StringWriter writer = new StringWriter();
 		XMLWriter xmlWriter = new XMLWriter(writer, null/*use the workspace line delimiter*/, true/*print XML version*/);
 
 		HashMap library = new HashMap();
@@ -144,7 +142,7 @@ public class UserLibrary {
 		xmlWriter.endTag(TAG_USERLIBRARY, true/*insert tab*/, true/*insert new line*/);
 		writer.flush();
 		writer.close();
-		return s.toString("UTF8");//$NON-NLS-1$
+		return writer.toString();
 	}
 
 	public static UserLibrary createFromString(Reader reader) throws IOException {

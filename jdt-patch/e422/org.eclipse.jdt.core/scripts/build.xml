@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2007, 2015 IBM Corporation and others.
+    Copyright (c) 2007, 2021 IBM Corporation and others.
 
     This program and the accompanying materials
     are made available under the terms of the Eclipse Public License 2.0
@@ -25,9 +25,9 @@
 
 		<javac srcdir="${basedir}" destdir="${output}"
 					debuglevel="lines,source"
-					source="1.8"
-					target="1.8">
-			<compilerarg line="-Xlint:none"/>
+					debug="true"
+					release="11">
+			<compilerarg line="-Xlint:none --patch-module java.compiler=javax17api.jar"/>
 		</javac>
 
 		<delete file="${basedir}/META-INF/MANIFEST.MF" failonerror="false"/>

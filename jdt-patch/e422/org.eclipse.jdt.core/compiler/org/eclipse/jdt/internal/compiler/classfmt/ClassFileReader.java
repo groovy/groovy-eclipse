@@ -90,7 +90,7 @@ public class ClassFileReader extends ClassFileStruct implements IBinaryType {
 	private RecordComponentInfo[] recordComponents;
 
 private static String printTypeModifiers(int modifiers) {
-	java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+	java.io.StringWriter out = new java.io.StringWriter();
 	java.io.PrintWriter print = new java.io.PrintWriter(out);
 
 	if ((modifiers & ClassFileConstants.AccPublic) != 0) print.print("public "); //$NON-NLS-1$

@@ -366,13 +366,12 @@ public class NullAnnotationTests17 extends AbstractNullAnnotationTest {
 				  "	}\n" +
 				  "}\n"
 			};
-		// demonstrate that null case cannot leak into a type pattern:
 		runner.expectedCompilerLog =
 				"----------\n" +
 				"1. ERROR in X.java (at line 5)\n" +
 				"	case null, Integer i -> consumeInt(i);\n" +
-				"	           ^^^^^^^^^\n" +
-				"Illegal fall-through to a pattern\n" +
+				"	                                   ^\n" +
+				"Null type mismatch: required \'@NonNull Integer\' but the provided value is inferred as @Nullable\n" +
 				"----------\n";
 		runner.runNegativeTest();
 	}
@@ -490,6 +489,56 @@ public class NullAnnotationTests17 extends AbstractNullAnnotationTest {
 			};
 		runner.expectedCompilerLog = "";
 		runner.expectedOutputString = "null";
+		runner.runConformTest();
+	}
+
+	public void test_defaultDoesNotApplyToNull_field2() {
+		Runner runner = getDefaultRunner();
+		runner.customOptions.put(CompilerOptions.OPTION_SyntacticNullAnalysisForFields, CompilerOptions.ENABLED);
+		runner.testFiles = new String[] {
+				"X.java",
+				  "import org.eclipse.jdt.annotation.*;\n" +
+				  "public class X {\n" +
+				  "	@Nullable Object o;\n" +
+				  "	void foo(X x) {\n" +
+				  "		switch (x.o) {\n" +
+				  "			case Integer i -> consumeInt(i);\n" +
+				  "			default -> System.out.println(x.o.toString());\n" +
+				  "			case null -> System.out.print(\"null\");\n" +
+				  "		};\n" +
+				  "	}\n" +
+				  "	void consumeInt(@NonNull Integer i) {\n" +
+				  "	}\n" +
+				  "	public static void main(String... args) {\n" +
+				  "		new X().foo(new X());\n" +
+				  "	}\n" +
+				  "}\n"
+			};
+		runner.expectedCompilerLog = "";
+		runner.expectedOutputString = "null";
+		runner.runConformTest();
+	}
+
+	public void testBug576329() {
+		Runner runner = getDefaultRunner();
+		runner.customOptions.put(CompilerOptions.OPTION_SyntacticNullAnalysisForFields, CompilerOptions.ENABLED);
+		runner.testFiles = new String[] {
+				"Main.java",
+				"public class Main {\n" +
+				"    int length;\n" +
+				"    public String switchOnArray(Object argv[]) {\n" +
+				"        return switch(argv.length) {\n" +
+				"        case 0 -> \"0\";\n" +
+				"        default -> \"x\";\n" +
+				"        };\n" +
+				"    }\n" +
+				"	public static void main(String... args) {\n" +
+				"		System.out.print(new Main().switchOnArray(args));\n" +
+				"	}\n" +
+				"}\n"
+			};
+		runner.expectedCompilerLog = "";
+		runner.expectedOutputString = "0";
 		runner.runConformTest();
 	}
 }

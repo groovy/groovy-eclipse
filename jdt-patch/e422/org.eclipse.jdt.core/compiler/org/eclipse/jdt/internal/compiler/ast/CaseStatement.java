@@ -82,6 +82,11 @@ public FlowInfo analyseCode(
 					currentScope.problemReporter().IllegalFallThroughToPattern(e);
 			}
 			analyseConstantExpression(currentScope, flowContext, flowInfo, e);
+			if (nullPatternCount > 0 && e instanceof TypePattern) {
+				LocalVariableBinding binding = ((TypePattern) e).local.binding;
+				if (binding != null)
+					flowInfo.markNullStatus(binding, FlowInfo.POTENTIALLY_NULL);
+			}
 		}
 	}
 	return flowInfo;

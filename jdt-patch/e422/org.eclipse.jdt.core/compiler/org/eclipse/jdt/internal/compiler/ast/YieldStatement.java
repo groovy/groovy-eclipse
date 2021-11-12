@@ -245,7 +245,9 @@ public void resolve(BlockScope skope) {
 			this.scope.problemReporter().switchExpressionsYieldOutsideSwitchExpression(this);
 		}
 	}
-	this.expression.resolveType(this.scope);
+	TypeBinding type = this.expression.resolveType(this.scope);
+	if (this.switchExpression != null && type != null)
+		this.switchExpression.originalTypeMap.put(this.expression, type);
 }
 
 @Override

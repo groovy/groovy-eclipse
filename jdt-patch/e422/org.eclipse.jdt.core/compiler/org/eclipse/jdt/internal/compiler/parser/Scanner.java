@@ -16,6 +16,7 @@
 package org.eclipse.jdt.internal.compiler.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,7 +116,7 @@ public class Scanner implements TerminalTokens {
 	public boolean wasAcr = false;
 
 	public boolean fakeInModule = false;
-	int caseStartPosition = -1;
+	public int caseStartPosition = -1;
 	boolean inCondition = false;
 	/* package */ int yieldColons = -1;
 	boolean breakPreviewAllowed = false;
@@ -5367,13 +5368,10 @@ int disambiguatedToken(int token, Scanner scanner) {
 	final VanguardParser parser = getVanguardParser();
 	if (token == TokenNameARROW  &&  mayBeAtCaseLabelExpr() &&  scanner.caseStartPosition < scanner.startPosition) {
 		// this.caseStartPosition > this.startPositionpossible on recovery - bother only about correct ones.
-		int nSz = scanner.startPosition - scanner.caseStartPosition;
 		// add fake token of TokenNameCOLON, call vanguard on this modified source
 		// TODO: Inefficient method due to redoing of the same source, investigate alternate
 		// Can we do a dup of parsing/check the transition of the state?
-		String s = new String(scanner.source, scanner.caseStartPosition, nSz);
-		String modSource = s.concat(new String(new char[] {':'}));
-		char[] nSource = modSource.toCharArray();
+		char[] nSource = CharOperation.append(Arrays.copyOfRange(scanner.source, scanner.caseStartPosition, scanner.startPosition), ':');
 		VanguardParser vp = getNewVanguardParser(nSource);
 		if (vp.parse(Goal.SwitchLabelCaseLhsGoal) == VanguardParser.SUCCESS) {
 			scanner.nextToken = TokenNameARROW;

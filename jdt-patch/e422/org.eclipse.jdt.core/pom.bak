@@ -153,6 +153,13 @@
                     <include>scripts/binary/**</include>
                   </includes>
                 </fileSet>
+                <!-- Include API stubs required for building ECJ on Java 11 -->
+                <fileSet>
+                  <directory>${project.basedir}/../org.eclipse.jdt.compiler.tool/lib</directory>
+                  <includes>
+                    <include>*.jar</include>
+                  </includes>
+                </fileSet>
               </fileSets>
             </configuration>
           </execution>

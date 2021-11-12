@@ -38,8 +38,65 @@ private static final long TARGET_ANNOTATION_BITS =
 	TagBits.AnnotationForModule |
 	TagBits.AnnotationForRecordComponent;
 private static final char[] JAVA_LANG_ANNOTATION_ELEMENTTYPE = CharOperation.concatWith(TypeConstants.JAVA_LANG_ANNOTATION_ELEMENTTYPE, '.');
+
+/**
+ * Convert binary name internally used in class files to binary name as specified by jls-13.1.
+ * <p/>
+ * Examples:
+ * <ul>
+ * <li>"java/lang/String" -> "java.lang.String",</li>
+ * <li>"java/util/Map$Entry" -> "java.util.Map$Entry"</li>
+ * </ul>
+ *
+ * @param name
+ *            class files internal form of binary name
+ * @return binary name as specified by
+ *         <a href="https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6.7">jls-13.1</a>
+ * @see Class#getName()
+ * @see IBinaryType#getName()
+ */
 public static char[] convertClassFileFormat(char[] name) {
 	return CharOperation.replaceOnCopy(name, '/', '.');
+}
+
+/**
+ * Returns null or a qualified name suitable for search. Unlike "qualified name" as specified by
+ * <a href="https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6.7">jls-6.7</a> (which defines that a
+ * local class or anonymous class does not have a full qualified name) this will return a name for local classes.
+ *
+ * <p>
+ * Note that the returned name could contain a "$" for a class or package that has a "$" in its simple name.
+ * </p>
+ *
+ * @param type
+ *            the IBinaryType to get the name from.
+ * @return full qualified name suitable for search or null for anonymous classes.<br>
+ *         Examples:
+ *         <ul>
+ *         <li>returns null for anonymous class like <code>new Object(){}</code>,</li>
+ *         <li>returns "java.lang.String" for String,</li>
+ *         <li>returns "java.util.Map.Entry" for the inner type java.util.Map$Entry,</li>
+ *         <li>returns "mypackage.MyLocal" for local class inside a block statement like <code>{class MyLocal{}}</code>,</li>
+ *         <li>should return "$.$.$1" (XXX currently does return ".....1") for $1 from <br>
+ *         <code>package $;<br> class $ {class $1{}}</code></li>
+ *         </ul>
+ * @see Class#getPackageName()
+ * @see Class#getSimpleName()
+ * @see Class#getCanonicalName()
+ **/
+static char[] getSearchFullQualifiedSearchName(IBinaryType type) {
+	if (type.isAnonymous()) {
+		return null;
+	}
+	char[] binaryName = convertClassFileFormat(type.getName());
+	// XXX textual replacement of "$" is not sufficient for classes/packages which contain "$" in their simple name:
+	// nevertheless this at least solves finding normal named inner Types in .class files
+	// "$" is rarely used since jls-3.8 states:
+	// "the $ sign should be used only in mechanically generated source code or, rarely, to access pre-existing names on legacy systems"
+	char[] qualifiedName = CharOperation.replaceOnCopy(binaryName, '$', '.');
+	// Note on how a type name is calculated for the UI:
+	// @see org.eclipse.jdt.internal.core.manipulation.BindingLabelProviderCore#getTypeLabel(ITypeBinding, long, StringBuffer)
+	return qualifiedName;
 }
 
 private  boolean checkAnnotation(IBinaryAnnotation annotation, TypeReferencePattern pattern) {
@@ -488,7 +545,7 @@ boolean matchTypeDeclaration(TypeDeclarationPattern pattern, Object binaryInfo, 
 	if (!(binaryInfo instanceof IBinaryType)) return false;
 
 	IBinaryType type = (IBinaryType) binaryInfo;
-	char[] fullyQualifiedTypeName = convertClassFileFormat(type.getName());
+	char[] fullyQualifiedTypeName = getSearchFullQualifiedSearchName(type);
 	boolean qualifiedPattern = pattern instanceof QualifiedTypeDeclarationPattern;
 	if (pattern.enclosingTypeNames == null || qualifiedPattern) {
 		char[] simpleName = (pattern.getMatchMode() == SearchPattern.R_PREFIX_MATCH)
