@@ -1529,7 +1529,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // List<Foo> l = new List() is an example for incomplete generics type info
         // we assume arity related errors are already handled here.
         if (hasRHSIncompleteGenericTypeInfo(wrappedRHS)) return;
-
+        // GRECLIPSE add -- GROOVY-10277
+        if (rightExpression instanceof ClosureExpression) return;
+        // GRECLIPSE end
         GenericsType gt = GenericsUtils.buildWildcardType(leftExpressionType);
         if (UNKNOWN_PARAMETER_TYPE.equals(wrappedRHS) ||
                 gt.isCompatibleWith(wrappedRHS) ||
@@ -2753,9 +2755,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
-        /* GRECLIPSE edit -- GROOVY-8310, GROOVY-9907, GROOVY-9971, GROOVY-9995, GROOVY-10080, GROOVY-10082, GROOVY-10091
         ClassNode type = getType(expression);
-
+        /* GRECLIPSE edit -- GROOVY-8310, GROOVY-9907, GROOVY-9971, GROOVY-9995, GROOVY-10080, GROOVY-10082, GROOVY-10091, GROOVY-10277
         if (typeCheckingContext.getEnclosingClosure() != null) {
             return type;
         }
@@ -2764,17 +2765,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             type = expression.getNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE);
         }
         */
-        ClassNode type = getType(expression);
-        if (typeCheckingContext.getEnclosingClosure() != null) {
-            ClassNode inferredReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
+        TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
+        if (enclosingClosure != null) { if (enclosingClosure.getClosureExpression().getNodeMetaData(StaticTypesMarker.INFERRED_TYPE) != null) return null;
+            ClassNode inferredReturnType = getInferredReturnType(enclosingClosure.getClosureExpression());
             if (expression instanceof ConstructorCallExpression) {
                 inferDiamondType((ConstructorCallExpression) expression, inferredReturnType != null ? inferredReturnType : DYNAMIC_TYPE);
             }
-            if (STRING_TYPE.equals(inferredReturnType) && StaticTypeCheckingSupport.isGStringOrGStringStringLUB(type)) {
-                type = STRING_TYPE; // implicit "toString()" before return
-            } else if (inferredReturnType != null && !GenericsUtils.hasUnresolvedGenerics(inferredReturnType)
-                    && GenericsUtils.buildWildcardType(inferredReturnType).isCompatibleWith(wrapTypeIfNecessary(type))) {
-                type = inferredReturnType; // allow simple covariance
+            if (inferredReturnType != null
+                    && !inferredReturnType.equals(type)
+                    && !inferredReturnType.equals(VOID_TYPE)
+                    && !inferredReturnType.equals(OBJECT_TYPE)
+                    && !inferredReturnType.equals(boolean_TYPE)
+                    && !GenericsUtils.hasUnresolvedGenerics(inferredReturnType)) {
+                if (inferredReturnType.equals(STRING_TYPE) && StaticTypeCheckingSupport.isGStringOrGStringStringLUB(type)) {
+                    type = STRING_TYPE; // implicit "toString()" before return
+                } else if (GenericsUtils.buildWildcardType(wrapTypeIfNecessary(inferredReturnType)).isCompatibleWith(wrapTypeIfNecessary(type))) {
+                    type = inferredReturnType; // allow simple covariance
+                } else if (!type.equals(VOID_TYPE) && !extension.handleIncompatibleReturnType(statement, type)) {
+                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " for closure expecting " + prettyPrintType(inferredReturnType), expression);
+                }
             }
             return type;
         }
@@ -2787,7 +2796,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     && !type.equals(void_WRAPPER_TYPE)
                     && !checkCompatibleAssignmentTypes(returnType, type, null, false)) {
                 if (!extension.handleIncompatibleReturnType(statement, type)) {
-                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " on method returning type " + prettyPrintType(returnType), expression);
+                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " for method returning " + prettyPrintType(returnType), expression);
                 }
             } else {
                 /* GRECLIPSE edit -- GROOVY-10295
@@ -4411,12 +4420,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 for (int i = 0, n = Math.min(arguments.size(), parameters.length); i < n; i += 1) {
                     Expression argument = arguments.get(i); ClassNode aType = getType(argument), pType = parameters[i].getType();
                     if (CLOSURE_TYPE.equals(pType) && CLOSURE_TYPE.equals(aType)) {
-                        // GROOVY-8310
+                        /* GRECLIPSE edit -- GROOVY-8310, GROOVY-10277
                         if (!name.equals("collectMany") && pType.isUsingGenerics() && !GenericsUtils.buildWildcardType(pType).isCompatibleWith(aType)) {
                             addNoMatchingMethodError(receiver, name, getArgumentTypes(argumentList), call);
                             call.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                             break;
                         }
+                        */
                         // GROOVY-7996
                         if (argument instanceof VariableExpression && ((VariableExpression) argument).getAccessedVariable() instanceof Parameter) {
                             int incomingStrategy = getResolveStrategy((Parameter) ((VariableExpression) argument).getAccessedVariable()), outgoingStrategy = getResolveStrategy(parameters[i]);

@@ -5998,11 +5998,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Main.groovy (at line 3)\n" +
-            "\tjava.util.function.Supplier<String> p = {\n" +
-            "\t                                        ^\n" +
-            "Groovy:[Static type checking] - Incompatible generic argument types. " +
-            "Cannot assign java.util.function.Supplier<java.util.UUID> to: java.util.function.Supplier<java.lang.String>\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\treturn java.util.UUID.randomUUID()\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot return value of type java.util.UUID for closure expecting java.lang.String\n" +
             "----------\n");
     }
 

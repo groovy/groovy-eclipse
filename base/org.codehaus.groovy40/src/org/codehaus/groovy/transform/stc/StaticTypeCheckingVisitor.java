@@ -210,7 +210,6 @@ import static org.codehaus.groovy.ast.tools.ClosureUtils.getResolveStrategyName;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.hasImplicitParameter;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.block;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
@@ -786,7 +785,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 lType = getType(leftExpression);
             } else {
-                if (op != ASSIGN && op != ELVIS_EQUAL) {
+                if (op != EQUAL && op != ELVIS_EQUAL) {
                     lType = getType(leftExpression);
                 } else {
                     lType = getOriginalDeclarationType(leftExpression);
@@ -1285,19 +1284,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private void checkTypeGenerics(final ClassNode leftExpressionType, final ClassNode wrappedRHS, final Expression rightExpression) {
-        // last, check generic type information to ensure that inferred types are compatible
-        if (!leftExpressionType.isUsingGenerics()) return;
-        // example of incomplete type info: "List<Type> list = new LinkedList()"
-        // we assume arity related errors are already handled here
-        if (missesGenericsTypes(wrappedRHS)) return;
-
-        GenericsType gt = GenericsUtils.buildWildcardType(leftExpressionType);
-        if (UNKNOWN_PARAMETER_TYPE.equals(wrappedRHS) ||
-                gt.isCompatibleWith(wrappedRHS) ||
-                isNullConstant(rightExpression)) return;
-
-        addStaticTypeError("Incompatible generic argument types. Cannot assign "
-                + prettyPrintType(wrappedRHS) + " to: " + prettyPrintType(leftExpressionType), rightExpression);
+        if (leftExpressionType.isUsingGenerics()
+                && !isNullConstant(rightExpression)
+                && !(rightExpression instanceof ClosureExpression) // GROOVY-10277
+                && !UNKNOWN_PARAMETER_TYPE.equals(wrappedRHS) && !missesGenericsTypes(wrappedRHS)
+                && !GenericsUtils.buildWildcardType(leftExpressionType).isCompatibleWith(wrappedRHS))
+            addStaticTypeError("Incompatible generic argument types. Cannot assign " + prettyPrintType(wrappedRHS) + " to: " + prettyPrintType(leftExpressionType), rightExpression);
     }
 
     private boolean hasGStringStringError(final ClassNode leftExpressionType, final ClassNode wrappedRHS, final Expression rightExpression) {
@@ -2214,18 +2206,29 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
         ClassNode type = getType(expression);
-        if (typeCheckingContext.getEnclosingClosure() != null) {
-            ClassNode inferredReturnType = getInferredReturnType(typeCheckingContext.getEnclosingClosure().getClosureExpression());
+
+        TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
+        if (enclosingClosure != null) {
+            if (enclosingClosure.getClosureExpression().getNodeMetaData(INFERRED_TYPE) != null) return null; // re-visit
+
+            ClassNode inferredReturnType = getInferredReturnType(enclosingClosure.getClosureExpression());
             // GROOVY-9995: return ctor call with diamond operator
             if (expression instanceof ConstructorCallExpression) {
                 inferDiamondType((ConstructorCallExpression) expression, inferredReturnType != null ? inferredReturnType : /*GROOVY-10080:*/dynamicType());
             }
-            if (isStringType(inferredReturnType) && isGStringOrGStringStringLUB(type)) {
-                type = STRING_TYPE; // GROOVY-9971: convert GString to String at point of return
-            } else if (inferredReturnType != null
-                    && !GenericsUtils.hasUnresolvedGenerics(inferredReturnType)
-                    &&  GenericsUtils.buildWildcardType(inferredReturnType).isCompatibleWith(wrapTypeIfNecessary(type))) {
-                type = inferredReturnType; // GROOVY-8310, GROOVY-10082, GROOVY-10091, GROOVY-10128, GROOVY-10306: allow simple covariance
+            if (inferredReturnType != null
+                    && !inferredReturnType.equals(type)
+                    && !isObjectType(inferredReturnType)
+                    && !isPrimitiveVoid(inferredReturnType)
+                    && !isPrimitiveBoolean(inferredReturnType)
+                    && !GenericsUtils.hasUnresolvedGenerics(inferredReturnType)) {
+                if (isStringType(inferredReturnType) && isGStringOrGStringStringLUB(type)) {
+                    type = STRING_TYPE; // GROOVY-9971: convert GString to String at point of return
+                } else if (GenericsUtils.buildWildcardType(wrapTypeIfNecessary(inferredReturnType)).isCompatibleWith(wrapTypeIfNecessary(type))) {
+                    type = inferredReturnType; // GROOVY-8310, GROOVY-10082, GROOVY-10091, GROOVY-10128, GROOVY-10306: allow simple covariance
+                } else if (!isPrimitiveVoid(type) && !extension.handleIncompatibleReturnType(statement, type)) { // GROOVY-10277: incompatible return value
+                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " for " + (enclosingClosure.getClosureExpression() instanceof LambdaExpression ? "lambda" : "closure") + " expecting " + prettyPrintType(inferredReturnType), expression);
+                }
             }
             return type;
         }
@@ -2235,7 +2238,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode returnType = enclosingMethod.getReturnType();
             if (!isPrimitiveVoid(getUnwrapper(type)) && !checkCompatibleAssignmentTypes(returnType, type, null, false)) {
                 if (!extension.handleIncompatibleReturnType(statement, type)) {
-                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " on method returning type " + prettyPrintType(returnType), expression);
+                    addStaticTypeError("Cannot return value of type " + prettyPrintType(type) + " for method returning " + prettyPrintType(returnType), expression);
                 }
             } else if (implementsInterfaceOrIsSubclassOf(type, returnType)) {
                 BinaryExpression dummy = assignX(varX("{target}", returnType), expression, statement);
@@ -3305,7 +3308,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     public void visitMethodCallExpression(final MethodCallExpression call) {
         String name = call.getMethodAsString();
         if (name == null) {
-            addStaticTypeError("cannot resolve dynamic method name at compile time.", call.getMethod());
+            addStaticTypeError("Cannot resolve dynamic method name at compile time", call.getMethod());
             return;
         }
         if (extension.beforeMethodCall(call)) {
@@ -3389,7 +3392,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             typeCheckClosureCall(callArguments, args, parameters);
                         }
                         ClassNode type = getType(((ASTNode) variable));
-                        if (CLOSURE_TYPE.equals(type)) { // GROOVY-10098, et al.
+                        if (type.equals(CLOSURE_TYPE)) { // GROOVY-10098, et al.
                             GenericsType[] genericsTypes = type.getGenericsTypes();
                             if (genericsTypes != null && genericsTypes.length == 1
                                     && genericsTypes[0].getLowerBound() == null) {
@@ -3457,10 +3460,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                         mn = accessibleMethods;
                         if (accessibleMethods.isEmpty()) {
-                            // choose an arbitrary method to display an error message
-                            MethodNode node = inaccessibleMethods.get(0);
-                            ClassNode owner = node.getDeclaringClass();
-                            addStaticTypeError("Non static method " + owner.getName() + "#" + node.getName() + " cannot be called from static context", call);
+                            MethodNode node = inaccessibleMethods.get(0); // choose an arbitrary method to display an error message
+                            addStaticTypeError("Non-static method " + prettyPrintTypeName(node.getDeclaringClass()) + "#" + node.getName() + " cannot be called from static context", call);
                         }
                     }
 
@@ -3488,35 +3489,29 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     mn = disambiguateMethods(mn, chosenReceiver != null ? chosenReceiver.getType() : null, args, call);
 
                     if (mn.size() == 1) {
-                        MethodNode directMethodCallCandidate = mn.get(0);
-                        ClassNode declaringClass = directMethodCallCandidate.getDeclaringClass();
-                        if (call.getNodeMetaData(DYNAMIC_RESOLUTION) == null
-                                && objectExpression instanceof ClassExpression
-                                && !directMethodCallCandidate.isStatic()
-                                && !isClassType(declaringClass)) {
-                            addStaticTypeError("Non static method " + declaringClass.getName() + "#" + directMethodCallCandidate.getName() + " cannot be called from static context", call);
+                        MethodNode targetMethodCandidate = mn.get(0);
+                        ClassNode declaringClass = targetMethodCandidate.getDeclaringClass();
+                        if (!targetMethodCandidate.isStatic() && !isClassType(declaringClass)
+                                && objectExpression instanceof ClassExpression && call.getNodeMetaData(DYNAMIC_RESOLUTION) == null) {
+                            addStaticTypeError("Non-static method " + prettyPrintTypeName(declaringClass) + "#" + targetMethodCandidate.getName() + " cannot be called from static context", call);
                         }
                         if (chosenReceiver == null) {
                             chosenReceiver = Receiver.make(declaringClass);
                         }
+                        // note second pass here to differentiate from extension that sets type
+                        boolean mergeType = (call.getNodeMetaData(INFERRED_TYPE) != null);
+                        storeTargetMethod(call, targetMethodCandidate);
 
-                        ClassNode returnType = getType(directMethodCallCandidate);
+                        visitMethodCallArguments(chosenReceiver.getType(), argumentList, true, targetMethodCandidate); callArgsVisited = true;
+
+                        ClassNode returnType = getType(targetMethodCandidate);
                         if (isUsingGenericsOrIsArrayUsingGenerics(returnType)) {
-                            visitMethodCallArguments(chosenReceiver.getType(), argumentList, true, directMethodCallCandidate);
-                            for (Expression argument : argumentList.getExpressions()) {
-                                if (argument instanceof ClosureExpression) {
-                                    // GROOVY-10052: return type known now
-                                    args = getArgumentTypes(argumentList);
-                                    break;
-                                }
-                            }
-                            callArgsVisited = true;
-
-                            ClassNode irtg = inferReturnTypeGenerics(chosenReceiver.getType(), directMethodCallCandidate, callArguments, call.getGenericsTypes());
-                            returnType = (irtg != null && implementsInterfaceOrIsSubclassOf(irtg, returnType) ? irtg : returnType);
+                            ClassNode irtg = inferReturnTypeGenerics(chosenReceiver.getType(), targetMethodCandidate, callArguments, call.getGenericsTypes());
+                            if (irtg != null && implementsInterfaceOrIsSubclassOf(irtg, returnType))
+                                returnType = irtg;
                         }
                         // GROOVY-6091: use of "delegate" or "getDelegate()" does not make use of @DelegatesTo metadata
-                        if (directMethodCallCandidate == GET_DELEGATE && typeCheckingContext.getEnclosingClosure() != null) {
+                        if (targetMethodCandidate == GET_DELEGATE && typeCheckingContext.getEnclosingClosure() != null) {
                             DelegationMetadata md = getDelegationMetadata(typeCheckingContext.getEnclosingClosure().getClosureExpression());
                             if (md != null) {
                                 returnType = md.getType();
@@ -3525,19 +3520,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             }
                         }
                         // GROOVY-7106, GROOVY-7274, GROOVY-8909, GROOVY-8961, GROOVY-9734, GROOVY-9844, GROOVY-9915, et al.
-                        Parameter[] parameters = directMethodCallCandidate.getParameters();
-                        if (chosenReceiver.getType().getGenericsTypes() != null && !directMethodCallCandidate.isStatic() && !(directMethodCallCandidate instanceof ExtensionMethodNode)) {
-                            Map<GenericsTypeName, GenericsType> context = extractPlaceHoldersVisibleToDeclaration(chosenReceiver.getType(), directMethodCallCandidate, argumentList);
+                        Parameter[] parameters = targetMethodCandidate.getParameters();
+                        if (chosenReceiver.getType().getGenericsTypes() != null && !targetMethodCandidate.isStatic() && !(targetMethodCandidate instanceof ExtensionMethodNode)) {
+                            Map<GenericsTypeName, GenericsType> context = extractPlaceHoldersVisibleToDeclaration(chosenReceiver.getType(), targetMethodCandidate, argumentList);
                             parameters = Arrays.stream(parameters).map(p -> new Parameter(applyGenericsContext(context, p.getType()), p.getName())).toArray(Parameter[]::new);
                         }
                         resolvePlaceholdersFromImplicitTypeHints(args, argumentList, parameters);
 
-                        if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, directMethodCallCandidate, call)) {
-                            returnType = adjustWithTraits(directMethodCallCandidate, chosenReceiver.getType(), args, returnType);
-
-                            storeType(call, returnType);
-                            storeTargetMethod(call, directMethodCallCandidate);
-
+                        if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, targetMethodCandidate, call)) {
                             String data = chosenReceiver.getData();
                             if (data != null) {
                                 // the method which has been chosen is supposed to be a call on delegate or owner
@@ -3545,73 +3535,63 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 call.putNodeMetaData(IMPLICIT_RECEIVER, data);
                             }
                             receiver = chosenReceiver.getType();
-
+                            if (mergeType || call.getNodeMetaData(INFERRED_TYPE) == null)
+                                storeType(call, adjustWithTraits(targetMethodCandidate, receiver, args, returnType));
                             /* GRECLIPE edit
-                            // if the object expression is a closure shared variable, we will have to perform a second pass
-                            if (objectExpression instanceof VariableExpression) {
-                                VariableExpression var = (VariableExpression) objectExpression;
-                                if (var.isClosureSharedVariable()) {
-                                    SecondPassExpression<ClassNode[]> wrapper = new SecondPassExpression<>(call, args);
-                                    typeCheckingContext.secondPassExpressions.add(wrapper);
-                                }
+                            if (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isClosureSharedVariable()) {
+                                // if the object expression is a closure shared variable, we will have to perform a second pass
+                                typeCheckingContext.secondPassExpressions.add(new SecondPassExpression<>(call, args));
                             }
                             */
+                        } else {
+                            call.removeNodeMetaData(DIRECT_METHOD_CALL_TARGET);
                         }
                     } else {
                         addAmbiguousErrorMessage(mn, name, args, call);
                     }
                 }
             }
-            // adjust typing for explicit math methods which have special handling - operator variants handled elsewhere
-            if (NUMBER_OPS.containsKey(name) && isNumberType(receiver) && argumentList.getExpressions().size() == 1
-                    && isNumberType(getType(argumentList.getExpression(0)))) {
-                ClassNode right = getType(argumentList.getExpression(0));
-                ClassNode resultType = getMathResultType(NUMBER_OPS.get(name), receiver, right, name);
+            // adjust typing for explicit math methods which have special handling; operator variants handled elsewhere
+            if (args.length == 1 && isNumberType(args[0]) && isNumberType(receiver) && NUMBER_OPS.containsKey(name)) {
+                ClassNode resultType = getMathResultType(NUMBER_OPS.get(name), receiver, args[0], name);
                 if (resultType != null) {
                     storeType(call, resultType);
                 }
             }
 
-            // now that a method has been chosen, we are allowed to visit the closures
             MethodNode target = call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
             if (!callArgsVisited) {
                 visitMethodCallArguments(receiver, argumentList, true, target);
             }
             if (target != null) {
-                List<Expression> arguments = argumentList.getExpressions();
-                Parameter[] parameters = target.getParameters();
-                for (int i = 0, n = Math.min(arguments.size(), parameters.length); i < n; i += 1) {
-                    Expression argument = arguments.get(i);
-                    ClassNode aType = getType(argument), pType = parameters[i].getType();
-                    if (CLOSURE_TYPE.equals(aType) && CLOSURE_TYPE.equals(pType)) {
-                        // GROOVY-8310: check closure generics
-                        if (!isAssignableTo(aType, pType) /*&& !extension.handleIncompatibleReturnType(getReturnStatement(argument), aType)*/) {
-                            addNoMatchingMethodError(receiver, name, getArgumentTypes(argumentList), call);
-                            call.removeNodeMetaData(DIRECT_METHOD_CALL_TARGET);
-                            break;
-                        }
-                        // GROOVY-7996: check delegation metadata of closure parameter used as method call argument
-                        if (argument instanceof VariableExpression && ((VariableExpression) argument).getAccessedVariable() instanceof Parameter) {
-                            // TODO: Check additional delegation metadata like type (see checkClosureWithDelegatesTo).
-                            int incomingStrategy = getResolveStrategy((Parameter) ((VariableExpression) argument).getAccessedVariable());
-                            int outgoingStrategy = getResolveStrategy(parameters[i]);
-                            if (incomingStrategy != outgoingStrategy) {
-                                /* GRECLIPSE edit
-                                addStaticTypeError("Closure parameter with resolve strategy " + getResolveStrategyName(incomingStrategy) + " passed to method with resolve strategy " + getResolveStrategyName(outgoingStrategy), argument);
-                                */
-                                if (argument.getLineNumber() > 0 && typeCheckingContext.reportedErrors.add(((long) argument.getLineNumber()) << 16 + argument.getColumnNumber())) {
-                                    String warning = "Closure parameter with resolve strategy " + getResolveStrategyName(incomingStrategy) + " passed to method with resolve strategy " + getResolveStrategyName(outgoingStrategy);
-                                    typeCheckingContext.getErrorCollector().addWarning(0, StaticTypesTransformation.STATIC_ERROR_PREFIX + warning, new org.codehaus.groovy.syntax.Token(0, argument.getText(), argument.getLineNumber(), argument.getColumnNumber()), getSourceUnit());
-                                }
-                                // GRECLIPSE end
-                            }
-                        }
-                    }
-                }
+                checkClosureMetadata(argumentList.getExpressions(), target.getParameters());
             }
         } finally {
             typeCheckingContext.popEnclosingMethodCall();
             extension.afterMethodCall(call);
+        }
+    }
+
+    private void checkClosureMetadata(final List<Expression> arguments, final Parameter[] parameters) {
+        // TODO: Check additional delegation metadata like type (see checkClosureWithDelegatesTo).
+        for (int i = 0, n = Math.min(arguments.size(), parameters.length); i < n; i += 1) {
+            Expression argument = arguments.get(i);
+            ClassNode aType = getType(argument), pType = parameters[i].getType();
+            // GROOVY-7996: check delegation metadata of closure parameter used as method call argument
+            if (CLOSURE_TYPE.equals(aType) && CLOSURE_TYPE.equals(pType) && argument instanceof VariableExpression && ((VariableExpression) argument).getAccessedVariable() instanceof Parameter) {
+                int incomingStrategy = getResolveStrategy((Parameter) ((VariableExpression) argument).getAccessedVariable());
+                int outgoingStrategy = getResolveStrategy(parameters[i]);
+                if (incomingStrategy != outgoingStrategy) {
+                    /* GRECLIPSE edit
+                    addStaticTypeError("Closure parameter with resolve strategy " + getResolveStrategyName(incomingStrategy) + " passed to method with resolve strategy " + getResolveStrategyName(outgoingStrategy), argument);
+                    */
+                    if (argument.getLineNumber() > 0 && typeCheckingContext.reportedErrors.add(((long) argument.getLineNumber()) << 16 + argument.getColumnNumber())) {
+                        String warning = "Closure parameter with resolve strategy " + getResolveStrategyName(incomingStrategy) + " passed to method with resolve strategy " + getResolveStrategyName(outgoingStrategy);
+                        typeCheckingContext.getErrorCollector().addWarning(0, StaticTypesTransformation.STATIC_ERROR_PREFIX + warning, new org.codehaus.groovy.syntax.Token(0, argument.getText(), argument.getLineNumber(), argument.getColumnNumber()), getSourceUnit());
+                    }
+                    // GRECLIPSE end
+                }
+            }
         }
     }
 
@@ -3673,24 +3653,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    private LambdaExpression constructLambdaExpressionForMethodReference(final ClassNode paramType) {
-        Parameter[] newParameters = createParametersForConstructedLambdaExpression(paramType);
-        return new LambdaExpression(newParameters, block());
-    }
-
-    private Parameter[] createParametersForConstructedLambdaExpression(final ClassNode functionalInterfaceType) {
-        MethodNode abstractMethodNode = findSAM(functionalInterfaceType);
-
-        Parameter[] abstractMethodNodeParameters = abstractMethodNode.getParameters();
-        if (abstractMethodNodeParameters == null) {
-            abstractMethodNodeParameters = Parameter.EMPTY_ARRAY;
+    private LambdaExpression constructLambdaExpressionForMethodReference(final ClassNode functionalInterfaceType) {
+        Parameter[] parameters = findSAM(functionalInterfaceType).getParameters().clone();
+        for (int i = 0, n = parameters.length; i < n; i += 1) {
+            parameters[i] = new Parameter(dynamicType(), "p" + System.nanoTime());
         }
 
-        Parameter[] newParameters = new Parameter[abstractMethodNodeParameters.length];
-        for (int i = 0; i < newParameters.length; i += 1) {
-            newParameters[i] = new Parameter(dynamicType(), "p" + System.nanoTime());
-        }
-        return newParameters;
+        return new LambdaExpression(parameters, EmptyStatement.INSTANCE);
     }
 
     /**
@@ -4133,14 +4102,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         source.visit(this);
 
-        if (!expression.isCoerce() && !checkCast(type, source) && !isDelegateOrOwnerInClosure(source)) {
+        if (!expression.isCoerce() && !checkCast(type, source)) {
             addStaticTypeError("Inconvertible types: cannot cast " + prettyPrintType(getType(source)) + " to " + prettyPrintType(type), expression);
         }
-    }
-
-    private boolean isDelegateOrOwnerInClosure(final Expression exp) {
-        return typeCheckingContext.getEnclosingClosure() != null && exp instanceof VariableExpression
-                && (("delegate".equals(((VariableExpression) exp).getName())) || ("owner".equals(((VariableExpression) exp).getName())));
     }
 
     protected boolean checkCast(final ClassNode targetType, final Expression source) {
@@ -5357,7 +5321,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                         if (isClosureWithType(argumentType)) {
                             MethodNode sam = findSAM(paramType);
-                            if (sam != null) { // implicit closure coerce
+                            if (sam != null) { // adapt closure to functional interface or other single-abstract-method class
                                 argumentType = convertClosureTypeToSAMType(expressions.get(i), argumentType, sam, paramType);
                             }
                         }
@@ -5886,8 +5850,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * @return the wrapped type
      */
     protected static ClassNode wrapTypeIfNecessary(final ClassNode type) {
-        if (isPrimitiveType(type)) return getWrapper(type);
-        return type;
+        return (type != null && isPrimitiveType(type) ? getWrapper(type) : type);
     }
 
     protected static boolean isClassInnerClassOrEqualTo(final ClassNode toBeChecked, final ClassNode start) {

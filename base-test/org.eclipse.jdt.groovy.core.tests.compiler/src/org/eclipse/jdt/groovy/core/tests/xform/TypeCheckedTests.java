@@ -1026,7 +1026,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 11)\n" +
             "\tseq()\n" +
             "\t^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot return value of type #T on method returning type java.util.List<?>\n" +
+            "Groovy:[Static type checking] - Cannot return value of type #T for method returning java.util.List<?>\n" +
             "----------\n");
     }
 
@@ -3539,27 +3539,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked10082a() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
-            "void test() {\n" +
-            "  Closure<String> c = {-> 42}\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 3)\n" +
-            "\tClosure<String> c = {-> 42}\n" +
-            "\t                    ^^^^^^^\n" +
-            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign groovy.lang.Closure<java.lang.Integer> to: groovy.lang.Closure<java.lang.String>\n" +
-            "----------\n");
-    }
-
-    @Test
     public void testTypeChecked10086() {
         //@formatter:off
         String[] sources = {
@@ -3664,8 +3643,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 8)\n" +
             "\tClosure<A<Number>> x = { -> new X()}\n" +
-            "\t                       ^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign groovy.lang.Closure<X> to: groovy.lang.Closure<A<java.lang.Number>>\n" +
+            "\t                            ^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot return value of type X for closure expecting A<java.lang.Number>\n" +
             "----------\n");
     }
 
@@ -4199,6 +4178,52 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\tbaz(this::foo)\n" +
             "\t    ^^^^^^^^^\n" +
             "Groovy:The argument is a method reference, but the parameter type is not a functional interface\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10277() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.*\n" +
+            "Long foo(Closure<Long> c) {\n" +
+            "  c()\n" +
+            "}\n" +
+            "Long bar(Supplier<Long> s) {\n" +
+            "  s.get()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  foo { -> false}\n" +
+            "  bar { -> false};\n" +
+            "  (Supplier<Long>) { -> false};\n" +
+            "  { -> false} as Supplier<Long>\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 10)\n" +
+            "\tfoo { -> false}\n" +
+            "\t         ^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot return value of type boolean for closure expecting java.lang.Long\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 11)\n" +
+            "\tbar { -> false};\n" +
+            "\t         ^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot return value of type boolean for closure expecting java.lang.Long\n" +
+            "----------\n" +
+            "3. ERROR in Main.groovy (at line 12)\n" +
+            "\t(Supplier<Long>) { -> false};\n" +
+            "\t                      ^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot return value of type boolean for closure expecting java.lang.Long\n" +
+            "----------\n" +
+            "4. ERROR in Main.groovy (at line 13)\n" +
+            "\t{ -> false} as Supplier<Long>\n" +
+            "\t     ^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot return value of type boolean for closure expecting java.lang.Long\n" +
             "----------\n");
     }
 
