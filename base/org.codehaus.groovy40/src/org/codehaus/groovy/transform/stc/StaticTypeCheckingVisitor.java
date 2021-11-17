@@ -978,14 +978,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (parameter.isDynamicTyped()) {
                     parameter.setType(samParameterTypes[i]);
                     parameter.setOriginType(samParameterTypes[i]);
+                } else {
+                    checkParamType(parameter, samParameterTypes[i], i == n-1, rhsExpression instanceof LambdaExpression);
                 }
             }
         } else {
-            String descriptor = toMethodParametersString(findSAM(lhsType).getName(), samParameterTypes);
-            addStaticTypeError("Wrong number of parameters for method target " + descriptor, rhsExpression);
+            addStaticTypeError("Wrong number of parameters for method target " + toMethodParametersString(findSAM(lhsType).getName(), samParameterTypes), rhsExpression);
         }
 
         storeInferredReturnType(rhsExpression, typeInfo.getV2());
+    }
+
+    private void checkParamType(final Parameter source, final ClassNode target, final boolean isLast, final boolean lambda) {
+        if (/*lambda ? !source.getOriginType().equals(target) :*/!typeCheckMethodArgumentWithGenerics(source.getOriginType(), target, isLast))
+            addStaticTypeError("Expected type " + prettyPrintType(target) + " for " + (lambda ? "lambda" : "closure") + " parameter: " + source.getName(), source);
     }
 
     /**
@@ -2405,38 +2411,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // perform visit
         typeCheckingContext.pushEnclosingClosureExpression(expression);
         DelegationMetadata dmd = getDelegationMetadata(expression);
-        if (dmd == null) {
-            typeCheckingContext.delegationMetadata = new DelegationMetadata(
-                    typeCheckingContext.getEnclosingClassNode(), Closure.OWNER_FIRST, typeCheckingContext.delegationMetadata
-            );
+        if (dmd != null) {
+            typeCheckingContext.delegationMetadata = newDelegationMetadata(dmd.getType(), dmd.getStrategy());
         } else {
-            typeCheckingContext.delegationMetadata = new DelegationMetadata(
-                    dmd.getType(),
-                    dmd.getStrategy(),
-                    typeCheckingContext.delegationMetadata
-            );
+            typeCheckingContext.delegationMetadata = newDelegationMetadata(typeCheckingContext.getEnclosingClassNode(), Closure.OWNER_FIRST);
         }
         super.visitClosureExpression(expression);
         typeCheckingContext.delegationMetadata = typeCheckingContext.delegationMetadata.getParent();
-        MethodNode node = new MethodNode("dummy", 0, OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, expression.getCode());
-        returnAdder.visitMethod(node);
 
-        TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
-        if (!enclosingClosure.getReturnTypes().isEmpty()) {
+        returnAdder.visitMethod(new MethodNode("dummy", 0, OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, expression.getCode()));
+        TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.popEnclosingClosure();
+        if (!enclosingClosure.getReturnTypes().isEmpty()) { // populated by ReturnAdder
             ClassNode returnType = lowestUpperBound(enclosingClosure.getReturnTypes());
-
-            ClassNode expectedReturnType = getInferredReturnType(expression);
-            // type argument can not be of primitive type, we should convert it to the wrapper type
-            if (expectedReturnType != null && isPrimitiveType(returnType) && expectedReturnType.equals(getWrapper(returnType))) {
-                returnType = expectedReturnType;
-            }
-
-            storeInferredReturnType(expression, returnType);
-            ClassNode inferredType = wrapClosureType(returnType);
-            storeType(enclosingClosure.getClosureExpression(), inferredType);
+            storeInferredReturnType(expression, wrapTypeIfNecessary(returnType));
+            storeType(expression, wrapClosureType(returnType));
         }
 
-        typeCheckingContext.popEnclosingClosure();
         // check types of closure shared variables for change
         if (isSecondPassNeededForControlStructure(varTypes, oldTracker)) {
             visitClosureExpression(expression);
@@ -2516,6 +2506,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected DelegationMetadata getDelegationMetadata(final ClosureExpression expression) {
         return expression.getNodeMetaData(DELEGATION_METADATA);
+    }
+
+    private DelegationMetadata newDelegationMetadata(final ClassNode delegateType, final int resolveStrategy) {
+        return new DelegationMetadata(delegateType, resolveStrategy, typeCheckingContext.delegationMetadata);
     }
 
     protected void restoreVariableExpressionMetadata(final Map<VariableExpression, Map<StaticTypesMarker, Object>> typesBeforeVisit) {
@@ -2759,11 +2753,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     addStaticTypeError("Expected parameter type: " + prettyPrintType(receiver) + " but was: " + prettyPrintType(param.getType()), param);
                 }
             }
-            closure.putNodeMetaData(DELEGATION_METADATA, new DelegationMetadata(
-                    receiver,
-                    Closure.DELEGATE_FIRST,
-                    typeCheckingContext.delegationMetadata
-            ));
+            closure.putNodeMetaData(DELEGATION_METADATA, newDelegationMetadata(receiver, Closure.DELEGATE_FIRST));
         }
     }
 
@@ -2982,9 +2972,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     // implicit parameter(s)
                     paramTypes = samParamTypes;
                 } else {
-                    paramTypes = new ClassNode[n];
-                    for (int i = 0; i < n; i += 1) {
-                        paramTypes[i] = i < samParamTypes.length ? samParamTypes[i] : null;
+                    paramTypes = Arrays.copyOf(samParamTypes, n);
+                    for (int i = 0; i < Math.min(n, samParamTypes.length); i += 1) {
+                        checkParamType(p[i], paramTypes[i], i == n-1, expression instanceof LambdaExpression);
                     }
                 }
                 expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
@@ -3055,25 +3045,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         }
         if (candidates.size() > 1) {
-            Iterator<ClassNode[]> candIt = candidates.iterator();
-            while (candIt.hasNext()) {
+            for (Iterator<ClassNode[]> candIt = candidates.iterator(); candIt.hasNext(); ) {
                 ClassNode[] inferred = candIt.next();
                 for (int i = 0, n = closureParams.length; i < n; i += 1) {
                     Parameter closureParam = closureParams[i];
-                    ClassNode originType = closureParam.getOriginType();
+                    ClassNode declaredType = closureParam.getOriginType();
                     ClassNode inferredType;
-                    if (i < inferred.length - 1 || inferred.length == closureParams.length) {
+                    if (i < inferred.length - 1 || inferred.length == n) {
                         inferredType = inferred[i];
-                    } else { // vargs?
-                        ClassNode lastArgInferred = inferred[inferred.length - 1];
-                        if (lastArgInferred.isArray()) {
-                            inferredType = lastArgInferred.getComponentType();
+                    } else {
+                        ClassNode lastInferred = inferred[inferred.length - 1];
+                        if (lastInferred.isArray()) {
+                            inferredType = lastInferred.getComponentType();
                         } else {
                             candIt.remove();
                             continue;
                         }
                     }
-                    if (!typeCheckMethodArgumentWithGenerics(originType, inferredType, i == (n - 1))) {
+                    if (!typeCheckMethodArgumentWithGenerics(declaredType, inferredType, i == (n - 1))) {
                         candIt.remove();
                     }
                 }
@@ -3092,24 +3081,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             } else {
                 for (int i = 0, n = closureParams.length; i < n; i += 1) {
                     Parameter closureParam = closureParams[i];
-                    ClassNode originType = closureParam.getOriginType();
+                    ClassNode declaredType = closureParam.getOriginType();
                     ClassNode inferredType = OBJECT_TYPE;
-                    if (i < inferred.length - 1 || inferred.length == closureParams.length) {
+                    if (i < inferred.length - 1 || inferred.length == n) {
                         inferredType = inferred[i];
-                    } else { // vargs?
-                        ClassNode lastArgInferred = inferred[inferred.length - 1];
-                        if (lastArgInferred.isArray()) {
-                            inferredType = lastArgInferred.getComponentType();
+                    } else {
+                        ClassNode lastInferred = inferred[inferred.length - 1];
+                        if (lastInferred.isArray()) {
+                            inferredType = lastInferred.getComponentType();
                         } else {
-                            addError("Incorrect number of parameters. Expected " + inferred.length + " but found " + closureParams.length, expression);
+                            addError("Incorrect number of parameters. Expected " + inferred.length + " but found " + n, expression);
                         }
                     }
-                    boolean lastArg = i == (n - 1);
-
-                    if (!typeCheckMethodArgumentWithGenerics(originType, inferredType, lastArg)) {
-                        addError("Expected parameter of type " + prettyPrintType(inferredType) + " but got " + prettyPrintType(originType), closureParam.getType());
-                    }
-
+                    checkParamType(closureParam, inferredType, i == n-1, false);
                     typeCheckingContext.controlStructureVariables.put(closureParam, inferredType);
                 }
             }
@@ -3191,7 +3175,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 + ") without @DelegatesTo.Target because generic argument types are not available at runtime", value);
                     }
                     // temporarily store the delegation strategy and the delegate type
-                    expression.putNodeMetaData(DELEGATION_METADATA, new DelegationMetadata(value.getType(), stInt, typeCheckingContext.delegationMetadata));
+                    expression.putNodeMetaData(DELEGATION_METADATA, newDelegationMetadata(value.getType(), stInt));
                 } else if (type != null && !"".equals(type.getText()) && type instanceof ConstantExpression) {
                     String typeString = type.getText();
                     ClassNode[] resolved = GenericsUtils.parseClassNodesFromString(
@@ -3204,7 +3188,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (resolved != null) {
                         if (resolved.length == 1) {
                             resolved = resolveGenericsFromTypeHint(receiver, arguments, mn, resolved);
-                            expression.putNodeMetaData(DELEGATION_METADATA, new DelegationMetadata(resolved[0], stInt, typeCheckingContext.delegationMetadata));
+                            expression.putNodeMetaData(DELEGATION_METADATA, newDelegationMetadata(resolved[0], stInt));
                         } else {
                             addStaticTypeError("Incorrect type hint found in method " + (mn), type);
                         }
@@ -3246,7 +3230,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                             }
                                         }
                                     }
-                                    expression.putNodeMetaData(DELEGATION_METADATA, new DelegationMetadata(actualType, stInt, typeCheckingContext.delegationMetadata));
+                                    expression.putNodeMetaData(DELEGATION_METADATA, newDelegationMetadata(actualType, stInt));
                                     break;
                                 }
                             }

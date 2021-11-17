@@ -5895,8 +5895,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  print new Value(123).replace { -> 'foo' }\n" +
-            "  print new Value(123).replace { Integer v -> 'bar' }\n" +
+            "  print new Value<>(123).replace { -> 'foo' }\n" +
+            "  print new Value<>(123).replace { Integer v -> 'bar' }\n" +
             "}\n" +
             "test()\n",
 
@@ -5932,8 +5932,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  print new Value(123).replace(() -> 'foo')\n" +
-            "  print new Value(123).replace((Integer v) -> 'bar')\n" +
+            "  print new Value<>(123).replace(() -> 'foo')\n" +
+            "  print new Value<>(123).replace((Integer v) -> 'bar')\n" +
             "}\n" +
             "test()\n",
 
