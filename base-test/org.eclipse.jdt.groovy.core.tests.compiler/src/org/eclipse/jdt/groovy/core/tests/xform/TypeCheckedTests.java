@@ -4748,6 +4748,33 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10341() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A {\n" +
+            "  abstract def m()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class C extends A {\n" +
+            "  @Override\n" +
+            "  def m() {\n" +
+            "    super.m()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 8)\n" +
+            "\tsuper.m()\n" +
+            "\t^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Abstract method m() cannot be called directly\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10344() {
         //@formatter:off
         String[] sources = {

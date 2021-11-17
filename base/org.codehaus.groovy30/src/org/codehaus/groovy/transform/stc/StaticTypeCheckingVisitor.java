@@ -3963,6 +3963,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             ClassNode owner = directMethodCallCandidate.getDeclaringClass();
                             addStaticTypeError("Non static method " + owner.getName() + "#" + directMethodCallCandidate.getName() + " cannot be called from static context", call);
                         }
+                        // GRECLIPSE add -- GROOVY-10341
+                        else if (directMethodCallCandidate.isAbstract() && isSuperExpression(objectExpression))
+                            addStaticTypeError("Abstract method " + toMethodParametersString(directMethodCallCandidate.getName(), extractTypesFromParameters(directMethodCallCandidate.getParameters())) + " cannot be called directly", call);
+                        // GRECLIPSE end
                         if (chosenReceiver == null) {
                             chosenReceiver = Receiver.make(directMethodCallCandidate.getDeclaringClass());
                         }
