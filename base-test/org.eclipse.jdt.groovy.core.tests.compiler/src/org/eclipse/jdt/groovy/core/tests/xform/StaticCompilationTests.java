@@ -5649,7 +5649,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class C extends p.A {\n" +
             "  void test() {\n" +
-            "    m('')\n" + // VerifyError: Bad access to protected data in invokevirtual
+            "    m('')\n" + // IncompatibleClassChangeError: Found class but interface was expected
             "  }\n" +
             "}\n" +
             "new C().test()\n",
@@ -6596,5 +6596,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "p.C([1])");
+    }
+
+    @Test
+    public void testCompileStatic10375() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Supplier\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  private String getX() {\n" +
+            "    return 'works'\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    Supplier<String> s = () -> x\n" + // GroovyCastException
+            "    print s.get()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 }
