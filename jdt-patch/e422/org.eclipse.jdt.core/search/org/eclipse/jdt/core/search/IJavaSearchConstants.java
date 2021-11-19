@@ -499,7 +499,6 @@ public interface IJavaSearchConstants {
 	 * returned.
 	 *</p>
 	 * @since 3.24
-	 * @noreference permit type reference
 	 * @category limitTo
 	 */
 	int PERMITTYPE_TYPE_REFERENCE = 0x20000000;

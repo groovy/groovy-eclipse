@@ -328,16 +328,14 @@ class BoundSet {
 			this.instantiation = type;
 		}
 	}
-
 	// main storage of type bounds:
-	Map<InferenceVariable, ThreeSets> boundsPerVariable = new HashMap<>();
+	HashMap<InferenceVariable, ThreeSets> boundsPerVariable = new HashMap<>();
 
 	/**
 	 * 18.1.3 bullet 4: G<α1, ..., αn> = capture(G<A1, ..., An>)
 	 * On both sides we only enter types with nonnull arguments.
 	 */
-	Map<ParameterizedTypeBinding, ParameterizedTypeBinding> captures = new HashMap<>();
-
+	HashMap<ParameterizedTypeBinding,ParameterizedTypeBinding> captures = new HashMap<>();
 	/** 18.1.3 bullet 5: throws α */
 	Set<InferenceVariable> inThrows = new HashSet<>();
 
@@ -529,7 +527,6 @@ class BoundSet {
 
 		return true;
 	}
-
 	/**
 	 * <b>JLS 18.3:</b> Try to infer new constraints from pairs of existing type bounds.
 	 * Each new constraint is first reduced and checked for TRUE or FALSE, which will
@@ -1167,7 +1164,6 @@ class BoundSet {
 		if (three == null) return null;
 		return three.findSingleWrapperType();
 	}
-
 	// this condition is just way too complex to check it in-line:
 	public boolean condition18_5_2_bullet_3_3_1(InferenceVariable alpha, TypeBinding targetType) {
 		// T is a reference type, but is not a wildcard-parameterized type, and either
@@ -1246,7 +1242,6 @@ class BoundSet {
 		}
 		return false;
 	}
-
 	private boolean superOnlyRaw(TypeBinding g, TypeBinding s, LookupEnvironment env) {
 		if (s instanceof InferenceVariable)
 			return false; // inference has no super types

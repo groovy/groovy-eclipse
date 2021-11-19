@@ -253,7 +253,7 @@ public abstract class JobManager implements Runnable {
 									throw new OperationCanceledException();
 								IJob currentJob = currentJob();
 								// currentJob can be null when jobs have been added to the queue but job manager is not enabled
-								if (currentJob != null) {
+								if (currentJob != null ) {
 									synchronized (this.idleMonitor) {
 										this.idleMonitor.notifyAll(); // wake up idle sleepers
 									}
@@ -438,7 +438,8 @@ public abstract class JobManager implements Runnable {
 							this.progressJob.setSystem(true);
 							this.progressJob.schedule();
 						}
-						job.execute(null);
+						/*boolean status = */job.execute(null);
+						//if (status == FAILED) request(job);
 					} finally {
 						this.executing = false;
 						if (VERBOSE)

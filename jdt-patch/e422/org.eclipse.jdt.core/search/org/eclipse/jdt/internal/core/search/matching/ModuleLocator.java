@@ -1,3 +1,14 @@
+package org.eclipse.jdt.internal.core.search.matching;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ModuleReference;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
+
 /*******************************************************************************
  * Copyright (c) 2017 IBM Corporation and others.
  *
@@ -12,17 +23,6 @@
  *     IBM Corporation - initial API and implementation
  *
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.search.matching;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ModuleReference;
-import org.eclipse.jdt.internal.compiler.lookup.Binding;
-import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
-
 public class ModuleLocator extends PatternLocator {
 
 	private ModulePattern pattern;
