@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.CompilerTestSetup;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.core.util.ClassFormatException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
@@ -291,8 +292,24 @@ public abstract class GroovyCompilerTestSuite {
         GroovyCompilationUnitDeclaration decl = getCUDeclFor(filename);
         if (decl != null) {
             return decl.getModuleNode();
-        } else {
-            return null;
+        }
+        return null;
+    }
+
+    protected static byte[] getOutputFile(final String filename) {
+        try {
+            File file = new File(AbstractRegressionTest.OUTPUT_DIR + File.separator + filename);
+            return org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected static String disassemble(final byte[] file, final int mode) {
+        try {
+            return ToolFactory.createDefaultClassFileBytesDisassembler().disassemble(file, "\n", mode);
+        } catch (ClassFormatException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -301,28 +318,21 @@ public abstract class GroovyCompilerTestSuite {
     }
 
     /**
-     * Check the disassembly of a .class file for a particular piece of text
+     * Checks the disassembly of a {@code .class} file for a particular piece of text.
      */
-    protected static void checkDisassemblyFor(final String filename, final String expectedOutput, final int detail) {
-        try {
-            File f = new File(AbstractRegressionTest.OUTPUT_DIR + File.separator + filename);
-            byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
-            ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
-            String result = disassembler.disassemble(classFileBytes, "\n", detail);
-            int index = result.indexOf(expectedOutput);
-            if (index == -1 || expectedOutput.length() == 0) {
-                System.out.println(Util.displayString(result, 3));
-            }
-            if (index == -1) {
-                Assert.assertEquals("Wrong contents", expectedOutput, result);
-            }
-        } catch (Exception e) {
-            Assert.fail(e.toString());
+    protected static void checkDisassemblyFor(final String filename, final String expectedOutput, final int mode) {
+        String disassembly = disassemble(getOutputFile(filename), mode);
+        int index = disassembly.indexOf(expectedOutput);
+        if (index == -1 || expectedOutput.length() == 0) {
+            System.out.println(Util.displayString(disassembly, 3));
+        }
+        if (index == -1) {
+            Assert.assertEquals("Wrong contents", expectedOutput, disassembly);
         }
     }
 
     protected static void checkGCUDeclaration(final String filename, final String expectedOutput) {
-        GroovyCompilationUnitDeclaration decl = ((DebugRequestor) GroovyParser.debugRequestor).declarations.get(filename);
+        GroovyCompilationUnitDeclaration decl = getCUDeclFor(filename);
         String declarationContents = decl.print();
         if (expectedOutput == null || expectedOutput.length() == 0) {
             System.out.println(Util.displayString(declarationContents, 2));

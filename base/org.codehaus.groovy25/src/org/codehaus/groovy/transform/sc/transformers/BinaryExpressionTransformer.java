@@ -21,6 +21,7 @@ package org.codehaus.groovy.transform.sc.transformers;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
@@ -30,12 +31,15 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ExpressionTransformer;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.RangeExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.WideningCategories;
+import org.codehaus.groovy.classgen.asm.WriterController;
 import org.codehaus.groovy.classgen.asm.sc.StaticPropertyAccessHelper;
 import org.codehaus.groovy.classgen.asm.sc.StaticTypesTypeChooser;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
@@ -52,6 +56,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class BinaryExpressionTransformer {
     private static final MethodNode COMPARE_TO_METHOD = ClassHelper.COMPARABLE_TYPE.getMethods("compareTo").get(0);
@@ -187,7 +192,6 @@ public class BinaryExpressionTransformer {
                     }
                 }
             }
-            boolean isAssignment = StaticTypeCheckingSupport.isAssignment(operationType);
             MethodCallExpression call;
             MethodNode node = (MethodNode) list[0];
             String name = (String) list[1];
@@ -223,7 +227,39 @@ public class BinaryExpressionTransformer {
             // the method represents the operation type only, and we must add an assignment
             return new BinaryExpression(left, Token.newSymbol("=", operation.getStartLine(), operation.getStartColumn()), call);
             */
-            Expression expr = !isAssignment ? left : new ExpressionTransformer() {
+            MethodNode adapter = StaticCompilationTransformer.BYTECODE_BINARY_ADAPTERS.get(operationType);
+            if (adapter != null) {
+                ClassExpression sba = new ClassExpression(StaticCompilationTransformer.BYTECODE_ADAPTER_CLASS);
+                /* GRECLIPSE edit
+                call = new MethodCallExpression(sba, "compareEquals", new ArgumentListExpression(expr, right));
+                */
+                call = new MethodCallExpression(sba, adapter.getName(), new ArgumentListExpression(left, right));
+                // GRECLIPSE end
+                call.setMethodTarget(adapter);
+            } else {
+                call = new MethodCallExpression(left, name, new ArgumentListExpression(right));
+                call.setMethodTarget(node);
+            }
+            call.setImplicitThis(false);
+            if (!StaticTypeCheckingSupport.isAssignment(operationType)) {
+                call.setSourcePosition(bin);
+                return call;
+            }
+            Expression expr = new BinaryExpression(left, Token.newSymbol(Types.EQUAL, operation.getStartLine(), operation.getStartColumn()), call);
+            // GRECLIPSE add -- GROOVY-5746, et al.
+            if (left instanceof BinaryExpression) {
+                BinaryExpression be = (BinaryExpression) left;
+                if (be.getOperation().getType() == Types.LEFT_SQUARE_BRACKET) {
+                    be.setLeftExpression(new TemporaryVariableExpression(be.getLeftExpression()));
+                    be.setRightExpression(new TemporaryVariableExpression(be.getRightExpression()));
+                    expr.putNodeMetaData("classgen.callback", classgenCallback(be.getRightExpression())
+                                                     .andThen(classgenCallback(be.getLeftExpression()))
+                    );
+                }
+            }
+            expr.putNodeMetaData("original.operator", operation);
+            // clone repeat occurrence of left sans source offsets
+            call.setObjectExpression(new ExpressionTransformer() {
                 @Override
                 public Expression transform(final Expression expression) {
                     if (expression == null) return null;
@@ -263,42 +299,10 @@ public class BinaryExpressionTransformer {
                     }
                     return transformed;
                 }
-            }.transform(left);
-
-            MethodNode adapter = StaticCompilationTransformer.BYTECODE_BINARY_ADAPTERS.get(operationType);
-            if (adapter != null) {
-                ClassExpression sba = new ClassExpression(StaticCompilationTransformer.BYTECODE_ADAPTER_CLASS);
-                /* GRECLIPSE edit
-                call = new MethodCallExpression(sba, "compareEquals", new ArgumentListExpression(expr, right));
-                */
-                call = new MethodCallExpression(sba, adapter.getName(), new ArgumentListExpression(expr, right));
-                // GRECLIPSE end
-                call.setMethodTarget(adapter);
-            } else {
-                call = new MethodCallExpression(expr, name, new ArgumentListExpression(right));
-                call.setMethodTarget(node);
-            }
-            call.setImplicitThis(false);
-            if (!isAssignment) {
-                call.setSourcePosition(bin);
-                return call;
-            }
-            // GRECLIPSE add -- GROOVY-5746
-            if (left instanceof BinaryExpression) {
-                BinaryExpression be = (BinaryExpression) left;
-                if (be.getOperation().getType() == Types.LEFT_SQUARE_BRACKET) {
-                    be.setLeftExpression(new TemporaryVariableExpression(be.getLeftExpression()));
-                    be.setRightExpression(new TemporaryVariableExpression(be.getRightExpression()));
-                                ((BinaryExpression) expr).setLeftExpression(be.getLeftExpression());
-                                ((BinaryExpression) expr).setRightExpression(be.getRightExpression());
-                }
-            }
+            }.transform(left));
             // GRECLIPSE end
-            expr = new BinaryExpression(left, Token.newSymbol(Types.EQUAL, operation.getStartLine(), operation.getStartColumn()), call);
-            expr.putNodeMetaData("original.operator", operation);
             expr.setSourcePosition(bin);
             return expr;
-            // GRECLIPSE end
         }
         if (bin.getOperation().getType() == Types.ASSIGN && leftExpression instanceof TupleExpression && rightExpression instanceof ListExpression) {
             // multiple assignment
@@ -405,7 +409,7 @@ public class BinaryExpressionTransformer {
         return null;
     }
 
-    private Expression convertInOperatorToTernary(final BinaryExpression bin, final Expression rightExpression, final Expression leftExpression) {
+    private Expression convertInOperatorToTernary(final BinaryExpression bin, Expression rightExpression, final Expression leftExpression) {
         MethodCallExpression call = new MethodCallExpression(
                 rightExpression,
                 "isCase",
@@ -414,6 +418,17 @@ public class BinaryExpressionTransformer {
         call.setMethodTarget((MethodNode) bin.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET));
         call.setSourcePosition(bin);
         call.copyNodeMetaData(bin);
+        // GRECLIPSE add -- GROOVY-7473
+        call.setImplicitThis(false);
+        if (rightExpression instanceof ListExpression
+                || rightExpression instanceof MapExpression
+                || rightExpression instanceof RangeExpression
+                || rightExpression instanceof ClassExpression
+                || rightExpression instanceof ConstantExpression
+                            && !isNullConstant(rightExpression))
+            return staticCompilationTransformer.transform(call);
+        call.setObjectExpression(rightExpression = transformRepeatedReference(rightExpression));
+        // GRECLIPSE end
         TernaryExpression tExp = new TernaryExpression(
                 new BooleanExpression(
                         new BinaryExpression(rightExpression, Token.newSymbol("==", -1, -1), new ConstantExpression(null))
@@ -421,8 +436,25 @@ public class BinaryExpressionTransformer {
                 new BinaryExpression(leftExpression, Token.newSymbol("==", -1, -1), new ConstantExpression(null)),
                 call
         );
+        // GRECLIPSE add
+        tExp.putNodeMetaData("classgen.callback", classgenCallback(call.getObjectExpression()));
+        // GRECLIPSE end
         return staticCompilationTransformer.transform(tExp);
     }
+
+    // GRECLIPSE add
+    private static Expression transformRepeatedReference(final Expression exp) {
+        if (exp instanceof ConstantExpression || exp instanceof VariableExpression
+                && ((VariableExpression) exp).getAccessedVariable() instanceof Parameter) {
+            return exp;
+        }
+        return new TemporaryVariableExpression(exp);
+    }
+
+    private static Consumer<WriterController> classgenCallback(final Expression source) {
+        return (source instanceof TemporaryVariableExpression ? ((TemporaryVariableExpression) source)::remove : wc -> {});
+    }
+    // GRECLIPSE end
 
     private static DeclarationExpression optimizeConstantInitialization(
             final BinaryExpression originalDeclaration,

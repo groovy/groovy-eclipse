@@ -28,7 +28,6 @@ import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.classgen.asm.indy.IndyBinHelper;
 import org.codehaus.groovy.classgen.asm.indy.IndyCallSiteWriter;
 import org.codehaus.groovy.classgen.asm.indy.InvokeDynamicWriter;
-import org.codehaus.groovy.classgen.asm.util.LoggableClassVisitor;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
 import groovyjarjarasm.asm.ClassVisitor;
@@ -134,11 +133,11 @@ public class WriterController {
         this.typeChooser = new StatementMetaTypeChooser();
     }
 
-    private static ClassVisitor createClassVisitor(final ClassVisitor cv, CompilerConfiguration config) {
-        if (cv instanceof LoggableClassVisitor || !Boolean.getBoolean("groovy.log.classgen")) {
+    private static ClassVisitor createClassVisitor(final ClassVisitor cv, final CompilerConfiguration config) {
+        if (cv instanceof groovyjarjarasm.asm.util.TraceClassVisitor || !Boolean.getBoolean("groovy.log.classgen")) {
             return cv;
         }
-        return new LoggableClassVisitor(cv, config);
+        return new groovyjarjarasm.asm.util.TraceClassVisitor(cv, java.util.Optional.ofNullable(config.getOutput()).orElseGet(() -> new java.io.PrintWriter(System.out, true)));
     }
 
     private static int chooseBytecodeVersion(final boolean invokedynamic, final boolean previewFeatures, final String targetBytecode) {

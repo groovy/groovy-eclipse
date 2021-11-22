@@ -152,7 +152,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             cNode.setUnresolvedSuperClass(OBJECT_TYPE);
             cNode.addInterface(superClass);
             // GRECLIPSE add
-            new VariableScopeVisitor(sourceUnit).visitClass(cNode);
+            resolveScope(cNode);
             // GRECLIPSE end
         }
     }

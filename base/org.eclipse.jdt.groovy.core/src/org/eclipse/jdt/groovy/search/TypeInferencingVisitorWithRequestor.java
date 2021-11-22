@@ -2646,7 +2646,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
 
                 @Override public void visitMethodCallExpression(final MethodCallExpression expression) {
-                    result[0] = (expr == expression.getObjectExpression());
+                    Expression obj = expression.getObjectExpression();
+                    result[0] = (expr == obj || obj instanceof TemporaryVariableExpression &&
+                                 expr == ReflectionUtils.getPrivateField(TemporaryVariableExpression.class, "expression", obj));
                 }
 
                 @Override public void visitMethodPointerExpression(final MethodPointerExpression expression) {

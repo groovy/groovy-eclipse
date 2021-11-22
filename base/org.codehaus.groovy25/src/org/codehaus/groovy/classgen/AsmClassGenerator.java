@@ -124,6 +124,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isThisOrSuper;
@@ -750,6 +751,10 @@ public class AsmClassGenerator extends ClassGenerator {
     public void visitTernaryExpression(TernaryExpression expression) {
         onLineNumber(expression, "visitTernaryExpression");
         controller.getBinaryExpressionHelper().evaluateTernary(expression);
+        // GRECLIPSE add -- GROOVY-7473
+        Consumer<WriterController> callback = expression.getNodeMetaData("classgen.callback");
+        if (callback != null) callback.accept(controller);
+        // GRECLIPSE end
     }
 
     public void visitDeclarationExpression(DeclarationExpression expression) {
@@ -761,6 +766,10 @@ public class AsmClassGenerator extends ClassGenerator {
         onLineNumber(expression, "visitBinaryExpression: \"" + expression.getOperation().getText() + "\" ");
         controller.getBinaryExpressionHelper().eval(expression);
         controller.getAssertionWriter().record(expression.getOperation());
+        // GRECLIPSE add -- GROOVY-5746
+        Consumer<WriterController> callback = expression.getNodeMetaData("classgen.callback");
+        if (callback != null) callback.accept(controller);
+        // GRECLIPSE end
     }
 
     public void visitPostfixExpression(PostfixExpression expression) {

@@ -17,6 +17,7 @@ package org.eclipse.jdt.groovy.core.tests.xform;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
@@ -767,15 +768,15 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "int getIndex() { i++ }\n" +
             "@CompileStatic void test() {\n" +
             "  def list = ['x','y','z']\n" +
-            "  print(list[index] += '!')\n" +
-            "  print(list[index] += '!')\n" +
-            "  print(list)\n" +
+            "  assert (list[index] += '!') == 'x!'\n" +
+            "  assert (list[index] += '!') == 'y!'\n" +
+            "  print list\n" +
             "}\n" +
             "test()\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "x!y![x!, y!, z]");
+        runConformTest(sources, "[x!, y!, z]");
     }
 
     @Test
@@ -798,6 +799,24 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "123.0");
+    }
+
+    @Test
+    public void testCompileStatic6137() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(a, b) {\n" +
+            "  print(a in b)\n" +
+            "}\n" +
+            "test(null,null)\n" +
+            "test(null,new Object())\n" +
+            "test(new Object(),null)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "truefalsefalse");
     }
 
     @Test
@@ -1278,6 +1297,126 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testCompileStatic7473() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Foo { String bar }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Foo foo) {\n" +
+            "  if (foo.bar[0] in ['a','b','c']) {\n" +
+            "    print 'abc'\n" +
+            "  }\n" +
+            "}\n" +
+            "test(new Foo(bar:'baz'))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
+
+        String result = disassemble(getOutputFile("Main.class"), 1);
+        int pos = result.indexOf("createList");
+        assumeTrue(pos > 0);
+
+        // the operand should be processed only once
+        pos = result.indexOf("createList", pos + 1);
+        assertTrue(pos < 0);
+    }
+
+    @Test
+    public void testCompileStatic7473a() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Foo { String bar }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Foo foo) {\n" +
+            "  if (foo.bar[0] !in ['x','y','z']) {\n" +
+            "    print 'not xyz'\n" +
+            "  }\n" +
+            "}\n" +
+            "test(new Foo(bar:'baz'))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "not xyz");
+
+        String result = disassemble(getOutputFile("Main.class"), 1);
+        int pos = result.indexOf("createList");
+        assumeTrue(pos > 0);
+
+        // the operand should be processed only once
+        pos = result.indexOf("createList", pos + 1);
+        assertTrue(pos < 0);
+    }
+
+    @Test
+    public void testCompileStatic7473b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  int[] accept = [1,2]\n" +
+            "  def   result = ['x','yy','zzz'].findAll { it.size() in accept }\n" +
+            "  print result\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[x, yy]");
+    }
+
+    @Test
+    public void testCompileStatic7473c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  int i, j\n" +
+            "  int getA() { i++ }\n" +
+            "  int getB() { j++ }\n" +
+            "  void test() {\n" +
+            "    assert a in b\n" +
+            "    assert i == 1\n" +
+            "    assert j == 1\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic7473d() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  int i, j\n" +
+            "  def getA() { i++ }\n" +
+            "  def getB() { j++; null }\n" +
+            "  void test() {\n" +
+            "    assert !(a in b)\n" +
+            "    assert i == 1\n" +
+            "    assert j == 1\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
@@ -5641,36 +5780,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "str");
     }
 
-    @Test(expected = AssertionError.class)
-    public void testCompileStatic9737b() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "class C extends p.A {\n" +
-            "  void test() {\n" +
-            "    m('')\n" + // IncompatibleClassChangeError: Found class but interface was expected
-            "  }\n" +
-            "}\n" +
-            "new C().test()\n",
-
-            "p/A.groovy",
-            "package p\n" +
-            "abstract class A implements I {\n" +
-            "  static void m(Integer i) { print 'int' }\n" +
-            "}\n",
-
-            "p/I.java",
-            "package p;\n" +
-            "interface I {\n" +
-            "  default void m(String s) { System.out.print(\"str\"); }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "str");
-    }
-
     @Test
     public void testCompileStatic9762() {
         assumeTrue(isParrotParser());
@@ -6621,5 +6730,26 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic10377() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(a, b = a) {\n" +
+            "  print(a === b)\n" +
+            "  print(a !== b)\n" +
+            "}\n" +
+            "test(new Object())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "truefalse");
+        checkDisassemblyFor("Main.class", "if_acmpne"); // ===
+        checkDisassemblyFor("Main.class", "if_acmpeq"); // !==
     }
 }
