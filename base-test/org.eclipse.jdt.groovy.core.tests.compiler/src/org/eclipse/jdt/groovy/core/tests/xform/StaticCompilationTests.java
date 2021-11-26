@@ -6752,4 +6752,38 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         checkDisassemblyFor("Main.class", "if_acmpne"); // ===
         checkDisassemblyFor("Main.class", "if_acmpeq"); // !==
     }
+
+    @Test
+    public void testCompileStatic10379() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C extends p.A {\n" +
+            "  void test() {\n" +
+            "    m('')\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/A.groovy",
+            "package p\n" +
+            "abstract class A implements I {\n" +
+            "  static void m(Number n) {\n" +
+            "    print 'number'\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "  default void m(String s) {\n" +
+            "    System.out.print(\"string\");\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "string");
+    }
 }

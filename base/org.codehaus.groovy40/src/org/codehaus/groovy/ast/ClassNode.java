@@ -1337,7 +1337,7 @@ public class ClassNode extends AnnotatedNode {
                     return true;
                 }
             }
-            // GRECLIPSE add -- GROOVY-9737
+            // GRECLIPSE add -- GROOVY-10379
             for (ClassNode in : cn.getAllInterfaces()) {
                 for (MethodNode mn : in.getDeclaredMethods(name)) {
                     if (mn.isDefault() && hasCompatibleNumberOfArgs(mn, count)) {
