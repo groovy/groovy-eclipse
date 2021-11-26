@@ -1352,6 +1352,40 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foobarbaznullnullnull");
     }
 
+    @Test(expected = AssertionError.class)
+    public void testTypeChecked8693() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C extends p.A {\n" +
+            "  void m() {\n" +
+            "    super.m()\n" + // MissingMethodException
+            "  }\n" +
+            "  void test() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/A.java",
+            "package p;\n" +
+            "public abstract class A implements I {\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "  default void m() {\n" +
+            "    System.out.print(\"works\");\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
     @Test
     public void testTypeChecked8909() {
         //@formatter:off

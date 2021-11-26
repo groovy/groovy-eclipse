@@ -42,9 +42,8 @@
         <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum|InnerClass|VariableScope)Visitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/(Extended)?Verifier.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/ClosureWriter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/(Closure|Invocation|Statement)Writer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/StatementWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypes(CallSite|Closure|Lambda|MethodReferenceExpression)Writer.java" include-pattern="false" />

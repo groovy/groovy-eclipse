@@ -2604,6 +2604,40 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8693() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C extends p.A {\n" +
+            "  void m() {\n" +
+            "    super.m()\n" + // StackOverflowError
+            "  }\n" +
+            "  void test() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/A.java",
+            "package p;\n" +
+            "public abstract class A implements I {\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "  default void m() {\n" +
+            "    System.out.print(\"works\");\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic8816() {
         //@formatter:off
         String[] sources = {
@@ -6236,6 +6270,44 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "String");
     }
 
+    @Test(expected = AssertionError.class)
+    public void testCompileStatic9909() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import p.*\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C implements A, B {\n" +
+            "  void m() {\n" +
+            "    A.super.m()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/A.java",
+            "package p;\n" +
+            "public interface A {\n" +
+            "  default void m() {\n" +
+            "    System.out.print(\"A\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/B.java",
+            "package p;\n" +
+            "public interface B {\n" +
+            "  default void m() {\n" +
+            "    System.out.print(\"B\");\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "A");
+    }
+
     @Test
     public void testCompileStatic9918() {
         //@formatter:off
@@ -6785,5 +6857,74 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "string");
+    }
+
+    @Test
+    public void testCompileStatic10380() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C extends p.A {\n" +
+            "  void test() {\n" +
+            "    m()\n" + // IncompatibleClassChangeError: Found class C, but interface was expected
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/A.groovy",
+            "package p\n" +
+            "abstract class A implements I {\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "interface I {\n" +
+            "  default void m() {\n" +
+            "    System.out.print(\"works\");\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic10381() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C implements p.A, p.B {\n" +
+            "  void test() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "p/A.java",
+            "package p;\n" +
+            "public interface A {\n" +
+            "  default void m() {\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/B.java",
+            "package p;\n" +
+            "public interface B {\n" +
+            "  default void m() {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
+            "\tclass C implements p.A, p.B {\n" +
+            "\t      ^\n" +
+            "Duplicate default methods named m with the parameters () and () are inherited from the types A and B\n" +
+            "----------\n");
     }
 }
