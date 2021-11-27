@@ -807,16 +807,41 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "void test(a, b) {\n" +
-            "  print(a in b)\n" +
+            "void test() {\n" +
+            "  print(null in null)\n" +
+            "  print(null in 'xx')\n" +
+            "  print('xx' in null)\n" +
+            "  print('xx' in 'xx')\n" +
+            "  print('xx' in ['xx'])\n" +
             "}\n" +
-            "test(null,null)\n" +
-            "test(null,new Object())\n" +
-            "test(new Object(),null)\n",
+            "test()\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "truefalsefalse");
+        runConformTest(sources, "truefalsefalsetruetrue");
+    }
+
+    @Test
+    public void testCompileStatic6137a() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print(null !in null)\n" +
+            "  print(null !in 'xx')\n" +
+            "  print('xx' !in null)\n" +
+            "  print('xx' !in 'xx')\n" +
+            "  print('xx' !in [''])\n" +
+            "  print('xx' !in ['xx'])\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "falsetruetruefalsetruefalse");
     }
 
     @Test
@@ -1347,7 +1372,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "not xyz");
 
         String result = disassemble(getOutputFile("Main.class"), 1);
-        int pos = result.indexOf("createList");
+        int pos = result.indexOf("ScriptBytecodeAdapter.isNotCase");
+        if (isAtLeastGroovy(40)) assertTrue(pos < 0); //GROOVY-10383
+
+        pos = result.indexOf("createList");
         assumeTrue(pos > 0);
 
         // the operand should be processed only once
