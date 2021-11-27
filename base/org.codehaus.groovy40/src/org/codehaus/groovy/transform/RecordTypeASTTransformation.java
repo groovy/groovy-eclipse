@@ -81,7 +81,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.hasDeclaredMethod;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.listX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.mapEntryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.mapX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.plusX;
@@ -177,10 +176,10 @@ public class RecordTypeASTTransformation extends AbstractASTTransformation imple
             cNode.setModifiers(cNode.getModifiers() | Opcodes.ACC_RECORD);
             final List<PropertyNode> pList = getInstanceProperties(cNode);
             if (!pList.isEmpty()) {
-                cNode.setRecordComponentNodes(new ArrayList<>());
+                cNode.setRecordComponents(new ArrayList<>());
             }
             for (PropertyNode pNode : pList) {
-                cNode.getRecordComponentNodes().add(new RecordComponentNode(cNode, pNode.getName(), pNode.getOriginType(), pNode.getAnnotations()));
+                cNode.getRecordComponents().add(new RecordComponentNode(cNode, pNode.getName(), pNode.getOriginType(), pNode.getAnnotations()));
             }
         } else if (mode == RecordTypeMode.NATIVE) {
             addError(message + " when attempting to create a native record", cNode);
@@ -275,7 +274,7 @@ public class RecordTypeASTTransformation extends AbstractASTTransformation imple
                 args.addExpression(callThisX(pNode.getName()));
                 gtypes.add(new GenericsType(getWrapper(pNode.getType())));
             }
-            tupleClass.setGenericsTypes(gtypes.toArray(new GenericsType[0]));
+            tupleClass.setGenericsTypes(gtypes.toArray(GenericsType.EMPTY_ARRAY));
             body = returnS(ctorX(tupleClass, args));
         }
         addGeneratedMethod(cNode, COMPONENTS, PUBLIC_FINAL, tupleClass, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, body);
@@ -377,11 +376,11 @@ public class RecordTypeASTTransformation extends AbstractASTTransformation imple
 
     private Object[] createBootstrapMethodArguments(ClassNode cNode) {
         String internalName = cNode.getName().replace('.', '/');
-        String names = cNode.getRecordComponentNodes().stream().map(RecordComponentNode::getName).collect(Collectors.joining(";"));
+        String names = cNode.getRecordComponents().stream().map(RecordComponentNode::getName).collect(Collectors.joining(";"));
         List<Object> args = new LinkedList<>();
         args.add(Type.getType(BytecodeHelper.getTypeDescription(cNode)));
         args.add(names);
-        cNode.getRecordComponentNodes().stream().forEach(rcn -> args.add(createFieldHandle(rcn, internalName)));
+        cNode.getRecordComponents().stream().forEach(rcn -> args.add(createFieldHandle(rcn, internalName)));
         return args.toArray();
     }
 

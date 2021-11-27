@@ -32,7 +32,6 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -53,7 +52,6 @@ import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1613,9 +1611,7 @@ public abstract class StaticTypeCheckingSupport {
                     if (newValue == null) {
                         newValue = connections.get(entry.getKey());
                         if (newValue != null) { // GROOVY-10315, GROOVY-10317
-                            ClassNode o = makeClassSafe0(CLASS_Type, oldValue),
-                                      n = makeClassSafe0(CLASS_Type, newValue);
-                            newValue = lowestUpperBound(o,n).getGenericsTypes()[0];
+                            newValue = getCombinedGenericsType(oldValue, newValue);
                         }
                     }
                     if (newValue == null) {
@@ -1670,19 +1666,19 @@ public abstract class StaticTypeCheckingSupport {
         return replacementType;
     }
 
-    private static boolean equalIncludingGenerics(final GenericsType orig, final GenericsType copy) {
-        if (orig == copy) return true;
-        if (orig.isPlaceholder() != copy.isPlaceholder()) return false;
-        if (orig.isWildcard() != copy.isWildcard()) return false;
-        if (!equalIncludingGenerics(orig.getType(), copy.getType())) return false;
-        ClassNode lower1 = orig.getLowerBound();
-        ClassNode lower2 = copy.getLowerBound();
+    private static boolean equalIncludingGenerics(final GenericsType one, final GenericsType two) {
+        if (one == two) return true;
+        if (one.isWildcard() != two.isWildcard()) return false;
+        if (one.isPlaceholder() != two.isPlaceholder()) return false;
+        if (!equalIncludingGenerics(one.getType(), two.getType())) return false;
+        ClassNode lower1 = one.getLowerBound();
+        ClassNode lower2 = two.getLowerBound();
         if ((lower1 == null) ^ (lower2 == null)) return false;
         if (lower1 != lower2) {
             if (!equalIncludingGenerics(lower1, lower2)) return false;
         }
-        ClassNode[] upper1 = orig.getUpperBounds();
-        ClassNode[] upper2 = copy.getUpperBounds();
+        ClassNode[] upper1 = one.getUpperBounds();
+        ClassNode[] upper2 = two.getUpperBounds();
         if ((upper1 == null) ^ (upper2 == null)) return false;
         if (upper1 != upper2) {
             if (upper1.length != upper2.length) return false;
@@ -1693,12 +1689,12 @@ public abstract class StaticTypeCheckingSupport {
         return true;
     }
 
-    private static boolean equalIncludingGenerics(final ClassNode orig, final ClassNode copy) {
-        if (orig == copy) return true;
-        if (orig.isGenericsPlaceHolder() != copy.isGenericsPlaceHolder()) return false;
-        if (!orig.equals(copy)) return false;
-        GenericsType[] gt1 = orig.getGenericsTypes();
-        GenericsType[] gt2 = copy.getGenericsTypes();
+    private static boolean equalIncludingGenerics(final ClassNode one, final ClassNode two) {
+        if (one == two) return true;
+        if (one.isGenericsPlaceHolder() != two.isGenericsPlaceHolder()) return false;
+        if (!one.equals(two)) return false;
+        GenericsType[] gt1 = one.getGenericsTypes();
+        GenericsType[] gt2 = two.getGenericsTypes();
         if ((gt1 == null) ^ (gt2 == null)) return false;
         if (gt1 != gt2) {
             if (gt1.length != gt2.length) return false;
@@ -1730,7 +1726,7 @@ public abstract class StaticTypeCheckingSupport {
         if (type == null || type == UNKNOWN_PARAMETER_TYPE) return;
 
         if (target.isGenericsPlaceHolder()) {
-            connections.put(new GenericsTypeName(target.getUnresolvedName()), new GenericsType(type));
+            storeGenericsConnection(connections, target.getUnresolvedName(), new GenericsType(type));
 
         } else if (type.isGenericsPlaceHolder()) {
             // "T extends java.util.List<X> -> java.util.List<E>" vs "java.util.List<E>"
@@ -1765,11 +1761,6 @@ public abstract class StaticTypeCheckingSupport {
         }
     }
 
-    public static ClassNode getCorrectedClassNode(final ClassNode type, final ClassNode superClass, final boolean handlingGenerics) {
-        if (handlingGenerics && GenericsUtils.hasUnresolvedGenerics(type)) return superClass.getPlainNodeReference();
-        return GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.createGenericsSpec(type), superClass);
-    }
-
     private static void extractGenericsConnections(final Map<GenericsTypeName, GenericsType> connections, final GenericsType[] usage, final GenericsType[] declaration) {
         // if declaration does not provide generics, there is no connection to make
         if (usage == null || declaration == null || declaration.length == 0) return;
@@ -1779,7 +1770,7 @@ public abstract class StaticTypeCheckingSupport {
         for (int i = 0, n = usage.length; i < n; i += 1) {
             GenericsType ui = usage[i], di = declaration[i];
             if (di.isPlaceholder()) {
-                connections.put(new GenericsTypeName(di.getName()), ui);
+                storeGenericsConnection(connections, di.getName(), ui);
             } else if (di.isWildcard()) {
                 ClassNode lowerBound = di.getLowerBound(), upperBounds[] = di.getUpperBounds();
                 if (ui.isWildcard()) {
@@ -1787,10 +1778,11 @@ public abstract class StaticTypeCheckingSupport {
                     extractGenericsConnections(connections, ui.getUpperBounds(), upperBounds);
                 } else if (!isUnboundedWildcard(di)) {
                     ClassNode boundType = lowerBound != null ? lowerBound : upperBounds[0];
-                    if (boundType.isGenericsPlaceHolder()) { // GROOVY-9998: preserve the wildcard semantics
-                        ui = new GenericsType(ui.getType()); ui.setPlaceHolder(false); ui.setWildcard(true);
-                        connections.put(new GenericsTypeName(boundType.getUnresolvedName()), ui);
-                    } else { // di like "? super Iterable<T>" and ui like "Collection<Type>"
+                    if (boundType.isGenericsPlaceHolder()) { // GROOVY-9998
+                        String placeholderName = boundType.getUnresolvedName();
+                        ui = new GenericsType(ui.getType()); ui.setWildcard(true);
+                        storeGenericsConnection(connections, placeholderName, ui);
+                    } else { // di like "? super Collection<T>" and ui like "List<Type>"
                         extractGenericsConnections(connections, ui.getType(), boundType);
                     }
                 }
@@ -1807,11 +1799,16 @@ public abstract class StaticTypeCheckingSupport {
             ClassNode ui = usage[i];
             ClassNode di = declaration[i];
             if (di.isGenericsPlaceHolder()) {
-                connections.put(new GenericsTypeName(di.getUnresolvedName()), new GenericsType(ui));
+                storeGenericsConnection(connections, di.getUnresolvedName(), new GenericsType(ui));
             } else if (di.isUsingGenerics()) {
                 extractGenericsConnections(connections, ui.getGenericsTypes(), di.getGenericsTypes());
             }
         }
+    }
+
+    private static void storeGenericsConnection(final Map<GenericsTypeName, GenericsType> connections, final String placeholderName, final GenericsType gt) {
+      //connections.merge(new GenericsTypeName(placeholderName), gt, (gt1, gt2) -> getCombinedGenericsType(gt1, gt2));
+        connections.put(new GenericsTypeName(placeholderName), gt);
     }
 
     static GenericsType[] getGenericsWithoutArray(final ClassNode type) {
@@ -1930,16 +1927,11 @@ public abstract class StaticTypeCheckingSupport {
         return genericsType.getType();
     }
 
-    private static Map<GenericsTypeName, GenericsType> getGenericsParameterMapOfThis(final ClassNode cn) {
-        if (cn == null) return null;
-        Map<GenericsTypeName, GenericsType> map = null;
-        if (cn.getEnclosingMethod() != null) {
-            map = extractGenericsParameterMapOfThis(cn.getEnclosingMethod());
-        } else if (cn.getOuterClass() != null) {
-            map = getGenericsParameterMapOfThis(cn.getOuterClass());
-        }
-        map = mergeGenerics(map, cn.getGenericsTypes());
-        return map;
+    static GenericsType getCombinedGenericsType(final GenericsType gt1, final GenericsType gt2) {
+        ClassNode cn1 = makeClassSafe0(CLASS_Type, gt1);
+        ClassNode cn2 = makeClassSafe0(CLASS_Type, gt2);
+        ClassNode lub = lowestUpperBound(cn1,cn2);
+        return lub.getGenericsTypes()[0];
     }
 
     /**
@@ -1989,37 +1981,60 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     static Map<GenericsTypeName, GenericsType> extractGenericsParameterMapOfThis(final TypeCheckingContext context) {
-        ClassNode cn = context.getEnclosingClassNode();
+        ClassNode  cn = context.getEnclosingClassNode();
         MethodNode mn = context.getEnclosingMethod();
         // GROOVY-9570: find the innermost class or method
         if (cn != null && cn.getEnclosingMethod() == mn) {
-            return getGenericsParameterMapOfThis(cn);
+            return extractGenericsParameterMapOfThis(cn);
+        } else {
+            return extractGenericsParameterMapOfThis(mn);
         }
-        return extractGenericsParameterMapOfThis(mn);
     }
 
     private static Map<GenericsTypeName, GenericsType> extractGenericsParameterMapOfThis(final MethodNode mn) {
         if (mn == null) return null;
 
-        Map<GenericsTypeName, GenericsType> map;
-        if (mn.isStatic()) {
-            map = new HashMap<>();
-        } else {
-            map = getGenericsParameterMapOfThis(mn.getDeclaringClass());
+        Map<GenericsTypeName, GenericsType> map = null;
+        if (!mn.isStatic()) {
+            map = extractGenericsParameterMapOfThis(mn.getDeclaringClass());
         }
 
-        return mergeGenerics(map, mn.getGenericsTypes());
+        GenericsType[] gts = mn.getGenericsTypes();
+        if (gts != null) {
+            if (map == null) map = new HashMap<>();
+            for (GenericsType gt : gts) {
+                assert gt.isPlaceholder();
+                map.put(new GenericsTypeName(gt.getName()), gt);
+            }
+        }
+
+        return map;
     }
 
-    private static Map<GenericsTypeName, GenericsType> mergeGenerics(Map<GenericsTypeName, GenericsType> current, final GenericsType[] newGenerics) {
-        if (newGenerics == null || newGenerics.length == 0) return current;
-        if (current == null) current = new HashMap<>();
-        for (GenericsType gt : newGenerics) {
-            if (!gt.isPlaceholder()) continue;
-            GenericsTypeName name = new GenericsTypeName(gt.getName());
-            if (!current.containsKey(name)) current.put(name, gt);
+    private static Map<GenericsTypeName, GenericsType> extractGenericsParameterMapOfThis(final ClassNode cn) {
+        if (cn == null) return null;
+
+        Map<GenericsTypeName, GenericsType> map = null;
+        if ((cn.getModifiers() & Opcodes.ACC_STATIC) == 0) {
+            if (cn.getEnclosingMethod() != null) {
+                map = extractGenericsParameterMapOfThis(cn.getEnclosingMethod());
+            } else if (cn.getOuterClass() != null) {
+                map = extractGenericsParameterMapOfThis(cn.getOuterClass());
+            }
         }
-        return current;
+
+        if (!(cn instanceof InnerClassNode && ((InnerClassNode) cn).isAnonymous())) {
+            GenericsType[] gts = cn.getGenericsTypes();
+            if (gts != null) {
+                if (map == null) map = new HashMap<>();
+                for (GenericsType gt : gts) {
+                    assert gt.isPlaceholder();
+                    map.put(new GenericsTypeName(gt.getName()), gt);
+                }
+            }
+        }
+
+        return map;
     }
 
     /**
@@ -2153,7 +2168,6 @@ public abstract class StaticTypeCheckingSupport {
      * @return the result of the expression
      */
     public static Object evaluateExpression(final Expression expr, final CompilerConfiguration config) {
-        // GRECLIPSE add
         Expression ce = expr instanceof CastExpression ? ((CastExpression) expr).getExpression() : expr;
         if (ce instanceof ConstantExpression) {
             if (expr.getType().equals(ce.getType()))
@@ -2162,26 +2176,25 @@ public abstract class StaticTypeCheckingSupport {
             if (expr.getType().isArray() && expr.getType().getComponentType().equals(STRING_TYPE))
                 return ((ListExpression) ce).getExpressions().stream().map(e -> evaluateExpression(e, config)).toArray(String[]::new);
         }
-        // GRECLIPSE end
+
         String className = "Expression$" + UUID.randomUUID().toString().replace('-', '$');
-        ClassNode node = new ClassNode(className, Opcodes.ACC_PUBLIC, OBJECT_TYPE);
-        ReturnStatement code = new ReturnStatement(expr);
-        addGeneratedMethod(node, "eval", Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC, OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, code);
-        CompilerConfiguration copyConf = new CompilerConfiguration(config);
-        // disable preview features so class can be inspected by this JVM
-        copyConf.setPreviewFeatures(false);
-        // GRECLIPSE add
-        copyConf.setTargetBytecode(CompilerConfiguration.DEFAULT.getTargetBytecode());
-        // GRECLIPSE end
-        CompilationUnit cu = new CompilationUnit(copyConf);
+        ClassNode simpleClass = new ClassNode(className, Opcodes.ACC_PUBLIC, OBJECT_TYPE);
+        addGeneratedMethod(simpleClass, "eval", Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC, OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, new ReturnStatement(expr));
+
+        // adjust configuration so class can be inspected by this JVM
+        CompilerConfiguration cc = new CompilerConfiguration(config);
+        cc.setPreviewFeatures(false); // unlikely to be required by expression
+        cc.setTargetBytecode(CompilerConfiguration.DEFAULT.getTargetBytecode());
+
+        CompilationUnit cu = new CompilationUnit(cc);
         try {
-            cu.addClassNode(node);
+            cu.addClassNode(simpleClass);
             cu.compile(Phases.CLASS_GENERATION);
             List<GroovyClass> classes = cu.getClasses();
             Class<?> aClass = cu.getClassLoader().defineClass(className, classes.get(0).getBytes());
             try {
                 return aClass.getMethod("eval").invoke(null);
-            } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            } catch (ReflectiveOperationException e) {
                 throw new GroovyBugError(e);
             }
         } finally {
@@ -2199,6 +2212,12 @@ public abstract class StaticTypeCheckingSupport {
     @Deprecated
     public static Set<ClassNode> collectAllInterfaces(final ClassNode node) {
         return GeneralUtils.getInterfacesAndSuperInterfaces(node);
+    }
+
+    @Deprecated
+    public static ClassNode getCorrectedClassNode(final ClassNode cn, final ClassNode sc, final boolean completed) {
+        if (completed && GenericsUtils.hasUnresolvedGenerics(cn)) return sc.getPlainNodeReference();
+        return GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.createGenericsSpec(cn), sc);
     }
 
     /**

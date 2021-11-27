@@ -79,11 +79,11 @@ final class OtherCompletionTests extends CompletionTestSuite {
         assert proposal.displayString == 'bar() : String - StringExtension (Groovy)'
 
         proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.collect'))
-        Arrays.sort(proposals) { ICompletionProposal o1, ICompletionProposal o2 ->
-            o2.displayString <=> o1.displayString
+        Arrays.sort(proposals) { ICompletionProposal p1, ICompletionProposal p2 ->
+            p2.displayString.length() <=> p1.displayString.length()
         }
         proposalExists(proposals, 'collect', 3)
-        assert proposals[0].displayString == 'collect(Collection<T> collector, Closure<? extends T> transform) : Collection<T> - DefaultGroovyMethods (Groovy)'
+        assert proposals[0].displayString == "collect(${isAtLeastGroovy(40)?'C':'Collection<T>'} collector, Closure<? extends T> transform) : ${isAtLeastGroovy(40)?'C':'Collection<T>'} - DefaultGroovyMethods (Groovy)"
         assert proposals[1].displayString == 'collect(Closure<T> transform) : List<T> - DefaultGroovyMethods (Groovy)'
         assert proposals[2].displayString == 'collect() : Collection - DefaultGroovyMethods (Groovy)'
     }

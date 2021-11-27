@@ -277,7 +277,10 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         if (type.isGenericsPlaceHolder()) {
             return type.getUnresolvedName() + arraySuffix;
         }
-        return type.getText() + printGenerics(type) + arraySuffix;
+        String name = type.getText();
+        if (name.charAt(0) == '(') // Groovy 4.0.0-rc-1+
+            name = name.substring(1, name.length() - 1);
+        return name + (name.contains(" or ") ? "" : printGenerics(type)) + arraySuffix;
     }
 
     public static String printGenerics(ClassNode type) {

@@ -317,9 +317,8 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.StringBuffer");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, Float.parseFloat(System.getProperty("java.specification.version")) < 11
-            ? "java.io.Serializable or java.lang.CharSequence" :  "java.io.Serializable or java.lang.CharSequence or " +
-                "java.lang.Comparable<? extends java.io.Serializable or java.lang.CharSequence or java.lang.Comparable<java.lang.String>>");
+        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.CharSequence" +
+            (Float.parseFloat(System.getProperty("java.specification.version")) < 11 ? "" :  " or java.lang.Comparable"));
     }
 
     @Test
@@ -341,9 +340,8 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.StringBuffer");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, Float.parseFloat(System.getProperty("java.specification.version")) < 11
-            ? "java.io.Serializable or java.lang.CharSequence" :  "java.io.Serializable or java.lang.CharSequence or " +
-                "java.lang.Comparable<? extends java.io.Serializable or java.lang.CharSequence or java.lang.Comparable<java.lang.String>>");
+        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.CharSequence" +
+            (Float.parseFloat(System.getProperty("java.specification.version")) < 11 ? "" :  " or java.lang.Comparable"));
     }
 
     @Test
@@ -370,7 +368,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.math.BigDecimal");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.Comparable<? extends java.lang.Object>");
+        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.Comparable");
     }
 
     @Test
@@ -396,7 +394,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.math.BigDecimal");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.Comparable<? extends java.lang.Object>");
+        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.Comparable");
     }
 
     @Test
@@ -425,7 +423,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.math.BigDecimal");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.Comparable<? extends java.lang.Object>");
+        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.Comparable");
     }
 
     @Test
@@ -492,7 +490,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
         // line 11
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Number or java.lang.Comparable<? extends java.lang.Number or java.lang.Comparable<java.lang.Integer>>");
+        assertType(contents, offset, offset + 1, "java.lang.Number or java.lang.Comparable");
     }
 
     @Test

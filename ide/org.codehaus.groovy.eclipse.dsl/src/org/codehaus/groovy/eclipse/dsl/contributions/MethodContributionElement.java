@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyNamedArgumentProposal;
@@ -47,8 +46,6 @@ import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclara
 
 public class MethodContributionElement implements IContributionElement {
 
-    private static final BlockStatement EMPTY_BLOCK = new BlockStatement();
-    private static final ClassNode[] NO_EXCEPTIONS = ClassNode.EMPTY_ARRAY;
     private static final ParameterContribution[] NO_PARAMETER_CONTRIBUTIONS = {};
 
     private final String methodName;
@@ -245,7 +242,7 @@ public class MethodContributionElement implements IContributionElement {
                     cachedReturnType = cachedReturnType.getPlainNodeReference();
                 }
             } else {
-                cachedReturnType = ClassHelper.DYNAMIC_TYPE;
+                cachedReturnType = ClassHelper.dynamicType();
             }
         }
         return cachedReturnType;
@@ -299,7 +296,7 @@ public class MethodContributionElement implements IContributionElement {
     public static class MethodContribution extends MethodNode implements MethodNodeWithNamedParams {
 
         public MethodContribution(String name, int modifiers, ClassNode returnType, Parameter[] namedParams, Parameter[] optionalParams, Parameter[] positionalParams) {
-            super(name, modifiers, returnType, MethodNodeWithNamedParams.concatParams(positionalParams, namedParams, optionalParams), NO_EXCEPTIONS, EMPTY_BLOCK);
+            super(name, modifiers, returnType, MethodNodeWithNamedParams.concatParams(positionalParams, namedParams, optionalParams), null, null);
 
             this.namedParams = namedParams;
             this.optionalParams = optionalParams;
@@ -327,7 +324,7 @@ public class MethodContributionElement implements IContributionElement {
     public static class ConstructorContribution extends ConstructorNode implements MethodNodeWithNamedParams {
 
         public ConstructorContribution(int modifiers, Parameter[] namedParams, Parameter[] optionalParams, Parameter[] positionalParams) {
-            super(modifiers, MethodNodeWithNamedParams.concatParams(positionalParams, namedParams, optionalParams), NO_EXCEPTIONS, EMPTY_BLOCK);
+            super(modifiers, MethodNodeWithNamedParams.concatParams(positionalParams, namedParams, optionalParams), null, null);
 
             this.namedParams = namedParams;
             this.optionalParams = optionalParams;

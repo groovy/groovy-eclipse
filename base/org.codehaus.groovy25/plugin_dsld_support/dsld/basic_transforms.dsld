@@ -172,7 +172,7 @@ contribute(enclosingClass(annotatedBy(AutoExternalize))) {
 contribute(isScript() & currentType(subType(Script) & bind(fields: fields(not(isFinal()))))) {
     provider = '{@link groovy.transform.Field Field} AST transform'
     for (FieldNode field : fields) {
-        if (field.getEnd() > 0) {
+        if (field.end > 0) {
             method name: getSetterName(field.name), type: void, params: [(field.name): field.type], isStatic: field.isStatic()
         }
     }
@@ -215,11 +215,11 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | ha
     provider = '{@link groovy.transform.NamedVariant NamedVariant} AST transform'
     for (MethodNode meth : meths) {
         Parameter parm = meth.parameters[0]
-        if (!ClassHelper.MAP_TYPE.equals(parm.type)) {
+        if (parm.type != ClassHelper.MAP_TYPE) {
             continue
         }
 
-        Map<String, ?> namedParams = [:], optionalParams = [:]
+        Map<String, ?> requiredParams = [:], optionalParams = [:]
         for (AnnotationNode anno : parm.getAnnotations(NAMED_PARAM_TYPE) ?:
                 parm.getAnnotations(NAMED_PARAMS_TYPE).collectMany { it.getMember('value').expressions*.value }) {
             String name = anno.getMember('value').value
@@ -228,12 +228,12 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | ha
             Boolean r = anno.getMember('required')?.value
             if (r == null) r = NamedParam.getMethod('required').defaultValue
 
-            (r ? namedParams : optionalParams).put(name, type)
+            (r ? requiredParams : optionalParams).put(name, type)
         }
 
         method  name: meth.name,
                 params: params(meth),
-                namedParams: namedParams,
+                namedParams: requiredParams,
                 optionalParams: optionalParams,
                 declaringType: meth.declaringClass,
                 type: meth.returnType, isStatic: meth.isStatic(),

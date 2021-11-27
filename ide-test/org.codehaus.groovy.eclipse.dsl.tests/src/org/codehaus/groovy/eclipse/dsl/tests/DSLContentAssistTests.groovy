@@ -836,7 +836,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedParamsAnnotation2a() {
+    void testNamedParamsAnnotation3() {
         String contents = '''\
             |import groovy.transform.*
             |
@@ -862,13 +862,13 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             |}
             |
             |@NamedVariant
-            |def meth(Pogo pogo) { }
+            |def meth(Pogo pogo) { } // implicit @NamedParam(name='pogo',type=Pogo,required=true)
             |
             |meth()
             |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
-        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'meth', 3)
         proposalExists(proposals, 'pogo : __', 1)
         proposalExists(proposals, 'name : __', 0)
         proposalExists(proposals, 'type : __', 0)
@@ -876,6 +876,49 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedVariantTransform2() {
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant
+            |def meth(Pogo pogo = null) { } // implicit @NamedParam(name='pogo',type=Pogo,required=false)
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 3)
+        proposalExists(proposals, 'pogo : __', 1)
+        proposalExists(proposals, 'name : __', 0)
+        proposalExists(proposals, 'type : __', 0)
+    }
+
+    @Test
+    void testNamedVariantTransform3() {
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant(autoDelegate=true)
+            |def meth(Pogo pogo) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+    }
+
+    @Test
+    void testNamedVariantTransform4() {
         String contents = '''\
             |import groovy.transform.*
             |
@@ -896,7 +939,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedVariantTransform2a() {
+    void testNamedVariantTransform5() {
         String contents = '''\
             |import groovy.transform.*
             |
@@ -918,7 +961,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedVariantTransform3() {
+    void testNamedVariantTransform6() {
         String contents = '''\
             |import groovy.transform.*
             |
@@ -944,7 +987,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedVariantTransform4() {
+    void testNamedVariantTransform7() {
         String contents = '''\
             |import groovy.transform.*
             |
@@ -961,7 +1004,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedVariantTransform5() {
+    void testNamedVariantTransform8() {
         String contents = '''\
             |import groovy.transform.*
             |
@@ -984,7 +1027,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedVariantTransform6() {
+    void testNamedVariantTransform9() {
         String contents = '''\
             |import groovy.transform.*
             |

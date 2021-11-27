@@ -1337,7 +1337,6 @@ public class ClassNode extends AnnotatedNode {
                     return true;
                 }
             }
-            // GRECLIPSE add -- GROOVY-10379
             for (ClassNode in : cn.getAllInterfaces()) {
                 for (MethodNode mn : in.getDeclaredMethods(name)) {
                     if (mn.isDefault() && hasCompatibleNumberOfArgs(mn, count)) {
@@ -1345,7 +1344,6 @@ public class ClassNode extends AnnotatedNode {
                     }
                 }
             }
-            // GRECLIPSE end
         }
 
         return false;
@@ -1449,11 +1447,16 @@ public class ClassNode extends AnnotatedNode {
      *
      * @since 4.0.0
      */
-    public List<RecordComponentNode> getRecordComponentNodes() {
+    public List<RecordComponentNode> getRecordComponents() {
         if (redirect != null)
-            return redirect.getRecordComponentNodes();
+            return redirect.getRecordComponents();
         lazyClassInit();
         return recordComponents;
+    }
+
+    @Deprecated
+    public List<RecordComponentNode> getRecordComponentNodes() {
+        return getRecordComponents();
     }
 
     /**
@@ -1461,12 +1464,17 @@ public class ClassNode extends AnnotatedNode {
      *
      * @since 4.0.0
      */
-    public void setRecordComponentNodes(List<RecordComponentNode> recordComponents) {
+    public void setRecordComponents(List<RecordComponentNode> recordComponents) {
         if (redirect != null) {
-            redirect.setRecordComponentNodes(recordComponents);
+            redirect.setRecordComponents(recordComponents);
         } else {
             this.recordComponents = recordComponents;
         }
+    }
+
+    @Deprecated
+    public void setRecordComponentNodes(List<RecordComponentNode> recordComponentNodes) {
+        setRecordComponents(recordComponentNodes);
     }
 
     public boolean isAbstract() {

@@ -3136,7 +3136,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\tList<String> list = ['a','b',3]\n" +
             "\t                    ^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Incompatible generic argument types." +
-            " Cannot assign java.util.ArrayList<java.io.Serializable<? extends java.lang.Object>> to: java.util.List<java.lang.String>\n" +
+            " Cannot assign java.util.ArrayList<java.io.Serializable<? extends " + (isAtLeastGroovy(40) ? "java.io.Serializable<java.lang.String>" : "java.lang.Object") + ">> to: java.util.List<java.lang.String>\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 4)\n" +
             "\tDeque<String> deque = ['x','y']\n" +
@@ -4772,12 +4772,22 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        String type = "java.io.Serializable";
+        if (isAtLeastGroovy(40)) {
+            type += " or java.lang.Comparable";
+            if (Float.parseFloat(System.getProperty("java.specification.version")) > 11) {
+                type += " or java.lang.constant.Constable or java.lang.constant.ConstantDesc";
+            }
+            type = "(" + type + ")";
+        } else {
+            type += "<? extends java.io.Serializable<java.lang.String>>";
+        }
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tInteger i = bar(foo(), 1)\n" +
             "\t            ^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot assign value of type java.io.Serializable<? extends java.io.Serializable<java.lang.String>> to variable of type java.lang.Integer\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type " + type + " to variable of type java.lang.Integer\n" +
             "----------\n");
     }
 

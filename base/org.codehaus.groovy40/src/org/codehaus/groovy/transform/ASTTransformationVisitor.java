@@ -20,6 +20,7 @@ package org.codehaus.groovy.transform;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.Tuple;
+import groovy.lang.Tuple2;
 import groovy.lang.Tuple3;
 import groovy.transform.CompilationUnitAware;
 import org.codehaus.groovy.GroovyException;
@@ -57,6 +58,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -87,6 +89,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
+    private static final PriorityComparator priorityComparator = new PriorityComparator();
     private final ASTTransformationsContext context;
     private final CompilePhase phase;
     private SourceUnit source;
@@ -173,39 +176,44 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             super.visitClass(classNode);
 
             // second pass, call visit on all of the collected nodes
+            List<Tuple2<ASTTransformation, ASTNode[]>> tuples = new ArrayList<>();
             for (ASTNode[] node : targetNodes) {
                 for (ASTTransformation snt : transforms.get(node[0])) {
-                    // GRECLIPSE add
-                    try {
-                        long t0 = System.nanoTime();
-                        boolean okToSet = (source != null && source.getErrorCollector() != null);
-                        try {
-                            if (okToSet) {
-                                source.getErrorCollector().transformActive = true;
-                            }
-                    // GRECLIPSE end
-                    if (snt instanceof CompilationUnitAware) {
-                        ((CompilationUnitAware)snt).setCompilationUnit(context.getCompilationUnit());
-                    }
-                    snt.visit(node, source);
-                    // GRECLIPSE add
-                        } finally {
-                            if (okToSet) {
-                                source.getErrorCollector().transformActive = false;
-                            }
-                        }
-                        if (GroovyLogManager.manager.hasLoggers()) {
-                            long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
-                            String sourceName = DefaultGroovyMethods.last(source.getName().split("/|\\\\"));
-                            GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Local transform " + snt.getClass().getName() + " applied to " + sourceName + "(" + getTargetName(node[1], classNode) + ") in " + millis + "ms");
-                        }
-                    } catch (NoClassDefFoundError ncdfe) {
-                        String message = "Unable to run AST transform " + snt.getClass().getName() + ": missing class " + ncdfe.getMessage() +
-                            ": Are you attempting to use groovy classes in an AST transform in the same project in which it is defined?";
-                        source.addError(new SyntaxException(message, ncdfe, node[1].getLineNumber(), node[1].getColumnNumber()));
-                    }
-                    // GRECLIPSE end
+                    tuples.add(new Tuple2<>(snt, node));
                 }
+            }
+            tuples.sort(priorityComparator);
+            for (Tuple2<ASTTransformation, ASTNode[]> tuple : tuples) {
+                if (tuple.getV1() instanceof CompilationUnitAware) {
+                    ((CompilationUnitAware)tuple.getV1()).setCompilationUnit(context.getCompilationUnit());
+                }
+                // GRECLIPSE add
+                try {
+                    long t0 = System.nanoTime();
+                    boolean okToSet = (source != null && source.getErrorCollector() != null);
+                    try {
+                        if (okToSet) {
+                            source.getErrorCollector().transformActive = true;
+                        }
+                // GRECLIPSE end
+                tuple.getV1().visit(tuple.getV2(), source);
+                // GRECLIPSE add
+                    } finally {
+                        if (okToSet) {
+                            source.getErrorCollector().transformActive = false;
+                        }
+                    }
+                    if (GroovyLogManager.manager.hasLoggers()) {
+                        long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
+                        String sourceName = DefaultGroovyMethods.last(source.getName().split("/|\\\\"));
+                        GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Local transform " + tuple.getV1().getClass().getName() + " applied to " + sourceName + "(" + getTargetName(tuple.getV2()[1], classNode) + ") in " + millis + "ms");
+                    }
+                } catch (NoClassDefFoundError ncdfe) {
+                    String message = "Unable to run AST transform " + tuple.getV1().getClass().getName() + ": missing class " + ncdfe.getMessage() +
+                                     ": Are you attempting to use groovy classes in an AST transform in the same project in which it is defined?";
+                    source.addError(new SyntaxException(message, ncdfe, tuple.getV2()[1].getLineNumber(), tuple.getV2()[1].getColumnNumber()));
+                }
+                // GRECLIPSE end
             }
         }
     }
@@ -491,6 +499,21 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     "Could not instantiate global transform class " + entry.getKey() + " specified at "
                     + entry.getValue().toExternalForm() + "  because of exception " + t.toString(), null));
             }
+        }
+    }
+
+    private static class PriorityComparator implements Comparator<Tuple2<ASTTransformation, ASTNode[]>> {
+        @Override
+        public int compare(Tuple2<ASTTransformation, ASTNode[]> o1, Tuple2<ASTTransformation, ASTNode[]> o2) {
+            Integer i1 = 0;
+            Integer i2 = 0;
+            if (o1.getV1() instanceof TransformWithPriority) {
+                i1 = ((TransformWithPriority) o1.getV1()).priority();
+            }
+            if (o2.getV1() instanceof TransformWithPriority) {
+                i2 = ((TransformWithPriority) o2.getV1()).priority();
+            }
+            return i2.compareTo(i1);
         }
     }
 }

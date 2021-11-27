@@ -277,6 +277,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findTa
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.fullyResolve;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.fullyResolveType;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getCombinedBoundType;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getCombinedGenericsType;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getGenericsWithoutArray;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getOperationName;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
@@ -2971,7 +2972,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else if ((n = p.length) == 0) {
                     // implicit parameter(s)
                     paramTypes = samParamTypes;
-                } else {
+                } else { // TODO: error for length mismatch
                     paramTypes = Arrays.copyOf(samParamTypes, n);
                     for (int i = 0; i < Math.min(n, samParamTypes.length); i += 1) {
                         checkParamType(p[i], paramTypes[i], i == n-1, expression instanceof LambdaExpression);
@@ -5315,10 +5316,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         Map<GenericsTypeName, GenericsType> connections = new HashMap<>();
                         extractGenericsConnections(connections, wrapTypeIfNecessary(argumentType), paramType);
                         connections.forEach((gtn, gt) -> resolvedPlaceholders.merge(gtn, gt, (gt1, gt2) -> {
-                            // GROOVY-10339: incorporate additional witness
-                            ClassNode cn1 = makeClassSafe0(CLASS_Type, gt1);
-                            ClassNode cn2 = makeClassSafe0(CLASS_Type, gt2);
-                            return lowestUpperBound(cn1,cn2).getGenericsTypes()[0];
+                            // GROOVY-10339: incorporate another witness
+                            return getCombinedGenericsType(gt1, gt2);
                         }));
                     }
                 }

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
+
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.core.Flags
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -159,7 +161,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testDGMParameters() {
         String contents = '[].collect'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'collect'))
-        proposalExists(proposals, 'collect(Collection<T> collector, Closure<? extends T> transform)', 1)
+        proposalExists(proposals, "collect(${isAtLeastGroovy(40)?'C':'Collection<T>'} collector, Closure<? extends T> transform)", 1)
         proposalExists(proposals, 'collect(Closure<T> transform)', 1)
         proposalExists(proposals, 'collect()', 1)
     }

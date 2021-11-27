@@ -1515,7 +1515,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         String contents = '''\
             |record Person(String name, Date dob) {
-            |  public Person {
+            |  Person {
             |    assert name?.size() > 1
             |  }
             |}

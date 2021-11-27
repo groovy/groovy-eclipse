@@ -18,8 +18,6 @@
  */
 package org.codehaus.groovy.ast;
 
-import org.apache.groovy.ast.tools.ClassNodeUtils;
-import org.apache.groovy.ast.tools.MethodNodeUtils;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 
@@ -27,6 +25,9 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Optional;
 
+import static org.apache.groovy.ast.tools.ClassNodeUtils.formatTypeName;
+import static org.apache.groovy.ast.tools.MethodNodeUtils.methodDescriptor;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.toGenericTypesString;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
 import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
@@ -80,7 +81,7 @@ public class MethodNode extends AnnotatedNode {
      */
     public String getTypeDescriptor() {
         if (typeDescriptor == null) {
-            typeDescriptor = MethodNodeUtils.methodDescriptor(this);
+            typeDescriptor = methodDescriptor(this);
         }
         return typeDescriptor;
     }
@@ -240,6 +241,27 @@ public class MethodNode extends AnnotatedNode {
         }
     }
 
+    // GRECLIPSE add
+    /**
+     * When default parameters are involved, this field will be
+     * the original method without any default parameters applied
+     */
+    private MethodNode original = this;
+
+    /**
+     * @return When default parameters are involved, this method returns the {@link MethodNode} 
+     * where no default parameters have been applied.  Otherwise returns <code>this</code>.  Never
+     * returns null.
+     */
+    public MethodNode getOriginal() {
+        return original;
+    }
+
+    public void setOriginal(MethodNode original) {
+        this.original = original;
+    }
+    // GRECLIPSE end
+
     /**
      * @return {@code true} if this method is the run method from a script
      */
@@ -285,48 +307,26 @@ public class MethodNode extends AnnotatedNode {
         this.syntheticPublic = syntheticPublic;
     }
 
-    /**
-     * Provides a nicely formatted string of the method definition. For simplicity, generic types on some of the elements
-     * are not displayed.
-     *
-     * @return string form of node with some generic elements suppressed
-     */
     @Override
     public String getText() {
-        String retType = AstToTextHelper.getClassText(returnType);
-        String exceptionTypes = AstToTextHelper.getThrowsClauseText(exceptions);
-        String params = AstToTextHelper.getParametersText(parameters);
         int mask = this instanceof ConstructorNode ? Modifier.constructorModifiers() : Modifier.methodModifiers();
-        return AstToTextHelper.getModifiersText(modifiers & mask) + " " + retType + " " + name + "(" + params + ") " + exceptionTypes + " { ... }";
+        return new StringBuilder(AstToTextHelper.getModifiersText(getModifiers() & mask))
+            .append(' ')
+            .append(toGenericTypesString(getGenericsTypes()))
+            .append(AstToTextHelper.getClassText(getReturnType()))
+            .append(' ')
+            .append(getName())
+            .append('(')
+            .append(AstToTextHelper.getParametersText(getParameters()))
+            .append(')')
+            .append(AstToTextHelper.getThrowsClauseText(getExceptions()))
+            .append(" { ... }")
+            .toString();
     }
-
-    // GRECLIPSE add
-    /**
-     * When default parameters are involved, this field will be
-     * the original method without any default parameters applied
-     */
-    private MethodNode original = this;
-
-    /**
-     * @return When default parameters are involved, this method returns the {@link MethodNode} 
-     * where no default parameters have been applied.  Otherwise returns <code>this</code>.  Never
-     * returns null.
-     */
-    public MethodNode getOriginal() {
-        return original;
-    }
-
-    public void setOriginal(MethodNode original) {
-        this.original = original;
-    }
-    // GRECLIPSE end
 
     @Override
     public String toString() {
-        /* GRECLIPSE edit
-        return super.toString() + "[" + getDeclaringClass().getName() + "#" + getTypeDescriptor() + "]";
-        */
-        return super.toString() + "[" + getTypeDescriptor() + " from " + ClassNodeUtils.formatTypeName(getDeclaringClass()) + "]";
-        // GRECLIPSE end
+        ClassNode declaringClass = getDeclaringClass();
+        return super.toString() + "[" + getTypeDescriptor() + (declaringClass == null ? "" : " from " + formatTypeName(declaringClass)) + "]";
     }
 }

@@ -64,6 +64,7 @@
         <file-match-pattern match-pattern="groovy/transform/DelegateASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/FieldASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/LogASTTransformation.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/NamedVariantASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/NullCheckASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/TupleConstructorASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/TemporaryVariableExpression.java" include-pattern="false" />
