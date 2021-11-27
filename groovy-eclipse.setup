@@ -293,7 +293,7 @@
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.22"/>
 	    <repository
-	        url="https://download.eclipse.org/eclipse/updates/4.22-I-builds/I20211117-1830"/>
+	        url="https://download.eclipse.org/eclipse/updates/4.22-I-builds/I20211124-1800"/>
       </repositoryList>
       <repositoryList
           name="2021-09">
