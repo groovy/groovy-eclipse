@@ -161,6 +161,9 @@ public class BinaryExpressionTransformer {
                     if (rightType.implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
                         Expression left = staticCompilationTransformer.transform(leftExpression);
                         Expression right = staticCompilationTransformer.transform(rightExpression);
+                        // GRECLIPSE add -- GROOVY-10394
+                        left = transformRepeatedReference(left); right = transformRepeatedReference(right);
+                        // GRECLIPSE end
                         MethodCallExpression call = new MethodCallExpression(left, "compareTo", new ArgumentListExpression(right));
                         call.setImplicitThis(false);
                         call.setMethodTarget(COMPARE_TO_METHOD);
@@ -188,6 +191,9 @@ public class BinaryExpressionTransformer {
                         TernaryExpression expr = (TernaryExpression) result.getFalseExpression();
                         expr.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
                         expr.getFalseExpression().putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
+                        // GRECLIPSE add -- GROOVY-10394
+                        expr.putNodeMetaData("classgen.callback", classgenCallback(right).andThen(classgenCallback(left)));
+                        // GRECLIPSE end
                         return result;
                     }
                 }

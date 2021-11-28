@@ -178,6 +178,10 @@ public class BinaryExpressionTransformer {
             if (operationType == Types.COMPARE_TO
                     && findType(leftExpression).implementsInterface(ClassHelper.COMPARABLE_TYPE)
                     && findType(rightExpression).implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
+                // GRECLIPSE add -- GROOVY-10394
+                left = transformRepeatedReference(left);
+                right = transformRepeatedReference(right);
+                // GRECLIPSE end
                 call = callX(left, "compareTo", args(right));
                 call.setImplicitThis(false);
                 call.setMethodTarget(COMPARE_TO_METHOD);
@@ -206,7 +210,9 @@ public class BinaryExpressionTransformer {
                         expr
                 );
                 expr.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
-
+                // GRECLIPSE add -- GROOVY-10394
+                expr.putNodeMetaData("classgen.callback", classgenCallback(right).andThen(classgenCallback(left)));
+                // GRECLIPSE end
                 return expr;
             }
 

@@ -6955,4 +6955,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Duplicate default methods named m with the parameters () and () are inherited from the types A and B\n" +
             "----------\n");
     }
+
+    @Test
+    public void testCompileStatic10394() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  int i = 0, j = 1\n" +
+            "  Integer getA() { i++ }\n" +
+            "  Integer getB() { j++ }\n" +
+            "  void test() {\n" +
+            "    assert (a <=> b) == -1\n" +
+            "    print i\n" +
+            "    print j\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "12");
+    }
 }
