@@ -148,7 +148,7 @@ public class BinaryExpressionTransformer {
                 compareToNullExpression.setSourcePosition(bin);
                 return compareToNullExpression;
             }
-        // GRECLIPSE add -- GROOVY-10377
+        // GRECLIPSE add -- GROOVY-10377, GROOVY-10395
         } else if (operationType == Types.COMPARE_IDENTICAL || operationType == Types.COMPARE_NOT_IDENTICAL) {
             if (isNullConstant(rightExpression)) {
                 CompareToNullExpression ctn = new CompareToNullExpression(staticCompilationTransformer.transform(leftExpression), operationType == Types.COMPARE_IDENTICAL);
@@ -165,6 +165,25 @@ public class BinaryExpressionTransformer {
                 Expression cid = new CompareIdentityExpression(staticCompilationTransformer.transform(leftExpression), operationType == Types.COMPARE_IDENTICAL, staticCompilationTransformer.transform(rightExpression));
                 cid.setSourcePosition(bin);
                 return cid;
+            }
+        } else if (operationType == Types.COMPARE_TO) {
+            ClassNode leftType = findType(leftExpression), rightType = findType(rightExpression);
+            // same-type primitive compare
+            if (leftType.equals(rightType)
+                    && ClassHelper.isPrimitiveType(leftType)
+                    || ClassHelper.isPrimitiveType(rightType)) {
+                ClassNode wrapperType = ClassHelper.getWrapper(leftType);
+                Expression leftAndRight = args(
+                    staticCompilationTransformer.transform(leftExpression),
+                    staticCompilationTransformer.transform(rightExpression)
+                );
+                // transform "a <=> b" into "[Integer|Long|Short|Byte|Double|Float|...].compare(a,b)"
+                MethodCallExpression call = callX(classX(wrapperType), "compare", leftAndRight);
+                call.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
+                call.setMethodTarget(wrapperType.getMethods("compare").get(0));
+                call.setImplicitThis(false);
+                call.setSourcePosition(bin);
+                return call;
             }
         // GRECLIPSE end
         } else if (operationType == Types.KEYWORD_IN) {

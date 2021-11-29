@@ -6978,4 +6978,51 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "12");
     }
+
+    @Test
+    public void testCompileStatic10395() {
+        for (String type : new String[] {"int", "long", "short", "byte", "char", "double", "float"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.CompileStatic\n" +
+                "int test(" + type + " a, " + type + " b) {\n" +
+                "  a <=> b\n" +
+                "}\n" +
+                "assert test((" + type + ")0,(" + type + ")0) == 0\n" +
+                "assert test((" + type + ")0,(" + type + ")1) < 0\n" +
+                "assert test((" + type + ")1,(" + type + ")0) > 0\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+
+            String result = disassemble(getOutputFile("Main.class"), 1);
+            int pos = result.indexOf("ScriptBytecodeAdapter.compareTo");
+            assertTrue(pos < 0);
+        }
+    }
+
+    @Test
+    public void testCompileStatic10395b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "int test(boolean a, boolean b) {\n" +
+            "  a <=> b\n" +
+            "}\n" +
+            "assert test(false,false) == 0\n" +
+            "assert test(false,true) < 0\n" +
+            "assert test(true,false) > 0\n" +
+            "assert test(true,true) == 0\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+
+        String result = disassemble(getOutputFile("Main.class"), 1);
+        int pos = result.indexOf("ScriptBytecodeAdapter.compareTo");
+        assertTrue(pos < 0);
+    }
 }
