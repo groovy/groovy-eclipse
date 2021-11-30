@@ -245,16 +245,23 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         Expression object = transform(mce.getObjectExpression());
         Expression method = transform(mce.getMethod());
         Expression args = transform(mce.getArguments());
-
+        // GRECLIPSE add
+        boolean staticWrtCurrent = inSpecialConstructorCall || currentMethod != null && currentMethod.isStatic();
+        // GRECLIPSE end
         if (mce.isImplicitThis()) {
-            if (currentClass.tryFindPossibleMethod(mce.getMethodAsString(), args) == null // GRECLIPSE add -- GROOVY-5239
-                    && currentClass.getOuterClasses().stream().noneMatch(oc -> oc.tryFindPossibleMethod(mce.getMethodAsString(), args) != null)) {
+            /* GRECLIPSE edit -- GROOVY-5239, GROOVY-10396
+            if (currentClass.tryFindPossibleMethod(mce.getMethodAsString(), args) == null) {
+            */
+            String name = mce.getMethodAsString();
+            boolean thisOrSuperMethod = staticWrtCurrent ? hasPossibleStaticMethod(currentClass, name, args, true) : currentClass.tryFindPossibleMethod(name, args) != null;
+            if (!thisOrSuperMethod && currentClass.getOuterClasses().stream().noneMatch(oc -> oc.tryFindPossibleMethod(name, args) != null)) {
+            // GRECLIPSE end
                 Expression result = findStaticMethodImportFromModule(method, args);
                 if (result != null) {
                     // GRECLIPSE add
-                    if (!((MethodCall) result).getMethodAsString().equals(method.getText())) {
-                        // store the identifier to facilitate organizing static imports
-                        result.putNodeMetaData("static.import.alias", method.getText());
+                    if (!((MethodCall) result).getMethodAsString().equals(name)) {
+                        // store the identifier to facilitate organizing imports
+                        result.putNodeMetaData("static.import.alias", name);
                     }
                     // GRECLIPSE end
                     result.setSourcePosition(mce);
@@ -262,7 +269,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 }
                 if (method instanceof ConstantExpression && !inLeftExpression) {
                     // could be a closure field
-                    result = findStaticFieldOrPropAccessorImportFromModule(method.getText());
+                    result = findStaticFieldOrPropAccessorImportFromModule(name);
                     if (result != null) {
                         // GRECLIPSE add
                         setSourcePosition(result, method);
@@ -285,7 +292,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                     }
                 }
             }
-        } else if (currentMethod != null && currentMethod.isStatic() && (object instanceof VariableExpression && ((VariableExpression) object).isSuperExpression())) {
+        } else if (staticWrtCurrent && (object instanceof VariableExpression && ((VariableExpression) object).isSuperExpression())) {
             Expression result = new MethodCallExpression(new ClassExpression(currentClass.getSuperClass()), method, args);
             result.setSourcePosition(mce);
             return result;
@@ -295,7 +302,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 || (object instanceof VariableExpression && (((VariableExpression) object).isThisExpression() || ((VariableExpression) object).isSuperExpression())))) {
             String methodName = (String) ((ConstantExpression) method).getValue();
 
-            boolean foundInstanceMethod = (currentMethod != null && !currentMethod.isStatic() && currentClass.hasPossibleMethod(methodName, args));
+            boolean foundInstanceMethod = !staticWrtCurrent && currentClass.hasPossibleMethod(methodName, args);
 
             if (mce.isImplicitThis()) {
                 if (isInnerClass(currentClass)) {

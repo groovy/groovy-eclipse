@@ -1475,4 +1475,103 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "CC");
     }
+
+    @Test // GROOVY-10396
+    public void testStaticImportVersusThisOrSuperMethod1() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.Q.println\n" +
+            "println 'x'\n", // from Script
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static void println(String s) {\n" +
+            "    System.out.println(\"Q:\" + s);\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
+    }
+
+    @Test // GROOVY-10396
+    public void testStaticImportVersusThisOrSuperMethod2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.Q.println\n" +
+            "static void test() {\n" +
+            "  println 'x'\n" +
+            "}\n" +
+            "test()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static void println(String s) {\n" +
+            "    System.out.println(\"Q:\" + s);\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Q:x");
+    }
+
+    @Test // GROOVY-10396
+    public void testStaticImportVersusThisOrSuperMethod3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.Q.println\n" +
+            "def obj = new Object() {\n" + // outer class extends Script
+            "  String toString() {\n" +
+            "    println 'AIC::x'\n" +
+            "    super.toString()\n" +
+            "  }\n" +
+            "}\n" +
+            "obj.toString()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static void println(String s) {\n" +
+            "    System.out.println(\"Q:\" + s);\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "AIC::x");
+    }
+
+    @Test // GROOVY-10396
+    public void testStaticImportVersusThisOrSuperMethod4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.Q.println\n" +
+            "static void println(String s) {\n" + // static overload
+            "  System.out.println(s)\n" +
+            "}\n" +
+            "static void test() {\n" +
+            "  println 'x'\n" +
+            "}\n" +
+            "test()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static void println(String s) {\n" +
+            "    System.out.println(\"Q:\" + s);\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
+    }
 }
