@@ -639,6 +639,17 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doAddImportTest(contents, ['java.text.DateFormat'])
     }
 
+    @Test
+    void testTitleCaseVariable() {
+        createGroovyType 'p', 'Q', 'class Q {}'
+
+        String contents = '''\
+            |def Q = null
+            |def q = Q
+            |'''
+        doContentsCompareTest(contents, contents)
+    }
+
     @Test // GRECLISPE-823
     void testThrownExceptions() {
         String originalContents = '''\

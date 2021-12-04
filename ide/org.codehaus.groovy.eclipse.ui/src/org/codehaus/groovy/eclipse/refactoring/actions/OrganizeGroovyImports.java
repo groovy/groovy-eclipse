@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -319,7 +320,7 @@ public class OrganizeGroovyImports {
 
     private IType[] resolveMissingTypes(IProgressMonitor monitor) throws JavaModelException {
         // fill in all the potential matches
-        new TypeSearch().searchForTypes(unit, missingTypes, monitor);
+        new TypeSearch().searchForTypes(unit, Collections.unmodifiableMap(missingTypes), monitor);
 
         List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<>();
         List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<>();
@@ -594,8 +595,8 @@ public class OrganizeGroovyImports {
                 // Assume dynamic variables are a candidate for organize imports,
                 // but only if name begins with a capital letter and does not match
                 // the idiomatic static constant naming. This will hopefully filter
-                // out false positives, but misses types that start with lower case.
-                if (expression.getAccessedVariable() instanceof DynamicVariable || expression.isDynamicTyped()) {
+                // out false positives but misses types that start with lower case.
+                if (expression.getAccessedVariable() instanceof DynamicVariable) {
                     if (!checkRetainImport(expression.getName())) { // could it be static?
                         String name = expression.getName();
                         if (!missingTypes.containsKey(name) &&
