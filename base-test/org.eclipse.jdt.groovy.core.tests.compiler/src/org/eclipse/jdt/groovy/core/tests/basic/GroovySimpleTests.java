@@ -6521,6 +6521,28 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "012012");
     }
 
+    @Test // GROOVY-9851
+    public void testSuperDotPrivateMethod() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A {\n" +
+            "  private void m() {\n" +
+            "    print 'works'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  void test() {\n" +
+            "    super.m()\n" + // private method!
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
     @Test
     public void testPositions1() {
         //@formatter:off
