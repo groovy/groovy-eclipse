@@ -127,6 +127,12 @@ public abstract class TraitComposer {
 
     private static void applyTrait(final ClassNode trait, final ClassNode cNode, final TraitHelpersTuple helpers, SourceUnit unit) {
         ClassNode helperClassNode = helpers.getHelper();
+        // GRECLIPSE add -- super class implements trait
+        if (helperClassNode == null) {
+            unit.addErrorAndContinue(new SyntaxException("Failed to locate helper for trait " + trait.getName(), trait));
+            return;
+        }
+        // GRECLIPSE end
         ClassNode fieldHelperClassNode = helpers.getFieldHelper();
         ClassNode staticFieldHelperClassNode = helpers.getStaticFieldHelper();
         Map<String,ClassNode> genericsSpec = GenericsUtils.createGenericsSpec(cNode);
