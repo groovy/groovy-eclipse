@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -354,22 +354,26 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
      * creates one.
      */
     protected ILaunchConfigurationWorkingCopy findOrCreateLaunchConfig(final Map<String, String> launchProperties, final String launchName) throws CoreException {
-        String projectName = launchProperties.get(ATTR_PROJECT_NAME);
-        ILaunchConfiguration config = findConfiguration(projectName, launchProperties.get(GROOVY_TYPE_TO_RUN));
-        return (config != null ? config.getWorkingCopy() : createLaunchConfig(launchProperties, launchName));
+        ILaunchConfiguration config = findConfiguration(launchProperties.get(ATTR_PROJECT_NAME), launchProperties.get(GROOVY_TYPE_TO_RUN));
+        if (config == null) {
+            return createLaunchConfig(launchProperties, launchName);
+        } else {
+            ILaunchConfigurationWorkingCopy workingCopy = config.getWorkingCopy();
+            // program arguments contains project's classpath, so always use fresh value
+            workingCopy.setAttribute(ATTR_PROGRAM_ARGUMENTS, launchProperties.get(ATTR_PROGRAM_ARGUMENTS));
+
+            return workingCopy;
+        }
     }
 
     /**
      * Creates a launch configuration for the given name and properties.
      */
     private ILaunchConfigurationWorkingCopy createLaunchConfig(final Map<String, String> launchProperties, final String launchName) throws CoreException {
-        ILaunchConfigurationWorkingCopy workingCopy = getGroovyLaunchConfigType().newInstance(
-            null, getLaunchManager().generateLaunchConfigurationName(launchName));
-
+        ILaunchConfigurationWorkingCopy workingCopy = getGroovyLaunchConfigType().newInstance(null, getLaunchManager().generateLaunchConfigurationName(launchName));
         for (Map.Entry<String, String> entry : launchProperties.entrySet()) {
             workingCopy.setAttribute(entry.getKey(), entry.getValue());
         }
-
         return workingCopy;
     }
 

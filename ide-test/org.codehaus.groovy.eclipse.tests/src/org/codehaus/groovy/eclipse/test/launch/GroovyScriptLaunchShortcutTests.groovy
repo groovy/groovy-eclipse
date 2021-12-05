@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Adapters
+import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants
@@ -51,6 +52,9 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
             setToDefault(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT)
             setToDefault(IInternalDebugUIConstants.PREF_WAIT_FOR_BUILD)
         }
+
+        def configType = new GroovyScriptLaunchShortcut().groovyLaunchConfigType
+        DebugPlugin.getDefault().launchManager.getLaunchConfigurations(configType).each { it.delete() }
     }
 
     @Test
@@ -286,6 +290,28 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
             |'''.stripMargin(), '../Launch.groovy') // '..' for root of project
         def type =  Adapters.adapt(file, GroovyCompilationUnit).getType('Launch')
         launchScriptAndAssertExitValue(type)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1299
+    void testScriptLaunch15() {
+        def shortcut = new GroovyScriptLaunchShortcut()
+        def unitType = addGroovySource('print "hello"', 'script').getType('script')
+
+        def newLaunchConfig = { ->
+            def workCopy = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(unitType, unitType.javaProject), unitType.fullyQualifiedName)
+            try {
+                String arguments = workCopy.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, '')
+                return arguments
+            } finally {
+                workCopy.doSave()
+            }
+        }
+
+        assert !newLaunchConfig().contains('jupiter')
+
+        addJUnit(5) // change the project's classpath
+
+        assert newLaunchConfig().contains('jupiter')
     }
 
     //--------------------------------------------------------------------------
