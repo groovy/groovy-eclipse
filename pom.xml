@@ -10,10 +10,11 @@
 		mvn clean deploy -Pe49 -Pmilestone -Ddist.qualifier=-M1
 		mvn clean deploy -Pe49 -Prelease
 
-		Running 'deploy' requires s3 accessKey and secretKey to be provided in a
-		properties file. The properties file must be specified via env variable
-		'dist_properties'. The existence of this env variable enables the deployment
-		profile automatically and will allow 'deploy' to execute.
+		Running 'deploy' requires s3 accessKey and secretKey to be provided via
+		the environment variables 'bamboo_tools_s3_accesskey_password' and also
+		'bamboo_tools_s3_secretkey_password'.  The existence of these variables
+		enables the deployment profile automatically and will allow 'deploy' to
+		execute.
 	-->
 
 	<properties>
@@ -495,38 +496,6 @@
 				<dist.target>e4.9</dist.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1809${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
-		</profile>
-
-		<profile>
-			<id>s3-deploy</id>
-			<activation>
-				<property>
-					<name>env.dist_properties</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>properties-maven-plugin</artifactId>
-						<version>1.0.0</version>
-						<executions>
-							<execution>
-								<phase>initialize</phase>
-								<goals>
-									<goal>read-project-properties</goal>
-								</goals>
-								<configuration>
-									<quiet>true</quiet>
-									<files>
-										<file>${env.dist_properties}</file>
-									</files>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
 		</profile>
 
 		<profile>

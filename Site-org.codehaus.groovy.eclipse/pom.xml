@@ -68,7 +68,7 @@
 			<id>s3-deploy</id>
 			<activation>
 				<property>
-					<name>env.dist_properties</name>
+					<name>env.bamboo_tools_s3_accesskey_password</name>
 				</property>
 			</activation>
 
@@ -91,14 +91,10 @@
 								<phase>deploy</phase>
 								<configuration>
 									<target>
-										<echo>Uploading main update site to s3..."</echo>
+										<echo>Uploading main update site to s3...</echo>
 
 										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
 										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
-
-										<echo>== Are props set so we can deploy? ==</echo>
-										<echo>dist_properties=${env.dist_properties}</echo>
-										<echo>bamboo_s3_properties=${env.bamboo_s3_properties}</echo>
 
 										<property name="dist.full.version" value="${unqualifiedVersion}.${buildQualifier}" />
 										<echo>dist.full.version=${dist.full.version}</echo><!-- ex: 3.5.0.v201909232147-e1909 -->
@@ -135,7 +131,7 @@
 										<echo> metadata project.name=${dist.name}</echo>
 										<echo> metadata release.type=${dist.type}</echo>
 
-										<s3 accessKey="${accessKey}" secretKey="${secretKey}">
+										<s3 accessKey="${env.bamboo_tools_s3_accesskey_password}" secretKey="${env.bamboo_tools_s3_secretkey_password}">
 											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
 													<include name="artifacts.jar" />
@@ -163,7 +159,7 @@
 										<if>
 											<equals arg1="${dist.type}" arg2="release" />
 											<then>
-												<s3 accessKey="${accessKey}" secretKey="${secretKey}">
+												<s3 accessKey="${env.bamboo_tools_s3_accesskey_password}" secretKey="${env.bamboo_tools_s3_secretkey_password}">
 													<delete bucketName="${dist.bucket}">
 														<fileset dir="${dist.type}/${dist.key}/${dist.target}" includes="composite*.xml" />
 													</delete>
