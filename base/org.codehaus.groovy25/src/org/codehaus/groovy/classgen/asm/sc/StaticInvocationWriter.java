@@ -119,13 +119,22 @@ public class StaticInvocationWriter extends InvocationWriter {
         if (origin instanceof MethodCallExpression &&
                 receiver instanceof VariableExpression &&
                 ((VariableExpression) receiver).isSuperExpression()) {
+            /* GRECLIPSE edit -- GROOVY-6097, GROOVY-7300, et al.
             ClassNode superClass = receiver.getNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER);
             if (superClass!=null && !controller.getCompileStack().isLHS()) {
-                // GROOVY-7300
                 MethodCallExpression mce = (MethodCallExpression) origin;
                 MethodNode node = superClass.getDeclaredMethod(mce.getMethodAsString(), Parameter.EMPTY_ARRAY);
                 mce.setMethodTarget(node);
             }
+            */
+            MethodCallExpression mce = (MethodCallExpression) origin;
+            if (mce.getMethodTarget() == null && !controller.getCompileStack().isLHS()) {
+                ClassNode owner = receiver.getNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER);
+                if (owner != null) {
+                    mce.setMethodTarget(owner.getDeclaredMethod(mce.getMethodAsString(), Parameter.EMPTY_ARRAY));
+                }
+            }
+            // GRECLIPSE end
         }
         return super.makeDirectCall(origin, receiver, message, arguments, adapter, implicitThis, containsSpreadExpression);
     }

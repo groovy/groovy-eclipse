@@ -5226,6 +5226,31 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-1736
+    public void testGroovy1736() {
+        for (String vis : new String[] {"", "public", "protected", "@groovy.transform.PackageScope"}) {
+            //@formatter:off
+            String[] sources = {
+                "Script.groovy",
+                "abstract class A {\n" +
+                vis + " def getX() { 'A' }\n" +
+                "}\n" +
+                "class C extends A {\n" +
+                "  def getX() { super.x + 'C' }\n" + // no stack overflow
+                "  void m() {\n" +
+                "    print x\n" +
+                "    print this.x\n" +
+                "    print super.x\n" + // TODO: test safe and spread
+                "  }\n" +
+                "}\n" +
+                "new C().m()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "ACACA");
+        }
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-3311
     public void testGroovy3311() {
         //@formatter:off
@@ -5272,6 +5297,51 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6097
+    public void testGroovy6097() {
+        for (String vis : new String[] {"", "public", "protected", "@groovy.transform.PackageScope"}) {
+            //@formatter:off
+            String[] sources = {
+                "Script.groovy",
+                "abstract class A {\n" +
+                vis + " boolean isX() { true }\n" +
+                vis + " boolean getX() { false }\n" +
+                "}\n" +
+                "class C extends A {\n" +
+                "  void m() {\n" +
+                "    print x\n" +
+                "    print this.x\n" +
+                "    print super.x\n" + // hardwired to "super.getX()"
+                "  }\n" +
+                "}\n" +
+                "new C().m()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "truetruefalse");
+        }
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7924
+    public void testGroovy7924() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            " def getFoo() { 'works' }\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  void m(String name) {\n" +
+            "    print super.\"$name\"\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().m('foo')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8311
