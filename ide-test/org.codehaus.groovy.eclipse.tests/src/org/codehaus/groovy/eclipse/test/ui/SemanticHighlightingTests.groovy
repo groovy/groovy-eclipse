@@ -3740,6 +3740,26 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testCastAndCoerce() {
+        String contents = '''\
+            |void test(obj) {
+            |  def one = (String) obj
+            |  def two = obj as String
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('obj'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('obj', contents.indexOf('String')), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('obj'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS))
+    }
+
+    @Test
     void testAliasType1() {
         String contents = '''\
             |import java.util.Map as Table

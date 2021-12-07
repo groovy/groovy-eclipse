@@ -2768,8 +2768,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode type = makeTypeWithArguments(rightNode);
 
         CastExpression asExpression = CastExpression.asExpression(type, leftExpression);
-        // GRECLIPSE edit -- set the sloc from the start of the target and the end of the type
-        //configureAST(asExpression, node);
+        /* GRECLIPSE edit -- set the sloc from the start of the target to the end of the type
+        configureAST(asExpression, node);
+        */
         asExpression.setStart(leftExpression.getStart());
         asExpression.setLineNumber(leftExpression.getLineNumber());
         asExpression.setColumnNumber(leftExpression.getColumnNumber());
@@ -2789,6 +2790,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // set the range of the type by itself
         asExpression.setNameStart(typeStart);
         asExpression.setNameEnd(asExpression.getEnd());
+
+        if (leftExpression instanceof VariableExpression && ((VariableExpression) leftExpression).isSuperExpression())
+            getController().addError(new SyntaxException("Cannot cast or coerce `super`", asExpression)); // GROOVY-9391
         // GRECLIPSE end
         return asExpression;
     }
@@ -2816,6 +2820,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             castExpression.setNameStart(locations.findOffset(typeNode.getLine(), typeNode.getColumn()));
             castExpression.setNameEnd(locations.findOffset(typeNode.getLineLast(), typeNode.getColumnLast()));
         }
+        if (expression instanceof VariableExpression && ((VariableExpression) expression).isSuperExpression())
+            getController().addError(new SyntaxException("Cannot cast or coerce `super`", castExpression)); // GROOVY-9391
         // GRECLIPSE end
         return castExpression;
     }

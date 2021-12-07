@@ -5377,6 +5377,30 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "65536.0");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9391
+    public void testGroovy9391() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A { def m() {} }\n" +
+            "class B extends A {  }\n" +
+            "class C extends B {\n" +
+            "  def m() {\n" +
+            "    ((A) super).m()\n" + // makes no sense
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\t((A) super).m()\n" +
+            "\t ^^^^^^^^^\n" +
+            "Groovy:Cannot cast or coerce `super`\n" +
+            "----------\n");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-9906
     public void testGroovy9906() {
         //@formatter:off

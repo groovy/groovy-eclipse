@@ -3162,9 +3162,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 ctx
         );
         */
-        CastExpression cast = new CastExpression(visitCastParExpression(ctx.castParExpression()), (Expression) visit(ctx.expression()));
+        Expression expr = (Expression) this.visit(ctx.expression());
+        if (expr instanceof VariableExpression && ((VariableExpression) expr).isSuperExpression()) {
+            this.createParsingFailedException("Cannot cast or coerce `super`", ctx); // GROOVY-9391
+        }
+        CastExpression cast = new CastExpression(this.visitCastParExpression(ctx.castParExpression()), expr);
         Expression name = configureAST(new ConstantExpression(null), ctx.castParExpression().type().primitiveType() != null
-            ? ctx.castParExpression().type().primitiveType() : ctx.castParExpression().type().classOrInterfaceType());
+                 ? ctx.castParExpression().type().primitiveType() : ctx.castParExpression().type().classOrInterfaceType());
         cast.setNameStart(name.getStart()); cast.setNameEnd(name.getEnd());
         return configureAST(cast, ctx);
         // GRECLIPSE end
@@ -3288,9 +3292,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         CastExpression.asExpression(this.visitType(ctx.type()), (Expression) this.visit(ctx.left)),
                         ctx);
                 */
-                CastExpression cast = CastExpression.asExpression(visitType(ctx.type()), (Expression) visit(ctx.left));
+                Expression expr = (Expression) this.visit(ctx.left);
+                if (expr instanceof VariableExpression && ((VariableExpression) expr).isSuperExpression()) {
+                    this.createParsingFailedException("Cannot cast or coerce `super`", ctx); // GROOVY-9391
+                }
+                CastExpression cast = CastExpression.asExpression(this.visitType(ctx.type()), expr);
                 Expression name = configureAST(new ConstantExpression(null), ctx.type().primitiveType() != null
-                    ? ctx.type().primitiveType() : ctx.type().classOrInterfaceType());
+                         ? ctx.type().primitiveType() : ctx.type().classOrInterfaceType());
                 cast.setNameStart(name.getStart()); cast.setNameEnd(name.getEnd());
                 return configureAST(cast, ctx);
                 // GRECLIPSE end
