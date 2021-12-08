@@ -57,15 +57,13 @@ class A {
     def x
     def y
 
-    def method1()
-    {
+    def method1() {
         method2()
         method2()
         method2()
     }
 
-    static constraints =
-    {
+    static constraints = {
         'test'
     }
 
@@ -77,7 +75,9 @@ class A {
         method3()
         method3(); method3()
 
-        for (int i = 0; i < 10; i++) { 1; 2 }
+        for (int i = 0; i < 10; i++) {
+            1; 2
+        }
     }
 }
 ###end

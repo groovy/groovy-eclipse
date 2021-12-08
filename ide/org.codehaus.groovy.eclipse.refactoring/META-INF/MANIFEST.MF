@@ -14,7 +14,6 @@ Export-Package: org.codehaus.groovy.eclipse.refactoring,
  org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner,
  org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates,
  org.codehaus.groovy.eclipse.refactoring.formatter,
- org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap,
  org.codehaus.groovy.eclipse.refactoring.ui.extract
 Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="4.4.0",
  org.codehaus.groovy.eclipse.core;bundle-version="4.4.0",

@@ -1,0 +1,31 @@
+###prop
+bracesEnd=next
+bracesStart=same
+indentation=space
+indentsize=4
+multilineIndentation=4
+setPreferences=true
+###src
+def method1() {
+	// both comment and block with curly braces are needed
+	if (flag) {
+	println('method1')
+	}
+}
+
+def method2()
+{
+println('method2')
+}
+###exp
+def method1() {
+    // both comment and block with curly braces are needed
+    if (flag) {
+        println('method1')
+    }
+}
+
+def method2() {
+    println('method2')
+}
+###end
