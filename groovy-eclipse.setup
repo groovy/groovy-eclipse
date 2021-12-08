@@ -126,7 +126,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2021-12) (scope.product.version.name=latest))">
+      filter="(| (scope.product.version.name=2021-12) (scope.product.version.name=latest) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -134,7 +134,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2021-09) (scope.product.version.name=latest.released))">
+      filter="(scope.product.version.name=2021-09)">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -292,8 +292,6 @@
             url="https://download.eclipse.org/releases/2021-12"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.22"/>
-	    <repository
-	        url="https://download.eclipse.org/eclipse/updates/4.22-I-builds/I20211124-1800"/>
       </repositoryList>
       <repositoryList
           name="2021-09">
