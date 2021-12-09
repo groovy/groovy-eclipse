@@ -108,6 +108,15 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
 
     @Override
     public Expression transform(final Expression expr) {
+        if (expr instanceof StaticMethodCallExpression) {
+            return staticMethodCallExpressionTransformer.transformStaticMethodCallExpression((StaticMethodCallExpression) expr);
+        }
+        if (expr instanceof MethodCallExpression) {
+            return methodCallExpressionTransformer.transformMethodCallExpression((MethodCallExpression) expr);
+        }
+        if (expr instanceof ConstructorCallExpression) {
+            return constructorCallTransformer.transformConstructorCall((ConstructorCallExpression) expr);
+        }
         if (expr instanceof PropertyExpression) {
             MethodNode dmct = expr.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             // NOTE: BinaryExpressionTransformer handles the setter
@@ -119,23 +128,24 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
                 mce.setSpreadSafe(pe.isSpreadSafe());
                 mce.setMethodTarget(dmct);
                 mce.setSourcePosition(pe);
-                mce.copyNodeMetaData(pe);
                 mce.setSafe(pe.isSafe());
                 return mce;
             }
             return super.transform(expr);
         }
-        if (expr instanceof StaticMethodCallExpression) {
-            return staticMethodCallExpressionTransformer.transformStaticMethodCallExpression((StaticMethodCallExpression) expr);
-        }
-        if (expr instanceof MethodCallExpression) {
-            return methodCallExpressionTransformer.transformMethodCallExpression((MethodCallExpression) expr);
-        }
-        if (expr instanceof ConstructorCallExpression) {
-            return constructorCallTransformer.transformConstructorCall((ConstructorCallExpression) expr);
-        }
         if (expr instanceof VariableExpression) {
-            return variableExpressionTransformer.transformVariableExpression((VariableExpression) expr);
+            Expression exp2 = variableExpressionTransformer.transformVariableExpression((VariableExpression) expr);
+            if (exp2 == expr) {
+                MethodNode dmct = expr.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                // NOTE: BinaryExpressionTransformer handles the setter
+                if (dmct != null && dmct.getParameters().length == 0) {
+                    MethodCallExpression mce = new MethodCallExpression(new VariableExpression("this"), dmct.getName(), MethodCallExpression.NO_ARGUMENTS);
+                    mce.getMethod().setSourcePosition(expr);
+                    mce.setMethodTarget(dmct);
+                    exp2 = mce;
+                }
+            }
+            return exp2;
         }
         if (expr instanceof ClosureExpression) {
             return closureExpressionTransformer.transformClosureExpression((ClosureExpression) expr);

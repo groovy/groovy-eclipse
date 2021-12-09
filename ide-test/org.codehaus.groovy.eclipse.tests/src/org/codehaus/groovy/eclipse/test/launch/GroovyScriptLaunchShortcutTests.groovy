@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.test.launch
 
+import static org.eclipse.jdt.core.JavaCore.getPlugin as getJavaPlugin
+import static org.junit.Assume.assumeTrue
+
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
@@ -294,6 +297,10 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1299
     void testScriptLaunch15() {
+        // ensure JUnit 5 container
+        def jdt = javaPlugin.bundle.version
+        assumeTrue(jdt.major > 3 || jdt.minor >= 18)
+
         def shortcut = new GroovyScriptLaunchShortcut()
         def unitType = addGroovySource('print "hello"', 'script').getType('script')
 

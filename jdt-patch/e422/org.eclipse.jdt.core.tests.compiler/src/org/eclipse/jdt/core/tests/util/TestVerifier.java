@@ -19,9 +19,8 @@ import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.eclipse.jdt.core.tests.runtime.*;
 import java.io.*;
 import java.net.*;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.stream.*;
 
 /**
  * Verifies that the .class files resulting from a compilation can be loaded
@@ -375,6 +374,30 @@ return Arrays.stream(classPath)
 	.toArray(String[]::new);
 }
 
+private String[] getVMArguments(String[] vmArguments) {
+	List<String> completeVmArguments = new ArrayList<>();
+
+	if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.io=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.net=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.math=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.text=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util.regex=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util.stream=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util.function=ALL-UNNAMED");
+	}
+
+	if (vmArguments != null) {
+		Collections.addAll(completeVmArguments, vmArguments);
+	}
+	completeVmArguments.add("-verify");
+
+	return completeVmArguments.toArray(new String[0]);
+}
 private void launchAndRun(String className, String[] classpaths, String[] programArguments, String[] vmArguments) {
 	// we won't reuse the vm, shut the existing one if running
 	if (this.vm != null) {
@@ -389,14 +412,7 @@ private void launchAndRun(String className, String[] classpaths, String[] progra
 	LocalVMLauncher launcher = LocalVMLauncher.getLauncher();
 	launcher.setClassPath(classpaths);
 	launcher.setVMPath(Util.getJREDirectory());
-	if (vmArguments != null) {
-		String[] completeVmArguments = new String[vmArguments.length + 1];
-		System.arraycopy(vmArguments, 0, completeVmArguments, 1, vmArguments.length);
-		completeVmArguments[0] = "-verify";
-		launcher.setVMArguments(completeVmArguments);
-	} else {
-		launcher.setVMArguments(new String[] {"-verify"});
-	}
+	launcher.setVMArguments(getVMArguments(vmArguments));
 	launcher.setProgramClass(className);
 	launcher.setProgramArguments(programArguments);
 	Thread outputThread;
@@ -481,14 +497,7 @@ private void launchVerifyTestsIfNeeded(String[] classpaths, String[] vmArguments
 	cp[length] = verifierDir;
 	launcher.setClassPath(getMinimalClassPath(cp));
 	launcher.setVMPath(Util.getJREDirectory());
-	if (vmArguments != null) {
-		String[] completeVmArguments = new String[vmArguments.length + 1];
-		System.arraycopy(vmArguments, 0, completeVmArguments, 1, vmArguments.length);
-		completeVmArguments[0] = "-verify";
-		launcher.setVMArguments(completeVmArguments);
-	} else {
-		launcher.setVMArguments(new String[] {"-verify"});
-	}
+	launcher.setVMArguments(getVMArguments(vmArguments));
 	launcher.setProgramClass(VerifyTests.class.getName());
 	try (ServerSocket server = new ServerSocket(0)) {
 		int portNumber = server.getLocalPort();

@@ -603,9 +603,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked6731() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
-            vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -1431,9 +1428,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked8917() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
-            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -1450,9 +1444,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked8917a() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
-            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -2961,9 +2952,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked9991() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
-            vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -3048,9 +3036,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked9998() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
-            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -3293,9 +3278,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked10049() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
-            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -3377,9 +3359,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked10053() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
-            vmArguments = new String[] {"--add-opens", "java.base/java.util.stream=ALL-UNNAMED"};
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -4683,9 +4662,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked10330() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
-            vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",

@@ -125,7 +125,6 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
                 mce.setSpreadSafe(pe.isSpreadSafe());
                 mce.setMethodTarget(dmct);
                 mce.setSourcePosition(pe);
-                mce.copyNodeMetaData(pe);
                 mce.setSafe(pe.isSafe());
                 return mce;
             }
@@ -151,7 +150,20 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
             return booleanExpressionTransformer.transformBooleanExpression((BooleanExpression)expr);
         }
         if (expr instanceof VariableExpression) {
-            return variableExpressionTransformer.transformVariableExpression((VariableExpression)expr);
+            // GRECLIPSE edit -- GROOVY-6097, GROOVY-7300, et al.
+            Expression exp2 = variableExpressionTransformer.transformVariableExpression((VariableExpression)expr);
+            if (exp2 == expr) {
+                MethodNode dmct = expr.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                // NOTE: BinaryExpressionTransformer handles the setter
+                if (dmct != null && dmct.getParameters().length == 0) {
+                    MethodCallExpression mce = new MethodCallExpression(new VariableExpression("this"), dmct.getName(), MethodCallExpression.NO_ARGUMENTS);
+                    mce.getMethod().setSourcePosition(expr);
+                    mce.setMethodTarget(dmct);
+                    exp2 = mce;
+                }
+            }
+            return exp2;
+            // GRECLIPSE end
         }
         if (expr instanceof RangeExpression) {
             return rangeExpressionTransformer.transformRangeExpression(((RangeExpression)expr));

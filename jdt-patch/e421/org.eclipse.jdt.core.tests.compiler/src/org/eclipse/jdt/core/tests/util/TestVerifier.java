@@ -372,7 +372,7 @@ private String getVerifyTestsCode() {
 		"}";
 }
 private String[] getVMArguments(String[] vmArguments) {
-	List<String> completeVmArguments = new ArrayList<String>();
+	List<String> completeVmArguments = new ArrayList<>();
 
 	if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.io=ALL-UNNAMED");
@@ -382,8 +382,10 @@ private String[] getVMArguments(String[] vmArguments) {
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.text=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util.regex=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util.stream=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util.function=ALL-UNNAMED");
 	}
 
 	if (vmArguments != null) {
