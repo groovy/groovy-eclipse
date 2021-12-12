@@ -862,7 +862,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
 
+            /* GRECLIPSE edit -- GROOVY-5502
             boolean isEmptyDeclaration = (expression instanceof DeclarationExpression && rightExpression instanceof EmptyExpression);
+            */
+            boolean isEmptyDeclaration = (expression instanceof DeclarationExpression
+                    && (rightExpression instanceof EmptyExpression || rType == UNKNOWN_PARAMETER_TYPE));
+            // GRECLIPSE end
             if (isAssignment(op) && !isEmptyDeclaration) {
                 if (rightExpression instanceof ConstructorCallExpression) {
                     inferDiamondType((ConstructorCallExpression) rightExpression, lType);

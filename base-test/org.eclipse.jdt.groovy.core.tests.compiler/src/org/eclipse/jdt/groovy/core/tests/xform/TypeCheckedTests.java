@@ -527,6 +527,38 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked5502() {
+        for (String val : new String[] {"null", "new A()", "new B()", "new C()"/*TODO:, "new Object()"*/}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "class A {\n" +
+                "  void m() {\n" +
+                "  }\n" +
+                "}\n" +
+                "class B extends A {\n" +
+                "}\n" +
+                "class C extends A {\n" +
+                "}\n" +
+                "@groovy.transform.TypeChecked\n" +
+                "void test(boolean flag) {\n" +
+                "  def var = " + val + "\n" +
+                "  if (flag) {\n" +
+                "    var = new B()\n" +
+                "  } else {\n" +
+                "    var = new C()\n" +
+                "  }\n" +
+                "  var.m()\n" + // Cannot find matching method Object#m()
+                "}\n" +
+                "test(true)\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+        }
+    }
+
+    @Test
     public void testTypeChecked5523() {
         //@formatter:off
         String[] sources = {
