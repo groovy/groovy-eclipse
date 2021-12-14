@@ -4913,4 +4913,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10414() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class Outer {\n" +
+            "  class Inner {\n" +
+            "    void test() {\n" +
+            "      foo = 'bar'\n" +
+            "      print(foo);\n" +
+            "      setFoo('baz')\n" +
+            "      print(getFoo())\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def foo\n" +
+            "}\n" +
+            "new Outer.Inner(new Outer()).test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "barbaz");
+    }
 }
