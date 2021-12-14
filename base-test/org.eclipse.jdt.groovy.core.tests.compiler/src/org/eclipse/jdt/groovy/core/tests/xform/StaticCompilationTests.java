@@ -2141,21 +2141,76 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8050() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Outer {\n" +
+            "  class Inner {\n" +
+            "  }\n" +
+            "  def foo = 1\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Outer.Inner inner) {\n" +
+            "  print inner.getFoo()\n" +
+            "}\n" +
+            "test(new Outer.Inner(new Outer()))\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 9)\n" +
+            "\tprint inner.getFoo()\n" +
+            "\t      ^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Outer$Inner#getFoo(). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic8050a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Outer {\n" +
+            "  class Inner {\n" +
+            "  }\n" +
+            "  def foo = 1\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Outer.Inner inner) {\n" +
+            "  print inner.foo\n" +
+            "}\n" +
+            "test(new Outer.Inner(new Outer()))\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 9)\n" +
+            "\tprint inner.foo\n" +
+            "\t      ^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - No such property: foo for class: Outer$Inner\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testCompileStatic8051() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Outer {\n" +
-            "  def foo = 1\n" +
-            "  Inner createInner() { new Inner() }\n" +
             "  class Inner {\n" +
             "    Closure createClosure() {\n" +
             "      return { foo }\n" +
             "    }\n" +
             "  }\n" +
+            "  def foo = 1\n" +
             "}\n" +
-            "def i = new Outer().createInner()\n" +
+            "def i = new Outer.Inner(new Outer())\n" +
             "def c = i.createClosure()\n" +
             "print c()\n",
         };

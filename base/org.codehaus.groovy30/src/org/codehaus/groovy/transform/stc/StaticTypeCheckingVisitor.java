@@ -5445,6 +5445,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     methods.add(callMethod);
                 }
             }
+            /* GRECLIPSE edit -- GROOVY-8050
             // TODO: investigate the trait exclusion a bit further, needed otherwise
             // CallMethodOfTraitInsideClosureAndClosureParamTypeInference fails saying
             // not static method can't be called from a static context
@@ -5456,6 +5457,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     methods.addAll(findMethodsWithGenerated(parent, name));
                 }
             }
+            */
+            if (!receiver.isStaticClass() && receiver.getOuterClass() != null
+                    && !receiver.getName().endsWith("$Trait$Helper") // GROOVY-7242
+                    && typeCheckingContext.getEnclosingClassNodes().contains(receiver)) {
+                ClassNode outer = receiver.getOuterClass();
+                do { methods.addAll(findMethodsWithGenerated(outer, name));
+                } while (!outer.isStaticClass() && (outer = outer.getOuterClass()) != null);
+            }
+            // GRECLIPSE end
             if (methods.isEmpty()) {
                 addArrayMethods(methods, receiver, name, args);
             }
@@ -5466,8 +5476,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     pname = extractPropertyNameFromMethodName("is", name);
                 }
                 if (pname != null) {
-                    // we don't use property exists there because findMethod is called on super clases recursively
                     PropertyNode property = null;
+                    /* GRECLIPSE edit -- GROOVY-8050
                     ClassNode curNode = receiver;
                     while (property == null && curNode != null) {
                         property = curNode.getProperty(pname);
@@ -5482,6 +5492,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                         curNode = curNode.getSuperClass();
                     }
+                    */
+                    outer_upper: // can't use existsProperty because it calls findMethod
+                    for (ClassNode cn = receiver; cn != null; cn = cn.getSuperClass()) {
+                        property = cn.getProperty(pname);
+                        if (property != null) break outer_upper;
+                        if (!cn.isStaticClass() && cn.getOuterClass() != null
+                                && typeCheckingContext.getEnclosingClassNodes().contains(cn)) {
+                            ClassNode outer = cn.getOuterClass();
+                            do { property = outer.getProperty(pname);
+                             if (property != null) break outer_upper;
+                            } while (!outer.isStaticClass() && (outer = outer.getOuterClass()) != null);
+                        }
+                    }
+                    // GRECLIPSE end
                     if (property != null) {
                         int mods = Opcodes.ACC_PUBLIC | (property.isStatic() ? Opcodes.ACC_STATIC : 0);
                         MethodNode node = new MethodNode(name, mods, property.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, GENERATED_EMPTY_STATEMENT);
