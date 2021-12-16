@@ -1042,9 +1042,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         };
         // GRECLIPSE end
         // for compound assignment "x op= y" find type as if it was "x = (x op y)"
+        /* GRECLIPSE edit -- GROOVY-10419
         Expression newRightExpression = isCompoundAssignment(expression)
                 ? binX(leftExpression, getOpWithoutEqual(expression), rightExpression)
                 : rightExpression;
+        */
+        Expression newRightExpression = rightExpression;
+        if (isCompoundAssignment(expression)) {
+            Token op = ((BinaryExpression) expression).getOperation();
+            if (op.getType() == ELVIS_EQUAL) { // GROOVY-10419: "x ?= y"
+                newRightExpression = new ElvisOperatorExpression(leftExpression, rightExpression);
+            } else {
+                newRightExpression = binX(leftExpression, getOpWithoutEqual(expression), rightExpression);
+            }
+        }
+        // GRECLIPSE end
         MethodCallExpression call = callX(ve, setterInfo.name, newRightExpression);
         call.setImplicitThis(false);
         visitMethodCallExpression(call);

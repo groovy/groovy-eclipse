@@ -4937,4 +4937,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "barbaz");
     }
+
+    @Test
+    public void testTypeChecked10419() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.ToString\n" +
+            "class C {\n" +
+            "  def p\n" +
+            "  void setP(p) {\n" +
+            "    this.p = p\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(C c) {\n" +
+            "  c.p ?= 'x'\n" +
+            "}\n" +
+            "def c = new C()\n" +
+            "test(c)\n" +
+            "print c\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "C(x)");
+    }
 }
