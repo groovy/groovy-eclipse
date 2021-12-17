@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,8 @@ public final class WizardMessages extends NLS {
     public static String NewTypeWizard_page2_class_message;
     public static String NewTypeWizard_page2_trait_title;
     public static String NewTypeWizard_page2_trait_message;
+    public static String NewTypeWizard_page2_record_title;
+    public static String NewTypeWizard_page2_record_message;
     public static String NewTypeWizard_page2_script_title;
     public static String NewTypeWizard_page2_script_message;
     public static String NewTypeWizard_page2_interface_title;
@@ -54,6 +56,7 @@ public final class WizardMessages extends NLS {
     public static String NewTypeWizard_page1_typeKind4;
     public static String NewTypeWizard_page1_typeKind5;
     public static String NewTypeWizard_page1_typeKind6;
+    public static String NewTypeWizard_page1_typeKind7;
     public static String NewTypeWizard_page1_error_java;
     public static String NewTypeWizard_page1_error_script;
     public static String NewTypeWizard_page1_info_groovyNature;

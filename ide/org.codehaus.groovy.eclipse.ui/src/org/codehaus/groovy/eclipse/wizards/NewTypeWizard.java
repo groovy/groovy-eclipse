@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -170,12 +170,12 @@ public class NewTypeWizard extends NewElementWizard {
         if (stubs != null) {
             IDialogSettings dialogSettings = getDialogSettings();
             if (dialogSettings != null) {
-                final String sectionName = "NewClassWizardPage"; //$NON-NLS-1$
+                final String sectionName = "NewClassWizardPage";
                 IDialogSettings sectionSettings = dialogSettings.getSection(sectionName);
                 if (sectionSettings == null) sectionSettings = dialogSettings.addNewSection(sectionName);
 
-                sectionSettings.put("create_constructor", stubs.isSelected(0)); //$NON-NLS-1$
-                sectionSettings.put("create_unimplemented", stubs.isSelected(1)); //$NON-NLS-1$
+                sectionSettings.put("create_constructor", stubs.isSelected(0));
+                sectionSettings.put("create_unimplemented", stubs.isSelected(1));
                 // main method checkbox is not persistent as per https://bugs.eclipse.org/388342
             }
 
@@ -226,7 +226,7 @@ public class NewTypeWizard extends NewElementWizard {
 
     public static class PageOne extends NewTypeWizardPage {
 
-        public static final String PAGE_NAME = "NewTypeWizard.PageOne"; //$NON-NLS-1$
+        public static final String PAGE_NAME = "NewTypeWizard.PageOne";
 
         public PageOne(final IStructuredSelection selection) {
             super(true, PAGE_NAME);
@@ -271,7 +271,8 @@ public class NewTypeWizard extends NewElementWizard {
                 WizardMessages.NewTypeWizard_page1_typeKind4,
                 WizardMessages.NewTypeWizard_page1_typeKind5,
                 WizardMessages.NewTypeWizard_page1_typeKind6,
-            }, 3);
+                WizardMessages.NewTypeWizard_page1_typeKind7,
+            }, 4);
             typeKindGroup.setDialogFieldListener(field -> {
                 for (int i = 0; i < 6; i += 1) {
                     if (typeKindGroup.isSelected(i)) {
@@ -296,15 +297,39 @@ public class NewTypeWizard extends NewElementWizard {
             // fill last column
             DialogField.createEmptySpace(parent);
 
+            // detect availability of Trait and Record type kinds
+            typeKindGroup.enableSelectionButton(1, isTraitAvailable());
+            typeKindGroup.enableSelectionButton(2, isRecordAvailable());
+
             // create callback that enables/disables Script type kind
-            enclosingSelectionHandler = () -> {
-                typeKindGroup.enableSelectionButton(2, !isEnclosingTypeSelected());
-                if (!typeKindGroup.isEnabled(2) && typeKindGroup.isSelected(2)) {
+            enclosingSelectionHandler = () -> { final int scriptIndex = 3;
+                typeKindGroup.enableSelectionButton(scriptIndex, !isEnclosingTypeSelected());
+                if (!typeKindGroup.isEnabled(scriptIndex) && typeKindGroup.isSelected(scriptIndex)) {
                     fTypeKindStatus.setError(WizardMessages.NewTypeWizard_page1_error_script);
                 } else {
                     fTypeKindStatus.setOK();
                 }
             };
+        }
+
+        private boolean isRecordAvailable() {
+            IType type = null;
+            try {
+                type = getJavaProject().findType("groovy.transform", "RecordType");
+            } catch (Exception e) {
+                GroovyPlugin.getDefault().logError("Error in New Groovy Type wizard", e);
+            }
+            return type != null;
+        }
+
+        private boolean isTraitAvailable() {
+            IType type = null;
+            try {
+                type = getJavaProject().findType("groovy.transform", "Trait");
+            } catch (Exception e) {
+                GroovyPlugin.getDefault().logError("Error in New Groovy Type wizard", e);
+            }
+            return type != null;
         }
 
         private Runnable enclosingSelectionHandler; // see usage below
@@ -330,8 +355,8 @@ public class NewTypeWizard extends NewElementWizard {
                 IPackageFragmentRoot root = getPackageFragmentRoot();
                 if (root != null) {
                     try {
-                        if (!root.getJavaProject().getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
-                            status.setInfo(WizardMessages.bind(WizardMessages.NewTypeWizard_page1_info_groovyNature, root.getJavaProject().getElementName()));
+                        if (!getJavaProject().getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
+                            status.setInfo(WizardMessages.bind(WizardMessages.NewTypeWizard_page1_info_groovyNature, getJavaProject().getElementName()));
                         }
 
                         String name = getTypeNameText();
@@ -348,13 +373,13 @@ public class NewTypeWizard extends NewElementWizard {
                                 }
                             }
 
-                            IType type = root.getJavaProject().findType(getPackageFragment().getElementName(), getTypeNameWithoutParameters());
+                            IType type = getJavaProject().findType(getPackageFragment().getElementName(), getTypeNameWithoutParameters());
                             if (type != null && type.exists()) {
                                 status.setError(NewWizardMessages.NewTypeWizardPage_error_TypeNameExists);
                             }
                         }
                     } catch (Exception e) {
-                        GroovyPlugin.getDefault().logError("Error in New Groovy Type wizard", e); //$NON-NLS-1$
+                        GroovyPlugin.getDefault().logError("Error in New Groovy Type wizard", e);
                     }
                 }
             }
@@ -377,15 +402,15 @@ public class NewTypeWizard extends NewElementWizard {
         @Override
         protected String getCompilationUnitName(final String typeName) {
             assert typeName.indexOf('<') == -1; // no parameters
-            return typeName + ".groovy"; //$NON-NLS-1$
+            return typeName + ".groovy";
         }
 
         public String getTypeNameWithoutParameters() {
-            return ReflectionUtils.executePrivateMethod(NewTypeWizardPage.class, "getTypeNameWithoutParameters", this); //$NON-NLS-1$
+            return ReflectionUtils.executePrivateMethod(NewTypeWizardPage.class, "getTypeNameWithoutParameters", this);
         }
 
         public String getTypeNameText() {
-            StringDialogField fTypeNameDialogField = ReflectionUtils.getPrivateField(NewTypeWizardPage.class, "fTypeNameDialogField", this); //$NON-NLS-1$
+            StringDialogField fTypeNameDialogField = ReflectionUtils.getPrivateField(NewTypeWizardPage.class, "fTypeNameDialogField", this);
             return fTypeNameDialogField.getText();
         }
 
@@ -400,7 +425,7 @@ public class NewTypeWizard extends NewElementWizard {
 
         @Override
         public String getSuperClass() {
-            return Optional.ofNullable((PageTwo) getNextPage()).map(PageTwo::getSuperClass).orElse(""); //$NON-NLS-1$
+            return Optional.ofNullable((PageTwo) getNextPage()).map(PageTwo::getSuperClass).orElse("");
         }
 
         @Override
@@ -438,7 +463,7 @@ public class NewTypeWizard extends NewElementWizard {
 
     public static class PageTwo extends WizardPage {
 
-        public static final String PAGE_NAME = "NewTypeWizard.PageTwo"; //$NON-NLS-1$
+        public static final String PAGE_NAME = "NewTypeWizard.PageTwo";
 
         public PageTwo() {
             super(PAGE_NAME);
@@ -450,27 +475,31 @@ public class NewTypeWizard extends NewElementWizard {
 
             onVisible = dontCare -> {
                 switch (getTypeKind()) {
-                case "class": //$NON-NLS-1$
+                case "class":
                     setTitle(WizardMessages.NewTypeWizard_page2_class_title);
                     setDescription(WizardMessages.NewTypeWizard_page2_class_message);
                     break;
-                case "trait": //$NON-NLS-1$
+                case "trait":
                     setTitle(WizardMessages.NewTypeWizard_page2_trait_title);
                     setDescription(WizardMessages.NewTypeWizard_page2_trait_message);
                     break;
-                case "script": //$NON-NLS-1$
+                case "record":
+                    setTitle(WizardMessages.NewTypeWizard_page2_record_title);
+                    setDescription(WizardMessages.NewTypeWizard_page2_record_message);
+                    break;
+                case "script":
                     setTitle(WizardMessages.NewTypeWizard_page2_script_title);
                     setDescription(WizardMessages.NewTypeWizard_page2_script_message);
                     break;
-                case "interface": //$NON-NLS-1$
+                case "interface":
                     setTitle(WizardMessages.NewTypeWizard_page2_interface_title);
                     setDescription(WizardMessages.NewTypeWizard_page2_interface_message);
                     break;
-                case "@interface": //$NON-NLS-1$
+                case "@interface":
                     setTitle(WizardMessages.NewTypeWizard_page2_annotation_title);
                     setDescription(WizardMessages.NewTypeWizard_page2_annotation_message);
                     break;
-                case "enum": //$NON-NLS-1$
+                case "enum":
                     setTitle(WizardMessages.NewTypeWizard_page2_enumeration_title);
                     setDescription(WizardMessages.NewTypeWizard_page2_enumeration_message);
                     break;
@@ -483,6 +512,7 @@ public class NewTypeWizard extends NewElementWizard {
 
             createClassControls(composite);
             createTraitControls(composite);
+            createRecordControls(composite);
             createScriptControls(composite);
             createInterfaceControls(composite);
             createAnnotationControls(composite);
@@ -497,7 +527,7 @@ public class NewTypeWizard extends NewElementWizard {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
-            composite.setData("TypeKind", "class"); //$NON-NLS-1$
+            composite.setData("TypeKind", "class");
             GridLayout layout = new GridLayout(nColumns, false);
             composite.setLayout(layout);
 
@@ -511,7 +541,7 @@ public class NewTypeWizard extends NewElementWizard {
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_static,    Flags.AccStatic);
 
             createModifierControls(composite, nColumns, modifiers);
-            createSuperClassControls(composite, nColumns, NewWizardMessages.NewTypeWizardPage_superclass_label, "java.lang.Object"); //$NON-NLS-1$
+            createSuperClassControls(composite, nColumns, NewWizardMessages.NewTypeWizardPage_superclass_label, "java.lang.Object");
             createSuperInterfacesControls(composite, nColumns);
             createMethodStubSelectionControls(composite, nColumns);
             createCommentControls(composite, nColumns);
@@ -521,7 +551,7 @@ public class NewTypeWizard extends NewElementWizard {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
-            composite.setData("TypeKind", "trait"); //$NON-NLS-1$
+            composite.setData("TypeKind", "trait");
             GridLayout layout = new GridLayout();
             layout.numColumns = nColumns;
             composite.setLayout(layout);
@@ -531,10 +561,29 @@ public class NewTypeWizard extends NewElementWizard {
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_default,   Flags.AccDefault);
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_private,   Flags.AccPrivate);
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_protected, Flags.AccProtected);
-          //modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_static,    Flags.AccStatic);
 
             createModifierControls(composite, nColumns, modifiers);
-            createSuperClassControls(composite, nColumns, WizardMessages.NewTypeWizard_page2_selftype_label, "java.lang.Object"); //$NON-NLS-1$
+            createSuperClassControls(composite, nColumns, WizardMessages.NewTypeWizard_page2_selftype_label, "java.lang.Object");
+            createSuperInterfacesControls(composite, nColumns);
+            createCommentControls(composite, nColumns);
+        }
+
+        private void createRecordControls(final Composite parent) {
+            final int nColumns = 4;
+
+            Composite composite = new Composite(parent, SWT.NONE);
+            composite.setData("TypeKind", "record");
+            GridLayout layout = new GridLayout();
+            layout.numColumns = nColumns;
+            composite.setLayout(layout);
+
+            Map<String, Integer> modifiers = new LinkedHashMap<>();
+            modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_public,    Flags.AccPublic);
+            modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_default,   Flags.AccDefault);
+            modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_private,   Flags.AccPrivate);
+            modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_protected, Flags.AccProtected);
+
+            createModifierControls(composite, nColumns, modifiers);
             createSuperInterfacesControls(composite, nColumns);
             createCommentControls(composite, nColumns);
         }
@@ -543,12 +592,12 @@ public class NewTypeWizard extends NewElementWizard {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
-            composite.setData("TypeKind", "script"); //$NON-NLS-1$
+            composite.setData("TypeKind", "script");
             GridLayout layout = new GridLayout();
             layout.numColumns = nColumns;
             composite.setLayout(layout);
 
-            createSuperClassControls(composite, nColumns, WizardMessages.NewTypeWizard_page2_basescript_label, "groovy.lang.Script"); //$NON-NLS-1$
+            createSuperClassControls(composite, nColumns, WizardMessages.NewTypeWizard_page2_basescript_label, "groovy.lang.Script");
             createCommentControls(composite, nColumns);
         }
 
@@ -556,7 +605,7 @@ public class NewTypeWizard extends NewElementWizard {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
-            composite.setData("TypeKind", "interface"); //$NON-NLS-1$
+            composite.setData("TypeKind", "interface");
             GridLayout layout = new GridLayout();
             layout.numColumns = nColumns;
             composite.setLayout(layout);
@@ -576,7 +625,7 @@ public class NewTypeWizard extends NewElementWizard {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
-            composite.setData("TypeKind", "@interface"); //$NON-NLS-1$
+            composite.setData("TypeKind", "@interface");
             GridLayout layout = new GridLayout();
             layout.numColumns = nColumns;
             composite.setLayout(layout);
@@ -609,7 +658,7 @@ public class NewTypeWizard extends NewElementWizard {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
-            composite.setData("TypeKind", "enum"); //$NON-NLS-1$
+            composite.setData("TypeKind", "enum");
             GridLayout layout = new GridLayout();
             layout.numColumns = nColumns;
             composite.setLayout(layout);
@@ -859,7 +908,7 @@ public class NewTypeWizard extends NewElementWizard {
 
             //
             TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
-            tableViewer.setColumnProperties(new String[] {"interface"}); //$NON-NLS-1$
+            tableViewer.setColumnProperties(new String[] {"interface"});
 
             setCellEditor(superInterfacesDialogField);
             setCellModifier(superInterfacesDialogField);
@@ -967,10 +1016,10 @@ public class NewTypeWizard extends NewElementWizard {
 
             IDialogSettings dialogSettings = getDialogSettings();
             if (dialogSettings != null) {
-                dialogSettings = dialogSettings.getSection("NewClassWizardPage"); //$NON-NLS-1$
+                dialogSettings = dialogSettings.getSection("NewClassWizardPage");
                 if (dialogSettings != null) {
-                    methodStubSelector.setSelection(0, dialogSettings.getBoolean("create_constructor")); //$NON-NLS-1$
-                    methodStubSelector.setSelection(1, dialogSettings.getBoolean("create_unimplemented")); //$NON-NLS-1$
+                    methodStubSelector.setSelection(0, dialogSettings.getBoolean("create_constructor"));
+                    methodStubSelector.setSelection(1, dialogSettings.getBoolean("create_unimplemented"));
                 }
             }
 
