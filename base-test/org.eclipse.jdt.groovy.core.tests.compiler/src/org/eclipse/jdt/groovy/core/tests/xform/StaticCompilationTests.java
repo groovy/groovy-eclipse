@@ -7074,4 +7074,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         int pos = result.indexOf("ScriptBytecodeAdapter.compareTo");
         assertTrue(pos < 0);
     }
+
+    @Test
+    public void testCompileStatic10424() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Outer {\n" +
+            "  private static class Inner {\n" +
+            "    static class Three {}\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def inner = new Inner()\n" +
+            "    if (inner) {\n" + // optimized boolean expression; StackOverflowError
+            "      print 'works'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new Outer().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
