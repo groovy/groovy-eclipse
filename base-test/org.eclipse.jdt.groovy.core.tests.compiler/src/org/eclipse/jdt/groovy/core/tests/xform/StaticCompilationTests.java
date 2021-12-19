@@ -549,7 +549,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -870,7 +870,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1580,6 +1580,32 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7595() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I {\n" +
+            "  void setP(value)\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  def p\n" +
+            "  void setP(value) {\n" +
+            "    { ->\n" +
+            "      this.@p = value\n" +
+            "    }()\n" +
+            "  }\n" +
+            "}\n" +
+            "def obj = new C()\n" +
+            "obj.setP('works')\n" +
+            "print(obj.p)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic7687() {
         //@formatter:off
         String[] sources = {
@@ -1824,7 +1850,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic7741() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  Closure doSomething = { -> }\n" +
+            "  void m() {\n" +
+            "    List items = ['x']\n" +
+            "    items.each {\n" +
+            "      doSomething()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
@@ -1920,7 +1968,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2137,7 +2185,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2243,7 +2291,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2889,7 +2937,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2931,7 +2979,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2977,7 +3025,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2994,7 +3042,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -3019,7 +3067,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -3711,7 +3759,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         if (!isAtLeastGroovy(40)) {
-            runConformTest(sources, "");
+            runConformTest(sources);
         } else {
             runNegativeTest(sources,
                 "----------\n" +
@@ -3863,7 +3911,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         if (!isAtLeastGroovy(40)) {
-            runConformTest(sources, "");
+            runConformTest(sources);
         } else {
             runNegativeTest(sources,
                 "----------\n" +
@@ -5495,7 +5543,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -5747,7 +5795,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -5808,7 +5856,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -5842,7 +5890,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -6400,7 +6448,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -6498,7 +6546,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -6551,7 +6599,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test

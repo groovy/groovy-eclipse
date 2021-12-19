@@ -299,7 +299,7 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
     void testScriptLaunch15() {
         // ensure JUnit 5 container
         def jdt = javaPlugin.bundle.version
-        assumeTrue(jdt.major > 3 || jdt.minor >= 18)
+        assumeTrue(jdt.major > 3 || jdt.minor > 21)
 
         def shortcut = new GroovyScriptLaunchShortcut()
         def unitType = addGroovySource('print "hello"', 'script').getType('script')
