@@ -1783,24 +1783,21 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "trait T {\n" +
-            "  String STATIC = 'const'\n" +
-            "  def so() {\n" +
-            "    print \"STATIC=${STATIC}\"\n" +
-            "  }\n" +
+            "  final foo = 'bar'\n" +
             "}\n" +
-            "class C implements T {\n" +
+            "class D implements T {\n" +
             "  def m() {\n" +
             "    print 'works'\n" +
             "  }\n" +
             "}\n" +
-            "class D {\n" + // The class 'D' must be declared abstract or the method 'java.lang.String T__STATIC$get()' must be implemented
-            "  @Delegate C delegates = new C()\n" +
+            "class C {\n" + // The class must be declared abstract or the method 'java.lang.String T__foo$get()' must be implemented
+            "  @Delegate D delegates = new D()\n" +
             "}\n" +
-            "new D().m()\n",
+            "new C().m()\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources, "works");
     }
 
     @Test
@@ -1854,34 +1851,6 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "");
-    }
-
-    @Test @Ignore
-    public void testTraits7439() {
-        vmArguments = new String[] {"-Djava.system.class.loader=org.codehaus.groovy.tools.RootLoader"};
-
-        //@formatter:off
-        String[] sources = {
-            "Script.groovy",
-            "@Grab('org.slf4j:slf4j-simple:1.7.30')\n" +
-            "import groovy.transform.CompileStatic\n" +
-            "import groovy.util.logging.Slf4j\n" +
-            "\n" +
-            "@CompileStatic @Slf4j('LOG')\n" +
-            "trait T {\n" +
-//            "  static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(this)\n" +
-//            "  static org.slf4j.Logger getLOG() { ??? }\n" +
-            "  void m() {\n" +
-            "    LOG.debug('works')\n" + // Cannot find matching method java.lang.Object#debug(java.lang.String)
-            "  }\n" +
-            "}\n" +
-            "class C implements T {\n" +
-            "}\n" +
-            "new C().m()\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "works");
     }
 
     @Test
@@ -2133,7 +2102,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources, "A");
     }
 
     @Test

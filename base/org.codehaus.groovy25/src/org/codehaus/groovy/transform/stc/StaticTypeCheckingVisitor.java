@@ -4443,7 +4443,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 //addStaticTypeError("Closure parameter with resolve strategy " + incomingStrategy + " passed to method with resolve strategy " + outgoingStrategy, argument);
                                 if (argument.getLineNumber() > 0 && typeCheckingContext.reportedErrors.add(((long) argument.getLineNumber()) << 16 + argument.getColumnNumber())) {
                                     String warning = StaticTypesTransformation.STATIC_ERROR_PREFIX + "Closure parameter with resolve strategy " + incomingStrategy + " passed to method with resolve strategy " + outgoingStrategy;
-                                    typeCheckingContext.getErrorCollector().addWarning(0, warning, new org.codehaus.groovy.syntax.Token(0, argument.getText(), argument.getLineNumber(), argument.getColumnNumber()), getSourceUnit());
+                                    typeCheckingContext.getErrorCollector().addWarning(1, warning, new org.codehaus.groovy.syntax.Token(0, argument.getText(), argument.getLineNumber(), argument.getColumnNumber()), getSourceUnit());
                                 }
                             }
                         }

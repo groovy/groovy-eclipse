@@ -41,6 +41,7 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.groovy.syntax.Token;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -108,6 +109,13 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                 } else {
                     logNode = loggingStrategy.addLoggerFieldToClass(node, logFieldName, categoryName);
                 }
+                // GRECLIPSE add -- GROOVY-5736
+                if (!logNode.getType().hasClass()) {
+                    String span = String.valueOf(new char[nodes[0].getLength()]);
+                    Token token = new Token(0, span, nodes[0].getLineNumber(), nodes[0].getColumnNumber());
+                    sourceUnit.getErrorCollector().addWarning(1, "Unable to resolve class: " + logNode.getType(), token, null);
+                }
+                // GRECLIPSE end
                 super.visitClass(node);
             }
 
