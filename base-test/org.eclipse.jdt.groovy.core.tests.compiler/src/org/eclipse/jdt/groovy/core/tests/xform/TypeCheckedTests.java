@@ -1174,6 +1174,53 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7890() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  List<String> replace\n" +
+            "  static String m(String s) {\n" + // static seems like an accident
+            "    s.collectReplacements {\n" +
+            "      (it in replace) ? 'o' : null\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\t(it in replace) ? 'o' : null\n" +
+            "\t       ^^^^^^^\n" +
+            "Groovy:[Static type checking] - The variable [replace] is undeclared.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked7890a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  List<String> replace\n" +
+            "  String m(String s) {\n" +
+            "    s.collectReplacements {\n" +
+            "      (it in replace) ? 'o' : null\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print(new C(replace:['a','b','c']).m('foobar'))",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foooor");
+    }
+
+    @Test
     public void testTypeChecked7945() {
         //@formatter:off
         String[] sources = {

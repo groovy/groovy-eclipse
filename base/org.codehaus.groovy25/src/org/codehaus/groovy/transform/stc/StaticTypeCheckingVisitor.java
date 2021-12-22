@@ -1856,6 +1856,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 boolean staticOnly;
                 if (isClassClassNodeWrappingConcreteType(current)) {
                     staticOnly = false;
+                // GRECLIPSE add -- GROOVY-7890
+                } else if (receiver.getData() != null) {
+                    staticOnly = false;
+                // GRECLIPSE end
                 } else {
                     staticOnly = staticOnlyAccess;
                 }
@@ -3018,8 +3022,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     @Override
     public void visitClosureExpression(final ClosureExpression expression) {
         boolean oldStaticContext = typeCheckingContext.isInStaticContext;
+        /* GRECLIPSE add -- GROOVY-7890
         typeCheckingContext.isInStaticContext = false;
-
+        */
         // collect every variable expression used in the loop body
         final Map<VariableExpression, ClassNode> varOrigType = new HashMap<VariableExpression, ClassNode>();
         Statement code = expression.getCode();
@@ -3238,7 +3243,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         final boolean osc = typeCheckingContext.isInStaticContext;
         try {
-            typeCheckingContext.isInStaticContext = node.isStatic();
+            typeCheckingContext.isInStaticContext = node.getOriginal().isStatic();
             super.visitMethod(node);
 /* GRECLIPSE edit -- GROOVY-6851, GROOVY-9151, GROOVY-10104
             for (Parameter parameter : node.getParameters()) {
@@ -4248,6 +4253,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     // if we are not in a static context but the current receiver is a static class, we must
                     // ensure that all methods are either static or declared by the current receiver or a superclass
                     if (!mn.isEmpty()
+                            // GRECLIPSE add -- GROOVY-7890
+                            && currentReceiver.getData() == null
                             && (typeCheckingContext.isInStaticContext || (receiverType.getModifiers() & Opcodes.ACC_STATIC) != 0)
                             && (call.isImplicitThis() || (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()))) {
                         // we create separate method lists just to be able to print out

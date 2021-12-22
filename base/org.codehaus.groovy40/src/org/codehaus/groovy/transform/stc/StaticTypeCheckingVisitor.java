@@ -1555,15 +1555,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     Collections.addAll(queue, current.getInterfaces());
                 }
 
-                // in case of a lookup on Class we look for instance methods on Class
-                // as well, since in case of a static property access we have the class
-                // itself in the list of receivers already;
-                boolean staticOnly;
-                if (isClassClassNodeWrappingConcreteType(current)) {
-                    staticOnly = false;
-                } else {
-                    staticOnly = staticOnlyAccess;
-                }
+                boolean staticOnly = (receiver.getData() == null ? staticOnlyAccess : false);
+                // in case of a lookup on java.lang.Class, look for instance methods on Class
+                // as well; in case of static property access Class<Type> and Type are listed
+                if (isClassClassNodeWrappingConcreteType(current)) staticOnly = false;
 
                 field = allowStaticAccessToMember(field, staticOnly);
 
@@ -2389,9 +2384,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitClosureExpression(final ClosureExpression expression) {
-        boolean oldStaticContext = typeCheckingContext.isInStaticContext;
-        typeCheckingContext.isInStaticContext = false;
-
         // collect every variable expression used in the closure body
         Map<VariableExpression, ClassNode> varTypes = new HashMap<>();
         expression.getCode().visit(new VariableExpressionTypeMemoizer(varTypes, true));
@@ -2439,7 +2431,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         // restore original metadata
         restoreVariableExpressionMetadata(variableMetadata);
-        typeCheckingContext.isInStaticContext = oldStaticContext;
         for (Parameter parameter : getParametersSafe(expression)) {
             typeCheckingContext.controlStructureVariables.remove(parameter);
             // GROOVY-10072: visit param default argument expression if present
@@ -2596,7 +2587,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         typeCheckingContext.pushErrorCollector(collector);
         boolean osc = typeCheckingContext.isInStaticContext;
         try {
-            typeCheckingContext.isInStaticContext = node.isStatic();
+            typeCheckingContext.isInStaticContext = node.getOriginal().isStatic();
 
             super.visitMethod(node);
         } finally {
@@ -3426,12 +3417,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     ClassNode receiverType = currentReceiver.getType();
                     mn = findMethod(receiverType, name, args);
 
-                    // if the receiver is "this" or "implicit this", then we must make sure that the compatible
-                    // methods are only static if we are in a static context
-                    // if we are not in a static context but the current receiver is a static class, we must
-                    // ensure that all methods are either static or declared by the current receiver or a superclass
-                    if (!mn.isEmpty()
-                            && (isThisObjectExpression || call.isImplicitThis())
+                    // if receiver is "this" in a static context then only static methods are compatible
+                    // if not in a static context but the current receiver is a static class ensure that
+                    // all methods are either static or declared by the current receiver or a superclass
+                    if (!mn.isEmpty() && currentReceiver.getData() == null && (isThisObjectExpression || call.isImplicitThis())
                             && (typeCheckingContext.isInStaticContext || (receiverType.getModifiers() & Opcodes.ACC_STATIC) != 0)) {
                         // we create separate method lists just to be able to print out
                         // a nice error message to the user
