@@ -1085,7 +1085,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8063
     public void testLocalAnnotationClassLiteral2() {
         //@formatter:off
         String[] sources = {
@@ -1104,17 +1104,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Main.groovy (at line 1)\n" +
-            "\t@Anno(Inner)\n" +
-            "\t      ^^^^^\n" +
-            "Inner cannot be resolved\n" +
-            "----------\n" +
-            "2. ERROR in Main.groovy (at line 1)\n" +
-            "\t@Anno(Inner)\n" +
-            "\t      ^^^^^\n" +
-            "Inner cannot be resolved or is not a field\n" +
-            "----------\n");
+        runNegativeTest(sources, "");
     }
 
     @Test

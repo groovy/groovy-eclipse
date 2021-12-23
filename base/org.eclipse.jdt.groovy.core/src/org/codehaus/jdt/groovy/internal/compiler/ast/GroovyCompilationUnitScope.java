@@ -108,10 +108,10 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
              *   static class Inner {}
              * }
              */
-            //for (SourceTypeBinding topLevelType : topLevelTypes) {
-            //    if (topLevelType.hasMemberTypes()) // add synthetic import to help resolve inner types
-            //        importBindings.add(new ImportBinding(topLevelType.compoundName, true, topLevelType, null));
-            //}
+            for (SourceTypeBinding topLevelType : topLevelTypes) {
+                if (topLevelType.hasMemberTypes()) // add synthetic import to help resolve inner types
+                    importBindings.add(new ImportBinding(topLevelType.compoundName, true, topLevelType, null));
+            }
 
             defaultGroovyImports = importBindings.toArray(new ImportBinding[importBindings.size()]);
         }

@@ -159,6 +159,30 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "VALUE");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1300
+    public void testInnerTypeReferencing7() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    Outer.Inner result = new Outer().getResult();\n" +
+            "  }\n" +
+            "}\n",
+
+            "Types.groovy",
+            "class Outer extends Type<Inner> {\n" + // unqualified reference to Inner
+            "  static class Inner { }\n" +
+            "}\n" +
+            "abstract class Type<T> {\n" +
+            "  T result\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testInnerClass1() {
         //@formatter:off
