@@ -19,6 +19,7 @@
 package org.codehaus.groovy.control;
 
 import org.apache.groovy.util.Maps;
+import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.io.NullWriter;
 import org.codehaus.groovy.control.messages.WarningMessage;
@@ -41,7 +42,6 @@ import java.util.StringTokenizer;
 
 import static org.apache.groovy.util.SystemUtil.getBooleanSafe;
 import static org.apache.groovy.util.SystemUtil.getSystemPropertySafe;
-import static org.codehaus.groovy.runtime.StringGroovyMethods.isAtLeast;
 import static org.codehaus.groovy.vmplugin.VMPlugin.getJavaVersion;
 
 /**
@@ -309,7 +309,7 @@ public class CompilerConfiguration {
     private int warningLevel;
 
     /**
-     * Encoding for source files
+     * Encoding for source files.
      */
     private String sourceEncoding;
 
@@ -319,88 +319,88 @@ public class CompilerConfiguration {
     private PrintWriter output;
 
     /**
-     * Directory into which to write classes
+     * Directory into which to write classes.
      */
     private File targetDirectory;
 
     /**
-     * Classpath for use during compilation
+     * Classpath for use during compilation.
      */
     private List<String> classpath;
 
     /**
-     * If true, the compiler should produce action information
+     * If true, the compiler should produce action information.
      */
     private boolean verbose;
 
     /**
-     * If true, debugging code should be activated
+     * If true, debugging code should be activated.
      */
     private boolean debug;
 
     /**
-     * If true, generates metadata for reflection on method parameters
+     * If true, generates metadata for reflection on method parameters.
      */
     private boolean parameters;
 
     /**
-     * The number of non-fatal errors to allow before bailing
+     * The number of non-fatal errors to allow before bailing.
      */
     private int tolerance;
 
     /**
-     * Base class name for scripts (must derive from Script)
+     * Base class name for scripts (must derive from Script).
      */
     private String scriptBaseClass;
 
     private ParserPluginFactory pluginFactory;
 
     /**
-     * extension used to find a groovy file
+     * Extension used to find a groovy file.
      */
     private String defaultScriptExtension;
 
     /**
-     * extensions used to find a groovy files
+     * Extensions used to find a groovy files.
      */
     private Set<String> scriptExtensions = new LinkedHashSet<>();
 
     /**
-     * if set to true recompilation is enabled
+     * If set to true recompilation is enabled.
      */
     private boolean recompileGroovySource;
 
     /**
-     * sets the minimum of time after a script can be recompiled.
+     * The minimum of time after a script can be recompiled.
      */
     private int minimumRecompilationInterval;
 
     /**
-     * sets the bytecode version target
+     * The bytecode version target.
      */
     private String targetBytecode;
 
     /**
-     * Whether the bytecode version has preview features enabled (JEP 12)
+     * Whether the bytecode version has preview features enabled (JEP 12).
      */
     private boolean previewFeatures;
 
     /**
-     * options for joint compilation (null by default == no joint compilation)
+     * Options for joint compilation (null by default == no joint compilation).
      */
     private Map<String, Object> jointCompilationOptions;
 
     /**
-     * options for optimizations (empty map by default)
+     * Options for optimizations (empty map by default).
      */
     private Map<String, Boolean> optimizationOptions;
 
     private final List<CompilationCustomizer> compilationCustomizers = new LinkedList<>();
 
     /**
-     * Global AST transformations which should not be loaded even if they are
-     * defined in META-INF/services/org.codehaus.groovy.transform.ASTTransformation files.
-     * By default, none are disabled.
+     * Global AST transformations which should not be loaded even if defined in
+     * <tt>META-INF/services/org.codehaus.groovy.transform.ASTTransformation</tt>
+     * files. By default, none are disabled.
      */
     private Set<String> disabledGlobalASTTransformations;
 
@@ -410,7 +410,6 @@ public class CompilerConfiguration {
      * Sets the compiler flags/settings to default values.
      *
      * The following system properties are referenced when setting the configuration:
-     *
      * <blockquote>
      * <table summary="Groovy Compiler Configuration Properties">
      *   <tr><th>Property Key</th><th>Related Property Getter</th></tr>
@@ -425,9 +424,8 @@ public class CompilerConfiguration {
      * </blockquote>
      *
      * The following system properties are referenced when setting the configuration optimization options:
-     *
      * <blockquote>
-     * <table summary="Groovy Compiler Optimization Options Configuration Properties">
+     * <table summary="Groovy Compiler Optimization Properties">
      *   <tr><th>Property Key</th><th>Related Property Getter</th></tr>
      *   <tr><td><code>groovy.target.indy</code></td><td>{@link #getOptimizationOptions}</td></tr>
      *   <tr><td><code>groovy.attach.groovydoc</code></td><td>{@link #getOptimizationOptions}</td></tr>
@@ -454,6 +452,11 @@ public class CompilerConfiguration {
         handleOptimizationOption(GROOVYDOC,         getSystemPropertySafe("groovy.attach.groovydoc"          ));
         handleOptimizationOption(RUNTIME_GROOVYDOC, getSystemPropertySafe("groovy.attach.runtime.groovydoc"  ));
         handleOptimizationOption(PARALLEL_PARSE,    getSystemPropertySafe("groovy.parallel.parse"/*, "true"*/));
+
+        if (getBooleanSafe("groovy.mem.stub")) {
+            jointCompilationOptions = new HashMap<>(2);
+            jointCompilationOptions.put(MEM_STUB, Boolean.TRUE);
+        }
     }
 
     private void handleOptimizationOption(String key, String val) {
@@ -491,18 +494,17 @@ public class CompilerConfiguration {
         setPreviewFeatures(configuration.isPreviewFeatures());
         setDefaultScriptExtension(configuration.getDefaultScriptExtension());
         setSourceEncoding(configuration.getSourceEncoding());
-        Map<String, Object> jointCompilationOptions = configuration.getJointCompilationOptions();
-        if (jointCompilationOptions != null) {
-            jointCompilationOptions = new HashMap<>(jointCompilationOptions);
-        }
-        // TODO GROOVY-9585: add line below once gradle build issues fixed
-//        compilationCustomizers.addAll(configuration.getCompilationCustomizers());
-        setJointCompilationOptions(jointCompilationOptions);
         setPluginFactory(configuration.getPluginFactory());
         setDisabledGlobalASTTransformations(configuration.getDisabledGlobalASTTransformations());
         setScriptExtensions(new LinkedHashSet<>(configuration.getScriptExtensions()));
         setOptimizationOptions(new HashMap<>(configuration.getOptimizationOptions()));
         setBytecodePostprocessor(configuration.getBytecodePostprocessor());
+
+        Map<String, Object> jointCompilationOptions = configuration.getJointCompilationOptions();
+        setJointCompilationOptions(null != jointCompilationOptions ? new HashMap<>(jointCompilationOptions) : jointCompilationOptions);
+
+        // TODO GROOVY-9585: add line below once gradle build issues fixed
+//        compilationCustomizers.addAll(configuration.getCompilationCustomizers());
     }
 
     /**
@@ -561,45 +563,6 @@ public class CompilerConfiguration {
         configure(configuration);
     }
 
-    /**
-     * Checks if the specified bytecode version string represents a JDK 1.5+ compatible
-     * bytecode version.
-     * @param bytecodeVersion The parameter can take one of the values in {@link #ALLOWED_JDKS}.
-     * @return true if the bytecode version is JDK 1.5+
-     */
-    public static boolean isPostJDK5(final String bytecodeVersion) {
-        return isAtLeast(bytecodeVersion, JDK5);
-    }
-
-    /**
-     * Checks if the specified bytecode version string represents a JDK 1.7+ compatible
-     * bytecode version.
-     * @param bytecodeVersion The parameter can take one of the values in {@link #ALLOWED_JDKS}.
-     * @return true if the bytecode version is JDK 1.7+
-     */
-    public static boolean isPostJDK7(final String bytecodeVersion) {
-        return isAtLeast(bytecodeVersion, JDK7);
-    }
-
-    /**
-     * Checks if the specified bytecode version string represents a JDK 1.8+ compatible
-     * bytecode version.
-     * @param bytecodeVersion The parameter can take one of the values in {@link #ALLOWED_JDKS}.
-     * @return true if the bytecode version is JDK 1.8+
-     */
-    public static boolean isPostJDK8(final String bytecodeVersion) {
-        return isAtLeast(bytecodeVersion, JDK8);
-    }
-
-    /**
-     * Checks if the specified bytecode version string represents a JDK 9+ compatible
-     * bytecode version.
-     * @param bytecodeVersion The parameter can take one of the values in {@link #ALLOWED_JDKS}.
-     * @return true if the bytecode version is JDK 9+
-     */
-    public static boolean isPostJDK9(final String bytecodeVersion) {
-        return isAtLeast(bytecodeVersion, JDK9);
-    }
 
     /**
      * Method to configure a CompilerConfiguration by using Properties.
@@ -981,6 +944,26 @@ public class CompilerConfiguration {
      */
     public String getTargetBytecode() {
         return this.targetBytecode;
+    }
+
+    /**
+     * Returns the ASM bytecode version.
+     *
+     * @since 4.0.0
+     */
+    public int getBytecodeVersion() {
+        Integer bytecodeVersion = CompilerConfiguration.JDK_TO_BYTECODE_VERSION_MAP.get(targetBytecode);
+        if (bytecodeVersion == null) {
+            throw new GroovyBugError("Bytecode version [" + targetBytecode + "] is not supported by the compiler");
+        }
+
+        if (bytecodeVersion <= Opcodes.V1_8) {
+            return Opcodes.V1_8;
+        } else if (previewFeatures) {
+            return bytecodeVersion | Opcodes.V_PREVIEW;
+        } else {
+            return bytecodeVersion;
+        }
     }
 
     /**

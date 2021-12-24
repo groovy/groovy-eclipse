@@ -1428,8 +1428,10 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foobarbaznullnullnull");
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testTypeChecked8693() {
+        assumeTrue(isAtLeastGroovy(40));
+
         //@formatter:off
         String[] sources = {
             "Main.groovy",

@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import org.junit.Test;
 
 public final class ClosureInferencingTests extends InferencingTestSuite {
@@ -301,8 +303,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "getDirective", "java.lang.Integer");
         assertType(contents, "resolveStrategy", "java.lang.Integer");
         assertType(contents, "getResolveStrategy", "java.lang.Integer");
-        assertType(contents, "parameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
-        assertType(contents, "getParameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertType(contents, "parameterTypes", "java.lang.Class<" + (isAtLeastGroovy(40) ? "?" : "T extends java.lang.Object") + ">[]");
+        assertType(contents, "getParameterTypes", "java.lang.Class<" + (isAtLeastGroovy(40) ? "?" : "T extends java.lang.Object") + ">[]");
         assertType(contents, "maximumNumberOfParameters", "java.lang.Integer");
         assertType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
     }
@@ -326,8 +328,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "getDirective", "java.lang.Integer");
         assertType(contents, "resolveStrategy", "java.lang.Integer");
         assertType(contents, "getResolveStrategy", "java.lang.Integer");
-        assertType(contents, "parameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
-        assertType(contents, "getParameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertType(contents, "parameterTypes", "java.lang.Class<" + (isAtLeastGroovy(40) ? "?" : "T extends java.lang.Object") + ">[]");
+        assertType(contents, "getParameterTypes", "java.lang.Class<" + (isAtLeastGroovy(40) ? "?" : "T extends java.lang.Object") + ">[]");
         assertType(contents, "maximumNumberOfParameters", "java.lang.Integer");
         assertType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
     }

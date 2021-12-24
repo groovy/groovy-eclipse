@@ -623,10 +623,8 @@ public class CompilationUnit extends ProcessingUnit {
      * Compiles the compilation unit from sources.
      */
     public void compile(int throughPhase) throws CompilationFailedException {
-        //
-        // To support delta compilations, we always restart
-        // the compiler.  The individual passes are responsible
-        // for not reprocessing old code.
+        // to support incremental compilation, always restart the compiler;
+        // individual passes are responsible for not re-processing old code
         gotoPhase(Phases.INITIALIZATION);
         throughPhase = Math.min(throughPhase, Phases.ALL);
 
@@ -642,7 +640,13 @@ public class CompilationUnit extends ProcessingUnit {
                 }
                 // GRECLIPSE end
             }
-            processPhaseOperations(phase);
+            try {
+                processPhaseOperations(phase);
+            } catch (ResolveVisitor.Interrupt x) {
+                assert !queuedSources.isEmpty();
+            }
+            if (dequeued()) continue; // bring new sources into phase
+
             // Grab processing may have brought in new AST transforms into various phases, process them as well
             processNewPhaseOperations(phase);
 
@@ -651,12 +655,10 @@ public class CompilationUnit extends ProcessingUnit {
             completePhase();
             mark();
 
-            if (dequeued()) continue;
-
             gotoPhase(phase + 1);
 
             if (phase == Phases.CLASS_GENERATION) {
-                sortClasses();
+                getAST().getModules().forEach(ModuleNode::sortClasses);
             }
         }
 
@@ -694,33 +696,25 @@ public class CompilationUnit extends ProcessingUnit {
         }
     }
 
-    private void sortClasses() {
-        for (ModuleNode module : getAST().getModules()) {
-            module.sortClasses();
-        }
-    }
-
     /**
-     * Dequeues any source units add through addSource and resets the compiler phase
-     * to initialization.
+     * Dequeues any source units added through addSource and resets the compiler
+     * phase to initialization.
      * <p>
-     * Note: this does not mean a file is recompiled. If a SourceUnit has already passed
-     * a phase it is skipped until a higher phase is reached.
+     * Note: this does not mean a file is recompiled. If a SourceUnit has already
+     * passed a phase it is skipped until a higher phase is reached.
      *
      * @return true if there was a queued source
      * @throws CompilationFailedException
      */
     protected boolean dequeued() throws CompilationFailedException {
-        boolean dequeue = !queuedSources.isEmpty();
-        while (!queuedSources.isEmpty()) {
-            SourceUnit unit = queuedSources.remove();
-            String name = unit.getName();
-            sources.put(name, unit);
-        }
-        if (dequeue) {
+        if (!queuedSources.isEmpty()) { SourceUnit unit;
+            while ((unit = queuedSources.poll()) != null) {
+                sources.put(unit.getName(), unit);
+            }
             gotoPhase(Phases.INITIALIZATION);
+            return true;
         }
-        return dequeue;
+        return false;
     }
 
     /**
@@ -815,7 +809,7 @@ public class CompilationUnit extends ProcessingUnit {
     };
 
     protected ClassVisitor createClassVisitor() {
-        return new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS) {
+        return new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES) {
             private ClassNode getClassNode(String name) {
                 // try classes under compilation
                 CompileUnit cu = getAST();

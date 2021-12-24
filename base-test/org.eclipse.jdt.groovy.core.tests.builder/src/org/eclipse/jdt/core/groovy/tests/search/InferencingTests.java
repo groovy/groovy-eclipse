@@ -1468,7 +1468,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertUnknown(contents, "value");
     }
 
-    @Test
+    @Test // GROOVY-6097
     public void testSuperPropertyReference6() {
         for (String qual : new String[] {"", "this.", "super."}) {
             String contents =
@@ -1482,8 +1482,8 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  }\n" +
                 "}\n";
             int offset = contents.lastIndexOf("value");
-            assertDeclaration(contents, offset, offset + 5, "A", qual.startsWith("super") ? "getValue" : "isValue", DeclarationKind.METHOD);
-            // TODO: GROOVY-6097                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            boolean getValue = qual.startsWith("super") && !isAtLeastGroovy(40);
+            assertDeclaration(contents, offset, offset + 5, "A", getValue ? "getValue" : "isValue", DeclarationKind.METHOD);
         }
     }
 
@@ -1501,7 +1501,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  }\n" +
                 "}\n";
             int offset = contents.lastIndexOf("value");
-            if (qual.startsWith("super")) {
+            if (qual.startsWith("super") && !isAtLeastGroovy(40)) {
                 assertUnknownConfidence(contents, offset, offset + 5);
             } else {
                 assertDeclaration(contents, offset, offset + 5, "A", "isValue", DeclarationKind.METHOD);
@@ -1580,7 +1580,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  }\n" +
                 "}\n";
             assertUnknown(contents, "getValue");
-            if (qual.startsWith("super")) {
+            if (qual.startsWith("super") && !isAtLeastGroovy(40)) {
                 assertUnknown(contents, "value");
             } else {
                 int offset = contents.lastIndexOf("value");

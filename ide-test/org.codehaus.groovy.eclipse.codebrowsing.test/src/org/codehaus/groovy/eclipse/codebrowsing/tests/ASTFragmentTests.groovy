@@ -18,6 +18,8 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import static org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind.*
 import static org.junit.Assert.*
 
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentFactory
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind
@@ -407,17 +409,15 @@ final class ASTFragmentTests extends BrowsingTestSuite {
         return new ASTFragmentFactory().createFragment(unit.moduleNode.statementBlock.statements.get(0).expression, start, end)
     }
 
-    private class TestFragmentVisitor extends FragmentVisitor {
+    @CompileStatic
+    private static class TestFragmentVisitor extends FragmentVisitor {
 
         private Stack<ASTFragmentKind> expectedKinds
 
-        void checkExpectedKinds(IASTFragment fragment, ASTFragmentKind... expectedKindsArr) {
-            this.expectedKinds = new Stack<ASTFragmentKind>()
-            List<ASTFragmentKind> list = Arrays.asList(expectedKindsArr)
-            Collections.reverse(list)
-            this.expectedKinds.addAll(list)
-            fragment.accept(this)
-            assert expectedKinds.isEmpty()
+        void checkExpectedKinds(IASTFragment fragment, ASTFragmentKind... expectedKinds) {
+            Collections.addAll(this.expectedKinds = new Stack(), expectedKinds.reverse(true))
+            fragment.accept(this) // consumes expected
+            assert this.expectedKinds.isEmpty()
         }
 
         @Override

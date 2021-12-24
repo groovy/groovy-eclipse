@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,15 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
+import groovy.transform.AutoFinal
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.junit.Before
 
+@AutoFinal @CompileStatic
 abstract class JUnitTestSuite extends GroovyEclipseTestSuite {
 
     @Before

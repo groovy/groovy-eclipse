@@ -232,7 +232,6 @@ import static org.codehaus.groovy.ast.tools.WideningCategories.isIntCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isLongCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isNumberCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.lowestUpperBound;
-import static org.codehaus.groovy.classgen.AsmClassGenerator.MINIMUM_BYTECODE_VERSION;
 import static org.codehaus.groovy.syntax.Types.ASSIGN;
 import static org.codehaus.groovy.syntax.Types.COMPARE_EQUAL;
 import static org.codehaus.groovy.syntax.Types.COMPARE_NOT_EQUAL;
@@ -2576,25 +2575,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // we must not visit a method which used dynamic dispatch.
         // We do not check for an annotation because some other AST transformations
         // may use this visitor without the annotation being explicitly set
-        if (!typeCheckingContext.methodsToBeVisited.isEmpty() && !typeCheckingContext.methodsToBeVisited.contains(node))
-            return;
+        if ((typeCheckingContext.methodsToBeVisited.isEmpty() || typeCheckingContext.methodsToBeVisited.contains(node))
+                && typeCheckingContext.alreadyVisitedMethods.add(node)) { // prevent re-visiting method (infinite loop)
+            typeCheckingContext.pushErrorCollector(collector);
+            boolean osc = typeCheckingContext.isInStaticContext;
+            try {
+                // GROOVY-7890: non-static trait method is static in helper type
+                typeCheckingContext.isInStaticContext = node.getOriginal().isStatic();
 
-        // alreadyVisitedMethods prevents from visiting the same method multiple times
-        // and prevents from infinite loops
-        if (typeCheckingContext.alreadyVisitedMethods.contains(node)) return;
-        typeCheckingContext.alreadyVisitedMethods.add(node);
-
-        typeCheckingContext.pushErrorCollector(collector);
-        boolean osc = typeCheckingContext.isInStaticContext;
-        try {
-            typeCheckingContext.isInStaticContext = node.getOriginal().isStatic();
-
-            super.visitMethod(node);
-        } finally {
-            typeCheckingContext.isInStaticContext = osc;
+                super.visitMethod(node);
+            } finally {
+                typeCheckingContext.isInStaticContext = osc;
+            }
+            typeCheckingContext.popErrorCollector();
+            node.putNodeMetaData(ERROR_COLLECTOR, collector);
         }
-        typeCheckingContext.popErrorCollector();
-        node.putNodeMetaData(ERROR_COLLECTOR, collector);
     }
 
     @Override
@@ -3753,6 +3748,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 addTraitType(receiver, owners);
                 if (receiver.redirect().isInterface()) {
                     owners.add(Receiver.make(OBJECT_TYPE));
+                } else if (isSuperExpression(objectExpression)) { //GROOVY-9909: super.defaultMethod()
+                    for (ClassNode in : typeCheckingContext.getEnclosingClassNode().getInterfaces()) {
+                        if (!receiver.implementsInterface(in)) owners.add(Receiver.make(in));
+                    }
                 }
             }
         }
@@ -3813,13 +3812,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected void storeTargetMethod(final Expression call, final MethodNode directMethodCallCandidate) {
         call.putNodeMetaData(DIRECT_METHOD_CALL_TARGET, directMethodCallCandidate);
-
-        if (directMethodCallCandidate != null
-                && directMethodCallCandidate.isStatic()
-                && directMethodCallCandidate.getDeclaringClass().isInterface()
-                && !(directMethodCallCandidate instanceof ExtensionMethodNode)) {
-            typeCheckingContext.getEnclosingClassNode().putNodeMetaData(MINIMUM_BYTECODE_VERSION, Opcodes.V1_8);
-        }
 
         checkOrMarkPrivateAccess(call, directMethodCallCandidate);
         checkSuperCallFromClosure(call, directMethodCallCandidate);
@@ -4789,7 +4781,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
             if (!receiver.isStaticClass() && receiver.getOuterClass() != null
-                    && !receiver.getName().endsWith("$Trait$Helper") // GROOVY-7242
                     && typeCheckingContext.getEnclosingClassNodes().contains(receiver)) {
                 ClassNode outer = receiver.getOuterClass();
                 do { methods.addAll(findMethodsWithGenerated(outer, name));

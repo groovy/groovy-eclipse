@@ -420,7 +420,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     } else if (method.isPrivate() && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                         // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope)) {
+                    } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 4) {
                         // GROOVY-1736, GROOVY-6097: "super.name" => "super.getName()" in AsmClassGenerator
                         String newName = "get" + MetaClassHelper.capitalize(name);
                         scope.setMethodCallArgumentTypes(Collections.emptyList());

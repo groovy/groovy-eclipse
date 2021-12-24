@@ -34,6 +34,7 @@ Export-Package: groovy.beans;version="4.0.0",
  org.apache.groovy.antlr;version="4.0.0",
  org.apache.groovy.ast.tools;version="4.0.0",
  org.apache.groovy.io;version="4.0.0",
+ org.apache.groovy.lang;version="4.0.0",
  org.apache.groovy.lang.annotation;version="4.0.0",
  org.apache.groovy.metaclass;version="4.0.0",
  org.apache.groovy.plugin;version="4.0.0",
@@ -93,7 +94,8 @@ Export-Package: groovy.beans;version="4.0.0",
  org.codehaus.groovy.vmplugin;version="4.0.0",
  org.codehaus.groovy.vmplugin.v8;version="4.0.0",
  org.codehaus.groovy.vmplugin.v9;version="4.0.0",
- org.codehaus.groovy.vmplugin.v10;version="4.0.0"
+ org.codehaus.groovy.vmplugin.v10;version="4.0.0",
+ org.codehaus.groovy.vmplugin.v16;version="4.0.0"
 Require-Bundle: org.eclipse.core.runtime,
  org.junit;resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

@@ -50,7 +50,6 @@ public class MethodNode extends AnnotatedNode {
     private boolean dynamicReturnType;
     private VariableScope variableScope;
     private final ClassNode[] exceptions;
-    private final boolean staticConstructor;
 
     // type spec for generics
     private GenericsType[] genericsTypes;
@@ -61,7 +60,6 @@ public class MethodNode extends AnnotatedNode {
     protected MethodNode() {
         this.name = null;
         this.exceptions = null;
-        this.staticConstructor = false;
     }
 
     public MethodNode(final String name, final int modifiers, final ClassNode returnType, final Parameter[] parameters, final ClassNode[] exceptions, final Statement code) {
@@ -71,7 +69,6 @@ public class MethodNode extends AnnotatedNode {
         this.code = code;
         setReturnType(returnType);
         setParameters(parameters);
-        this.staticConstructor = "<clinit>".equals(name);
     }
 
     /**
@@ -81,7 +78,7 @@ public class MethodNode extends AnnotatedNode {
      */
     public String getTypeDescriptor() {
         if (typeDescriptor == null) {
-            typeDescriptor = methodDescriptor(this);
+            typeDescriptor = methodDescriptor(this, false);
         }
         return typeDescriptor;
     }
@@ -287,7 +284,11 @@ public class MethodNode extends AnnotatedNode {
     }
 
     public boolean isStaticConstructor() {
-        return staticConstructor;
+        return "<clinit>".equals(name);
+    }
+
+    public boolean isConstructor() {
+        return "<init>".equals(name);
     }
 
     /**
@@ -310,12 +311,13 @@ public class MethodNode extends AnnotatedNode {
     @Override
     public String getText() {
         int mask = this instanceof ConstructorNode ? Modifier.constructorModifiers() : Modifier.methodModifiers();
+        String name = getName(); if (name.indexOf(' ') != -1) name = "\"" + name + "\""; // GROOVY-10417
         return new StringBuilder(AstToTextHelper.getModifiersText(getModifiers() & mask))
             .append(' ')
             .append(toGenericTypesString(getGenericsTypes()))
             .append(AstToTextHelper.getClassText(getReturnType()))
             .append(' ')
-            .append(getName())
+            .append(name)
             .append('(')
             .append(AstToTextHelper.getParametersText(getParameters()))
             .append(')')
@@ -327,6 +329,6 @@ public class MethodNode extends AnnotatedNode {
     @Override
     public String toString() {
         ClassNode declaringClass = getDeclaringClass();
-        return super.toString() + "[" + getTypeDescriptor() + (declaringClass == null ? "" : " from " + formatTypeName(declaringClass)) + "]";
+        return super.toString() + "[" + methodDescriptor(this, true) + (declaringClass == null ? "" : " from " + formatTypeName(declaringClass)) + "]";
     }
 }

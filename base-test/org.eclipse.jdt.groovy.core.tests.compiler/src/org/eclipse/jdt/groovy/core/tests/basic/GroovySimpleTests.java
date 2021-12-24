@@ -5231,7 +5231,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         for (String vis : new String[] {"", "public", "protected", "@groovy.transform.PackageScope"}) {
             //@formatter:off
             String[] sources = {
-                "Script.groovy",
+                "Main.groovy",
                 "abstract class A {\n" +
                 vis + " def getX() { 'A' }\n" +
                 "}\n" +
@@ -5304,7 +5304,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         for (String vis : new String[] {"", "public", "protected", "@groovy.transform.PackageScope"}) {
             //@formatter:off
             String[] sources = {
-                "Script.groovy",
+                "Main.groovy",
                 "abstract class A {\n" +
                 vis + " boolean isX() { true }\n" +
                 vis + " boolean getX() { false }\n" +
@@ -5320,15 +5320,37 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             };
             //@formatter:on
 
-            runConformTest(sources, "truetruefalse");
+            runConformTest(sources, "truetrue" + (isAtLeastGroovy(40) ? "true" : "false"));
         }
+    }
+
+    @Test(expected = AssertionError.class) // https://issues.apache.org/jira/browse/GROOVY-7844
+    public void testGroovy7844() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print(Pojo.m('foo'))\n",
+
+            "Pojo.java",
+            "class Pojo {\n" +
+            "  public  static String m(Object o) {\n" +
+            "    return o.toString();\n" +
+            "  }\n" +
+            "  private static String m(String s) {\n" +
+            "    return org.codehaus.groovy.runtime.StringGroovyMethods.reverse(s);\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-7924
     public void testGroovy7924() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "abstract class A {\n" +
             " def getFoo() { 'works' }\n" +
             "}\n" +
@@ -5344,11 +5366,41 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8164
+    public void testGroovy8164() {
+        assumeTrue(isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C implements I, J {\n" +
+            "}\n" +
+            "C.m()\n", // not inherited -- see JLS 8.4.8
+
+            "I.java",
+            "public interface I {\n" +
+            "  static void m() {\n" +
+            "    System.out.print(\"I\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "J.java",
+            "public interface J {\n" +
+            "  static void m() {\n" +
+            "    System.out.print(\"J\");\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: static C.m() is applicable for argument types: () values: []");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-8311
     public void testGroovy8311() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "def greet(args) {\n" +
             "  [args.name, args.age]\n" +
             "}\n" +
@@ -6634,7 +6686,11 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "works");
+        if (!isAtLeastGroovy(40)) {
+            runConformTest(sources, "works");
+        } else {
+            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: A.m() is applicable for argument types: () values: []");
+        }
     }
 
     @Test

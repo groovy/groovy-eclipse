@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
+
+import groovy.transform.CompileStatic
 
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper
@@ -143,6 +145,7 @@ final class PartialVisitTests extends BrowsingTestSuite {
         assert helper.skippedElements.size() == expectedSkippedElements.length
     }
 
+    @CompileStatic
     private static class PartialCodeSelectRequestor extends CodeSelectRequestor {
         private final Set<String> skippedElements = []
 
@@ -161,6 +164,7 @@ final class PartialVisitTests extends BrowsingTestSuite {
         }
     }
 
+    @CompileStatic
     private static class PartialCodeSelectHelper extends CodeSelectHelper {
         private Set<String> skippedElements = []
 

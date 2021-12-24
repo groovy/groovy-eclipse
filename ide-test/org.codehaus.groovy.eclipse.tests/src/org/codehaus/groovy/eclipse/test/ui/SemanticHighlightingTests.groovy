@@ -23,6 +23,9 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeTrue
 
+import groovy.transform.AutoFinal
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
 import org.codehaus.groovy.eclipse.preferences.PreferenceConstants
@@ -4409,9 +4412,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     //
     private int counter
 
+    @AutoFinal @CompileStatic
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
-        def references = new GatherSemanticReferences(
-            addGroovySource(contents, "Highlighting${++counter}"))
+        def references = new GatherSemanticReferences(addGroovySource(contents, "Highlighting${++counter}"))
         references.factory = new TypeInferencingVisitorFactory() {
             @Override
             TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit gcu) {

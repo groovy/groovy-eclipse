@@ -40,7 +40,6 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.ParameterUtils;
 import org.codehaus.groovy.control.AnnotationConstantsVisitor;
-import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import groovyjarjarasm.asm.Opcodes;
@@ -471,15 +470,5 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             }
         }
         return null;
-    }
-
-    /**
-     * Check if the current runtime allows Annotation usage.
-     *
-     * @return true if running on a 1.5+ runtime
-     */
-    @Deprecated
-    protected boolean isAnnotationCompatible() {
-        return CompilerConfiguration.isPostJDK5(this.source.getConfiguration().getTargetBytecode());
     }
 }

@@ -204,9 +204,9 @@ class ASTTestTransformation implements ASTTransformation, CompilationUnitAware {
             unit
         }
 
-        @Override
+        @Override @groovy.transform.CompileStatic
         protected void visitStatement(final Statement statement) {
-            super.visitStatement(statement)
+            super.visitStatement(statement) // GROOVY-8693, et al.
             if (label in statement.statementLabels) targets << statement
         }
 

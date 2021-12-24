@@ -247,7 +247,7 @@ public class SourceUnit extends ProcessingUnit {
         buildAST();
 
         /* GRECLIPSE edit
-        if ("xml".equals(AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty("groovy.ast")))) {
+        if ("xml".equals(VMPluginFactory.getPlugin().doPrivileged((PrivilegedAction<String>) () -> System.getProperty("groovy.ast")))) {
             XStreamUtils.serialize(name, ast);
         }
         */
