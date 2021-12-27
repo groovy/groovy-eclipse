@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1452,7 +1452,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
 
     //--------------------------------------------------------------------------
 
-    private void assertLocation(String contents, ContentAssistLocation expected, @ClosureParams(value=SimpleType, options=['org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext']) @DelegatesTo(value=ContentAssistContext, strategy=Closure.DELEGATE_FIRST) Closure<Void> withContext = null) {
+    private void assertLocation(String contents, ContentAssistLocation expected, @ClosureParams(value=SimpleType, options='org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext') @DelegatesTo(value=ContentAssistContext, strategy=Closure.DELEGATE_FIRST) Closure<Void> withContext = null) {
         def unit = addGroovySource(contents.replace('#', ''), nextUnitName()), offset = contents.indexOf('#')
         def context = new GroovyCompletionProposalComputer().createContentAssistContext(unit, offset, new Document(unit.buffer.contents))
 

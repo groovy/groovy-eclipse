@@ -2595,6 +2595,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     @Override
     protected void visitConstructorOrMethod(final MethodNode node, final boolean isConstructor) {
         typeCheckingContext.pushEnclosingMethod(node);
+        for (Parameter parameter : node.getParameters()) {
+            for (AnnotationNode annotation : parameter.getAnnotations()) {
+                if (annotation.getClassNode().equals(CLOSUREPARAMS_CLASSNODE)) {
+                    // GROOVY-6603: propagate closure parameter types
+                    Expression value = annotation.getMember("value");
+                    Expression options = annotation.getMember("options");
+                    List<ClassNode[]> signatures = getSignaturesFromHint(null, node, value, options);
+                    if (signatures.size() == 1) {
+                        parameter.putNodeMetaData(CLOSURE_ARGUMENTS, Arrays.stream(signatures.get(0)).map(t -> new Parameter(t,"")).toArray(Parameter[]::new));
+                    }
+                }
+            }
+        }
         super.visitConstructorOrMethod(node, isConstructor);
         if (node.hasDefaultValue()) {
             for (Parameter parameter : node.getParameters()) {
@@ -3366,7 +3379,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         if (parameters != null) {
                             typeCheckClosureCall(callArguments, args, parameters);
                         }
-                        ClassNode type = getType(((ASTNode) variable));
+                        ClassNode type = getType((ASTNode) variable);
                         if (type.equals(CLOSURE_TYPE)) { // GROOVY-10098, et al.
                             GenericsType[] genericsTypes = type.getGenericsTypes();
                             if (genericsTypes != null && genericsTypes.length == 1

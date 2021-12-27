@@ -170,7 +170,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "import groovy.transform.stc.*\n" +
             "class C {\n" +
-            "  C(String s, @ClosureParams(value=SimpleType, options='java.util.List') Closure<Integer> c) {\n" +
+            "  C(String s, @ClosureParams(value=FromString,options='java.util.List<java.lang.Integer>') Closure<Integer> c) {\n" +
             "  }\n" +
             "}\n" +
             "@groovy.transform.TypeChecked\n" +
@@ -631,6 +631,66 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked6603() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.stc.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(@ClosureParams(value=FromString,options='java.lang.Number') Closure<?> c) {\n" +
+            "  c('x')\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tc('x')\n" +
+            "\t  ^^^\n" +
+            "Groovy:[Static type checking] - Cannot call closure that accepts [java.lang.Number] with [java.lang.String]\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked6603a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.stc.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(@ClosureParams(value=FromString,options='java.util.List<java.lang.Number>') Closure<?> c) {\n" +
+            "  c(['x'])\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tc(['x'])\n" +
+            "\t  ^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call closure that accepts [java.util.List<java.lang.Number>] with [java.util.List<java.lang.String>]\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked6603b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.stc.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(@ClosureParams(value=FromString,options='java.util.Collection<java.lang.String>') Closure<?> c) {\n" +
+            "  c(Collections.singletonList('x'))\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
     }
 
     @Test

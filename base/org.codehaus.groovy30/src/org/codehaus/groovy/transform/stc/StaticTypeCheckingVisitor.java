@@ -2454,6 +2454,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected void visitConstructorOrMethod(final MethodNode node, final boolean isConstructor) {
         typeCheckingContext.pushEnclosingMethod(node);
         if (!isSkipMode(node) && !shouldSkipMethodNode(node)) {
+            // GRECLIPSE add -- GROOVY-6603
+            for (Parameter parameter : node.getParameters()) {
+                for (AnnotationNode annotation : parameter.getAnnotations()) {
+                    if (annotation.getClassNode().equals(CLOSUREPARAMS_CLASSNODE)) {
+                        List<ClassNode[]> signatures = getSignaturesFromHint(null, node, annotation.getMember("value"), annotation.getMember("options"));
+                        if (signatures.size() == 1) {
+                            parameter.putNodeMetaData(CLOSURE_ARGUMENTS, Arrays.stream(signatures.get(0)).map(t -> new Parameter(t,"")).toArray(Parameter[]::new));
+                        }
+                    }
+                }
+            }
+            // GRECLIPSE end
             super.visitConstructorOrMethod(node, isConstructor);
             // GRECLIPSE add
             if (node.hasDefaultValue())

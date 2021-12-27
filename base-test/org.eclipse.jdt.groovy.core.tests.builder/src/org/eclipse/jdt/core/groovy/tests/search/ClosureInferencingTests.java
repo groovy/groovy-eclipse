@@ -1394,7 +1394,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         //@formatter:off
         String contents =
             "import groovy.transform.stc.*\n" +
-            "def match(@ClosureParams(value=SimpleType, options=['java.util.regex.Pattern']) Closure block) {\n" +
+            "def match(@ClosureParams(value=SimpleType, options='java.util.regex.Pattern') Closure block) {\n" +
             "  block(item)\n" +
             "}\n" +
             "\n" +
@@ -1426,7 +1426,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             "import groovy.transform.stc.*\n" +
             "class C {\n" +
-            "  C(String s, @ClosureParams(value=SimpleType, options='java.util.List<java.lang.Integer>') Closure c) {\n" +
+            "  C(String s, @ClosureParams(value=FromString, options='java.util.List<java.lang.Integer>') Closure c) {\n" +
             "  }\n" +
             "}\n" +
             "new C('str', { list -> null })\n";
@@ -1440,7 +1440,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             "import groovy.transform.stc.*\n" +
             "class C {\n" +
-            "  static m(String s, @ClosureParams(value=SimpleType, options='java.util.List<java.lang.Integer>') Closure c) {\n" +
+            "  static m(String s, @ClosureParams(value=FromString, options='java.util.List<java.lang.Integer>') Closure c) {\n" +
             "  }\n" +
             "  static test() {\n" +
             "    m('str', { list -> null })\n" +
