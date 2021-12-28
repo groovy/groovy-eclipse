@@ -1136,6 +1136,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (!isEnum && !isTrait(classNode)) configureSuperClass(typeDeclaration,
                     isRecord(classNode) ? ClassHelper.make("java.lang.Record") : classNode.getSuperClass());
                 configureSuperInterfaces(typeDeclaration, classNode);
+                if (isSealed(classNode))
+                    configurePermittedSubtypes(typeDeclaration, classNode);
+
                 typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
 
@@ -1342,9 +1345,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             Parameter[] components = classNode.getNodeMetaData("_RECORD_HEADER");
             if (components != null) {
                 if (classNode.getDeclaredConstructor(components) == null) {
-                    ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                    ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult); // TODO: TypeDeclaration.createDefaultConstructorForRecord()
                     constructorDecl.arguments = createArguments(components);
-                    constructorDecl.bits |= /*ASTNode.IsCanonicalConstructor*/0x200;
+                    constructorDecl.bits |= ASTNode.Bit10;//ASTNode.IsCanonicalConstructor
                   //constructorDecl.bits |= ASTNode.IsImplicit;
                   //constructorDecl.constructorCall = SuperReference.implicitSuperConstructorCall();
                     constructorDecl.modifiers = getModifiers(classNode) & ExtraCompilerModifiers.AccVisibilityMASK;
@@ -1563,12 +1566,49 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private void configureSuperInterfaces(TypeDeclaration typeDeclaration, ClassNode classNode) {
             ClassNode[] interfaces = classNode.getInterfaces();
             if (interfaces != null && interfaces.length > 0) {
-                typeDeclaration.superInterfaces = new TypeReference[interfaces.length];
-                for (int i = 0, n = interfaces.length; i < n; i += 1) {
-                    typeDeclaration.superInterfaces[i] = createTypeReferenceForClassNode(interfaces[i]);
-                }
+                typeDeclaration.superInterfaces = createTypeReferencesForClassNodes(interfaces);
             } else {
                 typeDeclaration.superInterfaces = new TypeReference[0];
+            }
+        }
+
+        private void configurePermittedSubtypes(TypeDeclaration typeDeclaration, ClassNode classNode) {
+            java.util.function.Function<Expression, TypeReference> createTypeReference = e -> {
+                if (e instanceof ClassExpression) {
+                    return createTypeReferenceForClassNode(e.getType());
+                }
+                if (e instanceof VariableExpression) {
+                    char[] simpleName = e.getText().toCharArray(); // assume it's a type name
+                    TypeReference t = verify(new SingleTypeReference(simpleName, toPos(e.getStart(), e.getEnd() - 1)));
+                    t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    return t;
+                }
+                if (e instanceof PropertyExpression) {
+                    PropertyExpression p = (PropertyExpression) e;
+                    if ("class".equals(p.getPropertyAsString())) {
+                        return createTypeReferenceForClassLiteral(p);
+                    }
+                    char[][] compoundName = CharOperation.splitOn('.', e.getText().toCharArray()); // assume it's a type name
+                    TypeReference t = new QualifiedTypeReference(compoundName, positionsFor(compoundName, e.getStart(), e.getEnd()));
+                    t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    return t;
+                }
+                Util.log(IStatus.WARNING, "Unhandled reference type: " + e.getClass().getName());
+                return null;
+            };
+
+            for (AnnotationNode annotation : classNode.getAnnotations()) {
+                if (isType("groovy.transform.Sealed", annotation.getClassNode().getName())) {
+                    Expression permitsSpecification = annotation.getMember("permittedSubclasses");
+                    if (permitsSpecification instanceof ListExpression) { // typeDeclaration.permittedTypes = ...
+                        TypeReference[] permittedTypes = ((ListExpression) permitsSpecification).getExpressions()
+                                                .stream().map(createTypeReference).toArray(TypeReference[]::new);
+                        ReflectionUtils.setPrivateField(TypeDeclaration.class, "permittedTypes", typeDeclaration, permittedTypes);
+                    } else if (permitsSpecification != null) {
+                        TypeReference[] permittedTypes = {createTypeReference.apply(permitsSpecification)};
+                        ReflectionUtils.setPrivateField(TypeDeclaration.class, "permittedTypes", typeDeclaration, permittedTypes);
+                    }
+                }
             }
         }
 
@@ -2359,14 +2399,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(ClassNode node) {
             int modifiers = node.getModifiers();
             if (isRecord(node)) {
-                modifiers |= /*3.26+:Flags.AccRecord*/0x1000000;
+                modifiers |= ASTNode.Bit25; //3.26+:Flags.AccRecord
             } else if (isTrait(node)) {
                 modifiers |= Flags.AccInterface;
             }
+            if (isSealed(node)) {
+                modifiers |= ASTNode.Bit29; //3.24+:Flags.AccSealed
+            } else if (isNonSealed(node)) {
+                modifiers |= ASTNode.Bit27; //3.24+:Flags.AccNonSealed
+            }
             if (node.isInterface()) {
                 modifiers &= ~Flags.AccAbstract;
-            }
-            if (node.isEnum()) {
+            } else if (node.isEnum()) {
                 modifiers &= ~(Flags.AccAbstract | Flags.AccFinal);
             }
             if (!(node instanceof InnerClassNode)) {
@@ -2382,10 +2426,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private int getModifiers(FieldNode node) {
             int modifiers = node.getModifiers();
+            // native and non-native (aka emulated) record fields are final
+            if (node.getDeclaringClass().getAnnotations().stream().anyMatch(annotation ->
+                    isType("groovy.transform.RecordType", annotation.getClassNode().getName()))) {
+                modifiers |= Flags.AccFinal;
+            }
             if (node.getDeclaringClass().getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
                 modifiers &= ~Flags.AccPrivate;
-            } else if (isRecord(node.getDeclaringClass())) {
-                modifiers |= Flags.AccFinal;
             }
             return modifiers;
         }
@@ -2460,24 +2507,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return false;
         }
 
+        private boolean isNonSealed(ClassNode classNode) {
+            return classNode.getAnnotations().stream().anyMatch(annotation ->
+                isType("groovy.transform.NonSealed", annotation.getClassNode().getName()));
+        }
+
         private boolean isRecord(ClassNode classNode) {
+            // TODO: support @groovy.transform.RecordType(mode=NATIVE)
             return classNode.getNodeMetaData("_RECORD_HEADER") != null;
+        }
+
+        private boolean isSealed(ClassNode classNode) {
+            return classNode.getAnnotations().stream().anyMatch(annotation ->
+                isType("groovy.transform.Sealed", annotation.getClassNode().getName()));
         }
 
         private boolean isTrait(ClassNode classNode) {
             return unitDeclaration.traitHelper.isTrait(classNode);
-        }
-
-        /**
-         * @return true if this is varargs, using the same definition as in AsmClassGenerator.isVargs(Parameter[])
-         */
-        private boolean isVargs(Parameter[] parameters) {
-            if (parameters.length == 0) {
-                return false;
-            }
-            Parameter last = parameters[parameters.length - 1];
-            ClassNode type = last.getType();
-            return type.isArray();
         }
 
         /**
@@ -2504,6 +2550,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // TODO: check default imports
             }
             return false;
+        }
+
+        /**
+         * @return true if this is varargs, using the same definition as in AsmClassGenerator.isVargs(Parameter[])
+         */
+        private boolean isVargs(Parameter[] parameters) {
+            if (parameters.length == 0) {
+                return false;
+            }
+            Parameter last = parameters[parameters.length - 1];
+            ClassNode type = last.getType();
+            return type.isArray();
         }
 
         /**
@@ -2631,6 +2689,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (isRecord(classNode)) {
                     //typeDeclaration.restrictedIdentifierStart = classNode.getStart();
                     ReflectionUtils.setPrivateField(TypeDeclaration.class, "restrictedIdentifierStart", typeDeclaration, classNode.getStart());
+                } else if (isSealed(classNode)) {
+                    //typeDeclaration.restrictedIdentifierStart = classNode.getNameEnd()+2;
+                    ReflectionUtils.setPrivateField(TypeDeclaration.class, "restrictedIdentifierStart", typeDeclaration, classNode.getNameEnd()+2);
                 }
             }
         }
@@ -2881,7 +2942,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             public void visitMethodNode(MethodNode node) {
                 node.getCode().visit(this);
                 if (node.hasDefaultValue()) {
-                    Arrays.stream(node.getParameters())
+                    Stream.of(node.getParameters())
                         .filter(Parameter::hasInitialExpression)
                         .forEach(p -> p.getInitialExpression().visit(this));
                 }

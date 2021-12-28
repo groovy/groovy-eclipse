@@ -769,10 +769,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         parameter.setColumnNumber(ctx.variableModifiersOpt().getStart().getCharPositionInLine() + 1);
         parameter.setStart(locationSupport.findOffset(parameter.getLineNumber(), parameter.getColumnNumber()));
 
-        Optional<ModifierNode> var = new ModifierManager(this, this.visitVariableModifiersOpt(ctx.variableModifiersOpt())).get(VAR);
-        if (var != null && var.isPresent()) {
-            parameter.setNodeMetaData("reserved.type.name", var.get());
-        }
+        new ModifierManager(this, this.visitVariableModifiersOpt(ctx.variableModifiersOpt()))
+            .get(VAR).ifPresent(var -> parameter.setNodeMetaData("reserved.type.name", var));
         // GRECLIPSE end
 
         return tuple(parameter, (Expression) this.visit(ctx.expression()));
@@ -1459,7 +1457,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public ClassNode visitClassDeclaration(final ClassDeclarationContext ctx) {
         String packageName = Optional.ofNullable(moduleNode.getPackageName()).orElse("");
         String className = this.visitIdentifier(ctx.identifier());
-        if (VAR_STR.equals(className)) {
+        if ("var".equals(className)) {
             throw createParsingFailedException("var cannot be used for type declarations", ctx.identifier());
         }
 
@@ -1496,31 +1494,29 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
         }
 
-        List<ModifierNode> modifierNodeList = ctx.getNodeMetaData(TYPE_DECLARATION_MODIFIERS);
-        Objects.requireNonNull(modifierNodeList, "modifierNodeList should not be null");
-        ModifierManager modifierManager = new ModifierManager(this, modifierNodeList);
+        ModifierManager modifierManager = new ModifierManager(this, ctx.getNodeMetaData(TYPE_DECLARATION_MODIFIERS));
 
-        Optional<ModifierNode> finalModifierNodeOptional = modifierManager.get(FINAL);
-        Optional<ModifierNode> sealedModifierNodeOptional = modifierManager.get(SEALED);
-        Optional<ModifierNode> nonSealedModifierNodeOptional = modifierManager.get(NON_SEALED);
-        boolean isFinal = finalModifierNodeOptional.isPresent();
-        boolean isSealed = sealedModifierNodeOptional.isPresent();
-        boolean isNonSealed = nonSealedModifierNodeOptional.isPresent();
+        Optional<ModifierNode> finalModifier = modifierManager.get(FINAL);
+        Optional<ModifierNode> sealedModifier = modifierManager.get(SEALED);
+        Optional<ModifierNode> nonSealedModifier = modifierManager.get(NON_SEALED);
+        boolean isFinal = finalModifier.isPresent();
+        boolean isSealed = sealedModifier.isPresent();
+        boolean isNonSealed = nonSealedModifier.isPresent();
 
         boolean isRecord = asBoolean(ctx.RECORD());
         boolean hasRecordHeader = asBoolean(ctx.formalParameters());
         if (isRecord) {
-            if (asBoolean(ctx.EXTENDS())) {
-                throw createParsingFailedException("No extends clause allowed for record declaration", ctx.EXTENDS());
-            }
             if (!hasRecordHeader) {
                 throw createParsingFailedException("header declaration of record is expected", ctx.identifier());
             }
+            if (asBoolean(ctx.EXTENDS())) {
+                throw createParsingFailedException("No extends clause allowed for record declaration", ctx.EXTENDS());
+            }
             if (isSealed) {
-                throw createParsingFailedException("`sealed` is not allowed for record declaration", sealedModifierNodeOptional.get());
+                throw createParsingFailedException("`sealed` is not allowed for record declaration", sealedModifier.get());
             }
             if (isNonSealed) {
-                throw createParsingFailedException("`non-sealed` is not allowed for record declaration", nonSealedModifierNodeOptional.get());
+                throw createParsingFailedException("`non-sealed` is not allowed for record declaration", nonSealedModifier.get());
             }
         } else {
             if (hasRecordHeader) {
@@ -1529,15 +1525,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         if (isSealed && isNonSealed) {
-            throw createParsingFailedException("type cannot be defined with both `sealed` and `non-sealed`", nonSealedModifierNodeOptional.get());
+            throw createParsingFailedException("type cannot be defined with both `sealed` and `non-sealed`", nonSealedModifier.get());
         }
 
         if (isFinal && (isSealed || isNonSealed)) {
-            throw createParsingFailedException("type cannot be defined with both " + (isSealed ? "`sealed`" : "`non-sealed`") + " and `final`", finalModifierNodeOptional.get());
+            throw createParsingFailedException("type cannot be defined with both " + (isSealed ? "`sealed`" : "`non-sealed`") + " and `final`", finalModifier.get());
         }
 
         if ((isAnnotation || isEnum) && (isSealed || isNonSealed)) {
-            ModifierNode mn = isSealed ? sealedModifierNodeOptional.get() : nonSealedModifierNodeOptional.get();
+            ModifierNode mn = isSealed ? sealedModifier.get() : nonSealedModifier.get();
             throw createParsingFailedException("modifier `" + mn.getText() + "` is not allowed for " + (isEnum ? "enum" : "annotation definition"), mn);
         }
 
@@ -1579,7 +1575,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         configureAST(classNode, ctx);
         // GRECLIPSE add
         ASTNode nameNode = configureAST(new ConstantExpression(className), ctx.identifier());
-        classNode.setNameStart(nameNode.getStart()); classNode.setNameEnd(nameNode.getEnd() - 1);
+        classNode.setNameStart(nameNode.getStart()); classNode.setNameEnd(nameNode.getEnd()-1);
+        // keep track of restricted identifiers for highlighting
+        if (isRecord || isSealed || isNonSealed || hasPermits) {
+            List<ASTNode> list = new ArrayList<>(4);
+            if (isSealed) list.add(sealedModifier.get());
+            if (isNonSealed) list.add(nonSealedModifier.get());
+            if (isRecord) list.add(configureAST(new ASTNode(), ctx.RECORD()));
+            if (hasPermits) list.add(configureAST(new ASTNode(), ctx.PERMITS()));
+            classNode.putNodeMetaData("special.keyword", Collections.unmodifiableList(list));
+        }
         // GRECLIPSE end
         classNode.setSyntheticPublic(syntheticPublic);
         classNode.setGenericsTypes(this.visitTypeParameters(ctx.typeParameters()));
@@ -1661,12 +1666,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         ctx.classBody().putNodeMetaData(CLASS_DECLARATION_CLASS_NODE, classNode);
         this.visitClassBody(ctx.classBody());
         if (isRecord) {
-            Optional<FieldNode> fieldNodeOptional =
-                    classNode.getFields().stream()
-                            .filter(f -> !isTrue(f, IS_RECORD_GENERATED) && !f.isStatic()).findFirst();
-            if (fieldNodeOptional.isPresent()) {
-                createParsingFailedException("Instance field is not allowed in `record`", fieldNodeOptional.get());
-            }
+            classNode.getFields().stream().filter(f -> !isTrue(f, IS_RECORD_GENERATED) && !f.isStatic()).findFirst()
+                    .ifPresent(fn -> createParsingFailedException("Instance field is not allowed in `record`", fn));
         }
         classNodeStack.pop();
 
@@ -2309,10 +2310,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             ),
             this.createGroovyTokenByType(ctx.ASSIGN().getSymbol(), Types.ASSIGN),
             this.visitVariableInitializer(ctx.variableInitializer()));
-        Optional<ModifierNode> var = modifierManager.get(VAR);
-        if (var != null && var.isPresent()) {
-            de.setNodeMetaData("reserved.type.name", var.get());
-        }
+        modifierManager.get(VAR).ifPresent(var ->
+            de.setNodeMetaData("reserved.type.name", var));
         configureAST(modifierManager.attachAnnotations(de), ctx);
         return configureAST(new DeclarationListStatement(de), ctx);
         // GRECLIPSE end
@@ -2343,15 +2342,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         declarationExpressionList.forEach(e -> {
             VariableExpression variableExpression = (VariableExpression) e.getLeftExpression();
-
+            // GRECLIPSE add
+            modifierManager.get(VAR).ifPresent(var -> e.setNodeMetaData("reserved.type.name", var));
+            // GRECLIPSE end
             modifierManager.processVariableExpression(variableExpression);
             modifierManager.attachAnnotations(e);
-            // GRECLIPSE add
-            Optional<ModifierNode> var = modifierManager.get(VAR);
-            if (var != null && var.isPresent()) {
-                e.setNodeMetaData("reserved.type.name", var.get());
-            }
-            // GRECLIPSE end
         });
 
         int size = declarationExpressionList.size();
@@ -5475,7 +5470,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private static final String SQ_STR = "'";
     private static final String DQ_STR = "\"";
     private static final String DOLLAR_SLASH_STR = "$/";
-    private static final String VAR_STR = "var";
 
     private static final Map<String, String> QUOTATION_MAP = Maps.of(
             DQ_STR, DQ_STR,

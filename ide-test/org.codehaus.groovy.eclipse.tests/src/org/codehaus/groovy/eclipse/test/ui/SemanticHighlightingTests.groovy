@@ -1566,7 +1566,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |}
             |non-sealed class Bar extends Foo {
             |}
-            |class Baz {
+            |final class Baz {
             |}
             |'''.stripMargin()
 
@@ -1576,13 +1576,37 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('Baz'), 3, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('Foo'), 3, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('Bar'), 3, CLASS),
-            new HighlightedTypedPosition(contents.lastIndexOf('Baz'), 3, CLASS)/*,
-            new HighlightedTypedPosition(contents.indexOf('sealed'), 6, RESERVED),
-            new HighlightedTypedPosition(contents.indexOf('permits'), 7, RESERVED),
-            new HighlightedTypedPosition(contents.indexOf('non-sealed'), 10, RESERVED)*/)
+            new HighlightedTypedPosition(contents.lastIndexOf('Baz'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('sealed'), 6, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('permits'), 7, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('non-sealed'), 10, KEYWORD))
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9630
+    @Test // GROOVY-10433
+    void testSpecialName() {
+        String contents = '''\
+            |int _;
+            |int non;
+            |int var;
+            |int record;
+            |int sealed;
+            |int permits;
+            |f(non-sealed)
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('_'),          1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('non'),        3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('var'),        3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('record'),     6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('sealed'),     6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('permits'),    7, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('f'),          1, UNKNOWN ),
+            new HighlightedTypedPosition(contents.lastIndexOf('non'),    3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('sealed'), 6, VARIABLE))
+    }
+
+    @Test // GROOVY-9630
     void testVarKeyword0() {
         String contents = '''\
             |def var
@@ -1590,7 +1614,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('var'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('var'),     3, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('var'), 3, VARIABLE))
     }
 

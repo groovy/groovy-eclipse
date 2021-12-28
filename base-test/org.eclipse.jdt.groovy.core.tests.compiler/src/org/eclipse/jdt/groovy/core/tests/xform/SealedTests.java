@@ -67,7 +67,7 @@ public final class SealedTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  final int maxDistanceBetweenServicesInKilometers = 100_000\n" +
             "  @Override int getMaxServiceIntervalInMonths() { return 12 }\n" +
-            "}",
+            "}\n",
 
             "Truck.groovy",
             "final class Truck extends Vehicle implements Serviceable {\n" +
@@ -78,7 +78,7 @@ public final class SealedTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  final int maxDistanceBetweenServicesInKilometers = 100_000\n" +
             "  @Override int getMaxServiceIntervalInMonths() { return 18 }\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -96,28 +96,95 @@ public final class SealedTests extends GroovyCompilerTestSuite {
 
             "Bar.groovy",
             "class Bar {\n" + // missing "extends Foo"
-            "}",
+            "}\n",
 
             "Baz.groovy",
             "class Baz extends Foo {\n" + // missing "final", "sealed" or "non-sealed"
-            "}",
+            "}\n",
 
             "Boo.groovy",
             "class Boo extends Foo {\n" + // not permitted
-            "}",
+            "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
+        runNegativeTest(sources, !javaModelSealedSupport()
+            ?
             "----------\n" +
             "1. ERROR in Boo.groovy (at line 1)\n" +
             "\tclass Boo extends Foo {\n" +
             "\t      ^^^\n" +
             "Groovy:The class 'Boo' is not a permitted subclass of the sealed class 'Foo'.\n" +
+            "----------\n"
+            :
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\t@groovy.transform.Sealed(permittedSubclasses=[Bar,Baz])\n" +
+            "\t                                              ^^^\n" +
+            "Permitted class Bar does not declare Foo as direct super class\n" +
+            "----------\n" +
+            "----------\n" +
+            "1. ERROR in Baz.groovy (at line 1)\n" +
+            "\tclass Baz extends Foo {\n" +
+            "\t      ^^^\n" +
+            "The class Baz with a sealed direct superclass or a sealed direct superinterface Foo should be declared either final, sealed, or non-sealed\n" +
+            "----------\n" +
+            "----------\n" +
+            "1. ERROR in Boo.groovy (at line 1)\n" +
+            "\tclass Boo extends Foo {\n" +
+            "\t      ^^^\n" +
+            "The class Boo with a sealed direct superclass or a sealed direct superinterface Foo should be declared either final, sealed, or non-sealed\n" +
+            "----------\n" +
+            "2. ERROR in Boo.groovy (at line 1)\n" +
+            "\tclass Boo extends Foo {\n" +
+            "\t      ^^^\n" +
+            "Groovy:The class 'Boo' is not a permitted subclass of the sealed class 'Foo'.\n" +
+            "----------\n" +
+            "3. ERROR in Boo.groovy (at line 1)\n" +
+            "\tclass Boo extends Foo {\n" +
+            "\t                  ^^^\n" +
+            "The type Boo extending a sealed class Foo should be a permitted subtype of Foo\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testSealed3() {
+        assumeTrue(javaModelSealedSupport());
+
+        //@formatter:off
+        String[] sources = {
+            "p/Foo.groovy",
+            "package p\n" +
+            "@groovy.transform.Sealed(permittedSubclasses=[Bar.class,p.Baz])\n" +
+            "@groovy.transform.PackageScope abstract class Foo {\n" +
+            "}\n",
+
+            "p/Bar.java",
+            "package p;\n" +
+            "final class Bar extends Foo {\n" +
+            "}\n",
+
+            "p/Baz.java",
+            "package p;\n" +
+            "class Baz extends Foo {\n" + // missing "final", "sealed" or "non-sealed"
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\Baz.java (at line 2)\n" +
+            "\tclass Baz extends Foo {\n" +
+            "\t      ^^^\n" +
+            "The class Baz with a sealed direct superclass or a sealed direct superinterface Foo should be declared either final, sealed, or non-sealed\n" +
             "----------\n");
     }
 
     // non-sealed without extends
     // sealed without permits
-    // java extension
+
+    private static boolean javaModelSealedSupport() {
+        return org.eclipse.jdt.core.JavaCore.getPlugin().getBundle().getVersion()
+                .compareTo(org.osgi.framework.Version.parseVersion("3.24")) >= 0;
+    }
 }
