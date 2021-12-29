@@ -481,6 +481,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 (isDirectAccess && resolveStrategy != Closure.OWNER_FIRST && resolveStrategy != Closure.OWNER_ONLY)) {
             // accessed variable was found using direct search; forget the reference
             accessedVar = new DynamicVariable(var.getName(), scope.isStatic());
+        } else if (accessedVar instanceof Parameter && ((Parameter) accessedVar).getEnd() < 1 && var.getEnd() > 0 && // explicit reference to implicit parameter
+                variableInfo != null && variableInfo.scopeNode instanceof ConstructorNode) {
+            // could be field reference from pre- or post-condition block (incl. record compact constructor)
+            accessedVar = ((MethodNode) variableInfo.scopeNode).getDeclaringClass().getField(var.getName());
         }
 
         if (accessedVar instanceof ASTNode) {

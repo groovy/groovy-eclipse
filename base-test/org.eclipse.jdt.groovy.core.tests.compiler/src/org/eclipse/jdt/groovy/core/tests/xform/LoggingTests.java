@@ -121,7 +121,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.17.0", "org.apache.logging.log4j:log4j-core:2.17.0");
+        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.17.1", "org.apache.logging.log4j:log4j-core:2.17.1");
         vmArguments = new String[] {"-Dorg.apache.logging.log4j.level=INFO", "-Dlog4j2.clock=T"};
         runConformTest(sources, "[main] INFO  C - yay!");
     }

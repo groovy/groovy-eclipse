@@ -185,6 +185,6 @@ public final class SealedTests extends GroovyCompilerTestSuite {
 
     private static boolean javaModelSealedSupport() {
         return org.eclipse.jdt.core.JavaCore.getPlugin().getBundle().getVersion()
-                .compareTo(org.osgi.framework.Version.parseVersion("3.24")) >= 0;
+                .compareTo(org.osgi.framework.Version.parseVersion("3.28")) >= 0;
     }
 }
