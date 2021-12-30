@@ -500,6 +500,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1327
+    public void testTypeChecked21() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T m(java.util.function.Consumer<? super T> c) {\n" +
+            "  c.accept(null)\n" +
+            "  null\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  this.m { Number n ->\n" +
+            "    n?.toBigInteger()\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testTypeChecked5450() {
         //@formatter:off

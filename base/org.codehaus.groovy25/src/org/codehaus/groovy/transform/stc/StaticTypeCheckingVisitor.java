@@ -3651,7 +3651,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else {
                     paramTypes = new ClassNode[n];
                     for (int i = 0; i < n; i += 1) {
-                        paramTypes[i] = i < samParamTypes.length ? samParamTypes[i] : null;
+                        paramTypes[i] = !p[i].isDynamicTyped() ? p[i].getOriginType() : (i < samParamTypes.length ? samParamTypes[i] : null);
                     }
                 }
                 expression.putNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS, paramTypes);
