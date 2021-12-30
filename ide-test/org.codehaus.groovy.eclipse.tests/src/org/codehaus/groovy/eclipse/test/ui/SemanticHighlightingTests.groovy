@@ -1588,22 +1588,24 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |int _;
             |int non;
             |int var;
+            |int yield;
             |int record;
             |int sealed;
             |int permits;
-            |f(non-sealed)
+            |//f(non-sealed)
             |'''.stripMargin()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('_'),          1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('non'),        3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('var'),        3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('yield'),      5, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('record'),     6, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('sealed'),     6, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('permits'),    7, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('permits'),    7, VARIABLE)/*,
             new HighlightedTypedPosition(contents.indexOf('f'),          1, UNKNOWN ),
             new HighlightedTypedPosition(contents.lastIndexOf('non'),    3, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('sealed'), 6, VARIABLE))
+            new HighlightedTypedPosition(contents.lastIndexOf('sealed'), 6, VARIABLE)*/)
     }
 
     @Test // GROOVY-9630

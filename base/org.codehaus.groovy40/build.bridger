@@ -19,7 +19,7 @@
 
     <target name="weave">
         <resolve-dependencies pathid="classpath.bridger" type="jar,maven-plugin">
-            <dependency org="org.jboss.bridger" name="bridger" rev="1.5.Final">
+            <dependency org="org.jboss.bridger" name="bridger" rev="1.6.Final">
                 <exclude org="org\.apache\.maven.*" matcher="regexp" />
                 <exclude org="org.codehaus.plexus" />
                 <exclude org="org.sonatype.plexus" />

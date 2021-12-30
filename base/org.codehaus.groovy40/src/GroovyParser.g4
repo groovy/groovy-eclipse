@@ -1213,14 +1213,14 @@ className
 identifier
     :   Identifier
     |   CapitalizedIdentifier
-    |   VAR
-    |   IN
-//  |   DEF
-    |   TRAIT
     |   AS
-    |   YIELD
+    |   IN
     |   PERMITS
     |   RECORD
+    |   SEALED
+    |   TRAIT
+    |   VAR
+    |   YIELD
     ;
 
 builtInType
