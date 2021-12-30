@@ -3119,6 +3119,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void visitMethodCallArguments(final ClassNode receiver, final ArgumentListExpression arguments, final boolean visitClosures, final MethodNode selectedMethod) {
+        /* GRECLIPSE edit
         Parameter[] params = selectedMethod != null ? selectedMethod.getParameters() : Parameter.EMPTY_ARRAY;
         List<Expression> expressions = new LinkedList<>(arguments.getExpressions());
         if (selectedMethod instanceof ExtensionMethodNode) {
@@ -3126,7 +3127,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             expressions.add(0, varX("$self", receiver));
         }
         ArgumentListExpression newArgs = args(expressions);
-
+        */
+        Parameter[] params;
+        List<Expression> expressions = new ArrayList<>();
+        if (selectedMethod instanceof ExtensionMethodNode) {
+            params = ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode().getParameters();
+            expressions.add(varX("$self", receiver));
+        } else {
+            params = selectedMethod != null ? selectedMethod.getParameters() : Parameter.EMPTY_ARRAY;
+        }
+        expressions.addAll(arguments.getExpressions());
+        // GRECLIPSE end
         int nExpressions = expressions.size();
         for (int i = 0; i < nExpressions; i += 1) {
             Expression expression = expressions.get(i);
@@ -3136,13 +3147,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     Parameter target = params[i];
                     ClassNode targetType = target.getType();
                     ClosureExpression source = (ClosureExpression) expression;
-                    checkClosureWithDelegatesTo(receiver, selectedMethod, newArgs, params, source, target);
+                    checkClosureWithDelegatesTo(receiver, selectedMethod, args(expressions), params, source, target);
                     if (selectedMethod instanceof ExtensionMethodNode) {
                         if (i > 0) {
                             inferClosureParameterTypes(receiver, arguments, source, target, selectedMethod);
                         }
                     } else {
-                        inferClosureParameterTypes(receiver, newArgs, source, target, selectedMethod);
+                        inferClosureParameterTypes(receiver, arguments, source, target, selectedMethod);
                     }
                     if (isFunctionalInterface(targetType)) {
                         storeInferredReturnType(source, GenericsUtils.parameterizeSAM(targetType).getV2());

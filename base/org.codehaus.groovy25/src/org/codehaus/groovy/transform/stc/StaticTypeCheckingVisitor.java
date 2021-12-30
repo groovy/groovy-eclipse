@@ -3416,7 +3416,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         startMethodInference(directMethodCallCandidate, collector);
     }
 
-    protected void visitMethodCallArguments(final ClassNode receiver, ArgumentListExpression arguments, boolean visitClosures, final MethodNode selectedMethod) {
+    protected void visitMethodCallArguments(final ClassNode receiver, final ArgumentListExpression arguments, final boolean visitClosures, final MethodNode selectedMethod) {
+        /* GRECLIPSE edit
         Parameter[] params = selectedMethod != null ? selectedMethod.getParameters() : Parameter.EMPTY_ARRAY;
         List<Expression> expressions = new LinkedList<Expression>(arguments.getExpressions());
         if (selectedMethod instanceof ExtensionMethodNode) {
@@ -3424,20 +3425,31 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             expressions.add(0, varX("$self", receiver));
         }
         ArgumentListExpression newArgs = args(expressions);
-
-        for (int i = 0, expressionsSize = expressions.size(); i < expressionsSize; i++) {
+        */
+        Parameter[] params;
+        List<Expression> expressions = new ArrayList<>();
+        if (selectedMethod instanceof ExtensionMethodNode) {
+            params = ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode().getParameters();
+            expressions.add(varX("$self", receiver));
+        } else {
+            params = selectedMethod != null ? selectedMethod.getParameters() : Parameter.EMPTY_ARRAY;
+        }
+        expressions.addAll(arguments.getExpressions());
+        if (expressions.isEmpty()) return;
+        // GRECLIPSE end
+        for (int i = 0, n = expressions.size(); i < n; i++) {
             final Expression expression = expressions.get(i);
             if (visitClosures && expression instanceof ClosureExpression
                     || !visitClosures && !(expression instanceof ClosureExpression)) {
                 if (i < params.length && visitClosures) {
                     Parameter param = params[i];
-                    checkClosureWithDelegatesTo(receiver, selectedMethod, newArgs, params, expression, param);
+                    checkClosureWithDelegatesTo(receiver, selectedMethod, args(expressions), params, expression, param);
                     if (selectedMethod instanceof ExtensionMethodNode) {
                         if (i > 0) {
                             inferClosureParameterTypes(receiver, arguments, (ClosureExpression) expression, param, selectedMethod);
                         }
                     } else {
-                        inferClosureParameterTypes(receiver, newArgs, (ClosureExpression) expression, param, selectedMethod);
+                        inferClosureParameterTypes(receiver, arguments, (ClosureExpression) expression, param, selectedMethod);
                     }
                     // GRECLIPSE add -- GROOVY-9971
                     ClassNode targetType = param.getType();
@@ -3449,12 +3461,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     // GRECLIPSE end
                 }
                 expression.visit(this);
-                if (expression.getNodeMetaData(StaticTypesMarker.DELEGATION_METADATA) != null) {
-                    expression.removeNodeMetaData(StaticTypesMarker.DELEGATION_METADATA);
-                }
+                expression.removeNodeMetaData(StaticTypesMarker.DELEGATION_METADATA);
             }
         }
-        if (expressions.size() > 0 && expressions.get(0) instanceof MapExpression && params.length > 0) {
+        if (params.length > 0 && expressions.get(0) instanceof MapExpression) {
             checkNamedParamsAnnotation(params[0], (MapExpression) expressions.get(0));
         }
     }

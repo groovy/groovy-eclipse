@@ -425,9 +425,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "class C {\n" +
-            "  boolean b\n" +
-            "}\n" +
             "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
             "  print(new Pogo().isFlag())\n" +
@@ -479,6 +476,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "test");
+    }
+
+    @Test
+    public void testTypeChecked20() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T m(java.util.function.Consumer<? super T> c) {\n" +
+            "  c.accept(null)\n" +
+            "  null\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  this.<Number>m { n ->\n" +
+            "    n?.toBigInteger()\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
