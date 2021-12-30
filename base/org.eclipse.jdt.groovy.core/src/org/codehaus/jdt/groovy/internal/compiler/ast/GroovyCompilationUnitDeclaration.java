@@ -1353,8 +1353,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     constructorDecl.modifiers = getModifiers(classNode) & ExtraCompilerModifiers.AccVisibilityMASK;
                     constructorDecl.selector = ctorName;
 
-                    constructorDecl.declarationSourceStart = constructorDecl.sourceStart = constructorDecl.bodyStart = classNode.getNameStart();
-                    constructorDecl.declarationSourceEnd = constructorDecl.sourceEnd = constructorDecl.bodyEnd = classNode.getNameEnd();
+                    AnnotatedNode compactCtor = classNode.getNodeMetaData("compact.constructor");
+                    if (compactCtor == null) {
+                        constructorDecl.declarationSourceStart = constructorDecl.sourceStart = constructorDecl.bodyStart = classNode.getNameStart();
+                        constructorDecl.declarationSourceEnd = constructorDecl.sourceEnd = constructorDecl.bodyEnd = classNode.getNameEnd();
+                    } else {
+                      //constructorDecl.modifiers |= ExtraCompilerModifiers.AccCompactConstructor;
+                        constructorDecl.declarationSourceStart = compactCtor.getStart();
+                        constructorDecl.declarationSourceEnd = compactCtor.getEnd();
+                        constructorDecl.sourceStart = compactCtor.getNameStart();
+                        constructorDecl.bodyStart = compactCtor.getNameEnd() + 1;
+                        constructorDecl.sourceEnd = compactCtor.getNameEnd();
+                        constructorDecl.bodyEnd = compactCtor.getEnd();
+                    }
 
                     if (methodDeclarations.add(constructorDecl)) {
                         unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);

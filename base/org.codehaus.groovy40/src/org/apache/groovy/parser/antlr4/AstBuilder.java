@@ -44,6 +44,7 @@ import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.antlr.EnumHelper;
 import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -583,7 +584,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         // GRECLIPSE add
-        ASTNode nameNode = configureAST(new ConstantExpression(null), ctx.qualifiedName());
+        ASTNode nameNode = configureAST(new AnnotatedNode(), ctx.qualifiedName());
         importNode.setNameStart(nameNode.getStart());
         importNode.setNameEnd(nameNode.getEnd() - 1);
         // GRECLIPSE end
@@ -1997,14 +1998,19 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public MethodNode visitCompactConstructorDeclaration(final CompactConstructorDeclarationContext ctx) {
         ClassNode classNode = ctx.getNodeMetaData(CLASS_DECLARATION_CLASS_NODE);
-        Objects.requireNonNull(classNode, "classNode should not be null");
+        // GRECLIPSE add
+        AnnotatedNode name = configureAST(new AnnotatedNode(),ctx.methodName());
+        AnnotatedNode node = configureAST(new AnnotatedNode(),ctx);
+        classNode.putNodeMetaData("compact.constructor",node);
+        node.setNameStart(name.getStart());
+        node.setNameEnd(name.getEnd() - 1);
+        // GRECLIPSE end
 
-        if (classNode.getAnnotations().stream().noneMatch(a -> a.getClassNode().getName().equals(RecordType.class.getName()))) {
+        if (classNode.getAnnotations().stream().noneMatch(a -> a.getClassNode().getName().equals("groovy.transform.RecordType"))) {
             createParsingFailedException("Only record can have compact constructor", ctx);
         }
 
-        List<ModifierNode> modifierNodeList = ctx.getNodeMetaData(COMPACT_CONSTRUCTOR_DECLARATION_MODIFIERS);
-        if (new ModifierManager(this, modifierNodeList).containsAny(VAR)) {
+        if (new ModifierManager(this, ctx.getNodeMetaData(COMPACT_CONSTRUCTOR_DECLARATION_MODIFIERS)).containsAny(VAR)) {
             throw createParsingFailedException("var cannot be used for compact constructor declaration", ctx);
         }
 
