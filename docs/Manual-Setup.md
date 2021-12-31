@@ -22,7 +22,7 @@ On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Inst
 
 ### Setup Execution Environment Descriptions
 
-On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Java -> Installed JREs* and add JDK 8 and 11. Then go to *Java -> Installed JREs -> Execution Environments*, select JavaSE-1.8, and check the box next to JDK 8 in the list of compatible JREs.  Repeat for JDK 11.
+On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Java -> Installed JREs* and add JDK 8 and 11. Then go to *Java -> Installed JREs -> Execution Environments*, select JavaSE-1.8, and check the box next to JDK 8 in the list of compatible JREs.  Repeat for JDK 11 (and 17).
 
 ![API Baseline](images/eclipse-execution-environment.png)
 
