@@ -107,24 +107,6 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
 
     @Override
     public Expression transform(Expression expr) {
-        // GRECLIPSE add -- GROOVY-6097, GROOVY-7300, et al.
-        if (expr instanceof PropertyExpression) {
-            MethodNode dmct = expr.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-            // NOTE: BinaryExpressionTransformer handles the setter
-            if (dmct != null && dmct.getParameters().length == 0) {
-                PropertyExpression pe = (PropertyExpression) expr;
-
-                MethodCallExpression mce = new MethodCallExpression(transform(pe.getObjectExpression()), dmct.getName(), MethodCallExpression.NO_ARGUMENTS);
-                mce.setImplicitThis(pe.isImplicitThis());
-                mce.setSpreadSafe(pe.isSpreadSafe());
-                mce.setMethodTarget(dmct);
-                mce.setSourcePosition(pe);
-                mce.setSafe(pe.isSafe());
-                return mce;
-            }
-            return super.transform(expr);
-        }
-        // GRECLIPSE end
         if (expr instanceof StaticMethodCallExpression) {
             return staticMethodCallExpressionTransformer.transformStaticMethodCallExpression((StaticMethodCallExpression) expr);
         }
@@ -143,6 +125,28 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
         if (expr instanceof BooleanExpression) {
             return booleanExpressionTransformer.transformBooleanExpression((BooleanExpression)expr);
         }
+        // GRECLIPSE add -- GROOVY-6097, GROOVY-7300, et al.
+        if (expr instanceof PropertyExpression) {
+            MethodNode dmct = expr.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            // NOTE: BinaryExpressionTransformer handles the setter
+            if (dmct != null && dmct.getParameters().length == 0) {
+                PropertyExpression pe = (PropertyExpression) expr;
+
+                MethodCallExpression mce = new MethodCallExpression(transform(pe.getObjectExpression()), dmct.getName(), MethodCallExpression.NO_ARGUMENTS);
+                mce.setImplicitThis(pe.isImplicitThis());
+                mce.setSpreadSafe(pe.isSpreadSafe());
+                mce.setMethodTarget(dmct);
+                mce.setSourcePosition(pe);
+                mce.setSafe(pe.isSafe());
+                // check if method return type is incomplete
+                if (org.codehaus.groovy.ast.tools.GenericsUtils.hasPlaceHolders(mce.getType()))
+                    mce.putNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE,
+                        pe.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE));
+                return mce;
+            }
+            return super.transform(expr);
+        }
+        // GRECLIPSE end
         if (expr instanceof VariableExpression) {
             // GRECLIPSE edit -- GROOVY-6097, GROOVY-7300, et al.
             Expression exp2 = variableExpressionTransformer.transformVariableExpression((VariableExpression)expr);

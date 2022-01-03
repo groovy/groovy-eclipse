@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -660,6 +660,74 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t  ^^^^^^^^^^^^^\n" +
             "Groovy:Failed to find the expected method[sleep(java.lang.String)] in the type[java.lang.Object]\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic25() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "  T t\n" +
+            "  T getT() {\n" +
+            "    this.t\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(C<Map<String,Object>> p) {\n" +
+            "  print p.t.u\n" + // Access to T#x is forbidden
+            "}\n" +
+            "test(new C<>(t:[u:'v']))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "v");
+    }
+
+    @Test
+    public void testCompileStatic26() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "  T t\n" +
+            "  T getT() {\n" +
+            "    this.t\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(C<Map<String,Object>> p) {\n" +
+            "  print p.with { t.u }\n" +
+            "}\n" +
+            "test(new C<>(t:[u:'v']))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "v");
+    }
+
+    @Test
+    public void testCompileStatic27() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "  T t\n" +
+            "  T getT() {\n" +
+            "    this.t\n" +
+            "  }\n" +
+            "}\n" +
+            "class D extends C<Map<String,Object>> {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    print t.u\n" +
+            "  }\n" +
+            "}\n" +
+            "new D(t:[u:'v']).test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "v");
     }
 
     @Test
