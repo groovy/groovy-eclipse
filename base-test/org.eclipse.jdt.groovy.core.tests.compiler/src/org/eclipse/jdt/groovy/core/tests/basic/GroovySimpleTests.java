@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -4218,8 +4218,62 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test // GROOVY-5687
+    @Test // GROOVY-5106
     public void testImplementingInterface7() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I<T> {\n" +
+            "}\n",
+
+            "J.groovy",
+            "interface J<T> extends I<T> {\n" +
+            "}\n",
+
+            "X.groovy",
+            "class X implements I<String>, J<Number> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 1)\n" +
+            "\tclass X implements I<String>, J<Number> {\n" +
+            "\t^\n" +
+            "Groovy:The interface I cannot be implemented more than once with different arguments: I<java.lang.String> and I<java.lang.Number>\n" +
+            "----------\n");
+    }
+
+    @Test // GROOVY-5106
+    public void testImplementingInterface8() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I<T> {\n" +
+            "}\n",
+
+            "X.groovy",
+            "class X implements I<String> {\n" +
+            "}\n",
+
+            "Y.groovy",
+            "class Y extends X implements I<Number> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Y.groovy (at line 1)\n" +
+            "\tclass Y extends X implements I<Number> {\n" +
+            "\t^\n" +
+            "Groovy:The interface I cannot be implemented more than once with different arguments: I<java.lang.Number> and I<java.lang.String>\n" +
+            "----------\n");
+    }
+
+    @Test // GROOVY-5687
+    public void testImplementingInterface9() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
