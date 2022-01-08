@@ -100,7 +100,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testFields1() {
         String contents = '''\
-            |class X {
+            |class C {
             |  String one
             |  public Object two
             |  private Integer three
@@ -109,7 +109,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
@@ -130,7 +130,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         String contents = '''\
-            |class X extends Pogo {{
+            |class C extends Pogo {{
             |    string
             |    getString()
             |    setString('value')
@@ -138,11 +138,34 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
             new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
             new HighlightedTypedPosition(contents.indexOf('getString'), 9, UNKNOWN),
             new HighlightedTypedPosition(contents.indexOf('setString'), 9, UNKNOWN))
+    }
+
+    @Test
+    void testFields3() {
+        String contents = '''\
+            |class C {
+            |  final x
+            |  static final X;
+            |  {
+            |    x = null
+            |  }
+            |  static {
+            |    X = null
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'),     1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x'),     1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('X'),     1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, STATIC_VALUE))
     }
 
     @Test
@@ -3038,6 +3061,43 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('isEmpty'), 7, METHOD_CALL))
+    }
+
+    @Test // GROOVY-5491
+    void testMapKey6() {
+        String contents = '''\
+            |abstract class A extends HashMap {
+            |  def one
+            |  protected two
+            |  private   xxx
+            |}
+            |class C extends A {
+            |  final three
+            |  void test() {
+            |    one = null // set
+            |    two = null // write; public or protected
+            |    xxx = null // put; package-private or private
+            |    three = null // write; declared private field
+            |    ({ -> three = null }) // put; read-only field or property
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('xxx'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('xxx'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('three ='), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, MAP_KEY))
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -640,7 +640,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         boolean dynamicProperty = (!isCallExpression && !isStaticExpression && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE));
 
-        if (dynamicProperty && directFieldAccess == 0) {
+        if (dynamicProperty && directFieldAccess == 0 && !isLhsExpression) { // GROOVY-5491
             return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 
@@ -652,7 +652,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         Set<ClassNode> typeHierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(declaringType, typeHierarchy, true);
-        boolean noIndirectAccessor = !(accessor.isPresent() || dynamicProperty);
 
         // look for property
         for (ClassNode type : typeHierarchy) {
@@ -661,7 +660,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 property = Optional.ofNullable(type.redirect().<List<PropertyNode>>getNodeMetaData("trait.properties"))
                     .flatMap(list -> list.stream().filter(prop -> prop.getName().equals(name)).findFirst()).orElse(null);
             }
-            if (isCompatible(property, isStaticExpression) && (noIndirectAccessor ||
+            if (isCompatible(property, isStaticExpression) &&
+                (!isLhsExpression || !Flags.isFinal(property.getModifiers())) && // GROOVY-8065
+                (!(accessor.isPresent() || (dynamicProperty && !isLhsExpression)) || // GROOVY-5491
                     directFieldAccess == 1 && declaringType.equals(property.getDeclaringClass()))) {
                 return property;
             }
@@ -670,8 +671,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // look for field
         FieldNode field = declaringType.getField(name);
-        if (isCompatible(field, isStaticExpression) && (noIndirectAccessor ||
-                directFieldAccess >= 1 && declaringType.equals(field.getDeclaringClass()) && (directFieldAccess == 1 || !field.isPrivate()))) {
+        if (isCompatible(field, isStaticExpression) &&
+                // no indirect accessor (map get or put if no non-final public/protected field exists)
+                (!(accessor.isPresent() || (dynamicProperty && !(isLhsExpression && !field.isFinal()&&(field.isPublic()||field.isProtected())))) ||
+                    directFieldAccess >= 1 && declaringType.equals(field.getDeclaringClass()) && (directFieldAccess == 1 || !field.isPrivate()))) {
             return field;
         }
 
