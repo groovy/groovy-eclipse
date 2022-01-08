@@ -1644,6 +1644,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
     }
 
+    public void addTypeAnnotations(final List<AnnotationNode> x) {
+    }
+
     public List<AnnotationNode> getTypeAnnotations() {
         return Collections.emptyList();
     }

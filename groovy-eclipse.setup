@@ -67,11 +67,20 @@
     <description>Define the JRE needed to compile and run the Java projects of ${scope.project.label}</description>
   </setupTask>
   <setupTask
+      xsi:type="jdt:JRETask"
+      version="JavaSE-11"
+      location="${jre.location-11}">
+    <description>Define the JRE needed to compile and run the Java projects of ${scope.project.label}</description>
+  </setupTask>
+  <setupTask
       xsi:type="setup:VariableTask"
       name="eclipse.target.platform"
-      defaultValue="2020-06"
+      defaultValue="2021-03"
       storageURI="scope://Workspace"
       label="Target Platform">
+    <choice
+        value="2022-03"
+        label="Eclipse 4.23 (2022-03)"/>
     <choice
         value="2021-12"
         label="Eclipse 4.22 (2021-12)"/>
@@ -87,9 +96,6 @@
     <choice
         value="2020-12"
         label="Eclipse 4.18 (2020-12)"/>
-    <choice
-        value="2020-09"
-        label="Eclipse 4.17 (2020-09)"/>
     <description>Choose the compatibility level of the target platform</description>
   </setupTask>
   <setupTask
@@ -126,7 +132,15 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2021-12) (scope.product.version.name=latest) (scope.product.version.name=latest.released))">
+      filter="(| (scope.product.version.name=2022-03) (scope.product.version.name=latest))">
+    <requirement
+        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
+    <repository
+        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.23"/>
+  </setupTask>
+  <setupTask
+      xsi:type="setup.p2:P2Task"
+      filter="(| (scope.product.version.name=2021-12) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -163,14 +177,6 @@
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
         url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.18"/>
-  </setupTask>
-  <setupTask
-      xsi:type="setup.p2:P2Task"
-      filter="(scope.product.version.name=2020-09)">
-    <requirement
-        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
-    <repository
-        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.17"/>
   </setupTask>
   <setupTask
       xsi:type="git:GitCloneTask"
@@ -227,6 +233,13 @@
   </setupTask>
   <setupTask
       xsi:type="projects:ProjectsImportTask"
+      filter="(eclipse.target.platform=2022-03)">
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e423"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
+      xsi:type="projects:ProjectsImportTask"
       filter="(eclipse.target.platform=2021-12)">
     <sourceLocator
         rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e422"
@@ -261,13 +274,6 @@
         locateNestedProjects="true"/>
   </setupTask>
   <setupTask
-      xsi:type="projects:ProjectsImportTask"
-      filter="(eclipse.target.platform=2020-09)">
-    <sourceLocator
-        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e417"
-        locateNestedProjects="true"/>
-  </setupTask>
-  <setupTask
       xsi:type="setup.targlets:TargletTask">
     <targlet
         name="Eclipse ${eclipse.target.platform}"
@@ -287,7 +293,16 @@
       <requirement
           name="org.eclipse.test.feature.group"/>
       <repositoryList
-          name="2020-06">
+          name="2022-03">
+        <repository
+            url="https://download.eclipse.org/releases/2022-03"/>
+        <repository
+            url="https://download.eclipse.org/eclipse/updates/4.23"/>
+        <repository
+            url="https://download.eclipse.org/eclipse/updates/4.23-I-builds/I20220105-1800"/>
+      </repositoryList>
+      <repositoryList
+          name="2021-12">
         <repository
             url="https://download.eclipse.org/releases/2021-12"/>
         <repository
@@ -320,13 +335,6 @@
             url="https://download.eclipse.org/releases/2020-12"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.18"/>
-      </repositoryList>
-      <repositoryList
-          name="2020-09">
-        <repository
-            url="https://download.eclipse.org/releases/2020-09"/>
-        <repository
-            url="https://download.eclipse.org/eclipse/updates/4.17"/>
       </repositoryList>
     </targlet>
   </setupTask>

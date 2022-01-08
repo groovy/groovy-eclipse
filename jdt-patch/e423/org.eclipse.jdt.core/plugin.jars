@@ -1,0 +1,9 @@
+jdtcore.jar=\
+	batch,\
+	codeassist,\
+	compiler,\
+	eval,\
+	formatter,\
+	dom,\
+	model, \
+	search

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -971,7 +971,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                     char[][] splits = CharOperation.splitOn('.', importNode.getClassName().toCharArray());
                     ImportReference ref;
-                    if (importNode.getAlias() == null || importNode.getAlias().length() < 1 ||
+                    if (importNode.getAlias() == null || importNode.getAlias().isEmpty() ||
                             importNode.getAlias().equals(String.valueOf(splits[splits.length - 1]))) {
                         endOffset = nameEndOffset; // endOffset may include extras before ;
                         long[] positions = positionsFor(splits, nameStartOffset, endOffset);
@@ -1539,12 +1539,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int modifiers = getModifiers(methodNode);
                 Parameter[] params = methodNode.getParameters();
                 ClassNode returnType = methodNode.getReturnType();
-                // 'static main(args)' would become 'static Object main(Object args)' so make it 'static void main(String[] args)'
+                // present 'static main(args)' as 'static void main(String[] args)' -- not as 'static Object main(Object args)'
                 if (Flags.isStatic(modifiers) && "main".equals(methodNode.getName()) && params != null && params.length == 1) {
                     Parameter p = params[0];
-                    if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
+                    ClassNode pType = p.getType();
+                    if (pType == null || pType.getName().equals(ClassHelper.OBJECT)) {
                         params = new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), p.getName())};
+                        params[0].addAnnotations(p.getAnnotations());
+                        params[0].setModifiers(p.getModifiers());
                         params[0].setSourcePosition(p);
+                        if (pType != null) {
+                            params[0].getType().setSourcePosition(pType);
+                            params[0].getType().addTypeAnnotations(pType.getTypeAnnotations());
+                        }
                         if (returnType.getName().equals(ClassHelper.OBJECT)) {
                             returnType = ClassHelper.VOID_TYPE;
                         }

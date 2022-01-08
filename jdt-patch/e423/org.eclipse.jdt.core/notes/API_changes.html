@@ -1,0 +1,565 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="IBM">
+   <title>JDT/Core Breaking API changes</title>
+   <link rel="stylesheet" href="../jdt_core_style.css" charset="iso-8859-1" type="text/css">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+&nbsp;
+
+<table border=0 cellspacing=5 cellpadding=2 width="100%" >
+  <tr> 
+    <td align="left" width="72%" class="title1">
+      <font size="+3"><b>jdt core - Breaking API changes from R2.1 to R3.0</b></font>
+	</td>
+  </tr>
+  <tr>
+	<td align="left" width="72%" class="title2">
+	  <font size="-2" color="#8080ff">java development tooling core</font>
+	</td>
+  </tr>
+	<tr><td>&nbsp;</td></tr>
+  <tr>
+  	<td align="left" width="72%" class="title3">
+	  <font size="-1">
+	  This document lists all API changes (breaking or not) that occured between R2.1 and R3.0 and how to migrate from the R2.1 API to
+	  the R3.0 API.
+	  </font>
+	</td>
+  </tr>
+</table>
+<hr><h1>New API on <code>org.eclipse.jdt.core.dom.AST</code></h1>
+	(in progress) Last edit: 2003/07/18
+<h2>Problem description</h2>
+	Creating an DOM/AST for a compilation unit costs a lot when the user wants only a subpart
+	of the compilation unit to be populated. For example, only the statements of one method are
+	useful and there is no need to create the statements of the other methods.
+	<p>
+	See also <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=40474 ">bug 40474</a>.
+	</p>
+<h2>Problem resolution</h2>
+	Two new APIs have been added on <code>org.eclipse.jdt.core.dom.AST</code>.<br>
+	<ul>
+	<li><pre><code>public static org.eclipse.jdt.core.dom.CompilationUnit parsePartialCompilationUnit(
+		org.eclipse.jdt.core.ICompilationUnit unit,
+		int position,
+		boolean resolveBindings)</code>
+		</pre>
+	</li>
+	<li><pre><code>public static org.eclipse.jdt.core.dom.CompilationUnit parsePartialCompilationUnit(
+		org.eclipse.jdt.core.ICompilationUnit unit,
+		int position,
+		boolean resolveBindings,
+		org.eclipse.jdt.core.WorkingCopyOwner owner)</code>
+		</pre>
+	</ul>
+<h2>Converting to the new API</h2>
+	None.
+
+<hr><h1>IWorkingCopy is removed</h1>
+	(in progress) Last edit: 2003/07/03
+<h2>Problem description</h2>
+	Historically, <code>IWorkingCopy</code> gathered all working copy concerns, 
+	and <code>ICompilationUnit</code> implement this interface, though only the 
+	factory method makes sense for them; thus their implementation of the working 
+	copy features do nothing relevant to clients. <code>IWorkingCopy</code> also 
+	implements the spec'ed factory method, but it doesn't work for these.
+	<p>
+	See also <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=36987 ">bug 36987</a>.
+	</p>
+<h2>Problem resolution</h2>
+	Interface <code>IWorkingCopy</code> is removed and all its functionality is moved to <code>ICompilationUnit</code>.
+<h2>Converting to the new API</h2>
+	Clients using <code>IWorkingCopy</code> and <code>ICompilationUnit</code> can
+	adapt to this change by referencing <code>ICompilationUnit</code> instead of 
+	<code>IWorkingCopy</code> when a working copy is needed.
+
+<hr><h1>Working copy factory methods return ICompilationUnit</h1>
+	(in progress) Last edit: 2003/07/03
+<h2>Problem description</h2>
+	Working copies were initialy designed to be editable elements on any <code>IJavaElement</code>.
+	Pratice showed that they were used only to edit <code>ICompilationUnit</code>. This imposed 
+	downcasting to <code>IWorkingCopy</code> when using the working copy factory methods.
+<h2>Problem resolution</h2>
+	Factory methods that create <code>ICompilationUnits</code> (i.e. 
+	<code>getWorkingCopy</code>) now return an <code>ICompilationUint</code> instead of an 
+	<code>IJavaElement</code>.
+<h2>Converting to the new API</h2>
+	Clients using factory methods to create working copies can now remove the cast from 
+	<code>IJavaElement</code> to <code>IWorkingCopy</code>, <code>ICompilationUint</code>
+	being compatible with <code>IWorkingCopy</code>.
+
+<hr><h1>CharOperation.pathMatch(...) treats non absolute pattern as Ant does</h1>
+	Last edit: 2003/06/11 (-&gt;M2)
+<h2>Problem description</h2>
+	<code>CharOperation.pathMatch(...)</code> used to treat non absolute pattern <code>'foo'</code>
+	as <code>'**/foo'</code> for free. This was inconsistent with Ant patternset rules.
+<h2>Problem resolution</h2>
+	<code>CharOperation.pathMatch(...)</code> no longer treat non absolute pattern <code>'foo'</code>
+	as <code>'**/foo'</code> for free. This has no incidence on
+	source folder exclusion patterns which are implicitely concatenating exclusion patterns to source folder
+	paths when using them. Only direct clients to this <code>CharOperation</code> API will be affected.
+<h2>Converting to the new API</h2>
+	TODO
+
+<hr><h1>Change in syntax error message ID</h1>
+	Last edit: 2003/06/11 (-&gt;M2)
+<h2>Problem description</h2>
+	TODO
+<h2>Problem resolution</h2>
+	The new diagnose of syntax errors use new error messages.
+	  <p>The following messages ID are added:</p>
+		<ul>
+			<li>IProblem.ParsingErrorInsertTokenBefore</li>
+			<li>IProblem.ParsingErrorInsertTokenAfter</li>
+			<li>IProblem.ParsingErrorDeleteToken</li>
+			<li>IProblem.ParsingErrorDeleteTokens</li>
+			<li>IProblem.ParsingErrorMergeTokens</li>
+			<li>IProblem.ParsingErrorInvalidToken</li>
+			<li>IProblem.ParsingErrorMisplacedConstruct</li>
+			<li>IProblem.ParsingErrorReplaceTokens</li>
+			<li>IProblem.ParsingErrorNoSuggestionForTokens</li>
+			<li>IProblem.ParsingErrorUnexpectedEOF</li>
+			<li>IProblem.ParsingErrorInsertToComplete</li>
+			<li>IProblem.ParsingErrorInsertToCompleteScope</li>
+			<li>IProblem.ParsingErrorInsertToCompletePhrase</li>
+		</ul>
+	  <p>The following messages ID are removed:</p>
+		<ul>
+			<li>IProblem.ParsingErrorNoSuggestion</li>
+			<li>IProblem.ParsingErrorOnKeyword</li>
+			<li>IProblem.ParsingErrorOnKeywordNoSuggestion</li>
+			<li>IProblem.UnmatchedBracket</li>
+			<li>IProblem.InvalidExpressionAsStatement</li>
+		</ul>
+<h2>Converting to the new API</h2>
+	TODO
+
+<hr><h1>Force reload of .classpath file</h1>
+	Last edit: 2003/06/12 (-&gt;M2)
+<h2>Problem description</h2>
+	TODO
+<h2>Problem resolution</h2>
+	Added API <code>IJavaProject#forceClasspathReload(IProgressMonitor)</code> to force reload of <code>.classpath</code> file
+	before next automatic update occurs.
+	<pre>
+/**
+ * Force the project to reload its <code>.classpath</code> file from disk and update the classpath accordingly.
+ * Usually, a change to the <code>.classpath</code> file is automatically noticed and reconciled at the next 
+ * resource change notification event. If required to consider such a change prior to the next automatic
+ * refresh, then this functionnality should be used to trigger a refresh. In particular, if a change to the file is performed,
+ * during an operation where this change needs to be reflected before the operation ends, then an explicit refresh is
+ * necessary.
+ * 
+ * @param monitor a progress monitor for reporting operation progress
+ * @exception JavaModelException if the classpath could not be updated. Reasons
+ * include:
+ *  - This Java element does not exist (ELEMENT_DOES_NOT_EXIST)
+ *  - Two or more entries specify source roots with the same or overlapping paths (NAME_COLLISION)
+ *  - A entry of kind <code>CPE_PROJECT</code> refers to this project (INVALID_PATH)
+ *  - This Java element does not exist (ELEMENT_DOES_NOT_EXIST)
+ *  - The output location path refers to a location not contained in this project (<code>PATH_OUTSIDE_PROJECT</code>)
+ *  - The output location path is not an absolute path (<code>RELATIVE_PATH</code>)
+ *  - The output location path is nested inside a package fragment root of this project (<code>INVALID_PATH</code>)
+ *  - The classpath is being modified during resource change event notification (CORE_EXCEPTION)
+ * @since 3.0
+ */
+	</pre>
+<h2>Converting to the new API</h2>
+	TODO
+
+<hr><h1>Allow empty path to be equivalent to no source attachment</h1>
+	Last edit: 2003/06/13 (-&gt;M2)
+<h2>Problem description</h2>
+	<code>JavaCore.newLibraryEntry(...)</code> used to not allow an empty source attachment (
+	<code>new Path("")</code>) to be equivalent to no source attachment (i.e. <code>null</code>). 
+	This adjustment is made necessary for library entries generated from classpath variables which cannot be set to 
+	<code>null</code>. Also see bug <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=38531">38531</a>.
+<h2>Problem resolution</h2>
+	<code>JavaCore.newLibraryEntry(...)</code> will now allow an empty source attachment (
+	<code>new Path("")</code>) to be equivalent to no source attachment (i.e. <code>null</code>). 
+	<pre>
+* @param sourceAttachmentPath the absolute path of the corresponding source archive or folder, 
+*    or <code>null</code> if none. Note, since 3.0, an empty path is allowed to denote no source attachment.
+*   and will be automatically converted to <code>null</code>.
+	</pre>
+<h2>Converting to the new API</h2>
+	TODO
+
+<hr><h1>Close the gap between compilation units and working copies</h1>
+	Last edit: 2003/06/27 (-&gt;M2)
+<h2>Problem description</h2>
+	TODO
+	<p>See also <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=36888 ">bug 36888</a>.
+	</p>
+<h2>Problem resolution</h2>
+	The following new APIs are added to <code>ICompilationUnit</code>:
+	<ul>
+	<li><pre>
+/**
+ * Changes this compilation unit handle into a working copy. A new IBuffer is
+ * created using this compilation unit handle's owner. Uses the primary owner is none was
+ * specified when this compilation unit handle was created.
+ *
+ * When switching to working copy mode, problems are reported to given 
+ * IProblemRequestor.
+ *
+ * Once in working copy mode, changes to this compilation unit or its children are done in memory.
+ * Only the new buffer is affected. Using commitWorkingCopy(boolean, IProgressMonitor)
+ * will bring the underlying resource in sync with this compilation unit.
+ *
+ * If this compilation unit was already in working copy mode, an internal counter is incremented and no
+ * other action is taken on this compilation unit. To bring this compilation unit back into the original mode 
+ * (where it reflects the underlying resource), discardWorkingCopy must be call as many 
+ * times as becomeWorkingCopy.
+ * 
+ * @param problemRequestor a requestor which will get notified of problems detected during
+ * 	reconciling as they are discovered. The requestor can be set to null indicating
+ * 	that the client is not interested in problems.
+ * @param monitor a progress monitor used to report progress while opening this compilation unit
+ * 	or null if no progress should be reported 
+ * @exception JavaModelException if this compilation unit could not become a working copy.
+ * @see discardWorkingCopy
+ * @since 3.0
+ */
+void becomeWorkingCopy(IProblemRequestor problemRequestor, IProgressMonitor monitor) throws JavaModelException;	
+	</pre></li>
+	<li><pre>
+/**
+ * Commits the contents of this working copy to its underlying resource.
+ *
+ * It is possible that the contents of the original resource have changed
+ * since this working copy was created, in which case there is an update conflict.
+ * The value of the force parameter affects the resolution of
+ * such a conflict:
+ * - true - in this case the contents of this working copy are applied to
+ * 	the underlying resource even though this working copy was created 
+ * 	before a subsequent change in the resource
+ * - false - in this case a JavaModelException is thrown
+ * 
+ * Since 2.1, a working copy can be created on a not-yet existing compilation
+ * unit. In particular, such a working copy can then be committed in order to create
+ * the corresponding compilation unit.
+ * 
+ * @param force a flag to handle the cases when the contents of the original resource have changed
+ * since this working copy was created
+ * @param monitor the given progress monitor
+ * @exception JavaModelException if this working copy could not commit. Reasons include:
+ * - A CoreException occurred while updating an underlying resource
+ * - This element is not a working copy (INVALID_ELEMENT_TYPES)
+ * - A update conflict (described above) (UPDATE_CONFLICT)
+ * @since 3.0
+ */
+void commitWorkingCopy(boolean force, IProgressMonitor monitor) throws JavaModelException;	
+	</pre></li>
+	<li><pre>
+/**
+ * Changes this compilation unit in working copy mode back to its original mode.
+ *
+ * This has no effect if this compilation unit was not in working copy mode.
+ * 
+ * If becomeWorkingCopy was called several times on this
+ * compilation unit, discardWorkingCopy must be called as 
+ * many times before it switches back to the original mode.
+ * 
+ * @see becomeWorkingCopy
+ * @exception JavaModelException if this working copy could not return in its original mode.
+ * @since 3.0
+ */
+void discardWorkingCopy() throws JavaModelException;
+	</pre></li>
+	<li><pre>
+/**
+ * Returns the working copy owner of this working copy.
+ * Returns null if it is not a working copy or if it has no owner.
+ * 
+ * @return WorkingCopyOwner the owner of this working copy or null
+ * @since 3.0
+ */
+WorkingCopyOwner getOwner();
+	</pre></li>	
+	<li><pre>
+/**
+ * Returns a new working copy of this element if this element is not
+ * a working copy, or this element if this element is already a working copy.
+ * 
+ * Note: if intending to share a working copy amongst several clients, then 
+ * getWorkingCopy(WorkingCopyOwner, IProblemRequestor, IProgressMonitor) 
+ * should be used instead.
+ * 
+ * When the working copy instance is created, an ADDED IJavaElementDelta is 
+ * reported on this working copy.
+ * 
+ * Since 2.1, a working copy can be created on a not-yet existing compilation
+ * unit. In particular, such a working copy can then be committed in order to create
+ * the corresponding compilation unit.
+ * 
+* @param monitor a progress monitor used to report progress while opening this compilation unit
+ * 	or null if no progress should be reported 
+ * @exception JavaModelException if the contents of this element can
+ * 	not be determined. 
+ * @return a new working copy of this element if this element is not
+ * 	a working copy, or this element if this element is already a working copy
+ * @since 3.0
+ */
+ICompilationUnit getWorkingCopy(IProgressMonitor monitor) throws JavaModelException;
+	</pre></li>	
+	<li><pre>
+/**
+ * Returns a shared working copy on this element using the given working copy owner to create
+ * the buffer, or this element if this element is already a working copy.
+ * This API can only answer an already existing working copy if it is based on the same
+ * original compilation unit AND was using the same working copy owner (that is, as defined by Object.equals).	 
+ * 
+ * The life time of a shared working copy is as follows:
+ * - The first call to getWorkingCopy(WorkingCopyOwner, IProblemRequestor, IProgressMonitor)
+ *   creates a new working copy for this element
+ * - Subsequent calls increment an internal counter.
+ * - A call to discardWorkingCopy() decrements the internal counter.
+ * - When this counter is 0, the working copy is discarded.
+ * 
+ * So users of this method must discard exactly once the working copy.
+ *
+ * Note that the working copy owner will be used for the life time of this working copy, that is if the 
+ * working copy is closed then reopened, this owner will be used.
+ * The buffer will be automatically initialized with the original's compilation unit content
+ * upon creation.
+ * 
+ * When the shared working copy instance is created, an ADDED IJavaElementDelta is reported on this
+ * working copy.
+ * 
+ * Since 2.1, a working copy can be created on a not-yet existing compilation
+ * unit. In particular, such a working copy can then be committed in order to create
+ * the corresponding compilation unit.
+ * 
+ * @param owner the working copy owner that creates a buffer that is used to get the content 
+ *  	of the working copy
+ * @param problemRequestor a requestor which will get notified of problems detected during
+ * 	reconciling as they are discovered. The requestor can be set to null indicating
+ * 	that the client is not interested in problems.
+ * @param monitor a progress monitor used to report progress while opening this compilation unit
+ * 	or null if no progress should be reported 
+ * @exception JavaModelException if the contents of this element can
+ *  	not be determined. 
+ * @return a new working copy of this element using the given factory to create
+ * the buffer, or this element if this element is already a working copy
+ * @since 3.0
+ */
+ICompilationUnit getWorkingCopy(WorkingCopyOwner owner, IProblemRequestor problemRequestor, IProgressMonitor monitor) throws JavaModelException;	
+	</pre></li>
+	</ul>
+And the following abstract class replaces <code>IBufferFactory</code>:
+	<pre>
+/**
+ * The owner of an ICompilationUnit handle in working copy mode. 
+ * An owner is used to identify a working copy and to create its buffer.
+ * 
+ * @see ICompilationUnit#becomeWorkingCopy
+ * @see ICompilationUnit#discardWorkingCopy
+ * @since 3.0
+ */
+public abstract class WorkingCopyOwner {
+	/**
+	 * Creates a buffer for the given working copy.
+	 * The new buffer will be initialized with the contents of the underlying file
+	 * if and only if it was not already initialized by the compilation owner (a buffer is 
+	 * uninitialized if its content is null).
+	 * 
+	 * @param workingCopy the working copy of the buffer
+	 * @return IBuffer the created buffer for the given working copy
+	 * @see IBuffer
+	 */
+	public IBuffer createBuffer(ICompilationUnit workingCopy) {
+		...
+	}
+}
+	</pre>
+	To generalize the usage of a working copy owner (entire JavaModel is now aware of owned working copies), new
+	APIs were added. These new APIs are copies of existing APIs augmented with a <code>WorkingCopyOwner</code> 
+	parameter, that defines the working copies to consider in the operation. 
+	When specifying an owner parameter, all working copies belonging to this owner will implicitly take precedence over primary ones
+	(without requiring the owner to remember all its working copies, as in 2.1 era). Note that when no owned working copy is found, a primary
+	unit will be considered instead, and since primary units have a built-in working copy (see <code>ICompilationUnit.becomeWorkingCopy(...)</code>),
+	the primary unit may already be in working copy mode (very likely since an editor got opened on it). This means that an owner will already 
+	transparently see unsaved editor contents for all units for which it has no better working copy to contribute.
+	The following new APIs were added:
+	<ul>
+		<li><code>AST.parseCompilationUnit(char[] source, String unitName, IJavaProject project, WorkingCopyOwner owner)</code></li>
+		<li><code>AST.parseCompilationUnit(IClassFile classFile, boolean resolveBindings, WorkingCopyOwner owner)</code></li>
+		<li><code>AST.parseCompilationUnit(ICompilationUnit unit, boolean resolveBindings, WorkingCopyOwner owner)</code></li>
+		<li><code>IEvaluationContext.codeComplete(String codeSnippet, int position, ICompletionRequestor requestor, WorkingCopyOwner owner)</code></li>
+		<li><code>IEvaluationContext.codeSelect(String codeSnippet, int offset, int length, WorkingCopyOwner owner)</code></li>
+		<li><code>IDOMCompilationUnit.getCompilationUnit(IPackageFragment parent, WorkingCopyOwner owner)</code></li>
+		<li><code>ICodeAssist.codeComplete(int offset, ICompletionRequestor requestor, WorkingCopyOwner owner)</code></li>
+		<li><code>ICodeAssist.codeSelect(int offset, int length, WorkingCopyOwner owner)</code></li>
+		<li><code>ICompilationUnit.reconcile(boolean forceProblemDetection, WorkingCopyOwner owner, IProgressMonitor monitor)</code></li>
+		<li><code>IJavaProject.findElement(IPath path, WorkingCopyOwner owner)</code></li>
+		<li><code>IJavaProject.findType(String packageName, String typeQualifiedName, WorkingCopyOwner owner)</code></li>
+		<li><code>IJavaProject.findType(String fullyQualifiedName, WorkingCopyOwner owner)</code></li>
+		<li><code>IJavaProject.newTypeHierarchy(IRegion region, WorkingCopyOwner owner, IProgressMonitor monitor)</code></li>
+		<li><code>IJavaProject.newTypeHierarchy(IType type, IRegion region, WorkingCopyOwner owner, IProgressMonitor monitor)</code></li>
+		<li><code>IPackageFragment.getCompilationUnit(String name, WorkingCopyOwner owner)</code></li>
+		<li><code>IPackageFragment.getCompilationUnits(WorkingCopyOwner owner)</code></li>
+		<li><code>IType.codeComplete(char[] snippet, int insertion, int position, char[][] localVariableTypeNames, char[][] localVariableNames, int[] localVariableModifiers, boolean isStatic, ICompletionRequestor requestor, WorkingCopyOwner owner)</code></li>
+		<li><code>IType.newSupertypeHierarchy(WorkingCopyOwner owner, IProgressMonitor monitor)</code></li>
+		<li><code>IType.newTypeHierarchy(IJavaProject project, WorkingCopyOwner owner, IProgressMonitor monitor)</code></li>
+		<li><code>IType.newTypeHierarchy(WorkingCopyOwner owner, IProgressMonitor monitor)</code></li>
+		<li><code>IType.resolveType(String typeName, WorkingCopyOwner owner)</code></li>
+		<li><code>JavaCore.create(IFile file, WorkingCopyOwner owner)</code></li>
+		<li><code>JavaCore.create(IResource resource, WorkingCopyOwner owner)</code></li>
+		<li><code>JavaCore.create(String handleIdentifier, WorkingCopyOwner owner)</code></li>
+		<li><code>JavaCore.createCompilationUnitFrom(IFile file, WorkingCopyOwner owner)</code></li>
+		<li><code>JavaCore.getWorkingCopies(WorkingCopyOwner owner)</code></li>
+		<li><code>SearchEngine.SearchEngine(WorkingCopyOwner workingCopyOwner)</code></li>
+		<li><code>SearchEngine.createHierarchyScope(IType type, WorkingCopyOwner owner)</code></li>
+	</ul>
+<h2>Converting to the new API</h2>
+	TODO
+
+<hr><h1>IJavaElement.getResource() returns a non null value for working copies</h1>
+	Last edit: 2003/06/18 (-&gt;M2)
+<h2>Problem description</h2>
+	<code>IJavaElement.getResource()</code> was specified to return <code>null</code> for working copies. 
+	This didn't make sense as	this is a handle-only operation and an <code>IResource</code> is also a handle. 
+<h2>Problem resolution</h2>
+	This restriction was removed and <code>IJavaElement.getResource()</code> now returns a non-<code>null</code> 
+	value for a working copy.
+<h2>Converting to the new API</h2>
+	TODO
+
+<hr><h1>Rename getOriginalElement() into getPrimaryElement()</h1>
+	Last edit: 2003/06/20 (-&gt;M2)
+<h2>Problem description</h2>
+	The 2.1 API <code>IWorkingCopy.getOriginalElement()</code> returns an <code>IJavaElement</code>. In practice 
+	the original element for a working copy is always an <code>ICompilationUnit</code> whose owner is the primary owner. 
+<h2>Problem resolution</h2>
+	<code>getPrimary()</code> was added on <code>ICompilationUnit</code> to return an <code>ICompilationUnit</code>. 
+	This new API replaces <code>getOriginalElement()</code>.
+	<pre>
+/**
+ * Returns the primary compilation unit (whose owner is the primary owner)
+ * this working copy was created from, or this compilation unit if this a primary
+ * compilation unit.
+ * Note that the returned primary compilation unit can be in working copy mode.
+ * 
+ * @return the primary compilation unit this working copy was created from,
+ * or this compilation unit if it is primary
+ * @since 3.0
+ */
+ICompilationUnit getPrimary();
+	</pre>
+	In the same manner, <code>IWorkingCopy.getOriginalElement(IJavaElement)</code> is replaced with
+	<code>IJavaElement.getPrimaryElement()</code>.
+	<pre>
+/**
+ * Returns the primary element (whose compilation unit is the primary compilation unit)
+ * this working copy element was created from, or this element if it is a descendant of a
+ * primary compilation unit or if it is not a descendant of a working copy (e.g. it is a
+ * binary member).
+ * The returned element may or may not exist.
+ * 
+ * @return the primary element this working copy element was created from, or this
+ *		element.
+ * @since 3.0
+ */
+IJavaElement getPrimaryElement();
+	</pre>
+
+<h2>Converting to the new API</h2>
+	TODO
+
+<hr><h1>JavaCore.newLibraryEntry(...) no longer accepts a relative source attachment path</h1>
+	Last edit: 2003/06/30 (-&gt;M2)
+<h2>Problem description</h2>
+	The API <code>JavaCore.newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath, boolean isExported)</code> 
+	for creating a library classpath entry with a source attachment used to accept a relative source attachment path. It was spec'ed as such, 
+	but its implementation was too permissive.
+<h2>Problem resolution</h2>
+	From 3.0 on, an <code>IllegalArgumentException</code> will be raised if a non-relative source attachment path is provided. 
+	Note that the only exception to this rule is an empty path (answering <code>true</code> to <code>IPath.isEmpty()</code>) which is 
+	now automatically translated into <code>null</code> denoting no source attachment.
+	In 3.0, a .classpath file will compact source attachments into project relative ones (as it does with other entry pathes already). During 
+	this process, relative pathes are known to be meaning project relative (internally when reading/writing the .classpath file). Externally, 
+	only absolute pathes are allowed to avoid confusion when reading/writing the .classpath file.
+	The tolerance for empty relative pathes comes from the fact that it is possible for variable classpath entries can be resolved to library entries 
+	with no classpath. Then the variable source attachment needs to be positionned to a value meaning no source (<code>null</code>). 
+	However, assigning a classpath variable to <code>null</code> is not allowed (nullification is used to remove variables),
+	thus an empty relative source path is tolerated to work around this limitation.
+<h2>Converting to the new API</h2>
+	TODO
+
+<hr><h1>Read <code>.classpath</code> file contents even if project has not the java nature yet</h1>
+	Last edit: 2003/09/01 (-&gt;M4)
+<h2>Problem description</h2>
+In 2.0 it was allowed to access IJavaProject.getOutputLocation/getRawClasspath on a project where the JavaNature was not set yet. Since 2.1 a
+JavaModelException is thrown if that happens.
+For example, the new Java project wizard does this if a .classpath file is found at the
+location where the project will be created.
+<h2>Problem resolution</h2>
+
+	Added API <code>IJavaProject#readRawClasspath()</code> to allow user to read the raw classpath from <code>.classpath</code> disk file
+	on a java project which java nature has not been set yet.
+	<pre>
+/**
+ * Returns the raw classpath for the project as defined by its <code>.classpath</code> file from disk, or <code>null</code>
+ * if unable to read the file. 
+ * 
+ * This classpath may differ from the in-memory classpath returned by <code>getRawClasspath</code>, in case the 
+ * automatic reconciliation mechanism has not been performed yet. Usually, any change to the <code>.classpath</code> file 
+ * is automatically noticed and reconciled at the next resource change notification event. 
+ * However, if the file is modified within an operation, where this change needs to be taken into account before the 
+ * operation ends, then the classpath from disk can be read using this method, and further assigned to the project 
+ * using <code>setRawClasspath(...)</code>.
+ * 
+ * A raw classpath may contain classpath variable and/or container entries. Classpath variable entries can be resolved 
+ * individually (see <code>JavaCore#getClasspathVariable</code>), or the full classpath can be resolved at once using the 
+ * helper method <code>getResolvedClasspath</code>.
+ * TODO (jim) please reformulate to include classpath containers in resolution aspects
+ * 
+ * Note that no check is performed whether the project has the Java nature set, allowing an existing <code>.classpath</code> 
+ * file to be considered independantly (unlike <code>getRawClasspath</code> which requires the Java nature to be associated 
+ * with the project). 
+ * 
+ * @return the raw classpath from disk for the project, as a list of classpath entries
+ * @see #getRawClassPath
+ * @see IClasspathEntry
+ * @since 3.0
+ */
+	</pre>
+
+	Added API <code>IJavaProject#readOutputLocation()</code> to allow user to read the output location from <code>.classpath</code> disk file
+	on a java project which java nature has not been set yet.
+	<pre>
+/**
+ * Returns the default output location for the project as defined by its <code>.classpath</code> file from disk, or <code>null</code>
+ * if unable to read the file. 
+ * 
+ * This output location may differ from the in-memory one returned by <code>getOutputLocation</code>, in case the 
+ * automatic reconciliation mechanism has not been performed yet. Usually, any change to the <code>.classpath</code> file 
+ * is automatically noticed and reconciled at the next resource change notification event. 
+ * However, if the file is modified within an operation, where this change needs to be taken into account before the 
+ * operation ends, then the output location from disk can be read using this method, and further assigned to the project 
+ * using <code>setRawClasspath(...)</code>.
+ * 
+ * The default output location is where class files are ordinarily generated
+ * (and resource files, copied). Each source classpath entry can also
+ * specify an output location for the generated class files (and copied
+ * resource files) corresponding to compilation units under that source
+ * folder. This makes it possible to arrange generated class files for
+ * different source folders in different output folders, and not
+ * necessarily the default output folder. This means that the generated
+ * class files for the project may end up scattered across several folders,
+ * rather than all in the default output folder (which is more standard).
+ * 
+ * @return the workspace-relative absolute path of the default output folder
+ * @see #getOutputLocation
+ * @since 3.0
+ */
+	</pre>
+<h2>Converting to the new API</h2>
+	TODO
+
+</body>
+</html>
