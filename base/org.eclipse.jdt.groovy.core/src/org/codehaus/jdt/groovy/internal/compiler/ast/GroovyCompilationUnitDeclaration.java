@@ -1278,7 +1278,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 // this needs to be set for static finals to correctly determine constant status
                                 fieldDeclaration.initialization = createInitializationExpression(fieldNode.getInitialExpression(), fieldNode.getType());
                             }
-                            fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
+                            ClassNode fieldType = fieldNode.getType();
+                            if (fieldNode.getEnd() > 0 && fieldType.getEnd() < 1) { // 'def' or 'var' or modifier(s) or primitive
+                                assert fieldType.equals(ClassHelper.OBJECT_TYPE) || ClassHelper.isPrimitiveType(fieldType);
+                                ClassNode ft = new ClassNode(fieldType.getTypeClass());
+                                ft.setStart(fieldNode.getNameStart() - 1);
+                                ft.setEnd(fieldNode.getNameStart() - 1);
+                                ft.setRedirect(fieldType);
+                                fieldType = ft;
+                            }
+                            fieldDeclaration.type = createTypeReferenceForClassNode(fieldType);
 
                             if (anonymousLocations != null && fieldNode.getInitialExpression() != null) {
                                 fieldNode.getInitialExpression().visit(new AnonInnerFinder(fieldDeclaration));
@@ -1543,7 +1552,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (Flags.isStatic(modifiers) && "main".equals(methodNode.getName()) && params != null && params.length == 1) {
                     Parameter p = params[0];
                     ClassNode pType = p.getType();
-                    if (pType == null || pType.getName().equals(ClassHelper.OBJECT)) {
+                    if (pType == null || (pType.equals(ClassHelper.OBJECT_TYPE) && !pType.isGenericsPlaceHolder())) {
                         params = new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), p.getName())};
                         params[0].addAnnotations(p.getAnnotations());
                         params[0].setModifiers(p.getModifiers());
@@ -1552,7 +1561,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             params[0].getType().setSourcePosition(pType);
                             params[0].getType().addTypeAnnotations(pType.getTypeAnnotations());
                         }
-                        if (returnType.getName().equals(ClassHelper.OBJECT)) {
+                        if (returnType.equals(ClassHelper.OBJECT_TYPE)) {
                             returnType = ClassHelper.VOID_TYPE;
                         }
                     }
@@ -1564,6 +1573,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     GenericsType[] generics = methodNode.getGenericsTypes();
                     if (generics != null && generics.length > 0) {
                         ((MethodDeclaration) methodDeclaration).typeParameters = createTypeParametersForGenerics(generics);
+                    }
+                    if (methodNode.getNameEnd() > 0 && returnType.getEnd() < 1) { // 'def' or modifier(s) or primitive
+                        assert returnType.equals(ClassHelper.OBJECT_TYPE) || ClassHelper.isPrimitiveType(returnType);
+                        ClassNode rt = new ClassNode(returnType.getTypeClass());
+                        rt.setStart(methodNode.getNameStart() - 1);
+                        rt.setEnd(methodNode.getNameStart() - 1);
+                        rt.setRedirect(returnType);
+                        returnType = rt;
                     }
                     ((MethodDeclaration) methodDeclaration).returnType = createTypeReferenceForClassNode(returnType);
                 }
@@ -1761,8 +1778,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             Argument[] arguments = new Argument[n];
             for (int i = 0; i < n; i += 1) {
                 Parameter parameter = parameters[i];
-
-                arguments[i] = new Argument(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1), createTypeReferenceForClassNode(parameter.getType()), parameter.getModifiers());
+                ClassNode parameterType = parameter.getType();
+                if (parameter.getEnd() > 0 && parameterType.getEnd() < 1) { // 'def' or 'final' or annotated or primitive
+                    assert parameterType.equals(ClassHelper.OBJECT_TYPE) || ClassHelper.isPrimitiveType(parameterType) ||
+                            (parameterType.isArray() && parameterType.getComponentType().equals(ClassHelper.STRING_TYPE));
+                    ClassNode pt = !parameterType.isArray() ? new ClassNode(parameterType.getTypeClass())
+                            : new ClassNode(parameterType.getComponentType().getTypeClass()).makeArray();
+                    pt.setStart(parameter.getNameStart());
+                    pt.setEnd(parameter.getNameStart());
+                    pt.setRedirect(parameterType);
+                    parameterType = pt;
+                }
+                arguments[i] = new Argument(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1), createTypeReferenceForClassNode(parameterType), parameter.getModifiers());
                 arguments[i].annotations = createAnnotations(parameter.getAnnotations());
                 arguments[i].declarationSourceStart = arguments[i].sourceStart;
             }
