@@ -646,7 +646,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // look for canonical accessor method
         Optional<MethodNode> accessor = findPropertyAccessorMethod(name, declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes).filter(it -> !isSynthetic(it));
-        if (accessor.isPresent() && directFieldAccess == 0) {
+        boolean nonPrivateAccessor = accessor.filter(it -> !it.isPrivate() || declaringType.equals(it.getDeclaringClass())).isPresent();
+        if (nonPrivateAccessor && directFieldAccess == 0) {
             return accessor.get();
         }
 
@@ -678,7 +679,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return field;
         }
 
-        if (dynamicProperty) {
+        if (dynamicProperty && !(isLhsExpression && nonPrivateAccessor)) { // GROOVY-5491
             return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 

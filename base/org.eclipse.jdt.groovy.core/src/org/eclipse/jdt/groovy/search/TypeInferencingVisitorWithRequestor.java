@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1444,14 +1444,20 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     VariableScope scope = scopes.getLast();
                     // look for a non-synthetic setter followed by a property or field
                     String setterName = AccessorSupport.SETTER.createAccessorName(key.getText());
-                    scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(GeneralUtils.callX(ctorType, setterName, value)));
-                    TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(setterName), ctorType, false, scope);
+                    MethodCallExpression setterCall = GeneralUtils.callX(GeneralUtils.varX("this", ctorType), setterName, value);
+                    scope.setCurrentNode(setterCall); scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(setterCall));
+                    scope.setCurrentNode(setterCall.getMethod()); // scope.getEnclosingNode() should return setterCall
+                    TypeLookupResult result = lookupExpressionType(setterCall.getMethod(), ctorType, false, scope);
+                    scope.forgetCurrentNode();
                     if (result.confidence == TypeConfidence.UNKNOWN || !(result.declaration instanceof MethodNode) ||
                             ((MethodNode) result.declaration).isSynthetic()) {
+                        scope.setCurrentNode(key);
                         scope.getWormhole().put("lhs", key);
                         scope.setMethodCallArgumentTypes(null);
                         result = lookupExpressionType(key, ctorType, false, scope);
+                        scope.forgetCurrentNode();
                     }
+                    scope.forgetCurrentNode();
 
                     // pre-visit entry so keys are highlighted as keys, not fields/methods/properties
                     ClassNode mapType = Optional.ofNullable(exprType).orElseGet(() -> createParameterizedMap(key.getType(), value.getType()));

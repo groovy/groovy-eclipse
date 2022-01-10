@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1032,6 +1032,36 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testNamedParams3() {
+        addGroovySource '''\
+            |class C {
+            |  private void setX(x) {
+            |  }
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |class D extends C {
+            |  private void setY(y) {
+            |  }
+            |}
+            |new D(x: 'x', y: 'y')
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('D'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('setY'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('y'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('D'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('D'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('x:'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('x:'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('y:'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('y:'), 1, METHOD_CALL))
+    }
+
+    @Test
+    void testNamedParams4() {
         String contents = 'def map = Collections.singletonMap(key: "k", value: "v")'
 
         assertHighlighting(contents,
@@ -1812,7 +1842,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |    this();
             |  }
             |}
-            |def x = new X();
+            |def x = new X()
             |'''.stripMargin()
 
         assertHighlighting(contents,
@@ -3098,6 +3128,53 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('xxx'), 3, MAP_KEY),
             new HighlightedTypedPosition(contents.indexOf('three ='), 5, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, MAP_KEY))
+    }
+
+    @Test // GROOVY-5491
+    void testMapKey7() {
+        addGroovySource '''\
+            |import groovy.transform.PackageScope
+            |abstract class A {
+            |  public        void setFour(x) {}
+            |  protected     void setFive(x) {}
+            |  @PackageScope void setSixx(x) {}
+            |  private       void setSeven(x) {}
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |class C extends A implements Map {
+            |  private void setEight(x) {}
+            |  void test() {
+            |    four = null // set
+            |    five = null // set
+            |    sixx = null // set
+            |    seven = null // put
+            |    eight = null // set
+            |  }
+            |}
+            |new C().seven = null // put
+            |new C().eight = null // set
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('setEight'), 8, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('four'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('five'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('sixx'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('seven'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('eight'), 5, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('C().s'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C().s'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('seven'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('C().e'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C().e'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('eight'), 5, METHOD_CALL))
     }
 
     @Test
