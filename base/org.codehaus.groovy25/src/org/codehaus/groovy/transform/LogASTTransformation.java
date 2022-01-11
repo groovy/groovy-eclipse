@@ -113,7 +113,7 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                 if (!logNode.getType().hasClass()) {
                     String span = String.valueOf(new char[nodes[0].getLength()]);
                     Token token = new Token(0, span, nodes[0].getLineNumber(), nodes[0].getColumnNumber());
-                    sourceUnit.getErrorCollector().addWarning(1, "Unable to resolve class: " + logNode.getType(), token, null);
+                    sourceUnit.getErrorCollector().addWarning(1, "Unable to resolve class: " + logNode.getType(), token, sourceUnit);
                 }
                 // GRECLIPSE end
                 super.visitClass(node);

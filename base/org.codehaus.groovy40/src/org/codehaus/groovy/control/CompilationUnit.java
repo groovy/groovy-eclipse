@@ -755,6 +755,10 @@ public class CompilationUnit extends ProcessingUnit {
             // because the class may be generated even if a error was found
             // and that class may have an invalid format we fail here if needed
             getErrorCollector().failIfErrors();
+            // GRECLIPSE add -- if there are errors, don't generate code
+            // codegen can fail unexpectedly if there was an earlier error
+            if (source != null && source.getErrorCollector().hasErrors()) return;
+            // GRECLIPSE end
 
             //
             // Prep the generator machinery
@@ -767,10 +771,6 @@ public class CompilationUnit extends ProcessingUnit {
             if (sourceName != null) {
                 sourceName = sourceName.substring(Math.max(sourceName.lastIndexOf('\\'), sourceName.lastIndexOf('/')) + 1);
             }
-            // GRECLIPSE add -- if there are errors, don't generate code
-            // code gen can fail unexpectedly if there was an earlier error
-            if (source != null && source.getErrorCollector().hasErrors()) return;
-            // GRECLIPSE end
 
             //
             // Run the generation and create the class (if required)

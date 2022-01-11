@@ -137,7 +137,7 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                     if (!logNode.getType().hasClass()) { // GROOVY-5736
                         String span = String.valueOf(new char[nodes[0].getLength()]);
                         Token token = new Token(0, span, nodes[0].getLineNumber(), nodes[0].getColumnNumber());
-                        sourceUnit.getErrorCollector().addWarning(1, "Unable to resolve class: " + logNode.getType(), token, null);
+                        sourceUnit.getErrorCollector().addWarning(1, "Unable to resolve class: " + logNode.getType(), token, sourceUnit);
                     }
                     if (node.getName().endsWith("$Trait$Helper")) { // GROOVY-7439
                         addGeneratedMethod(node.getOuterClass(), "get" + logFieldName, ACC_PUBLIC, logNode.getType(), Parameter.EMPTY_ARRAY, null,
