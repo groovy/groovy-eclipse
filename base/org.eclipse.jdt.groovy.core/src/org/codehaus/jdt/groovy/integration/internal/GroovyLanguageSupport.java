@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -189,9 +189,9 @@ public class GroovyLanguageSupport implements LanguageSupport {
     @Override
     public CompilationUnitDeclaration newCompilationUnitDeclaration(final ICompilationUnit icu, final ProblemReporter problemReporter, final CompilationResult compilationResult, final int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(icu.getFileName())) {
-
+            char[] unitText = icu.getContents();
             String unitName = String.valueOf(icu.getFileName());
-            ReaderSource unitSource = new CharArrayReaderSource(icu.getContents()) {
+            ReaderSource unitSource = new CharArrayReaderSource(unitText) {
                 @Override public URI getURI() {
                     return URI.create("platform:/resource" + unitName);
                 }
@@ -210,12 +210,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
             ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilerConfig);
             SourceUnit groovySourceUnit = new SourceUnit(unitName, unitSource, compilerConfig, classLoader, errorCollector);
 
-            org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig);
+            org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig, null, classLoader, null, /*allowTransforms:*/false, null);
             JDTResolver resolver = new JDTResolver(gcu);
             gcu.setResolveVisitor(resolver);
             gcu.addSource(groovySourceUnit);
 
-            compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(icu.getContents()); // TODO: Get from Antlr
+            compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(unitText); // TODO: get from parser
 
             GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, groovySourceUnit, problemReporter.options);
 
