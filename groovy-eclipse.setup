@@ -339,6 +339,7 @@
     </targlet>
   </setupTask>
   <setupTask
+      id="GreclipseWorkingSets"
       xsi:type="setup.workingsets:WorkingSetTask">
     <workingSet
         name="RT">
@@ -353,8 +354,7 @@
           pattern="org\.eclipse\.jdt\..*"/>
     </workingSet>
     <workingSet
-        name="IDE"
-        id="">
+        name="IDE">
       <predicate
           xsi:type="predicates:AndPredicate">
         <operand
@@ -362,7 +362,7 @@
             pattern="org\.codehaus\.groovy\.(m2)?eclipse.*"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.21/@workingSets.3"/>
+            excludedWorkingSet="//'GreclipseWorkingSets'/@workingSets[name='Tests']"/>
       </predicate>
     </workingSet>
     <workingSet
