@@ -121,7 +121,6 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
@@ -130,7 +129,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
-import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyCodeVisitorAdapter;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -2227,15 +2225,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 String[] jdtParamTypes = method.getParameterTypes();
                 if (jdtParamTypes == null) jdtParamTypes = NO_PARAMS;
 
-                Expression targetExpr; // append implicit parameter for @Category method
-                if (!Flags.isStatic(method.getFlags()) && (targetExpr = findCategoryTarget(clazz)) != null) {
-                    TypeLookupResult result = lookupExpressionType(targetExpr, null, true, scopes.getLast());
-                    ClassNode targetType = result.type.getGenericsTypes()[0].getType();
-
-                    String typeSignature = GroovyUtils.getTypeSignature(targetType, false, false);
-                    jdtParamTypes = (String[]) ArrayUtils.add(jdtParamTypes, 0, typeSignature);
-                }
-
                 if (methods.size() > 1) {
                     methods.sort(Comparator.comparingInt(m -> m.getParameters().length));
                 }
@@ -3022,11 +3011,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
         }
         return null;
-    }
-
-    public static Expression findCategoryTarget(final ClassNode node) {
-        return GroovyUtils.getAnnotations(node, "groovy.lang.Category")
-            .findFirst().map(an -> an.getMember("value")).orElse(null);
     }
 
     private static Parameter findTargetParameter(final Expression arg, final MethodCall call, final MethodNode declaration, final boolean isGroovyMethod) {

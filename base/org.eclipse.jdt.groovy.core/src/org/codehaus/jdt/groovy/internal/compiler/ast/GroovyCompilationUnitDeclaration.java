@@ -1567,6 +1567,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                 }
 
+                for (AnnotationNode annotation : classNode.getAnnotations()) {
+                    if (isType("groovy.lang.Category", annotation.getClassNode().getName())) {
+                        ClassNode selfType = ClassHelper.make(java.util.Optional.ofNullable(annotation.getMember("value")).map(Expression::getText).orElse(ClassHelper.OBJECT));
+                        params = (Parameter[]) ArrayUtils.add(params, 0, new Parameter(selfType, "$this"));
+                        modifiers |= Flags.AccStatic;
+                        break;
+                    }
+                }
+
                 methodDeclaration.modifiers = modifiers;
                 methodDeclaration.arguments = createArguments(params);
                 if (methodDeclaration instanceof MethodDeclaration) {
@@ -2592,7 +2601,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         return true;
                     }
                 }
-                // TODO: check default imports
+                return "groovy.lang.".equals(pkg);
+              //return Stream.of(org.codehaus.groovy.control.ResolveVisitor.DEFAULT_IMPORTS).anyMatch(pkg::equals);
             }
             return false;
         }
@@ -2863,8 +2873,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             List<Argument[]> variants = new ArrayList<>();
 
             final int nParams = groovyParameters.length;
-            Parameter[] wipableParameters = new Parameter[nParams];
-            System.arraycopy(groovyParameters, 0, wipableParameters, 0, nParams);
+            Parameter[] wipableParameters = groovyParameters.clone();
 
             // Algorithm: wipableParameters is the 'full list' of parameters at the start. As the loop is repeated, all the non-null
             // values in the list indicate a parameter variation. On each repeat we null the last one in the list that

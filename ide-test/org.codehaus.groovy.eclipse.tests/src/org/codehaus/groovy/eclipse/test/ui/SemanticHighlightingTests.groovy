@@ -1830,6 +1830,31 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('"'), '"${this.hashCode()}, ${super.hashCode()}"'.length(), GSTRING))
     }
 
+    @Test
+    void testGStringThisAndSuper4() {
+        String contents = '''\
+            |@Category(Object)
+            |class D {
+            |  def x() {
+            |    "$this ${this.name} ${super.name}"
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('D'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('this'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(' ${t'), 1, STRING),
+            new HighlightedTypedPosition(contents.indexOf('this.'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('name}'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf(' ${s'), 1, STRING),
+            new HighlightedTypedPosition(contents.indexOf('super'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.lastIndexOf('name'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"$this ${this.name} ${super.name}"'.length(), GSTRING))
+    }
+
     @Test // see testDeprecated10 for case where this and super calls are highlighted
     void testCtorCalls() {
         // the keywords super and this are identified/highlighted by GroovyTagScanner
@@ -3707,7 +3732,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testCategoryMethodOverloads() {
-        // implicit 'self' parameter added by transformation caused confusion in TypeInferencingVisitor
         String contents = '''\
             |import java.util.regex.Pattern
             |@Category(Number)

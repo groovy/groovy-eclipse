@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -434,10 +434,11 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     private HighlightedTypedPosition handleVariableExpression(VariableExpression expr, VariableScope scope, IJavaElement source) {
         boolean isParam = (expr.getAccessedVariable() instanceof Parameter &&
                 !isForLoopParam(expr.getAccessedVariable(), scope)) &&
-                !isCatchParam(expr.getAccessedVariable(), scope);
+                !isCatchParam(expr.getAccessedVariable(), scope) &&
+                !Boolean.TRUE.equals(expr.getNodeMetaData("this"));
         boolean isIt = (isParam && "it".equals(expr.getName()) &&
                 (((Parameter) expr.getAccessedVariable()).getLineNumber() <= 0));
-        boolean isSuperOrThis = "super".equals(expr.getName()) || "this".equals(expr.getName());
+        boolean isSuperOrThis = "super".equals(expr.getName()) || "this".equals(expr.getName()) || Boolean.TRUE.equals(expr.getNodeMetaData("this"));
 
         // free vars and loop vars are okay as long as they are not reserved words (this, super); params must refer to "real" declarations
         if (!(isSuperOrThis && !lastGString.includes(expr.getStart())) &&
