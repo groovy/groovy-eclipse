@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -722,6 +722,30 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String contents =
             "void test(String[] strings) {\n" +
             "  [].equals(strings)\n" +
+            "}\n";
+        //@formatter:on
+        assertExprType(contents, "equals", "java.lang.Boolean");
+        assertDeclType(contents, "equals", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1076
+    public void testDGM54c() {
+        //@formatter:off
+        String contents =
+            "void test(Map map) {\n" +
+            "  map.equals([:])\n" +
+            "}\n";
+        //@formatter:on
+        assertExprType(contents, "equals", "java.lang.Boolean");
+        assertDeclType(contents, "equals", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1335
+    public void testDGM54d() {
+        //@formatter:off
+        String contents =
+            "void test(HashMap map) {\n" +
+            "  map.equals([:])\n" +
             "}\n";
         //@formatter:on
         assertExprType(contents, "equals", "java.lang.Boolean");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2410,7 +2410,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testGetAt6() {
-        String contents = "class A {\n A getAt(prop) { \n new A()\n}}\n new A().getAt('x')";
+        String contents = "class A {\n A getAt(String property) { \n new A()\n}}\n new A().getAt('x')";
         int start = contents.lastIndexOf("getAt");
         int end = start + "getAt".length();
         assertType(contents, start, end, "A");
@@ -2419,7 +2419,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testGetAt7() {
-        String contents = "class A {\n A getAt(prop) {\n new A()\n}}\n class B extends A {}\n new B().getAt('x')";
+        String contents = "class A {\n A getAt(String property) {\n new A()\n}}\n class B extends A {}\n new B().getAt('x')";
         int start = contents.lastIndexOf("getAt");
         int end = start + "getAt".length();
         assertType(contents, start, end, "A");

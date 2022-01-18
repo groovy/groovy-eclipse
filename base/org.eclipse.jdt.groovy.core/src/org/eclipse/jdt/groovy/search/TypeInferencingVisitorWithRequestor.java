@@ -2767,17 +2767,54 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         return false;
     }
 
+    private boolean isTighterFit(final TypeLookupResult next, final TypeLookupResult last, final List<ClassNode> args) {
+        if (last.confidence.isAtLeast(next.confidence)) {
+            return false;
+        }
+
+        if (!(last.declaration instanceof MethodNode && next.declaration instanceof MethodNode)) {
+            return true;
+        }
+
+        MethodNode m0 = (MethodNode) last.declaration, m1 = (MethodNode) next.declaration;
+        Parameter[] p0 = m0.getParameters(), p1 = m1.getParameters();
+        ClassNode t0, t1; // owner/self type
+
+        if (!last.isGroovy) {
+            t0 = m0.getDeclaringClass();
+        } else {
+            t0 = p0[0].getOriginType();
+            p0 = Arrays.copyOfRange(p0, 1, p0.length);
+        }
+
+        if (!next.isGroovy) {
+            t1 = m1.getDeclaringClass();
+        } else {
+            t1 = p1[0].getOriginType();
+            p1 = Arrays.copyOfRange(p1, 1, p1.length);
+        }
+
+        if (p0.length == p1.length && Arrays.equals(Arrays.stream(p0).map(Parameter::getType).toArray(),
+                                                    Arrays.stream(p1).map(Parameter::getType).toArray())) {
+            return !t0.isDerivedFrom(t1) && !t0.implementsInterface(t1);
+        } else {
+            long d0 = SimpleTypeLookup.calculateParameterDistance(args, p0);
+            long d1 = SimpleTypeLookup.calculateParameterDistance(args, p1);
+            return d0 > d1;
+        }
+    }
+
     private TypeLookupResult lookupExpressionType(final Expression node, final ClassNode objExprType, final boolean isStatic, final VariableScope scope) {
         TypeLookupResult result = null;
         for (ITypeLookup lookup : lookups) {
-            TypeLookupResult candidate;
+            final TypeLookupResult candidate;
             if (lookup instanceof ITypeLookupExtension) {
                 candidate = ((ITypeLookupExtension) lookup).lookupType(node, scope, objExprType, isStatic);
             } else {
                 candidate = lookup.lookupType(node, scope, objExprType);
             }
             if (candidate != null) {
-                if (result == null || result.confidence.isLessThan(candidate.confidence) && !VariableScope.OBJECT_CLASS_NODE.equals(candidate.declaringType)) {
+                if (result == null || isTighterFit(candidate, result, scope.getMethodCallArgumentTypes())) {
                     result = candidate;
                 }
                 if (result.confidence.isAtLeast(TypeConfidence.INFERRED) ||
