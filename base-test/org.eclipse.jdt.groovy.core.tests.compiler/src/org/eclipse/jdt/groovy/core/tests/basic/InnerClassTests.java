@@ -1754,6 +1754,26 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // GROOVY-7033
+    public void testAnonymousInnerClass34() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "new Object() {\n" +
+            "  @Tag(String) def field\n" +
+            "  @Tag(String) def method(@Tag(String) param) {\n" +
+            "    def type = String\n" +
+            "  }\n" +
+            "}\n",
+
+            "Tag.groovy",
+            "@interface Tag { Class<?> value() }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off

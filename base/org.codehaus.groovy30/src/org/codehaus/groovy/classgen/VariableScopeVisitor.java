@@ -504,7 +504,13 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         currentScope.setClassScope(innerClass);
         currentScope.setInStaticContext(false);
         for (MethodNode method : innerClass.getMethods()) {
+            // GRECLIPSE add -- GROOVY-7033
+            visitAnnotations(method);
+            // GRECLIPSE end
             Parameter[] parameters = method.getParameters();
+            // GRECLIPSE add -- GROOVY-7033
+            for (Parameter p : parameters) visitAnnotations(p);
+            // GRECLIPSE end
             if (parameters.length == 0) {
                 parameters = null; // null means no implicit "it"
             }
@@ -512,6 +518,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         }
 
         for (FieldNode field : innerClass.getFields()) {
+            // GRECLIPSE add -- GROOVY-7033
+            visitAnnotations(field);
+            // GRECLIPSE end
             Expression initExpression = field.getInitialExpression();
             pushState(field.isStatic());
             if (initExpression != null) {

@@ -53,6 +53,7 @@ import org.codehaus.groovy.syntax.Types;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.function.BiConsumer;
 
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
@@ -66,7 +67,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
     private ClassNode currentClass;
     private VariableScope currentScope;
-    private boolean inConstructor, inSpecialConstructorCall;
+    private boolean inClosure, inConstructor, inSpecialConstructorCall;
 
     private final SourceUnit source;
     private final boolean recurseInnerClasses;
@@ -75,22 +76,23 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     private static class StateStackElement {
         final ClassNode clazz;
         final VariableScope scope;
-        final boolean inConstructor;
+        final boolean inClosure, inConstructor;
 
-        StateStackElement(final ClassNode currentClass, final VariableScope currentScope, final boolean inConstructor) {
-            this.clazz = currentClass;
-            this.scope = currentScope;
+        StateStackElement(final ClassNode currentClass, final VariableScope currentScope, final boolean inClosure, final boolean inConstructor) {
+            clazz = currentClass;
+            scope = currentScope;
+            this.inClosure = inClosure;
             this.inConstructor = inConstructor;
         }
     }
 
-    public VariableScopeVisitor(final SourceUnit source, final boolean recurseInnerClasses) {
+    public VariableScopeVisitor(SourceUnit source, boolean recurseInnerClasses) {
         this.source = source;
         this.currentScope = new VariableScope();
         this.recurseInnerClasses = recurseInnerClasses;
     }
 
-    public VariableScopeVisitor(final SourceUnit source) {
+    public VariableScopeVisitor(SourceUnit source) {
         this(source, false);
     }
 
@@ -99,12 +101,12 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         return source;
     }
 
-    // ------------------------------
+    //----------------------------------
     // helper methods
-    // ------------------------------
+    //----------------------------------
 
     private void pushState(final boolean isStatic) {
-        stateStack.push(new StateStackElement(currentClass, currentScope, inConstructor));
+        stateStack.push(new StateStackElement(currentClass, currentScope, inClosure, inConstructor));
         currentScope = new VariableScope(currentScope);
         currentScope.setInStaticContext(isStatic);
     }
@@ -117,6 +119,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         StateStackElement state = stateStack.pop();
         this.currentClass  = state.clazz;
         this.currentScope  = state.scope;
+        this.inClosure     = state.inClosure;
         this.inConstructor = state.inConstructor;
     }
 
@@ -167,12 +170,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     private Variable findClassMember(final ClassNode node, final String name) {
         final boolean abstractType = node.isAbstract();
 
-        for (ClassNode cn = node; cn != null && !cn.equals(ClassHelper.OBJECT_TYPE); cn = cn.getSuperClass()) {
-            /* GRECLIPSE edit -- GROOVY-5364
-            if (cn.isScript()) {
-                return new DynamicVariable(name, false);
-            }
-            */
+        for (ClassNode cn = node; cn != null && !ClassHelper.isObjectType(cn); cn = cn.getSuperClass()) {
             for (FieldNode fn : cn.getFields()) {
                 if (name.equals(fn.getName())) return fn;
             }
@@ -183,17 +181,18 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
             for (MethodNode mn : cn.getMethods()) {
                 if ((abstractType || !mn.isAbstract()) && name.equals(getPropertyName(mn))) {
-                    // GRECLIPSE add -- check for override of super class property
+                    // check for super property before returning a pseudo-property
                     for (PropertyNode pn : getAllProperties(cn.getSuperClass())) {
                         if (name.equals(pn.getName())) return pn;
                     }
-                    // GRECLIPSE end
-                    FieldNode fn = new FieldNode(name, mn.getModifiers() & 0xF, ClassHelper.DYNAMIC_TYPE, cn, null);
+
+                    FieldNode fn = new FieldNode(name, mn.getModifiers() & 0xF, ClassHelper.dynamicType(), cn, null);
                     fn.setHasNoRealSourcePosition(true);
                     fn.setDeclaringClass(cn);
                     fn.setSynthetic(true);
 
                     PropertyNode pn = new PropertyNode(fn, fn.getModifiers(), null, null);
+                    pn.putNodeMetaData("access.method", mn);
                     pn.setDeclaringClass(cn);
                     return pn;
                 }
@@ -202,10 +201,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             for (ClassNode in : cn.getAllInterfaces()) {
                 FieldNode fn = in.getDeclaredField(name);
                 if (fn != null) return fn;
-                // GRECLIPSE add -- GROOVY-9678
                 PropertyNode pn = in.getProperty(name);
                 if (pn != null) return pn;
-                // GRECLIPSE end
             }
         }
 
@@ -280,223 +277,69 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     }
 
     private static boolean isAnonymous(final ClassNode node) {
-        return (!node.isEnum() && node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
-    }
-
-    /**
-     * a property on "this", like this.x is transformed to a
-     * direct field access, so we need to check the
-     * static context here
-     *
-     * @param pe the property expression to check
-     */
-    private void checkPropertyOnExplicitThis(PropertyExpression pe) {
-        if (!currentScope.isInStaticContext()) return;
-        Expression object = pe.getObjectExpression();
-        if (!(object instanceof VariableExpression)) return;
-        VariableExpression ve = (VariableExpression) object;
-        if (!ve.getName().equals("this")) return;
-        String name = pe.getPropertyAsString();
-        if (name == null || name.equals("class")) return;
-        Variable member = findClassMember(currentClass, name);
-        if (member == null) return;
-        checkVariableContextAccess(member, pe);
-    }
-
-    private void checkVariableContextAccess(Variable v, Expression expr) {
-        if (v.isInStaticContext() || !currentScope.isInStaticContext()) return;
-
-        String msg = v.getName() +
-                " is declared in a dynamic context, but you tried to" +
-                " access it from a static context.";
-        addError(msg, expr);
-
-        // declare a static variable to be able to continue the check
-        DynamicVariable v2 = new DynamicVariable(v.getName(), currentScope.isInStaticContext());
-        currentScope.putDeclaredVariable(v2);
-    }
-
-    // ------------------------------
-    // code visit
-    // ------------------------------
-
-    public void visitBlockStatement(BlockStatement block) {
-        pushState();
-        block.setVariableScope(currentScope);
-        super.visitBlockStatement(block);
-        popState();
-    }
-
-    public void visitForLoop(ForStatement forLoop) {
-        pushState();
-        forLoop.setVariableScope(currentScope);
-        Parameter p = forLoop.getVariable();
-        p.setInStaticContext(currentScope.isInStaticContext());
-        if (p != ForStatement.FOR_LOOP_DUMMY) declare(p, forLoop);
-        super.visitForLoop(forLoop);
-        popState();
-    }
-
-    public void visitIfElse(IfStatement ifElse) {
-        ifElse.getBooleanExpression().visit(this);
-        pushState();
-        ifElse.getIfBlock().visit(this);
-        popState();
-        pushState();
-        ifElse.getElseBlock().visit(this);
-        popState();
-    }
-
-    public void visitDeclarationExpression(DeclarationExpression expression) {
-        visitAnnotations(expression);
-        // visit right side first to avoid the usage of a
-        // variable before its declaration
-        expression.getRightExpression().visit(this);
-
-        if (expression.isMultipleAssignmentDeclaration()) {
-            TupleExpression list = expression.getTupleExpression();
-            for (Expression e : list.getExpressions()) {
-                declare((VariableExpression) e);
-            }
-        } else {
-            declare(expression.getVariableExpression());
-        }
-    }
-
-    @Override
-    public void visitBinaryExpression(BinaryExpression be) {
-        super.visitBinaryExpression(be);
-        switch (be.getOperation().getType()) {
-            case Types.EQUAL: // = assignment
-            case Types.BITWISE_AND_EQUAL:
-            case Types.BITWISE_OR_EQUAL:
-            case Types.BITWISE_XOR_EQUAL:
-            case Types.PLUS_EQUAL:
-            case Types.MINUS_EQUAL:
-            case Types.MULTIPLY_EQUAL:
-            case Types.DIVIDE_EQUAL:
-            case Types.INTDIV_EQUAL:
-            case Types.MOD_EQUAL:
-            case Types.POWER_EQUAL:
-            case Types.LEFT_SHIFT_EQUAL:
-            case Types.RIGHT_SHIFT_EQUAL:
-            case Types.RIGHT_SHIFT_UNSIGNED_EQUAL:
-                checkFinalFieldAccess(be.getLeftExpression());
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void checkFinalFieldAccess(Expression expression) {
-        // currently not looking for PropertyExpression: dealt with at runtime using ReadOnlyPropertyException
-        if (!(expression instanceof VariableExpression) && !(expression instanceof TupleExpression)) return;
-        if (expression instanceof TupleExpression) {
-            TupleExpression list = (TupleExpression) expression;
-            for (Expression e : list.getExpressions()) {
-                checkForFinal(expression, (VariableExpression) e);
-            }
-        } else {
-            checkForFinal(expression, (VariableExpression) expression);
-        }
-    }
-
-    // TODO handle local variables
-    private void checkForFinal(final Expression expression, VariableExpression ve) {
-        Variable v = ve.getAccessedVariable();
-        if (v != null) {
-            boolean isFinal = isFinal(v.getModifiers());
-            boolean isParameter = v instanceof Parameter;
-            if (isFinal && isParameter) {
-                addError("Cannot assign a value to final variable '" + v.getName() + "'", expression);
-            }
-        }
-    }
-
-    public void visitVariableExpression(VariableExpression expression) {
-        String name = expression.getName();
-        Variable v = findVariableDeclaration(name);
-        if (v == null) return;
-        expression.setAccessedVariable(v);
-        checkVariableContextAccess(v, expression);
-    }
-
-    public void visitPropertyExpression(PropertyExpression expression) {
-        expression.getObjectExpression().visit(this);
-        expression.getProperty().visit(this);
-        checkPropertyOnExplicitThis(expression);
-    }
-
-    public void visitClosureExpression(ClosureExpression expression) {
-        pushState();
-
-        expression.setVariableScope(currentScope);
-
-        if (expression.isParameterSpecified()) {
-            for (Parameter parameter : expression.getParameters()) {
-                parameter.setInStaticContext(currentScope.isInStaticContext());
-                if (parameter.hasInitialExpression()) {
-                    parameter.getInitialExpression().visit(this);
-                }
-                declare(parameter, expression);
-            }
-        } else if (expression.getParameters() != null) {
-            Parameter var = new Parameter(ClassHelper.OBJECT_TYPE, "it");
-            var.setInStaticContext(currentScope.isInStaticContext());
-            currentScope.putDeclaredVariable(var);
-        }
-
-        super.visitClosureExpression(expression);
-        markClosureSharedVariables();
-
-        popState();
+        return (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous() && !node.isEnum());
     }
 
     private void markClosureSharedVariables() {
-        VariableScope scope = currentScope;
-        for (Iterator<Variable> it = scope.getReferencedLocalVariablesIterator(); it.hasNext(); ) {
-            it.next().setClosureSharedVariable(true);
+        for (Iterator<Variable> it = currentScope.getReferencedLocalVariablesIterator(); it.hasNext(); ) {
+            Variable variable = it.next();
+            variable.setClosureSharedVariable(true);
         }
     }
 
-    public void visitCatchStatement(CatchStatement statement) {
-        pushState();
-        Parameter p = statement.getVariable();
-        p.setInStaticContext(currentScope.isInStaticContext());
-        declare(p, statement);
-        super.visitCatchStatement(statement);
-        popState();
-    }
+    //----------------------------------
+    // variable checks
+    //----------------------------------
 
-    public void visitFieldExpression(FieldExpression expression) {
-        String name = expression.getFieldName();
-        //TODO: change that to get the correct scope
-        Variable v = findVariableDeclaration(name);
-        checkVariableContextAccess(v, expression);
-    }
+    private void checkFinalFieldAccess(final Expression expression) {
+        BiConsumer<VariableExpression, ASTNode> checkForFinal = (expr, node) -> {
+            Variable variable = expr.getAccessedVariable();
+            if (variable != null) {
+                if (isFinal(variable.getModifiers()) && variable instanceof Parameter) {
+                    addError("Cannot assign a value to final variable '" + variable.getName() + "'", node);
+                }
+                // TODO: handle local variables
+            }
+        };
 
-    // ------------------------------
-    // class visit
-    // ------------------------------
-
-    public void visitClass(ClassNode node) {
-        // AIC are already done, doing them here again will lead to wrong scopes
-        if (isAnonymous(node)) return;
-
-        pushState();
-
-        prepareVisit(node);
-
-        super.visitClass(node);
-        if (recurseInnerClasses) {
-            Iterator<InnerClassNode> innerClasses = node.getInnerClasses();
-            while (innerClasses.hasNext()) {
-                visitClass(innerClasses.next());
+        if (expression instanceof VariableExpression) {
+            checkForFinal.accept((VariableExpression) expression, expression);
+        } else if (expression instanceof TupleExpression) {
+            TupleExpression tuple = (TupleExpression) expression;
+            for (Expression tupleExpression : tuple.getExpressions()) {
+                checkForFinal.accept((VariableExpression) tupleExpression, expression);
             }
         }
-        popState();
+        // currently not looking for PropertyExpression: dealt with at runtime using ReadOnlyPropertyException
     }
 
+    /**
+     * A property on "this", like this.x is transformed to a direct field access,
+     * so we need to check the static context here.
+     */
+    private void checkPropertyOnExplicitThis(final PropertyExpression expression) {
+        if (!currentScope.isInStaticContext()) return;
+        Expression object = expression.getObjectExpression();
+        if (!(object instanceof VariableExpression)) return;
+        VariableExpression ve = (VariableExpression) object;
+        if (!ve.getName().equals("this")) return;
+        String name = expression.getPropertyAsString();
+        if (name == null || name.equals("class")) return;
+        Variable member = findClassMember(currentClass, name);
+        if (member == null) return;
+        checkVariableContextAccess(member, expression);
+    }
+
+    private void checkVariableContextAccess(final Variable variable, final Expression expression) {
+        if (variable.isInStaticContext() || !currentScope.isInStaticContext()) return;
+
+        addError(variable.getName() + " is declared in a dynamic context, but you tried to access it from a static context.", expression);
+
+        // declare a static variable to be able to continue the check
+        currentScope.putDeclaredVariable(new DynamicVariable(variable.getName(), currentScope.isInStaticContext()));
+    }
+
+    //--------------------------------------------------------------------------
     /**
      * Sets the current class node context.
      */
@@ -505,18 +348,52 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         currentScope.setClassScope(node);
     }
 
-    protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
+    @Override
+    public void visitClass(final ClassNode node) {
+        // AIC are already done, doing them here again will lead to wrong scopes
+        if (isAnonymous(node)) return;
+
+        pushState();
+        inClosure = false;
+        currentClass = node;
+        currentScope.setClassScope(node);
+
+        super.visitClass(node);
+        if (recurseInnerClasses) {
+            for (Iterator<InnerClassNode> innerClasses = node.getInnerClasses(); innerClasses.hasNext(); ) {
+                visitClass(innerClasses.next());
+            }
+        }
+        popState();
+    }
+
+    @Override
+    public void visitField(final FieldNode node) {
+        pushState(node.isStatic());
+        super.visitField(node);
+        popState();
+    }
+
+    @Override
+    public void visitProperty(final PropertyNode node) {
+        pushState(node.isStatic());
+        super.visitProperty(node);
+        popState();
+    }
+
+    @Override
+    protected void visitConstructorOrMethod(final MethodNode node, final boolean isConstructor) {
         pushState(node.isStatic());
         inConstructor = isConstructor;
         node.setVariableScope(currentScope);
-        visitAnnotations(node);
 
-        // GROOVY-2156
-        Parameter[] parameters = node.getParameters();
-        for (Parameter parameter : parameters) {
+        visitAnnotations(node);
+        for (Parameter parameter : node.getParameters()) {
             visitAnnotations(parameter);
         }
-        for (Parameter parameter : parameters) {
+        // add parameters to scope and visit init expressions after annotations
+        // to prevent the use of parameters in annotation attributes
+        for (Parameter parameter : node.getParameters()) {
             if (parameter.hasInitialExpression()) {
                 parameter.getInitialExpression().visit(this);
             }
@@ -527,44 +404,96 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         popState();
     }
 
-    public void visitMethodCallExpression(MethodCallExpression call) {
-        if (call.isImplicitThis() && call.getMethod() instanceof ConstantExpression) {
-            ConstantExpression methodNameConstant = (ConstantExpression) call.getMethod();
-            String methodName = methodNameConstant.getText();
+    // statements:
 
-            if (methodName == null) {
-                throw new GroovyBugError("method name is null");
-            }
-
-            Variable v = findVariableDeclaration(methodName);
-            if (v != null && !(v instanceof DynamicVariable)) {
-                checkVariableContextAccess(v, call);
-            }
-
-            if (v instanceof VariableExpression || v instanceof Parameter) {
-                VariableExpression object = new VariableExpression(v);
-                object.setSourcePosition(methodNameConstant);
-                call.setObjectExpression(object);
-                ConstantExpression method = new ConstantExpression("call");
-                method.setSourcePosition(methodNameConstant); // important for GROOVY-4344
-                call.setImplicitThis(false);
-                call.setMethod(method);
-            }
-
-        }
-        super.visitMethodCallExpression(call);
+    @Override
+    public void visitBlockStatement(final BlockStatement statement) {
+        pushState();
+        statement.setVariableScope(currentScope);
+        super.visitBlockStatement(statement);
+        popState();
     }
 
-    public void visitConstructorCallExpression(ConstructorCallExpression call) {
-        boolean specialCtorFlag = inSpecialConstructorCall;
-        inSpecialConstructorCall |= call.isSpecialCall();
-        super.visitConstructorCallExpression(call);
-        inSpecialConstructorCall = specialCtorFlag;
+    @Override
+    public void visitCatchStatement(final CatchStatement statement) {
+        pushState();
+        Parameter parameter = statement.getVariable();
+        parameter.setInStaticContext(currentScope.isInStaticContext());
+        declare(parameter, statement);
+        super.visitCatchStatement(statement);
+        popState();
+    }
 
-        if (!call.isUsingAnonymousInnerClass()) return;
+    @Override
+    public void visitForLoop(final ForStatement statement) {
+        pushState();
+        statement.setVariableScope(currentScope);
+        Parameter parameter = statement.getVariable();
+        parameter.setInStaticContext(currentScope.isInStaticContext());
+        if (parameter != ForStatement.FOR_LOOP_DUMMY) declare(parameter, statement);
+        super.visitForLoop(statement);
+        popState();
+    }
+
+    @Override
+    public void visitIfElse(final IfStatement statement) {
+        statement.getBooleanExpression().visit(this);
+        pushState();
+        statement.getIfBlock().visit(this);
+        popState();
+        pushState();
+        statement.getElseBlock().visit(this);
+        popState();
+    }
+
+    // expressions:
+
+    @Override
+    public void visitBinaryExpression(final BinaryExpression expression) {
+        super.visitBinaryExpression(expression);
+
+        if (Types.isAssignment(expression.getOperation().getType())) {
+            checkFinalFieldAccess(expression.getLeftExpression());
+        }
+    }
+
+    @Override
+    public void visitClosureExpression(final ClosureExpression expression) {
+        pushState();
+        expression.setVariableScope(currentScope);
+        inClosure = !isAnonymous(currentScope.getParent().getClassScope());
+
+        if (expression.isParameterSpecified()) {
+            for (Parameter parameter : expression.getParameters()) {
+                parameter.setInStaticContext(currentScope.isInStaticContext());
+                if (parameter.hasInitialExpression()) {
+                    parameter.getInitialExpression().visit(this);
+                }
+                declare(parameter, expression);
+            }
+        } else if (expression.getParameters() != null) {
+            Parameter var = new Parameter(ClassHelper.dynamicType(), "it");
+            var.setInStaticContext(currentScope.isInStaticContext());
+            currentScope.putDeclaredVariable(var);
+        }
+
+        super.visitClosureExpression(expression);
+        markClosureSharedVariables();
+
+        popState();
+    }
+
+    @Override
+    public void visitConstructorCallExpression(final ConstructorCallExpression expression) {
+        boolean oldInSpecialCtorFlag = inSpecialConstructorCall;
+        inSpecialConstructorCall |= expression.isSpecialCall();
+        super.visitConstructorCallExpression(expression);
+        inSpecialConstructorCall = oldInSpecialCtorFlag;
+
+        if (!expression.isUsingAnonymousInnerClass()) return;
 
         pushState();
-        InnerClassNode innerClass = (InnerClassNode) call.getType();
+        InnerClassNode innerClass = (InnerClassNode) expression.getType();
         innerClass.setVariableScope(currentScope);
         currentScope.setClassScope(innerClass);
         currentScope.setInStaticContext(false);
@@ -576,46 +505,101 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             // GRECLIPSE add -- GROOVY-7033
             for (Parameter p : parameters) visitAnnotations(p);
             // GRECLIPSE end
-            if (parameters.length == 0)
+            if (parameters.length == 0) {
                 parameters = null; // null means no implicit "it"
-            ClosureExpression cl = new ClosureExpression(parameters, method.getCode());
-            visitClosureExpression(cl);
+            }
+            visitClosureExpression(new ClosureExpression(parameters, method.getCode()));
         }
 
         for (FieldNode field : innerClass.getFields()) {
             // GRECLIPSE add -- GROOVY-7033
             visitAnnotations(field);
             // GRECLIPSE end
-            Expression expression = field.getInitialExpression();
+            Expression initExpression = field.getInitialExpression();
             pushState(field.isStatic());
-            if (expression != null) {
-                if (expression.isSynthetic() && expression instanceof VariableExpression &&
-                        ((VariableExpression) expression).getAccessedVariable() instanceof Parameter) {
+            if (initExpression != null) {
+                if (initExpression.isSynthetic() && initExpression instanceof VariableExpression
+                        && ((VariableExpression) initExpression).getAccessedVariable() instanceof Parameter) {
                     // GROOVY-6834: accessing a parameter which is not yet seen in scope
                     popState();
                     continue;
                 }
-                expression.visit(this);
+                initExpression.visit(this);
             }
             popState();
         }
 
-        for (Statement statement : innerClass.getObjectInitializerStatements()) {
-            statement.visit(this);
+        for (Statement initStatement : innerClass.getObjectInitializerStatements()) {
+            initStatement.visit(this);
         }
         markClosureSharedVariables();
         popState();
     }
 
-    public void visitProperty(PropertyNode node) {
-        pushState(node.isStatic());
-        super.visitProperty(node);
-        popState();
+    @Override
+    public void visitDeclarationExpression(final DeclarationExpression expression) {
+        visitAnnotations(expression);
+        // visit right side first to prevent the use of a variable before its declaration
+        expression.getRightExpression().visit(this);
+
+        if (expression.isMultipleAssignmentDeclaration()) {
+            TupleExpression list = expression.getTupleExpression();
+            for (Expression listExpression : list.getExpressions()) {
+                declare((VariableExpression) listExpression);
+            }
+        } else {
+            declare(expression.getVariableExpression());
+        }
     }
 
-    public void visitField(FieldNode node) {
-        pushState(node.isStatic());
-        super.visitField(node);
-        popState();
+    @Override
+    public void visitFieldExpression(final FieldExpression expression) {
+        String name = expression.getFieldName();
+        //TODO: change that to get the correct scope
+        Variable variable = findVariableDeclaration(name);
+        checkVariableContextAccess(variable, expression);
+    }
+
+    @Override
+    public void visitMethodCallExpression(final MethodCallExpression expression) {
+        if (expression.isImplicitThis() && expression.getMethod() instanceof ConstantExpression) {
+            ConstantExpression methodNameConstant = (ConstantExpression) expression.getMethod();
+            String methodName = methodNameConstant.getText();
+
+            if (methodName == null) {
+                throw new GroovyBugError("method name is null");
+            }
+
+            Variable variable = findVariableDeclaration(methodName);
+            if (variable != null && !(variable instanceof DynamicVariable)) {
+                checkVariableContextAccess(variable, expression);
+            }
+
+            if (variable instanceof VariableExpression || variable instanceof Parameter) {
+                VariableExpression object = new VariableExpression(variable);
+                object.setSourcePosition(methodNameConstant);
+                expression.setObjectExpression(object);
+                ConstantExpression method = new ConstantExpression("call");
+                method.setSourcePosition(methodNameConstant); // important for GROOVY-4344
+                expression.setImplicitThis(false);
+                expression.setMethod(method);
+            }
+        }
+        super.visitMethodCallExpression(expression);
+    }
+
+    @Override
+    public void visitPropertyExpression(final PropertyExpression expression) {
+        expression.getObjectExpression().visit(this);
+        expression.getProperty().visit(this);
+        checkPropertyOnExplicitThis(expression);
+    }
+
+    @Override
+    public void visitVariableExpression(final VariableExpression expression) {
+        Variable variable = findVariableDeclaration(expression.getName());
+        if (variable == null) return;
+        expression.setAccessedVariable(variable);
+        checkVariableContextAccess(variable, expression);
     }
 }
