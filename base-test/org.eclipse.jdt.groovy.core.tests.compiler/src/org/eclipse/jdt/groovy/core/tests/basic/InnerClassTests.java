@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -300,8 +300,28 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/708
+    @Test // GROOVY-8715
     public void testInnerClass6() {
+        //@formatter:off
+        String[] sources = {
+            "p/Script.groovy",
+            "package p\n" +
+            "Outer.Inner[] array\n",
+
+            "p/Outer.groovy",
+            "package p\n" +
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/708, GROOVY-10455
+    public void testInnerClass7() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -328,7 +348,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass7() {
+    public void testInnerClass8() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -350,7 +370,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-8947
-    public void testInnerClass8() {
+    public void testInnerClass9() {
         assumeTrue(isParrotParser());
 
         //@formatter:off
@@ -374,7 +394,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass9() {
+    public void testInnerClass10() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -397,7 +417,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-10289
-    public void testInnerClass10() {
+    public void testInnerClass11() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
