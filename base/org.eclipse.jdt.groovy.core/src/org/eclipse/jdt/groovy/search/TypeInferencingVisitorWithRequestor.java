@@ -1956,9 +1956,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
         }
 
-        // don't check the lookups because statements have no type;
-        // but individual requestors may choose to end the visit here
-        TypeLookupResult noLookup = new TypeLookupResult(declaring, declaring, declaring, TypeConfidence.EXACT, scope);
+        // do not check the lookups because statements have no type; however individual requestors may choose to end the visit here
+        TypeLookupResult noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE, declaring, null, TypeConfidence.EXACT, scope);
         VisitStatus status = notifyRequestor(node, requestor, noLookup);
         switch (status) {
         case CONTINUE:

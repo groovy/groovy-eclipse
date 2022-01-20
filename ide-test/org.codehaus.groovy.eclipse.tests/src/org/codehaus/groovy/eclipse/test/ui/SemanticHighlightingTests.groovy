@@ -2673,14 +2673,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '''
             |class C {
             |  @Deprecated def x
-            |  def y() { x }
+            |  def m() { x }
             |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('x'), 1, DEPRECATED),
-            new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, DEPRECATED))
     }
 
@@ -2690,13 +2690,15 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |@Deprecated
             |class C {
             |  C x
+            |  def m() { null }
             |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('C'), 1, DEPRECATED),
-            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, DEPRECATED),
-            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD))
+            new HighlightedTypedPosition(contents.indexOf('C {'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('C x'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD))
     }
 
     @Test
