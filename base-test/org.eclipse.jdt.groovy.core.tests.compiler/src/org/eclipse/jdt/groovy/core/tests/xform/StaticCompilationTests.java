@@ -7214,4 +7214,23 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testCompileStatic10457() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  @groovy.transform.CompileDynamic\n" +
+            "  C() {\n" +
+            "    print(new StringReader('works').text)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }

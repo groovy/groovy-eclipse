@@ -68,6 +68,7 @@
         <file-match-pattern match-pattern="groovy/transform/NamedVariantASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/NullCheckASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/TupleConstructorASTTransformation.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/TemporaryVariableExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|Boolean|MethodCall)ExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/CompareIdentityExpression.java" include-pattern="false" />

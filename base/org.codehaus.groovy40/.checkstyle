@@ -56,6 +56,7 @@
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/(Category|Field|Log|NullCheck|RecordType|Sealed|TupleConstructor)ASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/NotYetImplemented.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|MethodCall)ExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingSupport.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingVisitor.java" include-pattern="false" />
