@@ -737,8 +737,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Script.groovy (at line 2)\n" +
             "\tMethod[] methodArray = anInt.class.methods\n" +
-            "\t^^^^^^^^\n" +
-            "Groovy:unable to resolve class Method[]\n" +
+            "\t^^^^^^\n" +
+            "Groovy:unable to resolve class Method\n" +
             "----------\n");
     }
 
@@ -756,8 +756,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Script.groovy (at line 2)\n" +
             "\tMethod[][] methodMethodArray = anInt.class.methods\n" +
-            "\t^^^^^^^^^^\n" +
-            "Groovy:unable to resolve class Method[][]\n" +
+            "\t^^^^^^\n" +
+            "Groovy:unable to resolve class Method\n" +
             "----------\n");
     }
 

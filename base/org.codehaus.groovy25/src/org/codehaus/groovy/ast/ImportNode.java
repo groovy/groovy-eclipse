@@ -167,7 +167,7 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     public void setType(ClassNode type) {
-        this.type = type;
+        this.type = java.util.Objects.requireNonNull(type);
     }
 
     public String toString() {

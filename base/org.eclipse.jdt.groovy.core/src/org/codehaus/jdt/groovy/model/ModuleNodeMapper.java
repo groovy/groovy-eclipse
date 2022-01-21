@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,9 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 
 /**
- * Stores module nodes for groovy compilation units This class is not meant to be accessed externally.
+ * Stores module nodes for groovy compilation units.
  * <p>
- * One module node is stored per working copy of a unit.
+ * One module node is stored per working copy of a unit. This class is not meant to be accessed externally.
  */
 public class ModuleNodeMapper {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ class MultiplexingParser extends Parser {
 
     MultiplexingParser(final Object requestor, final CompilerOptions compilerOptions, final ProblemReporter problemReporter, final boolean optimizeStringLiterals) {
         super(problemReporter, optimizeStringLiterals);
-        this.groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, true, false);
+        this.groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, /*allowTransforms:*/true, /*isReconcile:*/false);
     }
 
     @Override

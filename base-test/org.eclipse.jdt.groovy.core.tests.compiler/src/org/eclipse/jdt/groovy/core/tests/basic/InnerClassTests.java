@@ -183,6 +183,18 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // resolved through default imports
+    public void testInnerTypeReferencing8() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "Map.Entry e\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testInnerClass1() {
         //@formatter:off

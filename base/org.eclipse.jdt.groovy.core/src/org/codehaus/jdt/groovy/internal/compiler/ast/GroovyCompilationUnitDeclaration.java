@@ -198,6 +198,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         this.compilationUnit = compilationUnit;
         this.groovySourceUnit = groovySourceUnit;
         this.compilerOptions = compilerOptions;
+        bits |= ASTNode.HasAllMethodBodies;
     }
 
     /**

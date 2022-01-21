@@ -106,13 +106,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private VariableScope currentScope;
 
     private boolean isTopLevelProperty = true;
-    private boolean inPropertyExpression = false;
-    private boolean inClosure = false;
+    private boolean inPropertyExpression;
+    private boolean inClosure;
 
-    private Map<GenericsTypeName, GenericsType> genericParameterNames = new HashMap<>();
-    private final Set<FieldNode> fieldTypesChecked = new HashSet<>();
+    private Map<GenericsTypeName, GenericsType> genericParameterNames = Collections.EMPTY_MAP;
+    private Set<FieldNode> fieldTypesChecked;
     // GRECLIPSE add
-    private final Set<String> resolutionFailedCache = new HashSet<>();
+    private Set<String> resolutionFailed;
     // GRECLIPSE end
     private boolean checkingVariableTypeInDeclaration;
     // GRECLIPSE private->protected
@@ -263,6 +263,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     public void startResolving(final ClassNode node, final SourceUnit source) {
+        // GRECLIPSE add
+        if (fieldTypesChecked == null) {
+            fieldTypesChecked = new HashSet<>();
+            resolutionFailed = new HashSet<>();
+        }
+        // GRECLIPSE end
         this.source = source;
         visitClass(node);
     }
@@ -359,9 +365,41 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (resolveAliasFromModule(type)) return;
         }
         if (resolve(type)) return;
+        /* GRECLIPSE edit
         if (resolveToInner(type)) return;
 
-        addError("unable to resolve class " + type.toString(false) + msg, /*GRECLIPSE add*/type.getEnd() > 0 ? type : /*GRECLIPSE end*/node);
+        addError("unable to resolve class " + type.toString(false) + msg, node);
+        */
+        ClassNode temp = type;
+        while (temp.isArray())//GROOVY-8715
+            temp = temp.getComponentType();
+        final String name = temp.getName();
+        String nameAsType = name.replace('.', '$');
+        ModuleNode module = currentClass.getModule();
+        if (!name.equals(nameAsType) && module.hasPackageName()) {
+            // check qualified reference for a same-package type
+            temp.setName(module.getPackageName() + nameAsType);
+            if (resolve(temp, false, false, false)) return;
+        }
+        // check reference for an on-demand imported type
+        for (ImportNode star : module.getStarImports()) {
+            String cName = star.getClassName();
+            if (cName != null) {
+                temp.setName(cName + '$' + nameAsType);
+                if (resolve(temp, false, false, false)) return;
+            }
+        }
+        // check qualified reference
+        if (!name.equals(nameAsType)) {
+            // ... resolved by default imports
+            for (String pack : DEFAULT_IMPORTS) {
+                temp.setName(pack + nameAsType);
+                if (resolve(temp, false, false, false)) return;
+            }
+        }
+        temp.setName(name);
+        addError("unable to resolve class " + name + msg, temp.getEnd() > 0 ? temp : node);
+        // GRECLIPSE end
     }
 
     protected boolean resolveToInner(final ClassNode type) {
@@ -479,14 +517,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (!typeName.equals(maybeOuter.getName())) {
                 ClassNode maybeNested = new ConstructedNestedClass(maybeOuter, typeName);
                 // GRECLIPSE add
-                if (!resolutionFailedCache.contains(maybeNested.getName())) {
+                if (!resolutionFailed.contains(maybeNested.getName())) {
                 // GRECLIPSE end
                 if (resolveFromCompileUnit(maybeNested) || resolveToOuter(maybeNested)) {
                     type.setRedirect(maybeNested);
                     return true;
                 }
                 // GRECLIPSE add
-                    resolutionFailedCache.add(maybeNested.getName());
+                    resolutionFailed.add(maybeNested.getName());
                 }
                 // GRECLIPSE end
             }
@@ -500,6 +538,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 return true;
             }
         }
+        // GRECLIPSE add
+        if (classToCheck.getInterfaces().length > 0)
+        // GRECLIPSE end
         for (ClassNode face : classToCheck.getAllInterfaces()) {
             if (resolver.test(face)) {
                 return true;
@@ -526,16 +567,15 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 ConstructedClassWithPackage tmp = (ConstructedClassWithPackage) type;
                 String savedName = tmp.className;
                 tmp.className = replaceLastPointWithDollar(savedName);
-                if (resolve(tmp, false, true, true)) {
+                if (resolve(tmp, false, false, true)) {
                     type.setRedirect(tmp.redirect());
                     return true;
                 }
                 tmp.className = savedName;
             } else {
                 String savedName = type.getName();
-                String replacedPointType = replaceLastPointWithDollar(savedName);
-                type.setName(replacedPointType);
-                if (resolve(type, false, true, true)) return true;
+                type.setName(replaceLastPointWithDollar(savedName));
+                if (resolve(type, false, false, true)) return true;
                 type.setName(savedName);
             }
         }
@@ -592,7 +632,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             //          inner class in DEFAULT_IMPORTS
             ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(packagePrefix, typeName);
             // GRECLIPSE add
-            if (!resolutionFailedCache.contains(tmp.getName())) {
+            if (!resolutionFailed.contains(tmp.getName())) {
             // GRECLIPSE end
             if (resolve(tmp, false, false, false)) {
                 type.setRedirect(tmp.redirect());
@@ -605,7 +645,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 return true;
             }
             // GRECLIPSE add
-                resolutionFailedCache.add(tmp.getName());
+                resolutionFailed.add(tmp.getName());
             }
             // GRECLIPSE end
         }
@@ -749,14 +789,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // compiler tries to find an inner class.
                 ClassNode tmp = new ConstructedClassWithPackage(module.getPackageName(), name);
                 // GRECLIPSE add
-                if (!resolutionFailedCache.contains(tmp.getName())) {
+                if (!resolutionFailed.contains(tmp.getName())) {
                 // GRECLIPSE end
                 if (resolve(tmp, false, false, false)) {
                     ambiguousClass(type, tmp, name);
                     return true;
                 }
                 // GRECLIPSE add
-                    resolutionFailedCache.add(tmp.getName());
+                    resolutionFailed.add(tmp.getName());
                 }
                 // GRECLIPSE end
             }
@@ -765,14 +805,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (importNode.getFieldName().equals(name)) {
                     ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
                     // GRECLIPSE add
-                    if (!resolutionFailedCache.contains(tmp.getName())) {
+                    if (!resolutionFailed.contains(tmp.getName())) {
                     // GRECLIPSE end
                     if (resolve(tmp, false, false, true) && Modifier.isStatic(tmp.getModifiers())) {
                         type.setRedirect(tmp.redirect());
                         return true;
                     }
                     // GRECLIPSE add
-                        resolutionFailedCache.add(tmp.getName());
+                        resolutionFailed.add(tmp.getName());
                     }
                     // GRECLIPSE end
                 }
@@ -780,14 +820,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
                 // GRECLIPSE add
-                if (!resolutionFailedCache.contains(tmp.getName())) {
+                if (!resolutionFailed.contains(tmp.getName())) {
                 // GRECLIPSE end
                 if (resolve(tmp, false, false, true) && Modifier.isStatic(tmp.getModifiers())) {
                     ambiguousClass(type, tmp, name);
                     return true;
                 }
                 // GRECLIPSE add
-                    resolutionFailedCache.add(tmp.getName());
+                    resolutionFailed.add(tmp.getName());
                 }
                 // GRECLIPSE end
             }
@@ -796,27 +836,27 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (importNode.getType() != null) {
                     ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
                     // GRECLIPSE add
-                    if (!resolutionFailedCache.contains(tmp.getName())) {
+                    if (!resolutionFailed.contains(tmp.getName())) {
                     // GRECLIPSE end
                     if (resolve(tmp, false, false, true) && Modifier.isStatic(tmp.getModifiers())) {
                         ambiguousClass(type, tmp, name);
                         return true;
                     }
                     // GRECLIPSE add
-                        resolutionFailedCache.add(tmp.getName());
+                        resolutionFailed.add(tmp.getName());
                     }
                     // GRECLIPSE end
                 } else {
                     ClassNode tmp = new ConstructedClassWithPackage(importNode.getPackageName(), name);
                     // GRECLIPSE add
-                    if (!resolutionFailedCache.contains(tmp.getName())) {
+                    if (!resolutionFailed.contains(tmp.getName())) {
                     // GRECLIPSE end
                     if (resolve(tmp, false, false, true)) {
                         ambiguousClass(type, tmp, name);
                         return true;
                     }
                     // GRECLIPSE add
-                        resolutionFailedCache.add(tmp.getName());
+                        resolutionFailed.add(tmp.getName());
                     }
                     // GRECLIPSE end
                 }

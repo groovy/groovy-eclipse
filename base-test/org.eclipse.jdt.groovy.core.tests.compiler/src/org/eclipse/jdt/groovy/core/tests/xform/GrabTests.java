@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "Test.groovy",
-            "@Grab('joda-time:joda-time:2.10.10')\n" +
+            "@Grab('joda-time:joda-time:2.10.10;transitive=false')\n" +
             "import org.joda.time.DateTime\n" +
             "void printDate() {\n" +
             "  def now = new DateTime()\n" +
@@ -49,10 +49,10 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
     /**
      * This program has a broken grab. Without changes we get a 'general error'
-     * recorded on the first line of the source file (big juicy exception).
-     * General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.x: not found]
+     * recorded on the first line of the source file:
+     * <tt>General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.x: not found]</tt>
      * <p>
-     * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
+     * With grab improvements we get two errors: the missing dependency and the missing type (which is at the right version of that dependency!)
      */
     @Test // GRECLIPSE-1669
     public void testGrabError() {
@@ -67,7 +67,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
             "Test.groovy",
             "@Grapes([\n" +
-            "  @Grab(group='joda-time', module='joda-time', version='2.10.10'),\n" +
+            "  @Grab('joda-time:joda-time:2.10.10;transitive=false'),\n" +
             "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.x')\n" +
             "])\n" +
             "class Test {\n" +
@@ -107,7 +107,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
             "Test.groovy",
             "@GrabConfig(systemClassLoader=true)\n" +
-            "@Grab(group='mysql', module='mysql-connector-java', version='5.1.15')\n" +
+            "@Grab(group='mysql', module='mysql-connector-java', version='5.1.15', transitive=false)\n" +
             "class Test {\n" +
             "}\n",
         };
@@ -129,7 +129,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
             "Test.groovy",
             "@GrabResolver(name='restlet', root='https://maven.restlet.talend.com')\n" +
-            "@Grab(group='org.restlet.jse', module='org.restlet', version='2.4.3')\n" +
+            "@Grab(group='org.restlet.jse', module='org.restlet', version='2.4.3', transitive=false)\n" +
             "import org.restlet.Restlet\n",
         };
         //@formatter:on

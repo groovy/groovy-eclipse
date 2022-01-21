@@ -27,7 +27,6 @@ import java.util.Set;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -67,7 +66,7 @@ public class JDTResolver extends ResolveVisitor {
 
     private static final boolean DEBUG = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/resolver"));
 
-    /** Any type name that is equal to or shorter than this could be a primitive type. */
+    /** No need to check for primitive type if name length is greater than this. */
     private static final int BOOLEAN_LENGTH = "boolean".length();
 
     /** Arbitrary selection of common types. */
@@ -132,30 +131,26 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     public GroovyCompilationUnitScope getScope() {
-        return activeScope;
+        return compilationUnitScope;
     }
 
-    // Type references are resolved through the 'activeScope'. This ensures visibility rules are obeyed - just because a
-    // type exists does not mean it is visible to some other type and scope lookups verify this.
-    protected GroovyCompilationUnitScope activeScope;
-
-    // map of scopes in which resolution can happen
-    private Map<ClassNode, GroovyTypeDeclaration> scopes = new IdentityHashMap<>();
+    // Type references are resolved via this scope to ensure visibility rules are obeyed -- just because a type exists doesn't mean it's visible to some type.
+    private GroovyCompilationUnitScope compilationUnitScope;
 
     // By recording what is currently in progress in terms of creation, we avoid recursive problems (like Enum<E extends Enum<E>>)
-    private Map<TypeBinding, JDTClassNode> inProgress = new IdentityHashMap<>();
+    private Map<TypeBinding, JDTClassNode> inProgress;
 
     // Cache from bindings to JDTClassNodes to avoid unnecessary JDTClassNode creation
-    private Map<TypeBinding, JDTClassNode> nodeCache = new IdentityHashMap<>();
-
-    private Set<ClassNode> resolvedClassNodes = new HashSet<>();
+    private Map<TypeBinding, JDTClassNode> nodeCache;
 
     /**
      * Records the type names that aren't resolvable for the current resolution.
      * This means we will not repeatedly attempt to lookup something that is not
      * found through the same routes.
      */
-    private Map<String, Set<String>> unresolvables = new HashMap<>();
+    private Map<String, Set<String>> unresolvables;
+
+    private Set<ClassNode> resolvedClassNodes;
 
     //--------------------------------------------------------------------------
 
@@ -173,8 +168,7 @@ public class JDTResolver extends ResolveVisitor {
      * When recorded, the jdt resolver will be able to (later on) navigate from the classnode back to the JDT scope that should be used.
      */
     public void record(GroovyTypeDeclaration typeDecl) {
-        // FIXASC: Can the relationship here from classNode to scope be better preserved to remove the need for this map?
-        scopes.put(typeDecl.getClassNode(), typeDecl);
+        typeDecl.getClassNode().putNodeMetaData(GroovyTypeDeclaration.class, typeDecl);
 
         TypeDeclaration[] memberTypes = typeDecl.memberTypes;
         if (memberTypes != null) {
@@ -193,6 +187,12 @@ public class JDTResolver extends ResolveVisitor {
 
     @Override
     public void startResolving(ClassNode classNode, SourceUnit sourceUnit) {
+        if (resolvedClassNodes == null) {
+            resolvedClassNodes = new HashSet<>();
+            unresolvables      = new HashMap<>();
+            inProgress = new IdentityHashMap<>();
+            nodeCache  = new IdentityHashMap<>();
+        }
         try {
             unresolvables.put(classNode.getModule().getMainClassName(), new HashSet<>());
             super.startResolving(classNode, sourceUnit);
@@ -200,7 +200,7 @@ public class JDTResolver extends ResolveVisitor {
             // probably syntax error(s)
         } finally {
             resetSourceUnit();
-            assert !scopes.containsKey(classNode);
+            assert classNode.getNodeMetaData(GroovyTypeDeclaration.class) == null;
         }
     }
 
@@ -211,14 +211,15 @@ public class JDTResolver extends ResolveVisitor {
      */
     @Override
     protected boolean commencingResolution() {
-        GroovyTypeDeclaration typeDecl = scopes.remove(currentClass);
+        GroovyTypeDeclaration typeDecl = currentClass.getNodeMetaData(GroovyTypeDeclaration.class);
+        currentClass.removeNodeMetaData(GroovyTypeDeclaration.class); // TODO: remove returns value
         if (typeDecl == null) {
             if (resolvedClassNodes.contains(currentClass)) {
                 // already resolved
                 return false;
             }
-            if (activeScope != null && currentClass != null) {
-                for (TypeDeclaration t : activeScope.referenceContext.types) {
+            if (compilationUnitScope != null) {
+                for (TypeDeclaration t : compilationUnitScope.referenceContext.types) {
                     if (currentClass == ((GroovyTypeDeclaration) t).getClassNode()) {
                         return !t.hasErrors();
                     }
@@ -227,7 +228,7 @@ public class JDTResolver extends ResolveVisitor {
             throw new GroovyEclipseBug("commencingResolution failed: no declaration found for class " + currentClass);
         }
 
-        activeScope = null;
+        compilationUnitScope = null;
         if (typeDecl.scope == null) {
             // scope may be null if there were errors in the code - let's not freak out the user here
             if (typeDecl.hasErrors()) {
@@ -235,14 +236,14 @@ public class JDTResolver extends ResolveVisitor {
             }
             throw new GroovyEclipseBug("commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
         }
-        activeScope = (GroovyCompilationUnitScope) typeDecl.scope.compilationUnitScope();
+        compilationUnitScope = (GroovyCompilationUnitScope) typeDecl.scope.compilationUnitScope();
         if (DEBUG) {
             log("commencing resolution for " + currentClass.getName());
         }
         if (currentClass.getOuterClass() == null) {
             // ensure JDT pre-resolve steps completed before Groovy resolve step
-            activeScope.verifyMethods(activeScope.environment.methodVerifier());
-            typeDecl.resolve(activeScope); // must come after verifyMethods
+            compilationUnitScope.verifyMethods(compilationUnitScope.environment.methodVerifier());
+            typeDecl.resolve(compilationUnitScope); // must come after verifyMethods
         }
         return true;
     }
@@ -253,8 +254,8 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     public synchronized void cleanUp() {
-        scopes.clear();
-        inProgress.clear();
+        if (inProgress != null)
+            inProgress.clear();
         currentClass = null;
         resetVariableScope();
         setClassNodeResolver(null);
@@ -363,10 +364,10 @@ public class JDTResolver extends ResolveVisitor {
         if (resolved) {
             if (type.redirect() instanceof JDTClassNode && ((JDTClassNode) type.redirect()).getJdtBinding().hasRestrictedAccess()) {
                 TypeBinding binding = ((JDTClassNode) type.redirect()).getJdtBinding();
-                AccessRestriction restriction = activeScope.environment().getAccessRestriction(binding.erasure());
+                AccessRestriction restriction = compilationUnitScope.environment().getAccessRestriction(binding.erasure());
                 if (restriction != null) {
                     SingleTypeReference ref = new SingleTypeReference(type.getNameWithoutPackage().toCharArray(), ((long) type.getStart() << 32 | (long) type.getEnd() - 1));
-                    activeScope.problemReporter().forbiddenReference(binding, ref, restriction.classpathEntryType, restriction.classpathEntryName, restriction.getProblemId());
+                    compilationUnitScope.problemReporter().forbiddenReference(binding, ref, restriction.classpathEntryType, restriction.classpathEntryName, restriction.getProblemId());
                 }
             }
         }
@@ -405,12 +406,12 @@ public class JDTResolver extends ResolveVisitor {
 
     @Override
     protected boolean resolveToOuter(ClassNode type) {
-        if (activeScope != null) {
+        if (compilationUnitScope != null) {
             // ask the JDT for a binary or source type that is visible from the active scope
             char[][] compoundName = CharOperation.splitOn('.', type.getName().toCharArray());
             TypeBinding jdtBinding = null;
             try {
-                jdtBinding = activeScope.getType(compoundName, compoundName.length);
+                jdtBinding = compilationUnitScope.getType(compoundName, compoundName.length);
             } catch (AbortCompilation t) {
                 if (!(t.silentException instanceof AbortIncrementalBuildException)) {
                     throw t;
@@ -450,31 +451,6 @@ public class JDTResolver extends ResolveVisitor {
         }
 
         if (DEBUG) log("resolveToOuter", type, false);
-        return false;
-    }
-
-    @Override
-    protected boolean resolveToInner(ClassNode type) {
-        ModuleNode module = currentClass.getModule();
-        if (module != null) {
-            while (type.isArray()) type = type.getComponentType(); //GROOVY-8715
-
-            String name = type.getName();
-            int i = name.lastIndexOf('.');
-            if (i > 0 && module.hasPackageName()) {
-                type.setName(module.getPackageName() + name.substring(0, i) + '$' + name.substring(i + 1));
-                if (resolve(type, false, false, true)) {
-                    return true;
-                }
-            }
-            for (ImportNode node : module.getStarImports()) { String qual = node.getPackageName();
-                type.setName(qual.substring(0, qual.length() - 1) + '$' + name.replace('.', '$'));
-                if (resolve(type, false, false, true)) {
-                    return true;
-                }
-            }
-            type.setName(name);
-        }
         return false;
     }
 
@@ -554,11 +530,11 @@ public class JDTResolver extends ResolveVisitor {
     // FIXASC callers could check if it is a 'funky' type before always recording a depedency
     // by 'funky' I mean that the type was constructed just to try something (org.foo.bar.java$lang$Wibble doesn't want recording!)
     private void recordDependency(String typeName) {
-        if (activeScope != null) {
+        if (compilationUnitScope != null) {
             if (typeName.indexOf('.') != -1) {
-                activeScope.recordQualifiedReference(CharOperation.splitOn('.', typeName.toCharArray()));
+                compilationUnitScope.recordQualifiedReference(CharOperation.splitOn('.', typeName.toCharArray()));
             } else {
-                activeScope.recordSimpleReference(typeName.toCharArray());
+                compilationUnitScope.recordSimpleReference(typeName.toCharArray());
             }
         }
     }

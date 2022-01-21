@@ -15,25 +15,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.hierarchy;
 
-/**
- * This is the public entry point to resolve type hierarchies.
- *
- * When requesting additional types from the name environment, the resolver
- * accepts all forms (binary, source & compilation unit) for additional types.
- *
- * Side notes: Binary types already know their resolved supertypes so this
- * only makes sense for source types. Even though the compiler finds all binary
- * types to complete the hierarchy of a given source type, is there any reason
- * why the requestor should be informed that binary type X subclasses Y &
- * implements I & J?
- */
-
 import java.util.*;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.SubMonitor;
@@ -69,6 +55,18 @@ import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.util.ASTNodeFinder;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
 
+/**
+ * This is the public entry point to resolve type hierarchies.
+ *
+ * When requesting additional types from the name environment, the resolver
+ * accepts all forms (binary, source & compilation unit) for additional types.
+ *
+ * Side notes: Binary types already know their resolved supertypes so this
+ * only makes sense for source types. Even though the compiler finds all binary
+ * types to complete the hierarchy of a given source type, is there any reason
+ * why the requestor should be informed that binary type X subclasses Y &
+ * implements I & J?
+ */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class HierarchyResolver implements ITypeRequestor {
 
@@ -308,7 +306,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 	int length = superInterfaceNames == null ? 0 : superInterfaceNames.length;
 	IType[] superinterfaces = new IType[length];
 	int index = 0;
-	next : for (int i = 0; i < length; i++) {
+	next : for (int i = 0; i < length; i += 1) {
 		char[] superInterfaceName = superInterfaceNames[i];
 		int end = superInterfaceName.length;
 
@@ -331,7 +329,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 
 			// ensure that the binding corresponds to the interface defined by the user
 			if (CharOperation.equals(simpleName, interfaceBinding.sourceName)) {
-				bindingIndex++;
+				bindingIndex += 1;
 				IGenericType genericType = this.bindingMap.get(interfaceBinding);
 				if (genericType != null) {
 					IType handle = this.builder.getHandle(genericType, interfaceBinding);
@@ -389,7 +387,7 @@ private void fixSupertypeBindings() {
 				if (superInterfaces != null && (length = superInterfaces.length) > (interfaceBindings == null ? 0 : interfaceBindings.length)) { // check for interfaceBindings being null (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=139689)
 					interfaceBindings = new ReferenceBinding[length];
 					int index = 0;
-					for (int i = 0; i < length; i++) {
+					for (int i = 0; i < length; i += 1) {
 						TypeBinding superInterface = superInterfaces[i].resolvedType;
 						if (superInterface != null) {
 							superInterface = superInterface.closestMatch();
@@ -474,7 +472,7 @@ private void remember(IType type, ReferenceBinding typeBinding) {
 			if (superInterfaces != null) {
 				int length = superInterfaces.length;
 				superInterfaceNames = new char[length][];
-				for (int i = 0; i < length; i++) {
+				for (int i = 0; i < length; i += 1) {
 					TypeReference superInterface = superInterfaces[i];
 					char[][] typeName = superInterface.getTypeName();
 					superInterfaceNames[i] = typeName[typeName.length-1];
@@ -508,9 +506,8 @@ private void remember(IType type, ReferenceBinding typeBinding) {
 private void rememberAllTypes(CompilationUnitDeclaration parsedUnit, org.eclipse.jdt.core.ICompilationUnit cu, boolean includeLocalTypes) {
 	TypeDeclaration[] types = parsedUnit.types;
 	if (types != null) {
-		for (int i = 0, length = types.length; i < length; i++) {
-			TypeDeclaration type = types[i];
-			rememberWithMemberTypes(type, cu.getType(new String(type.name)));
+		for (TypeDeclaration type : types) {
+			rememberWithMemberTypes(type, cu.getType(String.valueOf(type.name)));
 		}
 	}
 	if (!includeLocalTypes || (parsedUnit.localTypes.isEmpty() && parsedUnit.functionalExpressions == null))
@@ -527,7 +524,7 @@ private void rememberAllTypes(CompilationUnitDeclaration parsedUnit, org.eclipse
 		rememberWithMemberTypes(typeDecl, typeHandle);
 	}
 	if (parsedUnit.functionalExpressions != null) {
-		for (int i = 0; i < parsedUnit.functionalExpressionsCount; i++) {
+		for (int i = 0; i < parsedUnit.functionalExpressionsCount; i += 1) {
 			if (parsedUnit.functionalExpressions[i] instanceof LambdaExpression) {
 				final LambdaExpression expression = (LambdaExpression) parsedUnit.functionalExpressions[i];
 				if (expression.resolvedType != null && expression.resolvedType.isValidBinding()) {
@@ -543,7 +540,7 @@ private void rememberWithMemberTypes(TypeDeclaration typeDecl, IType typeHandle)
 
 	TypeDeclaration[] memberTypes = typeDecl.memberTypes;
 	if (memberTypes != null) {
-		for (int i = 0, length = memberTypes.length; i < length; i++) {
+		for (int i = 0, length = memberTypes.length; i < length; i += 1) {
 			TypeDeclaration memberType = memberTypes[i];
 			rememberWithMemberTypes(memberType, typeHandle.getType(new String(memberType.name)));
 		}
@@ -637,7 +634,7 @@ public void resolve(IGenericType suppliedType) {
 			remember(suppliedType, binaryTypeBinding);
 			// We still need to add superclasses and superinterfaces bindings (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=53095)
 			int startIndex = this.typeIndex;
-			for (int i = startIndex; i <= this.typeIndex; i++) {
+			for (int i = startIndex; i <= this.typeIndex; i += 1) {
 				IGenericType igType = this.typeModels[i];
 				if (igType != null && igType.isBinaryType()) {
 					CompilationUnitDeclaration previousUnitBeingCompleted = this.lookupEnvironment.unitBeingCompleted;
@@ -661,8 +658,9 @@ public void resolve(IGenericType suppliedType) {
 			this.superTypesOnly = true;
 			reportHierarchy(this.builder.getType(), null, binaryTypeBinding);
 		} else {
-			// GROOVY edit
-			//org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
+			/* GROOVY edit
+			org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
+			*/
 			IType it = ((SourceTypeElementInfo) suppliedType).getHandle();
 			org.eclipse.jdt.core.ICompilationUnit cu = it == null ? null : it.getCompilationUnit();
 			// GROOVY end
@@ -695,9 +693,9 @@ public void resolve(IGenericType suppliedType) {
 public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor monitor) {
 	SubMonitor subMonitor = SubMonitor.convert(monitor, 3);
 	try {
-		int openablesLength = openables.length;
-		CompilationUnitDeclaration[] parsedUnits = new CompilationUnitDeclaration[openablesLength];
+		final int openablesLength = openables.length;
 		boolean[] hasLocalType = new boolean[openablesLength];
+		CompilationUnitDeclaration[] parsedUnits = new CompilationUnitDeclaration[openablesLength];
 		org.eclipse.jdt.core.ICompilationUnit[] cus = new org.eclipse.jdt.core.ICompilationUnit[openablesLength];
 		int unitsIndex = 0;
 
@@ -715,27 +713,29 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 
 		subMonitor.split(1);
 		// build type bindings
-		// GROOVY edit
-		//Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
+		/* GROOVY edit
+		Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
+		*/
 		Parser parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment.globalOptions, this.lookupEnvironment.problemReporter, true, 1);
 		// GROOVY end
 		final boolean isJava8 = this.options.sourceLevel >= ClassFileConstants.JDK1_8;
-		for (int i = 0; i < openablesLength; i++) {
+		for (int i = 0; i < openablesLength; i += 1) {
 			Openable openable = openables[i];
 			if (openable instanceof org.eclipse.jdt.core.ICompilationUnit) {
 				org.eclipse.jdt.core.ICompilationUnit cu = (org.eclipse.jdt.core.ICompilationUnit)openable;
 
 				// contains a potential subtype as a local or anonymous type?
-				boolean containsLocalType = false;
+				boolean containsLocalType;
 				if (localTypes == null) { // case of hierarchy on region
 					containsLocalType = true;
+				} else if (cu.isWorkingCopy()) {
+					containsLocalType = true; // presume conservatively!
 				} else {
-					IPath path = cu.getPath();
-					containsLocalType = cu.isWorkingCopy() ? true /* presume conservatively */ : localTypes.contains(path.toString());
+					containsLocalType = localTypes.contains(cu.getPath().toString());
 				}
 
 				// build parsed unit
-				CompilationUnitDeclaration parsedUnit = null;
+				CompilationUnitDeclaration parsedUnit;
 				if (cu.isOpen()) {
 					// create parsed unit from source element infos
 					CompilationResult result = new CompilationResult((ICompilationUnit)cu, i, openablesLength, this.options.maxProblemsPerUnit);
@@ -745,7 +745,7 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 						int topLevelLength = topLevelTypes.length;
 						if (topLevelLength == 0) continue; // empty cu: no need to parse (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=65677)
 						typeInfos = new SourceTypeElementInfo[topLevelLength];
-						for (int j = 0; j < topLevelLength; j++) {
+						for (int j = 0; j < topLevelLength; j += 1) {
 							IType topLevelType = topLevelTypes[j];
 							typeInfos[j] = (SourceTypeElementInfo)((JavaElement)topLevelType).getElementInfo();
 						}
@@ -768,16 +768,15 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 					if (containsLocalType && parsedUnit != null) parsedUnit.bits |= ASTNode.HasAllMethodBodies;
 				} else {
 					// create parsed unit from file
-					IFile file = (IFile) cu.getResource();
-					ICompilationUnit sourceUnit = this.builder.createCompilationUnitFromPath(openable, file, findAssociatedModuleName(openable));
+					ICompilationUnit sourceUnit = this.builder.createCompilationUnitFromPath(openable, (IFile)cu.getResource(), findAssociatedModuleName(openable));
 					CompilationResult unitResult = new CompilationResult(sourceUnit, i, openablesLength, this.options.maxProblemsPerUnit);
 					parsedUnit = parser.dietParse(sourceUnit, unitResult);
 				}
 
 				if (parsedUnit != null) {
-					hasLocalType[unitsIndex] = containsLocalType;
 					cus[unitsIndex] = cu;
-					parsedUnits[unitsIndex++] = parsedUnit;
+					parsedUnits[unitsIndex] = parsedUnit;
+					hasLocalType[unitsIndex++] = containsLocalType;
 					try {
 						this.lookupEnvironment.buildTypeBindings(parsedUnit, null /*no access restriction*/);
 						if (openable.equals(focusOpenable)) {
@@ -821,8 +820,7 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 			focusLocalType = new ASTNodeFinder(focusUnit).findType(focus);
 		}
 
-
-		for (int i = 0; i <= this.typeIndex; i++) {
+		for (int i = 0; i <= this.typeIndex; i += 1) {
 			IGenericType suppliedType = this.typeModels[i];
 			if (suppliedType != null && suppliedType.isBinaryType()) {
 				CompilationUnitDeclaration previousUnitBeingCompleted = this.lookupEnvironment.unitBeingCompleted;
@@ -844,10 +842,10 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 			}
 		}
 
-		SubMonitor unitLoopMonitor = subMonitor.split(1).setWorkRemaining(unitsIndex);
+		IProgressMonitor unitLoopMonitor = subMonitor.split(1).setWorkRemaining(unitsIndex);
 		// complete type bindings (i.e. connect super types)
-		for (int i = 0; i < unitsIndex; i++) {
-			unitLoopMonitor.split(1);
+		for (int i = 0; i < unitsIndex; i += 1) {
+			unitLoopMonitor.worked(1);
 			CompilationUnitDeclaration parsedUnit = parsedUnits[i];
 			if (parsedUnit != null) {
 				try {
@@ -864,11 +862,13 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		// (in this case the constructor is needed when resolving local types)
 		// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=145333)
 		try {
-			SubMonitor completeLoopMonitor = subMonitor.split(1).setWorkRemaining(unitsIndex);
+			IProgressMonitor completeLoopMonitor = subMonitor.split(1).setWorkRemaining(unitsIndex);
 			this.lookupEnvironment.completeTypeBindings(parsedUnits, hasLocalType, unitsIndex);
 			// remember type bindings
-			for (int i = 0; i < unitsIndex; i++) {
-				completeLoopMonitor.split(1);
+			for (int i = 0; i < unitsIndex; i += 1) {
+				completeLoopMonitor.worked(1);
+				if (completeLoopMonitor.isCanceled())
+					throw new OperationCanceledException();
 				CompilationUnitDeclaration parsedUnit = parsedUnits[i];
 				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=462158
 				// Certain assist features require type hierarchy even with code with compiler errors.
@@ -886,7 +886,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		}
 		// GROOVY add
 		finally {
-			Arrays.stream(parsedUnits).filter(Objects::nonNull).forEach(CompilationUnitDeclaration::cleanUp);
+			for (CompilationUnitDeclaration parsedUnit : parsedUnits) {
+				if (parsedUnit != null) parsedUnit.cleanUp();
+			}
 		}
 		// GROOVY end
 
@@ -958,7 +960,7 @@ public ReferenceBinding setFocusType(char[][] compoundName) {
 				this.focusType = this.lookupEnvironment.askForType(compoundName, this.lookupEnvironment.UnNamedModule);
 				if (this.focusType != null) {
 					char[][] memberTypeNames = CharOperation.splitOn('$', typeName, firstDollar+1, typeName.length);
-					for (int i = 0; i < memberTypeNames.length; i++) {
+					for (int i = 0; i < memberTypeNames.length; i += 1) {
 						this.focusType = this.focusType.getMemberType(memberTypeNames[i]);
 						if (this.focusType == null)
 							return null;
@@ -988,7 +990,7 @@ private boolean subTypeOfType(ReferenceBinding subType, ReferenceBinding typeBin
 	if (subTypeOfType(superclass, typeBinding)) return true;
 	ReferenceBinding[] superInterfaces = subType.superInterfaces();
 	if (superInterfaces != null) {
-		for (int i = 0, length = superInterfaces.length; i < length; i++) {
+		for (int i = 0, length = superInterfaces.length; i < length; i += 1) {
 			ReferenceBinding superInterface = (ReferenceBinding) superInterfaces[i].erasure();
 			if (superInterface.isHierarchyInconsistent()) return false;
 			if (subTypeOfType(superInterface, typeBinding)) return true;
@@ -1006,4 +1008,3 @@ protected void worked(IProgressMonitor monitor, int work) {
 	}
 }
 }
-

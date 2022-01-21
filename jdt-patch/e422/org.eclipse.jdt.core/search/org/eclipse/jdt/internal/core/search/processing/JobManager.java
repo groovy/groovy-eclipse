@@ -409,10 +409,11 @@ public abstract class JobManager implements Runnable {
 								this.progressJob.cancel();
 								this.progressJob = null;
 							}
-							if (idlingStart < 0)
+							if (idlingStart < 0) {
 								idlingStart = System.currentTimeMillis();
-							else
+							} else {
 								notifyIdle(System.currentTimeMillis() - idlingStart);
+							}
 							this.wait(); // wait until a new job is posted (or reenabled:38901)
 						} else {
 							idlingStart = -1;
