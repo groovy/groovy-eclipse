@@ -142,6 +142,7 @@ import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
+import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
 import static org.codehaus.groovy.ast.ClassHelper.BigDecimal_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.BigInteger_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Boolean_TYPE;
@@ -207,6 +208,7 @@ import static org.codehaus.groovy.ast.tools.WideningCategories.isNumberCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.lowestUpperBound;
 import static org.codehaus.groovy.classgen.AsmClassGenerator.MINIMUM_BYTECODE_VERSION;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.first;
 import static org.codehaus.groovy.syntax.Types.ASSIGN;
 import static org.codehaus.groovy.syntax.Types.ASSIGNMENT_OPERATOR;
 import static org.codehaus.groovy.syntax.Types.COMPARE_EQUAL;
@@ -576,21 +578,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private void checkSuperCallFromClosure(Expression call, MethodNode directCallTarget) {
-        if (call instanceof MethodCallExpression && typeCheckingContext.getEnclosingClosure() != null) {
-            Expression objectExpression = ((MethodCallExpression) call).getObjectExpression();
-            if (objectExpression instanceof VariableExpression) {
-                VariableExpression var = (VariableExpression) objectExpression;
-                if (var.isSuperExpression()) {
-                    ClassNode current = typeCheckingContext.getEnclosingClassNode();
-                    LinkedList<MethodNode> list = current.getNodeMetaData(StaticTypesMarker.SUPER_MOP_METHOD_REQUIRED);
-                    if (list == null) {
-                        list = new LinkedList<MethodNode>();
-                        current.putNodeMetaData(StaticTypesMarker.SUPER_MOP_METHOD_REQUIRED, list);
-                    }
-                    list.add(directCallTarget);
-                    call.putNodeMetaData(StaticTypesMarker.SUPER_MOP_METHOD_REQUIRED, current);
-                }
+        if (call instanceof MethodCallExpression
+                && typeCheckingContext.getEnclosingClosure() != null
+                && isSuperExpression(((MethodCallExpression) call).getObjectExpression())) {
+            ClassNode current = typeCheckingContext.getEnclosingClassNode();
+            LinkedList<MethodNode> list = current.getNodeMetaData(StaticTypesMarker.SUPER_MOP_METHOD_REQUIRED);
+            if (list == null) {
+                list = new LinkedList<MethodNode>();
+                current.putNodeMetaData(StaticTypesMarker.SUPER_MOP_METHOD_REQUIRED, list);
             }
+            list.add(directCallTarget);
+            call.putNodeMetaData(StaticTypesMarker.SUPER_MOP_METHOD_REQUIRED, current);
         }
     }
 
@@ -1782,8 +1780,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode rawType = objectExpressionType.getPlainNodeReference();
             inferDiamondType((ConstructorCallExpression) objectExpression, rawType);
         }
-        // GRECLIPSE end
+        /* GRECLIPSE edit -- enclosing excludes classes that skip STC
         List<ClassNode> enclosingTypes = typeCheckingContext.getEnclosingClassNodes();
+        */
+        Set<ClassNode> enclosingTypes = new LinkedHashSet<>();
+        enclosingTypes.add(typeCheckingContext.getEnclosingClassNode());
+        enclosingTypes.addAll( first(enclosingTypes).getOuterClasses());
+        // GRECLIPSE end
         boolean staticOnlyAccess = isClassClassNodeWrappingConcreteType(objectExpressionType);
         if ("this".equals(propertyName) && staticOnlyAccess) {
             // Outer.this for any level of nesting
@@ -1912,7 +1915,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 boolean checkGetterOrSetter = !isThisExpression || propertyNode == null;
 
                 if (readMode && checkGetterOrSetter) {
-                    if (getter != null) {
+                    if (getter != null // GRECLIPSE add -- GROOVY-6277
+                            && hasAccessToMember(first(enclosingTypes), getter.getDeclaringClass(), getter.getModifiers())) {
                         ClassNode cn = inferReturnTypeGenerics(current, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                         storeInferredTypeForPropertyExpression(pexp, cn);
                         storeTargetMethod(pexp, getter);
@@ -2052,14 +2056,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return false;
     }
     */
-    private static boolean hasAccessToField(ClassNode accessor, FieldNode field) {
-        if (field.isPublic() || accessor.equals(field.getDeclaringClass())) {
+    private static boolean hasAccessToMember(final ClassNode sender, final ClassNode receiver, final int modifiers) {
+        if (Modifier.isPublic(modifiers) || sender.equals(receiver) || sender.getOuterClasses().contains(receiver)) {
             return true;
         }
-        if (field.isProtected()) {
-            return accessor.isDerivedFrom(field.getDeclaringClass());
+        if (Modifier.isProtected(modifiers)) {
+            return sender.isDerivedFrom(receiver);
         } else {
-            return !field.isPrivate() && Objects.equals(accessor.getPackageName(), field.getDeclaringClass().getPackageName());
+            return !Modifier.isPrivate(modifiers) && Objects.equals(sender.getPackageName(), receiver.getPackageName());
         }
     }
     // GRECLIPSE end
@@ -2218,8 +2222,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitField(field);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
         // GRECLIPSE add
-        Expression objectExpression = expressionToStoreOn.getObjectExpression();
-        boolean accessible = hasAccessToField(objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isSuperExpression() ? typeCheckingContext.getEnclosingClassNode() : receiver, field);
+        boolean accessible = hasAccessToMember(isSuperExpression(expressionToStoreOn.getObjectExpression()) ? typeCheckingContext.getEnclosingClassNode() : receiver, field.getDeclaringClass(), field.getModifiers());
         if (expressionToStoreOn instanceof AttributeExpression) {
             if (!accessible) {
                 addStaticTypeError("The field " + field.getDeclaringClass().getNameWithoutPackage() + "." + field.getName() + " is not accessible", expressionToStoreOn.getProperty());
@@ -4277,7 +4280,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (!mn.isEmpty()
                             // GRECLIPSE add -- GROOVY-7890
                             && currentReceiver.getData() == null
-                            && (typeCheckingContext.isInStaticContext || (receiverType.getModifiers() & Opcodes.ACC_STATIC) != 0)
+                            && (typeCheckingContext.isInStaticContext || Modifier.isStatic(receiverType.getModifiers()))
                             && (call.isImplicitThis() || (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()))) {
                         // we create separate method lists just to be able to print out
                         // a nice error message to the user
@@ -4347,7 +4350,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             addStaticTypeError("Non static method " + owner.getName() + "#" + directMethodCallCandidate.getName() + " cannot be called from static context", call);
                         }
                         // GRECLIPSE add -- GROOVY-10341
-                        else if (directMethodCallCandidate.isAbstract() && objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isSuperExpression())
+                        else if (directMethodCallCandidate.isAbstract() && isSuperExpression(objectExpression))
                             addStaticTypeError("Abstract method " + toMethodParametersString(directMethodCallCandidate.getName(), extractTypesFromParameters(directMethodCallCandidate.getParameters())) + " cannot be called directly", call);
                         // GRECLIPSE end
                         if (chosenReceiver == null) {
@@ -5001,9 +5004,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // char c = (char) ...
         } else if (sourceIsNull && isPrimitiveType(targetType) && !boolean_TYPE.equals(targetType)) {
             return false;
-        } else if ((expressionType.getModifiers() & Opcodes.ACC_FINAL) == 0 && targetType.isInterface()) {
+        } else if (!Modifier.isFinal(expressionType.getModifiers()) && targetType.isInterface()) {
             return true;
-        } else if ((targetType.getModifiers() & Opcodes.ACC_FINAL) == 0 && expressionType.isInterface()) {
+        } else if (!Modifier.isFinal(targetType.getModifiers()) && expressionType.isInterface()) {
             return true;
         } else if (!isAssignableTo(targetType, expressionType) && !implementsInterfaceOrIsSubclassOf(expressionType, targetType)) {
             return false;
@@ -6003,7 +6006,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (variable instanceof FieldNode) {
                 ClassNode fieldType = variable.getOriginType();
                 if (isUsingGenericsOrIsArrayUsingGenerics(fieldType)) {
-                    boolean isStatic = (variable.getModifiers() & Opcodes.ACC_STATIC) != 0;
+                    boolean isStatic = Modifier.isStatic(variable.getModifiers());
                     ClassNode thisType = typeCheckingContext.getEnclosingClassNode(), declType = ((FieldNode) variable).getDeclaringClass();
                     Map<GenericsTypeName, GenericsType> placeholders = resolvePlaceHoldersFromDeclaration(thisType, declType, null, isStatic);
 

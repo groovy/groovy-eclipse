@@ -1710,9 +1710,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode rawType = objectExpressionType.getPlainNodeReference();
             inferDiamondType((ConstructorCallExpression) objectExpression, rawType);
         }
-        // GRECLIPSE end
+        /* GRECLIPSE edit -- enclosing excludes classes that skip STC
         List<ClassNode> enclosingTypes = typeCheckingContext.getEnclosingClassNodes();
-
+        */
+        Set<ClassNode> enclosingTypes = new LinkedHashSet<>();
+        enclosingTypes.add(typeCheckingContext.getEnclosingClassNode());
+        enclosingTypes.addAll(enclosingTypes.iterator().next().getOuterClasses());
+        // GRECLIPSE end
         boolean staticOnlyAccess = isClassClassNodeWrappingConcreteType(objectExpressionType);
         if (staticOnlyAccess && "this".equals(propertyName)) {
             // handle "Outer.this" for any level of nesting
@@ -1830,7 +1834,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 // prefer explicit getter or setter over property if receiver is not 'this'
                 if (property == null || !enclosingTypes.contains(receiverType)) {
                     if (readMode) {
-                        if (getter != null) {
+                        if (getter != null // GRECLIPSE add -- GROOVY-6277
+                                && hasAccessToMember(enclosingTypes.iterator().next(), getter.getDeclaringClass(), getter.getModifiers())) {
                             ClassNode returnType = inferReturnTypeGenerics(current, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                             storeInferredTypeForPropertyExpression(pexp, returnType);
                             storeTargetMethod(pexp, getter);
@@ -1957,14 +1962,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return foundGetterOrSetter;
     }
 
-    private static boolean hasAccessToField(final ClassNode accessor, final FieldNode field) {
-        if (field.isPublic() || accessor.equals(field.getDeclaringClass())) {
+    private static boolean hasAccessToMember(final ClassNode accessor, final ClassNode receiver, final int modifiers) {
+        if (Modifier.isPublic(modifiers)
+                || accessor.equals(receiver)
+                || accessor.getOuterClasses().contains(receiver)) {
             return true;
         }
-        if (field.isProtected()) {
-            return accessor.isDerivedFrom(field.getDeclaringClass());
+        if (Modifier.isProtected(modifiers)) {
+            return accessor.isDerivedFrom(receiver);
         } else {
-            return !field.isPrivate() && Objects.equals(accessor.getPackageName(), field.getDeclaringClass().getPackageName());
+            return !Modifier.isPrivate(modifiers) && Objects.equals(accessor.getPackageName(), receiver.getPackageName());
         }
     }
 
@@ -2100,9 +2107,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitField(field);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
         // GRECLIPSE add
-        boolean accessible = hasAccessToField(isSuperExpression(expressionToStoreOn.getObjectExpression()) ? typeCheckingContext.getEnclosingClassNode() : receiver, field);
+        boolean accessible = hasAccessToMember(isSuperExpression(expressionToStoreOn.getObjectExpression()) ? typeCheckingContext.getEnclosingClassNode() : receiver, field.getDeclaringClass(), field.getModifiers());
         // GRECLIPSE end
-
         if (expressionToStoreOn instanceof AttributeExpression) { // TODO: expand to include PropertyExpression
             if (!accessible) {
                 addStaticTypeError("The field " + field.getDeclaringClass().getNameWithoutPackage() + "." + field.getName() + " is not accessible", expressionToStoreOn.getProperty());
@@ -3955,7 +3961,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             // GRECLIPSE add -- GROOVY-7890
                             && currentReceiver.getData() == null
                             && (call.isImplicitThis() || isThisExpression(objectExpression))
-                            && (typeCheckingContext.isInStaticContext || (receiverType.getModifiers() & Opcodes.ACC_STATIC) != 0)) {
+                            && (typeCheckingContext.isInStaticContext || Modifier.isStatic(receiverType.getModifiers()))) {
                         // we create separate method lists just to be able to print out
                         // a nice error message to the user
                         // a method is accessible if it is static, or if we are not in a static context and it is
@@ -4737,9 +4743,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // char c = (char) ...
         } else if (sourceIsNull && isPrimitiveType(targetType) && !boolean_TYPE.equals(targetType)) {
             return false;
-        } else if ((expressionType.getModifiers() & Opcodes.ACC_FINAL) == 0 && targetType.isInterface()) {
+        } else if (!Modifier.isFinal(expressionType.getModifiers()) && targetType.isInterface()) {
             return true;
-        } else if ((targetType.getModifiers() & Opcodes.ACC_FINAL) == 0 && expressionType.isInterface()) {
+        } else if (!Modifier.isFinal(targetType.getModifiers()) && expressionType.isInterface()) {
             return true;
         } else if (!isAssignableTo(targetType, expressionType) && !implementsInterfaceOrIsSubclassOf(expressionType, targetType)) {
             return false;
@@ -5679,7 +5685,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (variable instanceof FieldNode) {
                 ClassNode fieldType = variable.getOriginType();
                 if (isUsingGenericsOrIsArrayUsingGenerics(fieldType)) {
-                    boolean isStatic = (variable.getModifiers() & Opcodes.ACC_STATIC) != 0;
+                    boolean isStatic = Modifier.isStatic(variable.getModifiers());
                     ClassNode thisType = typeCheckingContext.getEnclosingClassNode(), declType = ((FieldNode) variable).getDeclaringClass();
                     Map<GenericsTypeName, GenericsType> placeholders = resolvePlaceHoldersFromDeclaration(thisType, declType, null, isStatic);
 

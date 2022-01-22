@@ -147,6 +147,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testFields3() {
+        addGroovySource '''\
+            |abstract class A {
+            |  private getF() { 'A' }
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |class C extends A {
+            |  public f = 'C'
+            |}
+            |'C' == new C().f
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('f'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, FIELD))
+    }
+
+    @Test
+    void testFields4() {
         String contents = '''\
             |class C {
             |  final x

@@ -731,6 +731,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic28() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  private String getString() {''}\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    print new Object() {\n" +
+            "      String toString() {\n" +
+            "        string.toLowerCase()\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
@@ -939,6 +962,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic6277() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class One {\n" +
+            "  private getX() { 'One' }\n" +
+            "}\n" +
+            "class Two extends One {\n" +
+            "  public x = 'Two'\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print(new Two().x)\n" + // Cannot call private method One#getX from class Main
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Two");
     }
 
     @Test
