@@ -225,7 +225,7 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
         innerClass.addConstructor(ACC_SYNTHETIC, parameters.toArray(Parameter.EMPTY_ARRAY), ClassNode.EMPTY_ARRAY, block);
     }
 
-    private boolean isStatic(InnerClassNode innerClass, VariableScope scope, ConstructorCallExpression call) {
+    private boolean isStatic(final ClassNode innerClass, final VariableScope scope, final ConstructorCallExpression call) {
         boolean isStatic = innerClass.isStaticClass();
         if (!isStatic) {
             if (currentMethod != null) {
@@ -253,6 +253,10 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
                 isStatic = currentField.isStatic();
             }
         }
+        // GRECLIPSE add -- GROOVY-8433: Category transform applies static
+        isStatic = isStatic || innerClass.getOuterClass().getAnnotations().stream()
+            .anyMatch(a -> a.getClassNode().getName().equals("groovy.lang.Category"));
+        // GRECLIPSE end
         return isStatic;
     }
 

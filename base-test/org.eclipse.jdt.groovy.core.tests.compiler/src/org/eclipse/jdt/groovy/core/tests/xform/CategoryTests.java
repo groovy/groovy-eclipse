@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
     public void testCategory0() {
         //@formatter:off
         String[] sources = {
-            "Demo.groovy",
+            "Main.groovy",
             "use(NumberCategory) {\n" +
             "  def dist = 300.meters\n" +
             "  \n" +
@@ -58,7 +58,7 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
     public void testCategory1() {
         //@formatter:off
         String[] sources = {
-            "Demo.groovy",
+            "Main.groovy",
             "use(NumberCategory) {\n" +
             "  def dist = 300.meters\n" +
             "  \n" +
@@ -89,7 +89,7 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
     public void testCategory2() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "assert new Plane().fly() ==\n" +
             "       \"I'm the Concorde and I fly!\"\n" +
             "assert new Submarine().dive() ==\n" +
@@ -139,11 +139,35 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "I'm the James Bond's vehicle and I dive!");
     }
 
+    @Test
+    public void testCategory8433() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "use(NumberCategory) {\n" +
+            "  print 1.something()\n" +
+            "}\n",
+
+            "NumberCategory.groovy",
+            "@Category(Number) class NumberCategory {\n" +
+            "  def something() {\n" +
+            "    String variable = 'works'\n" +
+            "    new Object() {\n" + // cast exception due to implicit first param "this"
+            "      String toString() { variable }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
     @Test // not a great test, needs work
     public void testCategory_STS3822() {
         //@formatter:off
         String[] sources = {
-            "bad.groovy",
+            "Bad.groovy",
             "@Category(C.class) \n" +
             "@ScriptMixin(C.class)\n" +
             "class Bad {\n" +
@@ -156,37 +180,37 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in bad.groovy (at line 1)\n" +
+            "1. ERROR in Bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
             "\t^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to\n" +
             "----------\n" +
-            "2. ERROR in bad.groovy (at line 1)\n" +
+            "2. ERROR in Bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
             "\t          ^\n" +
             "Groovy:unable to find class \'C.class\' for annotation attribute constant\n" +
             "----------\n" +
-            "3. ERROR in bad.groovy (at line 1)\n" +
+            "3. ERROR in Bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
             "\t          ^^^^^^^\n" +
             "Groovy:Only classes and closures can be used for attribute \'value\' in @groovy.lang.Category\n" +
             "----------\n" +
-            "4. ERROR in bad.groovy (at line 2)\n" +
+            "4. ERROR in Bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
             "\t^^^^^^^^^^^^\n" +
             "Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" +
             "----------\n" +
-            "5. ERROR in bad.groovy (at line 2)\n" +
+            "5. ERROR in Bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
             "\t ^^^^^^^^^^^\n" +
             "Groovy:unable to resolve class ScriptMixin for annotation\n" +
             "----------\n" +
-            "6. ERROR in bad.groovy (at line 2)\n" +
+            "6. ERROR in Bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
             "\t             ^\n" +
             "Groovy:unable to find class \'C.class\' for annotation attribute constant\n" +
             "----------\n" +
-            "7. ERROR in bad.groovy (at line 4)\n" +
+            "7. ERROR in Bad.groovy (at line 4)\n" +
             "\t@Override\n" +
             "\t^^^^^^^^^\n" +
             "Groovy:Method \'toString\' from class \'Bad\' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
