@@ -596,7 +596,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         //@formatter:off
         String contents =
             "java.util.regex.Pattern[] pats = [~/one/, ~/two/]\n" +
-            "pats.eachWithIndex { pat, idx ->\n" + // T <T> eachWithIndex(T self, Closure task)
+            "pats.eachWithIndex { pat, idx ->\n" + // <T> T eachWithIndex(T self, Closure task)
             "  \n" +
             "}\n";
         //@formatter:on
@@ -772,7 +772,17 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String contents =
             "1.each { it }\n";
         //@formatter:on
-        assertExprType(contents, "it", "java.lang.Object"); // not Integer because no @ClosureParams on this each
+        assertExprType(contents, "it", "java.lang.Integer");
+    }
+
+    @Test // GRECLIPSE-1131
+    public void testDGMClosure1a() {
+        //@formatter:off
+        String contents =
+            "1.each { i, x -> }\n"; // extra param
+        //@formatter:on
+        assertExprType(contents, "i", "java.lang.Integer");
+        assertExprType(contents, "x", "java.lang.Object");
     }
 
     @Test // GRECLIPSE-1131
@@ -781,7 +791,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String contents =
             "each { it }\n";
         //@formatter:on
-        assertExprType(contents, "it", "java.lang.Object"); // not Search because no @ClosureParams on this each
+        assertExprType(contents, "it", "Search");
     }
 
     @Test
@@ -869,13 +879,33 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGMClosure12() {
         //@formatter:off
         String contents =
+            "'string'.eachWithIndex { c, i -> }\n";
+        //@formatter:on
+        assertExprType(contents, "c", "java.lang.String");
+        assertExprType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure13() {
+        //@formatter:off
+        String contents =
+            "new byte[0].eachWithIndex { b, i -> }\n";
+        //@formatter:on
+        assertExprType(contents, "b", "java.lang.Byte");
+        assertExprType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure14() {
+        //@formatter:off
+        String contents =
             "[1:new Date()].eachWithIndex { key, val, i -> val }\n";
         //@formatter:on
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
-    public void testDGMClosure13() {
+    public void testDGMClosure15() {
         //@formatter:off
         String contents =
             "[1:new Date()].eachWithIndex { key, val, i -> key }\n";
@@ -884,7 +914,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure14() {
+    public void testDGMClosure16() {
         //@formatter:off
         String contents =
             "[1:new Date()].eachWithIndex { key, val, i -> i }\n";
@@ -893,7 +923,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure15() {
+    public void testDGMClosure17() {
         //@formatter:off
         String contents =
             "[1:new Date()].each { key, val -> key }\n";
@@ -902,7 +932,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure16() {
+    public void testDGMClosure18() {
         //@formatter:off
         String contents =
             "[1:new Date()].each { key, val -> val }\n";
@@ -911,7 +941,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure17() {
+    public void testDGMClosure19() {
         //@formatter:off
         String contents =
             "[1:new Date()].collect { key, val -> key }\n";
@@ -920,7 +950,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure18() {
+    public void testDGMClosure20() {
         //@formatter:off
         String contents =
             "[1:new Date()].collect { key, val -> val }\n";
@@ -929,7 +959,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure19() {
+    public void testDGMClosure21() {
         //@formatter:off
         String contents =
             "[1].unique { a, b -> b }\n";
@@ -938,7 +968,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure20() {
+    public void testDGMClosure22() {
         //@formatter:off
         String contents =
             "[1].unique { a, b -> a }\n";
@@ -947,7 +977,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure21() {
+    public void testDGMClosure23() {
         //@formatter:off
         String contents =
             "[1f: 1d].collectEntries { key, value -> [value, key] }\n";
@@ -956,7 +986,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMClosure22() {
+    public void testDGMClosure24() {
         //@formatter:off
         String contents =
             "[1f: 1d].collectEntries { key, value -> [value, key] }\n";
@@ -965,7 +995,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/810
-    public void testDGMClosure23() {
+    public void testDGMClosure25() {
         //@formatter:off
         String contents =
             "class Bar { Number number }\n" +

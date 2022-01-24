@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1448,6 +1448,40 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}\n";
         //@formatter:on
         assertType(contents, "list", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test
+    public void testClosureParamsAnnotation5() {
+        //@formatter:off
+        String contents =
+            "import groovy.transform.stc.*\n" +
+            "class C {\n" + // cannot use primitives in options of FromString
+            "  def m(@ClosureParams(value=FromString, options='int,char') Closure c) {\n" +
+            "  }\n" +
+            "  def test() {\n" +
+            "    m { x, y -> }\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "x", "java.lang.Object");
+        assertType(contents, "y", "java.lang.Object");
+    }
+
+    @Test
+    public void testClosureParamsAnnotation6() {
+        //@formatter:off
+        String contents =
+            "import groovy.transform.stc.*\n" +
+            "class C {\n" +
+            "  def m(@ClosureParams(value=SimpleType, options=['int','char']) Closure c) {\n" +
+            "  }\n" +
+            "  def test() {\n" +
+            "    m { x, y -> }\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "x", "java.lang.Integer");
+        assertType(contents, "y", "java.lang.Character");
     }
 
     @Test

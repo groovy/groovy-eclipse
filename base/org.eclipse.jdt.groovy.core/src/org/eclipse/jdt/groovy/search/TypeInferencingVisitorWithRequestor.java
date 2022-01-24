@@ -979,8 +979,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (node.isParameterSpecified()) {
                 Parameter[] parameters = node.getParameters();
                 for (int i = 0, n = parameters.length; i < n; i += 1) {
-                    // only change the type of the parameter if it's not explicitly defined
-                    if (parameters[i].isDynamicTyped() && (inferredParamTypes[i].isGenericsPlaceHolder() || !inferredParamTypes[i].equals(VariableScope.OBJECT_CLASS_NODE))) {
+                    // only change the parameter's type if it's not declared explicitly
+                    if (parameters[i].isDynamicTyped() && inferredParamTypes[i] != null &&
+                            (!inferredParamTypes[i].equals(VariableScope.OBJECT_CLASS_NODE) || inferredParamTypes[i].isGenericsPlaceHolder())) {
                         parameters[i].setType(inferredParamTypes[i]);
                     }
                 }
@@ -2491,14 +2492,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(methodNode, sourceUnit, resolver.compilationUnit, opts, (Expression) cat.call);
                             if (isNotEmpty(sigs)) {
                                 for (ClassNode[] sig : sigs) {
-                                    if (sig.length == inferredTypes.length) {
-                                        GenericsType[] generics = getMethodCallGenericsTypes((Expression) cat.call);
-                                        List<ClassNode> arguments = GroovyUtils.getParameterTypes(methodNode.getParameters());
-                                        GenericsMapper map = GenericsMapper.gatherGenerics(arguments, cat.declaringType, methodNode.getOriginal(), generics);
+                                    if (sig != null && sig.length == inferredTypes.length) {
+                                        GenericsType[]  typeArgs = getMethodCallGenericsTypes((Expression) cat.call);
+                                        List<ClassNode> pTypes = GroovyUtils.getParameterTypes(methodNode.getParameters());
+                                        GenericsMapper  mapper = GenericsMapper.gatherGenerics(pTypes, cat.declaringType, methodNode.getOriginal(), typeArgs);
 
                                         for (int i = 0, n = sig.length; i < n; i += 1) {
                                             // TODO: If result still has generics, use Object or ???
-                                            inferredTypes[i] = VariableScope.resolveTypeParameterization(map, VariableScope.clone(sig[i]));
+                                            inferredTypes[i] = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(sig[i]));
                                         }
 
                                         break; // TODO: What if more than one signature matches parameter count?
@@ -2509,6 +2510,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             log(e, "Error processing @ClosureParams of %s#%s", methodNode.getDeclaringClass().getName(), methodNode.getName());
                         }
                     });
+                    // each[WithIndex] may leverage "self.iterator()", which cannot be described with @ClosureParams annotation attributes
+                    if (inferredTypes[0] == null && ("each".equals(methodNode.getName()) || "eachWithIndex".equals(methodNode.getName()))) {
+                        inferredTypes[0] = GroovyUtils.getWrapperTypeIfPrimitive(VariableScope.extractElementType(cat.declaringType));
+                        if (inferredTypes.length > 1 && !"each".equals(methodNode.getName()))
+                            inferredTypes[1] = VariableScope.INTEGER_CLASS_NODE; // the index
+                    }
                 }
 
                 if (inferredTypes[0] == null) {
