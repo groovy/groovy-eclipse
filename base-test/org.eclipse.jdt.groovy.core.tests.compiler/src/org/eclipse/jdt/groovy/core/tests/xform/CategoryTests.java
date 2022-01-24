@@ -103,40 +103,75 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
 
             "FlyingAbility.groovy",
             "@Category(Vehicle) class FlyingAbility {\n" +
-            "    def fly() { \"I'm the ${name} and I fly!\" }\n" +
+            "  def fly() { \"I'm the ${name} and I fly!\" }\n" +
             "}\n",
 
             "DivingAbility.groovy",
             "@Category(Vehicle) class DivingAbility {\n" +
-            "    def dive() { \"I'm the ${name} and I dive!\" }\n" +
+            "  def dive() { \"I'm the ${name} and I dive!\" }\n" +
             "}\n",
 
             "Vehicle.java",
             "interface Vehicle {\n" +
-            "    String getName();\n" +
+            "  String getName();\n" +
             "}\n",
 
             "Submarine.groovy",
             "@Mixin(DivingAbility)\n" +
             "class Submarine implements Vehicle {\n" +
-            "    String getName() { \"Yellow Submarine\" }\n" +
+            "  String getName() { \"Yellow Submarine\" }\n" +
             "}\n",
 
             "Plane.groovy",
             "@Mixin(FlyingAbility)\n" +
             "class Plane implements Vehicle {\n" +
-            "    String getName() { \"Concorde\" }\n" +
+            "  String getName() { \"Concorde\" }\n" +
             "}\n",
 
             "JamesBondVehicle.groovy",
             "@Mixin([DivingAbility, FlyingAbility])\n" +
             "class JamesBondVehicle implements Vehicle {\n" +
-            "    String getName() { \"James Bond's vehicle\" }\n" +
+            "  String getName() { \"James Bond's vehicle\" }\n" +
             "}\n",
         };
         //@formatter:on
 
         runConformTest(sources, "I'm the James Bond's vehicle and I dive!");
+    }
+
+    @Test
+    public void testCategory3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "use(NumberCategory) {\n" +
+            "  print 1.answer\n" +
+            "}\n",
+
+            "NumberCategory.groovy",
+            "@Category(java.lang.Number)\n" +
+            "class NumberCategory {\n" +
+            "  int getAnswer() {\n" +
+            "    helper()\n" +
+            "  }\n" +
+            "  private static int helper() {\n" +
+            "    return 42\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+
+        checkGCUDeclaration("NumberCategory.groovy",
+            "public @Category(java.lang.Number) class NumberCategory {\n" +
+            "  public @groovy.transform.Generated NumberCategory() {\n" +
+            "  }\n" +
+            "  public static int getAnswer(java.lang.Number $this) {\n" +
+            "  }\n" +
+            "  private static int helper() {\n" + // no param
+            "  }\n" +
+            "}\n");
     }
 
     @Test
@@ -163,17 +198,18 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // not a great test, needs work
+    @Test // https://jira.spring.io/browse/STS-3822
     public void testCategory_STS3822() {
         //@formatter:off
         String[] sources = {
             "Bad.groovy",
-            "@Category(C.class) \n" +
+            "@Category(C.class)\n" +
             "@ScriptMixin(C.class)\n" +
             "class Bad {\n" +
             "  @Override\n" +
-            "  public String toString()\n" +
-            "  { return \"Bad [takeI()=\" + takeI() + \"]\"; }\n" +
+            "  public String toString() {\n" +
+            "    'Bad [takeI()=' + takeI() + ']'\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on
@@ -181,19 +217,19 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Bad.groovy (at line 1)\n" +
-            "\t@Category(C.class) \n" +
+            "\t@Category(C.class)\n" +
             "\t^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to\n" +
+            "Groovy:@groovy.lang.Category must define 'value' which is the class to apply this category to\n" +
             "----------\n" +
             "2. ERROR in Bad.groovy (at line 1)\n" +
-            "\t@Category(C.class) \n" +
+            "\t@Category(C.class)\n" +
             "\t          ^\n" +
-            "Groovy:unable to find class \'C.class\' for annotation attribute constant\n" +
+            "Groovy:unable to find class 'C.class' for annotation attribute constant\n" +
             "----------\n" +
             "3. ERROR in Bad.groovy (at line 1)\n" +
-            "\t@Category(C.class) \n" +
+            "\t@Category(C.class)\n" +
             "\t          ^^^^^^^\n" +
-            "Groovy:Only classes and closures can be used for attribute \'value\' in @groovy.lang.Category\n" +
+            "Groovy:Only classes and closures can be used for attribute 'value' in @groovy.lang.Category\n" +
             "----------\n" +
             "4. ERROR in Bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
@@ -208,12 +244,12 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "6. ERROR in Bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
             "\t             ^\n" +
-            "Groovy:unable to find class \'C.class\' for annotation attribute constant\n" +
+            "Groovy:unable to find class 'C.class' for annotation attribute constant\n" +
             "----------\n" +
             "7. ERROR in Bad.groovy (at line 4)\n" +
             "\t@Override\n" +
             "\t^^^^^^^^^\n" +
-            "Groovy:Method \'toString\' from class \'Bad\' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
+            "Groovy:Method 'toString' from class 'Bad' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
             "----------\n");
     }
 }

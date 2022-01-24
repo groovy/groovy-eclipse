@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -361,7 +361,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         if (argumentTypes.size() == parameterTypeNames.length) {
             for (int i = 0; i < parameterTypeNames.length; i += 1) {
                 if (parameterTypeNames[i] == null) continue; // skip check
-                ClassNode source = argumentTypes.get(i), target = ConstructorReferenceSearchRequestor.makeType(parameterTypeNames[i]);
+                ClassNode source = argumentTypes.get(i), target = GroovyUtils.makeType(parameterTypeNames[i]);
                 if (Boolean.FALSE.equals(SimpleTypeLookup.isTypeCompatible(source, target))) {
                     return false;
                 }

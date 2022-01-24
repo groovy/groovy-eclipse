@@ -3762,12 +3762,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |import java.util.regex.Pattern
             |@Category(Number)
             |class X {
-            |    void method(String string) {
-            |      println this
-            |    }
-            |    void method(Pattern regex) {
-            |      println this
-            |    }
+            |  void method(String string) {
+            |    println this
+            |  }
+            |  void method(Pattern regex) {
+            |    println this
+            |  }
             |}
             |'''.stripMargin()
 

@@ -1549,31 +1549,36 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int modifiers = getModifiers(methodNode);
                 Parameter[] params = methodNode.getParameters();
                 ClassNode returnType = methodNode.getReturnType();
-                // present 'static main(args)' as 'static void main(String[] args)' -- not as 'static Object main(Object args)'
-                if (Flags.isStatic(modifiers) && "main".equals(methodNode.getName()) && params != null && params.length == 1) {
-                    Parameter p = params[0];
-                    ClassNode pType = p.getType();
-                    if (pType == null || (pType.equals(ClassHelper.OBJECT_TYPE) && !pType.isGenericsPlaceHolder())) {
-                        params = new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), p.getName())};
-                        params[0].addAnnotations(p.getAnnotations());
-                        params[0].setModifiers(p.getModifiers());
-                        params[0].setSourcePosition(p);
-                        if (pType != null) {
-                            params[0].getType().setSourcePosition(pType);
-                            params[0].getType().addTypeAnnotations(pType.getTypeAnnotations());
-                        }
-                        if (returnType.equals(ClassHelper.OBJECT_TYPE)) {
-                            returnType = ClassHelper.VOID_TYPE;
+                if (Flags.isStatic(modifiers)) {
+                    // present 'static main(args)' as 'static void main(String[] args)' to JDT model
+                    if ("main".equals(methodNode.getName()) && params != null && params.length == 1) {
+                        Parameter p = params[0];
+                        ClassNode pType = p.getType();
+                        if (pType == null || (pType.equals(ClassHelper.OBJECT_TYPE) && !pType.isGenericsPlaceHolder())) {
+                            params = new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), p.getName())};
+                            params[0].addAnnotations(p.getAnnotations());
+                            params[0].setModifiers(p.getModifiers());
+                            params[0].setSourcePosition(p);
+                            if (pType != null) {
+                                params[0].getType().setSourcePosition(pType);
+                                params[0].getType().addTypeAnnotations(pType.getTypeAnnotations());
+                            }
+                            if (returnType.equals(ClassHelper.OBJECT_TYPE)) {
+                                returnType = ClassHelper.VOID_TYPE;
+                            }
                         }
                     }
-                }
-
-                for (AnnotationNode annotation : classNode.getAnnotations()) {
-                    if (isType("groovy.lang.Category", annotation.getClassNode().getName())) {
-                        ClassNode selfType = ClassHelper.make(java.util.Optional.ofNullable(annotation.getMember("value")).map(Expression::getText).orElse(ClassHelper.OBJECT));
-                        params = (Parameter[]) ArrayUtils.add(params, 0, new Parameter(selfType, "$this"));
-                        modifiers |= Flags.AccStatic;
-                        break;
+                } else {
+                    // present as static and with self parameter if @Category(T)
+                    for (AnnotationNode annotation : classNode.getAnnotations()) {
+                        if (isType("groovy.lang.Category", annotation.getClassNode().getName())) {
+                            Object value = createAnnotationMemberExpression(annotation.getMember("value"), ClassHelper.CLASS_Type);
+                            value = (value instanceof ClassLiteralAccess ? ((ClassLiteralAccess) value).type : ClassHelper.OBJECT);
+                            Parameter firstParam = new Parameter(GroovyUtils.makeType(value.toString()), "$this");
+                            params = (Parameter[]) ArrayUtils.add(params, 0, firstParam);
+                            modifiers |= Flags.AccStatic;
+                            break;
+                        }
                     }
                 }
 
@@ -1709,13 +1714,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return annos[0];
 
             } else if (expr instanceof VariableExpression) {
-                String name = ((VariableExpression) expr).getName();
-                // could be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
-                return new SingleNameReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1));
+                char[] name = ((VariableExpression) expr).getName().toCharArray();
+                long   pos  = toPos(expr.getStart(), expr.getEnd() - 1);
+                if (ClassHelper.CLASS_Type.equals(type)) {
+                    return new ClassLiteralAccess(expr.getEnd() - 1, new SingleTypeReference(name, pos));
+                }
+                // could still be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
+                return new SingleNameReference(name, pos);
 
             } else if (expr instanceof PropertyExpression) {
                 PropertyExpression prop = (PropertyExpression) expr;
-                int propertyEnd = prop.getProperty().getEnd() - 1;
+                int propertyEnd =  prop.getProperty().getEnd() - 1;
+                if (ClassHelper.CLASS_Type.equals(type) && !"class".equals(prop.getPropertyAsString())) {
+                    prop = new PropertyExpression(expr, "class");
+                }
                 if ("class".equals(prop.getPropertyAsString())) {
                     return new ClassLiteralAccess(propertyEnd, createTypeReferenceForClassLiteral(prop));
                 }
@@ -1753,6 +1765,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     expression.sourceStart = expr.getStart();
                     expression.sourceEnd = expr.getEnd() - 1;
                     return expression;
+                } else if (be.getOperation().getType() == Types.LEFT_SQUARE_BRACKET && be.getRightExpression() instanceof ListExpression) {
+                    return new ClassLiteralAccess(expr.getEnd() - 1, createTypeReferenceForClassLiteral(new PropertyExpression(expr, "class")));
                 }
                 // or annotation may be something like "@Tag(value = List<String)" (incomplete generics specification)
             } else {
@@ -2056,21 +2070,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private TypeReference createTypeReferenceForArrayName(char[] typeName, ClassNode typeNode, int dim, int sourceStart, int sourceEnd) {
+            int nameEnd = (sourceEnd == -2 ? -1 : typeNode.getEnd());
             if (!typeNode.isUsingGenerics()) {
                 if (CharOperation.indexOf('.', typeName) < 0) {
                     // For a single array reference, for example 'String[]' start will be 'S' and end will be the char after ']'. When the
-                    // ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the ']';
+                    // ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the last ']';
                     // originalSourceEnd - the 'g'
-                    ArrayTypeReference tr = new ArrayTypeReference(typeName, dim, toPos(sourceStart, sourceEnd - 1));
-                    tr.originalSourceEnd = typeNode.getEnd() - 1;
+                    ArrayTypeReference tr = new ArrayTypeReference(typeName, dim, toPos(sourceStart, nameEnd - 1));
+                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
                     return tr;
                 } else {
                     // For a qualified array reference, for example 'java.lang.Number[][]' start will be 'j' and end will be the char after ']'.
                     // When the ArrayQualifiedTypeReference is built we need these positions for the result: sourceStart - the 'j'; sourceEnd - the
-                    // final ']'; the positions computed for the reference components would be j..a l..g and N..r
+                    // last ']'; the positions computed for the reference components would be j..a l..g and N..r
                     char[][] compoundName = CharOperation.splitOn('.', typeName);
-                    ArrayQualifiedTypeReference tr = new ArrayQualifiedTypeReference(compoundName, dim,
-                        positionsFor(compoundName, sourceStart, (sourceEnd == -2 ? -2 : sourceEnd - dim * 2)));
+                    ArrayQualifiedTypeReference tr = new ArrayQualifiedTypeReference(compoundName, dim, positionsFor(compoundName, sourceStart, nameEnd - 1));
                     tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
                     return tr;
                 }
@@ -2082,15 +2096,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 if (CharOperation.indexOf('.', typeName) < 0) {
-                    ParameterizedSingleTypeReference tr = new ParameterizedSingleTypeReference(typeName, typeArgs, dim, toPos(sourceStart, sourceEnd - 1));
-                    tr.originalSourceEnd = typeNode.getEnd() - 1;
+                    ParameterizedSingleTypeReference tr = new ParameterizedSingleTypeReference(typeName, typeArgs, dim, toPos(sourceStart, nameEnd - 1));
+                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
                     return tr;
                 } else {
                     char[][] compoundName = CharOperation.splitOn('.', typeName);
                     TypeReference[][] compoundArgs = new TypeReference[compoundName.length][];
                     compoundArgs[compoundName.length - 1] = typeArgs;
-                    ParameterizedQualifiedTypeReference tr = new ParameterizedQualifiedTypeReference(compoundName, compoundArgs, dim,
-                        positionsFor(compoundName, sourceStart, (sourceEnd == -2 ? -2 : sourceEnd - dim * 2)));
+                    ParameterizedQualifiedTypeReference tr = new ParameterizedQualifiedTypeReference(compoundName, compoundArgs, dim, positionsFor(compoundName, sourceStart, nameEnd - 1));
                     tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
                     return tr;
                 }
@@ -2098,9 +2111,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private TypeReference createTypeReferenceForClassLiteral(PropertyExpression expression) {
+            int arrayDims = 0;
             // FIXASC ignore type parameters for now
             Expression candidate = expression.getObjectExpression();
-            List<char[]> nameParts = new LinkedList<>();
+            while (candidate instanceof BinaryExpression) {
+                assert ((BinaryExpression) candidate).getOperation().getType() == Types.LEFT_SQUARE_BRACKET;
+                assert ((BinaryExpression) candidate).getRightExpression() instanceof ListExpression;
+                candidate = ((BinaryExpression) candidate).getLeftExpression();
+                arrayDims += 1;
+            }
+
+            List<char[]> nameParts = new ArrayList<>(8);
             while (candidate instanceof PropertyExpression) {
                 nameParts.add(0, ((PropertyExpression) candidate).getPropertyAsString().toCharArray());
                 candidate = ((PropertyExpression) candidate).getObjectExpression();
@@ -2109,13 +2130,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 nameParts.add(0, ((VariableExpression) candidate).getName().toCharArray());
             }
             char[][] namePartsArr = nameParts.toArray(new char[nameParts.size()][]);
-            long[] poss = positionsFor(namePartsArr, expression.getObjectExpression().getStart(), expression.getObjectExpression().getEnd());
+            long[] poss = positionsFor(namePartsArr, expression.getObjectExpression().getStart(), expression.getObjectExpression().getEnd() - (arrayDims * 2));
 
             TypeReference ref;
             if (namePartsArr.length > 1) {
-                ref = new QualifiedTypeReference(namePartsArr, poss);
+                if (arrayDims > 0) {
+                    ref = new ArrayQualifiedTypeReference(namePartsArr, arrayDims, poss);
+                    ref.sourceEnd = expression.getObjectExpression().getEnd() - 1;
+                } else {
+                    ref = new QualifiedTypeReference(namePartsArr, poss);
+                }
             } else if (namePartsArr.length == 1) {
-                ref = new SingleTypeReference(namePartsArr[0], poss[0]);
+                if (arrayDims > 0) {
+                    ref = new ArrayTypeReference(namePartsArr[0], arrayDims, poss[0]);
+                    ref.sourceEnd = expression.getObjectExpression().getEnd() - 1;
+                } else {
+                    ref = new SingleTypeReference(namePartsArr[0], poss[0]);
+                }
             } else { // should not happen
                 ref = TypeReference.baseTypeReference(TypeIds.T_void, 0);
             }

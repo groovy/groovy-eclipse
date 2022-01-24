@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -838,6 +838,75 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testClassLiteralAttributeValue4() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@Category(String[])\n" +
+            "class C {\n" +
+            "  def m() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public @Category(String[].class) class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public static java.lang.Object m(String... $this) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testClassLiteralAttributeValue5() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@Category(String[].class)\n" +
+            "class C {\n" +
+            "  def m() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public @Category(String[].class) class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public static java.lang.Object m(String... $this) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testClassLiteralAttributeValue6() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@Category(java.lang.String[][].class)\n" +
+            "class C {\n" +
+            "  def m() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public @Category(java.lang.String[][].class) class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public static java.lang.Object m(java.lang.String[]... $this) {\n" +
+            "  }\n" +
+            "}\n");
     }
 
     @Test

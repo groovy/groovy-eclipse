@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.makeType;
+
 import java.util.Optional;
 import java.util.function.Function;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -141,13 +142,5 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
             return true;
         }
         return false;
-    }
-
-    protected static ClassNode makeType(String typeName) {
-        int i = typeName.indexOf('[');
-        if (i < 0) {
-            return ClassHelper.make(typeName);
-        }
-        return makeType(typeName.substring(0, i)).makeArray();
     }
 }
