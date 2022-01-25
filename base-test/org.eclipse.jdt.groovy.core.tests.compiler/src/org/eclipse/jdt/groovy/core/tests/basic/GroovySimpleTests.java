@@ -7084,6 +7084,42 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
+    @Test
+    public void testVoidMethodParameter() {
+        //@formatter:off
+        String[] sources = {
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  void m(void p) {}\n" +
+            "}\n",
+
+            "Pojo.java",
+            "class Pojo {\n" +
+            "  void m(void p) {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Pogo.groovy (at line 2)\n" +
+            "\tvoid m(void p) {}\n" +
+            "\t     ^^^^^^^^^\n" +
+            "void is an invalid type for the parameter p of a method\n" +
+            "----------\n" +
+            "2. ERROR in Pogo.groovy (at line 2)\n" +
+            "\tvoid m(void p) {}\n" +
+            "\t            ^\n" +
+            "Groovy:The parameter 'p' in method 'void m(void)' has invalid type void\n" +
+            "----------\n" +
+            "----------\n" +
+            "1. ERROR in Pojo.java (at line 2)\n" +
+            "\tvoid m(void p) {}\n" +
+            "\t     ^^^^^^^^^\n" +
+            "void is an invalid type for the parameter p of a method\n" +
+            "----------\n");
+    }
+
     //--------------------------------------------------------------------------
 
     private void assertEventCount(int expectedCount, EventListener listener) {

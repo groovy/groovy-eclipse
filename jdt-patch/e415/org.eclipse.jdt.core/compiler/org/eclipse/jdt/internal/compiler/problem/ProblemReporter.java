@@ -1161,7 +1161,7 @@ public void anonymousClassCannotExtendFinalClass(TypeReference reference, TypeBi
 		reference.sourceEnd);
 }
 public void argumentTypeCannotBeVoid(ASTNode methodDecl, Argument arg) {
-	String[] arguments = new String[] { new String(arg.name) };
+	String[] arguments = {null, new String(arg.name)}; // GROOVY edit
 	this.handle(
 		IProblem.ArgumentTypeCannotBeVoid,
 		arguments,
