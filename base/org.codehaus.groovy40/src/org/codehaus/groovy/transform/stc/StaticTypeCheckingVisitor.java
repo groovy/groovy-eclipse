@@ -1713,18 +1713,30 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return foundGetterOrSetter;
     }
 
+    /* GRECLIPSE edit
+    private static boolean hasAccessToField(final ClassNode accessor, final FieldNode field) {
+        if (field.isPublic() || accessor.equals(field.getDeclaringClass())) {
+            return true;
+        }
+        if (field.isProtected()) {
+            return accessor.isDerivedFrom(field.getDeclaringClass());
+        } else {
+            return !field.isPrivate() && Objects.equals(accessor.getPackageName(), field.getDeclaringClass().getPackageName());
+        }
+    }
+    */
     private static boolean hasAccessToMember(final ClassNode accessor, final ClassNode receiver, final int modifiers) {
         if (Modifier.isPublic(modifiers)
                 || accessor.equals(receiver)
                 || accessor.getOuterClasses().contains(receiver)) {
             return true;
         }
-        if (Modifier.isProtected(modifiers)) {
-            return accessor.isDerivedFrom(receiver);
-        } else {
-            return !Modifier.isPrivate(modifiers) && Objects.equals(accessor.getPackageName(), receiver.getPackageName());
+        if (!Modifier.isPrivate(modifiers) && Objects.equals(accessor.getPackageName(), receiver.getPackageName())) {
+            return true;
         }
+        return Modifier.isProtected(modifiers) && accessor.isDerivedFrom(receiver);
     }
+    // GRECLIPSE end
 
     private MethodNode findGetter(final ClassNode current, String name, final boolean searchOuterClasses) {
         MethodNode getterMethod = current.getGetterMethod(name);

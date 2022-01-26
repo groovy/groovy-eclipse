@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -655,6 +655,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "A1B2C3");
+    }
+
+    @Test
+    public void testTypeChecked6277() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def test(Pogo pogo) {\n" +
+            "  def x = pogo.x;\n" +
+            "  x.toLowerCase()\n" +
+            "}\n" +
+            "print test(new Pogo())\n",
+
+            "p/Pogo.groovy",
+            "package p\n" +
+            "class Pogo {\n" +
+            "  protected String getX() { 'Works' }" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 
     @Test

@@ -2060,11 +2060,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (Modifier.isPublic(modifiers) || sender.equals(receiver) || sender.getOuterClasses().contains(receiver)) {
             return true;
         }
-        if (Modifier.isProtected(modifiers)) {
-            return sender.isDerivedFrom(receiver);
-        } else {
-            return !Modifier.isPrivate(modifiers) && Objects.equals(sender.getPackageName(), receiver.getPackageName());
+        if (!Modifier.isPrivate(modifiers) && Objects.equals(sender.getPackageName(), receiver.getPackageName())) {
+            return true;
         }
+        return Modifier.isProtected(modifiers) && sender.isDerivedFrom(receiver);
     }
     // GRECLIPSE end
 
@@ -2221,7 +2220,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (field == null || !returnTrueIfFieldExists) return false;
         if (visitor != null) visitor.visitField(field);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
-        // GRECLIPSE add
+        // GRECLIPSE add -- GROOVY-8999
         boolean accessible = hasAccessToMember(isSuperExpression(expressionToStoreOn.getObjectExpression()) ? typeCheckingContext.getEnclosingClassNode() : receiver, field.getDeclaringClass(), field.getModifiers());
         if (expressionToStoreOn instanceof AttributeExpression) {
             if (!accessible) {
