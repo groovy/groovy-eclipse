@@ -511,7 +511,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "}\n" +
             "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
-            "  this.m { Number n ->\n" +
+            "  this." + (isAtLeastGroovy(40) ? "<Number>" : "" ) + "m { Number n ->\n" + // TODO: GROOVY-10436
             "    n?.toBigInteger()\n" +
             "  }\n" +
             "}\n" +

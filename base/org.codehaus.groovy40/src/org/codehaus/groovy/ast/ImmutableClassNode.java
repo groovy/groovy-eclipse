@@ -157,7 +157,7 @@ public class ImmutableClassNode extends ClassNode {
     public void setPermittedSubclasses(List<ClassNode> l) {}
 
     @Override
-    public void setRecordComponentNodes(List<RecordComponentNode> l) {}
+    public void setRecordComponents(List<RecordComponentNode> l) {}
 
     //public void setRedirect(ClassNode cn) {}
 

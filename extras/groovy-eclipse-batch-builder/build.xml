@@ -149,6 +149,7 @@
         </fileset>
 
         <fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
+            <include name="${groovy.folder}/*-parser2.jar"/>
             <include name="${groovy.folder}/lib/groovy*.jar"/>
             <exclude name="${groovy.folder}/lib/*-javadoc.jar"/>
             <exclude name="${groovy.folder}/lib/groovy-test*.jar"/>

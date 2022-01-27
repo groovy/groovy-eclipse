@@ -35,7 +35,7 @@
         <file-match-pattern match-pattern="groovy/ast/expr/RangeExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/(Expression|Generics)Utils.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum|InnerClass|VariableScope)Visitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum)Visitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/(Extended)?Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/WriterController.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
@@ -56,7 +56,6 @@
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/(Category|Field|Log|NullCheck|RecordType|Sealed|TupleConstructor)ASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/NotYetImplemented.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|MethodCall)ExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingSupport.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingVisitor.java" include-pattern="false" />

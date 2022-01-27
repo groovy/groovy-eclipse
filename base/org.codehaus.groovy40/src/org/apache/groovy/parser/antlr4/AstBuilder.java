@@ -1599,6 +1599,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 .map(ClassExpression::new)
                                 .collect(Collectors.toList()));
                 sealedAnnotationNode.setMember("permittedSubclasses", permittedSubclassesListExpression);
+                configureAST(sealedAnnotationNode, ctx.PERMITS());
+                sealedAnnotationNode.setNodeMetaData("permits", true);
             }
             classNode.addAnnotation(sealedAnnotationNode);
         } else if (isNonSealed) {
