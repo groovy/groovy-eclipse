@@ -314,6 +314,19 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
+    void testAddImportForGenerics7() {
+        createGroovyType 'foo', 'Bar', 'interface Bar<T> extends Comparable<T> {}'
+
+        String contents = '''\
+            |class Baz<T extends Bar<? super T>> {
+            |  Set<T> getBars() {
+            |  }
+            |}
+            |'''
+        doAddImportTest(contents, ['import foo.Bar'])
+    }
+
+    @Test
     void testRemoveImport1() {
         String originalContents = '''\
             |import other.SecondClass

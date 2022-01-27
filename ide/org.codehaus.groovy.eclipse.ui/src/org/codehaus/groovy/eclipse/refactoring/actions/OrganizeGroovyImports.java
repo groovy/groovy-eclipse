@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -674,8 +674,12 @@ public class OrganizeGroovyImports {
                 return;
             }
             String name = getTypeName(type);
-
             GenericsType[] generics = type.getGenericsTypes();
+
+            if (isNotEmpty(generics) && !type.isGenericsPlaceHolder()) {
+                visitTypeParameters(generics, name);
+            }
+
             int start = node.getNameStart(),
                 until = node.getNameEnd()+1;
             if (until <= 1) {
@@ -695,11 +699,6 @@ public class OrganizeGroovyImports {
                 }
             }
             int length = until - start;
-
-            // check node's generics types
-            if (isNotEmpty(generics)) {
-                visitTypeParameters(generics, name);
-            }
 
             Matcher m = ALIASED_IMPORT.matcher(name);
             if (m.find()) {
