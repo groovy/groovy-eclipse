@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1195,11 +1195,8 @@ public void saveIndexes() {
 				if (monitor.exitReadEnterWrite()) {
 					try {
 						saveIndex(index);
-					} catch(IOException e) {
-						if (VERBOSE) {
-							Util.verbose("-> got the following exception while saving:", System.err); //$NON-NLS-1$
-							e.printStackTrace();
-						}
+					} catch(IOException | NegativeArraySizeException | OutOfMemoryError e) {
+						Util.log(e, "Failed to save JDT index: " + index.toString()); //$NON-NLS-1$
 						allSaved = false;
 					} finally {
 						monitor.exitWriteEnterRead();
@@ -1780,9 +1777,15 @@ class MetaIndexUpdateRequest implements IJob {
 			try {
 				updateMetaIndex(indexFile.getName(), index.getMetaIndexQualifications());
 			} catch (IOException e) {
-				if (JobManager.VERBOSE) {
-					Util.verbose("-> failed to update meta index for index " + indexFile.getName() + " because of the following exception:"); //$NON-NLS-1$ //$NON-NLS-2$
-					e.printStackTrace();
+				Throwable cause = e.getCause();
+				if (cause != null) {
+					Util.log(e, "Failed to update meta index"); //$NON-NLS-1$
+				} else {
+					if (JobManager.VERBOSE) {
+						Util.verbose("-> failed to update meta index for index " + indexFile.getName() //$NON-NLS-1$
+								+ " because of the following exception:"); //$NON-NLS-1$
+						e.printStackTrace();
+					}
 				}
 			}
 		}

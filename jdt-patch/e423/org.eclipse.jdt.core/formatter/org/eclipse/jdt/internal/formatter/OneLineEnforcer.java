@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 Mateusz Matela and others.
+ * Copyright (c) 2018, 2022 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
@@ -43,6 +44,9 @@ import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.RecordDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.SwitchCase;
+import org.eclipse.jdt.core.dom.SwitchExpression;
+import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -104,6 +108,24 @@ public class OneLineEnforcer extends ASTVisitor {
 	}
 
 	@Override
+	public void endVisit(SwitchExpression node) {
+		handleSwitchBody(node, node.getExpression(), node.statements());
+	}
+
+	@Override
+	public void endVisit(SwitchStatement node) {
+		handleSwitchBody(node, node.getExpression(), node.statements());
+	}
+
+	private void handleSwitchBody(ASTNode node, Expression expression, List<Statement> statements) {
+		if (statements.isEmpty() || ((SwitchCase) statements.get(0)).isSwitchLabeledRule()) {
+			List<Statement> items = statements.stream().filter(SwitchCase.class::isInstance)
+					.collect(Collectors.toList());
+			tryKeepOnOneLine(node, expression, items, this.options.keep_switch_body_block_on_one_line);
+		}
+	}
+
+	@Override
 	public void endVisit(Block node) {
 		ASTNode parent = node.getParent();
 		List<Statement> statements = node.statements();
@@ -153,10 +175,24 @@ public class OneLineEnforcer extends ASTVisitor {
 			int lastIndex = whileToken.getLineBreaksBefore() == 0 ? this.tm.lastIndexIn(parent, -1) : closeBraceIndex;
 			tryKeepOnOneLine(openBraceIndex, closeBraceIndex, lastIndex, statements, oneLineOption);
 			return;
+		} else if (isSwitchCaseWithArrow(node)) {
+			oneLineOption = this.options.keep_switch_case_with_arrow_on_one_line;
 		} else {
 			oneLineOption = this.options.keep_code_block_on_one_line;
 		}
 		tryKeepOnOneLine(node, null, statements, oneLineOption);
+	}
+
+	private boolean isSwitchCaseWithArrow(Block node) {
+		List<Statement> siblings;
+		if (node.getParent() instanceof SwitchStatement) {
+			siblings = ((SwitchStatement)node.getParent()).statements();
+		} else if (node.getParent() instanceof SwitchExpression) {
+			siblings = ((SwitchExpression)node.getParent()).statements();
+		} else {
+			return false;
+		}
+		return ((SwitchCase) siblings.get(0)).isSwitchLabeledRule();
 	}
 
 	@Override
@@ -213,8 +249,14 @@ public class OneLineEnforcer extends ASTVisitor {
 			prev = token;
 		}
 		if (!items.isEmpty()) {
-			if (items.get(0).getParent().getParent() instanceof LambdaExpression)
-				pos -= startPos; // lambda body could be put in a wrapped line, so only check its own width
+			ASTNode itemsParent = items.get(0).getParent();
+			if (itemsParent.getParent() instanceof LambdaExpression || itemsParent instanceof SwitchExpression
+					|| itemsParent.getParent() instanceof SwitchExpression
+					|| itemsParent.getParent() instanceof SwitchStatement) {
+				// lambda/case body could be put in a wrapped line, so only check its own width
+				// and re-wrap if necessary in WrapPreparator.handleOneLineEnforced()
+				pos -= this.tm.get(openBraceIndex).getIndent();
+			}
 			if (pos > this.options.page_width)
 				return; // line width limit exceeded
 		}

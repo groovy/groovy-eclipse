@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -149,6 +149,8 @@ public class DefaultCodeFormatterOptions {
 	public int alignment_for_enum_constants;
 	public int alignment_for_expressions_in_array_initializer;
 	public int alignment_for_expressions_in_for_loop_header;
+	public int alignment_for_expressions_in_switch_case_with_arrow;
+	public int alignment_for_expressions_in_switch_case_with_colon;
 	public int alignment_for_method_declaration;
 	public int alignment_for_module_statements;
 	// TODO following option cannot be set in preferences dialog (but it's used by old.CodeFormatter)
@@ -162,12 +164,14 @@ public class DefaultCodeFormatterOptions {
 	public int alignment_for_superinterfaces_in_enum_declaration;
 	public int alignment_for_superinterfaces_in_record_declaration;
 	public int alignment_for_superinterfaces_in_type_declaration;
+	public int alignment_for_switch_case_with_arrow;
 	public int alignment_for_throws_clause_in_constructor_declaration;
 	public int alignment_for_throws_clause_in_method_declaration;
 	public int alignment_for_type_arguments;
 	public int alignment_for_type_parameters;
 	public int alignment_for_resources_in_try;
 	public int alignment_for_union_type_in_multicatch;
+	public boolean align_selector_in_method_invocation_on_expression_first_line;
 
 	public boolean align_type_members_on_columns;
 	public boolean align_variable_declarations_on_columns;
@@ -287,6 +291,8 @@ public class DefaultCodeFormatterOptions {
 
 	public String keep_loop_body_block_on_one_line;
 	public String keep_if_then_body_block_on_one_line;
+	public String keep_switch_body_block_on_one_line;
+	public String keep_switch_case_with_arrow_on_one_line;
 	public String keep_code_block_on_one_line;
 	public String keep_lambda_body_block_on_one_line;
 	public String keep_method_body_on_one_line;
@@ -520,6 +526,7 @@ public class DefaultCodeFormatterOptions {
 	public boolean wrap_before_or_operator_multicatch;
 	public boolean wrap_before_conditional_operator;
 	public boolean wrap_before_assignment_operator;
+	public boolean wrap_before_switch_case_arrow_operator;
 	public boolean wrap_outer_expressions_when_nested;
 
 	public int initial_indentation_level;
@@ -592,6 +599,8 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_ENUM_CONSTANTS, getAlignment(this.alignment_for_enum_constants));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_ARRAY_INITIALIZER, getAlignment(this.alignment_for_expressions_in_array_initializer));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_FOR_LOOP_HEADER, getAlignment(this.alignment_for_expressions_in_for_loop_header));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_SWITCH_CASE_WITH_ARROW, getAlignment(this.alignment_for_expressions_in_switch_case_with_arrow));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_SWITCH_CASE_WITH_COLON, getAlignment(this.alignment_for_expressions_in_switch_case_with_colon));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_METHOD_DECLARATION, getAlignment(this.alignment_for_method_declaration));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_MODULE_STATEMENTS, getAlignment(this.alignment_for_module_statements));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_MULTIPLE_FIELDS, getAlignment(this.alignment_for_multiple_fields));
@@ -605,11 +614,13 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_SUPERINTERFACES_IN_ENUM_DECLARATION, getAlignment(this.alignment_for_superinterfaces_in_enum_declaration));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_SUPERINTERFACES_IN_RECORD_DECLARATION, getAlignment(this.alignment_for_superinterfaces_in_record_declaration));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_SUPERINTERFACES_IN_TYPE_DECLARATION, getAlignment(this.alignment_for_superinterfaces_in_type_declaration));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_SWITCH_CASE_WITH_ARROW, getAlignment(this.alignment_for_switch_case_with_arrow));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_THROWS_CLAUSE_IN_CONSTRUCTOR_DECLARATION, getAlignment(this.alignment_for_throws_clause_in_constructor_declaration));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_THROWS_CLAUSE_IN_METHOD_DECLARATION, getAlignment(this.alignment_for_throws_clause_in_method_declaration));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_TYPE_ARGUMENTS, getAlignment(this.alignment_for_type_arguments));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_TYPE_PARAMETERS, getAlignment(this.alignment_for_type_parameters));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_UNION_TYPE_IN_MULTICATCH, getAlignment(this.alignment_for_union_type_in_multicatch));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_SELECTOR_IN_METHOD_INVOCATION_ON_EXPRESSION_FIRST_LINE, this.align_selector_in_method_invocation_on_expression_first_line ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_TYPE_MEMBERS_ON_COLUMNS, this.align_type_members_on_columns ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_VARIABLE_DECLARATIONS_ON_COLUMNS, this.align_variable_declarations_on_columns ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_ASSIGNMENT_STATEMENTS_ON_COLUMNS, this.align_assignment_statements_on_columns ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
@@ -714,6 +725,8 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE, this.keep_annotation_declaration_on_one_line);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE, this.keep_anonymous_type_declaration_on_one_line);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE, this.keep_if_then_body_block_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_SWITCH_BODY_BLOCK_ON_ONE_LINE, this.keep_switch_body_block_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_SWITCH_CASE_WITH_ARROW_ON_ONE_LINE, this.keep_switch_case_with_arrow_on_one_line);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE, this.keep_lambda_body_block_on_one_line);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE, this.keep_loop_body_block_on_one_line);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_CODE_BLOCK_ON_ONE_LINE, this.keep_code_block_on_one_line);
@@ -974,6 +987,7 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_OR_OPERATOR_MULTICATCH, this.wrap_before_or_operator_multicatch ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_CONDITIONAL_OPERATOR, this.wrap_before_conditional_operator ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_ASSIGNMENT_OPERATOR, this.wrap_before_assignment_operator ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_SWITCH_CASE_ARROW_OPERATOR, this.wrap_before_switch_case_arrow_operator ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_DISABLING_TAG, this.disabling_tag == null ? Util.EMPTY_STRING : new String(this.disabling_tag));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ENABLING_TAG, this.enabling_tag == null ? Util.EMPTY_STRING : new String(this.enabling_tag));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_USE_ON_OFF_TAGS, this.use_tags ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
@@ -1111,6 +1125,10 @@ public class DefaultCodeFormatterOptions {
 		final Object alignmentForExpressionsInForLoopOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_FOR_LOOP_HEADER);
 		if (alignmentForExpressionsInForLoopOption != null)
 			this.alignment_for_expressions_in_for_loop_header = toInt(alignmentForExpressionsInForLoopOption, Alignment.M_NO_ALIGNMENT);
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_SWITCH_CASE_WITH_ARROW,
+				v -> this.alignment_for_expressions_in_switch_case_with_arrow = v);
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_SWITCH_CASE_WITH_COLON,
+				v -> this.alignment_for_expressions_in_switch_case_with_colon = v);
 
 		final Object alignmentForMethodDeclarationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_METHOD_DECLARATION);
 		if (alignmentForMethodDeclarationOption != null) {
@@ -1196,6 +1214,8 @@ public class DefaultCodeFormatterOptions {
 				this.alignment_for_superinterfaces_in_type_declaration = Alignment.M_NEXT_SHIFTED_SPLIT;
 			}
 		}
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_SWITCH_CASE_WITH_ARROW,
+				v -> this.alignment_for_switch_case_with_arrow = v);
 		final Object alignmentForThrowsClauseInConstructorDeclarationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_THROWS_CLAUSE_IN_CONSTRUCTOR_DECLARATION);
 		if (alignmentForThrowsClauseInConstructorDeclarationOption != null) {
 			try {
@@ -1228,6 +1248,8 @@ public class DefaultCodeFormatterOptions {
 				this.alignment_for_union_type_in_multicatch = Alignment.M_COMPACT_SPLIT;
 			}
 		}
+		setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_ALIGN_SELECTOR_IN_METHOD_INVOCATION_ON_EXPRESSION_FIRST_LINE, DefaultCodeFormatterConstants.TRUE,
+				v -> this.align_selector_in_method_invocation_on_expression_first_line = v);
 		final Object alignTypeMembersOnColumnsOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGN_TYPE_MEMBERS_ON_COLUMNS);
 		if (alignTypeMembersOnColumnsOption != null) {
 			this.align_type_members_on_columns = DefaultCodeFormatterConstants.TRUE.equals(alignTypeMembersOnColumnsOption);
@@ -1700,6 +1722,10 @@ public class DefaultCodeFormatterOptions {
 				v -> this.keep_anonymous_type_declaration_on_one_line = v);
 		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
 				v -> this.keep_if_then_body_block_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_SWITCH_BODY_BLOCK_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_switch_body_block_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_SWITCH_CASE_WITH_ARROW_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_switch_case_with_arrow_on_one_line = v);
 		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
 				v -> this.keep_loop_body_block_on_one_line = v);
 		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
@@ -2557,19 +2583,9 @@ public class DefaultCodeFormatterOptions {
 				v -> this.wrap_before_conditional_operator = v);
 		setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_ASSIGNMENT_OPERATOR, DefaultCodeFormatterConstants.TRUE,
 				v -> this.wrap_before_assignment_operator = v);
+		setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_SWITCH_CASE_ARROW_OPERATOR, DefaultCodeFormatterConstants.TRUE,
+				v -> this.wrap_before_switch_case_arrow_operator = v);
 
-		final Object wrapBeforeOrOperatorMulticatchOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_OR_OPERATOR_MULTICATCH);
-		if (wrapBeforeOrOperatorMulticatchOption != null) {
-			this.wrap_before_or_operator_multicatch = DefaultCodeFormatterConstants.TRUE.equals(wrapBeforeOrOperatorMulticatchOption);
-		}
-		final Object wrapBeforeConditionalOperatorOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_CONDITIONAL_OPERATOR);
-		if (wrapBeforeConditionalOperatorOption != null) {
-			this.wrap_before_conditional_operator = DefaultCodeFormatterConstants.TRUE.equals(wrapBeforeConditionalOperatorOption);
-		}
-		final Object wrapBeforeAssignmentOperatorOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_ASSIGNMENT_OPERATOR);
-		if (wrapBeforeAssignmentOperatorOption != null) {
-			this.wrap_before_assignment_operator= DefaultCodeFormatterConstants.TRUE.equals(wrapBeforeAssignmentOperatorOption);
-		}
 		final Object useTags = settings.get(DefaultCodeFormatterConstants.FORMATTER_USE_ON_OFF_TAGS);
 		if (useTags != null) {
 			this.use_tags = DefaultCodeFormatterConstants.TRUE.equals(useTags);
@@ -2787,6 +2803,10 @@ public class DefaultCodeFormatterOptions {
 			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK, JavaCore.INSERT,
 					v -> this.keep_if_then_body_block_on_one_line = insertToOneLine.get(v));
 		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_SWITCH_CASE_WITH_ARROW_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK, JavaCore.INSERT,
+					v -> this.keep_switch_case_with_arrow_on_one_line = insertToOneLine.get(v));
+		}
 		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE) == null) {
 			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK, JavaCore.INSERT,
 					v -> this.keep_loop_body_block_on_one_line = insertToOneLine.get(v));
@@ -2963,6 +2983,8 @@ public class DefaultCodeFormatterOptions {
 		this.alignment_for_enum_constants = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_expressions_in_array_initializer = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_expressions_in_for_loop_header = Alignment.M_NO_ALIGNMENT;
+		this.alignment_for_expressions_in_switch_case_with_arrow = Alignment.M_COMPACT_SPLIT;
+		this.alignment_for_expressions_in_switch_case_with_colon = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_method_declaration = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_module_statements = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_multiple_fields = Alignment.M_COMPACT_SPLIT;
@@ -2976,11 +2998,13 @@ public class DefaultCodeFormatterOptions {
 		this.alignment_for_superinterfaces_in_enum_declaration = Alignment.M_NEXT_SHIFTED_SPLIT;
 		this.alignment_for_superinterfaces_in_record_declaration = Alignment.M_NEXT_SHIFTED_SPLIT;
 		this.alignment_for_superinterfaces_in_type_declaration = Alignment.M_NEXT_SHIFTED_SPLIT;
+		this.alignment_for_switch_case_with_arrow = Alignment.M_COMPACT_SPLIT | Alignment.M_INDENT_BY_ONE;
 		this.alignment_for_throws_clause_in_constructor_declaration = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_throws_clause_in_method_declaration = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_type_arguments = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_type_parameters = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_union_type_in_multicatch = Alignment.M_COMPACT_SPLIT;
+		this.align_selector_in_method_invocation_on_expression_first_line = true;
 		this.align_type_members_on_columns = false;
 		this.align_variable_declarations_on_columns = false;
 		this.align_assignment_statements_on_columns = false;
@@ -3085,6 +3109,8 @@ public class DefaultCodeFormatterOptions {
 		this.keep_annotation_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_anonymous_type_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_if_then_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_switch_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_switch_case_with_arrow_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_lambda_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_loop_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_code_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
@@ -3314,6 +3340,7 @@ public class DefaultCodeFormatterOptions {
 		this.wrap_before_or_operator_multicatch = true;
 		this.wrap_before_conditional_operator = true;
 		this.wrap_before_assignment_operator = false;
+		this.wrap_before_switch_case_arrow_operator = false;
 		this.use_tags = true;
 		this.disabling_tag = DEFAULT_DISABLING_TAG;
 		this.enabling_tag = DEFAULT_ENABLING_TAG;
@@ -3357,6 +3384,8 @@ public class DefaultCodeFormatterOptions {
 		this.alignment_for_enum_constants = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_expressions_in_array_initializer = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_expressions_in_for_loop_header = Alignment.M_NO_ALIGNMENT;
+		this.alignment_for_expressions_in_switch_case_with_arrow = Alignment.M_COMPACT_SPLIT;
+		this.alignment_for_expressions_in_switch_case_with_colon = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_method_declaration = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_module_statements = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_multiple_fields = Alignment.M_COMPACT_SPLIT;
@@ -3370,11 +3399,13 @@ public class DefaultCodeFormatterOptions {
 		this.alignment_for_superinterfaces_in_enum_declaration = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_superinterfaces_in_record_declaration = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_superinterfaces_in_type_declaration = Alignment.M_COMPACT_SPLIT;
+		this.alignment_for_switch_case_with_arrow = Alignment.M_COMPACT_SPLIT | Alignment.M_INDENT_BY_ONE;
 		this.alignment_for_throws_clause_in_constructor_declaration = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_throws_clause_in_method_declaration = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_type_arguments = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_type_parameters = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_union_type_in_multicatch = Alignment.M_COMPACT_SPLIT;
+		this.align_selector_in_method_invocation_on_expression_first_line = true;
 		this.align_type_members_on_columns = false;
 		this.align_variable_declarations_on_columns = false;
 		this.align_assignment_statements_on_columns = false;
@@ -3479,6 +3510,8 @@ public class DefaultCodeFormatterOptions {
 		this.keep_annotation_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_anonymous_type_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_if_then_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_switch_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_switch_case_with_arrow_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_lambda_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_loop_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.keep_code_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
@@ -3708,6 +3741,7 @@ public class DefaultCodeFormatterOptions {
 		this.wrap_before_or_operator_multicatch = true;
 		this.wrap_before_conditional_operator = true;
 		this.wrap_before_assignment_operator = false;
+		this.wrap_before_switch_case_arrow_operator = false;
 		this.use_tags = true;
 		this.disabling_tag = DEFAULT_DISABLING_TAG;
 		this.enabling_tag = DEFAULT_ENABLING_TAG;

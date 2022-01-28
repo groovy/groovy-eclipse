@@ -18,7 +18,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -51,7 +51,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 		this.right = type;
 		this.relation = relation;
 	}
-	
+
 	ConstraintExpressionFormula(Expression expression, TypeBinding type, int relation, boolean isSoft) {
 		this(expression, type, relation);
 		this.isSoft = isSoft;
@@ -59,17 +59,17 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 
 	@Override
 	public Object reduce(InferenceContext18 inferenceContext) throws InferenceFailureException {
-		
+
 		if (this.relation == POTENTIALLY_COMPATIBLE) {
-			/* 15.12.2.1: ... The definition of potential applicability goes beyond a basic arity check to also take into account the presence and "shape" of functional interface 
-			   target types. In some cases involving type argument inference, a lambda expression appearing as a method invocation argument cannot be properly typed until after 
-			   overload resolution. These rules allow the form of the lambda expression to still be taken into account, discarding obviously incorrect target types that might 
+			/* 15.12.2.1: ... The definition of potential applicability goes beyond a basic arity check to also take into account the presence and "shape" of functional interface
+			   target types. In some cases involving type argument inference, a lambda expression appearing as a method invocation argument cannot be properly typed until after
+			   overload resolution. These rules allow the form of the lambda expression to still be taken into account, discarding obviously incorrect target types that might
 			   otherwise cause ambiguity errors.
 			*/
-			
+
 			return  this.left.isPotentiallyCompatibleWith(this.right, inferenceContext.scope) ? TRUE: FALSE;
 		}
-	
+
 		// JLS 18.2.1
 		if (this.right.isProperType(true)) {
 			if (this.left.isCompatibleWith(this.right, inferenceContext.scope) || this.left.isBoxingCompatibleWith(this.right, inferenceContext.scope)) {
@@ -98,7 +98,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 					return null; 				// -> proceed with no new constraints
 				MethodBinding method = previousMethod;
 				// ignore previous (inner) inference result and do a fresh start:
-				// avoid original(), since we only want to discard one level of instantiation 
+				// avoid original(), since we only want to discard one level of instantiation
 				// (method type variables - not class type variables)!
 				method = previousMethod.shallowOriginal();
 				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(invocation, invocation.arguments());
@@ -113,7 +113,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 					if (previousMethod instanceof ParameterizedGenericMethodBinding) {
 						// find the previous inner inference context to see what inference kind this invocation needs:
 						innerCtx = invocation.getInferenceContext((ParameterizedGenericMethodBinding) previousMethod);
-						if (innerCtx == null) { 
+						if (innerCtx == null) {
 							/* No inference context -> the method was likely manufactured by Scope.findExactMethod -> assume it wasn't really poly after all.
 							   -> proceed as for non-poly expressions.
 							*/
@@ -161,7 +161,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 					return TRUE; // assume inner inference will handle the fine print
 				if (!this.right.isFunctionalInterface(scope))
 					return FALSE;
-				
+
 				ReferenceBinding t = (ReferenceBinding) this.right;
 				ParameterizedTypeBinding withWildCards = InferenceContext18.parameterizedWithWildcard(t);
 				if (withWildCards != null) {
@@ -240,7 +240,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 	}
 
 	private boolean canBePolyExpression(Expression expr) {
-		// when inferring compatibility against a right type, the check isPolyExpression 
+		// when inferring compatibility against a right type, the check isPolyExpression
 		// must assume that expr occurs in s.t. like an assignment context:
 		ExpressionContext previousExpressionContext = expr.getExpressionContext();
 		if (previousExpressionContext == ExpressionContext.VANILLA_CONTEXT)
@@ -352,7 +352,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 		} else {
 			compileTimeReturn =  original.returnType;
 		}
-		return (original.typeVariables() != Binding.NO_TYPE_VARIABLES 
+		return (original.typeVariables() != Binding.NO_TYPE_VARIABLES
 				&& compileTimeReturn.mentionsAny(original.typeVariables(), -1));
 	}
 
@@ -397,8 +397,8 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 	}
 
 	/** Perform steps from JLS 18.5.2. needed for computing the bound set B3. */
-	static boolean inferPolyInvocationType(InferenceContext18 inferenceContext, InvocationSite invocationSite, TypeBinding targetType, MethodBinding method) 
-				throws InferenceFailureException 
+	static boolean inferPolyInvocationType(InferenceContext18 inferenceContext, InvocationSite invocationSite, TypeBinding targetType, MethodBinding method)
+				throws InferenceFailureException
 	{
 		TypeBinding[] typeArguments = invocationSite.genericTypeArguments();
 		if (typeArguments == null) {
@@ -499,7 +499,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 					return EMPTY_VARIABLE_LIST;
 				}
 				MethodBinding sam = targetType.getSingleAbstractMethod(context.scope, true);
-				final Set<InferenceVariable> variables = new HashSet<>();
+				final Set<InferenceVariable> variables = new LinkedHashSet<>();
 				if (lambda.argumentsTypeElided()) {
 					// i)
 					int len = sam.parameters.length;
@@ -524,22 +524,22 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			}
 			if (this.right.isFunctionalInterface(context.scope) && !this.left.isExactMethodReference()) {
 				MethodBinding sam = this.right.getSingleAbstractMethod(context.scope, true);
-				final Set<InferenceVariable> variables = new HashSet<>();
+				final Set<InferenceVariable> variables = new LinkedHashSet<>();
 				int len = sam.parameters.length;
 				for (int i = 0; i < len; i++) {
 					sam.parameters[i].collectInferenceVariables(variables);
 				}
 				return variables;
-			}			
+			}
 		} else if (this.left instanceof ConditionalExpression && this.left.isPolyExpression()) {
 			ConditionalExpression expr = (ConditionalExpression) this.left;
-			Set<InferenceVariable> variables = new HashSet<>();
+			Set<InferenceVariable> variables = new LinkedHashSet<>();
 			variables.addAll(new ConstraintExpressionFormula(expr.valueIfTrue, this.right, COMPATIBLE).inputVariables(context));
 			variables.addAll(new ConstraintExpressionFormula(expr.valueIfFalse, this.right, COMPATIBLE).inputVariables(context));
 			return variables;
 		} else if (this.left instanceof SwitchExpression && this.left.isPolyExpression()) {
 			SwitchExpression expr = (SwitchExpression) this.left;
-			Set<InferenceVariable> variables = new HashSet<>();
+			Set<InferenceVariable> variables = new LinkedHashSet<>();
 			for (Expression re : expr.resultExpressions) {
 				variables.addAll(new ConstraintExpressionFormula(re, this.right, COMPATIBLE).inputVariables(context));
 			}

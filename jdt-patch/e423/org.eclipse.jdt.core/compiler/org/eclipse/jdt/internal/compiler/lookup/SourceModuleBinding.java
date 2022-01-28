@@ -14,7 +14,7 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
 
@@ -46,7 +46,7 @@ public class SourceModuleBinding extends ModuleBinding {
 		this.requires = merge(this.requires, requires, javaBase, ModuleBinding[]::new);
 		this.requiresTransitive = merge(this.requiresTransitive, requiresTransitive, null, ModuleBinding[]::new);
 	}
-	
+
 	public void setUses(TypeBinding[] uses) {
 		this.uses = merge(this.uses, uses, null, TypeBinding[]::new);
 	}
@@ -56,13 +56,13 @@ public class SourceModuleBinding extends ModuleBinding {
 		resolveTypes();
 		return super.getUses();
 	}
-	
+
 	@Override
 	public TypeBinding[] getServices() {
 		resolveTypes();
 		return super.getServices();
 	}
-	
+
 	@Override
 	public TypeBinding[] getImplementations(TypeBinding binding) {
 		resolveTypes();
@@ -83,7 +83,7 @@ public class SourceModuleBinding extends ModuleBinding {
 
 	public void setImplementations(TypeBinding infBinding, Collection<TypeBinding> resolvedImplementations) {
 		if (this.implementations == null)
-			this.implementations = new HashMap<>();
+			this.implementations = new LinkedHashMap<>();
 		this.implementations.put(infBinding, resolvedImplementations.toArray(new TypeBinding[resolvedImplementations.size()]));
 	}
 
@@ -103,7 +103,7 @@ public class SourceModuleBinding extends ModuleBinding {
 		System.arraycopy(two, 0, result, len0+len1, len2);
 		return result;
 	}
-	
+
 	@Override
 	Stream<ModuleBinding> getRequiredModules(boolean transitiveOnly) {
 		// don't rely on "if (this.requires == NO_MODULES)" - could have been modified by completeIfNeeded()
@@ -157,7 +157,7 @@ public class SourceModuleBinding extends ModuleBinding {
 	@Override
 	SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore) {
 		if (this.scope != null) { // scope null when no annotation cached, and module got processed fully (159631)
-			SimpleLookupTable annotationTable = super.storedAnnotations(forceInitialize, forceStore); 
+			SimpleLookupTable annotationTable = super.storedAnnotations(forceInitialize, forceStore);
 			if (annotationTable != null)
 				this.scope.referenceCompilationUnit().compilationResult.hasAnnotations = true;
 			return annotationTable;

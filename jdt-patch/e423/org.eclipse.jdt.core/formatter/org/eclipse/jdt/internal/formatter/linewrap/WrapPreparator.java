@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2020 Mateusz Matela and others.
+ * Copyright (c) 2014, 2022 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -14,6 +14,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.formatter.linewrap;
 
+import static java.util.stream.Collectors.toList;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameARROW;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOLON;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMA;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_BLOCK;
@@ -31,6 +33,7 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameR
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameRPAREN;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameSEMICOLON;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameStringLiteral;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNamecase;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameenum;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameextends;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameimplements;
@@ -50,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Annotation;
@@ -99,6 +101,7 @@ import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.SuperMethodReference;
+import org.eclipse.jdt.core.dom.SwitchCase;
 import org.eclipse.jdt.core.dom.SwitchExpression;
 import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.ThisExpression;
@@ -528,8 +531,13 @@ public class WrapPreparator extends ASTVisitor {
 				}
 			}
 			Collections.reverse(this.wrapIndexes);
-			this.wrapParentIndex = (expression != null) ? this.tm.lastIndexIn(expression, -1)
-					: this.tm.lastIndexIn(invocation, -1);
+			if (expression == null)
+				expression = invocation;
+			this.wrapParentIndex = this.tm.lastIndexIn(expression, -1);
+			if (this.options.align_selector_in_method_invocation_on_expression_first_line
+					&& (this.options.alignment_for_selector_in_method_invocation & Alignment.M_INDENT_ON_COLUMN) == 0) {
+				this.wrapParentIndex = this.tm.firstIndexIn(expression, -1);
+			}
 			this.wrapGroupEnd = this.tm.lastIndexIn(node, -1);
 			handleWrap(this.options.alignment_for_selector_in_method_invocation);
 		}
@@ -987,24 +995,7 @@ public class WrapPreparator extends ASTVisitor {
 		}
 		if (node.getBody() instanceof Block) {
 			forceContinuousWrapping(node.getBody(), this.tm.firstIndexIn(node, -1));
-
-			List<Statement> statements = ((Block) node.getBody()).statements();
-			if (!statements.isEmpty()) {
-				int openBraceIndex = this.tm.firstIndexBefore(statements.get(0), TokenNameLBRACE);
-				int closeBraceIndex = this.tm.firstIndexAfter(statements.get(statements.size() - 1), TokenNameRBRACE);
-				boolean areKeptOnOneLine = this.tm.stream()
-						.skip(openBraceIndex + 1).limit(closeBraceIndex - openBraceIndex - 1)
-						.allMatch(t -> t.getLineBreaksBefore() == 0 && t.getLineBreaksAfter() == 0);
-				if (areKeptOnOneLine) {
-					for (Statement statement : statements)
-						this.wrapIndexes.add(this.tm.firstIndexIn(statement, -1));
-					this.wrapParentIndex = openBraceIndex;
-					this.wrapGroupEnd = closeBraceIndex;
-					handleWrap(Alignment.M_ONE_PER_LINE_SPLIT, node);
-					this.tm.get(closeBraceIndex).setWrapPolicy(new WrapPolicy(WrapMode.TOP_PRIORITY, openBraceIndex,
-							closeBraceIndex, 0, this.currentDepth, 1, false, false));
-				}
-			}
+			handleOneLineEnforced(node, ((Block) node.getBody()).statements());
 		}
 		if (node.hasParentheses()) {
 			List<VariableDeclaration> parameters = node.parameters();
@@ -1014,6 +1005,29 @@ public class WrapPreparator extends ASTVisitor {
 			this.currentDepth--;
 		}
 		return true;
+	}
+
+	private void handleOneLineEnforced(ASTNode node, List<Statement> statements) {
+		if (statements.isEmpty())
+			return;
+		int openBraceIndex = this.tm.firstIndexBefore(statements.get(0), TokenNameLBRACE);
+		int closeBraceIndex = this.tm.firstIndexAfter(statements.get(statements.size() - 1), TokenNameRBRACE);
+		if (areKeptOnOneLine(openBraceIndex, closeBraceIndex)) {
+			for (Statement statement : statements)
+				this.wrapIndexes.add(this.tm.firstIndexIn(statement, -1));
+			this.wrapParentIndex = openBraceIndex;
+			this.wrapGroupEnd = closeBraceIndex;
+			this.currentDepth++;
+			handleWrap(Alignment.M_ONE_PER_LINE_SPLIT + Alignment.M_INDENT_BY_ONE, node);
+			this.tm.get(closeBraceIndex).setWrapPolicy(new WrapPolicy(WrapMode.TOP_PRIORITY, openBraceIndex,
+					closeBraceIndex, 0, this.currentDepth, 1, false, false));
+			this.currentDepth--;
+		}
+	}
+
+	private boolean areKeptOnOneLine(int startIndex, int endIndex) {
+		return this.tm.stream().skip(startIndex + 1).limit(endIndex - startIndex - 1)
+				.allMatch(t -> t.getLineBreaksBefore() == 0 && t.getLineBreaksAfter() == 0);
 	}
 
 	@Override
@@ -1125,6 +1139,7 @@ public class WrapPreparator extends ASTVisitor {
 		int lParen = this.tm.firstIndexIn(node, TokenNameLPAREN);
 		int rParen = this.tm.firstIndexAfter(node.getExpression(), TokenNameRPAREN);
 		handleParenthesesPositions(lParen, rParen, this.options.parenthesis_positions_in_switch_statement);
+		handleOneLineEnforcedSwitchCases(node, node.statements());
 		return true;
 	}
 
@@ -1134,6 +1149,46 @@ public class WrapPreparator extends ASTVisitor {
 		int rParen = this.tm.firstIndexAfter(node.getExpression(), TokenNameRPAREN);
 		handleParenthesesPositions(lParen, rParen, this.options.parenthesis_positions_in_switch_statement);
 		forceContinuousWrapping(node, this.tm.firstIndexIn(node, TokenNameLPAREN));
+		List<Statement> statements = node.statements();
+		List<Statement> caseStatements = statements.stream().filter(SwitchCase.class::isInstance).collect(toList());
+		handleOneLineEnforced(node, caseStatements);
+		handleOneLineEnforcedSwitchCases(node, statements);
+		return true;
+	}
+
+	private void handleOneLineEnforcedSwitchCases(ASTNode node, List<Statement> statements) {
+		if (statements.isEmpty() || !((SwitchCase) statements.get(0)).isSwitchLabeledRule())
+			return;
+		for (Statement statement : statements) {
+			if (statement instanceof Block) {
+				handleOneLineEnforced(statement, ((Block)statement).statements());
+			}
+		}
+	}
+
+	@Override
+	public boolean visit(SwitchCase node) {
+		if (node.isSwitchLabeledRule()) {
+			List<Statement> siblings = node.getParent() instanceof SwitchStatement
+					? ((SwitchStatement) node.getParent()).statements()
+					: ((SwitchExpression) node.getParent()).statements();
+			Statement nextStatement = siblings.get(siblings.indexOf(node) + 1);
+			if (!(nextStatement instanceof Block) || areKeptOnOneLine(this.tm.firstIndexIn(nextStatement, -1),
+					this.tm.lastIndexIn(nextStatement, -1))) {
+				int atArrow = this.tm.lastIndexIn(node, TokenNameARROW);
+				int afterArrow = this.tm.firstIndexIn(nextStatement, -1);
+				boolean wrapBefore = this.options.wrap_before_switch_case_arrow_operator;
+				this.wrapIndexes.add(wrapBefore? atArrow : afterArrow);
+				this.secondaryWrapIndexes.add(wrapBefore ? afterArrow : atArrow);
+				this.wrapParentIndex = this.tm.firstIndexIn(node,  -1);
+				this.wrapGroupEnd = this.tm.lastIndexIn(nextStatement, -1);
+				handleWrap(this.options.alignment_for_switch_case_with_arrow);
+			}
+		}
+
+		prepareElementsList(node.expressions(), TokenNameCOMMA, TokenNamecase);
+		handleWrap(node.isSwitchLabeledRule() ? this.options.alignment_for_expressions_in_switch_case_with_arrow
+				: this.options.alignment_for_expressions_in_switch_case_with_colon);
 		return true;
 	}
 
@@ -1151,13 +1206,9 @@ public class WrapPreparator extends ASTVisitor {
 		if (message != null) {
 			int atColon = this.tm.firstIndexBefore(message, TokenNameCOLON);
 			int afterColon = this.tm.firstIndexIn(message, -1);
-			if (this.options.wrap_before_assertion_message_operator) {
-				this.wrapIndexes.add(atColon);
-				this.secondaryWrapIndexes.add(afterColon);
-			} else {
-				this.wrapIndexes.add(afterColon);
-				this.secondaryWrapIndexes.add(atColon);
-			}
+			boolean wrapBefore = this.options.wrap_before_assertion_message_operator;
+			this.wrapIndexes.add(wrapBefore? atColon : afterColon);
+			this.secondaryWrapIndexes.add(wrapBefore ? afterColon : atColon);
 			this.wrapParentIndex = this.tm.firstIndexIn(node,  -1);
 			this.wrapGroupEnd = this.tm.lastIndexIn(node, -1);
 			handleWrap(this.options.alignment_for_assertion_message);

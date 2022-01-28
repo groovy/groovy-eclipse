@@ -20,6 +20,9 @@ import org.eclipse.jdt.core.compiler.CharOperation;
  */
 public final class HashtableOfObject implements Cloneable {
 
+	/** Max array size accepted by JVM */
+	public static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 2;
+
 	// to avoid using Enumerations, walk the individual tables skipping nulls
 	public char[] keyTable[];
 	public Object valueTable[];
@@ -31,13 +34,25 @@ public final class HashtableOfObject implements Cloneable {
 		this(13);
 	}
 
+	/**
+	 * @param size preferred table size
+	 * @throws NegativeArraySizeException if size is negative
+	 * @throws OutOfMemoryError if size exceeds {@link #MAX_ARRAY_SIZE}
+	 */
 	public HashtableOfObject(int size) {
-
+		if (size < 0) {
+			throw new NegativeArraySizeException("Bad attempt to create table with " + size + " elements"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		this.elementSize = 0;
 		this.threshold = size; // size represents the expected number of elements
 		int extraRoom = (int) (size * 1.75f);
-		if (this.threshold == extraRoom)
+		if (this.threshold == extraRoom) {
 			extraRoom++;
+		}
+		// Check for integer overflow & max array size limit
+		if (extraRoom < 1 || extraRoom > MAX_ARRAY_SIZE) {
+			extraRoom = calculateNewSize(size);
+		}
 		this.keyTable = new char[extraRoom][];
 		this.valueTable = new Object[extraRoom];
 	}
@@ -136,7 +151,7 @@ public final class HashtableOfObject implements Cloneable {
 		}
 		this.keyTable[index] = key;
 		this.valueTable[index] = value;
-	
+
 		// assumes the threshold is never equal to the size of the table
 		if (++this.elementSize > this.threshold) {
 			rehash();
@@ -165,8 +180,8 @@ public final class HashtableOfObject implements Cloneable {
 	}
 
 	private void rehash() {
-
-		HashtableOfObject newHashtable = new HashtableOfObject(this.elementSize * 2);		// double the number of expected elements
+		int newSize = calculateNewSize(this.elementSize);
+		HashtableOfObject newHashtable = new HashtableOfObject(newSize);
 		char[] currentKey;
 		for (int i = this.keyTable.length; --i >= 0;)
 			if ((currentKey = this.keyTable[i]) != null)
@@ -175,6 +190,42 @@ public final class HashtableOfObject implements Cloneable {
 		this.keyTable = newHashtable.keyTable;
 		this.valueTable = newHashtable.valueTable;
 		this.threshold = newHashtable.threshold;
+	}
+
+	/**
+	 * Tries to double the number of given elements but returns {@link #MAX_ARRAY_SIZE} - 2 in case new value would
+	 * overflow
+	 *
+	 * @return new map size that fits to JVM limits or throws an error
+	 */
+	public static int calculateNewSize(int currentSize) {
+		if(currentSize == 0) {
+			return 1;
+		}
+		if(currentSize < 0) {
+			throw new NegativeArraySizeException("Bad attempt to calculate table size with " + currentSize + " elements"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+
+		// double the number of expected elements
+		int newSize = currentSize * 2;
+
+		// int overflow or JVM limit hit
+		if (newSize + 1 < 1 || newSize + 1 >= MAX_ARRAY_SIZE) {
+			// add half of space between current size and max array size
+			newSize = currentSize + (MAX_ARRAY_SIZE - currentSize) / 2;
+			if (newSize + 1 < 1 || newSize + 1 >= MAX_ARRAY_SIZE) {
+				// use max possible value
+				newSize = MAX_ARRAY_SIZE - 2;
+				if (newSize <= currentSize) {
+					throw new OutOfMemoryError("Unable to increase table size over " + currentSize + " elements"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			}
+		}
+		return newSize;
+	}
+
+	public int storageSize() {
+		return this.keyTable.length;
 	}
 
 	public int size() {

@@ -281,10 +281,7 @@ public class AddJrtToIndex extends BinaryContainer {
 				monitor.exitWrite();
 			}
 		} catch (IOException e ) {
-			if (JobManager.VERBOSE) {
-				org.eclipse.jdt.internal.core.util.Util.verbose("-> failed to index " + this.containerPath + " because of the following exception:"); //$NON-NLS-1$ //$NON-NLS-2$
-				e.printStackTrace();
-			}
+			org.eclipse.jdt.internal.core.util.Util.log(e, "Failed to index " + this.containerPath); //$NON-NLS-1$
 			this.manager.removeIndex(this.containerPath);
 			return false;
 		}

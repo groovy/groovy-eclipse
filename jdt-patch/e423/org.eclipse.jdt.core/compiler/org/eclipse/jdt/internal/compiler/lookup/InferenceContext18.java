@@ -19,8 +19,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -429,7 +429,7 @@ public class InferenceContext18 {
 			this.directlyAcceptingInnerBounds = true;
 
 			// 4. bullet: assemble C:
-			Set<ConstraintFormula> c = new HashSet<ConstraintFormula>();
+			Set<ConstraintFormula> c = new LinkedHashSet<ConstraintFormula>();
 			if (!addConstraintsToC(this.invocationArguments, c, method, this.inferenceKind, invocationSite))
 				return null;
 			// 5. bullet: determine B4 from C
@@ -443,7 +443,7 @@ public class InferenceContext18 {
 				// *
 				c.removeAll(bottomSet);
 				// * The union of the input variables of all the selected constraints, α1, ..., αm, ...
-				Set<InferenceVariable> allInputs = new HashSet<InferenceVariable>();
+				Set<InferenceVariable> allInputs = new LinkedHashSet<InferenceVariable>();
 				Iterator<ConstraintFormula> bottomIt = bottomSet.iterator();
 				while (bottomIt.hasNext()) {
 					allInputs.addAll(bottomIt.next().inputVariables(this));
@@ -1247,7 +1247,7 @@ public class InferenceContext18 {
 						if (tmpBoundSet == this.currentBounds)
 							tmpBoundSet = tmpBoundSet.copy();
 						Iterator<ParameterizedTypeBinding> captureKeys = tmpBoundSet.captures.keySet().iterator();
-						Set<ParameterizedTypeBinding> toRemove = new HashSet<ParameterizedTypeBinding>();
+						Set<ParameterizedTypeBinding> toRemove = new LinkedHashSet<ParameterizedTypeBinding>();
 						while (captureKeys.hasNext()) {
 							ParameterizedTypeBinding key = captureKeys.next();
 							int len = key.arguments.length;
@@ -1343,10 +1343,10 @@ public class InferenceContext18 {
 	private Set<InferenceVariable> getSmallestVariableSet(BoundSet bounds, InferenceVariable[] subSet) {
 		// "Given a set of inference variables to resolve, let V be the union of this set and
 		//  all variables upon which the resolution of at least one variable in this set depends."
-		Set<InferenceVariable> v = new HashSet<InferenceVariable>();
+		Set<InferenceVariable> v = new LinkedHashSet<InferenceVariable>();
 		Map<InferenceVariable,Set<InferenceVariable>> dependencies = new HashMap<>(); // compute only once, store for the final loop over 'v'.
 		for (InferenceVariable iv : subSet) {
-			Set<InferenceVariable> tmp = new HashSet<>();
+			Set<InferenceVariable> tmp = new LinkedHashSet<>();
 			addDependencies(bounds, tmp, iv);
 			dependencies.put(iv, tmp);
 			v.addAll(tmp);
@@ -1362,7 +1362,7 @@ public class InferenceContext18 {
 				// "... if αi depends on the resolution of a variable β, then either β has an instantiation or there is some j such that β = αj; ..."
 				Set<InferenceVariable> set = dependencies.get(currentVariable);
 				if (set == null) // not an element of the original subSet, still need to fetch this var's dependencies
-					addDependencies(bounds, set = new HashSet<>(), currentVariable);
+					addDependencies(bounds, set = new LinkedHashSet<>(), currentVariable);
 				//  "... and ii) there exists no non-empty proper subset of { α1, ..., αn } with this property."
 				int cur = set.size();
 				if (cur == 1)
@@ -1404,7 +1404,7 @@ public class InferenceContext18 {
 
 		// collect all constraints participating in a cycle
 		HashMap<ConstraintFormula,Set<ConstraintFormula>> dependencies = new HashMap<ConstraintFormula, Set<ConstraintFormula>>();
-		Set<ConstraintFormula> cycles = new HashSet<ConstraintFormula>();
+		Set<ConstraintFormula> cycles = new LinkedHashSet<ConstraintFormula>();
 		for (ConstraintFormula constraint : c) {
 			Collection<InferenceVariable> infVars = constraint.inputVariables(this);
 			for (ConstraintFormula other : c) {
@@ -1413,21 +1413,21 @@ public class InferenceContext18 {
 					// found a dependency, record it:
 					Set<ConstraintFormula> targetSet = dependencies.get(constraint);
 					if (targetSet == null)
-						dependencies.put(constraint, targetSet = new HashSet<ConstraintFormula>());
+						dependencies.put(constraint, targetSet = new LinkedHashSet<ConstraintFormula>());
 					targetSet.add(other);
 					// look for a cycle:
-					Set<ConstraintFormula> nodesInCycle = new HashSet<ConstraintFormula>();
-					if (isReachable(dependencies, other, constraint, new HashSet<ConstraintFormula>(), nodesInCycle)) {
+					Set<ConstraintFormula> nodesInCycle = new LinkedHashSet<ConstraintFormula>();
+					if (isReachable(dependencies, other, constraint, new LinkedHashSet<ConstraintFormula>(), nodesInCycle)) {
 						// found a cycle, record the involved nodes:
 						cycles.addAll(nodesInCycle);
 					}
 				}
 			}
 		}
-		Set<ConstraintFormula> outside = new HashSet<ConstraintFormula>(c);
+		Set<ConstraintFormula> outside = new LinkedHashSet<ConstraintFormula>(c);
 		outside.removeAll(cycles);
 
-		Set<ConstraintFormula> candidatesII = new HashSet<ConstraintFormula>();
+		Set<ConstraintFormula> candidatesII = new LinkedHashSet<ConstraintFormula>();
 		// (i): participates in a cycle:
 		candidates: for (ConstraintFormula candidate : cycles) {
 			Collection<InferenceVariable> infVars = candidate.inputVariables(this);
@@ -1442,7 +1442,7 @@ public class InferenceContext18 {
 			candidatesII = c; // not spec'ed but needed to avoid returning null below, witness: java.util.stream.Collectors
 
 		// tentatively: (iii)  has the form ⟨Expression → T⟩
-		Set<ConstraintFormula> candidatesIII = new HashSet<ConstraintFormula>();
+		Set<ConstraintFormula> candidatesIII = new LinkedHashSet<ConstraintFormula>();
 		for (ConstraintFormula candidate : candidatesII) {
 			if (candidate instanceof ConstraintExpressionFormula)
 				candidatesIII.add(candidate);
@@ -1455,7 +1455,7 @@ public class InferenceContext18 {
 
 			// collect containment info regarding all expressions in candidate constraints:
 			// (a) find minimal enclosing expressions:
-			Map<ConstraintExpressionFormula,ConstraintExpressionFormula> expressionContainedBy = new HashMap<ConstraintExpressionFormula, ConstraintExpressionFormula>();
+			Map<ConstraintExpressionFormula,ConstraintExpressionFormula> expressionContainedBy = new LinkedHashMap<ConstraintExpressionFormula, ConstraintExpressionFormula>();
 			for (ConstraintFormula one : candidatesIII) {
 				ConstraintExpressionFormula oneCEF = (ConstraintExpressionFormula) one;
 				Expression exprOne = oneCEF.left;
@@ -1471,12 +1471,12 @@ public class InferenceContext18 {
 				}
 			}
 			// (b) build the tree from the above
-			Map<ConstraintExpressionFormula,Set<ConstraintExpressionFormula>> containmentForest = new HashMap<ConstraintExpressionFormula, Set<ConstraintExpressionFormula>>();
+			Map<ConstraintExpressionFormula,Set<ConstraintExpressionFormula>> containmentForest = new LinkedHashMap<ConstraintExpressionFormula, Set<ConstraintExpressionFormula>>();
 			for (Map.Entry<ConstraintExpressionFormula, ConstraintExpressionFormula> parentRelation : expressionContainedBy.entrySet()) {
 				ConstraintExpressionFormula parent = parentRelation.getValue();
 				Set<ConstraintExpressionFormula> children = containmentForest.get(parent);
 				if (children == null)
-					containmentForest.put(parent, children = new HashSet<ConstraintExpressionFormula>());
+					containmentForest.put(parent, children = new LinkedHashSet<ConstraintExpressionFormula>());
 				children.add(parentRelation.getKey());
 			}
 
@@ -1571,7 +1571,7 @@ public class InferenceContext18 {
 		//  for each constraint, no input variable can influence an output variable of another constraint in C. ...
 		//  An inference variable α can influence an inference variable β if α depends on the resolution of β (§18.4), or vice versa;
 		//  or if there exists a third inference variable γ such that α can influence γ and γ can influence β.  ...
-		Set<ConstraintFormula> result = new HashSet<ConstraintFormula>();
+		Set<ConstraintFormula> result = new LinkedHashSet<ConstraintFormula>();
 	  constraintLoop:
 		for (ConstraintFormula constraint : constraints) {
 			for (InferenceVariable in : constraint.inputVariables(this)) {
@@ -1597,7 +1597,7 @@ public class InferenceContext18 {
 	}
 
 	Set<InferenceVariable> allOutputVariables(Set<ConstraintFormula> constraints) {
-		Set<InferenceVariable> result = new HashSet<InferenceVariable>();
+		Set<InferenceVariable> result = new LinkedHashSet<InferenceVariable>();
 		Iterator<ConstraintFormula> it = constraints.iterator();
 		while (it.hasNext()) {
 			result.addAll(it.next().outputVariables(this));
@@ -1671,7 +1671,7 @@ public class InferenceContext18 {
 			return false;
 		}
 		if(this.seenInnerContexts == null) {
-			this.seenInnerContexts = new HashSet<>();
+			this.seenInnerContexts = new LinkedHashSet<>();
 		}
 		return this.seenInnerContexts.add(innerContext);
 	}

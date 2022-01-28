@@ -13,7 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -28,7 +28,7 @@ import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jdt.internal.compiler.env.IModuleAwareNameEnvironment;
 
 public class BinaryModuleBinding extends ModuleBinding {
-	
+
 	private static class AutomaticModuleBinding extends ModuleBinding {
 
 		boolean autoNameFromManifest;
@@ -80,12 +80,12 @@ public class BinaryModuleBinding extends ModuleBinding {
 			return this.moduleName;
 		}
 	}
-	
+
 	private IPackageExport[] unresolvedExports;
 	private IPackageExport[] unresolvedOpens;
 	private char[][] unresolvedUses;
 	private IService[] unresolvedProvides;
-	
+
 	/**
 	 * Construct a named module from binary, could be an auto module - or from an info from Java Model.
 	 * <p>
@@ -106,7 +106,7 @@ public class BinaryModuleBinding extends ModuleBinding {
 		existingEnvironment.root.knownModules.put(this.moduleName, this);
 		cachePartsFrom(module);
 	}
-	
+
 	void cachePartsFrom(IBinaryModule module) {
 		if (module.isOpen())
 			this.modifiers |= ClassFileConstants.ACC_OPEN;
@@ -173,7 +173,7 @@ public class BinaryModuleBinding extends ModuleBinding {
 			resolvePackages();
 		return super.getExports();
 	}
-	
+
 	@Override
 	public PlainPackageBinding[] getOpens() {
 		if (this.openedPackages == null && this.unresolvedOpens != null)
@@ -195,7 +195,7 @@ public class BinaryModuleBinding extends ModuleBinding {
 		}
 		if (count < this.exportedPackages.length)
 			System.arraycopy(this.exportedPackages, 0, this.exportedPackages = new PlainPackageBinding[count], 0, count);
-		
+
 		this.openedPackages = new PlainPackageBinding[this.unresolvedOpens.length];
 		count = 0;
 		for (int i = 0; i < this.unresolvedOpens.length; i++) {
@@ -224,7 +224,7 @@ public class BinaryModuleBinding extends ModuleBinding {
 		}
 		return super.getUses();
 	}
-	
+
 	@Override
 	public TypeBinding[] getServices() {
 		if (this.services == null)
@@ -240,7 +240,7 @@ public class BinaryModuleBinding extends ModuleBinding {
 	}
 	private void resolveServices() {
 		this.services = new TypeBinding[this.unresolvedProvides.length];
-		this.implementations = new HashMap<>();
+		this.implementations = new LinkedHashMap<>();
 		for (int i = 0; i < this.unresolvedProvides.length; i++) {
 			this.services[i] = this.environment.getType(CharOperation.splitOn('.', this.unresolvedProvides[i].name()), this);
 			char[][] implNames = this.unresolvedProvides[i].with();

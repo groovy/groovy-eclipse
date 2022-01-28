@@ -242,8 +242,14 @@ public boolean search(Index index, IndexQueryRequestor queryRequestor, IProgress
 		this.executionTime.addAndGet(System.currentTimeMillis() - start);
 		return COMPLETE;
 	} catch (IOException e) {
-		if (e instanceof java.io.EOFException)
+		if (e instanceof java.io.EOFException) {
 			e.printStackTrace();
+		} else {
+			Throwable cause = e.getCause();
+			if (cause != null) {
+				Util.log(e, "Search failed for index " + index); //$NON-NLS-1$
+			}
+		}
 		return FAILED;
 	} finally {
 		monitor.exitRead(); // finished reading

@@ -2775,8 +2775,10 @@ protected void consumeDimWithOrWithOutExpr() {
 }
 @Override
 protected void consumeEmptyStatement() {
-	ASTNode nodeToAttach = (this.assistNodeParent instanceof MessageSend) || (this.assistNodeParent instanceof ParameterizedSingleTypeReference)
-								? this.assistNodeParent : this.assistNode;
+	boolean shouldAttachParent = (this.assistNodeParent instanceof MessageSend) ||
+			(this.assistNodeParent instanceof ParameterizedSingleTypeReference) ||
+			(this.assistNodeParent instanceof LocalDeclaration);
+	ASTNode nodeToAttach = shouldAttachParent ? this.assistNodeParent : this.assistNode;
 	if (this.shouldStackAssistNode && nodeToAttach != null) {
 		for (int ptr = this.astPtr; ptr >= 0; ptr--) {
 			if (new CompletionNodeDetector(nodeToAttach, this.astStack[ptr]).containsCompletionNode()) {
@@ -5799,9 +5801,10 @@ public void parseBlockStatements(AbstractMethodDeclaration md, CompilationUnitDe
 		}
 	}
 	super.parseBlockStatements(md, unit);
-	// if the assist node is parsed at the cursor location, then ignore syntax errors found due to chars such as . and (
+	// if the assist node is parsed at the cursor location or the cursor is within the assist node,
+	// then ignore syntax errors found due to chars such as . and (
 	if((md.bits & ASTNode.HasSyntaxErrors) != 0 && this.lastAct == ERROR_ACTION
-			&& this.assistNode != null && this.assistNode.sourceEnd == this.cursorLocation) {
+			&& this.assistNode != null && this.assistNode.sourceEnd >= this.cursorLocation) {
 		md.bits &= ~ASTNode.HasSyntaxErrors;
 	}
 }

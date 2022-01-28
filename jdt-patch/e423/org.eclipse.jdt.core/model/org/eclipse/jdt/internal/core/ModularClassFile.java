@@ -304,4 +304,19 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 		}
 		return module;
 	}
+
+	private static final JavaElementInfo notExists = new JavaElementInfo();
+
+	@Override
+	public boolean exists() {
+		Object info = JavaModelManager.getJavaModelManager().getInfo(this);
+		if (info == notExists)
+			return false;
+		if (info != null)
+			return true;
+		boolean exists = super.exists();
+		if (!exists)
+			JavaModelManager.getJavaModelManager().putInfos(this, notExists, false, Map.of(this, notExists));
+		return exists;
+	}
 }

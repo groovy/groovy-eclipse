@@ -86,10 +86,10 @@ public class TypeDeclaration extends Statement implements ProblemSeverities, Ref
 	public FieldBinding enumValuesSyntheticfield; 	// for enum
 	public int enumConstantsCounter;
 
-	// 1.5 support
+	// Generics support
 	public TypeParameter[] typeParameters;
 
-	// Records support
+	// Record Type support
 	public int nRecordComponents;
 	public RecordComponent[] recordComponents;
 	public static Set<String> disallowedComponentNames;

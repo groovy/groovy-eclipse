@@ -14,6 +14,8 @@
 package org.eclipse.jdt.internal.core.index;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -585,28 +587,35 @@ DiskIndex mergeWith(MemoryIndex memoryIndex) throws IOException {
 		newDiskIndex.writeOffsetToHeader(offsetToHeader);
 
 		// rename file by deleting previous index file & renaming temp one
-		if (oldIndexFile.exists() && !oldIndexFile.delete()) {
-			if (DEBUG)
-				System.out.println("mergeWith - Failed to delete " + this.indexLocation); //$NON-NLS-1$
-			throw new IOException("Failed to delete index file " + this.indexLocation); //$NON-NLS-1$
+		try {
+			Files.deleteIfExists(oldIndexFile.toPath());
+		} catch (Exception e2) {
+			throw new IOException("Failed to delete index file " + this.indexLocation, e2); //$NON-NLS-1$
 		}
-		if (!usingTmp && !newIndexFile.renameTo(oldIndexFile)) {
-			// try again after waiting for two milli secs
+		if (!usingTmp) {
 			try {
-				Thread.sleep(2);
-			} catch (InterruptedException e) {
-				//ignore
-			}
-			if (!newIndexFile.renameTo(oldIndexFile)) {
-				if (DEBUG)
-					System.out.println("mergeWith - Failed to rename " + this.indexLocation); //$NON-NLS-1$
-				usingTmp = true;
+				Files.move(newIndexFile.toPath(), oldIndexFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException ioe) {
+				// try again after waiting for two milli secs
+				try {
+					Thread.sleep(2);
+				} catch (InterruptedException e) {
+					//ignore
+				}
+				try {
+					Files.move(newIndexFile.toPath(), oldIndexFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				} catch (IOException e) {
+					Util.log(ioe, "mergeWith - Failed to rename index " + this.indexLocation); //$NON-NLS-1$
+					usingTmp = true;
+				}
 			}
 		}
 	} catch (IOException e) {
-		if (newIndexFile.exists() && !newIndexFile.delete())
-			if (DEBUG)
-				System.out.println("mergeWith - Failed to delete temp index " + newDiskIndex.indexLocation); //$NON-NLS-1$
+		try {
+			Files.deleteIfExists(newIndexFile.toPath());
+		} catch (Exception e2) {
+			Util.log(e2, "mergeWith - Failed to delete temp index " + newDiskIndex.indexLocation); //$NON-NLS-1$
+		}
 		throw e;
 	}
 
@@ -669,23 +678,11 @@ private synchronized HashtableOfObject readCategoryTable(char[] categoryName, bo
 		this.bufferEnd = stream.read(this.streamBuffer, 0, this.streamBuffer.length);
 		int size = readStreamInt(stream);
 		try {
-			if (size < 0) { // DEBUG
-				System.err.println("-------------------- DEBUG --------------------"); //$NON-NLS-1$
-				System.err.println("file = "+this.indexLocation); //$NON-NLS-1$
-				System.err.println("offset = "+offset); //$NON-NLS-1$
-				System.err.println("size = "+size); //$NON-NLS-1$
-				System.err.println("--------------------   END   --------------------"); //$NON-NLS-1$
-			}
 			categoryTable = new HashtableOfObject(size);
-		} catch (OutOfMemoryError oom) {
-			// DEBUG
-			oom.printStackTrace();
-			System.err.println("-------------------- DEBUG --------------------"); //$NON-NLS-1$
-			System.err.println("file = "+this.indexLocation); //$NON-NLS-1$
-			System.err.println("offset = "+offset); //$NON-NLS-1$
-			System.err.println("size = "+size); //$NON-NLS-1$
-			System.err.println("--------------------   END   --------------------"); //$NON-NLS-1$
-			throw oom;
+		} catch (NegativeArraySizeException | OutOfMemoryError e) {
+			String message = "Failed to read index data from " + this.indexLocation + " at offset " + offset //$NON-NLS-1$ //$NON-NLS-2$
+					+ " and size " + size; //$NON-NLS-1$
+			throw new IOException(message, e);
 		}
 		int largeArraySize = 256;
 		for (int i = 0; i < size; i++) {

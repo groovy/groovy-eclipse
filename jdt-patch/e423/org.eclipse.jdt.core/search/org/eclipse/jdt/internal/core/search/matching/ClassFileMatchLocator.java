@@ -520,13 +520,13 @@ boolean matchSuperTypeReference(SuperTypeReferencePattern pattern, Object binary
 	if (!(binaryInfo instanceof IBinaryType)) return false;
 
 	IBinaryType type = (IBinaryType) binaryInfo;
-	if (pattern.superRefKind != SuperTypeReferencePattern.ONLY_SUPER_INTERFACES) {
-		char[] vmName = type.getSuperclassName();
-		if (vmName != null) {
-			char[] superclassName = convertClassFileFormat(vmName);
-			if (checkTypeName(pattern.superSimpleName, pattern.superQualification, superclassName, pattern.isCaseSensitive(), pattern.isCamelCase()))
-				return true;
-		}
+
+	// regarding SuperTypeReferencePattern.ONLY_SUPER_INTERFACES: superClass is also a SuperInterface:
+	char[] vmName = type.getSuperclassName();
+	if (vmName != null) {
+		char[] superclassName = convertClassFileFormat(vmName);
+		if (checkTypeName(pattern.superSimpleName, pattern.superQualification, superclassName, pattern.isCaseSensitive(), pattern.isCamelCase()))
+			return true;
 	}
 
 	if (pattern.superRefKind != SuperTypeReferencePattern.ONLY_SUPER_CLASSES) {

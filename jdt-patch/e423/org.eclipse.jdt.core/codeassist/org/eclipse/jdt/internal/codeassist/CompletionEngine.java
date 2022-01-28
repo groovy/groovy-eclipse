@@ -4612,7 +4612,8 @@ public final class CompletionEngine
 			}
 		}
 
-		if(this.expectedTypesPtr + 1 != this.expectedTypes.length) {
+		// Guard it, otherwise we end up with a empty array which cause issues down the line
+		if((this.expectedTypesPtr > -1) && ((this.expectedTypesPtr + 1) != this.expectedTypes.length)) {
 			System.arraycopy(this.expectedTypes, 0, this.expectedTypes = new TypeBinding[this.expectedTypesPtr + 1], 0, this.expectedTypesPtr + 1);
 		}
 	}

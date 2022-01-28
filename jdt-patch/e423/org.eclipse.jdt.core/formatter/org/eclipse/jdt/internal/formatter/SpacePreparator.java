@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2021 Mateusz Matela and others.
+ * Copyright (c) 2014, 2022 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Annotation;
@@ -439,10 +438,9 @@ public class SpacePreparator extends ASTVisitor {
 		return true;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean visit(SwitchCase node) {
-		if (node.getAST().apiLevel() > AST.JLS13 && node.isSwitchLabeledRule()) {
+		if (node.isSwitchLabeledRule()) {
 			handleToken(this.tm.lastTokenIn(node, TokenNameARROW),
 					node.isDefault() ? this.options.insert_space_before_arrow_in_switch_default
 							: this.options.insert_space_before_arrow_in_switch_case,
@@ -456,10 +454,8 @@ public class SpacePreparator extends ASTVisitor {
 		}
 		if (!node.isDefault()) {
 			handleToken(node, TokenNamecase, false, true);
-			if (node.getAST().apiLevel() > AST.JLS13) {
-				handleCommas(node.expressions(), this.options.insert_space_before_comma_in_switch_case_expressions,
+			handleCommas(node.expressions(), this.options.insert_space_before_comma_in_switch_case_expressions,
 					this.options.insert_space_after_comma_in_switch_case_expressions);
-			}
 		}
 		return true;
 	}

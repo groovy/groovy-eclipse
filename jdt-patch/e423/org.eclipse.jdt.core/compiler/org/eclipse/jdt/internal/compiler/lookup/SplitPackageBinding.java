@@ -13,8 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -22,7 +22,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 public class SplitPackageBinding extends PackageBinding {
 	Set<ModuleBinding> declaringModules;
 	public Set<PlainPackageBinding> incarnations;
-	
+
 	/**
 	 * Combine two potential package bindings, answering either the better of those if the other has a problem,
 	 * or combine both into a split package.
@@ -63,8 +63,8 @@ public class SplitPackageBinding extends PackageBinding {
 
 	public SplitPackageBinding(PackageBinding initialBinding, ModuleBinding primaryModule) {
 		super(initialBinding.compoundName, initialBinding.parent, primaryModule.environment, primaryModule);
-		this.declaringModules = new HashSet<>();
-		this.incarnations = new HashSet<>();
+		this.declaringModules = new LinkedHashSet<>();
+		this.incarnations = new LinkedHashSet<>();
 		add(initialBinding);
 	}
 	public void add(PackageBinding packageBinding) {
@@ -119,7 +119,7 @@ public class SplitPackageBinding extends PackageBinding {
 		}
 		return childPackage;
 	}
-	
+
 	@Override
 	ModuleBinding[] getDeclaringModules() {
 		return this.declaringModules.toArray(new ModuleBinding[this.declaringModules.size()]);
@@ -135,12 +135,12 @@ public class SplitPackageBinding extends PackageBinding {
 		for (PackageBinding incarnation : this.incarnations) {
 			PackageBinding package0 = incarnation.getPackage0(name);
 			if (package0 == null)
-				return null; // if any incarnation lacks cached info, a full findPackage will be necessary 
+				return null; // if any incarnation lacks cached info, a full findPackage will be necessary
 			candidate = combine(package0, candidate, this.enclosingModule);
 		}
 		if (candidate != null)
 			this.knownPackages.put(name, candidate);
-		
+
 		return candidate;
 	}
 
@@ -164,7 +164,7 @@ public class SplitPackageBinding extends PackageBinding {
 	@Override
 	protected PackageBinding findPackage(char[] name, ModuleBinding module) {
 		char[][] subpackageCompoundName = CharOperation.arrayConcat(this.compoundName, name);
-		Set<PackageBinding> candidates = new HashSet<>();
+		Set<PackageBinding> candidates = new LinkedHashSet<>();
 		for (ModuleBinding candidateModule : this.declaringModules) {
 			PackageBinding candidate = candidateModule.getVisiblePackage(subpackageCompoundName);
 			if (candidate != null
