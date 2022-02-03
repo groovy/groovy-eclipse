@@ -3013,6 +3013,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9974a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@ToString\n" +
+            "class Pogo {\n" +
+            "  String foo\n" +
+            "}\n" +
+            "@Newify(Pogo)\n" +
+            "List<Pogo> m() {\n" +
+            "  [Pogo(foo:'bar'),Pogo(foo:'baz')]\n" +
+            "}\n" +
+            "@TypeChecked\n" +
+            "def test() {\n" +
+            "  m().with { list ->\n" +
+            "    def other = []\n" + // <-- causes some kind of interference
+            "    list.stream().filter{ it.foo.startsWith('ba') }.toList()\n" +
+            "  }\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Pogo(bar), Pogo(baz)]");
+    }
+
+    @Test
     public void testTypeChecked9977() {
         //@formatter:off
         String[] sources = {
