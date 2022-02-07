@@ -1083,6 +1083,12 @@ public class AsmClassGenerator extends ClassGenerator {
                             field = classNode.getDeclaredField(name); // params are stored as fields
                     } else {
                         field = classNode.getDeclaredField(name);
+                        // GRECLIPSE add -- GROOVY-8448: "this.name" from inner class
+                        if (field != null && (field.getModifiers() & ACC_SYNTHETIC) != 0
+                                && field.getType().equals(ClassHelper.REFERENCE_TYPE) && !expression.isImplicitThis()) {
+                            field = null;
+                        }
+                        // GRECLIPSE end
                         if (field == null && controller.isStaticContext()
                                 && expression instanceof AttributeExpression) {
                             field = classNode.getField(name); // GROOVY-6183: check supers

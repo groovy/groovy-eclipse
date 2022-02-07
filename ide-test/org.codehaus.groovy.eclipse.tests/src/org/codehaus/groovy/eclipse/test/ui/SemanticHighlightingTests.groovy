@@ -651,6 +651,29 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('prop'), 4, FIELD))
     }
 
+    @Test // GROOVY-8448
+    void testSyntheticVarReference() {
+        String contents = '''\
+            |def x = "local"
+            |new Runnable() {
+            |  def getX() { }
+            |  void run() {
+            |    x
+            |    this.x
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Runnable'), 8, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Runnable'), 8, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('getX'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('run'),  3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x', contents.indexOf('run')), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, METHOD_CALL)) // once was FIELD
+    }
+
     @Test
     void testMethodsAsProperties1() {
         String contents = '''\

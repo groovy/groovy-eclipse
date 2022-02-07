@@ -673,7 +673,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // look for field
         FieldNode field = declaringType.getField(name);
         if (isCompatible(field, isStaticExpression) &&
-                // no indirect accessor (map get or put if no non-final public/protected field exists)
+                !(Flags.isSynthetic(field.getModifiers()) && field.getType().equals(ClassHelper.REFERENCE_TYPE)) &&
+                // no indirect, non-private accessor (map get or put if no non-final public/protected field exists)
                 (!(nonPrivateAccessor || (dynamicProperty && !(isLhsExpression && !field.isFinal() && (field.isPublic()||field.isProtected())))) ||
                     directFieldAccess >= 1 && declaringType.equals(field.getDeclaringClass()) && (directFieldAccess == 1 || !field.isPrivate()))) {
             return field;

@@ -1786,6 +1786,24 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // GROOVY-8488
+    public void testAnonymousInnerClass35() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "def x = 'local'\n" + // shared variable written as field in AIC
+            "new Runnable() {\n" +
+            "  def getX() { 'getter' }\n" +
+            "  @Override void run() {\n" +
+            "    print x + ' then ' + this.x\n" +
+            "  }\n" +
+            "}.run()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "local then getter");
+    }
+
     @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off
