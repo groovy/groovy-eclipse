@@ -138,6 +138,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.groovy.util.BeanUtils.capitalize;
@@ -217,7 +218,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.elvisX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getGetterName;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.thisPropX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
@@ -353,6 +353,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected static final ClassNode ENUMERATION_TYPE = ClassHelper.make(Enumeration.class);
     protected static final ClassNode MAP_ENTRY_TYPE = ClassHelper.make(Map.Entry.class);
     protected static final ClassNode ITERABLE_TYPE = ClassHelper.ITERABLE_TYPE;
+    private static final ClassNode STREAM_TYPE = ClassHelper.make(Stream.class);
 
     private static List<ClassNode> TUPLE_TYPES = Arrays.stream(ClassHelper.TUPLE_CLASSES).map(ClassHelper::makeWithoutCaching).collect(Collectors.toList());
 
@@ -2044,6 +2045,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode intf = GenericsUtils.parameterizeType(collectionType, ENUMERATION_TYPE);
                 GenericsType[] genericsTypes = intf.getGenericsTypes();
                 componentType = genericsTypes[0].getType();
+            // GRECLIPSE add -- GROOVY-10476
+            } else if (isOrImplements(collectionType, STREAM_TYPE)) {
+                ClassNode col = GenericsUtils.parameterizeType(collectionType, STREAM_TYPE);
+                componentType = getCombinedBoundType(col.getGenericsTypes()[0]);
+            // GRECLIPSE end
             } else {
                 componentType = OBJECT_TYPE;
             }
@@ -3336,16 +3342,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (objectExpression instanceof ConstructorCallExpression) { // GROOVY-10228
             inferDiamondType((ConstructorCallExpression) objectExpression, receiver.getPlainNodeReference());
         }
-        if (call.isSpreadSafe()) { // make sure receiver is array or collection then check element type
-            if (!receiver.isArray() && !implementsInterfaceOrIsSubclassOf(receiver, Collection_TYPE)) {
-                addStaticTypeError("Spread operator can only be used on collection types", objectExpression);
+        if (call.isSpreadSafe()) {
+            ClassNode componentType = inferComponentType(receiver, null);
+            if (componentType == null) {
+                addStaticTypeError("Spread-dot operator can only be used on iterable types", objectExpression);
             } else {
-                ClassNode componentType = inferComponentType(receiver, int_TYPE);
-                MethodCallExpression subcall = callX(castX(componentType, EmptyExpression.INSTANCE), name, call.getArguments());
+                MethodCallExpression subcall = callX(varX("item", componentType), name, call.getArguments());
                 subcall.setLineNumber(call.getLineNumber()); subcall.setColumnNumber(call.getColumnNumber());
                 subcall.setImplicitThis(call.isImplicitThis());
                 visitMethodCallExpression(subcall);
-                // the inferred type here should be a list of what the subcall returns
+                // inferred type should be a list of what sub-call returns
                 storeType(call, extension.buildListType(getType(subcall)));
                 storeTargetMethod(call, subcall.getNodeMetaData(DIRECT_METHOD_CALL_TARGET));
             }
@@ -4583,23 +4589,36 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return Number_TYPE;
     }
 
-    protected ClassNode inferComponentType(final ClassNode containerType, final ClassNode indexType) {
-        ClassNode componentType = containerType.getComponentType();
+    protected ClassNode inferComponentType(final ClassNode receiverType, final ClassNode subscriptType) {
+        ClassNode componentType = receiverType.getComponentType();
         if (componentType == null) {
-            // GROOVY-5521
-            // try to identify a getAt method
+            MethodCallExpression mce;
+            if (subscriptType != null) { // GROOVY-5521: check for a suitable "getAt(T)" method
+                mce = callX(varX("#", receiverType), "getAt", varX("selector", subscriptType));
+            } else { // GROOVY-8133: check for an "iterator()" method
+                mce = callX(varX("#", receiverType), "iterator");
+            }
+            mce.setImplicitThis(false); // GROOVY-8943
+
             typeCheckingContext.pushErrorCollector();
-            MethodCallExpression vcall = callX(localVarX("_hash_", containerType), "getAt", varX("_index_", indexType));
-            vcall.setImplicitThis(false); // GROOVY-8943
             try {
-                visitMethodCallExpression(vcall);
+                visitMethodCallExpression(mce);
             } finally {
                 typeCheckingContext.popErrorCollector();
             }
-            return getType(vcall);
-        } else {
-            return componentType;
+
+            if (subscriptType != null) {
+                componentType = getType(mce);
+            } else {
+                ClassNode iteratorType = getType(mce);
+                if (isOrImplements(iteratorType, Iterator_TYPE) && (iteratorType.getGenericsTypes() != null
+                        // ignore the iterator(Object) extension method, since it makes *everything* appear iterable
+                        || !mce.<MethodNode>getNodeMetaData(DIRECT_METHOD_CALL_TARGET).getDeclaringClass().equals(OBJECT_TYPE))) {
+                    componentType = Optional.ofNullable(iteratorType.getGenericsTypes()).map(gt -> getCombinedBoundType(gt[0])).orElse(OBJECT_TYPE);
+                }
+            }
         }
+        return componentType;
     }
 
     protected MethodNode findMethodOrFail(final Expression expr, final ClassNode receiver, final String name, final ClassNode... args) {

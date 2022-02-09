@@ -2381,6 +2381,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8133() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "\n" +
+            "@CompileStatic void test() {\n" +
+            "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def list_type = node.getNodeMetaData(INFERRED_TYPE)\n" +
+            "    assert list_type?.toString(false) == 'java.util.List<java.lang.String>'\n" +
+            "  })\n" +
+            "  def list = ['foo','bar','baz'].stream()*.toUpperCase()\n" +
+            "  print list\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[FOO, BAR, BAZ]");
+    }
+
+    @Test
     public void testCompileStatic8176() {
         //@formatter:off
         String[] sources = {
@@ -7277,5 +7300,25 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic10476() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def list = []\n" +
+            "  for (e in ['foo','bar','baz'].stream()) {\n" +
+            "    list.add(e.toUpperCase())\n" +
+            "  }\n" +
+            "  print list\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[FOO, BAR, BAZ]");
     }
 }
