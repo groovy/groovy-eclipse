@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1943,6 +1943,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
+            "  static {\n" +
+            "  }\n" +
             "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  <clinit>() {\n" +

@@ -1859,27 +1859,20 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public Void visitClassBodyDeclaration(final ClassBodyDeclarationContext ctx) {
         ClassNode classNode = ctx.getNodeMetaData(CLASS_DECLARATION_CLASS_NODE);
-        Objects.requireNonNull(classNode, "classNode should not be null");
-
         if (asBoolean(ctx.memberDeclaration())) {
             ctx.memberDeclaration().putNodeMetaData(CLASS_DECLARATION_CLASS_NODE, classNode);
             this.visitMemberDeclaration(ctx.memberDeclaration());
         } else if (asBoolean(ctx.block())) {
             Statement statement = this.visitBlock(ctx.block());
-
             if (asBoolean(ctx.STATIC())) { // e.g. static { }
                 classNode.addStaticInitializerStatements(Collections.singletonList(statement), false);
                 // GRECLIPSE add
-                MethodNode clinit = classNode.getDeclaredMethod("<clinit>", Parameter.EMPTY_ARRAY);
-                if (clinit.getEnd() < 1) { // set source position for first initializer only
-                    configureAST(clinit, ctx.STATIC());
-                }
+                ASTNode node = new ASTNode();
+                configureAST(node, ctx.STATIC());
+                statement.putNodeMetaData("static.offset", node.getStart());
                 // GRECLIPSE end
-            } else { // e.g.  { }
-                classNode.addObjectInitializerStatements(
-                        configureAST(
-                                this.createBlockStatement(statement),
-                                statement));
+            } else { // e.g. { }
+                classNode.addObjectInitializerStatements(configureAST(this.createBlockStatement(statement), statement));
             }
         }
 

@@ -135,9 +135,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Collections.singletonList;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 
 /**
  * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime.
@@ -1310,12 +1311,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected void staticInit(AST staticInit) {
         BlockStatement code = (BlockStatement) statementList(staticInit);
+        /* GRECLIPSE edit
         classNode.addStaticInitializerStatements(code.getStatements(), false);
-        // GRECLIPSE add
-        MethodNode clinit = classNode.getDeclaredMethod("<clinit>", Parameter.EMPTY_ARRAY);
-        if (clinit.getEnd() < 1) { // set source position for first initializer only
-            configureAST(clinit, staticInit);
-        }
+        */
+        ASTNode node = new ASTNode();
+        configureAST(node, staticInit);
+        code.putNodeMetaData("static.offset", node.getStart());
+        classNode.addStaticInitializerStatements(singletonList(code), false);
         // GRECLIPSE end
     }
 

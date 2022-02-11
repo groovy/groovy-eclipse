@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -68,6 +67,7 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -1144,15 +1144,37 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
 
                 for (Statement statement : classNode.getObjectInitializerStatements()) {
-                    if (statement.getEnd() > 0) {
-                        Initializer initializer = new Initializer(new Block(0), Flags.AccDefault);
-                        initializer.declarationSourceEnd = initializer.sourceEnd = statement.getEnd() - 1;
+                    if (statement.getEnd() > 0 && statement instanceof BlockStatement) {
+                        Initializer initializer = new Initializer(new Block(0), /*!static:*/Flags.AccDefault);
                         initializer.declarationSourceStart = initializer.sourceStart = statement.getStart();
+                        initializer.declarationSourceEnd = initializer.sourceEnd = statement.getEnd() - 1;
+                        initializer.block.sourceStart = initializer.sourceStart;
+                        initializer.block.sourceEnd = initializer.sourceEnd;
+                        initializer.bodyStart = initializer.sourceStart + 1;
+                        initializer.bodyEnd = initializer.sourceEnd - 1;
+
                         typeDeclaration.fields = (FieldDeclaration[]) ArrayUtils.add(typeDeclaration.fields, initializer);
 
                         if (anonymousLocations != null) {
                             statement.visit(new AnonInnerFinder(typeDeclaration.methods.length > 0 &&
                                 typeDeclaration.methods[0].isConstructor() ? typeDeclaration.methods[0] : initializer));
+                        }
+                    }
+                }
+
+                MethodNode clinit = classNode.getDeclaredMethod("<clinit>", Parameter.EMPTY_ARRAY);
+                if (clinit != null && clinit.getCode() instanceof BlockStatement) {
+                    for (Statement statement : ((BlockStatement) clinit.getCode()).getStatements()) {
+                        if (statement.getEnd() > 0 && statement instanceof BlockStatement) {
+                            Initializer initializer = new Initializer(new Block(0), Flags.AccStatic);
+                            initializer.declarationSourceStart = (int) statement.getNodeMetaData("static.offset");
+                            initializer.declarationSourceEnd = initializer.sourceEnd = statement.getEnd() - 1;
+                            initializer.block.sourceStart = initializer.sourceStart = statement.getStart();
+                            initializer.block.sourceEnd = initializer.sourceEnd;
+                            initializer.bodyStart = initializer.sourceStart + 1;
+                            initializer.bodyEnd = initializer.sourceEnd - 1;
+
+                            typeDeclaration.fields = (FieldDeclaration[]) ArrayUtils.add(typeDeclaration.fields, initializer);
                         }
                     }
                 }
@@ -1387,16 +1409,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 constructorDecl.annotations = new Annotation[] {
                     new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(groovy.transform.Generated.class)), -1)
                 };
-                LinkedList<Statement> initializerStatements = (LinkedList<Statement>) classNode.getObjectInitializerStatements();
-                if (initializerStatements.isEmpty()) {
+                if (classNode.getObjectInitializerStatements().isEmpty()) {
                     constructorDecl.bits |= ASTNode.IsDefaultConstructor;
-                } else {
-                    constructorDecl.declarationSourceStart = initializerStatements.getFirst().getStart();
-                    constructorDecl.declarationSourceEnd = initializerStatements.getLast().getEnd() - 1;
-                    constructorDecl.sourceStart = constructorDecl.declarationSourceStart + 1;
-                    constructorDecl.sourceEnd = constructorDecl.declarationSourceStart;
-                    constructorDecl.bodyStart = constructorDecl.declarationSourceStart;
-                    constructorDecl.bodyEnd = constructorDecl.declarationSourceEnd - 1;
                 }
                 if (isEnum) {
                     constructorDecl.modifiers = Flags.AccPrivate;
@@ -1405,6 +1419,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
                 constructorDecl.selector = ctorName;
 
+                constructorDecl.bodyEnd = -2;
+                constructorDecl.sourceEnd = -1;
+                constructorDecl.declarationSourceEnd = -1;
                 if (methodDeclarations.add(constructorDecl)) {
                     unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);
                 }

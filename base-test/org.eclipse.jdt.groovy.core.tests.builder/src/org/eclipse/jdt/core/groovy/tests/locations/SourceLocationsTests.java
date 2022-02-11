@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Annotation;
+import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -150,16 +151,20 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         while (source.substring(start).startsWith("/*")) {
             start = source.indexOf("*/", start) + 2;
         }
-
         String endTag = "/*" + astKind + memberNumber + "e*/";
-        int len = (isParrotParser() || (decl instanceof IField && source.charAt(source.indexOf(endTag) - 1) == ';') ||
-            (decl instanceof IMethod && decl.getNameRange().getLength() > 0 && !Flags.isAbstract(decl.getFlags())) ? 0 : endTag.length());
-        int end = source.indexOf(endTag) + len;
-        if (len == 0 && source.substring(0, end).endsWith("*/")) {
-            end = source.substring(0, end).lastIndexOf("/*");
-        } else if (len > 0) {
-            while (source.substring(end).startsWith("/*")) {
-                end = source.indexOf("*/", end) + 2;
+        int end = 0;
+        if (start < startTag.length()) {
+            start = 0;
+        } else {
+            int len = (isParrotParser() || (decl instanceof IField && source.charAt(source.indexOf(endTag) - 1) == ';') ||
+                (decl instanceof IMethod && decl.getNameRange().getLength() > 0 && !Flags.isAbstract(decl.getFlags())) ? 0 : endTag.length());
+            end = source.indexOf(endTag) + len;
+            if (len == 0 && source.substring(0, end).endsWith("*/")) {
+                end = source.substring(0, end).lastIndexOf("/*");
+            } else if (len > 0) {
+                while (source.substring(end).startsWith("/*")) {
+                    end = source.indexOf("*/", end) + 2;
+                }
             }
         }
 
@@ -198,7 +203,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String nameStartTag = "/*" + astKind + memberNumber + "sn*/";
         int nameStart = source.indexOf(nameStartTag);
         if (nameStart == -1) {
-            nameStart = start + 1;
+            nameStart = start;
         } else {
             nameStart += nameStartTag.length();
         }
@@ -214,37 +219,39 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             nameEnd += nameEndTag.length();
         }
 
-        if (!(body instanceof Initializer)) {
+        if (astKind != 'i') {
             ISourceRange nameRange = decl.getNameRange();
             assertEquals(decl + "\nhas incorrect name start value", nameStart, nameRange.getOffset());
             assertEquals(decl + "\nhas incorrect name end value", nameEnd, nameRange.getOffset() + nameRange.getLength());
         }
-        if (body instanceof FieldDeclaration) {
+        if (astKind == 'f') {
             SimpleName name = ((VariableDeclarationFragment) ((FieldDeclaration) body).fragments().get(0)).getName();
             assertEquals(body + "\nhas incorrect source start value", nameStart, name.getStartPosition());
             assertEquals(body + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
-        } else if (body instanceof MethodDeclaration) {
-            SimpleName name = ((MethodDeclaration) body).getName();
+        } else if (astKind == 'm') {
+            SimpleName name = body instanceof MethodDeclaration ? ((MethodDeclaration) body).getName() : ((AnnotationTypeMemberDeclaration) body).getName();
             assertEquals(body + "\nhas incorrect source start value", nameStart, name.getStartPosition());
             assertEquals(body + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + (nameEnd - nameStart));
         }
 
-        if (astKind == 'm' || astKind == 't') {
-            String bodyStartTag = "/*" + astKind + memberNumber + "sb*/";
-            int bodyStart = source.indexOf(bodyStartTag) + bodyStartTag.length();
-            if (body instanceof MethodDeclaration) {
-                MethodDeclaration md = (MethodDeclaration) body;
-                if (md.getBody() != null) { // may be null for interfaces, @interfaces, abstract methods
-                    assertEquals(body + "\nhas incorrect body start value", bodyStart, md.getBody().getStartPosition());
-                }
-            }/* else if (body instanceof AbstractTypeDeclaration) {
-                AbstractTypeDeclaration td = (AbstractTypeDeclaration) body;
-                assertEquals(body + "\nhas incorrect body start value", bodyStart, td.???.getStartPosition());
-            }*/
+        String bodyStartTag = "/*" + astKind + memberNumber + "sb*/";
+        int bodyStart = source.indexOf(bodyStartTag);
+        if (bodyStart != -1) {
+            bodyStart += bodyStartTag.length();
+        } else {
+            bodyStart += 1;
+        }
+        if (astKind == 't') {
+            //AbstractTypeDeclaration td = (AbstractTypeDeclaration) body;
+            //assertEquals(body + "\nhas incorrect body start value", bodyStart, td.???.getStartPosition());
+        } else if (astKind == 'i') {
+            assertEquals(body + "\nhas incorrect body start value", bodyStart, ((Initializer) body).getBody().getStartPosition());
+        } else if (astKind == 'm' && !Flags.isAbstract(((IMethod) decl).getFlags())) {
+            assertEquals(body + "\nhas incorrect body start value", bodyStart, ((MethodDeclaration) body).getBody().getStartPosition());
         }
 
         int bodyEnd = body.getStartPosition() + body.getLength();
-        if (decl instanceof IMethod && (decl.getNameRange().getLength() == 0 ||
+        if (bodyEnd > 0 && decl instanceof IMethod && (decl.getNameRange().getLength() == 0 ||
                 (Flags.isAbstract(((IMethod) decl).getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
             bodyEnd += 1; // construcotrs and methods with a body have been set back by 1 for JDT compatibility
         } else if (body instanceof FieldDeclaration && source.charAt(source.indexOf(endTag) - 1) != ';') {
@@ -631,13 +638,29 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testSourceLocationsStaticInitializers() throws Exception {
+        String source =
+            "package p1\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
+            "  /*i0s*//*i0sb*/static {\n" +
+            "    int i = 0\n" +
+            "  }/*i0e*/\n" +
+            "  /*i1s*//*i1sb*/static\n" +
+            "  {\n" +
+            "    print 'f'\n" +
+            "  }/*i1e*/\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test
     public void testSourceLocationsObjectInitializers1() throws Exception {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
-            "  /*i0s*//*m1s*//*m1sb*/{\n" +
+            "  /*i1s*//*i1sb*/{\n" +
             "    int i = 0\n" +
-            "  }/*i0e*//*m1e*/\n" +
+            "  }/*i1e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -647,13 +670,13 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
-            "  /*i0s*//*m1s*//*m1sb*/{\n" +
+            "  /*i1s*//*i1sb*/{\n" +
             "    int i = 0\n" +
-            "  }/*i0e*/\n" +
-            "  /*i2s*/{\n" +
+            "  }/*i1e*/\n" +
+            "  /*i2s*//*i2sb*/{\n" +
             "    int j = 1\n" +
             "  }/*i2e*/\n" +
-            "  /*i3s*/{\n" +
+            "  /*i3s*//*i3sb*/{\n" +
             "  }/*i3e*//*m1e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));

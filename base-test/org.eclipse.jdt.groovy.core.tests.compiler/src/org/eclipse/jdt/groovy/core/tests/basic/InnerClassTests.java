@@ -248,7 +248,13 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "<clinit>");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Outer.groovy (at line 3)\n" +
+            "\tstatic {\n" +
+            "\t^\n" +
+            "Cannot define static initializer in inner type Outer.Inner\n" + // https://docs.oracle.com/javase/specs/jls/se7/html/jls-8.html#jls-8.1.3
+            "----------\n");
     }
 
     @Test
@@ -754,6 +760,8 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
+            "  static {\n" +
+            "  }\n" +
             "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  <clinit>() {\n" +
