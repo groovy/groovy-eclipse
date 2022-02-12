@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,6 +127,34 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testPlatformLog() {
+        assumeTrue(isAtLeastJava(JDK9) && isAtLeastGroovy(40) && Boolean.getBoolean("eclipse.pde.launch"));
+
+        //@formatter:off
+        String[] sources = {
+            "PlatformLogExample.groovy",
+            "import groovy.util.logging.*\n" +
+            "@PlatformLog\n" +
+            "class C {\n" +
+            "  void test() {\n" +
+            "    log.log(System.Logger.Level.INFO) { -> 'yay!' }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "T.groovy",
+            "class T implements org.apache.logging.log4j.core.util.Clock {\n" +
+            "  long currentTimeMillis() { 0 }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.17.1", "org.apache.logging.log4j:log4j-core:2.17.1", "org.apache.logging.log4j:log4j-jpl:2.17.1");
+        vmArguments = new String[] {"-Dorg.apache.logging.log4j.level=INFO", "-Dlog4j2.clock=T"};
+        runConformTest(sources, "[main] INFO  C - yay!");
+    }
+
+    @Test
     public void testSlf4j() {
         assumeTrue(Boolean.getBoolean("eclipse.pde.launch"));
 
@@ -173,7 +201,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testSlf4j_7439() {
-        assumeTrue(Boolean.getBoolean("eclipse.pde.launch") && isAtLeastGroovy(40));
+        assumeTrue(isAtLeastGroovy(40) && Boolean.getBoolean("eclipse.pde.launch"));
 
         //@formatter:off
         String[] sources = {
