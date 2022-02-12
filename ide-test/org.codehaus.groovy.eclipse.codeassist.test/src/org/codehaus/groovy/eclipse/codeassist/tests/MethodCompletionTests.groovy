@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assume.assumeTrue
 
@@ -554,7 +555,49 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testDefaultMethods() {
+        String contents = '''\
+            |class C implements Comparator<String> {
+            |  @Override
+            |  Comparator<String> reversed() {
+            |    super.r
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'reversed', isAtLeastGroovy(40) ? 1 : 0)
+        proposalExists(proposals, 'thenComparing', isAtLeastGroovy(40) ? 3 : 0)
+        proposalExists(proposals, 'comparing', 0) // no static methods
+    }
+
+    @Test
     void testStaticMethods1() {
+        String contents = '''\
+            |class C implements Comparator<String> {
+            |  static m() {
+            |    r
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'r'))
+        proposalExists(proposals, 'naturalOrder', 0)
+        proposalExists(proposals, 'reverseOrder', 0)
+        proposalExists(proposals, 'reversed', 0)
+    }
+
+    @Test
+    void testStaticMethods2() {
+        String contents = '''\
+            |class C implements Comparator<String> {}
+            |C.c
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'c'))
+        proposalExists(proposals, 'thenComparing', 0)
+        proposalExists(proposals, 'comparing', 0)
+    }
+
+    @Test
+    void testStaticMethods3() {
         String contents = '''\
             |import java.util.regex.Pattern
             |Pattern.
@@ -565,7 +608,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testStaticMethods2() {
+    void testStaticMethods4() {
         addGroovySource '''\
             |abstract class A {
             |  static void someThing() {}

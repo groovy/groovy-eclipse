@@ -140,7 +140,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}";
         //@formatter:on
         assertType(contents, "this",          "Bar");
-        assertType(contents, "super",         "java.lang.Object");
+        assertType(contents, "super",         "java.lang.Object" + (isAtLeastGroovy(40) ? " | groovy.lang.GroovyObject" : ""));
         assertType(contents, "owner",         "Bar");
         assertType(contents, "getOwner()",    "Bar");
         assertType(contents, "delegate",      "Foo");

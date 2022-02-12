@@ -1715,7 +1715,6 @@ public final class InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
-        assertType(contents, "super", "java.lang.Number");
         assertDeclaringType(contents, "intValue", "java.lang.Number");
     }
 
@@ -1730,8 +1729,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
-        assertDeclaringType(contents, "run", "java.lang.Runnable");
-        assertType(contents, "super", "java.lang.Runnable");
+        assertUnknown(contents, "run");
         assertDeclaringType(contents, "hashCode", "java.lang.Object");
     }
 
@@ -1746,7 +1744,55 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
         assertDeclaringType(contents, "hashCode", "java.lang.Object");
-        assertType(contents, "super", "groovy.lang.GroovyObject");
+    }
+
+    @Test // GROOVY-9884
+    public void testSuperInterfaceMethod1() {
+        String contents =
+            "class C {\n" +
+            "  Object getProperty(String name) {\n" +
+            "    name == 'foo' ? 'bar' : super.getProperty(name)\n" +
+            "  }\n" +
+            "}\n";
+        if (!isAtLeastGroovy(40)) {
+            assertUnknown(contents, "getProperty");
+        } else {
+            assertDeclaringType(contents, "getProperty", "groovy.lang.GroovyObject");
+            assertType(contents, "getProperty", "java.lang.Object");
+        }
+    }
+
+    @Test // GROOVY-9909
+    public void testSuperInterfaceMethod2() {
+        String contents =
+            "class C implements Comparator<String> {\n" +
+            "  Comparator<String> reversed() {\n" +
+            "    super.reversed()\n" +
+            "  }\n" +
+            "}\n";
+        if (!isAtLeastGroovy(40)) {
+            assertUnknown(contents, "reversed");
+        } else {
+            assertDeclaringType(contents, "reversed", "java.util.Comparator<java.lang.String>");
+            assertType(contents, "reversed", "java.util.Comparator<java.lang.String>");
+        }
+    }
+
+    @Test // super-interface static method requires qualifier
+    public void testSuperInterfaceMethod3() {
+        for (String qual : new String[]{"", "this.", "super.", "Comparator.", "Comparator.<String>"}) {
+            String contents =
+                "class C implements Comparator<String> {\n" +
+                "  static m() {\n" +
+                "    " + qual + "naturalOrder()\n" +
+                "  }\n" +
+                "}\n";
+            if (!qual.startsWith("C")) {
+                assertUnknown(contents, "naturalOrder");
+            } else {
+                assertType(contents, "naturalOrder", "java.util.Comparator<java.lang." + (qual.endsWith(">") ? "String" : "Comparable<? super T>") + ">");
+            }
+        }
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import static org.codehaus.groovy.transform.trait.Traits.decomposeSuperCallName;
 import static org.codehaus.groovy.transform.trait.Traits.findTraits;
+import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -69,12 +70,19 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         }
         boolean firstTime = alreadySeen.isEmpty();
         boolean isMapType = GeneralUtils.isOrImplements(type, VariableScope.MAP_CLASS_NODE);
+
         for (MethodNode method : getAllMethods(type, alreadySeen)) {
+            ClassNode declaringClass = method.getDeclaringClass();
+            if (method.isStatic() && declaringClass.isInterface() && !isTrait(declaringClass)) {
+                // a static interface method requires a direct reference
+                if (!isStatic || !declaringClass.equals(type)) continue;
+            }
+
             String methodName = method.getName();
             String[] traitAndMethodNames = decomposeSuperCallName(methodName);
             if (traitAndMethodNames != null) methodName = traitAndMethodNames[1];
 
-            if (!isStatic || method.isStatic() || method.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE)) {
+            if (!isStatic || method.isStatic() || declaringClass.equals(VariableScope.OBJECT_CLASS_NODE)) {
                 if (matcher.test(prefix, methodName) && !"<clinit>".equals(methodName)) {
                     final GroovyMethodProposal proposal;
                     if (traitAndMethodNames != null) {
@@ -94,7 +102,6 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                     } else {
                         FieldNode mockField = createMockField(method);
                         if (alreadySeenFields.add(mockField.getName())) {
-                            ClassNode declaringClass = method.getDeclaringClass();
                             FieldNode realField = declaringClass.getField(mockField.getName());
                             if (realField == null) realField = declaringClass.getField(ProposalUtils.createCapitalMockFieldName(methodName));
                             if (realField == null || leftIsMoreAccessible(mockField, realField)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -332,12 +332,15 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     // Class<super of T> (static scope) or Object (Is this a Groovy bug?)
                     if (!isStatic()) {
                         superType = type.getSuperClass();
-                        if (OBJECT_CLASS_NODE.equals(superType) && GroovyUtils.isAnonymous(type)) {
-                            superType = type.getInterfaces()[0];
+                        ClassNode[] superInterfaces = type.getInterfaces();
+                        if (superInterfaces.length > 0 && GroovyUtils.getGroovyVersion().getMajor() > 3) {
+                            String union = Stream.concat(Stream.of(superType), Stream.of(superInterfaces))
+                                .map(t -> t.toString(false)).collect(Collectors.joining(" | ", "(", ")"));
+                            superType = new ClassNode(union, 0, superType, superInterfaces.clone(), null);
                         }
-                    } else { // type is Class<T>, so produce Class<super of T>
-                        assert type.equals(CLASS_CLASS_NODE) && type.getGenericsTypes() != null;
-                        superType = type.getGenericsTypes()[0].getType().getSuperClass(); //super of T
+                    } else { // type is Class<T>, so produce Class<"super of T">
+                        assert (type.equals(CLASS_CLASS_NODE) && type.getGenericsTypes() != null);
+                        superType = type.getGenericsTypes()[0].getType().getSuperClass();
                         if (superType != null && !superType.equals(OBJECT_CLASS_NODE)) {
                             superType = newClassClassNode(superType);
                         }
