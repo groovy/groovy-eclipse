@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -40,7 +41,6 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
-import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.SyntaxException;
@@ -51,6 +51,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Collections.addAll;
+import static org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.hasImplicitParameter;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
@@ -65,8 +67,8 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
  * <li>references to 'this' changed to the additional 'self' parameter</li>
  * </ul>
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-public class CategoryASTTransformation implements ASTTransformation, Opcodes {
+@GroovyASTTransformation
+public class CategoryASTTransformation implements ASTTransformation {
     // should not use a static variable because of possible changes to node metadata
     // which would be visible to other compilation units
     private final VariableExpression thisExpression = createThisExpression();
@@ -144,9 +146,11 @@ public class CategoryASTTransformation implements ASTTransformation, Opcodes {
 
             @Override
             public void visitClosureExpression(ClosureExpression ce) {
+                /* GRECLIPSE edit
                 addVariablesToStack(getParametersSafe(ce));
                 super.visitClosureExpression(ce);
                 varStack.removeLast();
+                */
             }
 
             @Override
@@ -190,7 +194,7 @@ public class CategoryASTTransformation implements ASTTransformation, Opcodes {
             public Expression transform(Expression exp) {
                 if (exp instanceof VariableExpression) {
                     VariableExpression ve = (VariableExpression) exp;
-                    /* GRECLIPSE edit -- "this" and "super" handling
+                /* GRECLIPSE edit -- "this" and "super" handling
                     if (ve.getName().equals("this"))
                         return thisExpression;
                     else {
@@ -216,12 +220,20 @@ public class CategoryASTTransformation implements ASTTransformation, Opcodes {
                         thisExpression.setSourcePosition(ve);
                         thisExpression.setType(targetClass);
                         return thisExpression;
-                    } else if (!ve.isSuperExpression() && !varStack.getLast().contains(ve.getName())) {
+                    } else if (!inClosure && !ve.isSuperExpression() && !varStack.getLast().contains(ve.getName())) {
                         PropertyExpression pe = new PropertyExpression(thisExpression, ve.getName());
                         pe.setSourcePosition(ve);
                         return pe;
                     }
-                    // GRECLIPSE end
+                } else if (exp instanceof MethodCallExpression) {
+                    MethodCallExpression mce = (MethodCallExpression) exp;
+                    if (inClosure && mce.isImplicitThis() && isThisExpression(mce.getObjectExpression())) {
+                        // GROOVY-6510: preserve implicit-this semantics
+                        mce.setArguments(transform(mce.getArguments()));
+                        mce.setMethod(transform(mce.getMethod()));
+                        return mce;
+                    }
+                // GRECLIPSE end
                 } else if (exp instanceof ClosureExpression) {
                     ClosureExpression ce = (ClosureExpression) exp;
                     ce.getVariableScope().putReferencedLocalVariable((Parameter) parameter.get());
@@ -229,11 +241,21 @@ public class CategoryASTTransformation implements ASTTransformation, Opcodes {
                             hasImplicitParameter(ce)
                                     ? params(param(ClassHelper.OBJECT_TYPE, "it"))
                                     : getParametersSafe(ce));
+                    // GRECLIPSE add
+                    addAll(varStack.getLast(), "owner", "delegate", "thisObject");
+                    boolean closure = inClosure; inClosure = true;
+                    // GRECLIPSE end
                     ce.getCode().visit(this);
                     varStack.removeLast();
+                    // GRECLIPSE add
+                    inClosure = closure;
+                    // GRECLIPSE end
                 }
                 return super.transform(exp);
             }
+            // GRECLIPSE add
+            private boolean inClosure;
+            // GRECLIPSE end
         };
 
         for (MethodNode method : parent.getMethods()) {

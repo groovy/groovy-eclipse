@@ -175,6 +175,39 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCategory6510() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "use(NumberCategory) {\n" +
+            "  print 1.something()\n" +
+            "}\n",
+
+            "NumberCategory.groovy",
+            "@Category(Number) class NumberCategory {\n" +
+            "  def something() {\n" +
+            "    def closure = { ->\n" +
+            "      getThing()\n" + // replaced by "$this.getThing()"
+            "    }\n" +
+            "    closure.resolveStrategy = Closure.DELEGATE_FIRST\n" +
+            "    closure.delegate = new NumberDelegate(this)\n" +
+            "    closure.call()\n" +
+            "  }\n" +
+            "}\n",
+
+            "NumberDelegate.groovy",
+            "class NumberDelegate {\n" +
+            "  private final Number n\n" +
+            "  NumberDelegate(Number n) { this.n = n }\n" +
+            "  String getThing() { 'works' + n.intValue() }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works1");
+    }
+
+    @Test
     public void testCategory8433() {
         //@formatter:off
         String[] sources = {
