@@ -45,6 +45,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
@@ -52,12 +53,13 @@ import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedConstructor
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.isInnerClass;
 import static org.apache.groovy.ast.tools.VisibilityUtils.getVisibility;
-import static org.codehaus.groovy.antlr.AntlrParserPlugin.getDefaultValueForPrimitive;
 import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveType;
 import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.ast.ClassHelper.makeWithoutCaching;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.asX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.boolX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callThisX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
@@ -65,13 +67,14 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.defaultValueX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.elvisX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.entryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllProperties;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.list2args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.listX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.mapX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.notNullX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.plusX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
@@ -101,6 +104,7 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         }
 
         boolean autoDelegate = memberHasValue(anno, "autoDelegate", true);
+        boolean coerce = memberHasValue(anno, "coerce", true);
         Parameter mapParam = param(GenericsUtils.nonGeneric(MAP_TYPE), "__namedArgs");
         List<Parameter> genParams = new ArrayList<>();
         genParams.add(mapParam);
@@ -119,24 +123,26 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         }
 
         if (!annoFound && autoDelegate) { // the first param is the delegate
-            processDelegateParam(mNode, mapParam, args, propNames, fromParams[0]);
+            processDelegateParam(mNode, mapParam, args, propNames, fromParams[0], coerce);
         } else {
             for (Parameter fromParam : fromParams) {
                 if (!annoFound) {
-                    if (!processImplicitNamedParam(mNode, mapParam, inner, args, propNames, fromParam)) return;
+                    if (!processImplicitNamedParam(this, mNode, mapParam, inner, args, propNames, fromParam, coerce)) return;
                 } else if (AnnotatedNodeUtils.hasAnnotation(fromParam, NAMED_PARAM_TYPE)) {
-                    if (!processExplicitNamedParam(mNode, mapParam, inner, args, propNames, fromParam)) return;
+                    if (!processExplicitNamedParam(mNode, mapParam, inner, args, propNames, fromParam, coerce)) return;
                 } else if (AnnotatedNodeUtils.hasAnnotation(fromParam, NAMED_DELEGATE_TYPE)) {
-                    if (!processDelegateParam(mNode, mapParam, args, propNames, fromParam)) return;
+                    if (!processDelegateParam(mNode, mapParam, args, propNames, fromParam, coerce)) return;
                 } else {
-                    if (hasDuplicates(mNode, propNames, fromParam.getName())) return;
-                    args.addExpression(varX(fromParam));
+                    Expression arg = varX(fromParam);
+                    Expression argOrDefault = fromParam.hasInitialExpression() ? elvisX(arg, fromParam.getDefaultValue()) : arg;
+                    args.addExpression(asType(argOrDefault, fromParam.getType(), coerce));
+                    if (hasDuplicates(this, mNode, propNames, fromParam.getName())) return;
                     genParams.add(fromParam);
                 }
             }
         }
         collateNamedParamAnnotations(mapParam); // GROOVY-10484
-        createMapVariant(mNode, anno, mapParam, genParams, cNode, inner, args, propNames);
+        createMapVariant(this, mNode, anno, mapParam, genParams, cNode, inner, args, propNames);
     }
 
     private static void collateNamedParamAnnotations(final Parameter mapParam) {
@@ -148,11 +154,11 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         mapParamAnnotations.add(namedParams);
     }
 
-    private boolean processImplicitNamedParam(final MethodNode mNode, final Parameter mapParam, final BlockStatement inner, final ArgumentListExpression args, final List<String> propNames, final Parameter fromParam) {
+    static  boolean processImplicitNamedParam(final ErrorCollecting xform, final MethodNode mNode, final Parameter mapParam, final BlockStatement inner, final ArgumentListExpression args, final List<String> propNames, final Parameter fromParam, final boolean coerce) {
         String name = fromParam.getName();
         ClassNode type = fromParam.getType();
         boolean required = !fromParam.hasInitialExpression();
-        if (hasDuplicates(mNode, propNames, name)) return false;
+        if (hasDuplicates(xform, mNode, propNames, name)) return false;
 
         AnnotationNode namedParam = new AnnotationNode(NAMED_PARAM_TYPE);
         namedParam.addMember("value", constX(name));
@@ -164,11 +170,11 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
             inner.addStatement(new AssertStatement(boolX(containsKey(mapParam, name)),
                     plusX(constX("Missing required named argument '" + name + "'. Keys found: "), callX(varX(mapParam), "keySet"))));
         }
-        args.addExpression(namedParamValue(mapParam, name, type, fromParam.getInitialExpression()));
+        args.addExpression(namedParamValue(mapParam, name, type, coerce, fromParam.getInitialExpression()));
         return true;
     }
 
-    private boolean processExplicitNamedParam(final MethodNode mNode, final Parameter mapParam, final BlockStatement inner, final ArgumentListExpression args, final List<String> propNames, final Parameter fromParam) {
+    private boolean processExplicitNamedParam(final MethodNode mNode, final Parameter mapParam, final BlockStatement inner, final ArgumentListExpression args, final List<String> propNames, final Parameter fromParam, final boolean coerce) {
         AnnotationNode namedParam = fromParam.getAnnotations(NAMED_PARAM_TYPE).get(0);
 
         String name = getMemberStringValue(namedParam, "value");
@@ -176,7 +182,7 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
             name = fromParam.getName();
             namedParam.addMember("value", constX(name));
         }
-        if (hasDuplicates(mNode, propNames, name)) return false;
+        if (hasDuplicates(this, mNode, propNames, name)) return false;
 
         ClassNode type = getMemberClassValue(namedParam, "type");
         if (type == null) {
@@ -195,13 +201,13 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
             inner.addStatement(new AssertStatement(boolX(containsKey(mapParam, name)),
                     plusX(constX("Missing required named argument '" + name + "'. Keys found: "), callX(varX(mapParam), "keySet"))));
         }
-        args.addExpression(namedParamValue(mapParam, name, type, fromParam.getInitialExpression()));
+        args.addExpression(namedParamValue(mapParam, name, type, coerce, fromParam.getInitialExpression()));
         mapParam.addAnnotation(namedParam);
         fromParam.getAnnotations().remove(namedParam);
         return true;
     }
 
-    private boolean processDelegateParam(final MethodNode mNode, final Parameter mapParam, final ArgumentListExpression args, final List<String> propNames, final Parameter fromParam) {
+    private boolean processDelegateParam(final MethodNode mNode, final Parameter mapParam, final ArgumentListExpression args, final List<String> propNames, final Parameter fromParam, final boolean coerce) {
         if (isInnerClass(fromParam.getType()) && mNode.isStatic()) {
             addError("Error during " + NAMED_VARIANT + " processing. Delegate type '" + fromParam.getType().getNameWithoutPackage() + "' is an inner class which is not supported.", mNode);
             return false;
@@ -210,14 +216,15 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         Set<String> names = new HashSet<>();
         List<PropertyNode> props = getAllProperties(names, fromParam.getType(), true, false, false, true, false, true);
         for (String next : names) {
-            if (hasDuplicates(mNode, propNames, next)) return false;
+            if (hasDuplicates(this, mNode, propNames, next)) return false;
         }
         List<MapEntryExpression> entries = new ArrayList<>();
         for (PropertyNode pNode : props) {
             String name = pNode.getName();
             ClassNode type = pNode.getType();
-            // create entry [name: __namedArgs.name ?: defaultValue)]
-            entries.add(entryX(constX(name), namedParamValue(mapParam, name, type, pNode.getInitialExpression())));
+            // create entry [name: __namedArgs.getOrDefault('name', initialValue)]
+            Expression defaultValue = Optional.ofNullable(pNode.getInitialExpression()).orElseGet(() -> defaultValueX(type));
+            entries.add(entryX(constX(name), asType(callX(varX(mapParam), "getOrDefault", args(constX(name), defaultValue)), type, coerce)));
             // create annotation @NamedParam(value='name', type=PropertyType)
             AnnotationNode namedParam = new AnnotationNode(NAMED_PARAM_TYPE);
             namedParam.addMember("value", constX(name));
@@ -229,16 +236,16 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         return true;
     }
 
-    private boolean hasDuplicates(final MethodNode mNode, final List<String> propNames, final String next) {
+    private static boolean hasDuplicates(final ErrorCollecting xform, final MethodNode mNode, final List<String> propNames, final String next) {
         if (propNames.contains(next)) {
-            addError("Error during " + NAMED_VARIANT + " processing. Duplicate property '" + next + "' found.", mNode);
+            xform.addError("Error during " + NAMED_VARIANT + " processing. Duplicate property '" + next + "' found.", mNode);
             return true;
         }
         propNames.add(next);
         return false;
     }
 
-    private void createMapVariant(final MethodNode mNode, final AnnotationNode anno, final Parameter mapParam, final List<Parameter> genParams, final ClassNode cNode, final BlockStatement inner, final ArgumentListExpression args, final List<String> propNames) {
+    static void createMapVariant(final ErrorCollecting xform, final MethodNode mNode, final AnnotationNode anno, final Parameter mapParam, final List<Parameter> genParams, final ClassNode cNode, final BlockStatement inner, final ArgumentListExpression args, final List<String> propNames) {
         Parameter namedArgKey = param(STRING_TYPE, "namedArgKey");
         inner.addStatement(
                 new ForStatement(
@@ -248,9 +255,9 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
                 ));
 
         Parameter[] genParamsArray = genParams.toArray(Parameter.EMPTY_ARRAY);
-        // TODO account for default params giving multiple signatures
+        // TODO: account for default params giving multiple signatures
         if (cNode.hasMethod(mNode.getName(), genParamsArray)) {
-            addError("Error during " + NAMED_VARIANT + " processing. Class " + cNode.getNameWithoutPackage() +
+            xform.addError("Error during " + NAMED_VARIANT + " processing. Class " + cNode.getNameWithoutPackage() +
                     " already has a named-arg " + (mNode instanceof ConstructorNode ? "constructor" : "method") +
                     " of type " + genParams, mNode);
             return;
@@ -281,26 +288,18 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         }
     }
 
-    //--------------------------------------------------------------------------
-
-    private static Expression namedParamValue(final Parameter mapParam, final String name, final ClassNode type, Expression defaultValue) {
+    private static Expression namedParamValue(final Parameter mapParam, final String name, final ClassNode type, final boolean coerce, Expression defaultValue) {
         Expression value = propX(varX(mapParam), name); // TODO: "map.get(name)"
         if (defaultValue == null && isPrimitiveType(type)) {
             defaultValue = defaultValueX(type);
         }
-        if (defaultValue != null) { // GROOVY-9158, GROOVY-9183
+        if (defaultValue != null) {
             if (isPrimitiveType(type)) { // handle null for primitive
                 value = ternaryX(notNullX(value), value, defaultValueX(type));
             }
             value = ternaryX(containsKey(mapParam, name), value, defaultValue);
         }
-        return castX(type, value);
-    }
-
-    private static Expression defaultValueX(final ClassNode type) {
-        Expression defaultValue = getDefaultValueForPrimitive(type);
-        if (defaultValue == null) defaultValue = nullX();
-        return defaultValue;
+        return asType(value, type, coerce);
     }
 
     private static Expression containsKey(final Parameter mapParam, final String name) {
@@ -308,5 +307,9 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         call.setImplicitThis(false); // required for use before super ctor call
         call.setMethodTarget(MAP_TYPE.getMethods("containsKey").get(0));
         return call;
+    }
+
+    private static Expression asType(final Expression value, final ClassNode type, final boolean coerce) {
+        return coerce ? asX(type, value) : /*castX(type,*/value/*)*/;
     }
 }
