@@ -265,12 +265,11 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 			String compliance = project.getOption(JavaCore.COMPILER_COMPLIANCE, true);
 			cp = (root instanceof JrtPackageFragmentRoot) ?
 					ClasspathLocation.forJrtSystem(path.toOSString(), rawClasspathEntry.getAccessRuleSet(),
-							ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry, project.getProject(), true),
-							allLocations, compliance) :
+							ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry, project.getProject(), true), compliance) :
 									ClasspathLocation.forLibrary(manager.getZipFile(path), rawClasspathEntry.getAccessRuleSet(),
 												ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry,
 														((IJavaProject) root.getParent()).getProject(), true),
-												allLocations, rawClasspathEntry.isModular(), compliance) ;
+												rawClasspathEntry.isModular(), compliance) ;
 		} else {
 			Object target = JavaModel.getTarget(path, true);
 			if (target != null) {
@@ -280,7 +279,7 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 					ClasspathEntry rawClasspathEntry = (ClasspathEntry) root.getRawClasspathEntry();
 					cp = ClasspathLocation.forBinaryFolder((IContainer) target, false, rawClasspathEntry.getAccessRuleSet(),
 														ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry, ((IJavaProject)root.getParent()).getProject(), true),
-														allLocations, rawClasspathEntry.isModular());
+														rawClasspathEntry.isModular());
 				}
 			}
 		}
@@ -288,8 +287,12 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 		// problem opening zip file or getting root kind
 		// consider root corrupt and ignore
 	}
-	if (isComplianceJava9OrHigher(root.getJavaProject())) {
+	JavaProject javaProject = root.getJavaProject();
+	if (isComplianceJava9OrHigher(javaProject)) {
 		addModuleClassPathInfo(root, defaultModule, cp);
+	}
+	if (allLocations != null && cp != null && JavaCore.ENABLED.equals(javaProject.getOption(JavaCore.CORE_JAVA_BUILD_EXTERNAL_ANNOTATIONS_FROM_ALL_LOCATIONS, true))) {
+		cp.connectAllLocationsForEEA(allLocations, false/*allLocations is already accumulated by our caller*/);
 	}
 	return cp;
 }

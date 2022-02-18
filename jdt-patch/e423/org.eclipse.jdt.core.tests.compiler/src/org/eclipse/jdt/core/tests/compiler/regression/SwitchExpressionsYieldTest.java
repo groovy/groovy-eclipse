@@ -6136,4 +6136,35 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				},
 				"hello");
 	}
+	public void testBug577220_001() {
+		this.runNegativeTest(
+			new String[] {
+				"module-info.java",
+				"public class X {\n"+
+				" void main(Integer i) {\n"+
+				"   Object a = switch (i) {\n"+
+				"   default -> {\n"+
+				"     yield i.toString();\n"+
+				"   }\n"+
+				"   }\n"+
+				" }\n"+
+				"}",
+			},
+			"----------\n" +
+			"1. ERROR in module-info.java (at line 1)\n" +
+			"	public class X {\n" +
+			"	             ^\n" +
+			"The public type X must be defined in its own file\n" +
+			"----------\n" +
+			"2. ERROR in module-info.java (at line 5)\n" +
+			"	yield i.toString();\n" +
+			"	       ^\n" +
+			"Syntax error on token \".\", ; expected\n" +
+			"----------\n" +
+			"3. ERROR in module-info.java (at line 7)\n" +
+			"	}\n" +
+			"	^\n" +
+			"Syntax error, insert \";\" to complete BlockStatements\n" +
+			"----------\n");
+	}
 }

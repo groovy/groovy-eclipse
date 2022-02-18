@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1225,6 +1225,8 @@ void setSourceStart(int sourceStart);
 	int JavadocInvalidProvidesClass = Javadoc + Internal + 1809;
 	/** @since 3.24*/
 	int JavadocInvalidModuleQualification = Javadoc + Internal + 1810;
+	/** @since 3.29*/
+	int JavadocInvalidModule = Javadoc + Internal + 1811;
 
 	/**
 	 * Generics

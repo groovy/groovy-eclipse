@@ -62,7 +62,7 @@ PackageNameSet(int size) {
 	this.names = new char[extraRoom][];
 }
 
-char[] add(char[] name) {
+synchronized char[] add(char[] name) {
 	int length = this.names.length;
 	int index = CharOperation.hashCode(name) % length;
 	char[] current;
@@ -77,7 +77,7 @@ char[] add(char[] name) {
 	return name;
 }
 
-void rehash() {
+synchronized void rehash() {
 	PackageNameSet newSet = new PackageNameSet(this.elementSize * 2); // double the number of expected elements
 	char[] current;
 	for (int i = this.names.length; --i >= 0;)
@@ -186,7 +186,7 @@ protected void addModuleNames(char[] modNames) {
 	final String explicit_unnamed = new String(IJavaSearchConstants.ALL_UNNAMED);
 	String[] names = new String(modNames).split(String.valueOf(CharOperation.COMMA_SEPARATOR));
 	int len = names.length;
-	if (this.allowModuleRegex && len > 0 && names[0] != null && names[0].length() > 0 
+	if (this.allowModuleRegex && len > 0 && names[0] != null && names[0].length() > 0
 			&& names[0].charAt(0) == IIndexConstants.ZERO_CHAR) { //pattern
 		names[0] = names[0].substring(1);
 		this.modulePatterns = new Pattern[len];

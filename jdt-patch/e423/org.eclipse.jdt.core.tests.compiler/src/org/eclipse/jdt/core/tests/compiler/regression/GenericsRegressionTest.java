@@ -6657,5 +6657,29 @@ public void testBug561544() {
 		"", "", null
 	);
 }
+
+public void testBug576524() {
+	if (this.complianceLevel >= ClassFileConstants.JDK16) {
+		this.runConformTest(
+			new String[] {
+				"Singleton.java",
+				"public class Singleton<T> {\n" +
+				"    public static void main(String[] obj) {\n" +
+				"        test(new Pair<Integer,String>());\n" +
+				"    }\n" +
+				"    public static <T> void test(Singleton<T> singleton) {\n" +
+				"        if (singleton instanceof Pair<T,?> pair) {\n" +
+				"            System.out.println(\"SUCCESS\");\n" +
+				"        }\n" +
+				"    }\n" +
+				"}",
+				"Pair.java",
+				"public class Pair<T,U> extends Singleton<T> {\n" +
+				"}"
+			},
+			"SUCCESS"
+		);
+	}
+}
 }
 

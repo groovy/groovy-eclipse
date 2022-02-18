@@ -477,19 +477,13 @@ void faultInImports() {
 	// single imports change from being just types to types or fields
 	nextImport : for (int i = 0; i < numberOfStatements; i++) {
 		ImportReference importReference = this.referenceContext.imports[i];
-		// GROOVY edit
-		//char[][] compoundName = importReference.tokens;
 		char[][] compoundName = importReference.getImportName();
-		// GROOVY end
 
 		// skip duplicates or imports of the current package
 		for (int j = 0; j < this.importPtr; j++) {
 			ImportBinding resolved = this.tempImports[j];
 			if (resolved.onDemand == ((importReference.bits & ASTNode.OnDemand) != 0) && resolved.isStatic() == importReference.isStatic()) {
-				// GROOVY edit
-				//if (CharOperation.equals(compoundName, resolved.compoundName)) {
 				if (CharOperation.equals(compoundName, resolved.compoundName) && CharOperation.equals(importReference.getSimpleName(), resolved.getSimpleName())) {
-				// GROOVY end
 					problemReporter().unusedImport(importReference); // since skipped, must be reported now
 					continue nextImport;
 				}
@@ -589,10 +583,7 @@ void faultInImports() {
 	for (int i = 0; i < length; i++) {
 		ImportBinding binding = this.imports[i];
 		if (!binding.onDemand && binding.resolvedImport instanceof ReferenceBinding || binding instanceof ImportConflictBinding)
-			// GROOVY edit
-			//this.typeOrPackageCache.put(binding.compoundName[binding.compoundName.length - 1], binding);
 			this.typeOrPackageCache.put(binding.getSimpleName(), binding);
-			// GROOVY end
 	}
 	this.skipCachingImports = this.environment.suppressImportErrors && unresolvedFound;
 }

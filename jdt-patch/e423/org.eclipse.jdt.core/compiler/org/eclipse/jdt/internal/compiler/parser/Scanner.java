@@ -5010,15 +5010,17 @@ private VanguardScanner getNewVanguardScanner() {
 	return vs;
 }
 protected final boolean mayBeAtCasePattern(int token) {
-	return (this.complianceLevel == ClassFileConstants.JDK17 && this.previewEnabled)
+	return (!isInModuleDeclaration() && this.complianceLevel == ClassFileConstants.JDK17 && this.previewEnabled)
 			&& (token == TokenNamecase || this.multiCaseLabelComma);
 }
 protected final boolean mayBeAtBreakPreview() {
-	return this.breakPreviewAllowed && this.lookBack[1] != TokenNameARROW;
+	return !isInModuleDeclaration() && this.breakPreviewAllowed && this.lookBack[1] != TokenNameARROW;
 }
 
 protected final boolean maybeAtLambdaOrCast() { // Could the '(' we saw just now herald a lambda parameter list or a cast expression ? (the possible locations for both are identical.)
 
+	if (isInModuleDeclaration())
+		return false;
 	switch (this.lookBack[1]) {
 		case TokenNameIdentifier:
 		case TokenNamecatch:
@@ -5038,6 +5040,8 @@ protected final boolean maybeAtLambdaOrCast() { // Could the '(' we saw just now
 
 
 protected final boolean maybeAtReferenceExpression() { // Did the '<' we saw just now herald a reference expression's type arguments and trunk ?
+	if (isInModuleDeclaration())
+		return false;
 	switch (this.lookBack[1]) {
 		case TokenNameIdentifier:
 			switch (this.lookBack[0]) {
@@ -5130,6 +5134,8 @@ public static boolean isRestrictedKeyword(int token) {
 	}
 }
 private boolean mayBeAtAnYieldStatement() {
+	if (isInModuleDeclaration())
+		return false;
 	// preceded by ;, {, }, ), or -> [Ref: http://mail.openjdk.java.net/pipermail/amber-spec-experts/2019-May/001401.html]
 	// above comment is super-seded by http://mail.openjdk.java.net/pipermail/amber-spec-experts/2019-May/001414.html
 	switch (this.lookBack[1]) {
@@ -5148,7 +5154,9 @@ private boolean mayBeAtAnYieldStatement() {
 			return false;
 	}
 }
-private boolean mayBeAtARestricedIdentifier(int restrictedIdentifier) {
+private boolean mayBeAtASealedRestricedIdentifier(int restrictedIdentifier) {
+	if (isInModuleDeclaration())
+		return false;
 	switch (restrictedIdentifier) {
 		case TokenNameRestrictedIdentifiersealed:
 			break;
@@ -5295,7 +5303,7 @@ int disambiguatedRestrictedIdentifierpermits(int restrictedIdentifierToken) {
 	if (!JavaFeature.RECORDS.isSupported(this.complianceLevel, this.previewEnabled))
 		return TokenNameIdentifier;
 
-	return disambiguatesRestrictedIdentifierWithLookAhead(this::mayBeAtARestricedIdentifier,
+	return disambiguatesRestrictedIdentifierWithLookAhead(this::mayBeAtASealedRestricedIdentifier,
 			restrictedIdentifierToken, Goal.RestrictedIdentifierPermitsGoal);
 }
 int disambiguatedRestrictedIdentifiersealed(int restrictedIdentifierToken) {
@@ -5305,7 +5313,7 @@ int disambiguatedRestrictedIdentifiersealed(int restrictedIdentifierToken) {
 	if (!JavaFeature.RECORDS.isSupported(this.complianceLevel, this.previewEnabled))
 		return TokenNameIdentifier;
 
-	return disambiguatesRestrictedIdentifierWithLookAhead(this::mayBeAtARestricedIdentifier,
+	return disambiguatesRestrictedIdentifierWithLookAhead(this::mayBeAtASealedRestricedIdentifier,
 			restrictedIdentifierToken, Goal.RestrictedIdentifierSealedGoal);
 }
 int disambiguatedRestrictedIdentifierYield(int restrictedIdentifierToken) {
@@ -5438,7 +5446,7 @@ int disambiguateCasePattern(int token, Scanner scanner) {
 }
 
 private boolean mayBeAtCaseLabelExpr() {
-	if (this.caseStartPosition <= 0)
+	if (isInModuleDeclaration() || this.caseStartPosition <= 0)
 		return false;
 	if (this.lookBack[1] == TokenNamedefault) {
 		return this.complianceLevel == ClassFileConstants.JDK17 && this.previewEnabled ?

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2020 IBM Corporation and others.
+ * Copyright (c) 2004, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -252,6 +252,11 @@ class DocCommentParser extends AbstractCommentParser {
 		}
 		tagElement.setSourceRange(start, this.tagSourceEnd-start+1);
 		this.scanner.resetTo(position, this.javadocEnd);
+	}
+
+	@Override
+	protected Object createTypeReference(int primitiveToken, boolean canBeModule) {
+		return createTypeReference(primitiveToken);
 	}
 
 	@Override

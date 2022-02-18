@@ -615,4 +615,23 @@ private boolean debugIncludes(char[][] qualifiedName) {
 	return false;
 }
 
+@Override
+public int hashCode() {
+	return System.identityHashCode(this);
+}
+
+@Override
+public boolean equals(Object obj) {
+	if (this == obj) {
+		return true;
+	}
+	if (!(obj instanceof ReferenceCollection)) {
+		return false;
+	}
+	ReferenceCollection other = (ReferenceCollection) obj;
+	return Arrays.deepEquals(this.qualifiedNameReferences, other.qualifiedNameReferences)
+			&& Arrays.deepEquals(this.rootReferences, other.rootReferences)
+			&& Arrays.deepEquals(this.simpleNameReferences, other.simpleNameReferences);
+}
+
 }

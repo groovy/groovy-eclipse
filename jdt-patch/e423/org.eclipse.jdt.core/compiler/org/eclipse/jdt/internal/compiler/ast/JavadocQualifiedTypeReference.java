@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -15,11 +15,13 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
@@ -29,12 +31,19 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference implem
 
 	public int tagSourceStart, tagSourceEnd;
 	public PackageBinding packageBinding;
+	public ModuleBinding moduleBinding;
+	private boolean canBeModule;
 
 	public JavadocQualifiedTypeReference(char[][] sources, long[] pos, int tagStart, int tagEnd) {
+		this(sources, pos, tagStart, tagEnd, false);
+	}
+
+	public JavadocQualifiedTypeReference(char[][] sources, long[] pos, int tagStart, int tagEnd, boolean canBeModule) {
 		super(sources, pos);
 		this.tagSourceStart = tagStart;
 		this.tagSourceEnd = tagEnd;
 		this.bits |= ASTNode.InsideJavadoc;
+		this.canBeModule = canBeModule;
 	}
 
 	/*
@@ -57,7 +66,18 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference implem
 				this.packageBinding = (PackageBinding) binding;
 				// Valid package references are allowed in Javadoc (https://bugs.eclipse.org/bugs/show_bug.cgi?id=281609)
 			} else {
-				reportInvalidType(scope);
+				Binding modBinding = null;
+				if (this.canBeModule) {
+					char[] moduleName = CharOperation.concatWith(this.tokens, '.');
+					modBinding = scope.environment().getModule(moduleName);
+				}
+				if (modBinding instanceof ModuleBinding
+						&& !((ModuleBinding)modBinding).isUnnamed()
+						&& modBinding.isValidBinding()) {
+					this.moduleBinding = (ModuleBinding) modBinding;
+				} else {
+					reportInvalidType(scope);
+				}
 			}
 			return null;
 		}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 IBM Corporation and others.
+ * Copyright (c) 2020, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -17,6 +17,7 @@ import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
+import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
@@ -26,6 +27,7 @@ public class JavadocModuleReference extends Expression implements IJavadocTypeRe
 	public int tagSourceStart, tagSourceEnd;
 	public TypeReference typeReference;
 	public ModuleReference moduleReference;
+	public ModuleBinding moduleBinding;
 
 	public JavadocModuleReference(char[][] sources, long[] pos, int tagStart, int tagEnd) {
 		super();
@@ -101,34 +103,92 @@ public class JavadocModuleReference extends Expression implements IJavadocTypeRe
 	}
 
 	public ModuleBinding resolve(Scope scope) {
-		return this.moduleReference.resolve(scope);
+		ModuleBinding modBinding = this.moduleReference.resolve(scope);
+		if (modBinding != null
+				&& !modBinding.isUnnamed()
+				&& modBinding.isValidBinding()) {
+			this.moduleBinding = modBinding;
+		} else {
+			reportInvalidModule(scope);
+		}
+		return this.moduleBinding;
 	}
 
 	private ModuleBinding resolveModule(BlockScope scope) {
-		return this.moduleReference.resolve(scope);
+		return this.resolve((Scope)scope);
 	}
 
 	private ModuleBinding resolveModule(ClassScope scope) {
-		return this.moduleReference.resolve(scope);
+		return this.resolve(scope);
 	}
 
 	@Override
 	public TypeBinding resolveType(BlockScope blockScope) {
 		this.resolveModule(blockScope);
-		if (this.moduleReference.binding != null
+		TypeBinding tBinding= null;
+		if (this.moduleBinding != null
 				&& this.typeReference != null) {
-			return this.typeReference.resolveType(blockScope);
+			tBinding = this.typeReference.resolveType(blockScope);
+			PackageBinding pBinding = null;
+			if (tBinding!= null) {
+				if (tBinding.isValidBinding()) {
+					pBinding = tBinding.getPackage();
+				} else {
+					return tBinding;
+				}
+			} else {
+				if(this.typeReference.resolvedType != null && !this.typeReference.resolvedType.isValidBinding()) {
+					if (this.typeReference instanceof JavadocSingleTypeReference) {
+						pBinding = ((JavadocSingleTypeReference)this.typeReference).packageBinding;
+					} else if (this.typeReference instanceof JavadocQualifiedTypeReference) {
+						pBinding = ((JavadocQualifiedTypeReference)this.typeReference).packageBinding;
+					}
+				}
+			}
+			if (pBinding != null && !this.moduleBinding.equals(pBinding.enclosingModule)) {
+				reportInvalidType(blockScope);
+				tBinding = null;
+			}
 		}
-		return null;
+		return tBinding;
 	}
 
 	@Override
 	public TypeBinding resolveType(ClassScope classScope) {
 		this.resolveModule(classScope);
-		assert(this.moduleReference.binding != null);
-		if (this.typeReference != null) {
-			return this.typeReference.resolveType(classScope, -1);
+		TypeBinding tBinding= null;
+		if (this.moduleBinding != null
+				&& this.typeReference != null) {
+			tBinding =  this.typeReference.resolveType(classScope, -1);
+			PackageBinding pBinding = null;
+			if (tBinding!= null) {
+				if (tBinding.isValidBinding()) {
+					pBinding = tBinding.getPackage();
+				} else {
+					return tBinding;
+				}
+			} else {
+				if(this.resolvedType != null && !this.resolvedType.isValidBinding()) {
+					if (this.typeReference instanceof JavadocSingleTypeReference) {
+						pBinding = ((JavadocSingleTypeReference)this.typeReference).packageBinding;
+					} else if (this.typeReference instanceof JavadocQualifiedTypeReference) {
+						pBinding = ((JavadocQualifiedTypeReference)this.typeReference).packageBinding;
+					}
+				}
+			}
+			if (pBinding != null && !this.moduleBinding.equals(pBinding.enclosingModule)) {
+				reportInvalidType(classScope);
+				tBinding = null;
+			}
 		}
-		return null;
+		return tBinding;
+	}
+
+	protected void reportInvalidModule(Scope scope) {
+		scope.problemReporter().javadocInvalidModule(this.moduleReference);
+	}
+
+	protected void reportInvalidType(Scope scope) {
+		scope.problemReporter().javadocInvalidMemberTypeQualification(this.typeReference.sourceStart, this.typeReference.sourceEnd, scope.getDeclarationModifiers());
 	}
 }

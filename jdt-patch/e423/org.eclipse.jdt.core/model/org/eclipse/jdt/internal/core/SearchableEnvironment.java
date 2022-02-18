@@ -241,6 +241,7 @@ public class SearchableEnvironment
 				boolean isAnnotated = false;
 				IPackageFragment[] packageFragments = this.nameLookup.findPackageFragments(packageName, false);
 				if (packageFragments != null) {
+					String packageNameSlash = packageName.replace('.', '/');
 					for (IPackageFragment fragment : packageFragments) {
 						if (fragment.exists()) {
 							for (Object rc : fragment.getNonJavaResources()) {
@@ -252,7 +253,7 @@ public class SearchableEnvironment
 									}
 									try {
 										iBinaryType = new ExternalAnnotationDecorator(iBinaryType,
-												new ExternalAnnotationProvider(((IStorage) rc).getContents(), packageName+'/'+typeName));
+												new ExternalAnnotationProvider(((IStorage) rc).getContents(), packageNameSlash+'/'+typeName));
 										isAnnotated = true;
 										break;
 									} catch (IOException | CoreException e) {

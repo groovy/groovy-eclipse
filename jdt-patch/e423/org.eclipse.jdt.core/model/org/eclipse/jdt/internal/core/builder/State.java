@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IUpdatableModule;
@@ -77,12 +79,17 @@ private long previousStructuralBuildTime;
 private StringSet structurallyChangedTypes;
 public static int MaxStructurallyChangedTypes = 100; // keep track of ? structurally changed types, otherwise consider all to be changed
 
-public static final byte VERSION = 0x0024;
+public static final byte VERSION = 0x0025;
 
 static final byte SOURCE_FOLDER = 1;
 static final byte BINARY_FOLDER = 2;
 static final byte EXTERNAL_JAR = 3;
 static final byte INTERNAL_JAR = 4;
+
+/** typical values of accessRule.pattern for encoding hint */
+private static final int[] PROBLEM_IDS = new int[] { 0, IProblem.ForbiddenReference, IProblem.DiscouragedReference,
+		IProblem.ForbiddenReference | AccessRule.IgnoreIfBetter,
+		IProblem.DiscouragedReference | AccessRule.IgnoreIfBetter };
 
 State() {
 	// constructor with no argument
@@ -123,6 +130,40 @@ void copyFrom(State lastState) {
 	this.references = new LinkedHashMap<>(lastState.references);
 	this.typeLocators = new LinkedHashMap<>(lastState.typeLocators);
 }
+
+/**
+ * Compares this build state with other one in terms of persistence (transient data is ignored)
+ */
+@Override
+public boolean equals(Object obj) {
+	if (this == obj) {
+		return true;
+	}
+	if (!(obj instanceof State)) {
+		return false;
+	}
+	State other = (State) obj;
+	return this.buildNumber == other.buildNumber
+			&& this.lastStructuralBuildTime == other.lastStructuralBuildTime
+			&& Objects.equals(this.javaProjectName, other.javaProjectName)
+			&& Arrays.equals(this.sourceLocations, other.sourceLocations)
+			&& Arrays.equals(this.binaryLocations, other.binaryLocations)
+			&& Arrays.equals(this.testSourceLocations, other.testSourceLocations)
+			&& Arrays.equals(this.testBinaryLocations, other.testBinaryLocations)
+			&& Objects.equals(this.typeLocators, other.typeLocators)
+			&& Objects.equals(this.references, other.references);
+// Below fields aren't persisted
+//			&& this.previousStructuralBuildTime == other.previousStructuralBuildTime
+//			&& Arrays.equals(this.knownPackageNames, other.knownPackageNames)
+//			&& Objects.equals(this.structurallyChangedTypes, other.structurallyChangedTypes)
+//			&& Objects.equals(this.structuralBuildTimes, other.structuralBuildTimes)
+}
+
+@Override
+public int hashCode() {
+	return 31 + Objects.hash(this.javaProjectName);
+}
+
 public char[][] getDefinedTypeNamesFor(String typeLocator) {
 	Object c = this.references.get(typeLocator);
 	if (c instanceof AdditionalTypeCollection)
@@ -216,8 +257,6 @@ void removeLocator(String typeLocatorToRemove) {
 	this.typeLocators.values().removeIf(v -> typeLocatorToRemove.equals(v));
 }
 
-
-
 void removePackage(IResourceDelta sourceDelta) {
 	IResource resource = sourceDelta.getResource();
 	switch(resource.getType()) {
@@ -238,7 +277,8 @@ void removeQualifiedTypeName(String qualifiedTypeNameToRemove) {
 	this.typeLocators.remove(qualifiedTypeNameToRemove);
 }
 
-static State read(IProject project, DataInputStream in) throws IOException, CoreException {
+static State read(IProject project, DataInputStream input) throws IOException, CoreException {
+	CompressedReader in = new CompressedReader(input);
 	if (JavaBuilder.DEBUG)
 		System.out.println("About to read state " + project.getName()); //$NON-NLS-1$
 	if (VERSION != in.readByte()) {
@@ -248,7 +288,7 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 	}
 
 	State newState = new State();
-	newState.javaProjectName = in.readUTF();
+	newState.javaProjectName = in.readStringUsingDictionary();
 	if (!project.getName().equals(newState.javaProjectName)) {
 		if (JavaBuilder.DEBUG)
 			System.out.println("Project's name does not match... answered null"); //$NON-NLS-1$
@@ -271,16 +311,16 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 	int length;
 	newState.structuralBuildTimes = new SimpleLookupTable(length = in.readInt());
 	for (int i = 0; i < length; i++)
-		newState.structuralBuildTimes.put(in.readUTF(), Long.valueOf(in.readLong()));
+		newState.structuralBuildTimes.put(in.readStringUsingDictionary(), Long.valueOf(in.readLong()));
 
 	String[] internedTypeLocators = new String[length = in.readInt()];
 	for (int i = 0; i < length; i++)
-		internedTypeLocators[i] = in.readUTF();
+		internedTypeLocators[i] = in.readStringUsingLast();
 
 	length = in.readInt();
 	newState.typeLocators = new LinkedHashMap<>((int) (length / 0.75 + 1));
 	for (int i = 0; i < length; i++)
-		newState.recordLocatorForType(in.readUTF(), internedTypeLocators[in.readInt()]);
+		newState.recordLocatorForType(in.readStringUsingLast(), internedTypeLocators[in.readIntInRange(internedTypeLocators.length)]);
 
 	/*
 	 * Here we read global arrays of names for the entire project - do not mess up the ordering while interning
@@ -292,7 +332,7 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 		int qLength = in.readInt();
 		char[][] qName = new char[qLength][];
 		for (int j = 0; j < qLength; j++)
-			qName[j] = internedSimpleNames[in.readInt()];
+			qName[j] = internedSimpleNames[in.readIntInRange(internedSimpleNames.length)];
 		internedQualifiedNames[i] = qName;
 	}
 	internedQualifiedNames = ReferenceCollection.internQualifiedNames(internedQualifiedNames, false /* drop well known */, false /* do not sort */);
@@ -307,25 +347,25 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 				char[][] additionalTypeNames = readNames(in);
 				char[][][] qualifiedNames = new char[in.readInt()][][];
 				for (int j = 0, m = qualifiedNames.length; j < m; j++)
-					qualifiedNames[j] = internedQualifiedNames[in.readInt()];
+					qualifiedNames[j] = internedQualifiedNames[in.readIntInRange(internedQualifiedNames.length)];
 				char[][] simpleNames = new char[in.readInt()][];
 				for (int j = 0, m = simpleNames.length; j < m; j++)
-					simpleNames[j] = internedSimpleNames[in.readInt()];
+					simpleNames[j] = internedSimpleNames[in.readIntInRange(internedSimpleNames.length)];
 				char[][] rootNames = new char[in.readInt()][];
 				for (int j = 0, m = rootNames.length; j < m; j++)
-					rootNames[j] = internedRootNames[in.readInt()];
+					rootNames[j] = internedRootNames[in.readIntInRange(internedRootNames.length)];
 				collection = new AdditionalTypeCollection(additionalTypeNames, qualifiedNames, simpleNames, rootNames);
 				break;
 			case 2 :
 				char[][][] qNames = new char[in.readInt()][][];
 				for (int j = 0, m = qNames.length; j < m; j++)
-					qNames[j] = internedQualifiedNames[in.readInt()];
+					qNames[j] = internedQualifiedNames[in.readIntInRange(internedQualifiedNames.length)];
 				char[][] sNames = new char[in.readInt()][];
 				for (int j = 0, m = sNames.length; j < m; j++)
-					sNames[j] = internedSimpleNames[in.readInt()];
+					sNames[j] = internedSimpleNames[in.readIntInRange(internedSimpleNames.length)];
 				char[][] rNames = new char[in.readInt()][];
 				for (int j = 0, m = rNames.length; j < m; j++)
-					rNames[j] = internedRootNames[in.readInt()];
+					rNames[j] = internedRootNames[in.readIntInRange(internedRootNames.length)];
 				collection = new ReferenceCollection(qNames, sNames, rNames);
 		}
 		newState.references.put(typeLocator, collection);
@@ -335,26 +375,27 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 	return newState;
 }
 
-private static ClasspathMultiDirectory[] readSourceLocations(IProject project, DataInputStream in, List<ClasspathLocation> allLocationsForEEA) throws IOException {
+private static ClasspathMultiDirectory[] readSourceLocations(IProject project, CompressedReader in, List<ClasspathLocation> allLocationsForEEA) throws IOException {
 	int length = in.readInt();
 	ClasspathMultiDirectory[] sourceLocations = new ClasspathMultiDirectory[length];
 	for (int i = 0; i < length; i++) {
 		IContainer sourceFolder = project, outputFolder = project;
 		String folderName;
-		if ((folderName = in.readUTF()).length() > 0) sourceFolder = project.getFolder(folderName);
-		if ((folderName = in.readUTF()).length() > 0) outputFolder = project.getFolder(folderName);
+		if ((folderName = in.readStringUsingDictionary()).length() > 0) sourceFolder = project.getFolder(folderName);
+		if ((folderName = in.readStringUsingDictionary()).length() > 0) outputFolder = project.getFolder(folderName);
 		ClasspathMultiDirectory md =
-			(ClasspathMultiDirectory) ClasspathLocation.forSourceFolder(sourceFolder, outputFolder, readNames(in), readNames(in), in.readBoolean(), readNullablePath(in), allLocationsForEEA);
+			(ClasspathMultiDirectory) ClasspathLocation.forSourceFolder(sourceFolder, outputFolder, readNames(in), readNames(in), in.readBoolean(), readNullablePath(in));
 		if (in.readBoolean())
 			md.hasIndependentOutputFolder = true;
 		sourceLocations[i] = md;
-		if (allLocationsForEEA != null)
-			allLocationsForEEA.add(md);
+		if (allLocationsForEEA != null) {
+			md.connectAllLocationsForEEA(allLocationsForEEA, true);
+		}
 	}
 	return sourceLocations;
 }
 
-private static ClasspathLocation[] readBinaryLocations(IProject project, DataInputStream in, ClasspathMultiDirectory[] sourceLocations, ArrayList<ClasspathLocation> allLocationsForEEA) throws IOException, CoreException {
+private static ClasspathLocation[] readBinaryLocations(IProject project, CompressedReader in, ClasspathMultiDirectory[] sourceLocations, ArrayList<ClasspathLocation> allLocationsForEEA) throws IOException, CoreException {
 	int length = in.readInt();
 	ClasspathLocation[] locations = new ClasspathLocation[length];
 	IWorkspaceRoot root = project.getWorkspace().getRoot();
@@ -365,37 +406,38 @@ private static ClasspathLocation[] readBinaryLocations(IProject project, DataInp
 				locations[i] = sourceLocations[in.readInt()];
 				break;
 			case BINARY_FOLDER :
-				IPath path = new Path(in.readUTF());
+				IPath path = new Path(in.readStringUsingDictionary());
 				IContainer outputFolder = path.segmentCount() == 1
 					? (IContainer) root.getProject(path.toString())
 					: (IContainer) root.getFolder(path);
 				locations[i] = ClasspathLocation.forBinaryFolder(outputFolder, in.readBoolean(),
-							readRestriction(in), new Path(in.readUTF()), allLocationsForEEA, in.readBoolean());
+							readRestriction(in), new Path(in.readStringUsingDictionary()), in.readBoolean());
 				break;
 			case EXTERNAL_JAR :
-				String jarPath = in.readUTF();
+				String jarPath = in.readStringUsingDictionary();
 				if (Util.isJrt(jarPath)) {
-					locations[i] = ClasspathLocation.forJrtSystem(jarPath, readRestriction(in), new Path(in.readUTF()), allLocationsForEEA, in.readUTF());
+					locations[i] = ClasspathLocation.forJrtSystem(jarPath, readRestriction(in), new Path(in.readStringUsingDictionary()), in.readStringUsingDictionary());
 				} else {
 					locations[i] = ClasspathLocation.forLibrary(jarPath, in.readLong(),
-							readRestriction(in), new Path(in.readUTF()), in.readBoolean(), in.readUTF());
+							readRestriction(in), new Path(in.readStringUsingDictionary()), in.readBoolean(), in.readStringUsingDictionary());
 				}
 				break;
 			case INTERNAL_JAR :
-					locations[i] = ClasspathLocation.forLibrary(root.getFile(new Path(in.readUTF())),
-							readRestriction(in), new Path(in.readUTF()), allLocationsForEEA, in.readBoolean(), in.readUTF());
+					locations[i] = ClasspathLocation.forLibrary(root.getFile(new Path(in.readStringUsingDictionary())),
+							readRestriction(in), new Path(in.readStringUsingDictionary()), in.readBoolean(), in.readStringUsingDictionary());
 					break;
 		}
 		ClasspathLocation loc = locations[i];
-		if (allLocationsForEEA != null && kind != SOURCE_FOLDER && !allLocationsForEEA.contains(loc))
-			allLocationsForEEA.add(loc);
-		char[] patchName = readName(in);
+		if (allLocationsForEEA != null) {
+			loc.connectAllLocationsForEEA(allLocationsForEEA, true);
+		}
+		char[] patchName = in.readChars();
 		loc.patchModuleName = patchName.length > 0 ? new String(patchName) : null;
 		int limitSize = in.readInt();
 		if (limitSize != 0) {
 			loc.limitModuleNames = new LinkedHashSet<>(limitSize);
 			for (int j = 0; j < limitSize; j++) {
-				loc.limitModuleNames.add(in.readUTF());
+				loc.limitModuleNames.add(in.readStringUsingDictionary());
 			}
 		} else {
 			loc.limitModuleNames = null;
@@ -406,7 +448,7 @@ private static ClasspathLocation[] readBinaryLocations(IProject project, DataInp
 		if (packageUpdatesSize != 0) {
 			packageUpdates = updates.getList(UpdateKind.PACKAGE, true);
 			for (int j = 0; j < packageUpdatesSize; j++) {
-				char[] pkgName = readName(in);
+				char[] pkgName = in.readChars();
 				char[][] targets = readNames(in);
 				packageUpdates.add(new AddExports(pkgName, targets));
 			}
@@ -415,7 +457,7 @@ private static ClasspathLocation[] readBinaryLocations(IProject project, DataInp
 		int moduleUpdatesSize = in.readInt();
 		if (moduleUpdatesSize != 0) {
 			moduleUpdates = updates.getList(UpdateKind.MODULE, true);
-			char[] modName = readName(in);
+			char[] modName = in.readChars();
 			moduleUpdates.add(new AddReads(modName));
 		}
 		if (packageUpdates != null || moduleUpdates != null)
@@ -424,40 +466,24 @@ private static ClasspathLocation[] readBinaryLocations(IProject project, DataInp
 	return locations;
 }
 
-private static char[] readName(DataInputStream in) throws IOException {
-	int nLength = in.readInt();
-	char[] name = new char[nLength];
-	for (int j = 0; j < nLength; j++)
-		name[j] = in.readChar();
-	return name;
-}
-
-private static char[][] readNames(DataInputStream in) throws IOException {
-	int length = in.readInt();
-	char[][] names = new char[length][];
-	for (int i = 0; i < length; i++)
-		names[i] = readName(in);
-	return names;
-}
-
-private static IPath readNullablePath(DataInputStream in) throws IOException {
-	String path = in.readUTF();
+private static IPath readNullablePath(CompressedReader in) throws IOException {
+	String path = in.readStringUsingDictionary();
 	if (!path.isEmpty())
 		return new Path(path);
 	return null;
 }
 
-private static AccessRuleSet readRestriction(DataInputStream in) throws IOException {
+private static AccessRuleSet readRestriction(CompressedReader in) throws IOException {
 	int length = in.readInt();
 	if (length == 0) return null; // no restriction specified
 	AccessRule[] accessRules = new AccessRule[length];
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 	for (int i = 0; i < length; i++) {
-		char[] pattern = readName(in);
-		int problemId = in.readInt();
-		accessRules[i] = manager.getAccessRuleForProblemId(pattern,problemId);
+		char[] pattern = in.readCharsUsingLast();
+		int problemId = in.readIntWithHint(PROBLEM_IDS);
+		accessRules[i] = manager.getAccessRuleForProblemId(pattern, problemId);
 	}
-	return new AccessRuleSet(accessRules, in.readByte(), manager.intern(in.readUTF()));
+	return new AccessRuleSet(accessRules, in.readByte(), manager.intern(in.readStringUsingDictionary()));
 }
 
 void tagAsNoopBuild() {
@@ -492,7 +518,8 @@ void wasStructurallyChanged(String typeName) {
 	}
 }
 
-void write(DataOutputStream out) throws IOException {
+void write(DataOutputStream output) throws IOException {
+	CompressedWriter out=new CompressedWriter(output);
 	int length;
 	Object[] keyTable;
 	Object[] valueTable;
@@ -504,7 +531,7 @@ void write(DataOutputStream out) throws IOException {
  * int			last structural build number
 */
 	out.writeByte(VERSION);
-	out.writeUTF(this.javaProjectName);
+	out.writeStringUsingDictionary(this.javaProjectName);
 	out.writeInt(this.buildNumber);
 	out.writeLong(this.lastStructuralBuildTime);
 
@@ -548,7 +575,7 @@ void write(DataOutputStream out) throws IOException {
 		for (int i = 0, l = keyTable.length; i < l; i++) {
 			if (keyTable[i] != null) {
 				length--;
-				out.writeUTF((String) keyTable[i]);
+				out.writeStringUsingDictionary((String) keyTable[i]);
 				out.writeLong(((Long) valueTable[i]).longValue());
 			}
 		}
@@ -566,7 +593,7 @@ void write(DataOutputStream out) throws IOException {
 		for (String key : keys) {
 			if (key != null) {
 				length--;
-				out.writeUTF(key);
+				out.writeStringUsingLast(key);
 				internedTypeLocators.put(key, Integer.valueOf(internedTypeLocators.elementSize));
 			}
 		}
@@ -587,9 +614,9 @@ void write(DataOutputStream out) throws IOException {
 			String value = entry.getValue();
 			if (key != null) {
 				length--;
-				out.writeUTF(key);
+				out.writeStringUsingLast(key);
 				Integer index = (Integer) internedTypeLocators.get(value);
-				out.writeInt(index.intValue());
+				out.writeIntInRange(index.intValue(), internedTypeLocators.elementSize);
 			}
 		}
 		if (JavaBuilder.DEBUG && length != 0)
@@ -668,7 +695,7 @@ void write(DataOutputStream out) throws IOException {
 		out.writeInt(qLength);
 		for (int j = 0; j < qLength; j++) {
 			Integer index = (Integer) internedSimpleNames.get(qName[j]);
-			out.writeInt(index.intValue());
+			out.writeIntInRange(index.intValue(), internedSimpleNames.elementSize);
 		}
 	}
 
@@ -697,21 +724,21 @@ void write(DataOutputStream out) throws IOException {
 			out.writeInt(qLength);
 			for (int j = 0; j < qLength; j++) {
 				index = (Integer) internedQualifiedNames.get(qNames[j]);
-				out.writeInt(index.intValue());
+				out.writeIntInRange(index.intValue(), internedQualifiedNames.elementSize);
 			}
 			char[][] sNames = collection.simpleNameReferences;
 			int sLength = sNames.length;
 			out.writeInt(sLength);
 			for (int j = 0; j < sLength; j++) {
 				index = (Integer) internedSimpleNames.get(sNames[j]);
-				out.writeInt(index.intValue());
+				out.writeIntInRange(index.intValue(), internedSimpleNames.elementSize);
 			}
 			char[][] rNames = collection.rootReferences;
 			int rLength = rNames.length;
 			out.writeInt(rLength);
 			for (int j = 0; j < rLength; j++) {
 				index = (Integer) internedRootNames.get(rNames[j]);
-				out.writeInt(index.intValue());
+				out.writeIntInRange(index.intValue(), internedRootNames.elementSize);
 			}
 		}
 		if (JavaBuilder.DEBUG && length != 0)
@@ -719,13 +746,13 @@ void write(DataOutputStream out) throws IOException {
 	}
 }
 
-private void writeSourceLocations(DataOutputStream out, ClasspathMultiDirectory[] srcLocations) throws IOException {
+private void writeSourceLocations(CompressedWriter out, ClasspathMultiDirectory[] srcLocations) throws IOException {
 	int length;
 	out.writeInt(length = srcLocations.length);
 	for (int i = 0; i < length; i++) {
 		ClasspathMultiDirectory md = srcLocations[i];
-		out.writeUTF(md.sourceFolder.getProjectRelativePath().toString());
-		out.writeUTF(md.binaryFolder.getProjectRelativePath().toString());
+		out.writeStringUsingDictionary(md.sourceFolder.getProjectRelativePath().toString());
+		out.writeStringUsingDictionary(md.binaryFolder.getProjectRelativePath().toString());
 		writeNames(md.inclusionPatterns, out);
 		writeNames(md.exclusionPatterns, out);
 		out.writeBoolean(md.ignoreOptionalProblems);
@@ -734,7 +761,7 @@ private void writeSourceLocations(DataOutputStream out, ClasspathMultiDirectory[
 	}
 }
 
-private void writeBinaryLocations(DataOutputStream out, ClasspathLocation[] locations, ClasspathMultiDirectory[] srcLocations)
+private void writeBinaryLocations(CompressedWriter out, ClasspathLocation[] locations, ClasspathMultiDirectory[] srcLocations)
 		throws IOException {
 	/*
 	 * ClasspathLocation[]
@@ -757,7 +784,7 @@ private void writeBinaryLocations(DataOutputStream out, ClasspathLocation[] loca
 		} else if (c instanceof ClasspathDirectory) {
 			out.writeByte(BINARY_FOLDER);
 			ClasspathDirectory cd = (ClasspathDirectory) c;
-			out.writeUTF(cd.binaryFolder.getFullPath().toString());
+			out.writeStringUsingDictionary(cd.binaryFolder.getFullPath().toString());
 			out.writeBoolean(cd.isOutputFolder);
 			writeRestriction(cd.accessRuleSet, out);
 			writeNullablePath(cd.externalAnnotationPath, out);
@@ -766,34 +793,34 @@ private void writeBinaryLocations(DataOutputStream out, ClasspathLocation[] loca
 			ClasspathJar jar = (ClasspathJar) c;
 			if (jar.resource == null) {
 				out.writeByte(EXTERNAL_JAR);
-				out.writeUTF(jar.zipFilename);
+				out.writeStringUsingDictionary(jar.zipFilename);
 				out.writeLong(jar.lastModified());
 			} else {
 				out.writeByte(INTERNAL_JAR);
-				out.writeUTF(jar.resource.getFullPath().toString());
+				out.writeStringUsingDictionary(jar.resource.getFullPath().toString());
 			}
 			writeRestriction(jar.accessRuleSet, out);
 			writeNullablePath(jar.externalAnnotationPath, out);
 			out.writeBoolean(jar.isOnModulePath);
-			out.writeUTF(jar.compliance == null ? "" : jar.compliance); //$NON-NLS-1$
+			out.writeStringUsingDictionary(jar.compliance == null ? "" : jar.compliance); //$NON-NLS-1$
 
 		} else if (c instanceof ClasspathJrt) {
 			ClasspathJrt jrt = (ClasspathJrt) c;
 			out.writeByte(EXTERNAL_JAR);
-			out.writeUTF(jrt.zipFilename);
+			out.writeStringUsingDictionary(jrt.zipFilename);
 			writeRestriction(jrt.accessRuleSet, out);
 			writeNullablePath(jrt.externalAnnotationPath, out);
 			if (jrt instanceof ClasspathJrtWithReleaseOption)
-				out.writeUTF(((ClasspathJrtWithReleaseOption) jrt).release);
+				out.writeStringUsingDictionary(((ClasspathJrtWithReleaseOption) jrt).release);
 			else
-				out.writeUTF(""); //$NON-NLS-1$
+				out.writeStringUsingDictionary(""); //$NON-NLS-1$
 		}
 		char[] patchName = c.patchModuleName == null ? CharOperation.NO_CHAR : c.patchModuleName.toCharArray();
-		writeName(patchName, out);
+		out.writeChars(patchName);
 		if (c.limitModuleNames != null) {
 			out.writeInt(c.limitModuleNames.size());
 			for (String name : c.limitModuleNames) {
-				out.writeUTF(name);
+				out.writeStringUsingDictionary(name);
 			}
 		} else {
 			out.writeInt(0);
@@ -808,7 +835,7 @@ private void writeBinaryLocations(DataOutputStream out, ClasspathLocation[] loca
 				map.entrySet().stream().forEach(entry -> {
 					String pkgName = entry.getKey();
 					try {
-						writeName(pkgName.toCharArray(), out);
+						out.writeChars(pkgName.toCharArray());
 						char[][] targetModules = entry.getValue().stream()
 								.map(addExport -> addExport.getTargetModules()).filter(targets -> targets != null)
 								.reduce((f, s) -> CharOperation.arrayConcat(f, s)).orElse(null);
@@ -827,7 +854,7 @@ private void writeBinaryLocations(DataOutputStream out, ClasspathLocation[] loca
 				List<AddReads> allReads = mu.stream().filter(AddReads.class::isInstance).map(AddReads.class::cast).collect(Collectors.toList());
 				out.writeInt(allReads.size());
 				for (AddReads m : allReads) {
-					writeName(m.getTarget(), out);
+					out.writeChars(m.getTarget());
 				}
 			} else {
 				out.writeInt(0);
@@ -839,25 +866,26 @@ private void writeBinaryLocations(DataOutputStream out, ClasspathLocation[] loca
 	}
 }
 
-private void writeName(char[] name, DataOutputStream out) throws IOException {
-	int nLength = name.length;
-	out.writeInt(nLength);
-	for (int j = 0; j < nLength; j++)
-		out.writeChar(name[j]);
-}
-
-private void writeNames(char[][] names, DataOutputStream out) throws IOException {
+private void writeNames(char[][] names, CompressedWriter out) throws IOException {
 	int length = names == null ? 0 : names.length;
 	out.writeInt(length);
 	for (int i = 0; i < length; i++)
-		writeName(names[i], out);
+		out.writeChars(names[i]);
 }
 
-private void writeNullablePath(String path, DataOutputStream out) throws IOException {
-	out.writeUTF(path != null ? path : ""); //$NON-NLS-1$
+private static char[][] readNames(CompressedReader in) throws IOException {
+	int length = in.readInt();
+	char[][] names = new char[length][];
+	for (int i = 0; i < length; i++)
+		names[i] = in.readChars();
+	return names;
 }
 
-private void writeRestriction(AccessRuleSet accessRuleSet, DataOutputStream out) throws IOException {
+private void writeNullablePath(String path, CompressedWriter out) throws IOException {
+	out.writeStringUsingDictionary(path != null ? path : ""); //$NON-NLS-1$
+}
+
+private void writeRestriction(AccessRuleSet accessRuleSet, CompressedWriter out) throws IOException {
 	if (accessRuleSet == null) {
 		out.writeInt(0);
 	} else {
@@ -867,11 +895,11 @@ private void writeRestriction(AccessRuleSet accessRuleSet, DataOutputStream out)
 		if (length != 0) {
 			for (int i = 0; i < length; i++) {
 				AccessRule accessRule = accessRules[i];
-				writeName(accessRule.pattern, out);
-				out.writeInt(accessRule.problemId);
+				out.writeCharsUsingLast(accessRule.pattern);
+				out.writeIntWithHint(accessRule.problemId, PROBLEM_IDS);
 			}
 			out.writeByte(accessRuleSet.classpathEntryType);
-			out.writeUTF(accessRuleSet.classpathEntryName);
+			out.writeStringUsingDictionary(accessRuleSet.classpathEntryName);
 		}
 	}
 }

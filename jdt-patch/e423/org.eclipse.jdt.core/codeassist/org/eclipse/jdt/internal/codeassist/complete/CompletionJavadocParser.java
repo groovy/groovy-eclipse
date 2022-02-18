@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -199,7 +199,7 @@ public class CompletionJavadocParser extends JavadocParser {
 	 * Create type reference. If it includes completion location, create and store completion node.
 	 */
 	@Override
-	protected Object createTypeReference(int primitiveToken) {
+	protected Object createTypeReference(int primitiveToken, boolean canBeModule) {
 		// Need to create type ref in case it was needed by members
 		int nbIdentifiers = this.identifierLengthStack[this.identifierLengthPtr];
 		int startPtr = this.identifierPtr - (nbIdentifiers-1);
@@ -208,7 +208,7 @@ public class CompletionJavadocParser extends JavadocParser {
 		boolean inCompletion = (refStart <= (this.cursorLocation+1) && this.cursorLocation <= refEnd) // completion cursor is between first and last stacked identifiers
 			|| ((refStart == (refEnd+1) && refEnd == this.cursorLocation)); // or it's a completion on empty token
 		if (!inCompletion) {
-			return super.createTypeReference(primitiveToken);
+			return super.createTypeReference(primitiveToken, canBeModule);
 		}
 		this.identifierLengthPtr--;
 		if (nbIdentifiers == 1) { // Single Type ref

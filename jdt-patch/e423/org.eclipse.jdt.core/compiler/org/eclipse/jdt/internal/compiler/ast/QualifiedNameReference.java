@@ -101,6 +101,9 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 					currentScope.problemReporter().uninitializedBlankFinalField(lastFieldBinding, this);
 				}
 			}
+			if (needValue) {
+				checkInternalNPE(currentScope, flowContext, flowInfo, true);
+			}
 			break;
 		case Binding.LOCAL :
 			// first binding is a local variable

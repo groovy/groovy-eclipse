@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -133,9 +133,9 @@ public class SelectionJavadocParser extends JavadocParser {
 	 * Otherwise return null as we do not need this reference.
 	 */
 	@Override
-	protected Object createTypeReference(int primitiveToken) {
+	protected Object createTypeReference(int primitiveToken, boolean canBeModule) {
 		// Need to create type ref in case it was needed by members
-		TypeReference typeRef = (TypeReference) super.createTypeReference(primitiveToken);
+		TypeReference typeRef = (TypeReference) super.createTypeReference(primitiveToken, canBeModule);
 
 		// See if node is concerned by selection
 		if (typeRef.sourceStart <= this.selectionStart && this.selectionEnd <= typeRef.sourceEnd) {
@@ -204,7 +204,7 @@ public class SelectionJavadocParser extends JavadocParser {
 			((SelectionJavadoc) this.docComment).inheritDocSelected = true;
 		}
 	}
-	
+
 	/*
 	 * Sets a flag to denote that selection has taken place on an inheritDoc tag
 	 */

@@ -39,14 +39,6 @@ public class NullTypeAnnotationTest extends AbstractNullAnnotationTest {
 		super(name);
 	}
 
-	// Static initializer to specify tests subset using TESTS_* static variables
-	// All specified tests which do not belong to the class are skipped...
-	static {
-//			TESTS_NAMES = new String[] { "testBug456497" };
-//			TESTS_NUMBERS = new int[] { 561 };
-//			TESTS_RANGE = new int[] { 1, 2049 };
-	}
-
 	public static Test suite() {
 		return buildMinimalComplianceTestSuite(testClass(), F_1_8);
 	}
@@ -18258,6 +18250,47 @@ public void testBug562347() {
 		"The blank final field field may not have been initialized\n" +
 		"----------\n";
 	runner.classLibraries = this.LIBS;
+	runner.runNegativeTest();
+}
+public void testBug578300() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"A.java",
+			"import org.eclipse.jdt.annotation.Nullable;\n" +
+			"public class A {\n" +
+			"\n" +
+			"	@Nullable\n" +
+			"	public A next;\n" +
+			"\n" +
+			"	@Nullable\n" +
+			"	public A previous;\n" +
+			"\n" +
+			"	public void disconnectOK() {\n" +
+			"		this.next.previous = null; // Potential null pointer access: this expression has a '@Nullable' type\n" +
+			"		this.next = null;\n" +
+			"	}\n" +
+			"\n" +
+			"	public void disconnectKO() {\n" +
+			"		next.previous = null; // <-- Expected the same error here since we are accessing the same field\n" +
+			"		next = null;\n" +
+			"	}\n" +
+			"}\n"
+		};
+	runner.customOptions = getCompilerOptions();
+	runner.classLibraries = this.LIBS;
+	runner.expectedCompilerLog =
+			"----------\n" +
+			"1. ERROR in A.java (at line 11)\n" +
+			"	this.next.previous = null; // Potential null pointer access: this expression has a \'@Nullable\' type\n" +
+			"	     ^^^^\n" +
+			"Potential null pointer access: this expression has a \'@Nullable\' type\n" +
+			"----------\n" +
+			"2. ERROR in A.java (at line 16)\n" +
+			"	next.previous = null; // <-- Expected the same error here since we are accessing the same field\n" +
+			"	^^^^\n" +
+			"Potential null pointer access: this expression has a \'@Nullable\' type\n" +
+			"----------\n";
 	runner.runNegativeTest();
 }
 }

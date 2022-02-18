@@ -2,7 +2,6 @@ package org.eclipse.jdt.internal.core.builder;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.function.Predicate;
@@ -28,9 +27,9 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 	private static final int META_INF_LENGTH = META_INF_VERSIONS.length();
 	private volatile String[] supportedVersions;
 
-	ClasspathMultiReleaseJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, Collection<ClasspathLocation> allLocationsForEEA,
+	ClasspathMultiReleaseJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotationPath,
 			boolean isOnModulePath, String compliance) {
-		super(resource, accessRuleSet, externalAnnotationPath, allLocationsForEEA, isOnModulePath);
+		super(resource, accessRuleSet, externalAnnotationPath, isOnModulePath);
 		this.compliance = compliance;
 	}
 

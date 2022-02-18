@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -41,12 +41,14 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CaptureBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 public class ForeachStatement extends Statement {
@@ -124,6 +126,16 @@ public class ForeachStatement extends Statement {
 			int elementNullStatus = NullAnnotationMatching.nullStatusFromExpressionType(this.collectionElementType);
 			int nullStatus = NullAnnotationMatching.checkAssignment(currentScope, flowContext, elementVarBinding, null, // have no useful flowinfo for element var
 																		elementNullStatus, this.collection, this.collectionElementType);
+			if ((this.kind == GENERIC_ITERABLE || this.kind == RAW_ITERABLE) && !currentScope.compilerOptions().usesNullTypeAnnotations()) {
+				// respect declaration annotation on Iterator.next():
+				ReferenceBinding iterator = currentScope.getJavaUtilIterator();
+				if (iterator != null) {
+					MethodBinding next = iterator.getExactMethod(TypeConstants.NEXT, Binding.NO_TYPES, currentScope.compilationUnitScope);
+					if (next != null && ((next.tagBits & TagBits.AnnotationNullMASK) != 0)) {
+						nullStatus = FlowInfo.tagBitsToNullStatus(next.tagBits);
+					}
+				}
+			}
 			if ((elementVarBinding.type.tagBits & TagBits.IsBaseType) == 0) {
 				actionInfo.markNullStatus(elementVarBinding, nullStatus);
 			}

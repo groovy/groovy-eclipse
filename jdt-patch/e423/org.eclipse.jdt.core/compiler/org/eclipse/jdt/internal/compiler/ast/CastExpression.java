@@ -420,6 +420,9 @@ public static boolean checkUnsafeCast(Expression expression, Scope scope, TypeBi
 	switch (castType.kind()) {
 		case Binding.PARAMETERIZED_TYPE :
 			if (!castType.isReifiable()) {
+
+				// [JLS 5.1.6.2] T <: S
+				// [JLS 5.1.5] S <: T
 				if (match == null) { // unrelated types
 					expression.bits |= ASTNode.UnsafeCast;
 					return true;
@@ -427,34 +430,30 @@ public static boolean checkUnsafeCast(Expression expression, Scope scope, TypeBi
 				switch (match.kind()) {
 					case Binding.PARAMETERIZED_TYPE :
 						if (isNarrowing) {
-							// [JLS 5.5] T <: S
+							// [JLS 5.1.6.2] T <: S
+
+							// [JLS 5.1.6.2] S has no subtype X other than T where the type arguments of X are not contained in the type arguments of T
+							// S will have all the type arguments that were specified in S
+							// If T2<T> extends T1<T> then a cast from T1<? extends ArrayList<?>> to T2<? extends List<?>> is checked while a cast from T1<? extends List<?>> to T2<? extends ArrayList<?>> is unchecked
 							if (expressionType.isRawType() || !expressionType.isEquivalentTo(match)) {
 								expression.bits |= ASTNode.UnsafeCast;
 								return true;
 							}
-							// [JLS 5.5] S has no subtype X != T, such that |X| == |T|
-							// if I2<T,U> extends I1<T>, then cast from I1<T> to I2<T,U> is unchecked
+
+							// T will have all the type arguments that were introduced in subtypes of S so the type arguments of T need to be unbound wildcards since the type arguments couldn't have been specified by S
+							// If T2<T,U> extends T1<T> then a cast from T1<? extends List<?>> to T2<? extends List<?>, ? extends List<?>> is unchecked
 							ParameterizedTypeBinding paramCastType = (ParameterizedTypeBinding) castType;
-							ParameterizedTypeBinding paramMatch = (ParameterizedTypeBinding) match;
-							// easy case if less parameters on match
 							TypeBinding[] castArguments = paramCastType.arguments;
 							int length = castArguments == null ? 0 : castArguments.length;
-							if (paramMatch.arguments == null || length > paramMatch.arguments.length) {
-								expression.bits |= ASTNode.UnsafeCast;
-							} else if ((paramCastType.tagBits & (TagBits.HasDirectWildcard|TagBits.HasTypeVariable)) != 0) {
+							if ((paramCastType.tagBits & (TagBits.HasDirectWildcard|TagBits.HasTypeVariable)) != 0) {
 								// verify alternate cast type, substituting different type arguments
-								nextAlternateArgument: for (int i = 0; i < length; i++) {
-									switch (castArguments[i].kind()) {
-										case Binding.WILDCARD_TYPE :
-										case Binding.TYPE_PARAMETER :
-											break; // check substituting with other
-										default:
-											continue nextAlternateArgument; // no alternative possible
-									}
+								for (int i = 0; i < length; i++) {
+									if (castArguments[i].isUnboundWildcard())
+										continue;
 									TypeBinding[] alternateArguments;
 									// need to clone for each iteration to avoid env paramtype cache interference
 									System.arraycopy(paramCastType.arguments, 0, alternateArguments = new TypeBinding[length], 0, length);
-									alternateArguments[i] = scope.getJavaLangObject();
+									alternateArguments[i] = TypeBinding.equalsEquals(paramCastType.arguments[i], scope.getJavaLangObject()) ? scope.getJavaLangBoolean() : scope.getJavaLangObject();
 									LookupEnvironment environment = scope.environment();
 									ParameterizedTypeBinding alternateCastType = environment.createParameterizedType((ReferenceBinding)castType.erasure(), alternateArguments, castType.enclosingType());
 									if (TypeBinding.equalsEquals(alternateCastType.findSuperTypeOriginatingFrom(expressionType), match)) {
@@ -463,9 +462,11 @@ public static boolean checkUnsafeCast(Expression expression, Scope scope, TypeBi
 									}
 								}
 							}
+
+							// Type arguments added by subtypes of S and removed by supertypes of T don't need to be checked since the type arguments aren't specified by either S or T
 							return true;
 						} else {
-							// [JLS 5.5] T >: S
+							// [JLS 5.1.5] S <: T
 							if (!match.isEquivalentTo(castType)) {
 								expression.bits |= ASTNode.UnsafeCast;
 								return true;

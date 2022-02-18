@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2021 GK Software AG and others.
+ * Copyright (c) 2010, 2022 GK Software AG and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -11098,5 +11098,94 @@ public void testBug466477() {
 		"	                            ^^^^\n" +
 		"Parameter 1 of method testNN(String) lacks a @NonNull annotation as specified in type SuperI\n" +
 		"----------\n");
+}
+public void testBug565246() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"java/util/Iterator.java",
+			"package java.util;\n" +
+			"import org.eclipse.jdt.annotation.NonNullByDefault;\n" +
+			"\n" +
+			"@NonNullByDefault\n" +
+			"public interface Iterator<E> {\n" +
+			"	boolean hasNext();\n" +
+			"\n" +
+			"	E next();\n" +
+			"}",
+			"bug/B.java",
+			"package bug;\n" +
+			"\n" +
+			"import java.util.Iterator;\n" +
+			"\n" +
+			"import org.eclipse.jdt.annotation.*;\n" +
+			"\n" +
+			"@NonNullByDefault\n" +
+			"public class B<E> extends A<E> {\n" +
+			"\n" +
+			"	public void barKOWithForLoop(I<? extends E> c) {\n" +
+			"		for (E e : c) {\n" +
+			"			foo(e); //<-- Null type safety: The expression of type 'E' needs unchecked conversion to conform to '@NonNull E'\n" +
+			"		}\n" +
+			"	}\n" +
+			"\n" +
+			"	public void barOKWithWhileIteratorLoop(I<? extends E> c) {\n" +
+			"		Iterator<? extends E> it = c.iterator();\n" +
+			"		while (it.hasNext()) {\n" +
+			"			E e = it.next(); // <-- OK\n" +
+			"			foo(e);\n" +
+			"		}\n" +
+			"	}\n" +
+			"\n" +
+			"	@Override\n" +
+			"	public void foo(E e) { }\n" +
+			"}\n" +
+			"\n" +
+			"@NonNullByDefault\n" +
+			"abstract class A<E> implements I<E> {\n" +
+			"\n" +
+			"	@Nullable public E e;\n" +
+			"\n" +
+			"	public Iterator<E> iterator() {\n" +
+			"		return new Iterator<E>() {\n" +
+			"			public boolean hasNext() {\n" +
+			"				return false;\n" +
+			"			}\n" +
+			"			public E next() {\n" +
+			"				E e = A.this.e;\n" +
+			"				assert e != null;\n" +
+			"				return e;\n" +
+			"			}\n" +
+			"		};\n" +
+			"	}\n" +
+			"\n" +
+			"	public void foo(E e) {\n" +
+			"		throw new RuntimeException();\n" +
+			"	}\n" +
+			"}\n" +
+			"\n" +
+			"@NonNullByDefault\n" +
+			"interface I<E> extends Iterable<E> {\n" +
+			"	public Iterator<E> iterator();\n" +
+			"	public void foo(E e);\n" +
+			"}\n"
+		};
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportFieldHiding, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportLocalVariableHiding, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNullUncheckedConversion, CompilerOptions.ERROR);
+	runner.classLibraries = this.LIBS;
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		runner.expectedCompilerLog =
+			"----------\n" +
+			"1. ERROR in bug\\B.java (at line 39)\n" +
+			"	E e = A.this.e;\n" +
+			"	      ^^^^^^^^\n" +
+			"Null type mismatch (type annotations): required \'E\' but this expression has type \'@Nullable E\', where \'E\' is a free type variable\n" +
+			"----------\n";
+		runner.runNegativeTest();
+	} else {
+		runner.runConformTest();
+	}
 }
 }

@@ -543,6 +543,7 @@ public class BuilderTests extends TestCase {
 			FriendDependencyTests.class,
 			ReferenceCollectionTest.class,
 			StateTest.class,
+			CompressedWriterTest.class,
 			TestAttributeBuilderTests.class,
 			Bug530366Test.class,
 			Bug531382Test.class,

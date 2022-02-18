@@ -217,13 +217,19 @@ public void reset() throws IOException {
 	this.diskIndex = new DiskIndex(this.diskIndex.indexLocation);
 	this.diskIndex.initialize(false/*do not reuse the index file*/);
 }
-public void save() throws IOException {
+public boolean save() throws IOException {
+	ReadWriteMonitor readWriteMonitor = this.monitor;
+	if(readWriteMonitor == null) {
+		// index got deleted since acquired
+		return false;
+	}
 	// must own the write lock of the monitor
-	if (!hasChanged()) return;
+	if (!hasChanged()) return false;
 
 	this.diskIndex.separator = this.separator;
 	this.diskIndex = this.diskIndex.mergeWith(this.memoryIndex);
 	this.memoryIndex = new MemoryIndex();
+	return true;
 }
 public void startQuery() {
 	if (this.diskIndex != null)

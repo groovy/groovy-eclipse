@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core.builder;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -47,7 +46,7 @@ SimpleLookupTable directoryCache;
 String[] missingPackageHolder = new String[1];
 
 ClasspathDirectory(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSet accessRuleSet,
-		IPath externalAnnotationPath, Collection<ClasspathLocation> allLocationsForEEA, boolean isOnModulePath)
+		IPath externalAnnotationPath, boolean isOnModulePath)
 {
 	this.binaryFolder = binaryFolder;
 	this.isOutputFolder = isOutputFolder || binaryFolder.getProjectRelativePath().isEmpty(); // if binaryFolder == project, then treat it as an outputFolder
@@ -55,7 +54,6 @@ ClasspathDirectory(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSe
 	this.accessRuleSet = accessRuleSet;
 	if (externalAnnotationPath != null)
 		this.externalAnnotationPath = externalAnnotationPath.toOSString();
-	this.allLocationsForEEA = allLocationsForEEA; // shared within the project, may be updated after this constructor
 	this.isOnModulePath = isOnModulePath;
 }
 

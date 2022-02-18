@@ -55,12 +55,11 @@ static final Set<String> NO_LIMIT_MODULES = new HashSet<>();
  */
 protected ClasspathJrt() {
 }
-public ClasspathJrt(String zipFilename, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, Collection<ClasspathLocation> allLocationsForEEA) {
+public ClasspathJrt(String zipFilename, AccessRuleSet accessRuleSet, IPath externalAnnotationPath) {
 	setZipFile(zipFilename);
 	this.accessRuleSet = accessRuleSet;
 	if (externalAnnotationPath != null)
 		this.externalAnnotationPath = externalAnnotationPath.toString();
-	this.allLocationsForEEA = allLocationsForEEA;
 	loadModules(this);
 }
 

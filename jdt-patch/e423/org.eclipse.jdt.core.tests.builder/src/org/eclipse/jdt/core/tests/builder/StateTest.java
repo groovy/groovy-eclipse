@@ -236,6 +236,8 @@ public class StateTest extends BuilderTests {
 		byte[] bytes = outputStream.toByteArray();
 		State readState = JavaBuilder.readState(project, new DataInputStream(new ByteArrayInputStream(bytes)));
 		assertEqualBinaryLocations(savedState.testBinaryLocations, readState.testBinaryLocations);
+
+		assertEquals(readState, savedState);
 	}
 
 	private void assertEqualBinaryLocations(ClasspathLocation[] a,
@@ -258,6 +260,8 @@ public class StateTest extends BuilderTests {
 		for (int i=0; i < savedState.binaryLocations.length; i++) {
 			assertTrue("comparing eea locations of "+savedState.binaryLocations[i], savedState.binaryLocations[i].externalAnnotationsEquals(readState.binaryLocations[i]));
 		}
+
+		assertEquals(readState, savedState);
 	}
 
 	private void writeReadAndCompareReferences(IPath projectPath)
@@ -273,6 +277,8 @@ public class StateTest extends BuilderTests {
 		Map<String, ReferenceCollection> readReferences = readState.getReferences();
 		assertEqualLookupTables(savedState.getReferences(), readReferences);
 		assertEqualTypeLocators(savedState.typeLocators, readState.typeLocators);
+
+		assertEquals(readState, savedState);
 	}
 
 	private void assertEqualTypeLocators(Map<String, String> tl1, Map<String, String> tl2) {
