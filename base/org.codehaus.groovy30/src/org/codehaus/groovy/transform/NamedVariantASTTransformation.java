@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -68,7 +69,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.elvisX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.entryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllProperties;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.list2args;
@@ -135,7 +135,7 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
                     if (!processDelegateParam(mNode, mapParam, args, propNames, fromParam, coerce)) return;
                 } else {
                     Expression arg = varX(fromParam);
-                    Expression argOrDefault = fromParam.hasInitialExpression() ? elvisX(arg, fromParam.getDefaultValue()) : arg;
+                    Expression argOrDefault = fromParam.hasInitialExpression() ? new ElvisOperatorExpression(arg, fromParam.getDefaultValue()) : arg;
                     args.addExpression(asType(argOrDefault, fromParam.getType(), coerce));
                     if (hasDuplicates(mNode, propNames, fromParam.getName())) return;
                     genParams.add(fromParam);

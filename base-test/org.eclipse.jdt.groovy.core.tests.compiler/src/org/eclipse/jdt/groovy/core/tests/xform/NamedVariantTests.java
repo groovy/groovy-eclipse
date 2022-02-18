@@ -280,4 +280,29 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "0 null");
     }
+
+    @Test // GROOVY-10500
+    public void testNamedVariant12() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import groovy.transform.*\n" +
+            "\n" +
+            "@NamedVariant(autoDelegate=true)\n" +
+            "void test(Pogo p) {\n" +
+            "  print p\n" +
+            "}\n" +
+            "test([:])\n",
+
+            "Pogo.groovy",
+            "@groovy.transform.ToString\n" +
+            "class Pogo {\n" +
+            "  private static V = 42\n" +
+            "  Number n = V\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, /*TODO:"Pogo(42)"*/"", "groovy.lang.MissingPropertyException: No such property: V for class: Script");
+    }
 }
