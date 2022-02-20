@@ -2988,7 +2988,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             if (baseExpr instanceof VariableExpression) { // void and primitive type AST node must be an instance of VariableExpression
                 String baseExprText = baseExpr.getText();
-                if (VOID_STR.equals(baseExprText)) { // e.g. void()
+                if ("void".equals(baseExprText)) { // e.g. void()
                     return configureAST(this.createCallMethodCallExpression(this.createConstantExpression(baseExpr), argumentsExpr), ctx);
                 } else if (isPrimitiveType(baseExprText)) { // e.g. int(), long(), float(), etc.
                     throw this.createParsingFailedException("Primitive type literal: " + baseExprText + " cannot be used as a method name", ctx);
@@ -4595,12 +4595,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             classNode = this.visitClassOrInterfaceType(ctx.classOrInterfaceType());
         } else if (asBoolean(ctx.primitiveType())) {
             classNode = this.visitPrimitiveType(ctx.primitiveType());
+        } else if ("void".equals(ctx.getText())) {
+            classNode = ClassHelper.VOID_TYPE;
         }
 
-        if (!asBoolean(classNode)) {
-            if (VOID_STR.equals(ctx.getText())) {
-                throw createParsingFailedException("void is not allowed here", ctx);
-            }
+        if (classNode == null) {
             throw createParsingFailedException("Unsupported type: " + ctx.getText(), ctx);
         }
 
@@ -5463,7 +5462,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private static final String CALL_STR = "call";
     private static final String THIS_STR = "this";
     private static final String SUPER_STR = "super";
-    private static final String VOID_STR = "void";
     private static final String SLASH_STR = "/";
     private static final String SLASH_DOLLAR_STR = "/$";
     private static final String TDQ_STR = "\"\"\"";

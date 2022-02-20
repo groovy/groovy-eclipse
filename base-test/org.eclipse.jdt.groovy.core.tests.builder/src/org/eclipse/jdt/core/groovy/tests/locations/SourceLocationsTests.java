@@ -642,11 +642,11 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
-            "  /*i0s*//*i0sb*/static {\n" +
+            "  /*i0s*/static/*i0em*/ /*i0sb*/{\n" +
             "    int i = 0\n" +
             "  }/*i0e*/\n" +
-            "  /*i1s*//*i1sb*/static\n" +
-            "  {\n" +
+            "  /*i1s*/static/*i1em*/\n" +
+            "  /*i1sb*/{\n" +
             "    print 'f'\n" +
             "  }/*i1e*/\n" +
             "}/*t0e*/\n";

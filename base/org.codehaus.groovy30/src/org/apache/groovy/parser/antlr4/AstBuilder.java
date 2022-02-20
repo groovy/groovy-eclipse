@@ -4330,12 +4330,18 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             classNode = this.visitClassOrInterfaceType(ctx.classOrInterfaceType());
         } else if (asBoolean(ctx.primitiveType())) {
             classNode = this.visitPrimitiveType(ctx.primitiveType());
+        // GRECLIPSE add
+        } else if ("void".equals(ctx.getText())) {
+            classNode = ClassHelper.VOID_TYPE;
+        // GRECLIPSE end
         }
 
         if (!asBoolean(classNode)) {
+            /* GRECLIPSE edit
             if (VOID_STR.equals(ctx.getText())) {
                 throw createParsingFailedException("void is not allowed here", ctx);
             }
+            */
             throw createParsingFailedException("Unsupported type: " + ctx.getText(), ctx);
         }
 

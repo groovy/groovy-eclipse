@@ -16,6 +16,7 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 
 import org.junit.Test;
 
@@ -1463,8 +1464,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
         //@formatter:on
-        assertType(contents, "x", "java.lang.Object");
-        assertType(contents, "y", "java.lang.Object");
+        assertType(contents, "x", isParrotParser() ? "java.lang.Integer" : "java.lang.Object");
+        assertType(contents, "y", isParrotParser() ? "java.lang.Character" : "java.lang.Object");
     }
 
     @Test
