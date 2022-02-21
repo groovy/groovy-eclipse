@@ -33,7 +33,6 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.stmt.AssertStatement;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
@@ -45,7 +44,6 @@ import org.codehaus.groovy.control.SourceUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
@@ -69,11 +67,9 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.defaultValueX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.elvisX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.entryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllProperties;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.list2args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.listX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.mapX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.notNullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.plusX;
@@ -215,23 +211,19 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
 
         Set<String> names = new HashSet<>();
         List<PropertyNode> props = getAllProperties(names, fromParam.getType(), true, false, false, true, false, true);
-        for (String next : names) {
-            if (hasDuplicates(this, mNode, propNames, next)) return false;
+        for (String name : names) {
+            if (hasDuplicates(this, mNode, propNames, name)) return false;
         }
-        List<MapEntryExpression> entries = new ArrayList<>();
-        for (PropertyNode pNode : props) {
-            String name = pNode.getName();
-            ClassNode type = pNode.getType();
-            // create entry [name: __namedArgs.getOrDefault('name', initialValue)]
-            Expression defaultValue = Optional.ofNullable(pNode.getInitialExpression()).orElseGet(() -> defaultValueX(type));
-            entries.add(entryX(constX(name), asType(callX(varX(mapParam), "getOrDefault", args(constX(name), defaultValue)), type, coerce)));
+        for (PropertyNode prop : props) {
             // create annotation @NamedParam(value='name', type=PropertyType)
             AnnotationNode namedParam = new AnnotationNode(NAMED_PARAM_TYPE);
-            namedParam.addMember("value", constX(name));
-            namedParam.addMember("type", classX(type));
+            namedParam.addMember("value", constX(prop.getName()));
+            namedParam.addMember("type", classX(prop.getType()));
             mapParam.addAnnotation(namedParam);
         }
-        Expression delegateMap = mapX(entries);
+
+        Expression[] subMapArgs = names.stream().map(name -> constX(name)).toArray(Expression[]::new);
+        Expression delegateMap = callX(varX(mapParam), "subMap", args(subMapArgs));
         args.addExpression(castX(fromParam.getType(), delegateMap));
         return true;
     }

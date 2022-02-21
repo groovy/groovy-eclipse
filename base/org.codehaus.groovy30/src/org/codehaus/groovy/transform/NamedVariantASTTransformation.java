@@ -34,7 +34,6 @@ import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.stmt.AssertStatement;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
@@ -69,11 +68,9 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.entryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllProperties;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.list2args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.listX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.mapX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.notNullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
@@ -216,9 +213,10 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
 
         Set<String> names = new HashSet<>();
         List<PropertyNode> props = getAllProperties(names, fromParam.getType(), true, false, false, true, false, true);
-        for (String next : names) {
-            if (hasDuplicates(mNode, propNames, next)) return false;
+        for (String name : names) {
+            if (hasDuplicates(mNode, propNames, name)) return false;
         }
+        /* GRECLIPSE edit -- GROOVY-10500
         List<MapEntryExpression> entries = new ArrayList<>();
         for (PropertyNode pNode : props) {
             String name = pNode.getName();
@@ -233,6 +231,17 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
             mapParam.addAnnotation(namedParam);
         }
         Expression delegateMap = mapX(entries);
+        */
+        for (PropertyNode prop : props) {
+            // create annotation @NamedParam(value='name', type=PropertyType)
+            AnnotationNode namedParam = new AnnotationNode(NAMED_PARAM_TYPE);
+            namedParam.addMember("value", constX(prop.getName()));
+            namedParam.addMember("type", classX(prop.getType()));
+            mapParam.addAnnotation(namedParam);
+        }
+        Expression[] subMapArgs = names.stream().map(name -> constX(name)).toArray(Expression[]::new);
+        Expression delegateMap = callX(varX(mapParam), "subMap", args(subMapArgs));
+        // GRECLIPSE end
         args.addExpression(castX(fromParam.getType(), delegateMap));
         return true;
     }

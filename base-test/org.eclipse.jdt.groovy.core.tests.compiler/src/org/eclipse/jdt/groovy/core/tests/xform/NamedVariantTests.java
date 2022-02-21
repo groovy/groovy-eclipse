@@ -303,6 +303,6 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, /*TODO:"Pogo(42)"*/"", "groovy.lang.MissingPropertyException: No such property: V for class: Script");
+        runConformTest(sources, "Pogo(42)");
     }
 }
