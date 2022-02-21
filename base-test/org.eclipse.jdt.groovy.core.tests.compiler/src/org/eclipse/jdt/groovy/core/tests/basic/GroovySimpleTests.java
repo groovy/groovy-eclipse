@@ -4297,6 +4297,42 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "8:30pm");
     }
 
+    @Test // GROOVY-9259
+    public void testImplementingInterface10() {
+        assumeTrue(isParrotParser()); // TODO: support default in antlr2 parser?
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "print new C().m()\n",
+
+            "A.java",
+            "public interface A {\n" +
+            "  String m();\n" +
+            "}\n",
+
+            "B.groovy",
+            "interface B extends A {\n" +
+            "  default String m() {\n" +
+            "    'G'\n" +
+            "  }\n" +
+            "  static String sm() {\n" +
+            "    'S'\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "class C implements B {\n" +
+            "  @Override String m() {\n" +
+            "    'C' + B.super.m() + sm()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "CGS");
+    }
+
     // WMTW: Groovy compilation unit scope adds the extra default import for java.util so List can be seen
     @Test
     public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod() {

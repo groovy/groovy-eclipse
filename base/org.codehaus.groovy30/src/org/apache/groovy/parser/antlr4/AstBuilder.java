@@ -1428,24 +1428,35 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
         classNode.putNodeMetaData(CLASS_NAME, className);
 
-        if (asBoolean(ctx.CLASS()) || asBoolean(ctx.TRAIT()) || isInterfaceWithDefaultMethods) {
+        if (asBoolean(ctx.CLASS()) || asBoolean(ctx.TRAIT())/* GRECLIPSE edit || isInterfaceWithDefaultMethods*/) {
             ClassNode superClass;
             if (asBoolean(ctx.scs)) {
                 ClassNode[] scs = this.visitTypeList(ctx.scs);
                 if (scs.length > 1) {
                     throw createParsingFailedException("Cannot extend multiple classes", ctx.EXTENDS());
                 }
+            /* GRECLIPSE edit
                 superClass = scs[0];
             } else {
                 superClass = ClassHelper.OBJECT_TYPE;
             }
             classNode.setSuperClass(superClass);
+            */
+                classNode.setSuperClass(scs[0]);
+            }
+            // GRECLIPSE end
             classNode.setInterfaces(this.visitTypeList(ctx.is));
             this.initUsingGenerics(classNode);
-
+        // GRECLIPSE add -- GROOVY-9259
+        } else if (isInterfaceWithDefaultMethods) {
+            classNode.setInterfaces(this.visitTypeList(ctx.scs));
+            this.initUsingGenerics(classNode);
+        // GRECLIPSE end
         } else if (isInterface) {
             classNode.setModifiers(classNode.getModifiers() | Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT);
+            /* GRECLIPSE edit
             classNode.setSuperClass(ClassHelper.OBJECT_TYPE);
+            */
             classNode.setInterfaces(this.visitTypeList(ctx.scs));
             this.initUsingGenerics(classNode);
             this.hackMixins(classNode);
