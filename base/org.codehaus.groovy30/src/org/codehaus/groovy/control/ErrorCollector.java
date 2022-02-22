@@ -42,7 +42,7 @@ public class ErrorCollector implements Serializable {
     private static final long serialVersionUID = 2844774170905056755L;
 
     // GRECLIPSE add
-    public boolean transformActive;
+    public transient boolean transformActive;
     // GRECLIPSE end
 
     /**

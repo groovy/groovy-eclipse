@@ -40,6 +40,11 @@ import java.util.List;
 public class ErrorCollector implements Serializable {
 
     private static final long serialVersionUID = 2844774170905056755L;
+
+    // GRECLIPSE add
+    public transient boolean transformActive;
+    // GRECLIPSE end
+
     /**
      * WarningMessages collected during processing
      */
@@ -52,10 +57,6 @@ public class ErrorCollector implements Serializable {
      * Configuration and other settings that control processing
      */
     protected CompilerConfiguration configuration;
-
-    // GRECLIPSE add
-    public boolean transformActive;
-    // GRECLIPSE end
 
     /**
      * Initialize the ErrorReporter.

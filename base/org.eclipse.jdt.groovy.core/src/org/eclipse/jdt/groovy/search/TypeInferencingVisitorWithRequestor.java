@@ -681,7 +681,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     //
 
     @Override
-    public void visitAnnotation(final AnnotationNode node) {
+    protected void visitAnnotation(final AnnotationNode node) {
         ClassNode type = node.getClassNode();
         VariableScope scope = scopes.getLast();
         TypeLookupResult noLookup = new TypeLookupResult(type, type, node, TypeConfidence.EXACT, scope);
