@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,10 +103,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     private void addJUnitAndSpock(final IPath projectPath) throws Exception {
         String spockCorePath;
         if (!isAtLeastGroovy(30)) {
-            spockCorePath = "lib/spock-core-2.0-groovy-2.5.jar";
-            env.addJar(projectPath, "lib/spock-groovy2-compat-2.0.jar");
+            spockCorePath = "lib/spock-core-2.1-groovy-2.5.jar";
+            env.addJar(projectPath, "lib/spock-groovy2-compat-2.1.jar");
         } else {
-            spockCorePath = "lib/spock-core-2.0-groovy-3.0.jar";
+            spockCorePath = "lib/spock-core-2.1-groovy-3.0.jar";
             if (isAtLeastGroovy(40)) {
                 System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
             }
