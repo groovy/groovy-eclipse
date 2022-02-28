@@ -6159,6 +6159,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9790() {
+        assumeTrue(isParrotParser());
+
+        for (Object sig : new String[] {"i", "(int i)", "(Integer i)"}) {
+            //@formatter:off
+            String[] sources = {
+                "Script.groovy",
+                "@groovy.transform.CompileStatic\n" +
+                "void test() {\n" +
+                "  java.util.stream.IntStream.range(0, 2).forEach(\n" +
+                "    " + sig + " -> { assert i >= 0 && i < 2 }\n" +
+                "  )\n" +
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+        }
+    }
+
+    @Test
     public void testCompileStatic9799() {
         assumeTrue(isParrotParser());
 

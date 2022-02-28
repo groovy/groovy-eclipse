@@ -3358,8 +3358,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     paramTypes = samParamTypes;
                 } else {
                     paramTypes = new ClassNode[n];
-                    for (int i = 0; i < n; i += 1) {
-                        paramTypes[i] = !p[i].isDynamicTyped() ? p[i].getOriginType() : (i < samParamTypes.length ? samParamTypes[i] : null);
+                    for (int i = 0; i < n && i < samParamTypes.length; i += 1) {
+                        if (p[i].isDynamicTyped()) {
+                            paramTypes[i] = samParamTypes[i];
+                        } else {
+                            ClassNode declared = p[i].getOriginType(), inferred = samParamTypes[i];
+                            if (isPrimitiveType(inferred) && getWrapper(inferred).equals(declared))
+                                paramTypes[i] = inferred; // GROOVY-9790
+                            else
+                                paramTypes[i] = declared;
+                        }
                     }
                 }
                 expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
