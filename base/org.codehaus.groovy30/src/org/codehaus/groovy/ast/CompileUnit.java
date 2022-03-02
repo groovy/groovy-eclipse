@@ -55,6 +55,7 @@ public class CompileUnit implements NodeMetaDataHandler {
     private final Map<String, ClassNode> classesToCompile = new LinkedHashMap<>();
     private final Map<String, SourceUnit> classNameToSource = new LinkedHashMap<>();
     private final Map<String, InnerClassNode> generatedInnerClasses = new LinkedHashMap<>();
+
     private Map metaDataMap;
 
     public CompileUnit(GroovyClassLoader classLoader, CompilerConfiguration config) {
@@ -63,8 +64,8 @@ public class CompileUnit implements NodeMetaDataHandler {
 
     public CompileUnit(GroovyClassLoader classLoader, CodeSource codeSource, CompilerConfiguration config) {
         this.classLoader = classLoader;
-        this.config = config;
         this.codeSource = codeSource;
+        this.config = config;
     }
 
     public List<ModuleNode> getModules() {
@@ -158,7 +159,7 @@ public class CompileUnit implements NodeMetaDataHandler {
         // GRECLIPSE end
 
         ClassNode cn = classesToCompile.get(name);
-        if (null != cn) {
+        if (cn != null) {
             cn.setRedirect(node);
             classesToCompile.remove(name);
         }
@@ -175,8 +176,16 @@ public class CompileUnit implements NodeMetaDataHandler {
         classNameToSource.put(nodeName, location);
     }
 
+    public Map<String, ClassNode> getClassesToCompile() {
+        return classesToCompile;
+    }
+
     public Iterator<String> iterateClassNodeToCompile() {
         return classesToCompile.keySet().iterator();
+    }
+
+    public boolean hasClassNodeToCompile() {
+        return !classesToCompile.isEmpty();
     }
 
     public void addGeneratedInnerClass(InnerClassNode icn) {
@@ -191,8 +200,8 @@ public class CompileUnit implements NodeMetaDataHandler {
         return Collections.unmodifiableMap(generatedInnerClasses);
     }
 
-    public SourceUnit getScriptSourceLocation(String className) {
-        return classNameToSource.get(className);
+    public SourceUnit getScriptSourceLocation(String scriptClassName) {
+        return classNameToSource.get(scriptClassName);
     }
 
     @Override

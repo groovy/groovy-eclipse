@@ -173,9 +173,10 @@ public final class ExpressionUtils {
     // GRECLIPSE end
 
     private static ConstantExpression configure(final Expression origX, final ConstantExpression newX) {
-        // GRECLIPSE edit
+        /* GRECLIPSE edit
+        newX.setSourcePosition(origX);
+        */
         newX.setNodeMetaData(org.codehaus.groovy.ast.ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, origX);
-        //newX.setSourcePosition(origX);
         // GRECLIPSE end
         return newX;
     }
@@ -332,8 +333,9 @@ public final class ExpressionUtils {
                 FieldNode field = ClassNodeUtils.getField(type, pe.getPropertyAsString());
                 if (type.isEnum() && field != null && field.isEnum()) return exp;
                 Expression constant = findConstant(field);
-                // GRECLIPSE edit
-                //if (constant != null) return constant;
+                /* GRECLIPSE edit
+                if (constant != null) return constant;
+                */
                 if (constant instanceof ConstantExpression) {
                     return clone((ConstantExpression) constant, exp);
                 }

@@ -531,8 +531,7 @@ public class StaticInvocationWriter extends InvocationWriter {
 
     @Override
     public void makeCall(final Expression origin, final Expression receiver, final Expression message, final Expression arguments, final MethodCallerMultiAdapter adapter, final boolean safe, final boolean spreadSafe, final boolean implicitThis) {
-        ClassNode dynamicCallReturnType = origin.getNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION);
-        if (dynamicCallReturnType != null) {
+        if (origin.getNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION) != null) {
             StaticTypesWriterController staticController = (StaticTypesWriterController) controller;
             if (origin instanceof MethodCallExpression) {
                 ((MethodCallExpression) origin).setMethodTarget(null);
@@ -631,10 +630,11 @@ public class StaticInvocationWriter extends InvocationWriter {
                     origMCE.getArguments()
             );
             MethodNode methodTarget = origMCE.getMethodTarget();
+            newMCE.setImplicitThis(origMCE.isImplicitThis());
             newMCE.setMethodTarget(methodTarget);
             newMCE.setSafe(false);
-            newMCE.setImplicitThis(origMCE.isImplicitThis());
             newMCE.setSourcePosition(origMCE);
+            newMCE.getObjectExpression().setSourcePosition(origMCE.getObjectExpression());
             newMCE.visit(controller.getAcg());
             compileStack.removeVar(slot.getIndex());
             ClassNode returnType = operandStack.getTopOperand();

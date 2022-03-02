@@ -332,7 +332,7 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private static int fixInterfaceModifiers(final ClassNode classNode, int modifiers) {
-        // (JLS §9.1.1.1). Such a class file must not have its ACC_FINAL, ACC_SUPER or ACC_ENUM flags set.
+        // (JLS 9.1.1.1). Such a class file must not have its ACC_FINAL, ACC_SUPER or ACC_ENUM flags set.
         if (classNode.isInterface()) {
             modifiers = modifiers & ~ACC_ENUM;
             modifiers = modifiers & ~ACC_FINAL;
@@ -375,19 +375,11 @@ public class AsmClassGenerator extends ClassGenerator {
     @Override
     protected void visitConstructorOrMethod(final MethodNode node, final boolean isConstructor) {
         Parameter[] parameters = node.getParameters();
-        /* GRECLIPSE edit
-        String methodType = BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters);
-        String signature = BytecodeHelper.getGenericsMethodSignature(node);
-        int modifiers = node.getModifiers();
-        if (isVargs(node.getParameters())) modifiers |= ACC_VARARGS;
-        MethodVisitor mv = classVisitor.visitMethod(modifiers, node.getName(), methodType, signature, buildExceptions(node.getExceptions()));
-        */
         MethodVisitor mv = classVisitor.visitMethod(
                 node.getModifiers() | (isVargs(parameters) ? ACC_VARARGS : 0), node.getName(),
                 BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters),
                 BytecodeHelper.getGenericsMethodSignature(node),
                 buildExceptions(node.getExceptions()));
-        // GRECLIPSE end
         controller.setMethodVisitor(mv);
         controller.resetLineNumber();
 
@@ -400,7 +392,7 @@ public class AsmClassGenerator extends ClassGenerator {
         if (Optional.ofNullable(controller.getClassNode().getCompileUnit())
                 .orElseGet(context::getCompileUnit).getConfig().getParameters()) {
             for (Parameter parameter : parameters) {
-                mv.visitParameter(parameter.getName(), parameter.getModifiers()); // GRECLIPSE edit
+                mv.visitParameter(parameter.getName(), parameter.getModifiers());
             }
         }
 
@@ -1134,12 +1126,12 @@ public class AsmClassGenerator extends ClassGenerator {
                         if (expression.isImplicitThis()) fieldNode = classNode.getDeclaredField(name);
                     } else {
                         fieldNode = classNode.getDeclaredField(name);
-                        // GRECLIPSE add -- GROOVY-8448: "this.name" from inner class
-                        if (fieldNode != null && (fieldNode.getModifiers() & ACC_SYNTHETIC) != 0
-                                && fieldNode.getType().equals(ClassHelper.REFERENCE_TYPE) && !expression.isImplicitThis()) {
+                        // GROOVY-8448: "this.name" from anon. inner class
+                        if (fieldNode != null && !expression.isImplicitThis()
+                                && (fieldNode.getModifiers() & ACC_SYNTHETIC) != 0
+                                && fieldNode.getType().equals(ClassHelper.REFERENCE_TYPE)) {
                             fieldNode = null;
                         }
-                        // GRECLIPSE end
                     }
                     if (fieldNode == null && !isValidFieldNodeForByteCodeAccess(getField(classNode, name), classNode)) {
                         // GROOVY-9501, GROOVY-9569, GROOVY-9650, GROOVY-9655, GROOVY-9665, GROOVY-9683, GROOVY-9695

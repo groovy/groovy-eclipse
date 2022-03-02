@@ -998,7 +998,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         Statement getterBlock = node.getGetterBlock();
         if (getterBlock == null) {
             MethodNode getter = classNode.getGetterMethod(getterName, !node.isStatic());
-            if (getter == null && node.getType() == ClassHelper.boolean_TYPE) {
+            if (getter == null && node.getType().equals(ClassHelper.boolean_TYPE)) {
                 getter = classNode.getGetterMethod("is" + capitalize(name));
             }
             if (!node.isPrivate() && methodNeedsReplacement(getter)) {
@@ -1022,7 +1022,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (getterBlock != null) {
             visitGetter(node, getterBlock, getterModifiers, getterName);
 
-            if (node.getType() == ClassHelper.boolean_TYPE || node.getType().equals(ClassHelper.Boolean_TYPE)) {
+            if (node.getType().equals(ClassHelper.boolean_TYPE) || node.getType().equals(ClassHelper.Boolean_TYPE)) {
                 // GRECLIPSE add
                 if (methodNeedsReplacement(classNode.getGetterMethod("is" + capitalize(name), !node.isStatic())))
                 // GRECLIPSE end

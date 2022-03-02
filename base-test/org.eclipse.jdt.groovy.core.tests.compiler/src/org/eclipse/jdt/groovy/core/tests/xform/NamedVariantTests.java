@@ -256,7 +256,7 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
             "void test(int i, int j = 42) {\n" +
             "  print \"$i $j\"\n" +
             "}\n" +
-            "test(i:0,j:null)\n",
+            "test(i:0,j:0)\n",
         };
         //@formatter:on
 

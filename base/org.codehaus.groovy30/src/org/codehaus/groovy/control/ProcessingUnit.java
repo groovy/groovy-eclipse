@@ -143,8 +143,9 @@ public abstract class ProcessingUnit {
      * Marks the current phase complete and processes any errors.
      */
     public void completePhase() throws CompilationFailedException {
-        // GRECLIPSE edit
-        //errorCollector.failIfErrors();
+        /* GRECLIPSE edit
+        errorCollector.failIfErrors();
+        */
         if (errorCollector.hasErrors()) {
             erroredAtPhase = phase;
         }

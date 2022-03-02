@@ -249,11 +249,7 @@ public class BinaryExpressionTransformer {
             MethodNode adapter = StaticCompilationTransformer.BYTECODE_BINARY_ADAPTERS.get(operationType);
             if (adapter != null) {
                 Expression sba = classX(StaticCompilationTransformer.BYTECODE_ADAPTER_CLASS);
-                /* GRECLIPSE edit
-                call = callX(sba, "compareEquals", args(expr, right));
-                */
                 call = callX(sba, adapter.getName(), args(expr, right));
-                // GRECLIPSE end
                 call.setMethodTarget(adapter);
             } else {
                 call = callX(expr, name, args(right));

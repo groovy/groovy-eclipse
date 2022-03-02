@@ -141,8 +141,9 @@ public class AnnotationVisitor {
         for (MethodNode mn : classNode.getMethods()) {
             String methodName = mn.getName();
             // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
-            // GRECLIPSE edit
-            //if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            /* GRECLIPSE edit
+            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            */
             if (!mn.hasAnnotationDefault() && !attributes.containsKey(methodName)) {
             // GRECLIPSE end
                 addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);

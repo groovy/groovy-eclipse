@@ -416,12 +416,105 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
+    /* GRECLIPSE edit -- GROOVY-4386, GROOVY-7812, et al.
+    private boolean resolveToOuterNested(final ClassNode type) {
+        CompileUnit compileUnit = currentClass.getCompileUnit();
+        if (compileUnit == null) return false;
+        String typeName = type.getName();
+
+        BiConsumer<ConstructedOuterNestedClassNode, ClassNode> setRedirectListener = (s, c) -> type.setRedirect(s);
+
+        ModuleNode module = currentClass.getModule();
+        for (ImportNode importNode : module.getStaticImports().values()) {
+            String importFieldName = importNode.getFieldName();
+            String importAlias = importNode.getAlias();
+
+            if (!typeName.equals(importAlias)) continue;
+
+            ConstructedOuterNestedClassNode constructedOuterNestedClassNode = tryToConstructOuterNestedClassNodeViaStaticImport(compileUnit, importNode, importFieldName, setRedirectListener);
+            if (null != constructedOuterNestedClassNode) {
+                compileUnit.addClassNodeToResolve(constructedOuterNestedClassNode);
+                return true;
+            }
+        }
+
+        for (Map.Entry<String, ClassNode> entry : compileUnit.getClassesToCompile().entrySet()) {
+            ClassNode outerClassNode = entry.getValue();
+            ConstructedOuterNestedClassNode constructedOuterNestedClassNode = tryToConstructOuterNestedClassNode(type, outerClassNode, setRedirectListener);
+            if (null != constructedOuterNestedClassNode) {
+                compileUnit.addClassNodeToResolve(constructedOuterNestedClassNode);
+                return true;
+            }
+        }
+
+        boolean toResolveFurther = false;
+        for (ImportNode importNode : module.getStaticStarImports().values()) {
+            ConstructedOuterNestedClassNode constructedOuterNestedClassNode = tryToConstructOuterNestedClassNodeViaStaticImport(compileUnit, importNode, typeName, setRedirectListener);
+            if (null != constructedOuterNestedClassNode) {
+                compileUnit.addClassNodeToResolve(constructedOuterNestedClassNode);
+                toResolveFurther = true; // do not return here to try all static star imports because currently we do not know which outer class the class to resolve is declared in.
+            }
+        }
+        if (toResolveFurther) return true;
+
+        // GROOVY-9243
+        toResolveFurther = false;
+        if (typeName.indexOf('.') == -1) {
+            Map<String, ClassNode> hierClasses = findHierClasses(currentClass);
+            for (ClassNode cn : hierClasses.values()) {
+                ConstructedOuterNestedClassNode constructedOuterNestedClassNode = tryToConstructOuterNestedClassNodeForBaseType(compileUnit, typeName, cn, setRedirectListener);
+                if (null != constructedOuterNestedClassNode) {
+                    compileUnit.addClassNodeToResolve(constructedOuterNestedClassNode);
+                    toResolveFurther = true;
+                }
+            }
+        }
+
+        return toResolveFurther;
+    }
+
+    private ConstructedOuterNestedClassNode tryToConstructOuterNestedClassNodeViaStaticImport(final CompileUnit compileUnit, final ImportNode importNode, final String typeName, final BiConsumer<ConstructedOuterNestedClassNode, ClassNode> setRedirectListener) {
+        String importClassName = importNode.getClassName();
+        ClassNode outerClassNode = compileUnit.getClass(importClassName);
+
+        if (null == outerClassNode) return null;
+
+        String outerNestedClassName = importClassName + "$" + typeName.replace('.', '$');
+        ConstructedOuterNestedClassNode constructedOuterNestedClassNode = new ConstructedOuterNestedClassNode(outerClassNode, outerNestedClassName);
+        constructedOuterNestedClassNode.addSetRedirectListener(setRedirectListener);
+        return constructedOuterNestedClassNode;
+    }
+
+    private ConstructedOuterNestedClassNode tryToConstructOuterNestedClassNode(final ClassNode type, final ClassNode outerClassNode, final BiConsumer<ConstructedOuterNestedClassNode, ClassNode> setRedirectListener) {
+        String outerClassName = outerClassNode.getName();
+
+        for (String typeName = type.getName(), ident = typeName; ident.indexOf('.') != -1; ) {
+            ident = ident.substring(0, ident.lastIndexOf('.'));
+            if (outerClassName.endsWith(ident)) {
+                String outerNestedClassName = outerClassName + typeName.substring(ident.length()).replace('.', '$');
+                ConstructedOuterNestedClassNode constructedOuterNestedClassNode = new ConstructedOuterNestedClassNode(outerClassNode, outerNestedClassName);
+                constructedOuterNestedClassNode.addSetRedirectListener(setRedirectListener);
+                return constructedOuterNestedClassNode;
+            }
+        }
+
+        return null;
+    }
+
+    private ConstructedOuterNestedClassNode tryToConstructOuterNestedClassNodeForBaseType(final CompileUnit compileUnit, final String typeName, final ClassNode cn, final BiConsumer<ConstructedOuterNestedClassNode, ClassNode> setRedirectListener) {
+        if (!compileUnit.getClassesToCompile().containsValue(cn)) return null;
+
+        String outerNestedClassName = cn.getName() + "$" + typeName;
+        ConstructedOuterNestedClassNode constructedOuterNestedClassNode = new ConstructedOuterNestedClassNode(cn, outerNestedClassName);
+        constructedOuterNestedClassNode.addSetRedirectListener(setRedirectListener);
+        return constructedOuterNestedClassNode;
+    }
+    */
     // GRECLIPSE add
     public ClassNode resolve(final String name) {
         return null;
     }
     // GRECLIPSE end
-
     protected boolean resolve(final ClassNode type) {
         return resolve(type, true, true, true);
     }
@@ -1543,7 +1636,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (GenericsType gt : node.getGenericsTypes()) {
                 if (gt != null && gt.getUpperBounds() != null) {
                     for (ClassNode variant : gt.getUpperBounds()) {
-                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType()); // GRECLIPSE edit -- GROOVY-10113, GROOVY-10125
+                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType());
                     }
                 }
             }
@@ -1595,7 +1688,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     private void checkCyclicInheritance(final ClassNode node, final ClassNode type) {
         if (type.redirect() == node || type.getOuterClasses().contains(node)) {
-            addError("Cycle detected: the type " + node.getName() + " cannot extend/implement itself or one of its own member types", type);
+            addError("Cycle detected: the type " + node.getUnresolvedName() + " cannot extend/implement itself or one of its own member types", type);
             // GRECLIPSE add
             node.setHasInconsistentHierarchy(true);
             // GRECLIPSE end
@@ -1626,8 +1719,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
     }
 
-    /* GRECLIPSE edit
-    @Override
+    /* GRECLIPSE edit -- GROOVY-4386, GROOVY-7812, et al.
     private void resolveOuterNestedClassFurther(final ClassNode node) {
         CompileUnit compileUnit = currentClass.getCompileUnit();
 

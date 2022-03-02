@@ -1312,7 +1312,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                     return true;
                 }
             }
-            // GRECLIPSE add -- GROOVY-10379
             for (ClassNode in : cn.getAllInterfaces()) {
                 for (MethodNode mn : in.getDeclaredMethods(name)) {
                     if (mn.isDefault() && hasCompatibleNumberOfArgs(mn, count)) {
@@ -1320,7 +1319,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                     }
                 }
             }
-            // GRECLIPSE end
         }
 
         return false;

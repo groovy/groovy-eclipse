@@ -180,6 +180,7 @@ public class SourceUnit extends ProcessingUnit {
         return false;
     }
 
+    @Deprecated
     protected boolean isEofToken(groovyjarjarantlr.Token token) {
         return token.getType() == groovyjarjarantlr.Token.EOF_TYPE;
     }

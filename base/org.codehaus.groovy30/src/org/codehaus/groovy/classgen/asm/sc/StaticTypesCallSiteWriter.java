@@ -813,11 +813,8 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
                             call.setMethodTarget(methodNode);
                             call.visit(controller.getAcg());
 
-                            // GROOVY-9892: assuming that the mutator method has a return value, make sure the operand
-                            //  stack is not polluted with the result of the method call
-                            operandStack.pop();
-
                             compileStack.removeVar(i);
+                            operandStack.pop();
                             return;
                         }
                     }
