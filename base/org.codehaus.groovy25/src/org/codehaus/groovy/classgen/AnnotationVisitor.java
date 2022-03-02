@@ -36,7 +36,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
@@ -140,8 +139,9 @@ public class AnnotationVisitor {
         ClassNode classNode = node.getClassNode();
         for (MethodNode mn : classNode.getMethods()) {
             String methodName = mn.getName();
-            // GRECLIPSE edit
-            //if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            /* GRECLIPSE edit
+            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            */
             if (!mn.hasAnnotationDefault() && !attributes.containsKey(methodName)) {
             // GRECLIPSE end
                 addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);
@@ -158,10 +158,7 @@ public class AnnotationVisitor {
         // if it is an error, we have to test it at another place. But size==0 is
         // an error, because it means that no such attribute exists.
         if (methods.isEmpty()) {
-            // GRECLIPSE edit
-            //addError("'" + attrName + "'is not part of the annotation " + classNode, node);
             addError("'" + attrName + "'is not part of the annotation " + classNode.getNameWithoutPackage(), node);
-            // GRECLIPSE end
             return ClassHelper.OBJECT_TYPE;
         }
         MethodNode method = (MethodNode) methods.get(0);
@@ -246,12 +243,9 @@ public class AnnotationVisitor {
         } else {
             addError(base, exp);
         }
-        // GRECLIPSE edit
-        //return ConstantExpression.EMPTY_EXPRESSION;
         ConstantExpression ret = new ConstantExpression(null);
         ret.setSourcePosition(exp);
         return ret;
-        // GRECLIPSE end
     }
 
     protected void visitAnnotationExpression(String attrName, AnnotationConstantExpression expression, ClassNode attrType) {
@@ -292,16 +286,14 @@ public class AnnotationVisitor {
         addError(msg, this.annotation);
     }
 
-    protected void addError(String msg, ASTNode expr) {
+    protected void addError(String msg, ASTNode node) {
         // GRECLIPSE add
-        if (expr instanceof AnnotationNode) {
-            this.errorCollector.addErrorAndContinue(new SyntaxErrorMessage(
-                new PreciseSyntaxException(msg + " in @" + this.reportClass.getName() + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getStart(), ((AnnotationNode) expr).getClassNode().getEnd() - 1), this.source));
+        if (node instanceof AnnotationNode) {
+            this.errorCollector.addErrorAndContinue(new PreciseSyntaxException(msg + " in @" + this.reportClass.getName() + '\n',
+                node.getLineNumber(), node.getColumnNumber(), node.getStart(), ((AnnotationNode) node).getClassNode().getEnd() - 1), this.source);
         } else
         // GRECLIPSE end
-        this.errorCollector.addErrorAndContinue(
-                new SyntaxErrorMessage(new SyntaxException(msg + " in @" + this.reportClass.getName() + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), this.source)
-        );
+        this.errorCollector.addErrorAndContinue(new SyntaxException(msg + " in @" + this.reportClass.getName() + '\n', node), this.source);
     }
 
     public void checkCircularReference(ClassNode searchClass, ClassNode attrType, Expression startExp) {

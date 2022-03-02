@@ -305,7 +305,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         return next != null;
     }
 
-    private static MethodNode getDeclaredMethodCorrected(Map genericsSpec, MethodNode mn, ClassNode correctedNext) {
+    private static MethodNode getDeclaredMethodCorrected(Map<String, ClassNode> genericsSpec, MethodNode mn, ClassNode correctedNext) {
         for (MethodNode declared : correctedNext.getDeclaredMethods(mn.getName())) {
             MethodNode corrected = correctToGenericsSpec(genericsSpec, declared);
             if (ParameterUtils.parametersEqual(corrected.getParameters(), mn.getParameters())) {
@@ -339,11 +339,8 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     /* GRECLIPSE edit
-    public void addError(String msg, ASTNode expr) {
-        this.source.getErrorCollector().addErrorAndContinue(
-                new SyntaxErrorMessage(
-                        new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), this.source)
-        );
+    public void addError(String msg, ASTNode node) {
+        getSourceUnit().addErrorAndContinue(new SyntaxException(msg + '\n', node));
     }
     */
 

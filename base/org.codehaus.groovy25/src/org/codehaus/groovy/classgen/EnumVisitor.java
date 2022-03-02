@@ -53,7 +53,6 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
@@ -99,7 +98,6 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             values = new FieldNode("$VALUES", PRIVATE_FS | Opcodes.ACC_SYNTHETIC, enumRef.makeArray(), enumClass, null);
             values.setSynthetic(true);
 
-            // GRECLIPSE add -- GROOVY-6747
             for (ConstructorNode ctor : enumClass.getDeclaredConstructors()) {
                 if (ctor.isSyntheticPublic()) {
                     ctor.setSyntheticPublic(false);
@@ -108,7 +106,6 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                     addError(ctor, "Illegal modifier for the enum constructor; only private is permitted.");
                 }
             }
-            // GRECLIPSE end
 
             addMethods(enumClass, values);
             checkForAbstractMethods(enumClass);
@@ -149,11 +146,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             cloneCall.setMethodTarget(values.getType().getMethod("clone", Parameter.EMPTY_ARRAY));
             code.addStatement(new ReturnStatement(cloneCall));
             valuesMethod.setCode(code);
-            /* GRECLIPSE edit
-            enumClass.addMethod(valuesMethod);
-            */
             addGeneratedMethod(enumClass, valuesMethod);
-            // GRECLIPSE end
         }
 
         if (!hasNext) {
@@ -165,7 +158,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             //     }
             Token assign = Token.newSymbol(Types.ASSIGN, -1, -1);
             Token ge = Token.newSymbol(Types.COMPARE_GREATER_THAN_EQUAL, -1, -1);
-            MethodNode nextMethod = new MethodNode("next", Opcodes.ACC_PUBLIC/*GRECLIPSE | Opcodes.ACC_SYNTHETIC*/, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+            MethodNode nextMethod = new MethodNode("next", Opcodes.ACC_PUBLIC, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
             nextMethod.setSynthetic(true);
             BlockStatement code = new BlockStatement();
             BlockStatement ifStatement = new BlockStatement();
@@ -212,11 +205,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                     )
             );
             nextMethod.setCode(code);
-            /* GRECLIPSE edit
-            enumClass.addMethod(nextMethod);
-            */
             addGeneratedMethod(enumClass, nextMethod);
-            // GRECLIPSE end
         }
 
         if (!hasPrevious) {
@@ -228,7 +217,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             //    }
             Token assign = Token.newSymbol(Types.ASSIGN, -1, -1);
             Token lt = Token.newSymbol(Types.COMPARE_LESS_THAN, -1, -1);
-            MethodNode prevMethod = new MethodNode("previous", Opcodes.ACC_PUBLIC/*GRECLIPSE | Opcodes.ACC_SYNTHETIC*/, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+            MethodNode prevMethod = new MethodNode("previous", Opcodes.ACC_PUBLIC, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
             prevMethod.setSynthetic(true);
             BlockStatement code = new BlockStatement();
             BlockStatement ifStatement = new BlockStatement();
@@ -281,11 +270,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                     )
             );
             prevMethod.setCode(code);
-            /* GRECLIPSE edit
-            enumClass.addMethod(prevMethod);
-            */
             addGeneratedMethod(enumClass, prevMethod);
-            // GRECLIPSE end
         }
 
         {
@@ -304,11 +289,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             );
             valueOfMethod.setCode(code);
             valueOfMethod.setSynthetic(true);
-            /* GRECLIPSE edit
             enumClass.addMethod(valueOfMethod);
-            */
-            addGeneratedMethod(enumClass, valueOfMethod);
-            // GRECLIPSE end
         }
     }
 
@@ -320,7 +301,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         // calling the constructor may require a table with MetaClass
         // selecting the constructor for each enum value. So instead we
         // use this method to have a central point for constructor selection
-        // and only one table. The whole construction is needed because 
+        // and only one table. The whole construction is needed because
         // Reflection forbids access to the enum constructor.
         // code:
         // def $INIT(Object[] para) {
@@ -339,11 +320,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         BlockStatement code = new BlockStatement();
         code.addStatement(new ReturnStatement(cce));
         initMethod.setCode(code);
-        /* GRECLIPSE edit
-        enumClass.addMethod(initMethod);
-        */
         addGeneratedMethod(enumClass, initMethod);
-        // GRECLIPSE end
 
         // static init
         List<FieldNode> fields = enumClass.getFields();
@@ -458,25 +435,19 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         enumClass.addStaticInitializerStatements(block, true);
     }
 
-    private void addError(AnnotatedNode exp, String msg) {
+    private void addError(AnnotatedNode node, String msg) {
         // GRECLIPSE add
-        int start = exp.getStart(), end = exp.getEnd();
-        if (exp instanceof FieldNode && ((FieldNode) exp).hasInitialExpression()) {
-            List args = ((ListExpression) ((FieldNode) exp).getInitialExpression()).getExpressions();
+        int start = node.getStart(), end = node.getEnd();
+        if (node instanceof FieldNode && ((FieldNode) node).hasInitialExpression()) {
+            List args = ((ListExpression) ((FieldNode) node).getInitialExpression()).getExpressions();
             ClassNode type = ((ClassExpression) args.get(args.size() - 1)).getType();
             end = type.getStart() - 2; // cover arguments but not start of block
         }
         // GRECLIPSE end
-        sourceUnit.getErrorCollector().addErrorAndContinue(
-                new SyntaxErrorMessage(
-                        // GRECLIPSE edit
-                        //new SyntaxException(msg + '\n', exp.getLineNumber(), exp.getColumnNumber(), exp.getLastLineNumber(), exp.getLastColumnNumber()), sourceUnit)
-                        new PreciseSyntaxException(msg + '\n', exp.getLineNumber(), exp.getColumnNumber(), start, end), sourceUnit)
-                        // GRECLIPSE end
-        );
+        sourceUnit.addErrorAndContinue(new PreciseSyntaxException(msg + '\n', node.getLineNumber(), node.getColumnNumber(), start, end));
     }
 
-    private static boolean isAnonymousInnerClass(ClassNode enumClass) {
+    static boolean isAnonymousInnerClass(ClassNode enumClass) {
         if (!(enumClass instanceof EnumConstantClassNode)) return false;
         InnerClassNode ic = (InnerClassNode) enumClass;
         return ic.getVariableScope() == null;

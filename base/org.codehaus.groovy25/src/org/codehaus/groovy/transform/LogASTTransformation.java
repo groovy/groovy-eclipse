@@ -66,8 +66,7 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
         AnnotatedNode targetClass = (AnnotatedNode) nodes[1];
         AnnotationNode logAnnotation = (AnnotationNode) nodes[0];
 
-        final GroovyClassLoader classLoader = compilationUnit != null ? compilationUnit.getTransformLoader() : source.getClassLoader();
-        final LoggingStrategy loggingStrategy = createLoggingStrategy(logAnnotation, classLoader);
+        final LoggingStrategy loggingStrategy = createLoggingStrategy(logAnnotation, source.getClassLoader(), compilationUnit.getTransformLoader());
         if (loggingStrategy == null) return;
 
         final String logFieldName = lookupLogFieldName(logAnnotation);
@@ -196,28 +195,27 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
         return DEFAULT_CATEGORY_NAME;
     }
 
-    private static LoggingStrategy createLoggingStrategy(AnnotationNode logAnnotation, GroovyClassLoader loader) {
-
+    private static LoggingStrategy createLoggingStrategy(AnnotationNode logAnnotation, ClassLoader classLoader, ClassLoader xformLoader) {
         String annotationName = logAnnotation.getClassNode().getName();
 
         Class annotationClass;
         try {
-            annotationClass = Class.forName(annotationName, false, loader);
-        } catch (Throwable e) {
+            annotationClass = Class.forName(annotationName, false, xformLoader);
+        } catch (Throwable t) {
             throw new RuntimeException("Could not resolve class named " + annotationName);
         }
 
         Method annotationMethod;
         try {
             annotationMethod = annotationClass.getDeclaredMethod("loggingStrategy", (Class[]) null);
-        } catch (Throwable e) {
+        } catch (Throwable t) {
             throw new RuntimeException("Could not find method named loggingStrategy on class named " + annotationName);
         }
 
         Object defaultValue;
         try {
             defaultValue = annotationMethod.getDefaultValue();
-        } catch (Throwable e) {
+        } catch (Throwable t) {
             throw new RuntimeException("Could not find default value of method named loggingStrategy on class named " + annotationName);
         }
 
@@ -228,7 +226,7 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
         try {
             Class<? extends LoggingStrategy> strategyClass = (Class<? extends LoggingStrategy>) defaultValue;
             if (AbstractLoggingStrategy.class.isAssignableFrom(strategyClass)) {
-                return DefaultGroovyMethods.newInstance(strategyClass, new Object[]{loader});
+                return DefaultGroovyMethods.newInstance(strategyClass, new Object[]{classLoader});
             } else {
                 return strategyClass.getDeclaredConstructor().newInstance();
             }
@@ -282,15 +280,13 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
         }
 
         protected ClassNode classNode(String name) {
-            ClassLoader cl = loader == null ? this.getClass().getClassLoader() : loader;
+            ClassLoader cl = loader != null ? loader : getClass().getClassLoader();
             try {
                 return ClassHelper.make(Class.forName(name, false, cl));
             } catch (ClassNotFoundException e) {
-                // GRECLIPSE edit
-                //throw new GroovyRuntimeException("Unable to load logging class", e);
-                // don't throw an exception, rather just make the class from text
-                // See https://jira.codehaus.org/browse/GROOVY-5736
-                // might be fixed in Groovy 2.0.5 and later
+                /* GRECLIPSE edit -- GROOVY-5736: no exception; just make node from name
+                throw new GroovyRuntimeException("Unable to load class: " + name, e);
+                */
                 return ClassHelper.make(name);
                 // GRECLIPSE end
             }
@@ -298,7 +294,7 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
     }
 
     @Override
-    public void setCompilationUnit(final CompilationUnit unit) {
-        this.compilationUnit = unit;
+    public void setCompilationUnit(CompilationUnit compilationUnit) {
+        this.compilationUnit = compilationUnit;
     }
 }

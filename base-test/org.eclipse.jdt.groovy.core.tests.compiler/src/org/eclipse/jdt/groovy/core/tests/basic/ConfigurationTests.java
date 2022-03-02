@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,13 +44,12 @@ public final class ConfigurationTests {
     public void testTargetVersion() {
         CompilerConfiguration config = new CompilerConfiguration();
 
-        String x15x = isAtLeastGroovy(30) ? "15" : "14";
-        String x16x = isAtLeastGroovy(30) ? "16" : "14";
-        String x17x = isAtLeastGroovy(30) ? "17" : "14";
-        String x18x = isAtLeastGroovy(40) ? "18" : isAtLeastGroovy(30) ? "17" : "14";
+        String x16x = isAtLeastGroovy(30) ? "16" : "15";
+        String x17x = isAtLeastGroovy(30) ? "17" : "15";
+        String x18x = isAtLeastGroovy(40) ? "18" : isAtLeastGroovy(30) ? "17" : "15";
 
         String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18"};
-        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", x15x, x16x, x17x, x18x};
+        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", x16x, x17x, x18x};
         assertArrayEquals(expect, Arrays.stream(inputs).map(v -> { config.setTargetBytecode(v); return config.getTargetBytecode(); }).toArray(String[]::new));
     }
 }

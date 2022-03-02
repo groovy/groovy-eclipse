@@ -49,13 +49,15 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.classX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX
 
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
-class ASTTestTransformation extends AbstractASTTransformation implements CompilationUnitAware {
-    private CompilationUnit compilationUnit
+class ASTTestTransformation implements ASTTransformation, CompilationUnitAware {
 
+    CompilationUnit compilationUnit
+
+    @Override
     void visit(final ASTNode[] nodes, final SourceUnit source) {
         AnnotationNode annotationNode = nodes[0]
         def member = annotationNode.getMember('phase')
-        def phase = null
+        CompilePhase phase = null
         if (member) {
             if (member instanceof VariableExpression) {
                 phase = CompilePhase.valueOf(member.text)
@@ -103,29 +105,26 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
 
         def pcallback = compilationUnit.progressCallback
         def callback = new CompilationUnit.ProgressCallback() {
-            Binding binding = new Binding([:].withDefault { null })
+            private final Binding binding = new Binding([:].withDefault { null })
 
             @Override
-            void call(final ProcessingUnit context, final int phaseRef) {
-                if (phase == null || phaseRef == phase.phaseNumber) {
+            void call(final ProcessingUnit context, final int phaseNumber) {
+                if (phase == null || phaseNumber == phase.phaseNumber) {
                     ClosureExpression testClosure = nodes[0].getNodeMetaData(ASTTestTransformation)
                     StringBuilder sb = new StringBuilder()
-                    for (int i = testClosure.lineNumber; i <= testClosure.lastLineNumber; i++) {
+                    for (int i = testClosure.lineNumber; i <= testClosure.lastLineNumber; i += 1) {
                         sb.append(source.source.getLine(i, new Janitor())).append('\n')
                     }
                     def testSource = sb[testClosure.columnNumber..<sb.length()]
                     testSource = testSource[0..<testSource.lastIndexOf('}')]
-                    CompilerConfiguration config = new CompilerConfiguration()
-                    def customizer = new ImportCustomizer()
-                    config.addCompilationCustomizers(customizer)
-                    binding['sourceUnit'] = source
+
                     binding['node'] = nodes[1]
-                    binding['lookup'] = new MethodClosure(LabelFinder, 'lookup').curry(nodes[1])
+                    binding['sourceUnit'] = source
                     binding['compilationUnit'] = compilationUnit
-                    binding['compilePhase'] = CompilePhase.fromPhaseNumber(phaseRef)
+                    binding['compilePhase'] = CompilePhase.fromPhaseNumber(phaseNumber)
+                    binding['lookup'] = new MethodClosure(LabelFinder, 'lookup').curry(nodes[1])
 
-                    GroovyShell shell = new GroovyShell(/*GRECLIPSE add*/compilationUnit.transformLoader,/**/binding, config)
-
+                    def customizer = new ImportCustomizer()
                     source.AST.imports.each {
                         customizer.addImport(it.alias, it.type.name)
                     }
@@ -138,10 +137,14 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
                     source.AST.staticStarImports.each {
                         customizer.addStaticStars(it.value.className)
                     }
+
+                    def config = new CompilerConfiguration()
+                    config.addCompilationCustomizers(customizer)
+                    def loader = compilationUnit.transformLoader
                     // GRECLIPSE add
                     try {
                     // GRECLIPSE end
-                    shell.evaluate(testSource)
+                    new GroovyShell(loader, binding, config).evaluate(testSource)
                     // GRECLIPSE add
                     } catch (Throwable t) {
                         source.addErrorAndContinue(new SyntaxException(" ASTTest exception: $t.message", t,
@@ -165,15 +168,11 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
         compilationUnit.progressCallback = callback
     }
 
-    void setCompilationUnit(final CompilationUnit unit) {
-        this.compilationUnit = unit
-    }
-
     private static class AssertionSourceDelegatingSourceUnit extends SourceUnit {
         private final ReaderSource delegate
 
-        AssertionSourceDelegatingSourceUnit(final String name, final ReaderSource source, final CompilerConfiguration flags, final GroovyClassLoader loader, final ErrorCollector er) {
-            super(name, '', flags, loader, er)
+        AssertionSourceDelegatingSourceUnit(final String name, final ReaderSource source, final CompilerConfiguration config, final GroovyClassLoader loader, final ErrorCollector er) {
+            super(name, '', config, loader, er)
             delegate = source
         }
 
@@ -189,8 +188,7 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
                     if (column > 40) {
                         int start = column - 30 - 1
                         int end = (column + 10 > text.length() ? text.length() : column + 10 - 1)
-                        sample = '   ' + text[start..<end] + Utilities.eol() + '   ' +
-                                marker[start..<marker.length()]
+                        sample = '   ' + text[start..<end] + Utilities.eol() + '   ' + marker[start..<marker.length()]
                     } else {
                         sample = '   ' + text + Utilities.eol() + '   ' + marker
                     }
@@ -200,23 +198,21 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
             }
             sample
         }
-
     }
-    
+
     private static class ProgressCallbackChain extends CompilationUnit.ProgressCallback {
+        private final List<CompilationUnit.ProgressCallback> chain = [] as LinkedList
 
-        private final List<CompilationUnit.ProgressCallback> chain = new LinkedList<CompilationUnit.ProgressCallback>()
-
-        ProgressCallbackChain(CompilationUnit.ProgressCallback... callbacks) {
-            if (callbacks!=null) {
+        ProgressCallbackChain(final CompilationUnit.ProgressCallback... callbacks) {
+            if (callbacks) {
                 callbacks.each { addCallback(it) }
             }
         }
 
-        void addCallback(CompilationUnit.ProgressCallback callback) {
+        void addCallback(final CompilationUnit.ProgressCallback callback) {
             chain << callback
         }
-        
+
         @Override
         void call(final ProcessingUnit context, final int phase) {
             chain*.call(context, phase)
@@ -225,14 +221,14 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
 
     static class LabelFinder extends ClassCodeVisitorSupport {
 
-        static List<Statement> lookup(MethodNode node, String label) {
+        static List<Statement> lookup(final MethodNode node, final String label) {
             LabelFinder finder = new LabelFinder(label, null)
             node.code.visit(finder)
 
             finder.targets
         }
 
-        static List<Statement> lookup(ClassNode node, String label) {
+        static List<Statement> lookup(final ClassNode node, final String label) {
             LabelFinder finder = new LabelFinder(label, null)
             node.methods*.code*.visit(finder)
             node.declaredConstructors*.code*.visit(finder)
@@ -242,8 +238,7 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
 
         private final String label
         private final SourceUnit unit
-
-        private final List<Statement> targets = new LinkedList<Statement>()
+        private final List<Statement> targets = [] as LinkedList
 
         LabelFinder(final String label, final SourceUnit unit) {
             this.label = label
@@ -258,12 +253,11 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
         @Override
         protected void visitStatement(final Statement statement) {
             super.visitStatement(statement)
-            if (statement.statementLabel==label) targets << statement
+            if (label in statement.statementLabels) targets << statement
         }
 
         List<Statement> getTargets() {
             Collections.unmodifiableList(targets)
         }
     }
-
 }

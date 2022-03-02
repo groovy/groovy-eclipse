@@ -34,7 +34,7 @@ import org.codehaus.groovy.runtime.typehandling.NumberMath;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.codehaus.groovy.syntax.Types.BITWISE_AND;
 import static org.codehaus.groovy.syntax.Types.BITWISE_OR;
@@ -49,23 +49,16 @@ import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_UNSIGNED;
 
 public final class ExpressionUtils {
-    private static ArrayList<Integer> handledTypes = new ArrayList<Integer>();
-    static {
-        handledTypes.add(PLUS);
-        handledTypes.add(MINUS);
-        handledTypes.add(MULTIPLY);
-        handledTypes.add(DIVIDE);
-        handledTypes.add(LEFT_SHIFT);
-        handledTypes.add(RIGHT_SHIFT);
-        handledTypes.add(RIGHT_SHIFT_UNSIGNED);
-        handledTypes.add(BITWISE_OR);
-        handledTypes.add(BITWISE_AND);
-        handledTypes.add(BITWISE_XOR);
-        handledTypes.add(POWER);
-    }
 
     private ExpressionUtils() {
     }
+
+    // NOTE: values are sorted in ascending order
+    private static final int[] HANDLED_TYPES = {
+        PLUS, MINUS, MULTIPLY, DIVIDE, POWER,
+        LEFT_SHIFT, RIGHT_SHIFT, RIGHT_SHIFT_UNSIGNED,
+        BITWISE_OR, BITWISE_AND, BITWISE_XOR,
+    };
 
     /**
      * Turns expressions of the form ConstantExpression(40) + ConstantExpression(2)
@@ -91,14 +84,10 @@ public final class ExpressionUtils {
             }
         } else if (isNumberOrArrayOfNumber(wrapperType, false)) {
             int type = be.getOperation().getType();
-            if (handledTypes.contains(type)) {
+            if (Arrays.binarySearch(HANDLED_TYPES, type) >= 0) {
+                boolean isShift = (type >= LEFT_SHIFT && type <= RIGHT_SHIFT_UNSIGNED);
                 Expression leftX = transformInlineConstants(be.getLeftExpression(), targetType);
-                /* GRECLIPSE edit -- GROOVY-9336
-                Expression rightX = transformInlineConstants(be.getRightExpression(), targetType);
-                */
-                Expression rightX = transformInlineConstants(be.getRightExpression(),
-                    type >= LEFT_SHIFT && type <= RIGHT_SHIFT_UNSIGNED ? ClassHelper.int_TYPE : targetType);
-                // GRECLIPSE end
+                Expression rightX = transformInlineConstants(be.getRightExpression(), isShift ? ClassHelper.int_TYPE : targetType);
                 if (leftX instanceof ConstantExpression && rightX instanceof ConstantExpression) {
                     Number left = safeNumber((ConstantExpression) leftX);
                     Number right = safeNumber((ConstantExpression) rightX);
@@ -182,9 +171,10 @@ public final class ExpressionUtils {
     // GRECLIPSE end
 
     private static ConstantExpression configure(Expression origX, ConstantExpression newX) {
-        // GRECLIPSE edit
+        /* GRECLIPSE edit
+        newX.setSourcePosition(origX);
+        */
         newX.setNodeMetaData(ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, origX);
-        //newX.setSourcePosition(origX);
         // GRECLIPSE end
         return newX;
     }
@@ -260,13 +250,10 @@ public final class ExpressionUtils {
                         Field field = type.redirect().getTypeClass().getField(pe.getPropertyAsString());
                         if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
                             ConstantExpression ce3 = new ConstantExpression(field.get(null), true);
-                            // GRECLIPSE edit
-                            //ce3.setSourcePosition(exp);
                             configure(exp, ce3);
-                            // GRECLIPSE end
                             return ce3;
                         }
-                    } catch (Exception | LinkageError e) { // GRECLIPSE add
+                    } catch (Exception | LinkageError e) {
                         // ignore, leave property expression in place and we'll report later
                     }
                 }
@@ -313,7 +300,7 @@ public final class ExpressionUtils {
                 Expression transformed = transformInlineConstants(e, attrType);
                 newList.addExpression(transformed);
                 if (transformed != e) changed = true;
-            } catch(Exception ignored) {
+            } catch (Exception ignored) {
                 newList.addExpression(e);
             }
         }
@@ -344,30 +331,25 @@ public final class ExpressionUtils {
                 FieldNode field = ClassNodeUtils.getField(type, pe.getPropertyAsString());
                 if (type.isEnum() && field != null && field.isEnum()) return exp;
                 Expression constant = findConstant(field);
-                // GRECLIPSE edit
-                //if (constant != null) return constant;
+                // GRECLIPSE add
                 if (constant instanceof ConstantExpression) {
                     return clone((ConstantExpression) constant, exp);
                 }
                 // GRECLIPSE end
+                if (constant != null) return constant;
             }
         } else if (exp instanceof BinaryExpression) {
             BinaryExpression be = (BinaryExpression) exp;
-            /* GRECLIPSE edit -- GROOVY-9855: inline string concat sooner
-            be.setLeftExpression(transformInlineConstants(be.getLeftExpression()));
-            be.setRightExpression(transformInlineConstants(be.getRightExpression()));
-            return be;
-            */
             Expression lhs = transformInlineConstants(be.getLeftExpression());
             Expression rhs = transformInlineConstants(be.getRightExpression());
             if (be.getOperation().getType() == PLUS && lhs instanceof ConstantExpression && rhs instanceof ConstantExpression &&
                     lhs.getType().equals(ClassHelper.STRING_TYPE) && rhs.getType().equals(ClassHelper.STRING_TYPE)) {
+                // GROOVY-9855: inline string concat
                 return configure(be, new ConstantExpression(lhs.getText() + rhs.getText()));
             }
             be.setLeftExpression(lhs);
             be.setRightExpression(rhs);
             return be;
-            // GRECLIPSE end
         } else if (exp instanceof ListExpression) {
             ListExpression origList = (ListExpression) exp;
             ListExpression newList = new ListExpression();
@@ -388,10 +370,9 @@ public final class ExpressionUtils {
     }
 
     private static Expression findConstant(FieldNode fn) {
-        if (fn != null && !fn.isEnum() && fn.isStatic() && fn.isFinal()) {
-            if (fn.getInitialValueExpression() instanceof ConstantExpression) {
-                return fn.getInitialValueExpression();
-            }
+        if (fn != null && !fn.isEnum() && fn.isStatic() && fn.isFinal()
+                && fn.getInitialValueExpression() instanceof ConstantExpression) {
+            return fn.getInitialValueExpression();
         }
         return null;
     }

@@ -74,8 +74,7 @@ public class GenericsType extends ASTNode {
     }
 
     public String toString() {
-        Set<String> visited = new HashSet<String>();
-        return toString(visited);
+        return toString(new HashSet<String>());
     }
 
     private String toString(Set<String> visited) {
@@ -257,19 +256,6 @@ public class GenericsType extends ASTNode {
                 // if the classnode we compare to is a generics placeholder (like <E>) then we
                 // only need to check that the names are equal
                 if (genericsTypes==null) return true;
-                /* GRECLIPSE edit -- GROOVY-9945, GROOVY-10067
-                if (isWildcard()) {
-                    if (lowerBound!=null) return genericsTypes[0].getName().equals(lowerBound.getUnresolvedName());
-                    if (upperBounds!=null) {
-                        for (ClassNode upperBound : upperBounds) {
-                            String name = upperBound.getGenericsTypes()[0].getName();
-                            if (genericsTypes[0].getName().equals(name)) return true;
-                        }
-                        return false;
-                    }
-                }
-                return genericsTypes[0].getName().equals(name);
-                */
                 String name0 = genericsTypes[0].getName();
                 if (!isWildcard()) {
                     return name0.equals(getName());
@@ -284,7 +270,6 @@ public class GenericsType extends ASTNode {
                     }
                 }
                 return checkGenerics(classNode);
-                // GRECLIPSE end
             }
             if (wildcard || placeholder) {
                 // if the current generics spec is a wildcard spec or a placeholder spec
@@ -372,14 +357,10 @@ public class GenericsType extends ASTNode {
                             // class node are not parameterized. This means that we must create a
                             // new class node with the parameterized types that the current class node
                             // has defined.
-                            /* GRECLIPSE edit
-                            ClassNode node = GenericsUtils.parameterizeType(classNode, anInterface);
-                            */
                             ClassNode node = anInterface;
                             if (node.getGenericsTypes() != null) {
                                 node = GenericsUtils.parameterizeType(classNode, node);
                             }
-                            // GRECLIPSE end
                             return compareGenericsWithBound(node, bound);
                         }
                     }
@@ -397,7 +378,7 @@ public class GenericsType extends ASTNode {
                         if (success) return true;
                     }
                 }
-                /* GRECLIPSE edit
+                /* GRECLIPSE edit -- GROOVY-6232, GROOVY-9956
                 return compareGenericsWithBound(getParameterizedSuperClass(classNode), bound);
                 */
                 if (classNode.equals(ClassHelper.OBJECT_TYPE)) {
@@ -429,32 +410,21 @@ public class GenericsType extends ASTNode {
                     GenericsTypeName name = new GenericsTypeName(classNodeType.getName());
                     if (redirectBoundType.isPlaceholder()) {
                         GenericsTypeName gtn = new GenericsTypeName(redirectBoundType.getName());
-                        match = name.equals(gtn) // GRECLIPSE add
+                        match = name.equals(gtn) // GRECLIPSE add -- GROOVY-10067, et al.
                                 || name.equals(new GenericsTypeName("#" + redirectBoundType.getName()));
                         if (!match) {
-                            GenericsType genericsType = boundPlaceHolders.get(gtn);
-                            if (genericsType!=null) {
-                                if (genericsType.isPlaceholder()) {
+                            GenericsType boundGenericsType = boundPlaceHolders.get(gtn);
+                            if (boundGenericsType != null) {
+                                if (boundGenericsType.isPlaceholder()) {
                                     match = true;
-                                } else if (genericsType.isWildcard()) {
-                                    /* GRECLIPSE edit -- GROOVY-6786, GROOVY-9460, GROOVY-9902
-                                    if (genericsType.getUpperBounds()!=null) {
-                                        for (ClassNode up : genericsType.getUpperBounds()) {
-                                            match |= redirectBoundType.isCompatibleWith(up);
-                                        }
-                                        if (genericsType.getLowerBound()!=null) {
-                                            match |= redirectBoundType.isCompatibleWith(genericsType.getLowerBound());
-                                        }
-                                    }
-                                    */
-                                    if (genericsType.getUpperBounds() != null) { // ? supports single bound only
-                                        match = classNodeType.isCompatibleWith(genericsType.getUpperBounds()[0]);
-                                    } else if (genericsType.getLowerBound() != null) {
-                                        match = classNodeType.isCompatibleWith(genericsType.getLowerBound());
+                                } else if (boundGenericsType.isWildcard()) {
+                                    if (boundGenericsType.getUpperBounds() != null) { // multiple bounds not allowed for ?
+                                        match = classNodeType.isCompatibleWith(boundGenericsType.getUpperBounds()[0]);
+                                    } else if (boundGenericsType.getLowerBound() != null) {
+                                        match = classNodeType.isCompatibleWith(boundGenericsType.getLowerBound());
                                     } else {
                                         match = true;
                                     }
-                                    // GRECLIPSE end
                                 }
                             }
                         }
@@ -487,16 +457,15 @@ public class GenericsType extends ASTNode {
                                                     gt = classNodePlaceholders.get(gtn);
                                                 }
                                             }
-                                            // GRECLIPSE add -- GROOVY-9338
                                             if (classNodeType.isWildcard()) {
                                                 if (classNodeType.getLowerBound() != null || classNodeType.getUpperBounds() != null) {
                                                     match = classNodeType.new GenericsTypeMatcher().checkGenerics(gt.getType());
                                                 } else {
                                                     match = false; // "?" (from Comparable<?>) does not satisfy anything
                                                 }
-                                            } else
-                                            // GRECLIPSE end
-                                            match = implementsInterfaceOrIsSubclassOf(gt.getType(), classNodeType.getType());
+                                            } else {
+                                                match = implementsInterfaceOrIsSubclassOf(gt.getType(), classNodeType.getType());
+                                            }
                                         }
                                         if (match && redirectBoundType.upperBounds!=null) {
                                             for (ClassNode upperBound : redirectBoundType.upperBounds) {
@@ -509,7 +478,7 @@ public class GenericsType extends ASTNode {
                                                         gt = classNodePlaceholders.get(gtn);
                                                     }
                                                 }
-                                                // GRECLIPSE add -- GROOVY-9338
+                                                // GROOVY-6095, GROOVY-9338
                                                 if (classNodeType.isWildcard()) {
                                                     if (classNodeType.getLowerBound() != null) {
                                                         match = gt.new GenericsTypeMatcher().checkGenerics(classNodeType.getLowerBound());
@@ -518,20 +487,13 @@ public class GenericsType extends ASTNode {
                                                     } else {
                                                         match = false; // "?" (from Comparable<?>) does not satisfy anything
                                                     }
-                                                } else
-                                                // GRECLIPSE end
-                                                match = implementsInterfaceOrIsSubclassOf(classNodeType.getType(), gt.getType())
-                                                /* GRECLIPSE edit
-                                                         || classNodeType.isCompatibleWith(gt.getType()); // workaround for GROOVY-6095
-                                                */;
+                                                } else {
+                                                    match = implementsInterfaceOrIsSubclassOf(classNodeType.getType(), gt.getType());
+                                                }
                                                 if (!match) break;
                                             }
                                         }
-                                        /* GRECLIPSE edit -- GROOVY-10010
-                                        return match;
-                                        */
-                                        continue;
-                                        // GRECLIPSE end
+                                        continue; // GROOVY-10010
                                     } else if (classNodePlaceholders.containsKey(name)) {
                                         redirectBoundType = classNodePlaceholders.get(name);
                                     }
@@ -559,7 +521,7 @@ public class GenericsType extends ASTNode {
      * @param classNode the class for which we want to return the parameterized superclass
      * @return the parameterized superclass
      */
-    /* GRECLIPSE Edit
+    /* GRECLIPSE edit
     private static ClassNode getParameterizedSuperClass(ClassNode classNode) {
         if (ClassHelper.OBJECT_TYPE.equals(classNode)) return null;
         ClassNode superClass = classNode.getUnresolvedSuperClass();

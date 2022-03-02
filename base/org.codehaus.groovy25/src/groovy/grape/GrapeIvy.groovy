@@ -19,6 +19,8 @@
 package groovy.grape
 
 import groovy.transform.CompileStatic
+import groovy.transform.NamedParam
+import groovy.transform.NamedParams
 import org.apache.groovy.plugin.GroovyRunner
 import org.apache.groovy.plugin.GroovyRunnerRegistry
 import org.apache.ivy.Ivy
@@ -752,20 +754,20 @@ class GrapeIvy implements GrapeEngine {
 
     @Override
     @CompileStatic
-    void addResolver(Map<String, Object> args) {
-        ChainResolver chainResolver = (ChainResolver) settings.getResolver('downloadGrapes')
+    void addResolver(@NamedParams([
+        @NamedParam(value='name', type=String, required=true),
+        @NamedParam(value='root', type=String, required=true),
+        @NamedParam(value='m2Compatible', type=Boolean, required=false)
+    ]) Map<String, Object> args) {
+        def resolver = new IBiblioResolver(
+            name: (String) args.name,
+            root: (String) args.root,
+            m2compatible: !Boolean.FALSE.equals(args.get('m2Compatible')),
+            settings: (ResolverSettings) settings
+        )
 
-        IBiblioResolver resolver = new IBiblioResolver(
-                name: (String) args.name,
-                root: (String) args.root,
-                m2compatible: (boolean) (args.m2Compatible ?: true),
-                settings: (ResolverSettings) settings)
-
-        /* GRECLIPSE edit -- GROOVY-9376
-        chainResolver.add(resolver)
-        */
+        def chainResolver = (ChainResolver) settings.getResolver('downloadGrapes')
         chainResolver.resolvers.add(0, resolver)
-        // GRECLIPSE end
 
         ivyInstance = Ivy.newInstance(settings)
         resolvedDependencies = []

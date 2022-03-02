@@ -64,13 +64,7 @@ public class BinaryExpressionTransformer {
     private static final ConstantExpression CONSTANT_ZERO = new ConstantExpression(0, true);
     private static final ConstantExpression CONSTANT_MINUS_ONE = new ConstantExpression(-1, true);
     private static final ConstantExpression CONSTANT_ONE = new ConstantExpression(1, true);
-    /* GRECLIPSE edit
-    static {
-        CONSTANT_ZERO.setType(ClassHelper.int_TYPE);
-        CONSTANT_ONE.setType(ClassHelper.int_TYPE);
-        CONSTANT_MINUS_ONE.setType(ClassHelper.int_TYPE);
-    }
-    */
+
     private int tmpVarCounter = 0;
 
     private final StaticCompilationTransformer staticCompilationTransformer;

@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.decompiled.DecompiledClassNode;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ResolveVisitor;
@@ -63,7 +64,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implem
  */
 public class GenericsUtils {
     public static final GenericsType[] EMPTY_GENERICS_ARRAY = GenericsType.EMPTY_ARRAY;
-    public static final String JAVA_LANG_OBJECT = "java.lang.Object";
+    public static final String JAVA_LANG_OBJECT = ClassHelper.OBJECT;
 
     /**
      * Given a parameterized type and a generic type information, aligns actual type parameters. For example, if a
@@ -294,19 +295,24 @@ public class GenericsUtils {
         genericsSpec = createGenericsSpec(targetRedirect, genericsSpec);
         extractSuperClassGenerics(hint, targetRedirect, genericsSpec);
         return correctToGenericsSpecRecurse(genericsSpec, targetRedirect);
-
     }
 
-    public static ClassNode nonGeneric(ClassNode type) {
-        if (type.isUsingGenerics()) {
-            final ClassNode nonGen = ClassHelper.makeWithoutCaching(type.getName());
-            nonGen.setRedirect(type);
-            nonGen.setGenericsTypes(null);
-            nonGen.setUsingGenerics(false);
-            return nonGen;
+    public static ClassNode nonGeneric(final ClassNode type) {
+        int dims = 0;
+        ClassNode temp = type;
+        while (temp.isArray()) { dims += 1;
+            temp = temp.getComponentType();
         }
-        if (type.isArray() && type.getComponentType().isUsingGenerics()) {
-            return type.getComponentType().getPlainNodeReference().makeArray();
+        if (temp instanceof DecompiledClassNode // GROOVY-10461: check without resolving supers
+                        ? ((DecompiledClassNode) temp).isParameterized() : temp.isUsingGenerics()) {
+            ClassNode result = ClassHelper.makeWithoutCaching(temp.getName());
+            result.setRedirect(temp);
+            result.setGenericsTypes(null);
+            result.setUsingGenerics(false);
+            while (dims > 0) { dims -= 1;
+                result = result.makeArray();
+            }
+            return result;
         }
         return type;
     }
@@ -481,7 +487,7 @@ public class GenericsUtils {
     }
 
     public static Map<String, ClassNode> createGenericsSpec(ClassNode current) {
-        return createGenericsSpec(current, Collections.EMPTY_MAP);
+        return createGenericsSpec(current, Collections.<String,ClassNode>emptyMap());
     }
 
     public static Map<String, ClassNode> createGenericsSpec(ClassNode current, Map<String, ClassNode> oldSpec) {
@@ -1002,11 +1008,11 @@ public class GenericsUtils {
     }
     */
 
-    public static boolean hasPlaceHolders(final ClassNode parameterizedType) {
+    public static boolean hasPlaceHolders(ClassNode parameterizedType) {
         return checkPlaceHolders(parameterizedType, GenericsType::isPlaceholder);
     }
 
-    private static boolean checkPlaceHolders(final ClassNode parameterizedType, final java.util.function.Predicate<GenericsType> p) {
+    private static boolean checkPlaceHolders(ClassNode parameterizedType, java.util.function.Predicate<GenericsType> p) {
         if (parameterizedType == null) return false;
 
         GenericsType[] genericsTypes = parameterizedType.getGenericsTypes();
@@ -1051,12 +1057,7 @@ public class GenericsUtils {
      */
     public static ClassNode findActualTypeByGenericsPlaceholderName(String placeholderName, Map<GenericsType, GenericsType> genericsPlaceholderAndTypeMap) {
         for (Map.Entry<GenericsType, GenericsType> entry : genericsPlaceholderAndTypeMap.entrySet()) {
-            GenericsType declaringGenericsType = entry.getKey();
-
-            if (placeholderName.equals(declaringGenericsType.getName())) {
-                /* GRECLIPSE edit -- GROOVY-9340, GROOVY-9347
-                return entry.getValue().getType().redirect();
-                */
+            if (placeholderName.equals(entry.getKey().getName())) {
                 GenericsType gt = entry.getValue();
                 if (gt.isWildcard()) {
                     if (gt.getLowerBound() != null) {
@@ -1067,10 +1068,8 @@ public class GenericsUtils {
                     }
                 }
                 return gt.getType();
-                // GRECLIPSE end
             }
         }
-
         return null;
     }
 
@@ -1105,11 +1104,8 @@ public class GenericsUtils {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-
             ParameterizedTypeCacheKey cacheKey = (ParameterizedTypeCacheKey) o;
-
-            return genericsClass == cacheKey.genericsClass &&
-                    actualType == cacheKey.actualType;
+            return genericsClass == cacheKey.genericsClass && actualType == cacheKey.actualType;
         }
 
         @Override

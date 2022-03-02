@@ -57,7 +57,8 @@ public class CompileUnit {
     private final Map<String, ClassNode> classesToCompile = new HashMap<String, ClassNode>();
     private final Map<String, SourceUnit> classNameToSource = new HashMap<String, SourceUnit>();
     private final Map<String, InnerClassNode> generatedInnerClasses = new HashMap<String, InnerClassNode>();
-    private ListHashMap metaDataMap;
+
+    private ListHashMap<Object, Object> metaDataMap;
 
     public CompileUnit(GroovyClassLoader classLoader, CompilerConfiguration config) {
         this(classLoader, null, config);
@@ -65,8 +66,8 @@ public class CompileUnit {
 
     public CompileUnit(GroovyClassLoader classLoader, CodeSource codeSource, CompilerConfiguration config) {
         this.classLoader = classLoader;
-        this.config = config;
         this.codeSource = codeSource;
+        this.config = config;
     }
 
     public List<ModuleNode> getModules() {
@@ -158,9 +159,8 @@ public class CompileUnit {
         // GRECLIPSE add
         sortedClasses = null;
         // GRECLIPSE end
-
-        if (classesToCompile.containsKey(name)) {
-            ClassNode cn = classesToCompile.get(name);
+        ClassNode cn = classesToCompile.get(name);
+        if (cn != null) {
             cn.setRedirect(node);
             classesToCompile.remove(name);
         }
@@ -176,8 +176,16 @@ public class CompileUnit {
         classNameToSource.put(node.getName(), location);
     }
 
+    public Map<String, ClassNode> getClassesToCompile() {
+        return classesToCompile;
+    }
+
     public Iterator<String> iterateClassNodeToCompile() {
         return classesToCompile.keySet().iterator();
+    }
+
+    public boolean hasClassNodeToCompile() {
+        return !classesToCompile.isEmpty();
     }
 
     public void addGeneratedInnerClass(InnerClassNode icn) {
@@ -204,9 +212,10 @@ public class CompileUnit {
      */
     public <T> T getNodeMetaData(Object key) {
         if (metaDataMap == null) {
-            return (T) null;
+            return null;
         }
-        return (T) metaDataMap.get(key);
+        T val = (T) metaDataMap.get(key);
+        return val;
     }
 
     /**
@@ -218,12 +227,8 @@ public class CompileUnit {
      *                        data under that key
      */
     public void setNodeMetaData(Object key, Object value) {
-        if (key==null) throw new GroovyBugError("Tried to set meta data with null key on "+this+".");
-        if (metaDataMap == null) {
-            metaDataMap = new ListHashMap();
-        }
-        Object old = metaDataMap.put(key,value);
-        if (old!=null) throw new GroovyBugError("Tried to overwrite existing meta data "+this+".");
+        Object old = putNodeMetaData(key, value);
+        if (old != null) throw new GroovyBugError("Tried to overwrite existing meta data " + this + ".");
     }
 
     /**
@@ -237,7 +242,7 @@ public class CompileUnit {
     public Object putNodeMetaData(Object key, Object value) {
         if (key == null) throw new GroovyBugError("Tried to set meta data with null key on " + this + ".");
         if (metaDataMap == null) {
-            metaDataMap = new ListHashMap();
+            metaDataMap = new ListHashMap<Object, Object>();
         }
         return metaDataMap.put(key, value);
     }
@@ -249,7 +254,7 @@ public class CompileUnit {
      * @throws GroovyBugError if the key is null
      */
     public void removeNodeMetaData(Object key) {
-        if (key==null) throw new GroovyBugError("Tried to remove meta data with null key "+this+".");
+        if (key == null) throw new GroovyBugError("Tried to remove meta data with null key " + this + ".");
         if (metaDataMap == null) {
             return;
         }
@@ -261,7 +266,7 @@ public class CompileUnit {
      * @return the node metadata. Always not null.
      */
     public Map<?,?> getNodeMetaData() {
-        if (metaDataMap==null) {
+        if (metaDataMap == null) {
             return Collections.emptyMap();
         }
         return Collections.unmodifiableMap(metaDataMap);

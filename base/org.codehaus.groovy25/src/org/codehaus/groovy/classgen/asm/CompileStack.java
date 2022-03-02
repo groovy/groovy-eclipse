@@ -69,7 +69,7 @@ import java.util.Map;
 public class CompileStack implements Opcodes {
 
     // state flag
-    private boolean clear=true;
+    private boolean clear = true;
     // current scope
     private VariableScope scope;
     // current label for continue
@@ -105,9 +105,10 @@ public class CompileStack implements Opcodes {
     private final LinkedList<Boolean> implicitThisStack = new LinkedList<Boolean>();
     // handle different states for being on the left hand side
     private final LinkedList<Boolean> lhsStack = new LinkedList<Boolean>();
+
     {
-        implicitThisStack.add(false);
-        lhsStack.add(false);
+        implicitThisStack.add(Boolean.FALSE);
+        lhsStack.add(Boolean.FALSE);
     }
 
     // defines the first variable index usable after
@@ -356,17 +357,15 @@ public class CompileStack implements Opcodes {
                 mv.visitLocalVariable("this", className, null, thisStartLabel, thisEndLabel, 0);
             }
 
-            for (Iterator iterator = usedVariables.iterator(); iterator.hasNext();) {
+            for (Iterator iterator = usedVariables.iterator(); iterator.hasNext(); ) {
                 BytecodeVariable v = (BytecodeVariable) iterator.next();
                 ClassNode t = v.getType();
                 if (v.isHolder()) t = ClassHelper.REFERENCE_TYPE;
                 String type = BytecodeHelper.getTypeDescription(t);
                 Label start = v.getStartLabel();
                 Label end = v.getEndLabel();
-                // GRECLIPSE add
                 if (start != null && end != null)
-                // GRECLIPSE end
-                mv.visitLocalVariable(v.getName(), type, null, start, end, v.getIndex());
+                    mv.visitLocalVariable(v.getName(), type, null, start, end, v.getIndex());
             }
         }
 
@@ -405,7 +404,7 @@ public class CompileStack implements Opcodes {
         ep.end = end;
         ep.sig = sig;
         ep.goal = goal;
-        if (sig==null) {
+        if (sig == null) {
             untypedExceptions.add(ep);
         } else {
             typedExceptions.add(ep);
@@ -421,9 +420,9 @@ public class CompileStack implements Opcodes {
      */
     public Label init(VariableScope el, Parameter[] parameters) {
         if (!clear) throw new GroovyBugError("CompileStack#init called without calling clear before");
-        clear=false;
+        clear = false;
         pushVariableScope(el);
-        defineMethodVariables(parameters,el.isInStaticContext());
+        defineMethodVariables(parameters, el.isInStaticContext());
         className = BytecodeHelper.getTypeDescription(controller.getClassNode());
         // GRECLIPSE add -- GROOVY-9373
         return thisStartLabel;

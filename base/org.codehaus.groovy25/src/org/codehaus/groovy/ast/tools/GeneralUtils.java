@@ -763,7 +763,6 @@ public class GeneralUtils {
         return new TryCatchStatement(tryStatement, finallyStatement);
     }
 
-    // GRECLIPSE add
     public static TryCatchStatement tryCatchS(final Statement tryStatement, final Statement finallyStatement, final CatchStatement... catchStatements) {
         TryCatchStatement result = new TryCatchStatement(tryStatement, finallyStatement);
         for (CatchStatement catchStatement : catchStatements) {
@@ -771,7 +770,6 @@ public class GeneralUtils {
         }
         return result;
     }
-    // GRECLIPSE end
 
     public static VariableExpression varX(final String name) {
         return new VariableExpression(name);

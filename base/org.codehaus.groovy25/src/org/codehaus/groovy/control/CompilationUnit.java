@@ -81,11 +81,11 @@ public class CompilationUnit extends ProcessingUnit {
     protected ASTTransformationsContext astTransformationsContext; // AST transformations state data
 
     @Deprecated
-    protected Map summariesBySourceName;      // Summary of each SourceUnit
+    protected Map summariesBySourceName = new HashMap();
     @Deprecated
-    protected Map summariesByPublicClassName;       // Summary of each SourceUnit
+    protected Map summariesByPublicClassName = new HashMap();
     @Deprecated
-    protected Map classSourcesByPublicClassName;    // Summary of each Class
+    protected Map classSourcesByPublicClassName = new HashMap();
 
     protected Map<String, SourceUnit> sources;    // The SourceUnits from which this unit is built
     /* GRECLIPSE edit
@@ -160,31 +160,25 @@ public class CompilationUnit extends ProcessingUnit {
         // GRECLIPSE add
         this.allowTransforms = allowTransforms;
         // GRECLIPSE end
+        this.ast = new CompileUnit(this.classLoader, security, this.configuration);
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
         /* GRECLIPSE edit
         this.names = new ArrayList<String>();
         */
-        this.queuedSources = new LinkedList<SourceUnit>();
         this.sources = new LinkedHashMap<String, SourceUnit>();
-        this.summariesBySourceName = new HashMap();
-        this.summariesByPublicClassName = new HashMap();
-        this.classSourcesByPublicClassName = new HashMap();
-
-        this.ast = new CompileUnit(this.classLoader, security, this.configuration);
+        this.queuedSources = new LinkedList<SourceUnit>();
         this.generatedClasses = new ArrayList<GroovyClass>();
 
         this.verifier = new Verifier();
+        this.optimizer = new OptimizerVisitor(this);
         this.resolveVisitor = new ResolveVisitor(this);
         this.staticImportVisitor = new StaticImportVisitor();
-        this.optimizer = new OptimizerVisitor(this);
 
         initPhaseOperations();
         addPhaseOperations();
 
         applyCompilationCustomizers(configuration);
-
-        this.classgenCallback = null;
-        this.classNodeResolver = new ClassNodeResolver();
+        setClassNodeResolver(new ClassNodeResolver());
     }
 
     private void initPhaseOperations() {
@@ -304,7 +298,9 @@ public class CompilationUnit extends ProcessingUnit {
      * Returns the class loader for loading AST transformations.
      */
     public GroovyClassLoader getTransformLoader() {
-        return Optional.ofNullable(astTransformationsContext.getTransformLoader()).orElseGet(() -> getClassLoader());
+        GroovyClassLoader loader = astTransformationsContext.getTransformLoader();
+        if (loader == null) loader = this.getClassLoader();
+        return loader;
     }
 
     public void addPhaseOperation(SourceUnitOperation op, int phase) {
@@ -480,9 +476,10 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public Iterator<SourceUnit> iterator() {
         return new Iterator<SourceUnit>() {
-            // GRECLIPSE edit
-            //Iterator<String> nameIterator = names.iterator();
-            Iterator<String> nameIterator = sources.keySet().iterator();
+            /* GRECLIPSE edit
+            Iterator<String> nameIterator = names.iterator();
+            */
+            private Iterator<String> nameIterator = sources.keySet().iterator();
             // GRECLIPSE end
 
             public boolean hasNext() {
@@ -796,8 +793,7 @@ public class CompilationUnit extends ProcessingUnit {
             return true;
         }
 
-        public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-
+        public void call(final SourceUnit source, final GeneratorContext context, final ClassNode classNode) throws CompilationFailedException {
             optimizer.visitClass(classNode, source); // GROOVY-4272: repositioned it here from staticImport
 
             //
@@ -870,9 +866,9 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Recurse for inner classes
             //
-            LinkedList innerClasses = generator.getInnerClasses();
+            LinkedList<ClassNode> innerClasses = generator.getInnerClasses();
             while (!innerClasses.isEmpty()) {
-                classgen.call(source, context, (ClassNode) innerClasses.removeFirst());
+                classgen.call(source, context, innerClasses.removeFirst());
             }
         }
     };

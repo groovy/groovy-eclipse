@@ -96,7 +96,7 @@ public class ConstantExpression extends Expression {
     }
 
     public String getText() {
-        return (value == null ? "null" : value.toString());
+        return value == null ? "null" : value.toString();
     }
 
     public String getConstantName() {

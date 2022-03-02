@@ -33,13 +33,12 @@ public class MethodCallExpression extends Expression implements MethodCall {
     private Expression objectExpression;
     private Expression method;
     private Expression arguments;
-    private boolean spreadSafe = false;
-    private boolean safe = false;
+    private boolean safe;
+    private boolean spreadSafe;
     private boolean implicitThis;
-
+    private boolean usesGenerics;
     // type spec for generics
-    private GenericsType[] genericsTypes = null;
-    private boolean usesGenerics = false;
+    private GenericsType[] genericsTypes;
 
     private MethodNode target;
 
@@ -54,9 +53,7 @@ public class MethodCallExpression extends Expression implements MethodCall {
         this.method = method;
         if (!(arguments instanceof TupleExpression)) {
             this.arguments = new TupleExpression(arguments);
-            // GRECLIPSE add
             this.arguments.setSourcePosition(arguments);
-            // GRECLIPSE end
         } else {
             this.arguments = arguments;
         }

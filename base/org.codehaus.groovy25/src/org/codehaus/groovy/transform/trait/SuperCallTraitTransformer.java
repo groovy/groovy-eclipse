@@ -103,18 +103,14 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                 }
                 if (traitReceiver!=null) {
                     // A.super.foo = ...
-                    /* GRECLIPSE edit
-                    TraitHelpersTuple helpers = Traits.findHelpers(traitReceiver);
-                    ClassNode helper = helpers.getHelper();
-                    */
                     ClassNode helper = getHelper(traitReceiver);
-                    // GRECLIPSE end
                     String setterName = MetaProperty.getSetterName(leftPropertyExpression.getPropertyAsString());
                     List<MethodNode> methods = helper.getMethods(setterName);
                     for (MethodNode method : methods) {
                         Parameter[] parameters = method.getParameters();
-                        // GRECLIPSE edit -- GROOVY-9672
-                        //if (parameters.length==2 && parameters[0].getType().equals(traitReceiver)) {
+                        /* GRECLIPSE edit -- GROOVY-9672
+                        if (parameters.length==2 && parameters[0].getType().equals(traitReceiver)) {
+                        */
                         if (parameters.length == 2 && isSelfType(parameters[0], traitReceiver)) {
                         // GRECLIPSE end
                             ArgumentListExpression args = new ArgumentListExpression(
@@ -272,12 +268,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
             traitReceiver.redirect().setNodeMetaData(UNRESOLVED_HELPER_CLASS, ret);
             return ret;
         } else {
-            /* GRECLIPSE edit
-            TraitHelpersTuple helpers = Traits.findHelpers(traitReceiver);
-            return helpers.getHelper();
-            */
-            return Traits.findHelper(traitReceiver).getPlainNodeReference();
-            // GRECLIPSE end
+            return Traits.findHelper(traitReceiver).getPlainNodeReference(); // GRECLIPSE add
         }
     }
 

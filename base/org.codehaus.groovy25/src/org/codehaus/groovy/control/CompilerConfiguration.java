@@ -34,11 +34,11 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import static org.apache.groovy.util.SystemUtil.getBooleanSafe;
 import static org.apache.groovy.util.SystemUtil.getSystemPropertySafe;
 import static org.codehaus.groovy.runtime.StringGroovyMethods.isAtLeast;
 
@@ -47,7 +47,7 @@ import static org.codehaus.groovy.runtime.StringGroovyMethods.isAtLeast;
  */
 public class CompilerConfiguration {
 
-    /** This (<code>"indy"</code>) is the Optimization Option value for enabling <code>invokedynamic</code> compilation. */
+    /** Optimization Option for enabling <code>invokedynamic</code> compilation. */
     public static final String INVOKEDYNAMIC = "indy";
 
     /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4. */
@@ -72,6 +72,8 @@ public class CompilerConfiguration {
     public static final String JDK13 = "13";
     /** This (<code>"14"</code>) is the value for targetBytecode to compile for a JDK 14. */
     public static final String JDK14 = "14";
+    /** This (<code>"15"</code>) is the value for targetBytecode to compile for a JDK 15. */
+    public static final String JDK15 = "15";
 
     /**
      * This constant is for comparing targetBytecode to ensure it is set to JDK 1.5 or later.
@@ -88,39 +90,30 @@ public class CompilerConfiguration {
     public static final String PRE_JDK5 = JDK4;
 
     /**
-     * JDK version to bytecode version mapping
+     * JDK version to bytecode version mapping.
      */
     public static final Map<String, Integer> JDK_TO_BYTECODE_VERSION_MAP = Maps.of(
-            JDK4, Opcodes.V1_4,
-            JDK5, Opcodes.V1_5,
-            JDK6, Opcodes.V1_6,
-            JDK7, Opcodes.V1_7,
-            JDK8, Opcodes.V1_8,
-            JDK9, Opcodes.V9,
+            JDK4,  Opcodes.V1_4,
+            JDK5,  Opcodes.V1_5,
+            JDK6,  Opcodes.V1_6,
+            JDK7,  Opcodes.V1_7,
+            JDK8,  Opcodes.V1_8,
+            JDK9,  Opcodes.V9,
             JDK10, Opcodes.V10,
             JDK11, Opcodes.V11,
             JDK12, Opcodes.V12,
             JDK13, Opcodes.V13,
-            JDK14, Opcodes.V14
+            JDK14, Opcodes.V14,
+            JDK15, Opcodes.V15
     );
 
-    /* GRECLIPSE edit
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
-
-    /** An array of the valid targetBytecode values * /
-    public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(EMPTY_STRING_ARRAY);
-    */
     /** The valid targetBytecode values. */
     public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[JDK_TO_BYTECODE_VERSION_MAP.size()]);
-
     /* GRECLIPSE edit
+    public static final int ASM_API_VERSION = Opcodes.ASM8;
     @Deprecated
-    public static final String CURRENT_JVM_VERSION = getMinBytecodeVersion();
+    public static final String CURRENT_JVM_VERSION = JDK7;
     */
-
-    /**
-     * The default source encoding
-     */
     public static final String DEFAULT_SOURCE_ENCODING = "UTF-8";
 
     /**
@@ -142,12 +135,16 @@ public class CompilerConfiguration {
 
         @Override
         public Set<String> getDisabledGlobalASTTransformations() {
-            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(null);
+            Set<String> defaults = super.getDisabledGlobalASTTransformations();
+            if (defaults != null) return Collections.unmodifiableSet(defaults);
+            return null;
         }
 
         @Override
         public Map<String, Object> getJointCompilationOptions() {
-            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(null);
+            Map<String , Object> defaults = super.getJointCompilationOptions();
+            if (defaults != null) return Collections.unmodifiableMap(defaults);
+            return null;
         }
 
         @Override
@@ -304,7 +301,7 @@ public class CompilerConfiguration {
     /**
      * Classpath for use during compilation
      */
-    private LinkedList<String> classpath;
+    private List<String> classpath;
 
     /**
      * If true, the compiler should produce action information
@@ -384,10 +381,6 @@ public class CompilerConfiguration {
 
     private BytecodeProcessor bytecodePostprocessor;
 
-    /* GRECLIPSE edit
-    public static final int ASM_API_VERSION = Opcodes.ASM7;
-    */
-
     /**
      * Sets the compiler flags/settings to default values.
      *
@@ -415,50 +408,22 @@ public class CompilerConfiguration {
      * </blockquote>
      */
     public CompilerConfiguration() {
-        // Set in safe defaults
+        classpath = new LinkedList<>();
+
+        tolerance = 10;
+        minimumRecompilationInterval = 100;
         warningLevel = WarningMessage.LIKELY_ERRORS;
-        classpath = new LinkedList<String>();
-        /* GRECLIPSE edit
-        parameters = getSystemPropertySafe("groovy.parameters") != null;
-        tolerance = 10;
-        minimumRecompilationInterval = 100;
-
-        setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", getMinBytecodeVersion()));
-
-        previewFeatures = getSystemPropertySafe("groovy.preview.features") != null;
-        defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
-
-        // Source file encoding
-        String encoding = getSystemPropertySafe("file.encoding", DEFAULT_SOURCE_ENCODING);
-        encoding = getSystemPropertySafe("groovy.source.encoding", encoding);
-        setSourceEncodingOrDefault(encoding);
-
+        parameters = getBooleanSafe("groovy.parameters");
+        previewFeatures = getBooleanSafe("groovy.preview.features");
+        sourceEncoding = getSystemPropertySafe("groovy.source.encoding",
+            getSystemPropertySafe("file.encoding", DEFAULT_SOURCE_ENCODING));
         setTargetDirectorySafe(getSystemPropertySafe("groovy.target.directory"));
-        */
-        tolerance = 10;
-        minimumRecompilationInterval = 100;
-        parameters = Boolean.getBoolean("groovy.parameters");
-        previewFeatures = Boolean.getBoolean("groovy.preview.features");
-        setTargetDirectorySafe(getSystemPropertySafe("groovy.target.directory"));
-        setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", JDK8));
-        sourceEncoding = Optional.ofNullable(getSystemPropertySafe("groovy.source.encoding"))
-                .orElseGet(() -> getSystemPropertySafe("file.encoding", DEFAULT_SOURCE_ENCODING));
+        setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", JDK8)); //GRECLIPSE
         defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
-        // GRECLIPSE end
 
         optimizationOptions = new HashMap<>(4);
-        handleOptimizationOption(optimizationOptions, INVOKEDYNAMIC, "groovy.target.indy");
-    }
-
-    private void handleOptimizationOption(Map<String, Boolean> options, String optionName, String sysOptionName) {
-        String propValue = getSystemPropertySafe(sysOptionName);
-        boolean optionEnabled = propValue == null
-                ? (DEFAULT == null ? false : Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get(optionName)))
-                : Boolean.valueOf(propValue);
-
-        if (optionEnabled) {
-            options.put(optionName, Boolean.TRUE);
-        }
+        if (getBooleanSafe("groovy.target.indy"))
+            optimizationOptions.put(INVOKEDYNAMIC, Boolean.TRUE);
     }
 
     /**
@@ -480,7 +445,7 @@ public class CompilerConfiguration {
     public CompilerConfiguration(CompilerConfiguration configuration) {
         setWarningLevel(configuration.getWarningLevel());
         setTargetDirectory(configuration.getTargetDirectory());
-        setClasspathList(new LinkedList<String>(configuration.getClasspath()));
+        setClasspathList(configuration.getClasspath());
         setVerbose(configuration.getVerbose());
         setDebug(configuration.getDebug());
         setParameters(configuration.getParameters());
@@ -708,8 +673,7 @@ public class CompilerConfiguration {
     public void setWarningLevel(int level) {
         if (level < WarningMessage.NONE || level > WarningMessage.PARANOIA) {
             this.warningLevel = WarningMessage.LIKELY_ERRORS;
-        }
-        else {
+        } else {
             this.warningLevel = level;
         }
     }
@@ -725,12 +689,7 @@ public class CompilerConfiguration {
      * Sets the encoding to be used when reading source files.
      */
     public void setSourceEncoding(String encoding) {
-        setSourceEncodingOrDefault(encoding);
-    }
-
-    private void setSourceEncodingOrDefault(String encoding) {
-        if (encoding == null) encoding = DEFAULT_SOURCE_ENCODING;
-        this.sourceEncoding = encoding;
+        this.sourceEncoding = (encoding != null ? encoding : DEFAULT_SOURCE_ENCODING);
     }
 
     /**
@@ -748,11 +707,7 @@ public class CompilerConfiguration {
      */
     @Deprecated
     public void setOutput(PrintWriter output) {
-        if (output == null) {
-            this.output = new PrintWriter(NullWriter.DEFAULT);
-        } else {
-            this.output = output;
-        }
+        this.output = (output != null ? output : new PrintWriter(NullWriter.DEFAULT));
     }
 
     /**
@@ -760,6 +715,13 @@ public class CompilerConfiguration {
      */
     public File getTargetDirectory() {
         return this.targetDirectory;
+    }
+
+    /**
+     * Sets the target directory.
+     */
+    public void setTargetDirectory(File directory) {
+        this.targetDirectory = directory;
     }
 
     /**
@@ -778,13 +740,6 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Sets the target directory.
-     */
-    public void setTargetDirectory(File directory) {
-        this.targetDirectory = directory;
-    }
-
-    /**
      * @return the classpath
      */
     public List<String> getClasspath() {
@@ -795,7 +750,7 @@ public class CompilerConfiguration {
      * Sets the classpath.
      */
     public void setClasspath(String classpath) {
-        this.classpath = new LinkedList<String>();
+        this.classpath = new LinkedList<>();
         StringTokenizer tokenizer = new StringTokenizer(classpath, File.pathSeparator);
         while (tokenizer.hasMoreTokens()) {
             this.classpath.add(tokenizer.nextToken());
@@ -896,20 +851,18 @@ public class CompilerConfiguration {
     }
 
     public void setScriptExtensions(Set<String> scriptExtensions) {
-        if(scriptExtensions == null) scriptExtensions = new LinkedHashSet<String>();
-        this.scriptExtensions = scriptExtensions;
+        this.scriptExtensions = (scriptExtensions != null ? scriptExtensions : new LinkedHashSet<String>());
     }
 
     public Set<String> getScriptExtensions() {
-        if(scriptExtensions == null || scriptExtensions.isEmpty()) {
+        if (scriptExtensions == null || scriptExtensions.isEmpty()) {
             /*
              *  this happens
              *  *    when groovyc calls FileSystemCompiler in forked mode, or
              *  *    when FileSystemCompiler is run from the command line directly, or
              *  *    when groovy was not started using groovyc or FileSystemCompiler either
              */
-            scriptExtensions = SourceExtensionHandler.getRegisteredExtensions(
-                    this.getClass().getClassLoader());
+            scriptExtensions = SourceExtensionHandler.getRegisteredExtensions(getClass().getClassLoader());
         }
         return scriptExtensions;
     }
@@ -922,25 +875,35 @@ public class CompilerConfiguration {
         this.defaultScriptExtension = defaultScriptExtension;
     }
 
-    public void setRecompileGroovySource(boolean recompile) {
-        recompileGroovySource = recompile;
-    }
-
-    public boolean getRecompileGroovySource(){
+    public boolean getRecompileGroovySource() {
         return recompileGroovySource;
     }
 
-    public void setMinimumRecompilationInterval(int time) {
-        minimumRecompilationInterval = Math.max(0,time);
+    public void setRecompileGroovySource(boolean recompile) {
+        recompileGroovySource = recompile;
     }
 
     public int getMinimumRecompilationInterval() {
         return minimumRecompilationInterval;
     }
 
+    public void setMinimumRecompilationInterval(int time) {
+        minimumRecompilationInterval = Math.max(0, time);
+    }
+
     /**
-     * Allow setting the bytecode compatibility level. The parameter can take
-     * one of the values in {@link #ALLOWED_JDKS}.
+     * Returns the compiler bytecode compatibility level. Defaults to the minimum
+     * officially supported bytecode version for any particular Groovy version.
+     *
+     * @return bytecode compatibility level
+     */
+    public String getTargetBytecode() {
+        return targetBytecode;
+    }
+
+    /**
+     * Sets the bytecode compatibility level. The parameter can take one of the
+     * values in {@link #ALLOWED_JDKS}.
      *
      * @param version the bytecode compatibility level
      */
@@ -950,7 +913,7 @@ public class CompilerConfiguration {
 
     private void setTargetBytecodeIfValid(String version) {
         /* GRECLIPSE edit
-        if (JDK_TO_BYTECODE_VERSION_MAP.keySet().contains(version)) {
+        if (JDK_TO_BYTECODE_VERSION_MAP.containsKey(version)) {
             this.targetBytecode = version;
         }
         */
@@ -970,17 +933,6 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Retrieves the compiler bytecode compatibility level.
-     * Defaults to the minimum officially supported bytecode
-     * version for any particular Groovy version.
-     *
-     * @return bytecode compatibility level
-     */
-    public String getTargetBytecode() {
-        return targetBytecode;
-    }
-
-    /**
      * Whether the bytecode version has preview features enabled (JEP 12)
      *
      * @return preview features
@@ -997,12 +949,6 @@ public class CompilerConfiguration {
     public void setPreviewFeatures(boolean previewFeatures) {
         this.previewFeatures = previewFeatures;
     }
-
-    /* GRECLIPSE edit
-    private static String getMinBytecodeVersion() {
-        return JDK7;
-    }
-    */
 
     /**
      * Gets the joint compilation options for this configuration.
@@ -1050,7 +996,7 @@ public class CompilerConfiguration {
      */
     public CompilerConfiguration addCompilationCustomizers(CompilationCustomizer... customizers) {
         if (customizers == null) throw new IllegalArgumentException("provided customizers list must not be null");
-        compilationCustomizers.addAll(Arrays.asList(customizers));
+        Collections.addAll(compilationCustomizers, customizers);
         return this;
     }
 
@@ -1084,7 +1030,7 @@ public class CompilerConfiguration {
      * @param disabledGlobalASTTransformations a set of fully qualified class names of global AST transformations
      * which should not be loaded.
      */
-    public void setDisabledGlobalASTTransformations(final Set<String> disabledGlobalASTTransformations) {
+    public void setDisabledGlobalASTTransformations(Set<String> disabledGlobalASTTransformations) {
         this.disabledGlobalASTTransformations = disabledGlobalASTTransformations;
     }
 
@@ -1092,7 +1038,7 @@ public class CompilerConfiguration {
         return bytecodePostprocessor;
     }
 
-    public void setBytecodePostprocessor(final BytecodeProcessor bytecodePostprocessor) {
+    public void setBytecodePostprocessor(BytecodeProcessor bytecodePostprocessor) {
         this.bytecodePostprocessor = bytecodePostprocessor;
     }
 
@@ -1100,7 +1046,6 @@ public class CompilerConfiguration {
      * Checks if invoke dynamic is enabled.
      */
     public boolean isIndyEnabled() {
-        Boolean indyEnabled = getOptimizationOptions().get(INVOKEDYNAMIC);
-        return Optional.ofNullable(indyEnabled).orElse(Boolean.FALSE).booleanValue();
+        return Boolean.TRUE.equals(getOptimizationOptions().get(INVOKEDYNAMIC));
     }
 }

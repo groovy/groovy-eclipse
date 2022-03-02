@@ -118,6 +118,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -412,19 +413,11 @@ public class AsmClassGenerator extends ClassGenerator {
     protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
         controller.resetLineNumber();
         Parameter[] parameters = node.getParameters();
-        /* GRECLIPSE edit
-        String methodType = BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters);
-        String signature = BytecodeHelper.getGenericsMethodSignature(node);
-        int modifiers = node.getModifiers();
-        if (isVargs(node.getParameters())) modifiers |= Opcodes.ACC_VARARGS;
-        MethodVisitor mv = cv.visitMethod(modifiers, node.getName(), methodType, signature, buildExceptions(node.getExceptions()));
-        */
         MethodVisitor mv = cv.visitMethod(
                 node.getModifiers() | (isVargs(parameters) ? Opcodes.ACC_VARARGS : 0), node.getName(),
                 BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters),
                 BytecodeHelper.getGenericsMethodSignature(node),
                 buildExceptions(node.getExceptions()));
-        // GRECLIPSE end
         controller.setMethodVisitor(mv);
 
         visitAnnotations(node, mv);
@@ -436,7 +429,7 @@ public class AsmClassGenerator extends ClassGenerator {
         // add parameter names to the MethodVisitor (JDK8+)
         if (getCompileUnit().getConfig().getParameters()) {
             for (int i = 0; i < nParameters; i += 1) {
-                mv.visitParameter(parameters[i].getName(), parameters[i].getModifiers()); // GRECLIPSE edit
+                mv.visitParameter(parameters[i].getName(), parameters[i].getModifiers());
             }
         }
 
@@ -520,6 +513,8 @@ public class AsmClassGenerator extends ClassGenerator {
         super.visitConstructorOrMethod(node, isConstructor);
 
         controller.getCompileStack().clear();
+
+        if (checkIfLastStatementIsReturnOrThrow(code)) return;
         */
         if (code != null) {
             code.visit(this);
@@ -821,20 +816,9 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     public void visitSpreadMapExpression(SpreadMapExpression expression) {
-        /* GRECLIPSE edit -- GROOVY-3421 (take 2)
-        Expression subExpression = expression.getExpression();
-        // to not record the underlying MapExpression twice,
-        // we disable the assertion tracker
-        // see https://issues.apache.org/jira/browse/GROOVY-3421
-        controller.getAssertionWriter().disableTracker();
-        subExpression.visit(this);
-        controller.getOperandStack().box();
-        spreadMap.call(controller.getMethodVisitor());
-        controller.getAssertionWriter().reenableTracker();
-        */
-        callX(ClassHelper.make(java.util.Collections.class), "emptyMap").visit(this);
-        spreadMap.call(controller.getMethodVisitor());
-        // GRECLIPSE end
+        // GROOVY-3421: SpreadMapExpression is key expression and contains value
+        callX(ClassHelper.make(Collections.class), "emptyMap").visit(this);
+        spreadMap.call(controller.getMethodVisitor()); // dummy SpreadMap
         controller.getOperandStack().replace(ClassHelper.OBJECT_TYPE);
     }
 
@@ -1083,12 +1067,12 @@ public class AsmClassGenerator extends ClassGenerator {
                             field = classNode.getDeclaredField(name); // params are stored as fields
                     } else {
                         field = classNode.getDeclaredField(name);
-                        // GRECLIPSE add -- GROOVY-8448: "this.name" from inner class
-                        if (field != null && (field.getModifiers() & ACC_SYNTHETIC) != 0
-                                && field.getType().equals(ClassHelper.REFERENCE_TYPE) && !expression.isImplicitThis()) {
+                        // GROOVY-8448: "this.name" from anon. inner class
+                        if (field != null && !expression.isImplicitThis()
+                                && (field.getModifiers() & ACC_SYNTHETIC) != 0
+                                && field.getType().equals(ClassHelper.REFERENCE_TYPE)) {
                             field = null;
                         }
-                        // GRECLIPSE end
                         if (field == null && controller.isStaticContext()
                                 && expression instanceof AttributeExpression) {
                             field = classNode.getField(name); // GROOVY-6183: check supers
@@ -1242,7 +1226,6 @@ public class AsmClassGenerator extends ClassGenerator {
         int mark = operandStack.getStackLength()-1;
         MethodCallerMultiAdapter adapter;
         if (controller.getCompileStack().isLHS()) {
-            //operandStack.box();
             adapter = setProperty;
             if (isGroovyObject(objectExpression)) adapter = setGroovyObjectProperty;
             if (isThisOrSuperInStaticContext(objectExpression)) adapter = setProperty;

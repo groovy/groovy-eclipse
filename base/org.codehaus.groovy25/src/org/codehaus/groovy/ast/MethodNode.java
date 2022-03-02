@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 /**
@@ -32,6 +33,7 @@ import java.util.List;
 public class MethodNode extends AnnotatedNode implements Opcodes {
 
     public static final String SCRIPT_BODY_METHOD_KEY = "org.codehaus.groovy.ast.MethodNode.isScriptBody";
+
     private String name;
     private int modifiers;
     private boolean syntheticPublic;
@@ -113,9 +115,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     public void setParameters(Parameter[] parameters) {
         invalidateCachedData();
         VariableScope scope = new VariableScope();
-        // GRECLIPSE add
         this.hasDefaultValue = false;
-        // GRECLIPSE end
         this.parameters = parameters;
         if (parameters != null && parameters.length > 0) {
             for (Parameter para : parameters) {
@@ -150,11 +150,10 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         return (modifiers & ACC_ABSTRACT) != 0;
     }
 
-    // GRECLIPSE add
     public boolean isDefault() {
-        return (modifiers & (ACC_ABSTRACT | ACC_PUBLIC | ACC_STATIC)) == ACC_PUBLIC && getDeclaringClass() != null && getDeclaringClass().isInterface();
+        return (modifiers & (ACC_ABSTRACT | ACC_PUBLIC | ACC_STATIC)) == ACC_PUBLIC
+                && getDeclaringClass() != null && getDeclaringClass().isInterface();
     }
-    // GRECLIPSE end
 
     public boolean isStatic() {
         return (modifiers & ACC_STATIC) != 0;
@@ -196,19 +195,24 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
             getName().equals("run") &&
             (parameters == null || parameters.length == 0) &&
             (returnType != null && returnType.getName().equals("java.lang.Object"));
-        // GRECLIPSE: end
+        // GRECLIPSE end
     }
 
     /**
      * Set the metadata flag for this method to indicate that it is a script body implementation.
-     * @see ModuleNode createStatementsClass().
+     * @see ModuleNode#createStatementsClass()
      */
     public void setIsScriptBody() {
         setNodeMetaData(SCRIPT_BODY_METHOD_KEY, Boolean.TRUE);
     }
 
     public String toString() {
-        return super.toString() + "[" + getTypeDescriptor() + " from " + ClassNodeUtils.formatTypeName(getDeclaringClass()) + "]";
+        /* GRECLIPSE edit
+        return "MethodNode@" + hashCode() + "[" + getDeclaringClass().getName() + "#" + getTypeDescriptor() + "]";
+        */
+        ClassNode declaringClass = getDeclaringClass();
+        return super.toString() + "[" + getTypeDescriptor() + (declaringClass == null ? "" : " from " + ClassNodeUtils.formatTypeName(declaringClass)) + "]";
+        // GRECLIPSE end
     }
 
     public void setReturnType(ClassNode returnType) {
@@ -276,7 +280,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
 
     /**
      * Provides a nicely formatted string of the method definition. For simplicity, generic types on some of the elements
-     * are not displayed. 
+     * are not displayed.
      * @return
      *      string form of node with some generic elements suppressed
      */
@@ -285,7 +289,8 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         String retType = AstToTextHelper.getClassText(returnType);
         String exceptionTypes = AstToTextHelper.getThrowsClauseText(exceptions);
         String parms = AstToTextHelper.getParametersText(parameters);
-        return AstToTextHelper.getModifiersText(modifiers) + " " + retType + " " + name + "(" + parms + ") " + exceptionTypes + " { ... }";
+        int mask = this instanceof ConstructorNode ? Modifier.constructorModifiers() : Modifier.methodModifiers();
+        return AstToTextHelper.getModifiersText(modifiers & mask) + " " + retType + " " + name + "(" + parms + ") " + exceptionTypes + " { ... }";
     }
 
     // GRECLIPSE add

@@ -345,7 +345,7 @@ public abstract class Traits {
             for (AnnotationNode annotation : annotations) {
                 Expression value = annotation.getMember("value");
                 if (value instanceof ClassExpression) {
-                    /* GRECLIPSE add -- GROOVY-10102
+                    /* GRECLIPSE edit -- GROOVY-10102
                     selfTypes.add(value.getType());
                     */
                     ClassNode selfType = value.getType();
@@ -357,7 +357,7 @@ public abstract class Traits {
                     List<Expression> expressions = ((ListExpression) value).getExpressions();
                     for (Expression expression : expressions) {
                         if (expression instanceof ClassExpression) {
-                            /* GRECLIPSE add -- GROOVY-10102
+                            /* GRECLIPSE edit -- GROOVY-10102
                             selfTypes.add(expression.getType());
                             */
                             ClassNode selfType = expression.getType();

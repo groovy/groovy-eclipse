@@ -282,14 +282,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         ast = parser.getAST();
-
         // GRECLIPSE add
         sourceUnit.setComments(parser.getComments());
-
         for (Map<String, Object> error : (List<Map<String, Object>>) parser.getErrorList()) {
             int line = ((Integer) error.get("line")).intValue();
             int column = ((Integer) error.get("column")).intValue();
-
             // TODO: Sometimes the line/column is after the end of the file. Why is this? Fix if possible.
             if (locations.isPopulated()) {
                 int offset = locations.findOffset(line, column);
@@ -299,7 +296,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     column = row_col[1];
                 }
             }
-
             SyntaxException se = new SyntaxException((String) error.get("error"), line, column);
             sourceUnit.addError(se);
         }
@@ -513,8 +509,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             node = node.getNextSibling();
         }
         PackageNode packageNode = setPackage(qualifiedName(node), annotations);
-        // GRECLIPSE edit
-        //configureAST(packageNode, packageDef);
+        /* GRECLIPSE edit
+        configureAST(packageNode, packageDef);
+        */
         configureAST(packageNode, node);
         // GRECLIPSE end
     }
@@ -802,17 +799,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ((InnerClassNode) classNode).setAnonymous(true);
         classNode.setEnclosingMethod(methodNode);
         configureAST(classNode, node);
-        // GRECLIPSE add
         output.addClass(classNode);
-        // GRECLIPSE end
+
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
 
         AnonymousInnerClassCarrier ret = new AnonymousInnerClassCarrier();
         ret.innerClass = classNode;
-        /* GRECLIPSE edit
-        output.addClass(classNode);
-        */
         classNode = oldNode;
         return ret;
     }
@@ -821,8 +814,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         List<AnnotationNode> annotations = new ArrayList<>();
 
         if (isType(TRAIT_DEF, classDef)) {
-            // GRECLIPSE edit
-            //annotations.add(new AnnotationNode(ClassHelper.make("groovy.transform.Trait")));
+            /* GRECLIPSE edit
+            annotations.add(new AnnotationNode(ClassHelper.make("groovy.transform.Trait")));
+            */
             annotations.add(makeAnnotationNode(groovy.transform.Trait.class));
             // GRECLIPSE end
         }
@@ -1168,8 +1162,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         methodNode = new MethodNode(name, modifiers, returnType, parameters, exceptions, code);
         if ((modifiers & Opcodes.ACC_ABSTRACT) == 0) {
             if (node == null) {
-                // GRECLIPSE edit
-                //throw new ASTRuntimeException(methodDef, "You defined a method without a body. Try adding a body, or declare it abstract.");
+                /* GRECLIPSE edit
+                throw new ASTRuntimeException(methodDef, "You defined a method without a body. Try adding a body, or declare it abstract.");
+                */
                 if (getController() != null) getController().addError(new SyntaxException(
                     "You defined a method without a body. Try adding a body, or declare it abstract.", methodDef.getLine(), methodDef.getColumn()));
                 // create a fake node that can pretend to be the body
@@ -2570,8 +2565,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             booleanExpression.setSourcePosition(base);
             ret = new TernaryExpression(booleanExpression, left, right);
         }
-        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
-        //configureAST(ret, ternaryNode);
+        /* GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
+        configureAST(ret, ternaryNode);
+        */
         setSourceStart(ret, base);
         setSourceEnd(ret, ((TernaryExpression) ret).getFalseExpression());
         // GRECLIPSE end
@@ -2599,8 +2595,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression left = expression(node);
         Expression right = expression(node.getNextSibling());
         RangeExpression rangeExpression = new RangeExpression(left, right, inclusive);
-        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
-        //configureAST(rangeExpression, rangeNode);
+        /* GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
+        configureAST(rangeExpression, rangeNode);
+        */
         setSourceStart(rangeExpression, left);
         setSourceEnd(rangeExpression, right);
         // GRECLIPSE end
@@ -2723,8 +2720,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             AST valueNode = keyNode.getNextSibling();
             Expression valueExpression = expression(valueNode);
             MapEntryExpression mapEntryExpression = new MapEntryExpression(keyExpression, valueExpression);
-            // GRECLIPSE edit -- sloc for node only covers the ':'; must include the expressions
-            //configureAST(mapEntryExpression, node);
+            /* GRECLIPSE edit -- sloc for node only covers the ':'; must include the expressions
+            configureAST(mapEntryExpression, node);
+            */
             setSourceStart(mapEntryExpression, keyExpression);
             setSourceEnd(mapEntryExpression, valueExpression);
             // GRECLIPSE end
@@ -2743,8 +2741,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression rightExpression = new ClassExpression(type);
         configureAST(rightExpression, rightNode);
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, makeToken(Types.KEYWORD_INSTANCEOF, node), rightExpression);
-        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
-        //configureAST(binaryExpression, node);
+        /* GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
+        configureAST(binaryExpression, node);
+        */
         setSourceStart(binaryExpression, leftExpression);
         setSourceEnd(binaryExpression, rightExpression);
         // GRECLIPSE end
@@ -2883,8 +2882,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }*/
         Expression rightExpression = expression(rightNode);
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, token, rightExpression);
-        // GRECLIPSE edit -- sloc for node only covers the operator; must include the left and right expressions
-        //configureAST(binaryExpression, node);
+        /* GRECLIPSE edit -- sloc for node only covers the operator; must include the left and right expressions
+        configureAST(binaryExpression, node);
+        */
         setSourceStart(binaryExpression, leftExpression);
         setSourceEnd(binaryExpression, rightExpression);
         // GRECLIPSE end
@@ -3613,8 +3613,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE end
             } else {
                 checkTypeArgs(node, false);
-                // GRECLIPSE edit
-                //answer = ClassHelper.make(qualifiedName(node));
+                /* GRECLIPSE edit
+                answer = ClassHelper.make(qualifiedName(node));
+                */
                 answer = makeClassNode(qualifiedName(node));
                 // GRECLIPSE end
                 if (answer.isUsingGenerics()) {
@@ -3756,12 +3757,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         */
         final int offset = locations.findOffset(ast.getLine(), ast.getColumn());
-
         if (ast instanceof GroovySourceAST) {
             final int last_row = ((GroovySourceAST) ast).getLineLast();
             final int last_col = ((GroovySourceAST) ast).getColumnLast();
             final int end_offset = locations.findOffset(last_row, last_col);
-
             // GRECLIPSE-829: VariableExpression inside of GStrings contain the
             // openning '{', but shouldn't.  If the new sloc is larger than the
             // one being set, then save it as node meta-data.  Also numbers can
@@ -3771,12 +3770,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 node.putNodeMetaData("source.offsets", Long.valueOf(((long) offset << 32) | end_offset));
                 return;
             }
-
             node.setLastColumnNumber(last_col);
             node.setLastLineNumber(last_row);
             node.setEnd(end_offset);
         }
-
         node.setColumnNumber(ast.getColumn());
         node.setLineNumber(ast.getLine());
         node.setStart(offset);

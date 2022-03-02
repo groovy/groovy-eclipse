@@ -70,6 +70,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
@@ -152,9 +153,7 @@ public abstract class TraitComposer {
                 Map<String,ClassNode> methodGenericsSpec = new LinkedHashMap<String, ClassNode>(genericsSpec);
                 MethodNode originalMethod = trait.getMethod(name, params);
                 // Original method may be null for the case of private or static methods
-                if (originalMethod!=null) {
-                    methodGenericsSpec = GenericsUtils.addMethodGenerics(originalMethod, methodGenericsSpec);
-                }
+                methodGenericsSpec = GenericsUtils.addMethodGenerics(originalMethod != null ? originalMethod : methodNode, methodGenericsSpec);
                 */
                 MethodNode originalMethod = trait.getMethod(name, params);
                 Map<String, ClassNode> methodGenericsSpec = GenericsUtils.addMethodGenerics(
@@ -306,7 +305,7 @@ public abstract class TraitComposer {
                     // but add empty body for setter for legacy compatibility
                     MethodNode impl = new MethodNode(
                             methodNode.getName(),
-                            /*GRECLIPSE add*/Opcodes.ACC_SYNTHETIC | /*GRECLIPSE end*/Opcodes.ACC_PUBLIC | isStatic,
+                            Opcodes.ACC_PUBLIC | isStatic | Opcodes.ACC_SYNTHETIC,
                             returnType,
                             newParams,
                             ClassNode.EMPTY_ARRAY,
@@ -315,7 +314,7 @@ public abstract class TraitComposer {
                     AnnotationNode an = new AnnotationNode(COMPILESTATIC_CLASSNODE);
                     impl.addAnnotation(an);
                     cNode.addTransform(StaticCompileTransformation.class, an);
-                    cNode.addMethod(impl);
+                    addGeneratedMethod(cNode, impl);
                 }
             }
         }
@@ -344,9 +343,7 @@ public abstract class TraitComposer {
                 helperMethodArgList
         );
         mce.setImplicitThis(false);
-        /* GRECLIPSE edit -- GROOVY-8757
-        genericsSpec = GenericsUtils.addMethodGenerics(helperMethod,genericsSpec);
-        */
+
         ClassNode[] exceptionNodes = correctToGenericsSpecRecurse(genericsSpec, copyExceptions(helperMethod.getExceptions()));
         ClassNode fixedReturnType = correctToGenericsSpecRecurse(genericsSpec, helperMethod.getReturnType());
         boolean noCastRequired = genericsSpec.isEmpty() || fixedReturnType.getName().equals(ClassHelper.VOID_TYPE.getName());
@@ -513,7 +510,7 @@ public abstract class TraitComposer {
             if (targetNode.getDeclaredMethod(forwarderName, superForwarderParams) == null) {
                 ClassNode returnType = correctToGenericsSpecRecurse(genericsSpec, forwarderMethod.getReturnType());
                 Statement delegate = next == null ? createSuperFallback(forwarderMethod, returnType) : createDelegatingForwarder(forwarderMethod, next);
-                MethodNode methodNode = targetNode.addMethod(forwarderName, Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, returnType, superForwarderParams, ClassNode.EMPTY_ARRAY, delegate);
+                MethodNode methodNode = addGeneratedMethod(targetNode, forwarderName, Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, returnType, superForwarderParams, ClassNode.EMPTY_ARRAY, delegate);
                 methodNode.setGenericsTypes(forwarderMethod.getGenericsTypes());
             }
         }
@@ -534,7 +531,7 @@ public abstract class TraitComposer {
         superCall.setImplicitThis(false);
         CastExpression proxyReceiver = new CastExpression(Traits.GENERATED_PROXY_CLASSNODE, new VariableExpression("this"));
         MethodCallExpression getProxy = new MethodCallExpression(proxyReceiver, "getProxyTarget", ArgumentListExpression.EMPTY_ARGUMENTS);
-        getProxy.setImplicitThis(false); // GRECLIPSE edit -- GROOVY-9938
+        getProxy.setImplicitThis(false);
         StaticMethodCallExpression proxyCall = new StaticMethodCallExpression(
                 ClassHelper.make(InvokerHelper.class),
                 "invokeMethod",
