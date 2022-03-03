@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 import static org.apache.groovy.util.BeanUtils.capitalize;
 import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
@@ -439,7 +440,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             getter.setNameEnd(field.getNameEnd());
             // GRECLIPSE end
             getter.setSynthetic(true);
-            cNode.addMethod(getter);
+            addGeneratedMethod(cNode, getter);
 
             if (node.getGetterName() == null && getterName.startsWith("get") && (isPrimitiveBoolean(node.getType()) || isWrapperBoolean(node.getType()))) {
                 MethodNode secondGetter = new MethodNode("is" + capitalize(name), propNodeModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
@@ -449,7 +450,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                     secondGetter.setNameEnd(field.getNameEnd());
                     // GRECLIPSE end
                     secondGetter.setSynthetic(true);
-                    cNode.addMethod(secondGetter);
+                    addGeneratedMethod(cNode, secondGetter);
                 }
             }
         }
@@ -464,7 +465,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             setter.setNameEnd(field.getNameEnd());
             // GRECLIPSE end
             setter.setSynthetic(true);
-            cNode.addMethod(setter);
+            addGeneratedMethod(cNode, setter);
         }
     }
 
@@ -534,7 +535,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             }
         }
         // define setter/getter helper methods (setter added even for final fields for legacy compatibility)
-        target.addMethod(
+        addGeneratedMethod(target,
                 Traits.helperSetterName(field),
                 ACC_PUBLIC | ACC_ABSTRACT,
                 field.getOriginType(),
@@ -542,7 +543,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                 ClassNode.EMPTY_ARRAY,
                 null
         );
-        target.addMethod(
+        addGeneratedMethod(target,
                 Traits.helperGetterName(field),
                 ACC_PUBLIC | ACC_ABSTRACT,
                 field.getOriginType(),

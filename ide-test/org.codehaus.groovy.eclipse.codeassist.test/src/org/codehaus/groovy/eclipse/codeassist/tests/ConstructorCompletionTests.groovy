@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -436,9 +436,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Map'))
-        proposalExists(proposals, 'Map - java.util', 1)
         proposalExists(proposals, 'MapWithDefault - groovy.lang', 1)
-        proposalExists(proposals, 'MapWithDefault(Map<K,V> m, Closure initClosure) - groovy.lang.MapWithDefault', 1)
+        proposalExists(proposals, 'Map - java.util', 1)
     }
 
     @Test

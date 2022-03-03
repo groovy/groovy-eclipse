@@ -58,9 +58,6 @@ public class CompilerConfiguration {
     /** Optimization Option for enabling attaching {@link groovy.lang.Groovydoc} annotation. */
     public static final String RUNTIME_GROOVYDOC = "runtimeGroovydoc";
 
-    /** Optimization Option for enabling parallel parsing. */
-    public static final String PARALLEL_PARSE = "parallelParse";
-
     /** Joint Compilation Option for enabling generating stubs in memory. */
     public static final String MEM_STUB = "memStub";
 
@@ -449,9 +446,8 @@ public class CompilerConfiguration {
 
         optimizationOptions = new HashMap<>(4);
         handleOptimizationOption(INVOKEDYNAMIC,     getSystemPropertySafe("groovy.target.indy", "true"));
-        handleOptimizationOption(GROOVYDOC,         getSystemPropertySafe("groovy.attach.groovydoc"          ));
-        handleOptimizationOption(RUNTIME_GROOVYDOC, getSystemPropertySafe("groovy.attach.runtime.groovydoc"  ));
-        handleOptimizationOption(PARALLEL_PARSE,    getSystemPropertySafe("groovy.parallel.parse"/*, "true"*/));
+        handleOptimizationOption(GROOVYDOC,         getSystemPropertySafe("groovy.attach.groovydoc"        ));
+        handleOptimizationOption(RUNTIME_GROOVYDOC, getSystemPropertySafe("groovy.attach.runtime.groovydoc"));
 
         if (getBooleanSafe("groovy.mem.stub")) {
             jointCompilationOptions = new HashMap<>(2);
@@ -482,7 +478,7 @@ public class CompilerConfiguration {
     public CompilerConfiguration(final CompilerConfiguration configuration) {
         setWarningLevel(configuration.getWarningLevel());
         setTargetDirectory(configuration.getTargetDirectory());
-        setClasspathList(new LinkedList<String>(configuration.getClasspath()));
+        setClasspathList(configuration.getClasspath());
         setVerbose(configuration.getVerbose());
         setDebug(configuration.getDebug());
         setParameters(configuration.getParameters());
@@ -1080,23 +1076,20 @@ public class CompilerConfiguration {
      * Checks if invoke dynamic is enabled.
      */
     public boolean isIndyEnabled() {
-        Boolean indyEnabled = getOptimizationOptions().get(INVOKEDYNAMIC);
-        return Optional.ofNullable(indyEnabled).orElse(Boolean.TRUE).booleanValue();
+        return !Boolean.FALSE.equals(getOptimizationOptions().get(INVOKEDYNAMIC));
     }
 
     /**
      * Checks if groovydoc is enabled.
      */
     public boolean isGroovydocEnabled() {
-        Boolean groovydocEnabled = getOptimizationOptions().get(GROOVYDOC);
-        return Optional.ofNullable(groovydocEnabled).orElse(Boolean.FALSE).booleanValue();
+        return Boolean.TRUE.equals(getOptimizationOptions().get(GROOVYDOC));
     }
 
     /**
      * Checks if runtime groovydoc is enabled.
      */
     public boolean isRuntimeGroovydocEnabled() {
-        Boolean runtimeGroovydocEnabled = getOptimizationOptions().get(RUNTIME_GROOVYDOC);
-        return Optional.ofNullable(runtimeGroovydocEnabled).orElse(Boolean.FALSE).booleanValue();
+        return Boolean.TRUE.equals(getOptimizationOptions().get(RUNTIME_GROOVYDOC));
     }
 }
