@@ -34,13 +34,15 @@ public class MatchLocatorParser extends Parser {
 
 public static MatchLocatorParser createParser(ProblemReporter problemReporter, MatchLocator locator) {
 	if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
-		// GROOVY edit
-		//return new ImportMatchLocatorParser(problemReporter, locator);
+		/* GROOVY edit
+		return new ImportMatchLocatorParser(problemReporter, locator);
+		*/
 		return LanguageSupportFactory.getImportMatchLocatorParser(problemReporter, locator);
 		// GROOVY end
 	}
-	// GROOVY edit
-	//return new MatchLocatorParser(problemReporter, locator);
+	/* GROOVY edit
+	return new MatchLocatorParser(problemReporter, locator);
+	*/
 	return LanguageSupportFactory.getMatchLocatorParser(problemReporter, locator);
 	// GROOVY end
 }

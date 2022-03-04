@@ -810,8 +810,9 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 	}
 
 	public void initializeParser() {
-		// GROOVY edit
-		//this.parser = new Parser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
+		/* GROOVY edit
+		this.parser = new Parser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
+		*/
 		this.parser = LanguageSupportFactory.getParser(this, this.options, this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 1);
 		// GROOVY end
 	}

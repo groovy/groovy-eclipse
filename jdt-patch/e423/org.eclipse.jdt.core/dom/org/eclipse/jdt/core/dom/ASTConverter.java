@@ -1545,8 +1545,9 @@ class ASTConverter {
 			this.compilationUnitSource = source;
 			this.compilationUnitSourceLength = source.length;
 			this.scanner.setSource(source, unit.compilationResult);
-			// GROOVY edit
-			//CompilationUnit compilationUnit = new CompilationUnit(this.ast);
+			/* GROOVY edit
+			CompilationUnit compilationUnit = new CompilationUnit(this.ast);
+			*/
 			CompilationUnit compilationUnit = unit.getSpecialDomCompilationUnit(this.ast);
 			if (compilationUnit == null) compilationUnit = new CompilationUnit(this.ast);
 			// GROOVY end
@@ -4430,8 +4431,9 @@ class ASTConverter {
 								type2 = convertType(arguments[i]);
 								parameterizedType.typeArguments().add(type2);
 							}
-							// GROOVY edit -- avoid IllegalArgumentException in setSourceRange below
-							//end = type2 != null ? type2.getStartPosition() + type2.getLength() - 1 : end;
+							/* GROOVY edit -- avoid IllegalArgumentException in setSourceRange below
+							end = type2 != null ? type2.getStartPosition() + type2.getLength() - 1 : end;
+							*/
 							if (type2 != null) {
 								if (start == -1) {
 									end = -3;

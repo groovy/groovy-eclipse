@@ -617,8 +617,9 @@ public IJavaElement findSharedWorkingCopy(IBufferFactory factory) {
  */
 @Override
 public ICompilationUnit findWorkingCopy(WorkingCopyOwner workingCopyOwner) {
-	// GROOVY edit
-	//CompilationUnit cu = new CompilationUnit((PackageFragment)this.getParent(), getElementName(), workingCopyOwner);
+	/* GROOVY edit
+	CompilationUnit cu = new CompilationUnit((PackageFragment)this.getParent(), getElementName(), workingCopyOwner);
+	*/
 	CompilationUnit cu = LanguageSupportFactory.newCompilationUnit((PackageFragment) this.getParent(), getElementName(), workingCopyOwner);
 	// GROOVY end
 	if (workingCopyOwner == DefaultWorkingCopyOwner.PRIMARY) {
@@ -936,8 +937,9 @@ public ICompilationUnit getPrimary() {
 @Override
 public JavaElement getPrimaryElement(boolean checkOwner) {
 	if (checkOwner && isPrimary()) return this;
-	// GROOVY edit
-	//return new CompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY);
+	/* GROOVY edit
+	return new CompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY);
+	*/
 	return LanguageSupportFactory.newCompilationUnit((PackageFragment) getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY);
 	// GROOVY end
 }
@@ -1040,8 +1042,9 @@ public ICompilationUnit getWorkingCopy(WorkingCopyOwner workingCopyOwner, IProbl
 
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 
-	// GROOVY edit
-	//CompilationUnit workingCopy = new CompilationUnit((PackageFragment)getParent(), getElementName(), workingCopyOwner);
+	/* GROOVY edit
+	CompilationUnit workingCopy = new CompilationUnit((PackageFragment)getParent(), getElementName(), workingCopyOwner);
+	*/
 	CompilationUnit workingCopy = LanguageSupportFactory.newCompilationUnit((PackageFragment) getParent(), getElementName(), workingCopyOwner);
 	// GROOVY end
 	JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo =

@@ -233,9 +233,9 @@ protected void addAllSourceFiles(final LinkedHashSet<SourceFile> sourceFiles) th
 				public boolean visit(IResourceProxy proxy) throws CoreException {
 					switch(proxy.getType()) {
 						case IResource.FILE :
-							// GROOVY edit
-							//if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) {
-							// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
+							/* GROOVY edit -- GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
+							if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) {
+							*/
 							String resourceName = proxy.getName();
 							if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName) && !LanguageSupportFactory.isInterestingSourceFile(resourceName)) ||
 									(isInterestingProject && LanguageSupportFactory.isSourceFile(resourceName, isInterestingProject))) {

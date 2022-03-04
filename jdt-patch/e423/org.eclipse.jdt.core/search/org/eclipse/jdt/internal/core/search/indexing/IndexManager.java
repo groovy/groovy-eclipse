@@ -377,8 +377,9 @@ public SourceElementParser getSourceElementParser(IJavaProject project, ISourceE
 	Map options = project.getOptions(true);
 	options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
 
-	// GROOVY edit
-	//SourceElementParser parser = new IndexingParser(
+	/* GROOVY edit
+	SourceElementParser parser = new IndexingParser(
+	*/
 	SourceElementParser parser = LanguageSupportFactory.getIndexingParser(
 	// GROOVY end
 		requestor,

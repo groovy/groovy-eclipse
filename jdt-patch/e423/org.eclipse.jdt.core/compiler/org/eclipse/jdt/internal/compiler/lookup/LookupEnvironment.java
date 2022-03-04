@@ -472,8 +472,9 @@ public void buildTypeBindings(CompilationUnitDeclaration unit, AccessRestriction
 		if (this.globalOptions.sourceLevel >= ClassFileConstants.JDK9) {
 			unitModule = unit.module(this);
 		}
-		// GROOVY edit
-		//scope = new CompilationUnitScope(unit, unitModule != null ? unitModule.environment : this);
+		/* GROOVY edit
+		scope = new CompilationUnitScope(unit, unitModule != null ? unitModule.environment : this);
+		*/
 		scope = unit.buildCompilationUnitScope(unitModule != null ? unitModule.environment : this);
 		// GROOVY end
 	}

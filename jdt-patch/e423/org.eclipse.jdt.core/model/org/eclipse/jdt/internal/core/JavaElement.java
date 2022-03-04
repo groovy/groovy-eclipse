@@ -464,8 +464,9 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 									return candidate == null ? child.getSourceElementAt(position) : candidate.getSourceElementAt(position);
 								}
 								child = --i>=0 ? (SourceRefElement) children[i] : null;
-							// GROOVY edit
-							//} while (child != null && child.getSourceRange().getOffset() == declarationStart);
+							/* GROOVY edit
+							} while (child != null && child.getSourceRange().getOffset() == declarationStart);
+							*/
 							} while (child instanceof IField && child.getSourceRange().getOffset() == declarationStart);
 							// GROOVY end
 							// position in field's type: use first field

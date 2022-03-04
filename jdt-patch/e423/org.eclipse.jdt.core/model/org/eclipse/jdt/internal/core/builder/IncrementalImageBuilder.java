@@ -633,13 +633,12 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 			if (isExcluded) return true;
 
 			String resourceName = resource.getName();
-			// GROOVY add
-			// determine if this is a Groovy project
+			// GROOVY add -- determine if this is a Groovy project
 			final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
 			// GROOVY end
-			// GROOVY edit
-			//if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName)) {
-			// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
+			/* GROOVY edit -- GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
+			if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName)) {
+			*/
 			if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName) && !LanguageSupportFactory.isInterestingSourceFile(resourceName))
 					|| (isInterestingProject && LanguageSupportFactory.isSourceFile(resourceName, isInterestingProject))) {
 			// GROOVY end

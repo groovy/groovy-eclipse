@@ -375,8 +375,9 @@ public class CompilationUnitResolver extends Compiler {
 
 	@Override
 	public void initializeParser() {
-		// GROOVY edit
-		//this.parser = new CommentRecorderParser(this.problemReporter, false);
+		/* GROOVY edit
+		this.parser = new CommentRecorderParser(this.problemReporter, false);
+		*/
 		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment == null ? null : this.lookupEnvironment.globalOptions, this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant + 1);
 		// GROOVY end
 	}

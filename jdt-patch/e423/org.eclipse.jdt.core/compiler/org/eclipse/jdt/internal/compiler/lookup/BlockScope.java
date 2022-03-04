@@ -98,8 +98,9 @@ protected BlockScope(int kind, Scope parent) {
 /* Create the class scope & binding for the anonymous type.
  */
 public final void addAnonymousType(TypeDeclaration anonymousType, ReferenceBinding superBinding) {
-	// GROOVY edit
-	//ClassScope anonymousClassScope = new ClassScope(this, anonymousType);
+	/* GROOVY edit
+	ClassScope anonymousClassScope = new ClassScope(this, anonymousType);
+	*/
 	ClassScope anonymousClassScope = anonymousType.newClassScope(this);
 	// GROOVY end
 	anonymousClassScope.buildAnonymousTypeBinding(
@@ -124,8 +125,9 @@ public final void addAnonymousType(TypeDeclaration anonymousType, ReferenceBindi
 /* Create the class scope & binding for the local type.
  */
 public final void addLocalType(TypeDeclaration localType) {
-	// GROOVY edit
-	//ClassScope localTypeScope = new ClassScope(this, localType);
+	/* GROOVY edit
+	ClassScope localTypeScope = new ClassScope(this, localType);
+	*/
 	ClassScope localTypeScope = localType.newClassScope(this);
 	// GROOVY end
 	addSubscope(localTypeScope);

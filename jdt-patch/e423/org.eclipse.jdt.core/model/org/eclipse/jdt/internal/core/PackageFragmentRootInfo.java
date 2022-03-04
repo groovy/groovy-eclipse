@@ -85,8 +85,9 @@ static Object[] computeFolderNonJavaResources(IPackageFragmentRoot root, IContai
 						String fileName = member.getName();
 
 						// ignore .java files that are not excluded
-						// GROOVY edit
-						//if (Util.isValidCompilationUnitName(fileName, sourceLevel, complianceLevel) && !Util.isExcluded(member, inclusionPatterns, exclusionPatterns))
+						/* GROOVY edit
+						if (Util.isValidCompilationUnitName(fileName, sourceLevel, complianceLevel) && !Util.isExcluded(member, inclusionPatterns, exclusionPatterns))
+						*/
 						if ((Util.isValidCompilationUnitName(fileName, sourceLevel, complianceLevel) && !Util.isExcluded(member, inclusionPatterns, exclusionPatterns)) &&
 								// we want to show groovy scripts that are coming from class folders
 								!(isInterestingPackageRoot && LanguageSupportFactory.isInterestingSourceFile(fileName)))

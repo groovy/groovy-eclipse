@@ -123,8 +123,9 @@ public class SourceTypeConverter extends TypeConverter {
 	 * at least contain one type.
 	 */
 	private CompilationUnitDeclaration convert(ISourceType[] sourceTypes, CompilationResult compilationResult) throws JavaModelException {
-		// GROOVY edit
-		//this.unit = new CompilationUnitDeclaration(this.problemReporter, compilationResult, 0);
+		/* GROOVY edit
+		this.unit = new CompilationUnitDeclaration(this.problemReporter, compilationResult, 0);
+		*/
 		this.unit = LanguageSupportFactory.newCompilationUnitDeclaration((ICompilationUnit) ((SourceTypeElementInfo) sourceTypes[0]).getHandle().getCompilationUnit(), this.problemReporter, compilationResult, 0);
 		// GROOVY end
 		// not filled at this point

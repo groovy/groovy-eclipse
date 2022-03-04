@@ -435,8 +435,9 @@ protected Parser basicParser() {
 				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 				this.options,
 				new DefaultProblemFactory());
-		// GROOVY edit
-		//this.basicParser = new Parser(problemReporter, false);
+		/* GROOVY edit
+		this.basicParser = new Parser(problemReporter, false);
+		*/
 		this.basicParser = LanguageSupportFactory.getParser(this, this.options, problemReporter, false, 1);
 		// GROOVY end
 		this.basicParser.reportOnlyOneSyntaxError = true;

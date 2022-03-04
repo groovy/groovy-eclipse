@@ -901,8 +901,9 @@ public final class CompletionEngine
 		this.lookupEnvironment =
 			new LookupEnvironment(this, this.compilerOptions, this.problemReporter, nameEnvironment);
 		this.parser =
-			// GROOVY edit
-			//new CompletionParser(this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
+			/* GROOVY edit
+			new CompletionParser(this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
+			*/
 			LanguageSupportFactory.getCompletionParser(this.compilerOptions, this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
 			// GROOVY end
 		this.owner = owner;

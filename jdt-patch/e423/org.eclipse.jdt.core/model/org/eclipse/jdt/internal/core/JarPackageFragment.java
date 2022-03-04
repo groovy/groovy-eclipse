@@ -101,8 +101,9 @@ private Object[] computeNonJavaResources(ArrayList entryNames) {
 	for (int i = 0; i < length; i++) {
 		String resName = (String) entryNames.get(i);
 		// consider that a .java file is not a non-java resource (see bug 12246 Packages view shows .class and .java files when JAR has source)
-		// GROOVY edit
-		//if (!Util.isJavaLikeFileName(resName)) {
+		/* GROOVY edit
+		if (!Util.isJavaLikeFileName(resName)) {
+		*/
 		if (!Util.isJavaLikeFileName(resName) || (isInteresting && LanguageSupportFactory.isInterestingSourceFile(resName))) {
 		// GROOVY end
 			IPath filePath = new Path(resName);

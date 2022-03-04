@@ -98,8 +98,9 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 						&& !Util.isExcluded(child, inclusionPatterns, exclusionPatterns)) {
 					IJavaElement childElement;
 					if (kind == IPackageFragmentRoot.K_SOURCE && Util.isValidCompilationUnitName(child.getName(), sourceLevel, complianceLevel)) {
-						// GROOVY edit
-						//childElement = new CompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
+						/* GROOVY edit
+						childElement = new CompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
+						*/
 						childElement = LanguageSupportFactory.newCompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
 						// GROOVY end
 						vChildren.add(childElement);
@@ -167,8 +168,9 @@ public void copy(IJavaElement container, IJavaElement sibling, String rename, bo
 public ICompilationUnit createCompilationUnit(String cuName, String contents, boolean force, IProgressMonitor monitor) throws JavaModelException {
 	CreateCompilationUnitOperation op= new CreateCompilationUnitOperation(this, cuName, contents, force);
 	op.runOperation(monitor);
-	// GROOVY edit
-	//return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+	/* GROOVY edit
+	return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+	*/
 	return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
 	// GROOVY end
 }
@@ -296,8 +298,9 @@ public ICompilationUnit getCompilationUnit(String cuName) {
 	if (!org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(cuName)) {
 		throw new IllegalArgumentException(Messages.convention_unit_notJavaName);
 	}
-	// GROOVY edit
-	//return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+	/* GROOVY edit
+	return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+	*/
 	return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
 	// GROOVY end
 }
@@ -366,8 +369,9 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 		case JEM_COMPILATIONUNIT:
 			if (!memento.hasMoreTokens()) return this;
 			String cuName = memento.nextToken();
-			// GROOVY edit
-			//JavaElement cu = new CompilationUnit(this, cuName, owner);
+			/* GROOVY edit
+			JavaElement cu = new CompilationUnit(this, cuName, owner);
+			*/
 			JavaElement cu = LanguageSupportFactory.newCompilationUnit(this, cuName, owner);
 			// GROOVY end
 			return cu.getHandleFromMemento(memento, owner);
