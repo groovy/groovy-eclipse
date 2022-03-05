@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2872,5 +2872,31 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "xx");
+    }
+
+    @Test
+    public void testTraits10521() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "}\n" +
+            "class C extends A implements T {\n" +
+            "  void test() {\n" +
+            "    p(90,'x')\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+
+            "T.groovy",
+            "trait T {\n" +
+            "  void p(one, Object... zeroOrMore) {\n" +
+            "    print one; print zeroOrMore\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "90[x]");
     }
 }

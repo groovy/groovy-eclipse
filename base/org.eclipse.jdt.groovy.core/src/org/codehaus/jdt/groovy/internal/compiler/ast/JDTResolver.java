@@ -41,7 +41,6 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -259,7 +258,7 @@ public class JDTResolver extends ResolveVisitor {
         currentClass = null;
         resetVariableScope();
         setClassNodeResolver(null);
-        // TODO: Reset things like currentMethod, currImportNode, etc.?
+        // TODO: Reset things like currentMethod, currentImport, etc.?
     }
 
     @Override
@@ -421,11 +420,11 @@ public class JDTResolver extends ResolveVisitor {
                 ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
                 if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
                     jdtBinding = prBinding.closestMatch();
-                } else if (prBinding.problemId() == ProblemReasons.NotFound &&
-                        prBinding.closestMatch() instanceof MissingTypeBinding && currImportNode != null && currImportNode.isStar()) {
+                }/*else if (prBinding.problemId() == ProblemReasons.NotFound &&
+                        prBinding.closestMatch() instanceof MissingTypeBinding) {
                     MissingTypeBinding mtBinding = (MissingTypeBinding) prBinding.closestMatch();
                     mtBinding.fPackage.knownTypes.put(compoundName[compoundName.length - 1], null);
-                }
+                }*/
             }
 
             if ((jdtBinding instanceof BinaryTypeBinding || jdtBinding instanceof SourceTypeBinding) &&

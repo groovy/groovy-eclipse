@@ -115,8 +115,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private Set<String> resolutionFailed;
     // GRECLIPSE end
     private boolean checkingVariableTypeInDeclaration;
-    // GRECLIPSE private->protected
-    protected ImportNode currImportNode;
+    private ImportNode currImportNode;
     private MethodNode currentMethod;
     private ClassNodeResolver classNodeResolver;
 

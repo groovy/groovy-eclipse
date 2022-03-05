@@ -207,8 +207,8 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.CONVERSION);
 
         addPhaseOperation(source -> {
+            resolveVisitor.setClassNodeResolver(classNodeResolver);
             for (ClassNode classNode : source.getAST().getClasses()) {
-                resolveVisitor.setClassNodeResolver(classNodeResolver);
                 resolveVisitor.startResolving(classNode, source);
             }
         }, Phases.SEMANTIC_ANALYSIS);
@@ -240,16 +240,15 @@ public class CompilationUnit extends ProcessingUnit {
                 CompileUnit cu = node.getCompileUnit();
                 for (Iterator<String> it = cu.getClassesToCompile().keySet().iterator(); it.hasNext(); ) {
                     String name = it.next();
-                    StringBuilder message = new StringBuilder();
-                    message
-                            .append("Compilation incomplete: expected to find the class ")
+                    StringBuilder message = new StringBuilder("Compilation incomplete: expected to find the class ")
                             .append(name)
                             .append(" in ")
-                            .append(source.getName());
+                            .append(source.getName())
+                            .append(", but the file ");
                     if (classes.isEmpty()) {
-                        message.append(", but the file seems not to contain any classes");
+                        message.append("seems not to contain any classes");
                     } else {
-                        message.append(", but the file contains the classes: ");
+                        message.append("contains the classes: ");
                         boolean first = true;
                         for (ClassNode cn : classes) {
                             if (first) {
