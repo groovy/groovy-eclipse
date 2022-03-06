@@ -114,6 +114,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private Set<FieldNode> fieldTypesChecked;
     // GRECLIPSE add
     private Set<String> resolutionFailed;
+            int phase; //sub-divide visit
     // GRECLIPSE end
     private boolean checkingVariableTypeInDeclaration;
     private ImportNode currImportNode;
@@ -1545,9 +1546,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         currentClass = node;
         // GRECLIPSE add
-        if (commencingResolution()) try {
+        if (phase == 2 || commencingResolution()) try {
         // GRECLIPSE end
-
         if (node instanceof InnerClassNode) {
             if (Modifier.isStatic(node.getModifiers())) {
                 genericParameterNames = new HashMap<>();
@@ -1618,7 +1618,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
             module.setImportsResolved(true);
         }
-
+switch (phase) { case 0: case 1: // GROOVY-9866, GROOVY-10466
         ClassNode sn = node.getUnresolvedSuperClass();
         if (sn != null) {
             resolveOrFail(sn, "", node, true);
@@ -1641,6 +1641,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
         }
         // GRECLIPSE add
+case 2:
         // VariableScopeVisitor visits anon. inner class body inline, so resolve now
         for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
             InnerClassNode cn = it.next();
@@ -1652,13 +1653,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveOrFail(cn.getUnresolvedSuperClass(false), cn); // GROOVY-9642
             }
         }
+if (phase == 1) break; // resolve other class headers before members, et al.
         // initialize scopes/variables now that imports and super types are resolved
         new VariableScopeVisitor(source).visitClass(node);
         // GRECLIPSE end
         super.visitClass(node);
-
         // GRECLIPSE add
         finishedResolution();
+}
         } finally {
         if (currentClass == node)
         // GRECLIPSE end
@@ -1807,6 +1809,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (bounds != null) {
                 boolean nameAdded = false;
                 for (ClassNode upperBound : bounds) {
+                    // GRECLIPSE add
+                    if (upperBound.hasInconsistentHierarchy()) continue;
+                    // GRECLIPSE end
                     if (!isWild) {
                         if (!nameAdded && upperBound != null || !resolve(classNode)) {
                             if (toDealWithGenerics) {

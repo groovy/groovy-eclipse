@@ -116,6 +116,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private boolean checkingVariableTypeInDeclaration;
     private boolean inClosure, inPropertyExpression;
     private boolean isTopLevelProperty = true;
+    /*package*/ int phase; // sub-divide visit
 
     /**
      * A ConstructedNestedClass consists of an outer class and a name part, denoting a
@@ -478,7 +479,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // GROOVY-4043: for type "X", try "A$X" with each type in the class hierarchy (except for Object)
         for (; cn != null && cycleCheck.add(cn) && !isObjectType(cn); cn = cn.getSuperClass()) {
             if (setRedirect(type, cn)) return true;
-            // GROOVY-9866: unresolvable interfaces
         }
 
         // Another case we want to check here is if we are in a
@@ -1390,7 +1390,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         ClassNode oldNode = currentClass;
         currentClass = node;
         // GRECLIPSE add
-        if (commencingResolution()) try {
+        if (phase == 2 || commencingResolution()) try {
         // GRECLIPSE end
         ModuleNode module = node.getModule();
         if (!module.hasImportsResolved()) {
@@ -1451,7 +1451,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             genericParameterNames = new HashMap<>();
         }
         resolveGenericsHeader(node.getGenericsTypes());
-
+switch (phase) { case 0: case 1: // GROOVY-9866, GROOVY-10466
         ClassNode sn = node.getUnresolvedSuperClass();
         if (sn != null) {
             resolveOrFail(sn, "", node, true);
@@ -1473,7 +1473,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
             }
         }
-
+case 2:
         // VariableScopeVisitor visits anon. inner class body inline, so resolve now
         for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
             InnerClassNode cn = it.next();
@@ -1485,14 +1485,17 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveOrFail(cn.getUnresolvedSuperClass(false), cn); // GROOVY-9642
             }
         }
+if (phase == 1) break; // resolve other class headers before members, et al.
         // initialize scopes/variables now that imports and super types are resolved
         new VariableScopeVisitor(source).visitClass(node);
 
         visitTypeAnnotations(node);
         super.visitClass(node);
-
         // GRECLIPSE add
         finishedResolution();
+        // GRECLIPSE end
+}
+        // GRECLIPSE add
         } finally {
         if (currentClass == node)
         // GRECLIPSE end
@@ -1612,7 +1615,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 boolean nameAdded = false;
                 for (ClassNode upperBound : type.getUpperBounds()) {
                     if (upperBound == null) continue;
-
+                    // GRECLIPSE add
+                    if (upperBound.hasInconsistentHierarchy()) continue;
+                    // GRECLIPSE end
                     if (!isWildcardGT) {
                         if (!nameAdded || !resolve(typeType)) {
                             if (dealWithGenerics) {

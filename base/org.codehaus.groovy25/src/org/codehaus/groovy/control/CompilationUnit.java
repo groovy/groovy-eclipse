@@ -205,7 +205,35 @@ public class CompilationUnit extends ProcessingUnit {
                 ev.visitClass(classNode);
             }
         }, Phases.CONVERSION);
+        /* GRECLIPSE edit -- GROOVY-9866, GROOVY-10466
         addPhaseOperation(resolve, Phases.SEMANTIC_ANALYSIS);
+        */
+        addPhaseOperation(new SourceUnitOperation() {
+            @Override
+            public void call(final SourceUnit source) {
+                try {
+                    resolveVisitor.phase = 1; // resolve head of each class
+                    resolveVisitor.setClassNodeResolver(classNodeResolver);
+                    for (ClassNode classNode : source.getAST().getClasses())
+                            resolveVisitor.startResolving(classNode, source);
+                } finally {
+                    resolveVisitor.phase = 0;
+                }
+            }
+        }, Phases.SEMANTIC_ANALYSIS);
+        addPhaseOperation(new SourceUnitOperation() {
+            @Override
+            public void call(final SourceUnit source) {
+                try {
+                    resolveVisitor.phase = 2; // resolve body of each class
+                    for (ClassNode classNode : source.getAST().getClasses())
+                            resolveVisitor.startResolving(classNode, source);
+                } finally {
+                    resolveVisitor.phase = 0;
+                }
+            }
+        }, Phases.SEMANTIC_ANALYSIS);
+        // GRECLIPSE end
         addPhaseOperation(staticImport, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(new PrimaryClassNodeOperation() {
             @Override
@@ -678,23 +706,20 @@ public class CompilationUnit extends ProcessingUnit {
         return dequeue;
     }
 
-    /**
-     * Resolves all types
-     */
+    /* GRECLIPSE edit -- GROOVY-4386, GROOVY-9866, GROOVY-10466, et al.
     private final SourceUnitOperation resolve = new SourceUnitOperation() {
         public void call(SourceUnit source) throws CompilationFailedException {
             List<ClassNode> classes = source.ast.getClasses();
             for (ClassNode node : classes) {
-                /* GRECLIPSE edit -- GROOVY-4386, et al.
                 VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(source);
                 scopeVisitor.visitClass(node);
-                */
+
                 resolveVisitor.setClassNodeResolver(classNodeResolver);
                 resolveVisitor.startResolving(node, source);
             }
-
         }
     };
+    */
 
     private final PrimaryClassNodeOperation staticImport = new PrimaryClassNodeOperation() {
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {

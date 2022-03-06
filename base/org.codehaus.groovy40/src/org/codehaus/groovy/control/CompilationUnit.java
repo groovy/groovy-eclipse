@@ -205,14 +205,34 @@ public class CompilationUnit extends ProcessingUnit {
             GroovyClassVisitor visitor = new EnumVisitor(this, source);
             visitor.visitClass(classNode);
         }, Phases.CONVERSION);
-
+        /* GRECLIPSE edit -- GROOVY-9866, GROOVY-10466
         addPhaseOperation(source -> {
             resolveVisitor.setClassNodeResolver(classNodeResolver);
             for (ClassNode classNode : source.getAST().getClasses()) {
                 resolveVisitor.startResolving(classNode, source);
             }
         }, Phases.SEMANTIC_ANALYSIS);
-
+        */
+        addPhaseOperation(source -> {
+            try {
+                resolveVisitor.phase = 1; // resolve head of each class
+                resolveVisitor.setClassNodeResolver(classNodeResolver);
+                for (ClassNode classNode : source.getAST().getClasses())
+                        resolveVisitor.startResolving(classNode, source);
+            } finally {
+                resolveVisitor.phase = 0;
+            }
+        }, Phases.SEMANTIC_ANALYSIS);
+        addPhaseOperation(source -> {
+            try {
+                resolveVisitor.phase = 2; // resolve body of each class
+                for (ClassNode classNode : source.getAST().getClasses())
+                        resolveVisitor.startResolving(classNode, source);
+            } finally {
+                resolveVisitor.phase = 0;
+            }
+        }, Phases.SEMANTIC_ANALYSIS);
+        // GRECLIPSE end
         addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
             GroovyClassVisitor visitor = new StaticImportVisitor(classNode, source);
             visitor.visitClass(classNode);

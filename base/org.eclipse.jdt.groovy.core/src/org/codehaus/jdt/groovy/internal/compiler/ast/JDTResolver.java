@@ -193,7 +193,7 @@ public class JDTResolver extends ResolveVisitor {
             nodeCache  = new IdentityHashMap<>();
         }
         try {
-            unresolvables.put(classNode.getModule().getMainClassName(), new HashSet<>());
+            unresolvables.computeIfAbsent(classNode.getModule().getMainClassName(), x -> new HashSet<>());
             super.startResolving(classNode, sourceUnit);
         } catch (AbortResolutionException ignore) {
             // probably syntax error(s)
