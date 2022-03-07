@@ -31,7 +31,7 @@
 		<groovy-eclipse-compiler-version>3.7.1</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
-		<groovy-eclipse-batch-version>2.5.15-02</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>2.5.16-01</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
