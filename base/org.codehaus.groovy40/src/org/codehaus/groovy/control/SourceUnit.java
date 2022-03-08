@@ -345,21 +345,11 @@ public class SourceUnit extends ProcessingUnit {
      * @param msg the error message
      * @param node the AST node
      * @throws CompilationFailedException on error
+     *
      * @since 3.0.0
      */
     public void addFatalError(String msg, ASTNode node) throws CompilationFailedException {
-        getErrorCollector().addFatalError(
-                new SyntaxErrorMessage(
-                        new SyntaxException(
-                                msg,
-                                node.getLineNumber(),
-                                node.getColumnNumber(),
-                                node.getLastLineNumber(),
-                                node.getLastColumnNumber()
-                        ),
-                        this
-                )
-        );
+        getErrorCollector().addFatalError(Message.create(new SyntaxException(msg, node), this));
     }
 
     public void addErrorAndContinue(SyntaxException se) {

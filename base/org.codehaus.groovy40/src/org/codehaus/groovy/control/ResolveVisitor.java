@@ -1520,9 +1520,7 @@ if (phase == 1) break; // resolve other class headers before members, et al.
     // GRECLIPSE end
 
     private void addFatalError(final String text, final ASTNode node) {
-        source.getErrorCollector().addFatalError(
-                org.codehaus.groovy.control.messages.Message.create(new SyntaxException(text, node), source)
-        );
+        source.addFatalError(text, node);
     }
 
     private void checkCyclicInheritance(final ClassNode node, final ClassNode type) {
