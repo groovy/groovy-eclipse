@@ -333,7 +333,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\tdef list = new LinkedList<String>([1,2,3])\n" +
             "\t           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call java.util.LinkedList#<init>(java.util.Collection<? extends java.lang.String>) with arguments [java.util.List<java.lang.Integer>]\n" +
+            "Groovy:[Static type checking] - Cannot call java.util.LinkedList#<init>(java.util.Collection<? extends java.lang.String>) with arguments [java.util.ArrayList<java.lang.Integer>]\n" +
             "----------\n");
     }
 

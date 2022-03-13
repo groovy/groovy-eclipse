@@ -5166,4 +5166,68 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "C(x)");
     }
+
+    @Test
+    public void testTypeChecked10482() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Foo<X> {\n" +
+            "  Foo(X x) {\n" +
+            "  }\n" +
+            "}\n" +
+            "def <Y> Y bar() {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <Z> void baz() {\n" +
+            "  new Foo<Z>(bar())\n" + // Cannot call Foo#<init>(Z) with arguments [#Y]
+            "}\n" +
+            "this.<String>baz()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10482a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Foo<X> {\n" +
+            "  Foo(X x) {\n" +
+            "  }\n" +
+            "}\n" +
+            "static <Y> Y bar() {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "static <Z> void baz() {\n" +
+            "  new Foo<Z>(bar())\n" + // Cannot call Foo#<init>(Z) with arguments [#Y]
+            "}\n" +
+            "Main.<String>baz()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10482b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <X> X foo(X x) {\n" +
+            "}\n" +
+            "def <Y> Y bar() {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <Z> void baz() {\n" +
+            "  this.<Z>foo(bar())\n" +
+            "}\n" +
+            "this.<String>baz()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }
