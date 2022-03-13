@@ -5230,4 +5230,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10525() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(bean, List<Class<?>> types, Validator validator) {\n" +
+            "  validator.validate(bean, types as Class<?>[])\n" +
+            "}\n",
+
+            "Validator.java",
+            "import java.util.*;\n" +
+            "public class Validator {\n" +
+            "  @SafeVarargs public final <T> Set<Violation<T>>\n" +
+            "  validate(T object, Class<?>... types) {\n" +
+            "    return Collections.emptySet();\n" +
+            "  }\n" +
+            "}\n",
+
+            "Violation.java",
+            "public interface Violation<T> { }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }
