@@ -5232,6 +5232,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10499() {
+        for (String bounds : new String[] {"?", "Y", "? extends Y"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "class C<X> {\n" +
+                "  C(X x) {\n" +
+                "  }\n" +
+                "}\n" +
+                "class D<Y> {\n" +
+                "  D(C<" + bounds + "> c, Y y) {\n" +
+                "  }\n" +
+                "  Y m(Y y) {\n" +
+                "  }\n" +
+                "}\n" +
+                "@groovy.transform.TypeChecked\n" +
+                "def <Z> void test(Z z = null) {\n" +
+                "  new D<>(new C<Z>(z), z).m(z)\n" + // Cannot find matching method D#m(Z)
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+        }
+    }
+
+    @Test
     public void testTypeChecked10525() {
         //@formatter:off
         String[] sources = {
