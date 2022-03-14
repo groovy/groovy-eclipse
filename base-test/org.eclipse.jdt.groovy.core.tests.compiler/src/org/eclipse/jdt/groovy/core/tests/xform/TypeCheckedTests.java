@@ -5117,6 +5117,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10357() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Function\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "abstract class A {\n" +
+            "  abstract long m(Function<Boolean,Integer> f = { Boolean b -> b ? +1 : -1 })\n" +
+            "}\n" +
+            "print new A() {\n" +
+            "  @Override\n" +
+            "  long m(Function<Boolean,Integer> f) {\n" +
+            "    f.apply(true).longValue()\n" +
+            "  }\n" +
+            "}.m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
     public void testTypeChecked10414() {
         //@formatter:off
         String[] sources = {
