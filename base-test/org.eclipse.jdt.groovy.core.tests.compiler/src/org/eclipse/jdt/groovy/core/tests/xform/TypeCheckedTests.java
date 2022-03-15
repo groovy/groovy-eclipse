@@ -5139,6 +5139,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10368() {
+        for (String bounds : new String[] {"T", "T extends Number", "T extends Object"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "class C<" + bounds + "> {\n" +
+                "  C(p) {\n" +
+                "  }\n" +
+                "}\n" +
+                "void m(C<Integer> c) {\n" +
+                "}\n" +
+                "@groovy.transform.TypeChecked\n" +
+                "void test() {\n" +
+                "  m(new C<>(null))\n" + // Cannot call m(C<java.lang.Integer>) with arguments [C<# extends java.lang.Number>]
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+        }
+    }
+
+    @Test
     public void testTypeChecked10414() {
         //@formatter:off
         String[] sources = {

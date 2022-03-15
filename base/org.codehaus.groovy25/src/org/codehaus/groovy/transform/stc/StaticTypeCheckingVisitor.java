@@ -1204,7 +1204,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // check if constructor call expression makes use of the diamond operator
         if (cceType.getGenericsTypes() != null && cceType.getGenericsTypes().length == 0) {
             ArgumentListExpression argumentListExpression = InvocationWriter.makeArgumentList(cce.getArguments());
-            /* GRECLIPSE edit -- GROOVY-9948, GROOVY-9983, GROOVY-10291, et al.
+            /* GRECLIPSE edit -- GROOVY-9948, GROOVY-9983, GROOVY-10291, GROOVY-10368, et al.
             if (argumentListExpression.getExpressions().isEmpty()) {
                 adjustGenerics(lType, cceType);
             } else {
@@ -1231,8 +1231,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (lhs == null || rhs == null || lhs.length != rhs.length) throw new GroovyBugError(
                             "Parameterization failed: " + prettyPrintType(pType) + " ~ " + prettyPrintType(type));
 
-                    if (java.util.stream.IntStream.range(0, lhs.length).allMatch(i ->
-                            GenericsUtils.buildWildcardType(getCombinedBoundType(lhs[i])).isCompatibleWith(getCombinedBoundType(rhs[i])))) {
+                    if (IntStream.range(0, lhs.length).allMatch(i ->
+                            GenericsUtils.buildWildcardType(getCombinedBoundType(lhs[i])).isCompatibleWith(rhs[i].getType()))) {
                         type = pType; // lType proved to be a viable type witness
                     }
                 }
