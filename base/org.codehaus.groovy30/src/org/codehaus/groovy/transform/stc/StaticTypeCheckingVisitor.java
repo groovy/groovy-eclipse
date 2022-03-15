@@ -4823,7 +4823,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private ClassNode checkForTargetType(final Expression expr, final ClassNode type) {
-        /* GRECLIPSE edit -- GROOVY-9972, GROOVY-9983
+        /* GRECLIPSE edit -- GROOVY-9972, GROOVY-9983, GROOVY-10114
         BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
         if (enclosingBinaryExpression instanceof DeclarationExpression
                 && isEmptyCollection(expr) && isAssignment(enclosingBinaryExpression.getOperation().getType())) {
@@ -4856,11 +4856,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
              targetType = enclosingMethod.getReturnType();
         }
 
+        if (expr instanceof ConstructorCallExpression) {
+            if (targetType == null) targetType = OBJECT_TYPE;
+            inferDiamondType((ConstructorCallExpression) expr, targetType);
+            return sourceType;
+        }
+
         if (targetType == null) return sourceType;
 
-        if (expr instanceof ConstructorCallExpression) {
-            inferDiamondType((ConstructorCallExpression) expr, targetType);
-        } else if (targetType != null && !isPrimitiveType(getUnwrapper(targetType))
+        if (!isPrimitiveType(getUnwrapper(targetType))
                 && !targetType.equals(OBJECT_TYPE) && missesGenericsTypes(sourceType)) {
             // unchecked assignment with ternary/elvis, like "List<T> list = listOfT ?: []"
             // the inferred type is the RHS type "completed" with generics information from LHS

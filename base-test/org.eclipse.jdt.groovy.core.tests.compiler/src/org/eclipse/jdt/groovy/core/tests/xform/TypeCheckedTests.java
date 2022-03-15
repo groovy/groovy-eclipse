@@ -3090,7 +3090,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  C.m(new A<>(new B()))\n" +
             "  C.m(new A<>(new D()))\n" +
             "  C.m(flag ? new A<>(new B()) : new A<>(new B()))\n" +
-            "  C.m(flag ? new A<>(new B()) : new A<>(new D()))\n" + // Cannot call m(A<B>) with arguments [A<? extends B>]\n" +
+            "  C.m(flag ? new A<>(new B()) : new A<>((B)null))\n" +
+            "  C.m(flag ? new A<>(new B()) : new A<>((B)new D()))\n" + // Cannot call m(A<B>) with arguments [A<? extends B>]\n" +
             "}\n" +
             "test()\n",
         };
@@ -3993,6 +3994,36 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10114() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<T> {\n" +
+            "  T p\n" +
+            "  C(T p) {\n" +
+            "    this.p = p\n" +
+            "  }\n" +
+            "}\n" +
+            "class D {\n" +
+            "  Character m() {\n" +
+            "    (Character) '!'\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  print((false ? new C<D>(new D()) : new C<>(new D())).p.m())\n" +
+            "  print((false ? new C< >(new D()) : new C<>(new D())).p.m())\n" +
+            "  def c = (true ? new C<>(new D()) : new C<>(new D()))\n" +
+            "  print c.p.m()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "!!!");
     }
 
     @Test
