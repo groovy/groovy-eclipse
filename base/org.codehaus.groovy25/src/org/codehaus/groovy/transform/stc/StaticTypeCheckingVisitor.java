@@ -1204,7 +1204,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // check if constructor call expression makes use of the diamond operator
         if (cceType.getGenericsTypes() != null && cceType.getGenericsTypes().length == 0) {
             ArgumentListExpression argumentListExpression = InvocationWriter.makeArgumentList(cce.getArguments());
-            /* GRECLIPSE edit -- GROOVY-9948, GROOVY-9983, GROOVY-10291, GROOVY-10368, et al.
+            /* GRECLIPSE edit -- GROOVY-9948, GROOVY-9983, GROOVY-10291, GROOVY-10367, GROOVY-10368, et al.
             if (argumentListExpression.getExpressions().isEmpty()) {
                 adjustGenerics(lType, cceType);
             } else {
@@ -1221,9 +1221,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode type = GenericsUtils.parameterizeType(cceType, cceType);
                 type = inferReturnTypeGenerics(type, constructor, argumentListExpression);
                 // process target as additional type witness, if ...
-                if (type.toString(false).indexOf('#') > 0 // unresolved generics
-                        // GROOVY-6232, GROOVY-9956: cce not assignment compatible
-                        || checkCompatibleAssignmentTypes(lType, type, cce) && !GenericsUtils.buildWildcardType(lType).isCompatibleWith(type)) {
+                if (lType.getGenericsTypes() != null // has generics
+                        && (type.toString(false).indexOf('#') > 0 // unresolved generics
+                        // GROOVY-6232, GROOVY-9956, etc.: cce not assignment compatible
+                        || checkCompatibleAssignmentTypes(lType, type, cce) && !GenericsUtils.buildWildcardType(lType).isCompatibleWith(type))) {
                     // allow covariance of each type parameter, but maintain semantics for nested generics
 
                     ClassNode pType = GenericsUtils.parameterizeType(lType, type);

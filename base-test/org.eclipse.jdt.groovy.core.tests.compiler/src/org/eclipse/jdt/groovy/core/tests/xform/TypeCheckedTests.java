@@ -5139,6 +5139,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10367() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class C<X, Y extends X> {\n" + // works without Y
+            "  X x\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <Z extends Number> void test(Z z) {\n" +
+            "  z = new C<>(z).x\n" + // Cannot assign value of type Object to variable of type Z
+            "}\n" +
+            "test(null)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10368() {
         for (String bounds : new String[] {"T", "T extends Number", "T extends Object"}) {
             //@formatter:off
