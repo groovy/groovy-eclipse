@@ -167,7 +167,7 @@ This minimal project set should be open in your workspace:
 * org.eclipse.jdt.groovy.core.tests.builder
 * org.eclipse.jdt.groovy.core.tests.compiler
 
-Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.tests.builder`, `org.eclipse.jdt.core.tests.compiler`) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e422` folder is for Eclipse 4.23 (2022-03).
+Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.tests.builder`, `org.eclipse.jdt.core.tests.compiler`) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e423` folder is for Eclipse 4.23 (2022-03).
 
 
 ## Test with Eclipse

@@ -131,11 +131,6 @@
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.23</url>
 				</repository>
-				<repository>
-					<id>milestone</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.23-I-builds/I20220308-0310</url>
-				</repository>
 			</repositories>
 			<modules>
 				<module>jdt-patch/e423/org.eclipse.jdt.core</module>
