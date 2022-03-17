@@ -5329,6 +5329,36 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10494() {
+        assumeTrue(isAtLeastGroovy(40) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I<T> {\n" +
+            "  default void m(T t) {\n" +
+            "    println t\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class C implements I<String> {\n" +
+            "  @Override void m(String s) {\n" +
+            "    super.m(s)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 9)\n" +
+            "\tsuper.m(s)\n" +
+            "\t^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Default method m(T) requires qualified super\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10499() {
         for (String bounds : new String[] {"?", "Y", "? extends Y"}) {
             //@formatter:off
