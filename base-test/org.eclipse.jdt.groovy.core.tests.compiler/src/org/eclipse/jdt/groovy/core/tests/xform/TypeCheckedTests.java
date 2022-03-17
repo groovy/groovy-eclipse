@@ -4811,7 +4811,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. WARNING in Main.groovy (at line 2)\n" +
             "\tdef <T> T m(T t) {\n" +
-            "\t     ^^\n" +
+            "\t     ^\n" +
             "The type parameter T is hiding the type T\n" +
             "----------\n");
     }
@@ -4836,7 +4836,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\tdef <T,T> T m(C<T> c) {\n" +
-            "\t       ^^\n" +
+            "\t       ^\n" +
             "Duplicate type parameter T\n" +
             "----------\n");
     }

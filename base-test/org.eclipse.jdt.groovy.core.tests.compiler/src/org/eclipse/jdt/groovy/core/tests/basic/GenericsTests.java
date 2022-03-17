@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -407,6 +407,43 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\tjava.lang.Object<Object> tooMany2\n" +
             "\t^^^^^^^^^^^^^^^^\n" +
             "Groovy:The class java.lang.Object<Object> (supplied with 1 type parameter) refers to the class java.lang.Object which takes no parameters\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testGenericsBoundsError() {
+        //@formatter:off
+        String[] sources = {
+            "T.groovy",
+            "class T<X extends Y> {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in T.groovy (at line 1)\n" +
+            "\tclass T<X extends Y> {}\n" +
+            "\t                  ^\n" +
+            "Groovy:unable to resolve class Y\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testGenericsHidingError() {
+        //@formatter:off
+        String[] sources = {
+            "T.groovy",
+            "class T {}\n" +
+            "class U<T> {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. WARNING in T.groovy (at line 2)\n" +
+            "\tclass U<T> {}\n" +
+            "\t        ^\n" +
+            "The type parameter T is hiding the type T\n" +
             "----------\n");
     }
 

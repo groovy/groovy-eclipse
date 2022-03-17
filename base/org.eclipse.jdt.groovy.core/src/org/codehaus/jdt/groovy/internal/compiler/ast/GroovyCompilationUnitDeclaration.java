@@ -2013,12 +2013,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not!");
                 } else {
                     TypeReference baseTypeReference = TypeReference.baseTypeReference(typeId, dim);
+                    if (sourceEnd > 0)  sourceEnd = sourceStart + componentType.getName().length();
                     baseTypeReference.sourceStart = sourceStart;
-                    baseTypeReference.sourceEnd = sourceStart + componentType.getName().length();
+                    baseTypeReference.sourceEnd = sourceEnd - 1;
                     return baseTypeReference;
                 }
             }
-            assert dim > 0 : "array ClassNode with no dimensions: " + name;
 
             char[] typeName = name.substring(0, pos + 2).toCharArray();
 
@@ -2057,44 +2057,45 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not!");
                 } else {
                     TypeReference baseTypeReference = TypeReference.baseTypeReference(typeId, dim);
+                    if (sourceEnd > 0)  sourceEnd = sourceStart + componentType.getName().length();
                     baseTypeReference.sourceStart = sourceStart;
-                    baseTypeReference.sourceEnd = sourceStart + componentType.getName().length();
+                    baseTypeReference.sourceEnd = sourceEnd - 1;
                     return baseTypeReference;
                 }
-            } else {
-                name = name.substring(dim);
-                if (name.charAt(name.length() - 1) == ';') {
-                    name = name.substring(1, name.length() - 1); // chop off 'L' and ';'
-                }
+            }
 
-                char[] typeName = name.toCharArray();
+            name = name.substring(dim);
+            if (name.charAt(name.length() - 1) == ';') {
+                name = name.substring(1, name.length() - 1); // chop off 'L' and ';'
+            }
 
-                if (unitDeclaration.imports.length > 0) {
-                    char[][] compoundName = CharOperation.splitOn('.', typeName);
-                    for (ImportReference importReference : unitDeclaration.imports) {
-                        if (isAliasForType(importReference, compoundName[0])) {
-                            typeName = CharOperation.concatWith(importReference.getImportName(), '.');
-                            if (compoundName.length > 1) {
-                                typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
-                            }
-                            break;
+            char[] typeName = name.toCharArray();
+
+            if (unitDeclaration.imports.length > 0) {
+                char[][] compoundName = CharOperation.splitOn('.', typeName);
+                for (ImportReference importReference : unitDeclaration.imports) {
+                    if (isAliasForType(importReference, compoundName[0])) {
+                        typeName = CharOperation.concatWith(importReference.getImportName(), '.');
+                        if (compoundName.length > 1) {
+                            typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
                         }
+                        break;
                     }
                 }
-
-                return createTypeReferenceForArrayName(typeName, componentType, dim, sourceStart, sourceEnd);
             }
+
+            return createTypeReferenceForArrayName(typeName, componentType, dim, sourceStart, sourceEnd);
         }
 
         private TypeReference createTypeReferenceForArrayName(char[] typeName, ClassNode typeNode, int dim, int sourceStart, int sourceEnd) {
-            int nameEnd = (sourceEnd == -2 ? -1 : typeNode.getEnd());
+            int nameEnd = (sourceEnd < 0 ? -1 : typeNode.getEnd());
             if (!typeNode.isUsingGenerics()) {
                 if (CharOperation.indexOf('.', typeName) < 0) {
                     // For a single array reference, for example 'String[]' start will be 'S' and end will be the char after ']'. When the
                     // ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the last ']';
                     // originalSourceEnd - the 'g'
                     ArrayTypeReference tr = new ArrayTypeReference(typeName, dim, toPos(sourceStart, nameEnd - 1));
-                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
+                    tr.sourceEnd = sourceEnd - 1;
                     return tr;
                 } else {
                     // For a qualified array reference, for example 'java.lang.Number[][]' start will be 'j' and end will be the char after ']'.
@@ -2102,7 +2103,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     // last ']'; the positions computed for the reference components would be j..a l..g and N..r
                     char[][] compoundName = CharOperation.splitOn('.', typeName);
                     ArrayQualifiedTypeReference tr = new ArrayQualifiedTypeReference(compoundName, dim, positionsFor(compoundName, sourceStart, nameEnd - 1));
-                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
+                    tr.sourceEnd = sourceEnd - 1;
                     return tr;
                 }
             } else {
@@ -2114,14 +2115,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 if (CharOperation.indexOf('.', typeName) < 0) {
                     ParameterizedSingleTypeReference tr = new ParameterizedSingleTypeReference(typeName, typeArgs, dim, toPos(sourceStart, nameEnd - 1));
-                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
+                    tr.sourceEnd = sourceEnd - 1;
                     return tr;
                 } else {
                     char[][] compoundName = CharOperation.splitOn('.', typeName);
                     TypeReference[][] compoundArgs = new TypeReference[compoundName.length][];
                     compoundArgs[compoundName.length - 1] = typeArgs;
                     ParameterizedQualifiedTypeReference tr = new ParameterizedQualifiedTypeReference(compoundName, compoundArgs, dim, positionsFor(compoundName, sourceStart, nameEnd - 1));
-                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
+                    tr.sourceEnd = sourceEnd - 1;
                     return tr;
                 }
             }
@@ -2183,7 +2184,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private TypeReference createTypeReferenceForClassNode(ClassNode classNode) {
-            return createTypeReferenceForClassNode(classNode, startOffset(classNode), endOffset(classNode));
+            return createTypeReferenceForClassNode(classNode, startOffset(classNode), Math.max(endOffset(classNode), -1));
         }
 
         private TypeReference createTypeReferenceForClassNode(ClassNode classNode, int sourceStart, int sourceEnd) {
@@ -2210,7 +2211,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (name.length() == 1 && name.charAt(0) == '?') {
                 TypeReference tr = new Wildcard(Wildcard.UNBOUND);
                 tr.sourceStart = sourceStart;
-                tr.sourceEnd = sourceEnd;
+                tr.sourceEnd = sourceEnd - 1;
                 return tr;
             }
 
@@ -2224,7 +2225,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (nameToPrimitiveTypeId.containsKey(name)) {
                 TypeReference tr = TypeReference.baseTypeReference(nameToPrimitiveTypeId.get(name), 0);
                 tr.sourceStart = sourceStart;
-                tr.sourceEnd = sourceEnd;
+                tr.sourceEnd = sourceEnd - 1;
                 return tr;
             }
 
@@ -2329,7 +2330,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int offset = generics[i].getStart(),
                     length = typeParameter.name.length;
                 typeParameter.sourceStart = offset;
-                typeParameter.sourceEnd = offset + length;
+                typeParameter.sourceEnd = offset + length - 1;
 
                 ClassNode[] upperBounds = generics[i].getUpperBounds();
                 if (upperBounds != null && upperBounds.length > 0) {
@@ -2451,9 +2452,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     result[i] = ((offset << 32) | offset + length);
                     offset += length + 2; // advance past the next '.'
                 }
-            } else if (start == -1 && end == -2) {
+            } else if (start == -1) {
                 Arrays.fill(result, (-1L << 32) | -2L);
-            } else { // FIXASC: This case shouldn't happen
+            } else { // length is 0 or ...
                 Arrays.fill(result, (start << 32) | start);
             }
             return result;
