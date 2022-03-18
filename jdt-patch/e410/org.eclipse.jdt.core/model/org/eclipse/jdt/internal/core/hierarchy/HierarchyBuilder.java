@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2016 IBM Corporation and others.
  *
@@ -277,6 +278,7 @@ public abstract class HierarchyBuilder {
  * Create an ICompilationUnit info from the given compilation unit on disk.
  */
 	protected ICompilationUnit createCompilationUnitFromPath(Openable handle, IFile file) {
+		/* GROOVY edit -- file path
 		final char[] elementName = handle.getElementName().toCharArray();
 		return new ResourceCompilationUnit(file, null) {
 			@Override
@@ -284,6 +286,9 @@ public abstract class HierarchyBuilder {
 				return elementName;
 			}
 		};
+		*/
+		return new ResourceCompilationUnit(file, null);
+		// GROOVY end
 	}
 	/**
  * Creates the type info from the given class file on disk and

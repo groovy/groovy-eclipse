@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.junit.test
+
+import static org.eclipse.jdt.internal.compiler.impl.CompilerOptions.OPTIONG_GroovyCompilerConfigScript
 
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IType
@@ -163,5 +165,49 @@ final class JUnit4TestFinderTests extends JUnitTestSuite {
         assert testTypes.any { it.elementName == 'Y4' } : 'Y4 should be a test type'
         assert testTypes.any { it.elementName == 'Z4' } : 'Z4 should be a test type'
         assert testTypes.size() == 6
+    }
+
+    @Test
+    void testFindAllTestSuites2() {
+        try {
+            setJavaPreference(OPTIONG_GroovyCompilerConfigScript, 'config.groovy')
+            addPlainText '''
+                withConfig(configuration) {
+                    // fails if HierarchyBuilder returns file name without path
+                    source(unitValidator: { unit -> !!(unit.name =~ /.p./) }) {
+                        imports {
+                            normal 'junit.framework.TestCase'
+                            normal 'org.junit.Test'
+                        }
+                    }
+                }''', '../config.groovy'
+
+            addGroovySource '''
+                abstract class TestBase extends TestCase {
+                }
+                '''
+
+            addGroovySource '''
+                class X3 extends TestBase {
+                }
+                '''
+
+            addGroovySource '''
+                class X4 {
+                    @Test // unresolved if GroovyCompilationUnit skips config script
+                    void m() {
+                    }
+                }
+                '''
+
+            Set<IType> testTypes = []
+            new JUnit4TestFinder().findTestsInContainer(packageFragmentRoot, testTypes, null)
+
+            assert testTypes.any { it.elementName == 'X3' } : 'X3 should be a test type'
+            assert testTypes.any { it.elementName == 'X4' } : 'X4 should be a test type'
+            assert testTypes.size() == 2
+        } finally {
+            setJavaPreference(OPTIONG_GroovyCompilerConfigScript, null)
+        }
     }
 }

@@ -146,9 +146,8 @@ public void accept(ICompilationUnit sourceUnit, AccessRestriction accessRestrict
 		this.lookupEnvironment.buildTypeBindings(parsedUnit, accessRestriction);
 		this.lookupEnvironment.completeTypeBindings(parsedUnit, true); // work done inside checkAndSetImports()
 	} else {
-		//System.out.println("Cannot accept compilation units inside the HierarchyResolver.");
 		this.lookupEnvironment.problemReporter.abortDueToInternalError(
-			new StringBuffer(Messages.accept_cannot)
+			new StringBuilder(Messages.accept_cannot)
 				.append(sourceUnit.getFileName())
 				.toString());
 	}
@@ -223,7 +222,7 @@ private IType findSuperClass(IGenericType type, ReferenceBinding typeBinding) {
 		if (typeBinding.isHierarchyInconsistent()) {
 			if (superBinding.problemId() == ProblemReasons.NotFound) {
 				this.hasMissingSuperClass = true;
-				this.builder.hierarchy.missingTypes.add(new String(superBinding.sourceName)); // note: this could be Map$Entry
+				this.builder.hierarchy.missingTypes.add(String.valueOf(superBinding.sourceName)); // note: this could be Map$Entry
 				return null;
 			} else if ((superBinding.id == TypeIds.T_JavaLangObject)) {
 				char[] superclassName;
@@ -246,7 +245,7 @@ private IType findSuperClass(IGenericType type, ReferenceBinding typeBinding) {
 					char[] simpleName = lastSeparator == -1 ? superclassName : CharOperation.subarray(superclassName, lastSeparator+1, superclassName.length);
 					if (!CharOperation.equals(simpleName, TypeConstants.OBJECT)) {
 						this.hasMissingSuperClass = true;
-						this.builder.hierarchy.missingTypes.add(new String(simpleName));
+						this.builder.hierarchy.missingTypes.add(String.valueOf(simpleName));
 						return null;
 					}
 				}
@@ -340,7 +339,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 				}
 			}
 		}
-		this.builder.hierarchy.missingTypes.add(new String(simpleName));
+		this.builder.hierarchy.missingTypes.add(String.valueOf(simpleName));
 	}
 	if (index != length)
 		System.arraycopy(superinterfaces, 0, superinterfaces = new IType[index], 0, index);
@@ -410,7 +409,7 @@ private void fixSupertypeBindings() {
 			} catch (AbortCompilation e) {
 				// allow subsequent call to superclass() to succeed so that we don't have to catch AbortCompilation everywhere
 				((BinaryTypeBinding) typeBinding).tagBits &= ~TagBits.HasUnresolvedSuperclass;
-				this.builder.hierarchy.missingTypes.add(new String(typeBinding.superclass().sourceName()));
+				this.builder.hierarchy.missingTypes.add(String.valueOf(typeBinding.superclass().sourceName()));
 				this.hasMissingSuperClass = true;
 			}
 			try {
@@ -542,7 +541,7 @@ private void rememberWithMemberTypes(TypeDeclaration typeDecl, IType typeHandle)
 	if (memberTypes != null) {
 		for (int i = 0, length = memberTypes.length; i < length; i += 1) {
 			TypeDeclaration memberType = memberTypes[i];
-			rememberWithMemberTypes(memberType, typeHandle.getType(new String(memberType.name)));
+			rememberWithMemberTypes(memberType, typeHandle.getType(String.valueOf(memberType.name)));
 		}
 	}
 }
@@ -661,7 +660,7 @@ public void resolve(IGenericType suppliedType) {
 			/* GROOVY edit
 			org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
 			*/
-			IType it = ((SourceTypeElementInfo) suppliedType).getHandle();
+			IType it = ((SourceTypeElementInfo)suppliedType).getHandle();
 			org.eclipse.jdt.core.ICompilationUnit cu = it == null ? null : it.getCompilationUnit();
 			// GROOVY end
 			if (cu != null) {
