@@ -853,7 +853,6 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
                 compileStack.removeVar(rhs);
                 return;
             }
-
             // GRECLIPSE end
         }
         super.fallbackAttributeOrPropertySite(expression, objectExpression, name, adapter);

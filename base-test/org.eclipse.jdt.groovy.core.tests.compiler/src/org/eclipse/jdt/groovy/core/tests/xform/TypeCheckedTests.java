@@ -600,6 +600,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked5517() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class MyHashMap extends HashMap {\n" +
+            "  public static int version = 666\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def map = new MyHashMap()\n" +
+            "  map.foo = 123\n" +
+            "  print map.foo\n" +
+            "  map['foo'] = 4.5\n" +
+            "  print map['foo']\n" +
+            "  print MyHashMap.version\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1234.5666");
+    }
+
+    @Test
     public void testTypeChecked5523() {
         //@formatter:off
         String[] sources = {

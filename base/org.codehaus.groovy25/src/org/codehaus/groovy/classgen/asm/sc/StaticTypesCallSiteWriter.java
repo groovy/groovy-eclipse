@@ -890,9 +890,8 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
                 operandStack.pop();
                 return;
             }
-
+            // GRECLIPSE end
         }
-        // GRECLIPSE end
         super.fallbackAttributeOrPropertySite(expression, objectExpression, name, adapter);
     }
 

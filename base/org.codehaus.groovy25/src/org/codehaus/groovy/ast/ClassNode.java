@@ -752,7 +752,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void addInterface(ClassNode type) {
-        // let's check if it already implements an interface
+        /* GRECLIPSE edit
         boolean skip = false;
         ClassNode[] interfaces = redirect().interfaces;
         for (ClassNode existing : interfaces) {
@@ -767,6 +767,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             newInterfaces[interfaces.length] = type;
             redirect().interfaces = newInterfaces;
         }
+        */
+        ClassNode[] interfaces = getInterfaces();
+        for (ClassNode face : interfaces) {
+            if (face.equals(type)) return;
+        }
+        final int n = interfaces.length;
+
+        System.arraycopy(interfaces, 0, interfaces = new ClassNode[n + 1], 0, n);
+        interfaces[n] = type; // append interface
+        setInterfaces(interfaces);
+        // GRECLIPSE end
     }
 
     public boolean equals(Object that) {
@@ -1045,7 +1056,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * 
      */
     public boolean declaresInterface(ClassNode classNode) {
-        ClassNode[] interfaces = redirect().getInterfaces();
+        ClassNode[] interfaces = getInterfaces();
         for (ClassNode cn : interfaces) {
             if (cn.equals(classNode)) return true;
         }

@@ -827,8 +827,8 @@ public class CompilationUnit extends ProcessingUnit {
             GroovyClassVisitor visitor = verifier;
             try {
                 visitor.visitClass(classNode);
-            } catch (GroovyRuntimeException rpe) {
-                getErrorCollector().addError(new SyntaxException(rpe.getMessage(), rpe.getNode()), source);
+            } catch (GroovyRuntimeException gre) {
+                getErrorCollector().addError(new SyntaxException(gre.getMessage(), gre.getNode()), source);
             }
 
             visitor = new LabelVerifier(source);
@@ -1030,13 +1030,13 @@ public class CompilationUnit extends ProcessingUnit {
     private static int getSuperClassCount(ClassNode element) {
         int count = 0;
         while (element != null) {
-            count++;
+            count += 1;
             element = element.getSuperClass();
         }
         return count;
     }
 
-    private int getSuperInterfaceCount(ClassNode element) {
+    private static int getSuperInterfaceCount(ClassNode element) {
         int count = 1;
         ClassNode[] interfaces = element.getInterfaces();
         for (ClassNode anInterface : interfaces) {
@@ -1080,31 +1080,37 @@ public class CompilationUnit extends ProcessingUnit {
         List<ClassNode> sorted = getSorted(indexInterface, unsorted);
         sorted.addAll(getSorted(indexClass, unsorted));
         */
-        // Sort them by how many types are in their hierarchy, but all interfaces first.
-        // Algorithm:
-        // Create a list of integers.  Each integer captures the index into the unsorted
-        // list (bottom 16 bits) and the count of how many types are in that types
-        // hierarchy (top 16 bits).  For classes the count is augmented so that when
-        // sorting the classes will come out after the interfaces. This list of integers
-        // is sorted.  We then just go through it and for the lower 16 bits of each entry
-        // that is the index of the next value to pull from the unsorted list and put into
-        // the sorted list.
-        int[] countIndexPairs = new int[unsortedSize];
-        int count, index = 0;
-        for (ClassNode node : unsorted) {
-            if (node.isInterface()) {
-                count = getSuperInterfaceCount(node);
-            } else {
-                count = getSuperClassCount(node) + 5000;
+        List<ClassNode> sorted;
+        if (unsortedSize == 1) {
+            sorted = unsorted;
+        } else {
+            assert unsortedSize <= 0xFFFF;
+            // Sort them by how many types are in their hierarchy, but all interfaces first.
+            // Algorithm:
+            // Create a list of integers.  Each integer captures the index into the unsorted
+            // list (bottom 16 bits) and the count of how many types are in that types
+            // hierarchy (top 16 bits).  For classes the count is augmented so that when
+            // sorting the classes will come out after the interfaces. This list of integers
+            // is sorted.  We then just go through it and for the lower 16 bits of each entry
+            // that is the index of the next value to pull from the unsorted list and put into
+            // the sorted list.
+            int[] countIndexPairs = new int[unsortedSize];
+            int count, index = 0;
+            for (ClassNode node : unsorted) {
+                if (node.isInterface()) {
+                    count = getSuperInterfaceCount(node);
+                } else {
+                    count = getSuperClassCount(node) + 5000;
+                }
+                countIndexPairs[index] = ((count << 16) + index);
+                index += 1;
             }
-            countIndexPairs[index] = ((count << 16) + index);
-            index += 1;
-        }
-        Arrays.sort(countIndexPairs);
+            Arrays.sort(countIndexPairs);
 
-        List<ClassNode> sorted = new ArrayList<>(index);
-        for (int i : countIndexPairs) {
-            sorted.add(unsorted.get(i & 0xFFFF));
+            sorted = new ArrayList<>(unsortedSize);
+            for (int i : countIndexPairs) {
+                sorted.add(unsorted.get(i & 0xFFFF));
+            }
         }
         this.ast.setSortedClasses(sorted);
         // GRECLIPSE end

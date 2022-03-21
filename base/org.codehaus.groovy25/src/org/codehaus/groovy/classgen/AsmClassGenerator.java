@@ -1305,8 +1305,12 @@ public class AsmClassGenerator extends ClassGenerator {
 
         ClassNode objectExpressionType = controller.getTypeChooser().resolveType(objectExpression, controller.getClassNode());
         if (objectExpressionType.equals(ClassHelper.OBJECT_TYPE)) objectExpressionType = objectExpression.getType();
-        return objectExpressionType.isDerivedFromGroovyObject();
+        return implementsGroovyObject(objectExpressionType);
         // GRECLIPSE end
+    }
+
+    private static boolean implementsGroovyObject(ClassNode cn) {
+        return cn.isDerivedFromGroovyObject() || (!cn.isInterface() && cn.getCompileUnit() != null);
     }
 
     public void visitFieldExpression(FieldExpression expression) {
@@ -1737,8 +1741,8 @@ public class AsmClassGenerator extends ClassGenerator {
     public void loadWrapper(Expression argument) {
         MethodVisitor mv = controller.getMethodVisitor();
         ClassNode goalClass = argument.getType();
-        visitClassExpression(new ClassExpression(goalClass));
-        if (goalClass.isDerivedFromGroovyObject()) {
+        visitClassExpression(classX(goalClass));
+        if (implementsGroovyObject(goalClass)) {
             createGroovyObjectWrapperMethod.call(mv);
         } else {
             createPojoWrapperMethod.call(mv);
