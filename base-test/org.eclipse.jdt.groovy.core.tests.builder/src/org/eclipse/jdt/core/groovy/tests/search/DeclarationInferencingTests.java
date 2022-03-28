@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1307,15 +1307,6 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1047
     public void testJavaInterfaceWithDefaultMethod3() {
-        // Java 11 adds default method toArray(IntFunction) to the Collection interface
-        boolean jdkCollectToArray3;
-        try {
-            java.util.Collection.class.getDeclaredMethod("toArray", java.util.function.IntFunction.class);
-            jdkCollectToArray3 = true;
-        } catch (Exception e) {
-            jdkCollectToArray3 = false;
-        }
-
         //@formatter:off
         String contents =
             "List<String> list = []\n" +
@@ -1325,8 +1316,15 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = contents.indexOf("toArray");
-        MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.Collection<java.lang.String>", "toArray", DeclarationKind.METHOD);
-        assertEquals(jdkCollectToArray3 ? "java.util.function.IntFunction<T[]>" : "T[]", printTypeName(method.getParameters()[0].getType()));
+        try { // Java 11 adds default method toArray(IntFunction) to the Collection interface
+            java.util.Collection.class.getDeclaredMethod("toArray", java.util.function.IntFunction.class);
+            MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.Collection<java.lang.String>", "toArray", DeclarationKind.METHOD);
+            assertEquals("java.util.function.IntFunction<T[]>", printTypeName(method.getParameters()[0].getType()));
+            assertType(contents, "n", "java.lang.Integer");
+        } catch (Exception e) {
+            MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.List<java.lang.String>", "toArray", DeclarationKind.METHOD);
+            assertEquals("T[]", printTypeName(method.getParameters()[0].getType()));
+        }
     }
 
     @Test // GRECLIPSE-1105

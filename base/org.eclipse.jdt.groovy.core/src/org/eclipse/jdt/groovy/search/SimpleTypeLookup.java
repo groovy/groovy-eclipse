@@ -793,7 +793,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     return innerCandidate;
                 }
                 if (argumentTypes.size() == methodParameters.length) {
-                    outerCandidate = innerCandidate;
+                    outerCandidate = closer(innerCandidate, outerCandidate, argumentTypes);
 
                     Boolean suitable = isTypeCompatible(argumentTypes, methodParameters);
                     if (Boolean.FALSE.equals(suitable)) {

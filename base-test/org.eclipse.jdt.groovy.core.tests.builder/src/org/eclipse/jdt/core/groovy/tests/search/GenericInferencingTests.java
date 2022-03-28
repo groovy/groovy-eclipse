@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1283,6 +1283,22 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "n", "java.lang.Byte");
     }
 
+    @Test // GROOVY-10544
+    public void testMethod7() {
+        String contents =
+            "import java.util.function.Function\n" +
+            "interface I<T> {\n" +
+            "  def <U> Iterable<U> m(Function<? super T, ? extends U> f)\n" +
+            "}\n" +
+            "interface J<T> extends I<T> {\n" +
+            "  def <U> List<U> m(Function<? super T, ? extends U> f)\n" +
+            "}\n" +
+            "void test(J<String> j) {\n" +
+            "  def list = j.m{s -> java.util.regex.Pattern.compile(s)}\n" +
+            "}\n";
+        assertType(contents, "list", "java.util.List<java.util.regex.Pattern>");
+    }
+
     @Test // GRECLIPSE-1129: Static generic method type inference with @CompileStatic
     public void testStaticMethod1() {
         String contents =
@@ -1431,8 +1447,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String toFind = "removeAll";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
-        // Is there any reason to fully resolve the declaring type in this case?
-        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<E extends java.lang.Object>", toFind, DeclarationKind.METHOD);
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.List<java.lang.String>", toFind, DeclarationKind.METHOD);
         assertEquals("java.util.Collection<?>", printTypeName(m.getParameters()[0].getType()));
     }
 
@@ -1443,7 +1458,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String toFind = "addAll";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
-        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<java.lang.String>", toFind, DeclarationKind.METHOD);
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.List<java.lang.String>", toFind, DeclarationKind.METHOD);
         assertEquals("Parameter type should be resolved", "java.util.Collection<? extends java.lang.String>", printTypeName(m.getParameters()[0].getType()));
     }
 
