@@ -3796,7 +3796,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             dummyMN.setGenericsTypes(orig.getGenericsTypes());
         }
         ClassNode classNode = inferReturnTypeGenerics(receiver, dummyMN, arguments);
-        /* GRECLIPSE edit -- GROOVY-10327
+        /* GRECLIPSE edit -- GROOVY-9968, GROOVY-10327, GROOVY-10528
         ClassNode[] inferred = new ClassNode[classNode.getGenericsTypes().length];
         for (int i = 0; i < classNode.getGenericsTypes().length; i++) {
             GenericsType genericsType = classNode.getGenericsTypes()[i];
@@ -3807,8 +3807,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         GenericsType[] returnTypeGenerics = classNode.getGenericsTypes();
         ClassNode[] inferred = new ClassNode[returnTypeGenerics.length];
         for (int i = 0, n = returnTypeGenerics.length; i < n; i += 1) {
-            GenericsType genericsType = returnTypeGenerics[i];
-            inferred[i] = getCombinedBoundType(genericsType);
+            GenericsType gt = returnTypeGenerics[i];
+            if (!gt.isPlaceholder()) {
+                inferred[i] = getCombinedBoundType(gt);
+            } else {
+                inferred[i] = gt.getUpperBounds() != null ? gt.getUpperBounds()[0] : gt.getType().redirect();
+            }
         }
         // GRECLIPSE end
         return inferred;

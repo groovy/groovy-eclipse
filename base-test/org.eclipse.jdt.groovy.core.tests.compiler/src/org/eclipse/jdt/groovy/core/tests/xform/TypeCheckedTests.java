@@ -522,6 +522,130 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1349
+    public void testTypeChecked22() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(... args) {\n" +
+            "  args?.each { item ->\n" +
+            "    item.properties.each { key, value ->\n" +
+            "      if (value instanceof Iterable) value.each { test(it) }\n" + // NPE
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test([new Object()])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked23() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Set<Integer> ints = [1,2,3]\n" +
+            "  assert ints == [1,2,3] as Set\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked24() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "import static org.codehaus.groovy.ast.ClassHelper.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "@TypeChecked void test() {\n" +
+            "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def type = node.getNodeMetaData(INFERRED_TYPE)\n" +
+            "    assert type == LIST_TYPE\n" +
+            "    assert type.genericsTypes != null\n" +
+            "    assert type.genericsTypes.length == 1\n" +
+            "    assert type.genericsTypes[0].type == STRING_TYPE\n" +
+            "  })\n" +
+            "  Iterable<String> list = (List) null\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked25() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  final type = new Type<String,Integer>('works')\n" +
+            "  print type.map { length() }\n" +
+            "}\n" +
+            "test()\n",
+
+            "Type.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "class Type<T,U> {\n" +
+            "  final T value\n" +
+            "  U map(@DelegatesTo(type='T') Closure<U> producer) {\n" +
+            "    producer.delegate = value\n" +
+            "    producer()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "5");
+    }
+
+    @Test
+    public void testTypeChecked26() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void proc(Pogo p, Closure<Boolean> predicate) {\n" +
+            "  if (predicate.call(p)) {\n" +
+                //...
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  proc(new Pogo(name:'Abe', age:55)) {\n" +
+            "    it.age >= 18\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  String name\n" +
+            "  int age\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 8)\n" +
+            "\tit.age >= 18\n" +
+            "\t^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "Groovy:[Static type checking] - No such property: age for class: java.lang.Object\n" +
+            "----------\n");
+    }
+
     @Test
     public void testTypeChecked5450() {
         //@formatter:off
