@@ -7343,4 +7343,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[FOO, BAR, BAZ]");
     }
+
+    @Test
+    public void testCompileStatic10557() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  def <T> T m(java.util.function.Function<Reader,T> f) {\n" +
+            "    new StringReader('').withCloseable { reader ->\n" +
+            "      f.apply(reader)\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print(new C().m { it.text.empty })\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
 }
