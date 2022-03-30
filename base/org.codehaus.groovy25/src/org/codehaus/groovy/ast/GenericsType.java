@@ -337,6 +337,9 @@ public class GenericsType extends ASTNode {
          */
         private boolean compareGenericsWithBound(final ClassNode classNode, final ClassNode bound) {
             if (classNode==null) return false;
+            // GRECLIPSE add -- GROOVY-10556: "T" vs "C<T extends C<?>>" bound
+            if (classNode.isGenericsPlaceHolder()) return true;
+            // GRECLIPSE end
             if (bound.getGenericsTypes() == null || (classNode.getGenericsTypes()==null && classNode.redirect().getGenericsTypes()!=null)) {
                 // if the bound is not using generics, there's nothing to compare with
                 return true;

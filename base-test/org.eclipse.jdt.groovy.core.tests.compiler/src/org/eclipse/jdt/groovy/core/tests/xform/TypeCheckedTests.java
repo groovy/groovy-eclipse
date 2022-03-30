@@ -5560,4 +5560,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10556() {
+        for (String self : new String[] {"(B) this", "this as B"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.TypeChecked\n" +
+                "abstract class A<B extends A<B,X>,X> {\n" +
+                "  B m() {\n" +
+                "   " + self + "\n" +
+                "  }\n" +
+                "}\n" +
+                "(new A(){}).m()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+        }
+    }
 }
