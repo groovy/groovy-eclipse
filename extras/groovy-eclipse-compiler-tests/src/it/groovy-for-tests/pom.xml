@@ -36,8 +36,8 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
+          <groupId>@org@.groovy</groupId>
           <artifactId>*</artifactId>
-          <groupId>org.codehaus.groovy</groupId>
         </exclusion>
       </exclusions>
     </dependency>
