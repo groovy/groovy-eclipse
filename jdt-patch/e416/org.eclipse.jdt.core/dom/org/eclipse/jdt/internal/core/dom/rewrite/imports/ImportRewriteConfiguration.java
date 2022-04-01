@@ -164,13 +164,12 @@ public final class ImportRewriteConfiguration {
 			@Override
 			Set<String> determineImplicitImportContainers(ICompilationUnit compilationUnit) {
 				Set<String> implicitImportContainerNames = new HashSet<String>();
-
-				implicitImportContainerNames.add("java.lang"); //$NON-NLS-1$
 				// GROOVY add
-				if (LanguageSupportFactory.isInterestingSourceFile(compilationUnit.getElementName())) {
+				if (LanguageSupportFactory.isInterestingSourceFile(compilationUnit.getElementName()))
 					implicitImportContainerNames.addAll(LanguageSupportFactory.getImplicitImportContainers(compilationUnit));
-				}
+				else
 				// GROOVY end
+				implicitImportContainerNames.add("java.lang"); //$NON-NLS-1$
 
 				IJavaElement packageFragment = compilationUnit.getParent();
 				String compilationUnitPackageName = packageFragment.getElementName();

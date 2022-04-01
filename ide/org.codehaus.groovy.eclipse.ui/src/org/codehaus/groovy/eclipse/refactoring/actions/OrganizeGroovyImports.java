@@ -135,10 +135,10 @@ public class OrganizeGroovyImports {
             importsSlatedForRemoval = new HashMap<>();
 
             try {
+                Iterable<ImportNode> allImports = GroovyUtils.getAllImportNodes(info.module);
                 // Configure the import rewriter to keep all existing imports. This is different from how
                 // JDT does organize imports, but this prevents annotations on imports from being removed.
                 // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
-                Iterable<ImportNode> allImports = GroovyUtils.getAllImportNodes(info.module);
                 ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !isSafeToReorganize(allImports));
 
                 for (ImportNode imp : allImports) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1656,13 +1656,13 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     void testDefaultImport1() {
         String originalContents = '''\
             |import java.util.List
-            |import groovy.util.Proxy
-            |List
-            |Proxy
+            |import groovy.util.Node
+            |List list
+            |Node node
             |'''
         String expectedContents = '''\
-            |List
-            |Proxy
+            |List list
+            |Node node
             |'''
         doContentsCompareTest(originalContents, expectedContents)
     }
@@ -1672,12 +1672,12 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String originalContents = '''\
             |import java.util.*
             |import groovy.util.*
-            |List
-            |Proxy
+            |List list
+            |Node node
             |'''
         String expectedContents = '''\
-            |List
-            |Proxy
+            |List list
+            |Node node
             |'''
         doContentsCompareTest(originalContents, expectedContents)
     }
@@ -1687,23 +1687,28 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String originalContents = '''\
             |import java.math.BigDecimal
             |import java.math.BigInteger
-            |BigDecimal
-            |BigInteger
+            |BigDecimal bd
+            |BigInteger bi
             |'''
         String expectedContents = '''\
-            |BigDecimal
-            |BigInteger
+            |BigDecimal bd
+            |BigInteger bi
             |'''
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test // GRECLIPSE-1392
+    @Test
     void testDefaultImport5() {
-        String contents = '''\
-            |import static java.util.Collections.swap
-            |swap
+        String originalContents = '''\
+            |import java.awt.*
+            |import java.util.*
+            |import java.util.List
+            |List list
             |'''
-        doContentsCompareTest(contents)
+        String expectedContents = '''\
+            |List list
+            |'''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     @Test
@@ -1712,10 +1717,13 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |import java.awt.*
             |import java.util.*
             |import java.util.List
-            |
+            |Font font
             |List list
             |'''
         String expectedContents = '''\
+            |import java.awt.*
+            |import java.util.List
+            |Font font
             |List list
             |'''
         doContentsCompareTest(originalContents, expectedContents)
@@ -1727,16 +1735,34 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |import java.sql.*
             |import java.util.*
             |import java.sql.Date
-            |
             |Date date
             |'''
         String expectedContents = '''\
             |import java.sql.*
             |import java.sql.Date
-            |
             |Date date
             |'''
         doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1354
+    void testDefaultImport8() {
+        ['groovy.util', 'java.net', 'java.lang.reflect'].each {
+            String contents = """\
+                |import ${it}.Proxy
+                |Proxy proxy
+                |"""
+            doContentsCompareTest(contents)
+        }
+    }
+
+    @Test
+    void testDefaultImport9() {
+        String contents = '''\
+            |import static java.util.Collections.swap
+            |swap
+            |'''
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-1553
@@ -1913,6 +1939,25 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         addConfigScript '''\
             |withConfig(configuration) {
             |  imports {
+            |    star 'java.awt'
+            |  }
+            |}
+            |'''
+
+        String contents = '''\
+            |import java.util.List
+            |
+            |Font font
+            |List list
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testOrganizeWithExtraImports6() {
+        addConfigScript '''\
+            |withConfig(configuration) {
+            |  imports {
             |    star 'java.sql'
             |  }
             |}
@@ -1927,7 +1972,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testOrganizeWithExtraImports6() {
+    void testOrganizeWithExtraImports7() {
         addConfigScript '''\
             |withConfig(configuration) {
             |  imports {
@@ -1967,7 +2012,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/840
-    void testOrganizeWithExtraImports7() {
+    void testOrganizeWithExtraImports8() {
         addConfigScript '''\
             |withConfig(configuration) {
             |  imports {

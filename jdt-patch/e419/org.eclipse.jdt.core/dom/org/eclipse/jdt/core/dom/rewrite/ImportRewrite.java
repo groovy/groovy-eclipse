@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -458,6 +459,14 @@ public final class ImportRewrite {
 		this.staticImportOnDemandThreshold= 99;
 
 		this.importsKindMap = new HashMap();
+		// GROOVY add -- load default imports so disambiguation import(s) can be added/retained
+		if (cu != null && LanguageSupportFactory.isInterestingSourceFile(cu.getElementName())){
+			for (String p : LanguageSupportFactory.getImplicitImportContainers(cu)){
+				this.addedImports.add(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
+			}
+			this.useContextToFilterImplicitImports= true;
+		}
+		// GROOVY end
 	}
 
 
@@ -542,6 +551,11 @@ public final class ImportRewrite {
 	 */
 	public void setFilterImplicitImports(boolean filterImplicitImports) {
 		this.filterImplicitImports= filterImplicitImports;
+		// GROOVY add
+		if (!filterImplicitImports && LanguageSupportFactory.isInterestingSourceFile(this.compilationUnit.getElementName()))
+			for (String p : LanguageSupportFactory.getImplicitImportContainers(this.compilationUnit))
+				this.addedImports.remove(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
+		// GROOVY end
 	}
 
 	/**

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -79,7 +80,6 @@ import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
-
 
 /**
  * The {@link ImportRewrite} helps updating imports following a import order and on-demand imports threshold as configured by a project.
@@ -437,7 +437,7 @@ public final class ImportRewrite {
 		}
 		this.filterImplicitImports= true;
 		// consider that no contexts are used
-		this.useContextToFilterImplicitImports = false;
+		this.useContextToFilterImplicitImports= false;
 
 		this.defaultContext= new ImportRewriteContext() {
 			@Override
@@ -447,20 +447,25 @@ public final class ImportRewrite {
 		};
 		this.addedImports= new ArrayList<>();
 		this.removedImports= new ArrayList<>();
-		this.typeExplicitSimpleNames = new HashSet<>();
-		this.staticExplicitSimpleNames = new HashSet<>();
-		this.createdImports= null;
-		this.createdStaticImports= null;
+		this.typeExplicitSimpleNames= new HashSet<>();
+		this.staticExplicitSimpleNames= new HashSet<>();
 
 		this.importOrder= CharOperation.NO_STRINGS;
 		this.importOnDemandThreshold= 99;
 		this.staticImportOnDemandThreshold= 99;
 
 		this.importsKindMap = new HashMap();
+		// GROOVY add -- load default imports so disambiguation import(s) can be added/retained
+		if (cu != null && LanguageSupportFactory.isInterestingSourceFile(cu.getElementName())){
+			for (String p : LanguageSupportFactory.getImplicitImportContainers(cu)){
+				this.addedImports.add(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
+			}
+			this.useContextToFilterImplicitImports= true;
+		}
+		// GROOVY end
 	}
 
-
-	 /**
+	/**
 	 * Defines the import groups and order to be used by the {@link ImportRewrite}.
 	 * Imports are added to the group matching their qualified name most. The empty group name groups all imports not matching
 	 * any other group. Static imports are managed in separate groups. Static import group names are prefixed with a '#' character.
@@ -473,7 +478,7 @@ public final class ImportRewrite {
 		this.importOrder= order;
 	}
 
-	 /**
+	/**
 	 *	Sets the on-demand import threshold for normal (non-static) imports.
 	 *	This threshold defines the number of imports that need to be in a group to use
 	 * a on-demand (star) import declaration instead.
@@ -482,14 +487,14 @@ public final class ImportRewrite {
 	 * for normal (non-static) imports.
 	 * @throws IllegalArgumentException a {@link IllegalArgumentException} is thrown
 	 * if the number is not positive.
-     */
+	 */
 	public void setOnDemandImportThreshold(int threshold) {
 		if (threshold <= 0)
 			throw new IllegalArgumentException("Threshold must be positive."); //$NON-NLS-1$
 		this.importOnDemandThreshold= threshold;
 	}
 
-	 /**
+	/**
 	 *	Sets the on-demand import threshold for static imports.
 	 *	This threshold defines the number of imports that need to be in a group to use
 	 * a on-demand (star) import declaration instead.
@@ -498,7 +503,7 @@ public final class ImportRewrite {
 	 * for normal (non-static) imports.
 	 * @throws IllegalArgumentException a {@link IllegalArgumentException} is thrown
 	 * if the number is not positive.
-     */
+	 */
 	public void setStaticOnDemandImportThreshold(int threshold) {
 		if (threshold <= 0)
 			throw new IllegalArgumentException("Threshold must be positive."); //$NON-NLS-1$
@@ -541,6 +546,11 @@ public final class ImportRewrite {
 	 */
 	public void setFilterImplicitImports(boolean filterImplicitImports) {
 		this.filterImplicitImports= filterImplicitImports;
+		// GROOVY add
+		if (!filterImplicitImports && LanguageSupportFactory.isInterestingSourceFile(this.compilationUnit.getElementName()))
+			for (String p : LanguageSupportFactory.getImplicitImportContainers(this.compilationUnit))
+				this.addedImports.remove(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
+		// GROOVY end
 	}
 
 	/**
@@ -808,8 +818,6 @@ public final class ImportRewrite {
 				throw new IllegalArgumentException("Unknown type signature kind: " + typeSig); //$NON-NLS-1$
 		}
 	}
-
-
 
 	/**
 	 * Adds a new import to the rewriter's record and returns a type reference that can be used
@@ -1292,7 +1300,6 @@ public final class ImportRewrite {
 		return normalizedBinding.getTypeDeclaration().getQualifiedName();
 	}
 
-
 	/**
 	 * Converts all modifications recorded by this rewriter into an object representing the corresponding text
 	 * edits to the source code of the rewrite's compilation unit. The compilation unit itself is not modified.
@@ -1307,7 +1314,6 @@ public final class ImportRewrite {
 	 * @throws CoreException the exception is thrown if the rewrite fails.
 	 */
 	public final TextEdit rewriteImports(IProgressMonitor monitor) throws CoreException {
-
 		SubMonitor subMonitor = SubMonitor.convert(monitor,
 				Messages.bind(Messages.importRewrite_processDescription), 2);
 		if (!hasRecordedChanges()) {
@@ -1453,7 +1459,6 @@ public final class ImportRewrite {
 				|| !this.addedImports.isEmpty()
 				|| !this.removedImports.isEmpty();
 	}
-
 
 	private static String[] filterFromList(List<String> imports, char prefix) {
 		if (imports == null) {
