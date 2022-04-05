@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,10 +115,18 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 MethodProposalCreator methodProposalCreator = initProposalCreator(new MethodProposalCreator());
                 List<IGroovyProposal> candidates = methodProposalCreator.findAllProposals(
                     getAnnotation().getClassNode(), // completion type
-                    Collections.EMPTY_SET, // categories
+                    Collections.emptySet(), // categories
                     context.completionExpression,
                     false, // isStatic
                     true); // isPrimary
+                // generate proposals for EqualsAndHashCode, ToString, etc. for collector types like Canonical
+                getMetaAnnotations().forEach(meta -> candidates.addAll(methodProposalCreator.findAllProposals(
+                    meta.getClassNode(),
+                    Collections.emptySet(),
+                    context.completionExpression,
+                    false,
+                    true))
+                );
 
                 for (IGroovyProposal candidate : candidates) {
                     if (candidate instanceof GroovyMethodProposal) {
@@ -175,7 +183,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 List<IGroovyProposal> groovyProposals = new ArrayList<>();
                 for (ClassNode completionType : completionTypes) {
                     groovyProposals.addAll(fieldProposalCreator.findAllProposals(
-                        completionType, Collections.EMPTY_SET, context.completionExpression, true, true));
+                        completionType, Collections.emptySet(), context.completionExpression, true, true));
                 }
                 for (IGroovyProposal groovyProposal : groovyProposals) {
                     if (groovyProposal instanceof GroovyFieldProposal) {
@@ -195,6 +203,11 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
 
             private AnnotationNode getAnnotation() {
                 return (AnnotationNode) context.containingCodeBlock;
+            }
+
+            private List<AnnotationNode> getMetaAnnotations() {
+                List<AnnotationNode> act = getAnnotation().getNodeMetaData("AnnotationCollectorTransform");
+                return act != null ? act : Collections.emptyList();
             }
 
             private String getPerceivedCompletionMember() {
