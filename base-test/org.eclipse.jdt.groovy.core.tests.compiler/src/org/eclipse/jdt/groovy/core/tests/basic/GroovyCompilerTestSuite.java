@@ -79,13 +79,14 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK15 = (59L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK16 = (60L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK17 = (61L << 16) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final long JDK18 = (62L << 16) + ClassFileConstants.MINOR_VERSION_0;
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
         long javaSpec = CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version"));
         List<Object[]> params = new ArrayList<>();
-        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17}) {
-            if (jdk == javaSpec || (jdk < javaSpec && (jdk == JDK8 || jdk == JDK11))) { // current and LTS
+        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17, JDK18}) {
+            if (jdk == javaSpec || (jdk < javaSpec && (jdk == JDK8 || jdk == JDK11 || jdk == JDK17))) { // current and LTS
                 params.add(new Object[] {jdk, CompilerOptions.versionFromJdkLevel(jdk)});
             }
         }
