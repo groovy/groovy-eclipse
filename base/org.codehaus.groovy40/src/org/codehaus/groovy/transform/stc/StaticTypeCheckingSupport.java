@@ -745,10 +745,6 @@ public abstract class StaticTypeCheckingSupport {
             return true;
         }
 
-        if (isGroovyObjectType(leftRedirect) && isBeingCompiled(right)) {
-            return true;
-        }
-
         if (right.isDerivedFrom(CLOSURE_TYPE) && isSAMType(left)) {
             return true;
         }
@@ -914,7 +910,7 @@ public abstract class StaticTypeCheckingSupport {
         if (type.isArray() && superOrInterface.isArray()) {
             return implementsInterfaceOrIsSubclassOf(type.getComponentType(), superOrInterface.getComponentType());
         }
-        if (isGroovyObjectType(superOrInterface) && !type.isInterface() && isBeingCompiled(type)) {
+        if (isGroovyObjectType(superOrInterface) && isBeingCompiled(type) && !type.isInterface()) {//TODO: !POJO !Trait
             return true;
         }
         return false;
@@ -1867,7 +1863,7 @@ public abstract class StaticTypeCheckingSupport {
         }
         ClassNode[] upperBounds = gt.getUpperBounds();
         if (upperBounds != null) {
-            return (upperBounds.length != 1 || upperBounds[0].isGenericsPlaceHolder() || !OBJECT_TYPE.equals(upperBounds[0]));
+            return (upperBounds.length != 1 || upperBounds[0].isGenericsPlaceHolder() || !isObjectType(upperBounds[0]));
         }
         return false;
     }

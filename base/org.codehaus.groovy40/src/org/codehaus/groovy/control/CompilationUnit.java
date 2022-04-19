@@ -22,6 +22,7 @@ import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyRuntimeException;
 import groovy.transform.CompilationUnitAware;
 import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -205,34 +206,30 @@ public class CompilationUnit extends ProcessingUnit {
             GroovyClassVisitor visitor = new EnumVisitor(this, source);
             visitor.visitClass(classNode);
         }, Phases.CONVERSION);
-        /* GRECLIPSE edit -- GROOVY-9866, GROOVY-10466
-        addPhaseOperation(source -> {
-            resolveVisitor.setClassNodeResolver(classNodeResolver);
-            for (ClassNode classNode : source.getAST().getClasses()) {
-                resolveVisitor.startResolving(classNode, source);
-            }
-        }, Phases.SEMANTIC_ANALYSIS);
-        */
+
         addPhaseOperation(source -> {
             try {
                 resolveVisitor.phase = 1; // resolve head of each class
                 resolveVisitor.setClassNodeResolver(classNodeResolver);
-                for (ClassNode classNode : source.getAST().getClasses())
-                        resolveVisitor.startResolving(classNode, source);
+                for (ClassNode classNode : source.getAST().getClasses()) {
+                    resolveVisitor.startResolving(classNode, source);
+                }
             } finally {
                 resolveVisitor.phase = 0;
             }
         }, Phases.SEMANTIC_ANALYSIS);
+
         addPhaseOperation(source -> {
             try {
                 resolveVisitor.phase = 2; // resolve body of each class
-                for (ClassNode classNode : source.getAST().getClasses())
-                        resolveVisitor.startResolving(classNode, source);
+                for (ClassNode classNode : source.getAST().getClasses()) {
+                    resolveVisitor.startResolving(classNode, source);
+                }
             } finally {
                 resolveVisitor.phase = 0;
             }
         }, Phases.SEMANTIC_ANALYSIS);
-        // GRECLIPSE end
+
         addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
             GroovyClassVisitor visitor = new StaticImportVisitor(classNode, source);
             visitor.visitClass(classNode);
@@ -248,6 +245,11 @@ public class CompilationUnit extends ProcessingUnit {
                 GroovyClassVisitor visitor = new GenericsVisitor(source);
                 visitor.visitClass(classNode);
             }
+        }, Phases.SEMANTIC_ANALYSIS);
+
+        addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
+            AnnotationCollectorTransform.ClassChanger xformer = new AnnotationCollectorTransform.ClassChanger();
+            xformer.transformClass(classNode);
         }, Phases.SEMANTIC_ANALYSIS);
 
         addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
@@ -287,6 +289,27 @@ public class CompilationUnit extends ProcessingUnit {
             }
         }, Phases.CANONICALIZATION);
 
+        addPhaseOperation(source -> {
+            for (ClassNode cn : source.getAST().getClasses()) {
+                // GROOVY-10540: add GroovyObject before STC and classgen
+                if (!cn.isInterface() && !cn.isDerivedFromGroovyObject()) {
+                    boolean cs = false, pojo = false, trait = false;
+                    for (AnnotationNode an : cn.getAnnotations()) {
+                        switch (an.getClassNode().getName()) {
+                        case "groovy.transform.CompileStatic":
+                            cs = true; break;
+                        case "groovy.transform.stc.POJO":
+                            pojo = true; break;
+                        case "groovy.transform.Trait":
+                            trait = true; break;
+                        }
+                    }
+                    if (!(cs && pojo) && !trait)
+                        cn.addInterface(ClassHelper.GROOVY_OBJECT_TYPE);
+                }
+            }
+        }, Phases.INSTRUCTION_SELECTION);
+
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
 
         /* GRECLIPSE edit -- skip output phase
@@ -309,10 +332,6 @@ public class CompilationUnit extends ProcessingUnit {
         });
         */
 
-        addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
-            AnnotationCollectorTransform.ClassChanger xformer = new AnnotationCollectorTransform.ClassChanger();
-            xformer.transformClass(classNode);
-        }, Phases.SEMANTIC_ANALYSIS);
         ASTTransformationVisitor.addPhaseOperations(this);
 
         // post-transform operations:

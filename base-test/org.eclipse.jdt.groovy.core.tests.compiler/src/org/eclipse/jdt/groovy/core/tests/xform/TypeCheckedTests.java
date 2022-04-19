@@ -5580,4 +5580,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             runConformTest(sources);
         }
     }
+
+    @Test
+    public void testTypeChecked10576() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  Map<String,Object> map\n" +
+            "  void test(Map<String,?> m) {\n" +
+            "    map.putAll(m)\n" + // Cannot call Map#putAll(Map<? extends String, ? extends Object>) with arguments [Map<String, ?>]
+            "  }\n" +
+            "}\n" +
+            "def obj = new C(map:[:])\n" +
+            "obj.test([foo:'bar'])\n" +
+            "print obj.map\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo:bar]");
+    }
 }

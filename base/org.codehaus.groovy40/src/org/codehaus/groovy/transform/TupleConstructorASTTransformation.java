@@ -54,9 +54,11 @@ import org.codehaus.groovy.control.SourceUnit;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static groovy.transform.DefaultsMode.AUTO;
@@ -279,8 +281,9 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
             genParams.add(mapParam);
             ArgumentListExpression args = new ArgumentListExpression();
             List<String> propNames = new ArrayList<>();
+            Map<Parameter, Expression> seen = new HashMap<>();
             for (Parameter p : params) {
-                if (!processImplicitNamedParam(xform, ctorNode, mapParam, inner, args, propNames, p, false)) return;
+                if (!processImplicitNamedParam(xform, ctorNode, mapParam, inner, args, propNames, p, false, seen)) return;
             }
             NamedVariantASTTransformation.createMapVariant(xform, ctorNode, anno, mapParam, genParams, cNode, inner, args, propNames);
         }

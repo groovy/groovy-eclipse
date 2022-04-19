@@ -500,12 +500,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        String lub = isAtLeastGroovy(40) ? "groovy.lang.GroovyObject" : "java.lang.Object";
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 11)\n" +
             "\tx.foo()\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#foo()." +
+            "Groovy:[Static type checking] - Cannot find matching method " + lub + "#foo()." +
             " Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
@@ -7365,5 +7366,24 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testCompileStatic10579() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  int[] numbers = [1,2,3,4,5]\n" +
+            "  int sum = 0\n" +
+            "  for (i in numbers) sum += i\n" +
+            "  print sum\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "15");
     }
 }

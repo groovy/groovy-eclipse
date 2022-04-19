@@ -1192,7 +1192,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-5961
+    @Test // GROOVY-5961
     public void testAnonymousInnerClass17() {
         //@formatter:off
         String[] sources = {
@@ -1214,7 +1214,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-5961
+    @Test // GROOVY-5961
     public void testAnonymousInnerClass17a() {
         //@formatter:off
         String[] sources = {
@@ -1240,7 +1240,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-4035
+    @Test // GROOVY-4035
     public void testAnonymousInnerClass18() {
         //@formatter:off
         String[] sources = {
@@ -1319,7 +1319,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foo");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // GROOVY-6809
     public void testAnonymousInnerClass21() {
         //@formatter:off
         String[] sources = {
@@ -1345,7 +1345,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // GROOVY-9168
     public void testAnonymousInnerClass22() {
         //@formatter:off
         String[] sources = {
@@ -1370,7 +1370,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // GROOVY-6809
     public void testAnonymousInnerClass23() {
         //@formatter:off
         String[] sources = {
@@ -1399,7 +1399,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // GROOVY-6809
     public void testAnonymousInnerClass23a() {
         //@formatter:off
         String[] sources = {
@@ -1448,7 +1448,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // GROOVY-9168
     public void testAnonymousInnerClass24a() {
         //@formatter:off
         String[] sources = {
@@ -1472,7 +1472,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // GROOVY-9168
     public void testAnonymousInnerClass24b() {
         //@formatter:off
         String[] sources = {
@@ -1578,7 +1578,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9120
+    @Test // GROOVY-9120
     public void testAnonymousInnerClass27() {
         //@formatter:off
         String[] sources = {
@@ -1615,7 +1615,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "4242");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9642
+    @Test // GROOVY-9642
     public void testAnonymousInnerClass28() {
         //@formatter:off
         String[] sources = {
@@ -1641,7 +1641,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "class D$1;class D$2");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-5728
+    @Test // GROOVY-5728
     public void testAnonymousInnerClass29() {
         //@formatter:off
         String[] sources = {
@@ -1662,7 +1662,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "42");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-7686
+    @Test // GROOVY-7686
     public void testAnonymousInnerClass30() {
         //@formatter:off
         String[] sources = {
@@ -1691,7 +1691,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-8104
+    @Test // GROOVY-8104
     public void testAnonymousInnerClass31() {
         //@formatter:off
         String[] sources = {
@@ -1914,7 +1914,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "success");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // GROOVY-9168
     public void testReferenceToUninitializedThis1() {
         //@formatter:off
         String[] sources = {
@@ -2206,7 +2206,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "ok");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-5259
+    @Test // GROOVY-5259
     public void testAccessOuterClassMemberFromInnerClassConstructor3() {
         //@formatter:off
         String[] sources = {
@@ -2231,7 +2231,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "ok");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9501
+    @Test // GROOVY-9501
     public void testAccessOuterClassMemberFromInnerClassMethod1() {
         //@formatter:off
         String[] sources = {
@@ -2313,7 +2313,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9569
+    @Test // GROOVY-9569
     public void testAccessOuterClassMemberFromInnerClassMethod3() {
         //@formatter:off
         String[] sources = {
@@ -2377,7 +2377,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
-    @Test // // https://issues.apache.org/jira/browse/GROOVY-9905
+    @Test // GROOVY-9905
     public void testAccessOuterClassMemberFromInnerClassMethod5() {
         //@formatter:off
         String[] sources = {
@@ -2402,5 +2402,28 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "x");
+    }
+
+    @Test // GROOVY-10558
+    public void testAccessOuterClassMemberFromInnerClassMethod6() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  static byte[] m(byte[] bytes) {\n" +
+            "    print(new String(bytes))\n" +
+            "    bytes\n" +
+            "  }\n" +
+            "  static class Inner {\n" +
+            "    void test(byte[] bytes) {\n" +
+            "      m(bytes)\n" + // MissingMethodException
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new Outer.Inner().test('works'.bytes)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 }

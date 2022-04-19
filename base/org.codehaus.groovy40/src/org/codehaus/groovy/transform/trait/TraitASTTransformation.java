@@ -56,7 +56,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -159,7 +158,12 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     }
 
     private static void generateMethodsWithDefaultArgs(final ClassNode cNode) {
-        new DefaultArgsMethodsAdder().addDefaultParameterMethods(cNode);
+        new Verifier() {
+            @Override
+            public void addDefaultParameterMethods(final ClassNode cn) {
+                setClassNode(cn); super.addDefaultParameterMethods(cn);
+            }
+        }.addDefaultParameterMethods(cNode);
     }
 
     private ClassNode createHelperClass(final ClassNode cNode) {
@@ -223,7 +227,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
 
         // add methods
         List<MethodNode> methods = new ArrayList<>(cNode.getMethods());
-        List<MethodNode> nonPublicAPIMethods = new LinkedList<>();
+        List<MethodNode> nonPublicAPIMethods = new ArrayList<>();
         List<Statement> staticInitStatements = null;
         for (final MethodNode methodNode : methods) {
             boolean declared = methodNode.getDeclaringClass() == cNode;
@@ -372,16 +376,17 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     }
 
     /**
-     * Copies annotation from the trait to the helper, excluding the trait annotation itself.
+     * Copies annotations from the trait to the helper, excluding non-applicable
+     * items such as {@code @Trait} and {@code @Sealed}.
      *
      * @param cNode the trait class node
      * @param helper the helper class node
      */
     private static void copyClassAnnotations(final ClassNode cNode, final ClassNode helper) {
-        List<AnnotationNode> annotations = cNode.getAnnotations();
-        for (AnnotationNode annotation : annotations) {
-            if (!annotation.getClassNode().equals(Traits.TRAIT_CLASSNODE)
-                    && !annotation.getClassNode().equals(SEALED_TYPE)) {
+        for (AnnotationNode annotation : cNode.getAnnotations()) {
+            ClassNode annotationType = annotation.getClassNode();
+            if (!annotationType.equals(Traits.TRAIT_CLASSNODE)
+                    && !annotationType.equals(SEALED_TYPE)) {
                 helper.addAnnotation(annotation);
             }
         }
@@ -563,11 +568,12 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                 fieldHelper,
                 null
         );
+        dummyField.setSynthetic(true);
         // copy annotations from field to dummy field
-        List<AnnotationNode> copied = new LinkedList<>();
-        List<AnnotationNode> notCopied = new LinkedList<>();
-        GeneralUtils.copyAnnotatedNodeAnnotations(field, copied, notCopied);
-        dummyField.addAnnotations(copied);
+        List<AnnotationNode> copy = new ArrayList<>();
+        List<AnnotationNode> skip = new ArrayList<>();
+        GeneralUtils.copyAnnotatedNodeAnnotations(field, copy, skip);
+        dummyField.addAnnotations(copy);
         fieldHelper.addField(dummyField);
 
         // retain legacy field (will be given lower precedence than above)
@@ -581,11 +587,8 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                 fieldHelper,
                 null
         );
-        // copy annotations from field to legacy dummy field
-        copied = new LinkedList<>();
-        notCopied = new LinkedList<>();
-        GeneralUtils.copyAnnotatedNodeAnnotations(field, copied, notCopied);
-        dummyField.addAnnotations(copied);
+        dummyField.setSynthetic(true);
+        dummyField.addAnnotations(copy);
         fieldHelper.addField(dummyField);
     }
 
@@ -658,15 +661,6 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     }
 
     //--------------------------------------------------------------------------
-
-    private static class DefaultArgsMethodsAdder extends Verifier {
-
-        @Override
-        public void addDefaultParameterMethods(final ClassNode node) {
-            setClassNode(node);
-            super.addDefaultParameterMethods(node);
-        }
-    }
 
     private static class PostTypeCheckingExpressionReplacer extends ClassCodeExpressionTransformer {
         private final SourceUnit sourceUnit;

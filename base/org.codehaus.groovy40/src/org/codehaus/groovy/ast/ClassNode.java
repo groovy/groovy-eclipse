@@ -159,7 +159,7 @@ public class ClassNode extends AnnotatedNode {
     // GRECLIPSE private->protected
     protected List<ConstructorNode> constructors;
     // GRECLIPSE private->protected
-    protected MapOfLists methods;
+    protected final MapOfLists methods;
     private List<MethodNode> methodsList;
     private List<FieldNode> fields;
     private List<PropertyNode> properties;
@@ -748,23 +748,7 @@ public class ClassNode extends AnnotatedNode {
         return node;
     }
 
-    public void addInterface(ClassNode type) {
-        /* GRECLIPSE edit
-        boolean skip = false;
-        ClassNode[] interfaces = getInterfaces();
-        for (ClassNode face : interfaces) {
-            if (type.equals(face)) {
-                skip = true;
-                break;
-            }
-        }
-        if (!skip) {
-            ClassNode[] newInterfaces = new ClassNode[interfaces.length + 1];
-            System.arraycopy(interfaces, 0, newInterfaces, 0, interfaces.length);
-            newInterfaces[interfaces.length] = type;
-            redirect().interfaces = newInterfaces;
-        }
-        */
+    public void addInterface(final ClassNode type) {
         ClassNode[] interfaces = getInterfaces();
         for (ClassNode face : interfaces) {
             if (face.equals(type)) return;
@@ -774,7 +758,6 @@ public class ClassNode extends AnnotatedNode {
         System.arraycopy(interfaces, 0, interfaces = new ClassNode[n + 1], 0, n);
         interfaces[n] = type; // append interface
         setInterfaces(interfaces);
-        // GRECLIPSE end
     }
 
     @Override
@@ -1081,6 +1064,8 @@ public class ClassNode extends AnnotatedNode {
      * NOTE: Doesn't consider an interface to implement itself.
      * I think this is intended to be called on ClassNodes representing
      * classes, not interfaces.
+     *
+     * @see org.codehaus.groovy.ast.tools.GeneralUtils#isOrImplements
      */
     public boolean declaresInterface(ClassNode classNode) {
         ClassNode[] interfaces = getInterfaces();

@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import static org.codehaus.groovy.ast.ClassHelper.isGroovyObjectType;
 import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
 
 /**
  * This class is used to describe generic type signatures for ClassNodes.
@@ -78,20 +78,21 @@ public class GenericsType extends ASTNode {
     }
 
     private static String toString(final GenericsType gt, final Set<String> visited) {
+        String name = gt.getName();
         ClassNode type = gt.getType();
         boolean wildcard = gt.isWildcard();
         boolean placeholder = gt.isPlaceholder();
         ClassNode lowerBound = gt.getLowerBound();
         ClassNode[] upperBounds = gt.getUpperBounds();
 
-        if (placeholder) visited.add(gt.getName());
+        if (placeholder) visited.add(name);
 
-        StringBuilder ret = new StringBuilder(wildcard || placeholder ? gt.getName() : genericsBounds(type, visited));
+        StringBuilder ret = new StringBuilder(wildcard || placeholder ? name : genericsBounds(type, visited));
         if (lowerBound != null) {
             ret.append(" super ").append(genericsBounds(lowerBound, visited));
         } else if (upperBounds != null
                 // T extends Object should just be printed as T
-                && !(placeholder && upperBounds.length == 1 && !upperBounds[0].isGenericsPlaceHolder() && upperBounds[0].getName().equals("java.lang.Object"))) {
+                && !(placeholder && upperBounds.length == 1 && !upperBounds[0].isGenericsPlaceHolder() && upperBounds[0].getName().equals(ClassHelper.OBJECT))) {
             ret.append(" extends ");
             for (int i = 0, n = upperBounds.length; i < n; i += 1) {
                 if (i != 0) ret.append(" & ");
@@ -103,30 +104,21 @@ public class GenericsType extends ASTNode {
 
     private static String genericsBounds(final ClassNode theType, final Set<String> visited) {
         StringBuilder ret = appendName(theType, new StringBuilder());
-
         GenericsType[] genericsTypes = theType.getGenericsTypes();
-        if (genericsTypes == null || genericsTypes.length == 0) {
-            return ret.toString();
-        }
-
-        // TODO: instead of catching Object<T> here stop it from being placed into type in first place
-        if (genericsTypes.length == 1 && genericsTypes[0].isPlaceholder() && theType.getName().equals("java.lang.Object")) {
-            return genericsTypes[0].getName();
-        }
-
-        ret.append('<');
-        for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
-            if (i != 0) ret.append(", ");
-
-            GenericsType type = genericsTypes[i];
-            if (type.isPlaceholder() && visited.contains(type.getName())) {
-                ret.append(type.getName());
-            } else {
-                ret.append(toString(type, visited));
+        if (genericsTypes != null && genericsTypes.length > 0
+                && !theType.isGenericsPlaceHolder()) { // GROOVY-10583
+            ret.append('<');
+            for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
+                if (i != 0) ret.append(", ");
+                GenericsType type = genericsTypes[i];
+                if (type.isPlaceholder() && visited.contains(type.getName())) {
+                    ret.append(type.getName());
+                } else {
+                    ret.append(toString(type, visited));
+                }
             }
+            ret.append('>');
         }
-        ret.append('>');
-
         return ret.toString();
     }
 
@@ -267,33 +259,6 @@ public class GenericsType extends ASTNode {
         }
         // not placeholder or wildcard; no covariance allowed for type or bound(s)
         return classNode.equals(getType()) && compareGenericsWithBound(classNode, getType());
-    }
-
-    private static boolean implementsInterfaceOrIsSubclassOf(final ClassNode type, final ClassNode superOrInterface) {
-        if (type.equals(superOrInterface)
-                || type.isDerivedFrom(superOrInterface)
-                || type.implementsInterface(superOrInterface)) {
-            return true;
-        }
-        if (isGroovyObjectType(superOrInterface) && type.getCompileUnit() != null) {
-            // type is being compiled so it will implement GroovyObject later
-            return true;
-        }
-        if (superOrInterface instanceof WideningCategories.LowestUpperBoundClassNode) {
-            WideningCategories.LowestUpperBoundClassNode lub = (WideningCategories.LowestUpperBoundClassNode) superOrInterface;
-            boolean result = implementsInterfaceOrIsSubclassOf(type, lub.getSuperClass());
-            if (result) {
-                for (ClassNode face : lub.getInterfaces()) {
-                    result = implementsInterfaceOrIsSubclassOf(type, face);
-                    if (!result) break;
-                }
-            }
-            if (result) return true;
-        }
-        if (type.isArray() && superOrInterface.isArray()) {
-            return implementsInterfaceOrIsSubclassOf(type.getComponentType(), superOrInterface.getComponentType());
-        }
-        return false;
     }
 
     /**
@@ -458,8 +423,8 @@ public class GenericsType extends ASTNode {
                                                 match = gt.checkGenerics(classNodeType.getLowerBound());
                                             } else if (classNodeType.getUpperBounds() != null) {
                                                 match = gt.checkGenerics(classNodeType.getUpperBounds()[0]);
-                                            } else {
-                                                match = false; // "?" (from Comparable<?>) does not satisfy anything
+                                            } else { // GROOVY-10576: "?" vs "? extends Object" (citation required) or no match
+                                                match = (!gt.isPlaceholder() && !gt.isWildcard() && isObjectType(gt.getType()));
                                             }
                                         } else {
                                             match = implementsInterfaceOrIsSubclassOf(classNodeType.getType(), gt.getType());

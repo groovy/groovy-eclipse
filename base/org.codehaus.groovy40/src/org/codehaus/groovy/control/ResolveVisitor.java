@@ -61,7 +61,6 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
-import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
@@ -1451,50 +1450,53 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             genericParameterNames = new HashMap<>();
         }
         resolveGenericsHeader(node.getGenericsTypes());
-switch (phase) { case 0: case 1: // GROOVY-9866, GROOVY-10466
-        ClassNode sn = node.getUnresolvedSuperClass();
-        if (sn != null) {
-            resolveOrFail(sn, "", node, true);
-        }
-        for (ClassNode in : node.getInterfaces()) {
-            resolveOrFail(in, "", node, true);
-        }
+        switch (phase) { // GROOVY-9866, GROOVY-10466
+          case 0:
+          case 1:
+            ClassNode sn = node.getUnresolvedSuperClass();
+            if (sn != null) {
+                resolveOrFail(sn, "", node, true);
+            }
+            for (ClassNode in : node.getInterfaces()) {
+                resolveOrFail(in, "", node, true);
+            }
 
-        if (sn != null) checkCyclicInheritance(node, sn);
-        for (ClassNode in : node.getInterfaces()) {
-            checkCyclicInheritance(node, in);
-        }
-        if (node.getGenericsTypes() != null) {
-            for (GenericsType gt : node.getGenericsTypes()) {
-                if (gt != null && gt.getUpperBounds() != null) {
-                    for (ClassNode variant : gt.getUpperBounds()) {
-                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType());
+            if (sn != null) checkCyclicInheritance(node, sn);
+            for (ClassNode in : node.getInterfaces()) {
+                checkCyclicInheritance(node, in);
+            }
+            if (node.getGenericsTypes() != null) {
+                for (GenericsType gt : node.getGenericsTypes()) {
+                    if (gt != null && gt.getUpperBounds() != null) {
+                        for (ClassNode variant : gt.getUpperBounds()) {
+                            if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType());
+                        }
                     }
                 }
             }
-        }
-case 2:
-        // VariableScopeVisitor visits anon. inner class body inline, so resolve now
-        for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
-            InnerClassNode cn = it.next();
-            if (cn.isAnonymous()) {
-                MethodNode enclosingMethod = cn.getEnclosingMethod();
-                if (enclosingMethod != null) {
-                    resolveGenericsHeader(enclosingMethod.getGenericsTypes()); // GROOVY-6977
+          case 2:
+            // VariableScopeVisitor visits anon. inner class body inline, so resolve now
+            for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
+                InnerClassNode cn = it.next();
+                if (cn.isAnonymous()) {
+                    MethodNode enclosingMethod = cn.getEnclosingMethod();
+                    if (enclosingMethod != null) {
+                        resolveGenericsHeader(enclosingMethod.getGenericsTypes()); // GROOVY-6977
+                    }
+                    resolveOrFail(cn.getUnresolvedSuperClass(false), cn); // GROOVY-9642
                 }
-                resolveOrFail(cn.getUnresolvedSuperClass(false), cn); // GROOVY-9642
             }
-        }
-if (phase == 1) break; // resolve other class headers before members, et al.
-        // initialize scopes/variables now that imports and super types are resolved
-        new VariableScopeVisitor(source).visitClass(node);
+            if (phase == 1) break; // resolve other class headers before members, et al.
 
-        visitTypeAnnotations(node);
-        super.visitClass(node);
-        // GRECLIPSE add
-        finishedResolution();
-        // GRECLIPSE end
-}
+            // initialize scopes/variables now that imports and super types are resolved
+            new VariableScopeVisitor(source).visitClass(node);
+
+            visitTypeAnnotations(node);
+            super.visitClass(node);
+            // GRECLIPSE add
+            finishedResolution();
+            // GRECLIPSE end
+        }
         // GRECLIPSE add
         } finally {
         if (currentClass == node)

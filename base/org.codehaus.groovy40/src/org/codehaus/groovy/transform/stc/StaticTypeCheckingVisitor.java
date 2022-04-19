@@ -151,7 +151,6 @@ import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Character_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Double_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Float_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Iterator_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.LIST_TYPE;
@@ -1992,6 +1991,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // for (int i=0; i<...; i++) style loop
             super.visitForLoop(forLoop);
         } else {
+            visitStatement(forLoop);
             collectionExpression.visit(this);
             ClassNode collectionType = getType(collectionExpression);
             ClassNode forLoopVariableType = forLoop.getVariableType();
@@ -2015,7 +2015,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             typeCheckingContext.controlStructureVariables.put(forLoop.getVariable(), componentType);
             try {
-                super.visitForLoop(forLoop);
+                forLoop.getLoopBlock().visit(this);
             } finally {
                 typeCheckingContext.controlStructureVariables.remove(forLoop.getVariable());
             }
@@ -2490,7 +2490,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 receiverType = wrapTypeIfNecessary(currentReceiver.getType());
 
                 candidates = findMethodsWithGenerated(receiverType, nameText);
-                if (isBeingCompiled(receiverType)) candidates.addAll(GROOVY_OBJECT_TYPE.getMethods(nameText));
                 candidates.addAll(findDGMMethodsForClassNode(getSourceUnit().getClassLoader(), receiverType, nameText));
                 candidates = filterMethodsByVisibility(candidates, typeCheckingContext.getEnclosingClassNode());
 
@@ -4468,13 +4467,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             storeTargetMethod(expr, method);
             typeCheckMethodsWithGenericsOrFail(left, new ClassNode[]{right}, method, expr);
             if (isAssignment(op)) return left;
-            if (isCompareToBoolean(op)) return boolean_TYPE;
-            if (op == COMPARE_TO) return int_TYPE;
-            return inferReturnTypeGenerics(left, method, args(rightExpression));
+            if (!isCompareToBoolean(op) && op != COMPARE_TO)
+                return inferReturnTypeGenerics(left, method, args(rightExpression));
         }
 
-        // TODO: other cases
-
+        if (isCompareToBoolean(op)) return boolean_TYPE;
+        if (op == COMPARE_TO) return int_TYPE;
         return null;
     }
 
@@ -4934,9 +4932,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         if (isGStringType(receiver)) {
             return findMethod(STRING_TYPE, name, args);
-        }
-        if (isBeingCompiled(receiver)) {
-            return findMethod(GROOVY_OBJECT_TYPE, name, args);
         }
 
         return EMPTY_METHODNODE_LIST;

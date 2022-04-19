@@ -247,11 +247,18 @@ public class SourceUnit extends ProcessingUnit {
         buildAST();
 
         /* GRECLIPSE edit
-        if ("xml".equals(VMPluginFactory.getPlugin().doPrivileged((PrivilegedAction<String>) () -> System.getProperty("groovy.ast")))) {
+        if ("xml".equals(getProperty("groovy.ast"))) {
             XStreamUtils.serialize(name, ast);
         }
         */
     }
+
+    /* GRECLIPSE edit
+    @SuppressWarnings("removal") // TODO a future Groovy version should get the property not as a privileged action
+    private String getProperty(String key) {
+        return java.security.AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(key));
+    }
+    */
 
     /**
      * Builds the AST.

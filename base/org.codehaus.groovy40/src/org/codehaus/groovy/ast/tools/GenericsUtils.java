@@ -347,14 +347,16 @@ public class GenericsUtils {
     public static MethodNode correctToGenericsSpec(Map<String, ClassNode> genericsSpec, MethodNode mn) {
         if (genericsSpec == null) return mn;
         if (mn.getGenericsTypes() != null) genericsSpec = addMethodGenerics(mn, genericsSpec);
-        ClassNode correctedType = correctToGenericsSpecRecurse(genericsSpec, mn.getReturnType());
-        Parameter[] origParameters = mn.getParameters();
-        Parameter[] newParameters = new Parameter[origParameters.length];
-        for (int i = 0; i < origParameters.length; i++) {
-            Parameter origParameter = origParameters[i];
-            newParameters[i] = new Parameter(correctToGenericsSpecRecurse(genericsSpec, origParameter.getType()), origParameter.getName(), origParameter.getInitialExpression());
+        ClassNode returnType = correctToGenericsSpecRecurse(genericsSpec, mn.getReturnType());
+        Parameter[] oldParameters = mn.getParameters(); int nParameters= oldParameters.length;
+        Parameter[] newParameters = new Parameter[nParameters];
+        for (int i = 0; i < nParameters; i += 1) {
+            Parameter oldParameter = oldParameters[i];
+            newParameters[i] = new Parameter(correctToGenericsSpecRecurse(genericsSpec, oldParameter.getType()), oldParameter.getName(), oldParameter.getInitialExpression());
         }
-        return new MethodNode(mn.getName(), mn.getModifiers(), correctedType, newParameters, mn.getExceptions(), mn.getCode());
+        MethodNode newMethod = new MethodNode(mn.getName(), mn.getModifiers(), returnType, newParameters, mn.getExceptions(), mn.getCode());
+        newMethod.setGenericsTypes(mn.getGenericsTypes());
+        return newMethod;
     }
 
     public static ClassNode correctToGenericsSpecRecurse(Map<String, ClassNode> genericsSpec, ClassNode type) {
@@ -571,16 +573,8 @@ public class GenericsUtils {
         }
     }
 
-    public static ClassNode getSuperClass(ClassNode type, ClassNode target) {
-        ClassNode superClass = ClassHelper.getNextSuperClass(type, target);
-
-        if (superClass == null) {
-            if (ClassHelper.isPrimitiveType(type)) {
-                superClass = ClassHelper.getNextSuperClass(ClassHelper.getWrapper(type), target);
-            }
-        }
-
-        return superClass;
+    public static ClassNode getSuperClass(final ClassNode type, final ClassNode target) {
+        return ClassHelper.getNextSuperClass(ClassHelper.isPrimitiveType(type) ? ClassHelper.getWrapper(type) : type, target);
     }
 
     private static void extractSuperClassGenerics(final GenericsType[] usage, final GenericsType[] declaration, final Map<String, ClassNode> spec) {

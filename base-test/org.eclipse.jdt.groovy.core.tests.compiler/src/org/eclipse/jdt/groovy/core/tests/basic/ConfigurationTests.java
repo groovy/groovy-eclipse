@@ -47,9 +47,10 @@ public final class ConfigurationTests {
         String x16x = isAtLeastGroovy(30) ? "16" : "15";
         String x17x = isAtLeastGroovy(30) ? "17" : "15";
         String x18x = isAtLeastGroovy(40) ? "18" : isAtLeastGroovy(30) ? "17" : "15";
+        String x19x = isAtLeastGroovy(40) ? "19" : isAtLeastGroovy(30) ? "17" : "15";
 
-        String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18"};
-        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", x16x, x17x, x18x};
+        String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"};
+        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", x16x, x17x, x18x, x19x};
         assertArrayEquals(expect, Arrays.stream(inputs).map(v -> { config.setTargetBytecode(v); return config.getTargetBytecode(); }).toArray(String[]::new));
     }
 }

@@ -91,6 +91,8 @@ public class CompilerConfiguration {
     public static final String JDK17 = "17";
     /** This (<code>"18"</code>) is the value for targetBytecode to compile for a JDK 18. */
     public static final String JDK18 = "18";
+    /** This (<code>"19"</code>) is the value for targetBytecode to compile for a JDK 19. */
+    public static final String JDK19 = "19";
 
     /**
      * This constant is for comparing targetBytecode to ensure it is set to JDK 1.5 or later.
@@ -124,7 +126,8 @@ public class CompilerConfiguration {
             JDK15, Opcodes.V15,
             JDK16, Opcodes.V16,
             JDK17, Opcodes.V17,
-            JDK18, Opcodes.V18
+            JDK18, Opcodes.V18,
+            JDK19, Opcodes.V19
     );
 
     /**

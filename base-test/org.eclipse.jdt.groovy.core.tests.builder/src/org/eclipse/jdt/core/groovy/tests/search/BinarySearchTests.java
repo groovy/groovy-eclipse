@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,7 +110,7 @@ public final class BinarySearchTests extends SearchTestSuite {
     }
 
     private List<SearchMatch> performSearch(final IJavaElement javaElement) throws Exception {
-        assertTrue("Expected binary member, but got: " + javaElement == null ? null : javaElement.getClass().getName(), javaElement instanceof BinaryMember);
+        assertTrue("Expected binary member, but got: " + (javaElement == null ? null : javaElement.getClass().getName()), javaElement instanceof BinaryMember);
         SearchPattern pattern  = SearchPattern.createPattern(javaElement, IJavaSearchConstants.REFERENCES);
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
         return search(pattern, scope);
