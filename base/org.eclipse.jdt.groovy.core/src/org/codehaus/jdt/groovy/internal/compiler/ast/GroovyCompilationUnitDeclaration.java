@@ -1006,7 +1006,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         nameEndOffset = importPackage.getNameEnd() + 1;
                         nameStartOffset = importPackage.getNameStart();
                     }
-                    char[][] splits = CharOperation.splitOn('.', importPackage.getPackageName().substring(0, importPackage.getPackageName().length() - 1).toCharArray());
+                    char[][] splits = CharOperation.splitOn('.', importPackage.getPackageName().toCharArray(), 0, importPackage.getPackageName().length() - 1);
                     ImportReference ref = new ImportReference(splits, positionsFor(splits, nameStartOffset, nameEndOffset), true, Flags.AccDefault);
                     ref.annotations = createAnnotations(importPackage.getAnnotations());
 
@@ -1022,6 +1022,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         ref.declarationSourceStart = importPackage.getStart();
                         ref.declarationSourceEnd = ref.sourceEnd;
                     }
+                    ref.trailingStarPosition = ref.sourceEnd;
 
                     importReferences.put(lexicalKey(ref), ref);
                 }
@@ -1038,9 +1039,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     long[] positions = positionsFor(splits, nameStartOffset, nameEndOffset);
                     ImportReference ref;
                     if (importNode.getAlias() == null || importNode.getAlias().length() < 1 || importNode.getAlias().equals(importNode.getFieldName())) {
-                        ref = new ImportReference(splits, positions, false, Flags.AccDefault | Flags.AccStatic);
+                        ref = new ImportReference(splits, positions, false, Flags.AccStatic);
                     } else {
-                        ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccDefault | Flags.AccStatic);
+                        ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccStatic);
                     }
                     ref.annotations = createAnnotations(importNode.getAnnotations());
 
@@ -1071,7 +1072,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                     char[][] splits = CharOperation.splitOn('.', classname.toCharArray());
                     long[] positions = positionsFor(splits, nameStartOffset, nameEndOffset);
-                    ImportReference ref = new ImportReference(splits, positions, true, Flags.AccDefault | Flags.AccStatic);
+                    ImportReference ref = new ImportReference(splits, positions, true, Flags.AccStatic);
                     ref.annotations = createAnnotations(importNode.getAnnotations());
 
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
@@ -1086,6 +1087,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         ref.declarationSourceStart = importNode.getStart();
                         ref.declarationSourceEnd = ref.sourceEnd;
                     }
+                    ref.trailingStarPosition = ref.sourceEnd;
 
                     importReferences.put(lexicalKey(ref), ref);
                 }

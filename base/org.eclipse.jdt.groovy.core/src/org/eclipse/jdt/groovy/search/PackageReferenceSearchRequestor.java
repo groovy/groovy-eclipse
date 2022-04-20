@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,16 +53,14 @@ public class PackageReferenceSearchRequestor implements ITypeRequestor {
                 if (name.startsWith(packageName)) {
                     notifyRequestor(enclosingElement, node.getStart());
                 }
-
             } else if (node instanceof ImportNode) {
                 ImportNode i = ((ImportNode) node);
                 String name = i.getClassName(); // "java.util.Map$Entry" or null
                 if (i.isStar() && !i.isStatic()) name = i.getPackageName(); // "java.util."
 
                 if (name.startsWith(packageName)) {
-                    notifyRequestor(enclosingElement, i.getType().getStart());
+                    notifyRequestor(enclosingElement, i.getNameStart());
                 }
-
             } else if (node instanceof ClassNode && enclosingElement.getElementType() != IJavaElement.IMPORT_DECLARATION) {
                 String name = ((ClassNode) node).getName(); // "java.util.Map$Entry"
 
@@ -76,7 +74,6 @@ public class PackageReferenceSearchRequestor implements ITypeRequestor {
                     }
                 }
             }
-
         } catch (CoreException e) {
             Util.log(e, "Error accepting " + node.getClass().getSimpleName() + " for " + enclosingElement);
         }

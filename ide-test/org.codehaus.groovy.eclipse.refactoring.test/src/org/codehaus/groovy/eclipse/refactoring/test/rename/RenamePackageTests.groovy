@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -171,6 +171,29 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
                 |import static q.H.*
                 |class C {
                 |  def foo = CONST
+                |}
+                |'''.stripMargin()
+        ))
+    }
+
+    @Test // star import reference
+    void testRenamePackage6() {
+        renamePackage(new TestSource(
+            pack: 'p', name: 'H.java',
+            contents: 'package p; interface H { }',
+            finalContents: 'package q; interface H { }'
+        ), new TestSource(
+            pack: 'x', name: 'I.groovy',
+            contents: '''\
+                |package x
+                |import p.*
+                |interface I extends H {
+                |}
+                |'''.stripMargin(),
+            finalContents: '''\
+                |package x
+                |import q.*
+                |interface I extends H {
                 |}
                 |'''.stripMargin()
         ))

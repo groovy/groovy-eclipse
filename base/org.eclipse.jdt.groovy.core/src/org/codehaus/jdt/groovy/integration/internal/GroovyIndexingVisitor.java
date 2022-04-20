@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -40,10 +41,12 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
+import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 
 /**
  * Visits a {@link ModuleNode} and passes it to an indexing element requestor,
@@ -62,9 +65,21 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
     // NOTE: Expected entry point is visitModule(ModuleNode).
 
     @Override
+    public void visitPackage(final PackageNode node) {
+        char[][] tokens = CharOperation.splitOn('.', node.getName().toCharArray(), 0, node.getName().length() - 1);
+        requestor.acceptPackage(new ImportReference(tokens, new long[tokens.length], false, 0));
+        super.visitPackage(node);
+    }
+
+    @Override
     public void visitImport(final ImportNode node) {
-        if (node.getType() != null && node.getEnd() > 0) {
-            visitTypeReference(node.getType(), false, true);
+        if (node.getEnd() > 0) {
+            if (node.getType() == null) { String name = node.getPackageName(); // includes trailing '.'
+                char[][] tokens = CharOperation.splitOn('.', name.toCharArray(), 0, name.length() - 1);
+                requestor.acceptUnknownReference(tokens, node.getNameStart(), node.getNameEnd());
+            } else {
+                visitTypeReference(node.getType(), false, true);
+            }
         }
         super.visitImport(node);
     }
@@ -363,11 +378,6 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     private static char[][] splitName(final ClassNode type, final boolean useQualifiedName) {
         String name = useQualifiedName ? type.getName() : type.getNameWithoutPackage();
-        String[] nameArr = name.split("\\.");
-        char[][] nameCharArr = new char[nameArr.length][];
-        for (int i = 0; i < nameArr.length; i += 1) {
-            nameCharArr[i] = nameArr[i].toCharArray();
-        }
-        return nameCharArr;
+        return CharOperation.splitOn('.', name.toCharArray());
     }
 }
