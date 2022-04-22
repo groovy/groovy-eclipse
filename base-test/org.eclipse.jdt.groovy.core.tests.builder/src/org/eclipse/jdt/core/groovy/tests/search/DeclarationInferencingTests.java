@@ -1327,6 +1327,26 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         }
     }
 
+    @Test // GROOVY-10592
+    public void testJavaInterfaceWithStaticMethod() {
+        //@formatter:off
+        createJavaUnit("I",
+            "public interface I {\n" +
+            "  static C getP() {\n" +
+            "  }\n" +
+            "  class C {\n" +
+            "  }\n" +
+            "}");
+
+        String contents =
+            "I.getP();" +
+            "I.p"; // XXX
+        //@formatter:on
+
+        assertKnown(contents, "getP", "I", "getP", DeclarationKind.METHOD);
+        assertUnknown(contents, "p");
+    }
+
     @Test // GRECLIPSE-1105
     public void testFluentInterfaceWithFieldNameConflicts() {
         //@formatter:off

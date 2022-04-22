@@ -7386,4 +7386,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "15");
     }
+
+    @Test
+    public void testCompileStatic10592() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print Face.getValue()\n" +
+            "  print Face.value\n" +
+            "}\n" +
+            "test()\n",
+
+            "Face.java",
+            "interface Face {\n" +
+            "  static String getValue() {\n" +
+            "    return \"works\";\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "worksworks");
+    }
 }

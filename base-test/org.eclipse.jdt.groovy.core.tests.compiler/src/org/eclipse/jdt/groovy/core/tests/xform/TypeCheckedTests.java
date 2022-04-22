@@ -5601,4 +5601,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[foo:bar]");
     }
+
+    @Test
+    public void testTypeChecked10592() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  print Face.getValue()\n" +
+            "  print Face.value\n" +
+            "}\n" +
+            "test()\n",
+
+            "Face.java",
+            "interface Face {\n" +
+            "  static String getValue() {\n" +
+            "    return \"works\";\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works", "groovy.lang.MissingPropertyException: No such property: value for class: Face");
+    }
 }
