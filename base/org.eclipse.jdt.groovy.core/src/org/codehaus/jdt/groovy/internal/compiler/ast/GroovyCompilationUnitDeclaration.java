@@ -1767,7 +1767,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 long[] poss = positionsFor(toks, expr.getStart(), expr.getEnd() - 1);
 
                 return new ClassLiteralAccess(expr.getEnd() - 1, n == 1 ? new SingleTypeReference(toks[0], poss[0])
-                        : new QualifiedTypeReference(Arrays.copyOfRange(toks, 0, n), Arrays.copyOfRange(poss, 0, n)));
+                        : new QualifiedTypeReference(Arrays.copyOf(toks, n), Arrays.copyOf(poss, n)));
 
             } else if (expr instanceof ClosureExpression) {
                 // annotation is something like "@Tag(value = { -> ... })"

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -222,6 +222,12 @@ public class GroovyClassScope extends ClassScope {
         return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS, this);
     }
 
+    private ReferenceBinding getGroovyTransformInternal() {
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_TRANSFORM_INTERNAL);
+        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_TRANSFORM_INTERNAL, this);
+    }
+
     private ReferenceBinding getGroovyTransformGenerated() {
         CompilationUnitScope unitScope = compilationUnitScope();
         unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_TRANSFORM_GENERATED);
@@ -308,13 +314,6 @@ public class GroovyClassScope extends ClassScope {
         return true;
     }
 
-    private Optional<MethodBinding> asGenerated(final MethodBinding methodBinding) {
-        methodBinding.setAnnotations(new AnnotationBinding[] {new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS)}, false);
-        methodBinding.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
-        methodBinding.modifiers |= 0x400000; // see JDTClassNode#methodBindingToMethodNode
-        return Optional.of(methodBinding);
-    }
-
     private Optional<MethodBinding> createMethod(final String methodName, final TypeBinding[] parameterTypes, final TypeBinding returnType, final MethodBinding[] methodBindings) {
         final char[] nameChars = methodName.toCharArray();
         for (MethodBinding methodBinding : methodBindings) {
@@ -335,7 +334,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        return asGenerated(new MethodBinding(Flags.AccPublic, nameChars, returnType, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        return asInternal(new MethodBinding(Flags.AccPublic, nameChars, returnType, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
     }
 
     private Optional<MethodBinding> createGetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] methodBindings) {
@@ -389,6 +388,25 @@ public class GroovyClassScope extends ClassScope {
         }
         int va = (propertyNode.getType().isArray() ? Flags.AccVarargs : 0); // GROOVY-10249: see AsmClassGenerator#visitConstructorOrMethod
         return asGenerated(new LazilyResolvedMethodBinding(false, propertyNode.getName(), modifiers | va, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding));
+    }
+
+    private Optional<MethodBinding> asGenerated(final MethodBinding methodBinding) {
+        AnnotationBinding atGenerated = new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        return asOptional(methodBinding, atGenerated);
+    }
+
+    private Optional<MethodBinding> asInternal(final MethodBinding methodBinding) {
+        AnnotationBinding atGenerated = new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atInternal = new AnnotationBinding(getGroovyTransformInternal(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        return asOptional(methodBinding, atGenerated, atInternal);
+    }
+
+    private Optional<MethodBinding> asOptional(final MethodBinding methodBinding,
+        final AnnotationBinding... annotationBindings) {
+        methodBinding.setAnnotations(annotationBindings, false);
+        methodBinding.modifiers |= 0x400000; // see JDTClassNode#methodBindingToMethodNode
+        methodBinding.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
+        return Optional.of(methodBinding);
     }
 
     @Override

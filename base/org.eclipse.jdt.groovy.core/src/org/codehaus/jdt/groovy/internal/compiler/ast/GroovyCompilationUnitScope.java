@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -59,8 +58,10 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     private static final char[][] javaMathBigDecimal = CharOperation.splitOn('.', "java.math.BigDecimal".toCharArray());
     private static final char[][] javaMathBigInteger = CharOperation.splitOn('.', "java.math.BigInteger".toCharArray());
+
     /*   */ static final char[][] GROOVY_LANG_METACLASS = CharOperation.splitOn('.', "groovy.lang.MetaClass".toCharArray());
     /*   */ static final char[][] GROOVY_LANG_GROOVYOBJECT = CharOperation.splitOn('.', "groovy.lang.GroovyObject".toCharArray());
+    /*   */ static final char[][] GROOVY_TRANSFORM_INTERNAL = CharOperation.splitOn('.', "groovy.transform.Internal".toCharArray());
     /*   */ static final char[][] GROOVY_TRANSFORM_GENERATED = CharOperation.splitOn('.', "groovy.transform.Generated".toCharArray());
 
     public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration, LookupEnvironment lookupEnvironment) {
@@ -129,17 +130,27 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     }
 
     /**
-     * Ensures Groovy types implement {@code groovy.lang.GroovyObject}.
+     * Ensures classes implement {@code groovy.lang.GroovyObject}.
      */
     @Override
     public void augmentTypeHierarchy() {
+        ReferenceBinding groovyObjectType = null;
         for (SourceTypeBinding topLevelType : topLevelTypes) {
-            if (!topLevelType.isInterface() && !topLevelType.isAnnotationType() && topLevelType.superInterfaces != null) {
-                CompilationUnitScope unitScope = compilationUnitScope();
-                unitScope.recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
-                ReferenceBinding groovyLangObjectBinding = unitScope.environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
-                if (!topLevelType.implementsInterface(groovyLangObjectBinding, true)) {
-                    topLevelType.superInterfaces = (ReferenceBinding[]) ArrayUtils.add(topLevelType.superInterfaces, groovyLangObjectBinding);
+            if (!topLevelType.isInterface() && topLevelType.superInterfaces != null) {
+                if (groovyObjectType == null) {
+                    groovyObjectType = environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
+                }
+                if (!topLevelType.implementsInterface(groovyObjectType, true)) {
+                    int n = topLevelType.superInterfaces.length;
+                    if (n == 0) {
+                        topLevelType.superInterfaces = new ReferenceBinding[1];
+                    } else {
+                        ReferenceBinding[] types = topLevelType.superInterfaces;
+                        topLevelType.superInterfaces = new ReferenceBinding[n + 1];
+                        System.arraycopy(types, 0, topLevelType.superInterfaces, 0, n);
+                    }
+                    topLevelType.superInterfaces[n] = groovyObjectType;
+                    recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
                 }
             }
         }
