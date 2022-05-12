@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -252,8 +252,67 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "number", "java.lang.Number");
     }
 
-    @Test // GROOVY-9255
+    @Test
     public void testProperty14() {
+        //@formatter:off
+        String source =
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "trait B extends A {\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "A");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1361
+    public void testProperty15() {
+        createUnit("T",
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "trait B extends A {\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "A");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1361
+    public void testProperty16() {
+        createUnit("A",
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n");
+        createUnit("B",
+            "trait B extends A {\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "A");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test // GROOVY-9255
+    public void testProperty17() {
         //@formatter:off
         String source =
             "trait T {\n" +
@@ -271,7 +330,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty15() {
+    public void testProperty18() {
         //@formatter:off
         String source =
             "trait T {\n" +
@@ -289,7 +348,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty16() {
+    public void testProperty19() {
         createUnit("T",
             "trait T {\n" +
             "  Number number\n" +
@@ -309,7 +368,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty17() {
+    public void testProperty20() {
         createUnit("T",
             "trait T {\n" +
             "  Number number\n" +
@@ -329,7 +388,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty18() {
+    public void testProperty21() {
         createUnit("T",
             "trait T {\n" +
             "  Number number\n" +
@@ -349,7 +408,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty19() {
+    public void testProperty22() {
         createUnit("T",
             "trait T {\n" +
             "  Number number\n" +
@@ -369,7 +428,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty20() {
+    public void testProperty23() {
         createUnit("T",
             "trait T {\n" +
             "  Number[] numbers\n" +

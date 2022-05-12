@@ -1626,14 +1626,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         //----------------------------------------------------------------------
 
-        private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass) {
-            if (!(superclass.getStart() == 0 && superclass.equals(ClassHelper.OBJECT_TYPE))) {
-                typeDeclaration.superclass = createTypeReferenceForClassNode(superclass);
+        private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superClass) {
+            if (!(superClass.getStart() == 0 && superClass.equals(ClassHelper.OBJECT_TYPE))) {
+                typeDeclaration.superclass = createTypeReferenceForClassNode(superClass);
             }
         }
 
         private void configureSuperInterfaces(TypeDeclaration typeDeclaration, ClassNode classNode) {
             ClassNode[] interfaces = classNode.getInterfaces();
+            ClassNode   superClass = classNode.getSuperClass();
+            if (superClass != null && !superClass.equals(ClassHelper.OBJECT_TYPE) && isTrait(classNode)) {
+                interfaces = Arrays.copyOf(interfaces, interfaces.length + 1);
+                interfaces[interfaces.length - 1] = superClass; // super trait
+            }
             if (interfaces != null && interfaces.length > 0) {
                 typeDeclaration.superInterfaces = createTypeReferencesForClassNodes(interfaces);
             } else {
