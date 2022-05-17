@@ -5645,4 +5645,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works", "groovy.lang.MissingPropertyException: No such property: value for class: Face");
     }
+
+    @Test
+    public void testTypeChecked10624() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T> {\n" +
+            "}\n" +
+            "class B<T> {\n" +
+            "  B(A<T> a) { }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  B<Float> x = new B<>(new A<>())\n" + // Cannot assign B<Object> to B<Float>
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }
