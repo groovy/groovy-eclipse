@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
+import java.util.function.BooleanSupplier;
+
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 
@@ -40,6 +42,14 @@ public static int FixedErrorCount = 0;
 public static int NewWarningCount = 0;
 public static int FixedWarningCount = 0;
 
+private static final int millisecondsBeforeCancelAutoBuild = Integer
+		.getInteger("org.eclipse.jdt.MillisecondsBeforeCancelAutoBuild", 1000); //$NON-NLS-1$
+private static final int millisecondsBeforeInterruptAutoBuild = Integer
+		.getInteger("org.eclipse.jdt.MillisecondsBeforeInterruptAutoBuild", 3000); //$NON-NLS-1$
+private BooleanSupplier interruptSupplier;
+private long startTimeNanos;
+private int buildKind;
+
 public static void resetProblemCounters() {
 	NewErrorCount = 0;
 	FixedErrorCount = 0;
@@ -47,8 +57,10 @@ public static void resetProblemCounters() {
 	FixedWarningCount = 0;
 }
 
-public BuildNotifier(IProgressMonitor monitor, IProject project) {
+public BuildNotifier(IProgressMonitor monitor, int buildKind, BooleanSupplier interruptSupplier) {
 	this.monitor = monitor;
+	this.buildKind = buildKind;
+	this.interruptSupplier = interruptSupplier;
 	this.cancelling = false;
 	this.newErrorCount = NewErrorCount;
 	this.fixedErrorCount = FixedErrorCount;
@@ -56,6 +68,7 @@ public BuildNotifier(IProgressMonitor monitor, IProject project) {
 	this.fixedWarningCount = FixedWarningCount;
 	this.workDone = 0;
 	this.totalWork = 1000000;
+	this.startTimeNanos = System.nanoTime();
 }
 
 /**
@@ -76,8 +89,32 @@ public void begin() {
  * Check whether the build has been canceled.
  */
 public void checkCancel() {
-	if (this.monitor != null && this.monitor.isCanceled())
-		throw new OperationCanceledException();
+	if (this.monitor != null && this.monitor.isCanceled()) {
+		// User requested cancel.
+		if (this.buildKind == IncrementalProjectBuilder.AUTO_BUILD) {
+			// Since jdt can not resume the incremental build we follow that request only after a period of grace
+			// to increase the chance the cancel happens between project builds and not during a project build
+			if (getBuildDurationInMs() > millisecondsBeforeCancelAutoBuild) {
+				throw new OperationCanceledException();
+			}
+		} else {
+			// non autobuild will be canceled immediately.
+			throw new OperationCanceledException();
+		}
+	}
+	if (this.interruptSupplier.getAsBoolean()) {
+		// Automatic request to interrupt build due to a conflicting user action.
+		// Since jdt can not resume the incremental build we follow that request only after a period of grace:
+		if (getBuildDurationInMs() > millisecondsBeforeInterruptAutoBuild) {
+			// This is a trade off between UI responsiveness and additional work to restart autobuild.
+			// We cancel autobuild to avoid possible UI freeze where the user can not manually cancel.
+			throw new OperationCanceledException();
+		}
+	}
+}
+
+private long getBuildDurationInMs() {
+	return ((System.nanoTime() - this.startTimeNanos) / 1_000_000);
 }
 
 /**

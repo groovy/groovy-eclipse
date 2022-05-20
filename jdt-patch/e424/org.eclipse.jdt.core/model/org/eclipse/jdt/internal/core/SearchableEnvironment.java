@@ -224,7 +224,7 @@ public class SearchableEnvironment
 	private String getExternalAnnotationPath(IClasspathEntry entry) {
 		if (entry == null)
 			return null;
-		IPath path = ClasspathEntry.getExternalAnnotationPath(entry, this.project.getProject(), true);
+		IPath path = entry.getExternalAnnotationPath(this.project.getProject(), true);
 		if (path == null)
 			return null;
 		return path.toOSString();

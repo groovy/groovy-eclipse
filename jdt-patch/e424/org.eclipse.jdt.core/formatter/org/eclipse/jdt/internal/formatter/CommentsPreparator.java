@@ -77,6 +77,23 @@ public class CommentsPreparator extends ASTVisitor {
 			.compile("&(#x[0-9a-fA-F]+)?(#[0-9]+)?(lt)?(gt)?(nbsp)?(amp)?(circ)?(tilde)?(quot)?;"); //$NON-NLS-1$
 	private final static String HTML_ENTITY_REPLACE = "   <> &^~\""; //$NON-NLS-1$
 
+	private final static Pattern SNIPPET_ATTRIBUTE_PATTERN;
+	private final static Pattern SNIPPET_ATTRIBUTES_PATTERN;
+	private final static Pattern SNIPPET_MARKUP_TAG_PATTERN;
+	private final static Pattern SNIPPET_MARKUP_TAG_ARGUMENT_PATTERN;
+	static {
+		String attributeNames = "(class|file|id|lang|region)"; //$NON-NLS-1$
+		String markupTagNames = "(@start|@end|@highlight|@replace|@link)"; //$NON-NLS-1$
+		String ws = "(?>[ \\t]++|[\\r\\n]++[ \\t]*+\\*?)"; // whitespace or line break with optional asterisk //$NON-NLS-1$
+		String attributeValue = "(?>\"[^\"]*\")|(?>\'[^\']*\')|[\\S&&[^\"':]]++"; //$NON-NLS-1$
+		String snippetAttribute = "(?>" + ws + "*" + attributeNames + ws + "*(=)" + ws + "*(" + attributeValue  + "))"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		String markupTagArgument = "(?>[ \\t]*\\w+(?>[ \\t]*(=)[ \\t]*(" + attributeValue  + "))?)"; //$NON-NLS-1$ //$NON-NLS-2$
+		SNIPPET_ATTRIBUTE_PATTERN = Pattern.compile(snippetAttribute);
+		SNIPPET_ATTRIBUTES_PATTERN = Pattern.compile(snippetAttribute + "*" + ws + "*(?<colon>:?)"); //$NON-NLS-1$ //$NON-NLS-2$
+		SNIPPET_MARKUP_TAG_ARGUMENT_PATTERN = Pattern.compile(markupTagArgument);
+		SNIPPET_MARKUP_TAG_PATTERN = Pattern.compile(markupTagNames + markupTagArgument + "*"); //$NON-NLS-1$
+	}
+
 	// Param tags list copied from IJavaDocTagConstants in legacy formatter for compatibility.
 	// There were the following comments:
 	// TODO (frederic) should have another name than 'param' for the following tags
@@ -110,7 +127,8 @@ public class CommentsPreparator extends ASTVisitor {
 	private int formatCodeOpenTagEndIndex = -1;
 	private int lastFormatCodeClosingTagIndex = -1;
 	private ArrayList<Integer> commonAttributeAnnotations = new ArrayList<Integer>();
-	private DefaultCodeFormatter commentCodeFormatter;
+	private DefaultCodeFormatter preTagCodeFormatter;
+	private DefaultCodeFormatter snippetCodeFormatter;
 
 	public CommentsPreparator(TokenManager tm, DefaultCodeFormatterOptions options, String sourceLevel) {
 		this.tm = tm;
@@ -204,6 +222,7 @@ public class CommentsPreparator extends ASTVisitor {
 		} else {
 			commentToken.setInternalStructure(structure);
 			handleCompilerTags(commentToken, commentIndex);
+			handleSnippetMarkupTags(commentToken);
 			preserveWhitespace(commentToken, commentIndex);
 			this.lastLineComment = commentToken;
 			this.lastLineCommentPosition = positionInLine;
@@ -309,6 +328,25 @@ public class CommentsPreparator extends ASTVisitor {
 				token.setWrapPolicy(WrapPolicy.DISABLE_WRAP);
 				token = left;
 			}
+		}
+	}
+
+	private void handleSnippetMarkupTags(Token commentToken) {
+		String commentText = this.tm.toString(commentToken);
+
+		Matcher m = SNIPPET_MARKUP_TAG_PATTERN.matcher(commentText);
+		while (m.find()) {
+			Matcher m2 = SNIPPET_MARKUP_TAG_ARGUMENT_PATTERN.matcher(m.group());
+			if (!m2.find())
+				continue;
+			this.commentStructure = commentToken.getInternalStructure();
+			this.ctm = new TokenManager(this.commentStructure, this.tm);
+			if (commentToken.tokenType != TokenNameCOMMENT_LINE)
+				continue;
+			do {
+				handleFoundAssignment(m2, 1, commentToken.originalStart + m.start());
+				handleFoundStringLiteral(m2, 2, commentToken.originalStart + m.start());
+			} while (m2.find());
 		}
 	}
 
@@ -583,30 +621,32 @@ public class CommentsPreparator extends ASTVisitor {
 	@Override
 	public boolean visit(TagElement node) {
 		String tagName = node.getTagName();
-		if (tagName == null || tagName.length() <= 1)
+		if (tagName == null || tagName.length() <= 1 || !node.tagProperties().isEmpty() /*snippet markup tags*/)
 			return true;
 
 		int startIndex = tokenStartingAt(node.getStartPosition());
-		int nodeEnd = node.getStartPosition() + node.getLength() - 1;
-		while (ScannerHelper.isWhitespace(this.ctm.charAt(nodeEnd)))
-			nodeEnd--;
-		int endIndex = tokenEndingAt(nodeEnd);
-
 		this.ctm.get(startIndex + 1).setWrapPolicy(WrapPolicy.DISABLE_WRAP);
 
 		if (node.getParent() instanceof Javadoc) {
 			assert this.ctm.toString(startIndex).startsWith(tagName);
 
-			Token startTokeen = this.ctm.get(startIndex);
-			if (startIndex > 1)
-				startTokeen.breakBefore();
+			if (startIndex > 1) {
+				this.ctm.get(startIndex).breakBefore();
+			}
 
 			handleHtml(node);
 			this.ctm.get(tokenStartingAt(node.getStartPosition())).setToEscape(false);
-		}
 
-		if (node.isNested() && IMMUTABLE_TAGS.contains(tagName) && startIndex < endIndex) {
-			disableFormatting(startIndex, endIndex, false);
+		} else if (node.isNested() && (IMMUTABLE_TAGS.contains(tagName) || TagElement.TAG_SNIPPET.equals(tagName))) {
+			int endPos = node.getStartPosition() + node.getLength() - 1;
+			int endIndex = this.ctm.findIndex(endPos, -1, false);
+			if (this.ctm.get(endIndex).originalEnd > endPos)
+				endIndex = tokenEndingAt(endPos);
+			if (TagElement.TAG_SNIPPET.equals(tagName)) {
+				handleSnippet(node, startIndex, endIndex);
+			} else {
+				disableFormatting(startIndex, endIndex, false);
+			}
 		}
 		return true;
 	}
@@ -836,16 +876,42 @@ public class CommentsPreparator extends ASTVisitor {
 	private void handleStringLiterals(String text, int textStartPosition) {
 		Matcher matcher = STRING_LITERAL_PATTERN.matcher(text);
 		while (matcher.find()) {
-			int startPosition = textStartPosition + matcher.start();
-			int startIndex = this.ctm.findIndex(startPosition, -1, false);
-			int endPosition = textStartPosition + matcher.end() - 1;
-			int endIndex = this.ctm.findIndex(endPosition, -1, false);
-			if (startIndex != endIndex) {
-				startIndex = tokenStartingAt(startPosition);
-				endIndex = tokenEndingAt(endPosition);
-				disableFormatting(startIndex, endIndex, false);
-			}
+			handleFoundStringLiteral(matcher, 0, textStartPosition);
+		}
+	}
+
+	private void handleFoundStringLiteral(Matcher matcher, int group, int textStartPosition) {
+		if (matcher.start(group) == matcher.end(group))
+			return;
+		int startPosition = textStartPosition + matcher.start(group);
+		int startIndex = this.ctm.findIndex(startPosition, -1, false);
+		int endPosition = textStartPosition + matcher.end(group) - 1;
+		int endIndex = this.ctm.findIndex(endPosition, -1, false);
+		if (startIndex != endIndex) {
+			startIndex = tokenStartingAt(startPosition);
+			endIndex = tokenEndingAt(endPosition);
+			disableFormatting(startIndex, endIndex, false);
+		}
+		if (this.ctm.get(0).tokenType != TokenNameCOMMENT_LINE)
 			noSubstituteWrapping(startPosition, endPosition);
+	}
+
+	private void handleFoundAssignment(Matcher matcher, int group, int textStartPosition) {
+		if (matcher.start(group) == matcher.end(group))
+			return;
+		int equalsPosition = textStartPosition + matcher.start(group);
+		int equalsIndex = tokenStartingAt(equalsPosition);
+		equalsIndex = tokenEndingAt(equalsPosition);
+		assert this.ctm.toString(equalsIndex).equals("="); //$NON-NLS-1$
+		if (this.options.insert_space_before_assignment_operator) {
+			this.ctm.get(equalsIndex).spaceBefore();
+		} else {
+			this.ctm.get(equalsIndex).clearSpaceBefore();
+		}
+		if (this.options.insert_space_after_assignment_operator) {
+			this.ctm.get(equalsIndex + 1).spaceBefore();
+		} else {
+			this.ctm.get(equalsIndex + 1).clearSpaceBefore();
 		}
 	}
 
@@ -938,7 +1004,7 @@ public class CommentsPreparator extends ASTVisitor {
 						}
 						closingBracePos--;
 
-						if (formatCode(tokenEndingAt(nameEndPos), tokenStartingAt(closingBracePos))) {
+						if (formatCode(tokenEndingAt(nameEndPos), tokenStartingAt(closingBracePos), false)) {
 							int closingIndex = tokenStartingAt(closingBracePos);
 							Token t = this.ctm.get(closingIndex);
 							this.commentStructure.set(closingIndex,
@@ -961,11 +1027,44 @@ public class CommentsPreparator extends ASTVisitor {
 					}
 				}
 			} else if (this.formatCodeOpenTagEndIndex >= startIndex - 1
-					|| !formatCode(this.formatCodeOpenTagEndIndex, startIndex)) {
+					|| !formatCode(this.formatCodeOpenTagEndIndex, startIndex, false)) {
 				disableFormattingExclusively(this.formatCodeOpenTagEndIndex, startIndex);
 			}
 			this.formatCodeOpenTagEndIndex = -1;
 			this.lastFormatCodeClosingTagIndex = this.ctm.findIndex(startPos, -1, true);
+		}
+	}
+
+	private void handleSnippet(TagElement node, int startIndex, int endIndex) {
+		Token startToken = this.ctm.get(startIndex), endToken = this.ctm.get(endIndex);
+		startToken.breakBefore();
+		endToken.breakAfter();
+
+		String lang = null;
+		boolean isInline = false;
+		int snippetTextStartPos = startToken.originalEnd + 1;
+		String snippetText = this.ctm.getSource().substring(snippetTextStartPos, endToken.originalEnd + 1);
+		Matcher m = SNIPPET_ATTRIBUTES_PATTERN.matcher(snippetText);
+		if (m.find() && m.start() == 0) {
+			isInline = !m.group("colon").isEmpty(); //$NON-NLS-1$
+			Matcher m2 = SNIPPET_ATTRIBUTE_PATTERN.matcher(snippetText);
+			while (m2.find()) {
+				handleFoundAssignment(m2, 2, snippetTextStartPos);
+				handleFoundStringLiteral(m2, 3, snippetTextStartPos);
+				if (m2.group(1).equals("lang")) //$NON-NLS-1$
+					lang = m2.group(3);
+			}
+		}
+
+		List<ASTNode> fragments = node.fragments();
+		if (isInline && !fragments.isEmpty()) {
+			int openingIndex = this.ctm.firstIndexBefore(fragments.get(0), -1);
+			int closingIndex = tokenStartingAt(endToken.originalEnd);
+			this.ctm.get(closingIndex).breakBefore();
+			boolean formatted = (lang == null || lang.matches("['\"]?java['\"]?")) //$NON-NLS-1$
+					&& formatCode(openingIndex, closingIndex, true);
+			if (!formatted)
+				disableFormattingExclusively(openingIndex, closingIndex);
 		}
 	}
 
@@ -1213,7 +1312,7 @@ public class CommentsPreparator extends ASTVisitor {
 		}
 	}
 
-	private boolean formatCode(int openingIndex, int closingIndex) {
+	private boolean formatCode(int openingIndex, int closingIndex, boolean snippetTag) {
 		int codeStartPosition = this.ctm.get(openingIndex).originalEnd + 1;
 		int codeEndPosition = this.ctm.get(closingIndex).originalStart - 1;
 		StringBuilder codeBuilder = new StringBuilder(codeEndPosition - codeStartPosition + 1);
@@ -1221,7 +1320,8 @@ public class CommentsPreparator extends ASTVisitor {
 		// ^ index: original source position (minus startPosition), value: position in code string
 		getCodeToFormat(codeStartPosition, codeEndPosition, codeBuilder, positionMapping);
 
-		List<Token> formattedTokens = getCommentCodeFormatter().prepareFormattedCode(codeBuilder.toString());
+		DefaultCodeFormatter formatter = snippetTag ? getSnippetCodeFormatter() : getPreTagCodeFormatter();
+		List<Token> formattedTokens = formatter.prepareFormattedCode(codeBuilder.toString());
 
 		if (formattedTokens == null) {
 			return false;
@@ -1248,18 +1348,35 @@ public class CommentsPreparator extends ASTVisitor {
 		return true;
 	}
 
-	private DefaultCodeFormatter getCommentCodeFormatter() {
-		if (this.commentCodeFormatter == null) {
+	private DefaultCodeFormatter getPreTagCodeFormatter() {
+		if (this.preTagCodeFormatter == null) {
 			Map<String, String> options2 = this.options.getMap();
 			options2.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_LINE_LENGTH,
 					String.valueOf(this.options.comment_line_length - this.commentIndent
 							- COMMENT_LINE_SEPARATOR_LENGTH));
+
 			options2.put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT,
 					String.valueOf(this.options.page_width - this.commentIndent - COMMENT_LINE_SEPARATOR_LENGTH));
 			options2.put(CompilerOptions.OPTION_Source, this.sourceLevel);
-			this.commentCodeFormatter = new DefaultCodeFormatter(options2);
+			this.preTagCodeFormatter = new DefaultCodeFormatter(options2);
 		}
-		return this.commentCodeFormatter;
+		return this.preTagCodeFormatter;
+	}
+
+	private DefaultCodeFormatter getSnippetCodeFormatter() {
+		if (this.snippetCodeFormatter == null) {
+			Map<String, String> options2 = this.options.getMap();
+			options2.put(
+					DefaultCodeFormatterConstants.FORMATTER_COMMENT_PRESERVE_WHITE_SPACE_BETWEEN_CODE_AND_LINE_COMMENT,
+					DefaultCodeFormatterConstants.TRUE);
+			options2.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_LINE_LENGTH, String.valueOf(10000));
+
+			options2.put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT,
+					String.valueOf(this.options.page_width - this.commentIndent - COMMENT_LINE_SEPARATOR_LENGTH));
+			options2.put(CompilerOptions.OPTION_Source, this.sourceLevel);
+			this.snippetCodeFormatter = new DefaultCodeFormatter(options2);
+		}
+		return this.snippetCodeFormatter;
 	}
 
 	private void getCodeToFormat(int startPos, int endPos, StringBuilder sb, int[] posMapping) {

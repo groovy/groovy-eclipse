@@ -10,14 +10,11 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contribution for
- *								Bug 440477 - [null] Infrastructure for feeding external annotations into compilation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
 import static java.util.stream.Collectors.joining;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -197,7 +194,7 @@ private LinkedHashSet<ClasspathLocation> computeClasspathLocations(JavaProject j
 	int length = roots.length;
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 	for (int i = 0; i < length; i++) {
-		ClasspathLocation cp = mapToClassPathLocation(manager, (PackageFragmentRoot) roots[i], imd, locations);
+		ClasspathLocation cp = mapToClassPathLocation(manager, (PackageFragmentRoot) roots[i], imd);
 		if (cp != null) {
 			try {
 				indexPackageNames(cp, roots[i]);
@@ -255,7 +252,7 @@ private void computeModules() {
 	}
 }
 
-private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, PackageFragmentRoot root, IModuleDescription defaultModule, Collection<ClasspathLocation> allLocations) {
+private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, PackageFragmentRoot root, IModuleDescription defaultModule) {
 	ClasspathLocation cp = null;
 	IPath path = root.getPath();
 	try {
@@ -264,12 +261,8 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 			IJavaProject project = (IJavaProject) root.getParent();
 			String compliance = project.getOption(JavaCore.COMPILER_COMPLIANCE, true);
 			cp = (root instanceof JrtPackageFragmentRoot) ?
-					ClasspathLocation.forJrtSystem(path.toOSString(), rawClasspathEntry.getAccessRuleSet(),
-							ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry, project.getProject(), true), compliance) :
-									ClasspathLocation.forLibrary(manager.getZipFile(path), rawClasspathEntry.getAccessRuleSet(),
-												ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry,
-														((IJavaProject) root.getParent()).getProject(), true),
-												rawClasspathEntry.isModular(), compliance) ;
+					ClasspathLocation.forJrtSystem(path.toOSString(), rawClasspathEntry.getAccessRuleSet(), null, compliance) :
+					ClasspathLocation.forLibrary(manager.getZipFile(path), rawClasspathEntry.getAccessRuleSet(), rawClasspathEntry.isModular(), compliance) ;
 		} else {
 			Object target = JavaModel.getTarget(path, true);
 			if (target != null) {
@@ -278,8 +271,7 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 				} else {
 					ClasspathEntry rawClasspathEntry = (ClasspathEntry) root.getRawClasspathEntry();
 					cp = ClasspathLocation.forBinaryFolder((IContainer) target, false, rawClasspathEntry.getAccessRuleSet(),
-														ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry, ((IJavaProject)root.getParent()).getProject(), true),
-														rawClasspathEntry.isModular());
+														null, rawClasspathEntry.isModular());
 				}
 			}
 		}
@@ -290,9 +282,6 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 	JavaProject javaProject = root.getJavaProject();
 	if (isComplianceJava9OrHigher(javaProject)) {
 		addModuleClassPathInfo(root, defaultModule, cp);
-	}
-	if (allLocations != null && cp != null && JavaCore.ENABLED.equals(javaProject.getOption(JavaCore.CORE_JAVA_BUILD_EXTERNAL_ANNOTATIONS_FROM_ALL_LOCATIONS, true))) {
-		cp.connectAllLocationsForEEA(allLocations, false/*allLocations is already accumulated by our caller*/);
 	}
 	return cp;
 }

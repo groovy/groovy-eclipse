@@ -1412,6 +1412,11 @@ public int getNextToken() throws InvalidInputException {
 		updateScanContext(token);
 	}
 	if (this.activeParser == null) { // anybody interested in the grammatical structure of the program should have registered.
+		if (token != TokenNameWHITESPACE) {
+			this.lookBack[0] = this.lookBack[1];
+			this.lookBack[1] = token;
+			this.multiCaseLabelComma = false;
+		}
 		return token;
 	}
 	if (token == TokenNameLPAREN || token == TokenNameLESS || token == TokenNameAT || token == TokenNameARROW) {

@@ -41,7 +41,6 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
 import org.eclipse.jdt.internal.compiler.lookup.SignatureWrapper;
-import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.util.KeyToSignature;
 
 /**
@@ -207,7 +206,7 @@ public final class ExternalAnnotationUtil {
 
 		IPackageFragmentRoot packageRoot = (IPackageFragmentRoot) targetType.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 		IClasspathEntry entry = packageRoot.getResolvedClasspathEntry();
-		IPath annotationPath = ClasspathEntry.getExternalAnnotationPath(entry, project.getProject(), false);
+		IPath annotationPath = entry.getExternalAnnotationPath(project.getProject(), false);
 
 		if (annotationPath == null)
 			return null;

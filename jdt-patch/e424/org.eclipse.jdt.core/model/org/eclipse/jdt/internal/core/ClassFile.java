@@ -280,7 +280,7 @@ private IBinaryType getJarBinaryTypeInfo() throws CoreException, IOException, Cl
 			entryName = new String(Util.concat(
 					BinaryTypeFactory.fieldDescriptorToBinaryName(descriptor.fieldDescriptor), SuffixConstants.SUFFIX_CLASS));
 			IProject project = javaProject.getProject();
-			IPath externalAnnotationPath = ClasspathEntry.getExternalAnnotationPath(entry, project, false); // unresolved for use in ExternalAnnotationTracker
+			IPath externalAnnotationPath = entry.getExternalAnnotationPath(project, false); // unresolved for use in ExternalAnnotationTracker
 			if (externalAnnotationPath != null) {
 				result = setupExternalAnnotationProvider(project, externalAnnotationPath, result,
 						entryName.substring(0, entryName.length() - SuffixConstants.SUFFIX_CLASS.length));

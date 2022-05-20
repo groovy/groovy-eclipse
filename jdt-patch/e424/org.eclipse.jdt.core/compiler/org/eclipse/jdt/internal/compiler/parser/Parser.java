@@ -4601,7 +4601,7 @@ protected void consumeInstanceOfExpression() {
 		exp.sourceEnd = this.scanner.startPosition - 1;
 	}
 }
-private Expression consumePatternInsideInstanceof(Pattern pattern) {
+protected Expression consumePatternInsideInstanceof(Pattern pattern) {
 	Expression exp;
 	if (pattern instanceof GuardedPattern) {
 		// This is a workaround as InstanceOfExpression doesn't handle a guarded pattern

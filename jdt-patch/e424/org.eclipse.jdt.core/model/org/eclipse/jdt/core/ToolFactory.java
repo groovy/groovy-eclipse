@@ -449,8 +449,9 @@ public class ToolFactory {
 				complianceLevelValue,
 				null/*taskTags*/,
 				null/*taskPriorities*/,
-				true/*taskCaseSensitive*/);
-		scanner.recordLineSeparator = recordLineSeparator;
+				true/*taskCaseSensitive*/,
+				true/*isPreviewEnabled*/,
+				recordLineSeparator);
 		return scanner;
 	}
 
@@ -506,8 +507,9 @@ public class ToolFactory {
 				complianceLevelValue,
 				null/*taskTags*/,
 				null/*taskPriorities*/,
-				true/*taskCaseSensitive*/);
-		scanner.recordLineSeparator = recordLineSeparator;
+				true/*taskCaseSensitive*/,
+				true/*isPreviewEnabled*/,
+				recordLineSeparator);
 		return scanner;
 	}
 
@@ -591,8 +593,10 @@ public class ToolFactory {
 		if (sourceLevelValue == 0) sourceLevelValue = ClassFileConstants.JDK1_3; // fault-tolerance
 		long complianceLevelValue = CompilerOptions.versionToJdkLevel(complianceLevel);
 		if (complianceLevelValue == 0) complianceLevelValue = ClassFileConstants.JDK1_4; // fault-tolerance
-		scanner = new PublicScanner(tokenizeComments, tokenizeWhiteSpace, false/*nls*/,sourceLevelValue /*sourceLevel*/, complianceLevelValue, null/*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/, enablePreview);
-		scanner.recordLineSeparator = recordLineSeparator;
+		scanner = new PublicScanner(tokenizeComments, tokenizeWhiteSpace,
+				false/*nls*/,sourceLevelValue /*sourceLevel*/, complianceLevelValue,
+				null/*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/,
+				enablePreview, recordLineSeparator);
 		return scanner;
 	}
 }

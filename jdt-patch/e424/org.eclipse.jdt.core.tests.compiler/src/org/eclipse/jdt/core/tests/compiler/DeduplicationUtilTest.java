@@ -54,8 +54,7 @@ public class DeduplicationUtilTest extends TestCase {
 			assertSame(b, expected);
 			b = null;
 			expected = null;
-			System.gc();
-			System.runFinalization();
+			forceGc();
 			String actual = DeduplicationUtil.intern(a);
 			assertSame(a, actual); // i.e. actual != expected since "expected" was garbage collected.
 		}
@@ -78,8 +77,7 @@ public class DeduplicationUtilTest extends TestCase {
 			assertSame(b, expected);
 			b = null;
 			expected = null;
-			System.gc();
-			System.runFinalization();
+			forceGc();
 			char[] actual = DeduplicationUtil.intern(a);
 			assertSame(a, actual);
 		}
@@ -102,8 +100,7 @@ public class DeduplicationUtilTest extends TestCase {
 			assertSame(b, expected);
 			b = null;
 			expected = null;
-			System.gc();
-			System.runFinalization();
+			forceGc();
 			Object actual = DeduplicationUtil.internObject(a);
 			assertSame(a, actual);
 		}
@@ -114,6 +111,17 @@ public class DeduplicationUtilTest extends TestCase {
 			Object actual = DeduplicationUtil.internObject(a);
 			Object expected = DeduplicationUtil.internObject(b);
 			assertSame(expected, actual);
+		}
+	}
+
+	private void forceGc() {
+		System.gc();
+		System.runFinalization();
+		try {
+			// give gc some time to run
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			// don't care
 		}
 	}
 }

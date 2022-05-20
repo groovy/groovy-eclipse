@@ -824,7 +824,7 @@ public boolean isIndexDisabledForTest() {
 }
 
 protected void setUp() throws Exception {
-	if (JavaCore.getPlugin() != null && isIndexDisabledForTest()) {
+	if (JavaCore.getPlugin() != null && isIndexDisabledForTest() && JavaModelManager.getIndexManager().isEnabled()) {
 		JavaModelManager.getIndexManager().disable();
 	}
 	super.setUp();

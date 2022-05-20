@@ -361,7 +361,7 @@ public class ClasspathEntry implements IClasspathEntry {
 			int lenRefer = referringExtraAttributes.length;
 			if (lenRefer > 0) {
 				int lenEntry = combinedAttributes.length;
-				if (referringEntry.path.isPrefixOf(this.path)) {
+				if (referringEntry.path.isPrefixOf(this.path) || referringEntry.getEntryKind() == CPE_CONTAINER) {
 					// consider prefix location as less specific, put to back (e.g.: referring to a library via a project):
 					System.arraycopy(combinedAttributes, 0, combinedAttributes=new IClasspathAttribute[lenEntry+lenRefer], 0, lenEntry);
 					System.arraycopy(referringExtraAttributes, 0, combinedAttributes, lenEntry, lenRefer);
@@ -1312,26 +1312,9 @@ public class ClasspathEntry implements IClasspathEntry {
 		return this.sourceAttachmentRootPath;
 	}
 
-	/**
-	 * Internal API: answer the path for external annotations (for null analysis) associated with
-	 * the given classpath entry.
-	 * Four shapes of paths are supported:
-	 * <ol>
-	 * <li>relative, variable (VAR/relpath): resolve classpath variable VAR and append relpath</li>
-	 * <li>relative, project (relpath): interpret relpath as a relative path within the given project</li>
-	 * <li>absolute, workspace (/Proj/relpath): an absolute path in the workspace</li>
-	 * <li>absolute, filesystem (/abspath): an absolute path in the filesystem</li>
-	 * </ol>
-	 * In case of ambiguity, workspace lookup has higher priority than filesystem lookup
-	 * (in fact filesystem paths are never validated).
-	 *
-	 * @param entry classpath entry to work on
-	 * @param project project whose classpath we are analysing
-	 * @param resolve if true, any workspace-relative paths will be resolved to filesystem paths.
-	 * @return a path (in the workspace or filesystem-absolute) or null
-	 */
-	public static IPath getExternalAnnotationPath(IClasspathEntry entry, IProject project, boolean resolve) {
-		String rawAnnotationPath = getRawExternalAnnotationPath(entry);
+	@Override
+	public IPath getExternalAnnotationPath(IProject project, boolean resolve) {
+		String rawAnnotationPath = getRawExternalAnnotationPath(this);
 		if (rawAnnotationPath != null) {
 			IPath annotationPath = new Path(rawAnnotationPath);
 			if (annotationPath.isAbsolute()) {
@@ -1358,12 +1341,75 @@ public class ClasspathEntry implements IClasspathEntry {
 						IResource member = project.findMember(annotationPath);
 						if (member != null)
 							return member.getLocation();
+					}
+					// try container relative:
+					IPath containerMemberPath = findAnnotationPathViaContainer(project, rawAnnotationPath, resolve);
+					if (containerMemberPath != null)
+						return containerMemberPath;
+
+					if (resolve) {
 						invalidExternalAnnotationPath(project);
 					} else {
 						return new Path(project.getName()).append(annotationPath).makeAbsolute();
 					}
 				}
 			}
+		}
+		return null;
+	}
+
+	public static IPath findAnnotationPathViaContainer(IProject project, String rawAnnotationPath, boolean resolve) {
+		if (rawAnnotationPath.indexOf('/') == -1)
+			return null;
+		IJavaProject jProject = JavaCore.create(project);
+		try {
+			IClasspathContainer container = null;
+			String relative = null;
+			// scan containers:
+			for (IClasspathEntry rawEntry : jProject.getRawClasspath()) {
+				if (rawEntry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
+					String containerName = rawEntry.getPath().toString()+'/';
+					if (rawAnnotationPath.startsWith(containerName)) {
+						// this is the container referenced in the annotation path
+						container = JavaCore.getClasspathContainer(rawEntry.getPath(), jProject);
+						relative = rawAnnotationPath.substring(containerName.length());
+						break;
+					}
+				}
+			}
+			if (container != null) {
+				// now search container entries for the one matching the tail 'relative':
+				for (IClasspathEntry containerEntry : container.getClasspathEntries()) {
+					IPath path = containerEntry.getPath();
+					String entryName = path.lastSegment();
+					if (entryName.startsWith(relative)) {
+						// found a prefix match, check if the prefix ends at some kind of "boundary":
+						int endPos = relative.length();
+						if (endPos >= entryName.length() || !Character.isLetterOrDigit(entryName.charAt(endPos))) {
+							if (path.isAbsolute() && path.segmentCount() == 1) {
+								// resolved entry could point to a workspace project
+								IWorkspaceRoot wsRoot = project.getWorkspace().getRoot();
+								IProject tgtProject = wsRoot.getProject(path.toString());
+								IJavaProject tgtJProject = JavaCore.create(tgtProject);
+								if (tgtJProject.exists()) {
+									if (resolve) {
+										// resolve the project's output location:
+										return wsRoot.findMember(tgtJProject.getOutputLocation()).getLocation();
+									}
+									// in non-resolving scenarii return the unresolved source folder path
+									for (IClasspathEntry classpathEntry : tgtJProject.getRawClasspath()) {
+										if (classpathEntry.getEntryKind() == CPE_SOURCE && classpathEntry.getOutputLocation() == null)
+											return classpathEntry.getPath();
+									}
+								}
+							}
+							return path; // assumed to be a file system path
+						}
+					}
+				}
+			}
+		} catch (JavaModelException e) {
+			Util.log(e);
 		}
 		return null;
 	}
@@ -1403,6 +1449,9 @@ public class ClasspathEntry implements IClasspathEntry {
 			if (JavaCore.getResolvedVariablePath(annotationPath) != null // variable (relative)
 					|| project.exists(annotationPath))					 // project relative
 			{
+				return null;
+			}
+			if (findAnnotationPathViaContainer(project, annotationPath.toString(), false) != null) {
 				return null;
 			}
 		}

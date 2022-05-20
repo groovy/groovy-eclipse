@@ -33,6 +33,7 @@
  *     Jesper Steen Moller - Contributions for
  *								bug 404146 - [1.7][compiler] nested try-catch-finally-blocks leads to unrunnable Java byte code
  *								bug 407297 - [1.8][compiler] Control generation of parameter names by option
+ *                              bug 413873 - Warning "Method can be static" on method referencing a non-static inner class
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
@@ -13307,5 +13308,29 @@ public void testBug573153() {
 	template = "target level should be in '1.1'...'1.8','9'...'15' (or '5.0'..'15.0') or cldc1.1: 10";
 	template = template.replace("15", CompilerOptions.getLatestVersion());
 	assertEquals("configure.source is not updated", template, output);
+}
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=413873
+public void test413873() {
+	this.runConformTest(
+		new String[] {
+			"OuterClass.java",
+			"public class OuterClass<T> {\n" + 
+			"	private final class InnerClass {\n" + 
+			"	}\n" + 
+			"\n" + 
+			"	private InnerClass foo(final InnerClass object) {\n" + 
+			"		return object;\n" + 
+			"	}\n" + 
+			"	\n" + 
+			"	public void doStuff() {\n" + 
+			"		foo(new InnerClass());\n" + 
+			"	}\n" + 
+			"}"
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "OuterClass.java\""
+			+ " -1.6 -warn:all-static-method -proc:none -d none",
+			"",
+			"",
+			true);
 }
 }

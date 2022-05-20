@@ -62,6 +62,7 @@ public static Test suite() {
 	standardTests.add(ProblemConstructorTest.class);
 	standardTests.add(ProblemTypeAndMethodTest.class);
 	standardTests.add(ScannerTest.class);
+	standardTests.add(PublicScannerTest.class);
 	standardTests.add(SwitchTest.class);
 	standardTests.add(TryStatementTest.class);
 	standardTests.add(UtilTest.class);

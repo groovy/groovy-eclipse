@@ -1924,7 +1924,10 @@ public class JavaProject
 		if (!JavaProject.hasJavaNature(this.project)) return null;
 		// Get cached preferences if exist
 		JavaModelManager.PerProjectInfo perProjectInfo = JavaModelManager.getJavaModelManager().getPerProjectInfo(this.project, true);
-		if (perProjectInfo.preferences != null) return perProjectInfo.preferences;
+		IEclipsePreferences preferences = perProjectInfo.preferences;
+		if (checkPreferencesExist(preferences)) {
+			return preferences;
+		}
 		// Init project preferences
 		IScopeContext context = new ProjectScope(getProject());
 		final IEclipsePreferences eclipsePreferences = context.getNode(JavaCore.PLUGIN_ID);
@@ -2004,6 +2007,23 @@ public class JavaProject
 		};
 		eclipsePreferences.addPreferenceChangeListener(this.preferencesChangeListener);
 		return eclipsePreferences;
+	}
+
+	private boolean checkPreferencesExist(IEclipsePreferences preferences) {
+		if (preferences == null) {
+			return false;
+		}
+		try {
+			// check the root node ("")
+			if (preferences.nodeExists("")) { //$NON-NLS-1$
+				return true;
+			}
+		} catch (BackingStoreException e1) {
+			// shouldn't happen, but if happens, we continue below
+		}
+		JavaModelManager manager = JavaModelManager.getJavaModelManager();
+		manager.resetProjectPreferences(this);
+		return false;
 	}
 
 	@Override
@@ -2151,7 +2171,17 @@ public class JavaProject
 	 */
 	@Override
 	public String getOption(String optionName, boolean inheritJavaCoreOptions) {
-		return JavaModelManager.getJavaModelManager().getOption(optionName, inheritJavaCoreOptions, getEclipsePreferences());
+		IEclipsePreferences preferences = getEclipsePreferences();
+		JavaModelManager manager = JavaModelManager.getJavaModelManager();
+		String option;
+		try {
+			option = manager.getOption(optionName, inheritJavaCoreOptions, preferences);
+		} catch (IllegalStateException e) {
+			// preferences deleted right after the check? let's retry once
+			preferences = getEclipsePreferences();
+			option = manager.getOption(optionName, inheritJavaCoreOptions, preferences);
+		}
+		return option;
 	}
 
 	/**

@@ -39,19 +39,10 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 		this.compliance = compliance;
 	}
 
-	public ClasspathMultiReleaseJar(ZipFile zipFile, AccessRuleSet accessRuleSet, IPath externalAnnotationPath,
-			boolean isOnModulePath, String compliance) {
-		this(zipFile.getName(), accessRuleSet, externalAnnotationPath, isOnModulePath, compliance);
+	public ClasspathMultiReleaseJar(ZipFile zipFile, AccessRuleSet accessRuleSet, boolean isOnModulePath, String compliance) {
+		this(zipFile.getName(), 0, accessRuleSet, null, isOnModulePath, compliance);
 		this.zipFile = zipFile;
 		this.closeZipFileAtEnd = true;
-	}
-
-	public ClasspathMultiReleaseJar(String fileName, AccessRuleSet accessRuleSet, IPath externalAnnotationPath,
-			boolean isOnModulePath, String compliance) {
-		this(fileName, 0, accessRuleSet, externalAnnotationPath, isOnModulePath, compliance);
-		if (externalAnnotationPath != null) {
-			this.externalAnnotationPath = externalAnnotationPath.toString();
-		}
 	}
 
 	@Override

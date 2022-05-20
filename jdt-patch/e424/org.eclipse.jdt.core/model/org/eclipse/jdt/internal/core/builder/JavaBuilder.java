@@ -173,7 +173,8 @@ protected IProject[] build(int kind, Map ignored, IProgressMonitor monitor) thro
 	if (DEBUG)
 		System.out.println("\nJavaBuilder: Starting build of " + this.currentProject.getName() //$NON-NLS-1$
 			+ " @ " + new Date(System.currentTimeMillis())); //$NON-NLS-1$
-	this.notifier = new BuildNotifier(monitor, this.currentProject);
+	this.notifier = new BuildNotifier(monitor,kind,
+			kind == IncrementalProjectBuilder.AUTO_BUILD ? this::isInterrupted : ()->false);
 	this.notifier.begin();
 	boolean ok = false;
 	try {
@@ -303,7 +304,7 @@ protected void clean(IProgressMonitor monitor) throws CoreException {
 	if (DEBUG)
 		System.out.println("\nJavaBuilder: Cleaning " + this.currentProject.getName() //$NON-NLS-1$
 			+ " @ " + new Date(System.currentTimeMillis())); //$NON-NLS-1$
-	this.notifier = new BuildNotifier(monitor, this.currentProject);
+	this.notifier = new BuildNotifier(monitor,CLEAN_BUILD, ()->false);
 	this.notifier.begin();
 	try {
 		this.notifier.checkCancel();

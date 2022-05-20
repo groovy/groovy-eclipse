@@ -275,6 +275,7 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 						copyResource(resource, copiedResource);
 						return false;
 					case IResource.FOLDER :
+						BatchImageBuilder.this.notifier.checkCancel();
 						resource = proxy.requestResource();
 						if (BatchImageBuilder.this.javaBuilder.filterExtraResource(resource)) return false;
 						if (isAlsoProject && isExcludedFromProject(resource.getFullPath())) return false; // the sourceFolder == project

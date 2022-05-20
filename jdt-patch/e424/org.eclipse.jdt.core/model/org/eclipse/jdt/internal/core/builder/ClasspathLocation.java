@@ -168,11 +168,10 @@ public static ClasspathLocation forLibrary(IFile library, AccessRuleSet accessRu
 			new ClasspathJar(library, accessRuleSet, annotationsPath, isOnModulePath) :
 				new ClasspathMultiReleaseJar(library, accessRuleSet, annotationsPath, isOnModulePath, compliance);
 }
-public static ClasspathLocation forLibrary(ZipFile zipFile, AccessRuleSet accessRuleSet, IPath externalAnnotationPath,
-										boolean isOnModulePath, String compliance) {
+public static ClasspathLocation forLibrary(ZipFile zipFile, AccessRuleSet accessRuleSet, boolean isOnModulePath, String compliance) {
 	return (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?
-			new ClasspathJar(zipFile, accessRuleSet, externalAnnotationPath, isOnModulePath) :
-				new ClasspathMultiReleaseJar(zipFile, accessRuleSet, externalAnnotationPath, isOnModulePath, compliance);
+			new ClasspathJar(zipFile, accessRuleSet, isOnModulePath) :
+				new ClasspathMultiReleaseJar(zipFile, accessRuleSet, isOnModulePath, compliance);
 }
 
 public abstract IPath getProjectRelativePath();

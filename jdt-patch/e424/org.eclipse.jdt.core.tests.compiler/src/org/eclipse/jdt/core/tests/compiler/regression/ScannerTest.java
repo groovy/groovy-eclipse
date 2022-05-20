@@ -13,8 +13,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
-import junit.framework.Test;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.compiler.IScanner;
@@ -23,7 +21,8 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
-import org.eclipse.jdt.internal.core.util.PublicScanner;
+
+import junit.framework.Test;
 
 @SuppressWarnings({ "rawtypes" })
 public class ScannerTest extends AbstractRegressionTest {
@@ -198,7 +197,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		try {
 			scanner.getNextToken();
 		} catch (InvalidInputException e) {
-			assertEquals("Wrong message", PublicScanner.ILLEGAL_HEXA_LITERAL, e.getMessage());
+			assertEquals("Wrong message", Scanner.ILLEGAL_HEXA_LITERAL, e.getMessage());
 		}
 	}
 
@@ -885,7 +884,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		} catch (InvalidInputException e) {
 			buffer.append(scanner.getRawTokenSource());
 			assertEquals("Unexpected contents", "\"a\\u000D\"", String.valueOf(buffer));
-			assertEquals("Wrong exception", PublicScanner.INVALID_CHAR_IN_STRING, e.getMessage());
+			assertEquals("Wrong exception", Scanner.INVALID_CHAR_IN_STRING, e.getMessage());
 		}
 	}
 
@@ -914,7 +913,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		} catch (InvalidInputException e) {
 			buffer.append(scanner.getRawTokenSource());
 			assertEquals("Unexpected contents", "\"\\u004Ca\\u000D\"", String.valueOf(buffer));
-			assertEquals("Wrong exception", PublicScanner.INVALID_CHAR_IN_STRING, e.getMessage());
+			assertEquals("Wrong exception", Scanner.INVALID_CHAR_IN_STRING, e.getMessage());
 		}
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=112223
@@ -942,7 +941,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		} catch (InvalidInputException e) {
 			buffer.append(scanner.getRawTokenSource());
 			assertEquals("Unexpected contents", "\"\\u004Ca\\u000D\\u0022", String.valueOf(buffer));
-			assertEquals("Wrong exception", PublicScanner.INVALID_CHAR_IN_STRING, e.getMessage());
+			assertEquals("Wrong exception", Scanner.INVALID_CHAR_IN_STRING, e.getMessage());
 		}
 	}
 
@@ -1580,6 +1579,215 @@ public class ScannerTest extends AbstractRegressionTest {
 			assertEquals("Unexpected string literal content", "Hello world", scanner.getCurrentStringLiteral());
 		} catch (InvalidInputException e) {
 			fail("Should have accepted \\s");
+		}
+	}
+
+	public void testSealed() {
+		char[] source = ("sealed class X { }").toCharArray();
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "17", "17", false);
+		scanner.setSource(source);
+		scanner.resetTo(0, source.length - 1);
+		try {
+			int token = scanner.getNextToken();
+			assertEquals("Wrong token", ITerminalSymbols.TokenNameRestrictedIdentifiersealed, token);
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	public void testPermits() {
+		char[] source = ("sealed class X permits Y { }").toCharArray();
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "17", "17", false);
+		scanner.setSource(source);
+		scanner.resetTo(0, source.length - 1);
+		try {
+			int token;
+			while ((token = scanner.getNextToken()) != ITerminalSymbols.TokenNameEOF) {
+				switch (token) {
+					case ITerminalSymbols.TokenNameclass:
+					case ITerminalSymbols.TokenNameWHITESPACE:
+					case ITerminalSymbols.TokenNameIdentifier:
+					case ITerminalSymbols.TokenNameRestrictedIdentifiersealed:
+						break;
+					case ITerminalSymbols.TokenNameRestrictedIdentifierpermits:
+						return; // success
+					default:
+						fail("Unexpected token "+token);
+				}
+			}
+			fail("TokenNameRestrictedIdentifierpermits was not detected");
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+	public void testNonSealed() {
+		char[] source = ("non-sealed class X { }").toCharArray();
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "17", "17", false);
+		scanner.setSource(source);
+		scanner.resetTo(0, source.length - 1);
+		try {
+			int token = scanner.getNextToken();
+			assertEquals("Wrong token", ITerminalSymbols.TokenNamenon_sealed, token);
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	public void testNonSealedNOK() { // insufficient compliance level
+		char[] source = ("non-sealed class X { }").toCharArray();
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "15", "15", false);
+		scanner.setSource(source);
+		scanner.resetTo(0, source.length - 1);
+		try {
+			int token = scanner.getNextToken();
+			assertEquals("Wrong token", ITerminalSymbols.TokenNameIdentifier, token);
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	public void testRestrictedIdentifierYield() {
+		char[] source = ("class X {\n" +
+				"	int m(int i) {\n" +
+				"		return switch (i) { case 0 -> { yield 13; } default -> 0 }\n" +
+				"	}\n" +
+				"}\n").toCharArray();
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "17", "17", false);
+		scanner.setSource(source);
+		scanner.resetTo(0, source.length - 1);
+		try {
+			int token;
+			while ((token = scanner.getNextToken()) != ITerminalSymbols.TokenNameEOF) {
+				switch (token) {
+					case ITerminalSymbols.TokenNameclass:
+					case ITerminalSymbols.TokenNameWHITESPACE:
+					case ITerminalSymbols.TokenNameLBRACE:
+					case ITerminalSymbols.TokenNameint:
+					case ITerminalSymbols.TokenNameIdentifier:
+					case ITerminalSymbols.TokenNameLPAREN:
+					case ITerminalSymbols.TokenNameRPAREN:
+					case ITerminalSymbols.TokenNamereturn:
+					case ITerminalSymbols.TokenNameswitch:
+					case ITerminalSymbols.TokenNamecase:
+					case ITerminalSymbols.TokenNameIntegerLiteral:
+					case ITerminalSymbols.TokenNameARROW:
+						break;
+					case ITerminalSymbols.TokenNameRestrictedIdentifierYield:
+						return; // success
+					default:
+						fail("Unexpected token "+token);
+				}
+			}
+			fail("TokenNameRestrictedIdentifierYield was not detected");
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	public void testYieldNOK() { // insufficient context
+		String source = "class X {\n" +
+				"	int m(int i) {\n" +
+				"		return switch (i) { case 0 -> { yield 13; } default -> 0 }\n" +
+				"	}\n" +
+				"}\n";
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "15", "15", false);
+		scanner.setSource(source.toCharArray());
+		scanner.resetTo(source.indexOf("yield")-1, source.length() - 1); // start directly at "yield"
+		try {
+			int token;
+			while ((token = scanner.getNextToken()) != ITerminalSymbols.TokenNameEOF) {
+				switch (token) {
+					case ITerminalSymbols.TokenNameIdentifier:
+					case ITerminalSymbols.TokenNameWHITESPACE:
+					case ITerminalSymbols.TokenNameIntegerLiteral:
+						break;
+					case ITerminalSymbols.TokenNameSEMICOLON: // past the word 'yield'
+						return; // success
+					default:
+						fail("Unexpected token "+token);
+				}
+			}
+			fail("TokenNameSEMICOLON was not detected");
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+	public void testRecord() {
+		char[] source = ("record Point {int x, int y}").toCharArray();
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "16", "16", false);
+		scanner.setSource(source);
+		scanner.resetTo(0, source.length - 1);
+		try {
+			int token = scanner.getNextToken();
+			assertEquals("Wrong token", ITerminalSymbols.TokenNameRestrictedIdentifierrecord, token);
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+	// here the internal scanner could theoretically produce TokenNameAt308, which, however, doesn't happen without an active parser
+	@SuppressWarnings("deprecation")
+	public void testAt308() {
+		char[] source = ("class X<@Marker T> { }").toCharArray();
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "17", "17", false);
+		scanner.setSource(source);
+		scanner.resetTo(0, source.length - 1);
+		try {
+			int token;
+			while ((token = scanner.getNextToken()) != ITerminalSymbols.TokenNameEOF) {
+				switch (token) {
+					case ITerminalSymbols.TokenNameclass:
+					case ITerminalSymbols.TokenNameWHITESPACE:
+					case ITerminalSymbols.TokenNameIdentifier:
+					case ITerminalSymbols.TokenNameLESS:
+						break;
+					case ITerminalSymbols.TokenNameAT:
+						return; // success
+					default:
+						fail("Unexpected token "+token);
+				}
+			}
+			fail("TokenNameAT was not detected");
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+
+	@SuppressWarnings("deprecation")
+	public void testModule() { // insufficient context, all module words are identifiers
+		String source =
+				"open module m1 {\n" +
+				"	requires p1.m2;\n" +
+				"	requires transitive p1.m3;\n" +
+				"	exports p2;\n" +
+				"}\n";
+		IScanner scanner = ToolFactory.createScanner(false, true, false, "9", "9", false);
+		scanner.setSource(source.toCharArray());
+		scanner.resetTo(0, source.length() - 1);
+		try {
+			int token;
+			while ((token = scanner.getNextToken()) != ITerminalSymbols.TokenNameEOF) {
+				switch (token) {
+					case ITerminalSymbols.TokenNameIdentifier:
+					case ITerminalSymbols.TokenNameWHITESPACE:
+					case ITerminalSymbols.TokenNameLBRACE:
+					case ITerminalSymbols.TokenNameRBRACE:
+					case ITerminalSymbols.TokenNameDOT:
+					case ITerminalSymbols.TokenNameSEMICOLON:
+						break;
+					default:
+						fail("Unexpected token "+token);
+				}
+			}
+		} catch (InvalidInputException e) {
+			assertTrue(false);
 		}
 	}
 }

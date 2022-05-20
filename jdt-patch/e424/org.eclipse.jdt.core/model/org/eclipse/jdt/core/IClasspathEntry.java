@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.core;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 
 /**
@@ -417,23 +418,23 @@ public interface IClasspathEntry {
 	 */
 	IPath getSourceAttachmentRootPath();
 
-	
+
 	/**
-	 * Returns the classpath entry that is making a reference to this classpath entry. For entry kinds 
-	 * {@link #CPE_LIBRARY}, the return value is the entry that is representing the JAR that includes 
-	 * <code>this</code> in the MANIFEST.MF file's Class-Path section. For entry kinds other than 
-	 * {@link #CPE_LIBRARY}, this returns <code>null</code>. For those entries that are on the raw classpath already, 
-	 * this returns <code>null</code>.  
+	 * Returns the classpath entry that is making a reference to this classpath entry. For entry kinds
+	 * {@link #CPE_LIBRARY}, the return value is the entry that is representing the JAR that includes
+	 * <code>this</code> in the MANIFEST.MF file's Class-Path section. For entry kinds other than
+	 * {@link #CPE_LIBRARY}, this returns <code>null</code>. For those entries that are on the raw classpath already,
+	 * this returns <code>null</code>.
 	 * <p>
 	 * It is possible that multiple library entries refer to the same entry
-	 * via the MANIFEST.MF file. In those cases, this method returns the first classpath entry 
-	 * that appears in the raw classpath. However, this does not mean that the other referencing 
-	 * entries do not relate to their referenced entries. 
-	 * See {@link JavaCore#getReferencedClasspathEntries(IClasspathEntry, IJavaProject)} for 
+	 * via the MANIFEST.MF file. In those cases, this method returns the first classpath entry
+	 * that appears in the raw classpath. However, this does not mean that the other referencing
+	 * entries do not relate to their referenced entries.
+	 * See {@link JavaCore#getReferencedClasspathEntries(IClasspathEntry, IJavaProject)} for
 	 * more details.
 	 * </p>
-	 * 
-	 * @return the classpath entry that is referencing this entry or <code>null</code> if 
+	 *
+	 * @return the classpath entry that is referencing this entry or <code>null</code> if
 	 * 		not applicable.
 	 * @since 3.6
 	 */
@@ -475,7 +476,7 @@ public interface IClasspathEntry {
 	/**
 	 * This is a convience method, that returns <code>true</code> if the extra attributes contain an attribute whose name
 	 * is {@link IClasspathAttribute#TEST} and whose value is 'true'.
-	 * 
+	 *
 	 * @see #getExtraAttributes()
 	 * @see IClasspathAttribute#TEST
 	 * @return <code>true</code>, if if the extra attributes contain a attribute whose name is
@@ -493,7 +494,7 @@ public interface IClasspathEntry {
 	/**
 	 * This is a convience method, that returns <code>true</code> if the extra attributes contain an attribute whose name
 	 * is {@link IClasspathAttribute#WITHOUT_TEST_CODE} and whose value is 'true'.
-	 * 
+	 *
 	 * @see #getExtraAttributes()
 	 * @see IClasspathAttribute#WITHOUT_TEST_CODE
 	 * @return <code>true</code>, if if the extra attributes contain a attribute whose name is
@@ -507,4 +508,24 @@ public interface IClasspathEntry {
 		}
 		return false;
 	}
+
+	/**
+	 * Answer the path for external annotations (for null analysis) associated with this classpath entry.
+	 * Five shapes of paths are supported:
+	 * <ol>
+	 * <li>relative, variable (VAR/relpath): resolve classpath variable VAR and append relpath</li>
+	 * <li>relative, container (CON/relpath): locate relpath among the elements within container CON</li>
+	 * <li>relative, project (relpath): interpret relpath as a relative path within the given project</li>
+	 * <li>absolute, workspace (/Proj/relpath): an absolute path in the workspace</li>
+	 * <li>absolute, filesystem (/abspath): an absolute path in the filesystem</li>
+	 * </ol>
+	 * In case of ambiguity, workspace lookup has higher priority than filesystem lookup
+	 * (in fact filesystem paths are never validated).
+	 *
+	 * @param project project whose classpath we are analysing
+	 * @param resolve if true, any workspace-relative paths will be resolved to filesystem paths.
+	 * @return a path (in the workspace or filesystem-absolute) or null
+	 * @since 3.30
+	 */
+	IPath getExternalAnnotationPath(IProject project, boolean resolve);
 }

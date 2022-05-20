@@ -25,6 +25,7 @@
  *								Bug 466713 - Null Annotations: NullPointerException using <int @Nullable []> as Type Param
  *     Jesper S Moller <jesper@selskabet.org> - Contributions for
  *								bug 378674 - "The method can be declared as static" is wrong
+ *                              bug 413873 - Warning "Method can be static" on method referencing a non-static inner class
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -43,6 +44,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MemberTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
@@ -114,7 +116,17 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 			// nullity and mark as assigned
 			analyseArguments(classScope.environment(), flowInfo, this.arguments, this.binding);
 
-			if (this.binding.declaringClass instanceof MemberTypeBinding && !this.binding.declaringClass.isStatic()) {
+			boolean hasMemberTypeParameter = false;
+			if (this.binding.parameters != null && this.arguments != null) {
+				int length = Math.min(this.binding.parameters.length, this.arguments.length);
+				for (int i = 0; i < length; i++) {
+					if (this.binding.parameters[i] instanceof ParameterizedTypeBinding) {
+						hasMemberTypeParameter = true;
+						break;
+					}
+				}
+			}
+			if (this.binding.declaringClass instanceof MemberTypeBinding && !this.binding.declaringClass.isStatic() || hasMemberTypeParameter) {
 				// method of a non-static member type can't be static.
 				this.bits &= ~ASTNode.CanBeStatic;
 			}
