@@ -41,6 +41,7 @@
         <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum)Visitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/(Extended)?Verifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/GeneratorContext.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/(Invocation|Statement)Writer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />

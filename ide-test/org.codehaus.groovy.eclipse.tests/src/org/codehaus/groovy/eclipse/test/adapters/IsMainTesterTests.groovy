@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,64 +24,71 @@ import org.junit.Test
  */
 final class IsMainTesterTests extends GroovyEclipseTestSuite {
 
-    private void doTest(String text, boolean expected) {
-        def unit = addGroovySource(text, 'MainClass', 'pack1')
-        boolean result = new GroovyPropertyTester().test(unit, 'hasMain', null, null)
-        assert result == expected : 'Should have ' + (expected ? '' : '*not*') + ' found a main method in class:\n' + text
+    private void doTest(String name = 'MainType', String text, boolean expected) {
+        def unit = addGroovySource(text, name, 'a_package')
+        boolean hasMain = new GroovyPropertyTester().test(unit, 'hasMain', null, null)
+        assert hasMain == expected : 'Should have ' + (expected ? '' : '*not*') + ' found a main method in class:\n' + text
     }
 
     @Test
     void testHasMain1() {
-        doTest('class MainClass { static void main(String[] args){}}', true)
+        doTest('class MainType { static void main(String[] args){}}', true)
     }
 
     @Test
     void testHasMain2() {
-        doTest('class MainClass { static main(args){}}', true)
-    }
-
-    @Test
-    void testHasMain2a() {
-        doTest('class MainClass { static def main(args){}}', true)
+        doTest('class MainType { static main(args){}}', true)
     }
 
     @Test
     void testHasMain3() {
-        // not static
-        doTest('class MainClass { void main(String[] args){}}', false)
-    }
-
-    @Test
-    void testHasMain3a() {
-        // no args
-        doTest('class MainClass { static void main(){}}', false)
+        doTest('class MainType { static def main(args){}}', true)
     }
 
     @Test
     void testHasMain4() {
+        // not static
+        doTest('class MainType { void main(String[] args){}}', false)
+    }
+
+    @Test
+    void testHasMain5() {
+        // no args
+        doTest('class MainType { static void main(){}}', false)
+    }
+
+    @Test
+    void testHasMain6() {
         // no script defined in this file
         doTest('class OtherClass { def s() { } }', false)
     }
 
     @Test
-    void testHasMain5() {
+    void testHasMain7() {
         // has a script
         doTest('thisIsPartOfAScript()\nclass OtherClass { def s() { } }', true)
     }
 
     @Test
-    void testHasMain5a() {
+    void testHasMain8() {
         // has a script
         doTest('class OtherClass { def s() { } }\nthisIsPartOfAScript()', true)
     }
 
     @Test
-    void testHasMain6() {
+    void testHasMain9() {
         doTest('thisIsPartOfAScript()', true)
     }
 
     @Test
-    void testHasMain7() {
+    void testHasMain10() {
         doTest('def x() { } \nx()', true)
     }
+
+    @Test
+    void testHasMain11() {
+        doTest('main_type', 'print "works"', true)
+    }
+
+    // TODO: GROOVY-4020, GROOVY-5760
 }

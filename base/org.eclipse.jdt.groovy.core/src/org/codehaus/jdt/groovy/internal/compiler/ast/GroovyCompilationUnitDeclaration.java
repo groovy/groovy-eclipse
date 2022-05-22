@@ -70,6 +70,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Janitor;
@@ -2708,7 +2709,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (end == -1)
                 end = fileName.length;
 
-            return CharOperation.subarray(fileName, start, end);
+            char[] mainName = CharOperation.subarray(fileName, start, end);
+            for (char c : mainName) { if (c < 'A' || (c > 'Z' && c < 'a') || c > 'z') {
+                mainName = GeneratorContext.encodeAsValidClassName(String.valueOf(mainName)).toCharArray();
+                break;
+            }}
+            return mainName;
         }
 
         // because 'length' is computed as 'end-start+1' and start==-1 indicates it does not exist, then

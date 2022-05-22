@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
@@ -36,7 +37,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.PerformanceStats;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IBuffer;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IJavaProject;
@@ -51,6 +51,7 @@ import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -72,6 +73,17 @@ public class GroovyCompilationUnit extends CompilationUnit {
         super(parent, name, owner);
     }
 
+    private String mainTypeName;
+
+    @Override
+    public char[] getMainTypeName() {
+        if (this.mainTypeName == null) {
+            String unitName = Util.getNameWithoutJavaLikeExtension(this.name);
+            this.mainTypeName = GeneratorContext.encodeAsValidClassName(unitName);
+        }
+        return this.mainTypeName.toCharArray();
+    }
+
     /**
      * Returns the module node for this GroovyCompilationUnit creates one if one doesn't exist.
      *
@@ -79,7 +91,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
      * consistent (if not a reconcile operation is performed).
      */
     public ModuleNode getModuleNode() {
-        ModuleNodeInfo moduleInfo = getModuleInfo(true);
+        ModuleNodeInfo moduleInfo = this.getModuleInfo(true);
         return moduleInfo != null ? moduleInfo.module : null;
     }
 
@@ -93,33 +105,33 @@ public class GroovyCompilationUnit extends CompilationUnit {
      */
     public ModuleNodeInfo getModuleInfo(boolean force) {
         try {
-            if (!isConsistent()) {
-                makeConsistent(null);
+            if (!this.isConsistent()) {
+                this.makeConsistent(null);
             }
             boolean becameWorkingCopy = false;
             ModuleNodeMapper.getInstance().lock();
             // discard the working copy after finishing
             // if there was no working copy to begin with
             try {
-                becameWorkingCopy = (force && !isWorkingCopy());
+                becameWorkingCopy = (force && !this.isWorkingCopy());
                 if (becameWorkingCopy) {
-                    becomeWorkingCopy(null);
+                    this.becomeWorkingCopy(null);
                 }
-                JavaModelManager.PerWorkingCopyInfo info = getPerWorkingCopyInfo();
+                JavaModelManager.PerWorkingCopyInfo info = this.getPerWorkingCopyInfo();
                 if (info != null) {
                     return ModuleNodeMapper.getInstance().get(info);
                 }
             } finally {
                 try {
                     if (becameWorkingCopy) {
-                        discardWorkingCopy();
+                        this.discardWorkingCopy();
                     }
                 } finally {
                     ModuleNodeMapper.getInstance().unlock();
                 }
             }
         } catch (JavaModelException e) {
-            Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName());
+            Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.name);
         }
         // return null if not found. Means that there was a problem with build structure
         return null;
@@ -131,11 +143,11 @@ public class GroovyCompilationUnit extends CompilationUnit {
      */
     public ModuleNodeInfo getNewModuleInfo() {
         try {
-            openWhenClosed(createElementInfo(), false/* or should it be true... ? */, new NullProgressMonitor());
+            this.openWhenClosed(this.createElementInfo(), false/* or should it be true... ? */, new NullProgressMonitor());
         } catch (JavaModelException e) {
-            Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName());
+            Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.name);
         }
-        return getModuleInfo(true);
+        return this.getModuleInfo(true);
     }
 
     @Override
@@ -143,8 +155,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
         // GRECLIPSE-804 must synchronize
         ModuleNodeMapper.getInstance().lock();
         try {
-            JavaModelManager.PerWorkingCopyInfo info = getPerWorkingCopyInfo();
-            if (workingCopyInfoWillBeDiscarded(info)) {
+            JavaModelManager.PerWorkingCopyInfo info = this.getPerWorkingCopyInfo();
+            if (this.workingCopyInfoWillBeDiscarded(info)) {
                 ModuleNodeMapper.getInstance().remove(info);
             }
             super.discardWorkingCopy();
@@ -229,7 +241,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
             parser.reportOnlyOneSyntaxError = !computeProblems;
             // maybe not needed for groovy, but I don't want to find out.
             parser.setMethodsFullRecovery(true);
-            parser.setStatementsRecovery((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
+            parser.setStatementsRecovery((reconcileFlags & ENABLE_STATEMENTS_RECOVERY) != 0);
 
             if (!computeProblems && !resolveBindings && !createAST) // disable javadoc parsing if not computing problems, not resolving and not creating ast
                 parser.javadocParser.checkDocComment = false;
@@ -324,9 +336,9 @@ public class GroovyCompilationUnit extends CompilationUnit {
                         throw e;
                     } catch (IllegalArgumentException e) {
                         // if necessary, we can do some better reporting here.
-                        Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " + this.getParent().getElementName() + "." + getElementName());
+                        Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " + this.getParent().getElementName() + "." + this.name);
                     } catch (Exception e) {
-                        Util.log(e, "Problem with build structure for " + this.getElementName());
+                        Util.log(e, "Problem with build structure for " + this.name);
                     }
                 }
             } catch (OperationCanceledException e) {
@@ -337,13 +349,13 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 // GRECLIPSE-1480 don't log element does not exist exceptions. since this could occur when element is in a non-java
                 // project
                 if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST || this.getJavaProject().exists()) {
-                    Util.log(e, "Problem with build structure for " + this.getElementName());
+                    Util.log(e, "Problem with build structure for " + this.name);
                 }
             } catch (Exception e) {
                 // GROOVY: The groovy compiler does not handle broken code well in many situations
                 // use this general catch clause so that exceptions thrown by broken code
                 // do not bubble up the stack.
-                Util.log(e, "Problem with build structure for " + this.getElementName());
+                Util.log(e, "Problem with build structure for " + this.name);
             } finally {
                 if (compilationUnitDeclaration != null) {
                     compilationUnitDeclaration.cleanUp();
@@ -365,21 +377,22 @@ public class GroovyCompilationUnit extends CompilationUnit {
     @Override
     public org.eclipse.jdt.core.dom.CompilationUnit reconcile(int astLevel, int reconcileFlags, WorkingCopyOwner workingCopyOwner, IProgressMonitor monitor)
             throws JavaModelException {
-        if (!isWorkingCopy() || isCanceled(monitor))
+        if (!this.isWorkingCopy() || (monitor != null && monitor.isCanceled()))
             return null; // reconciling is not supported on non-working copies
 
         PerformanceStats stats = null;
         if (ReconcileWorkingCopyOperation.PERF) {
             stats = PerformanceStats.getStats(JavaModelManager.RECONCILE_PERF, this);
-            stats.startRun(String.valueOf(getFileName()));
+            stats.startRun(String.valueOf(this.getFileName()));
         }
         ReconcileWorkingCopyOperation op = new GroovyReconcileWorkingCopyOperation(this, astLevel,
             reconcileFlags, workingCopyOwner != null ? workingCopyOwner : DefaultWorkingCopyOwner.PRIMARY);
         JavaModelManager manager = JavaModelManager.getJavaModelManager();
         try {
             manager.cacheZipFiles(this); // cache zip files for performance (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
-            if (!isCanceled(monitor))
+            if (monitor == null || !monitor.isCanceled()) {
                 op.runOperation(monitor);
+            }
         } finally {
             manager.flushZipFiles(this);
         }
@@ -389,68 +402,20 @@ public class GroovyCompilationUnit extends CompilationUnit {
         return op.ast;
     }
 
-    private boolean isCanceled(IProgressMonitor monitor) {
-        return (monitor != null && monitor.isCanceled());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T getAdapter(Class<T> adapter) {
-        if (GroovyCompilationUnit.class.equals(adapter)) {
-            return (T) this;
-        }
-        if (ModuleNode.class.equals(adapter)) {
-            return (T) getModuleNode();
-        }
-        return super.getAdapter(adapter);
-    }
-
-    public GroovyCompilationUnit cloneCachingContents(char[] newContents) {
-        return new CompilationUnitClone(newContents);
-    }
-
-    /*
-     * Clone this handle so that it caches its contents in memory. DO NOT PASS TO CLIENTS
-     */
-    @Override
-    public GroovyCompilationUnit cloneCachingContents() {
-        return new CompilationUnitClone();
-    }
-
-    @Override
-    public IJavaElement[] codeSelect(int offset, int length)
-            throws JavaModelException {
-        return codeSelect(offset, length, DefaultWorkingCopyOwner.PRIMARY);
-    }
-
-    @Override
-    public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner workingCopyOwner)
-            throws JavaModelException {
-        return codeSelect(this, offset, length, workingCopyOwner);
-    }
-
-    @Override
-    protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu, int offset, int length, WorkingCopyOwner o)
-            throws JavaModelException {
-        if (CodeSelectHelperFactory.selectHelper != null) {
-            return CodeSelectHelperFactory.selectHelper.select(this, offset, length);
-        }
-        return new IJavaElement[0];
-    }
-
     /**
-     * There is no such thing as a primary type in Groovy. First look for a type of the same name as the CU, Else get the first type
-     * in getAllTypes()
+     * There is no such thing as a primary type in Groovy. First look for a type
+     * of the same name as the CU, else get the first type in getAllTypes().
      */
     @Override
     public IType findPrimaryType() {
-        IType type = super.findPrimaryType();
-        if (type != null) {
+        if (this.mainTypeName == null) this.getMainTypeName();
+        IType type = this.getType(this.mainTypeName);
+        if (type.exists()) {
             return type;
         }
         try {
-            if (getResource().exists()) {
-                IType[] types = getTypes();
+            if (this.getResource().exists()) {
+                IType[] types = this.getTypes();
                 if (types != null && types.length > 0) {
                     return types[0];
                 }
@@ -458,7 +423,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
         } catch (JavaModelException e) {
             // can ignore situations when trying to find types that are not on the classpath
             if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH) {
-                Util.log(e, "Error finding all types of " + this.getElementName());
+                Util.log(e, "Error finding all types of " + this.name);
             }
         }
         return null;
@@ -479,14 +444,15 @@ public class GroovyCompilationUnit extends CompilationUnit {
     }
 
     @Override
-    public IResource getUnderlyingResource() throws JavaModelException {
-        if (isOnBuildPath()) {
+    public IResource getUnderlyingResource()
+            throws JavaModelException {
+        if (this.isOnBuildPath()) {
             return super.getUnderlyingResource();
         } else {
             // Super class method appears to only work correctly when we are on the build
             // path. Otherwise parent, which is a package, is seen as non-existent.
             // This causes a JavaModel exception.
-            IResource rsrc = getResource();
+            IResource rsrc = this.getResource();
             // I think that getResource *should* just return a path to the .groovy file
             // under these circumstances.
             try {
@@ -501,30 +467,63 @@ public class GroovyCompilationUnit extends CompilationUnit {
     }
 
     @Override
-    public void rename(String newName, boolean force, IProgressMonitor monitor) throws JavaModelException {
-        super.rename(newName, force, monitor);
-        // FIXADE we should not have to do this. Somewhere, a working copy is being created and not discarded
-        if (this.isWorkingCopy()) {
-            this.discardWorkingCopy();
+    @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Class<T> adapter) {
+        if (GroovyCompilationUnit.class.equals(adapter)) {
+            return (T) this;
         }
+        if (ModuleNode.class.equals(adapter)) {
+            return (T) this.getModuleNode();
+        }
+        return super.getAdapter(adapter);
     }
 
-    @Override
-    protected void codeComplete(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu,
-            org.eclipse.jdt.internal.compiler.env.ICompilationUnit unitToSkip, int position, CompletionRequestor requestor,
-            WorkingCopyOwner owner, ITypeRoot typeRoot, IProgressMonitor monitor) throws JavaModelException {
+    //--------------------------------------------------------------------------
 
+    @Override
+    protected void codeComplete(ICompilationUnit unit, ICompilationUnit skip, int position, CompletionRequestor requestor, WorkingCopyOwner owner, ITypeRoot typeRoot, IProgressMonitor monitor)
+            throws JavaModelException {
         // allow a delegate to perform completion if required
         // this is used by the grails plugin when editing in gsp editor
         ICodeCompletionDelegate delegate = Adapters.adapt(this, ICodeCompletionDelegate.class);
         if (delegate != null && delegate.shouldCodeComplete(requestor, typeRoot)) {
-            delegate.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
+            delegate.codeComplete(unit, skip, position, requestor, owner, typeRoot, monitor);
         } else {
-            super.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
+            super.codeComplete(unit, skip, position, requestor, owner, typeRoot, monitor);
         }
     }
 
+    @Override
+    protected IJavaElement[] codeSelect(ICompilationUnit unit, int offset, int length, WorkingCopyOwner owner)
+            throws JavaModelException {
+        if (CodeSelectHelperFactory.selectHelper != null) {
+            return CodeSelectHelperFactory.selectHelper.select(this, offset, length);
+        }
+        return new IJavaElement[0];
+    }
+
+    @Override
+    public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
+            throws JavaModelException {
+        return codeSelect(this, offset, length, owner);
+    }
+
+    @Override
+    public IJavaElement[] codeSelect(int offset, int length)
+            throws JavaModelException {
+        return codeSelect(offset, length, DefaultWorkingCopyOwner.PRIMARY);
+    }
+
     //--------------------------------------------------------------------------
+
+    @Override
+    public GroovyCompilationUnit cloneCachingContents() {
+        return new CompilationUnitClone();
+    }
+
+    public GroovyCompilationUnit cloneCachingContents(char[] source) {
+        return new CompilationUnitClone(source);
+    }
 
     private class CompilationUnitClone extends GroovyCompilationUnit {
 

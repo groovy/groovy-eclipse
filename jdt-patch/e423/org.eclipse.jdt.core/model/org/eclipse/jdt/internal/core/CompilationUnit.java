@@ -58,7 +58,7 @@ public class CompilationUnit extends Openable implements ICompilationUnit, org.e
 
 	private static final IImportDeclaration[] NO_IMPORTS = new IImportDeclaration[0];
 
-	protected String name;
+	protected final String name;
 	public WorkingCopyOwner owner;
 
 /**

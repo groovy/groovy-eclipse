@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2018 IBM Corporation and others.
  *
@@ -164,6 +165,11 @@ public final class JavaConventions {
 		// the package-level spec (replaces package.html)
 		if (!CharOperation.equals(identifier.toCharArray(), TypeConstants.PACKAGE_INFO_NAME)
 				&& !CharOperation.equals(identifier.toCharArray(), TypeConstants.MODULE_INFO_NAME)) {
+			// GROOVY add
+			if (org.codehaus.jdt.groovy.integration.LanguageSupportFactory.isInterestingSourceFile(name)) {
+				identifier = identifier.replace('-', '_'); // GROOVY-4020, GROOVY-5760, GROOVY-7670, et al.
+			}
+			// GROOVY end
 			IStatus status = validateIdentifier(identifier, sourceLevel, complianceLevel);
 			if (!status.isOK()) {
 				return status;
