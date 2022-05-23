@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -369,7 +369,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         try {
             if (isNotBlank(javaAgentClass)) {
-                cli.addArguments(new String[] {"-javaagent:" + getAdditionnalJavaAgentLocation()});
+                cli.addArguments(new String[] {"-javaagent:" + getAdditionalJavaAgentLocation()});
             }
 
             if (isNotBlank(config.getMeminitial())) {
@@ -549,7 +549,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return tempFile;
     }
 
-    private String getAdditionnalJavaAgentLocation() throws CompilerException {
+    private String getAdditionalJavaAgentLocation() throws CompilerException {
         return getClassLocation(getJavaAgentClass());
     }
 

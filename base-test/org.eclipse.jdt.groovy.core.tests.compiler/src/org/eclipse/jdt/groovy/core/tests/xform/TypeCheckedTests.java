@@ -1328,7 +1328,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 11)\n" +
             "\tseq()\n" +
             "\t^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot return value of type #T for method returning java.util.List<?>\n" +
+            "Groovy:[Static type checking] - Cannot return value of type java.lang.CharSequence for method returning java.util.List<?>\n" +
             "----------\n");
     }
 

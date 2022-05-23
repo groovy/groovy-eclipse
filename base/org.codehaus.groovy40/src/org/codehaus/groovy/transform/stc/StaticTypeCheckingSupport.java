@@ -869,6 +869,9 @@ public abstract class StaticTypeCheckingSupport {
      * with trailing "[]".
      */
     static String prettyPrintType(final ClassNode type) {
+        if (type.getUnresolvedName().charAt(0) == '#') {
+            return type.redirect().toString(false);
+        }
         return type.toString(false);
     }
 
