@@ -46,16 +46,6 @@
 		<dist.type>snapshot</dist.type>
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
 		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like '-M1', '-RELEASE' etc. -->
-
-		<!-- Signing properties: These properties here are only 'documentation'.
-			The real values are furnished by the 'bamboo-signing' profile.
-			When not running on bamboo, singing is disabled by default.
-		-->
-		<signing.skip>true</signing.skip>
-		<signing.alias></signing.alias>
-		<signing.keystore></signing.keystore>
-		<signing.key.password></signing.key.password>
-		<signing.store.password></signing.store.password>
 	</properties>
 
 	<pluginRepositories>
@@ -134,7 +124,7 @@
 				<repository>
 					<id>milestone</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.24-I-builds/I20220519-0130</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.24-I-builds/I20220525-1800</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -564,20 +554,6 @@
 		</profile>
 
 		<profile>
-			<id>bamboo-signing</id>
-			<activation>
-				<property>
-					<name>env.bamboo_signing_key_password</name>
-				</property>
-			</activation>
-			<properties>
-				<signing.skip>false</signing.skip>
-				<signing.key.password>${env.bamboo_signing_key_password}</signing.key.password>
-				<signing.store.password>${env.bamboo_signing_store_password}</signing.store.password>
-			</properties>
-		</profile>
-
-		<profile>
 			<id>milestone</id>
 			<properties>
 				<dist.type>milestone</dist.type>
@@ -606,27 +582,6 @@
 				<!-- disable default behavior; AWS S3 deployment in Site project -->
 				<configuration>
 					<skip>true</skip>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jarsigner-plugin</artifactId>
-				<version>3.0.0</version>
-				<executions>
-					<execution>
-						<id>sign</id>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<skip>${signing.skip}</skip>
-					<alias>${signing.alias}</alias>
-					<keystore>${signing.keystore}</keystore>
-					<keypass>${signing.key.password}</keypass>
-					<storepass>${signing.store.password}</storepass>
 				</configuration>
 			</plugin>
 

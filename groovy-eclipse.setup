@@ -299,7 +299,7 @@
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.24"/>
         <repository
-            url="https://download.eclipse.org/eclipse/updates/4.24-I-builds/I20220519-0130"/>
+            url="https://download.eclipse.org/eclipse/updates/4.24-I-builds/I20220525-1800"/>
       </repositoryList>
       <repositoryList
           name="2022-03">

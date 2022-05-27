@@ -96,20 +96,39 @@ public class DeduplicationUtilTest extends TestCase {
 			Object a = supplier.get();
 			Object b = supplier.get();
 			assertNotSame(a, b);
+			assertEquals(a, b);
 			Object expected = DeduplicationUtil.internObject(b);
 			assertSame(b, expected);
 			b = null;
 			expected = null;
+
 			forceGc();
+
+			// Now "b" is not referenced anymore, can be garbage collected
+			// and DeduplicationUtil is supposed to release weak reference to it
+			// so after trying to intern "a" we will get "a" and not previously set "b"
 			Object actual = DeduplicationUtil.internObject(a);
+
+			// It is impossible to rely on GC to run immediately, so loop few times
+			for (int i = 0; i < 42; i++) {
+				if(actual != a) {
+					forceGc();
+					actual = DeduplicationUtil.internObject(a);
+				} else {
+					break;
+				}
+			}
 			assertSame(a, actual);
 		}
 		{ // strong
 			Object a = supplier.get();
 			Object b = supplier.get();
 			assertNotSame(a, b);
+			assertEquals(a, b);
 			Object actual = DeduplicationUtil.internObject(a);
 			Object expected = DeduplicationUtil.internObject(b);
+
+			// since "a" is still referenced, we should get it
 			assertSame(expected, actual);
 		}
 	}

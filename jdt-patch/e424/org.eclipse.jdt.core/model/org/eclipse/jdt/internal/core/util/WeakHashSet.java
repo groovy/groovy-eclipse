@@ -69,7 +69,7 @@ public class WeakHashSet<T> {
 		this.values = references;
 	}
 
-	/*
+	/**
 	 * Adds the given object to this set.
 	 * If an object that is equals to the given object already exists, do nothing.
 	 * Returns the existing object or the new object if not found.
@@ -148,7 +148,7 @@ public class WeakHashSet<T> {
 		return get(obj) != null;
 	}
 
-	/*
+	/**
 	 * Return the object that is in this set and that is equals to the given object.
 	 * Return null if not found.
 	 */
@@ -182,7 +182,7 @@ public class WeakHashSet<T> {
 		this.elementSize = newHashSet.elementSize;
 	}
 
-	/*
+	/**
 	 * Removes the object that is in this set and that is equals to the given object.
 	 * Return the object that was in the set, or null if not found.
 	 */
