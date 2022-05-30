@@ -4068,11 +4068,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 ? this.visitFormalParameterList(ctx.formalParameterList())
                 : null;
 
+        BlockStatement code = this.visitBlockStatementsOpt(ctx.blockStatementsOpt());
         if (!asBoolean(ctx.ARROW())) {
             parameters = Parameter.EMPTY_ARRAY;
+
+            if (code.isEmpty()) {
+                configureAST(code, ctx);
+            }
         }
 
-        Statement code = this.visitBlockStatementsOpt(ctx.blockStatementsOpt());
         ClosureExpression result = configureAST(new ClosureExpression(parameters, code), ctx);
 
         visitingClosureCount -= 1;
@@ -5065,12 +5069,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
         };
     }
-
+    /* GRECLIPSE edit
     private void removeErrorListeners() {
         lexer.removeErrorListeners();
         parser.removeErrorListeners();
     }
-
+    */
     private void addErrorListeners() {
         lexer.removeErrorListeners();
         lexer.addErrorListener(this.createANTLRErrorListener());

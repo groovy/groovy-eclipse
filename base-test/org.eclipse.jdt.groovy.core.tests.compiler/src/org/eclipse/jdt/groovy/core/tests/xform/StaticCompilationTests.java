@@ -6208,7 +6208,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test(expected = AssertionError.class) // see GROOVY-10047
+    @Test
     public void testCompileStatic9853() {
         assumeTrue(isParrotParser());
 
