@@ -118,8 +118,6 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
             typeOrTargetRef = classExpression;
         }
 
-        methodRefMethod.putNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE, parametersWithExactType);
-
         if (!isClassExpression) {
             if (isConstructorReference) {
                 // TODO: move the checking code to the parser
@@ -134,18 +132,32 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
             }
         }
 
-        controller.getMethodVisitor().visitInvokeDynamicInsn(
-                abstractMethod.getName(),
-                createAbstractMethodDesc(functionalInterfaceType, typeOrTargetRef),
-                createBootstrapMethod(classNode.isInterface(), false),
-                createBootstrapMethodArguments(
-                        abstractMethodDesc,
-                        methodRefMethod.isStatic() || isConstructorReference ? Opcodes.H_INVOKESTATIC : Opcodes.H_INVOKEVIRTUAL,
-                        isConstructorReference ? controller.getClassNode() : typeOrTargetRefType,
-                        methodRefMethod,
-                        false
-                )
-        );
+        int referenceKind;
+        if (isConstructorReference || methodRefMethod.isStatic()) {
+            referenceKind = Opcodes.H_INVOKESTATIC;
+        } else if (methodRefMethod.getDeclaringClass().isInterface()) {
+            referenceKind = Opcodes.H_INVOKEINTERFACE; // GROOVY-9853
+        } else {
+            referenceKind = Opcodes.H_INVOKEVIRTUAL;
+        }
+
+        methodRefMethod.putNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE, parametersWithExactType);
+        try {
+            controller.getMethodVisitor().visitInvokeDynamicInsn(
+                    abstractMethod.getName(),
+                    createAbstractMethodDesc(functionalInterfaceType, typeOrTargetRef),
+                    createBootstrapMethod(classNode.isInterface(), false),
+                    createBootstrapMethodArguments(
+                            abstractMethodDesc,
+                            referenceKind,
+                            isConstructorReference ? classNode : typeOrTargetRefType,
+                            methodRefMethod,
+                            false
+                    )
+            );
+        } finally {
+            methodRefMethod.removeNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE);
+        }
 
         if (isClassExpression) {
             controller.getOperandStack().push(redirect);
@@ -162,7 +174,7 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
                             .map(e -> e.getType().getText())
                             .collect(Collectors.joining(","))
                     + ")] in the type[" + typeOrTargetRefType.getText() + "]", methodReferenceExpression);
-        } else if (parametersWithExactType.length > 0 && isTypeReferingInstanceMethod(typeOrTargetRef, methodRefMethod)) {
+        } else if (parametersWithExactType.length > 0 && isTypeReferringInstanceMethod(typeOrTargetRef, methodRefMethod)) {
             ClassNode firstParameterType = parametersWithExactType[0].getType();
             if (!isAssignableTo(firstParameterType, typeOrTargetRefType)) {
                 throw new RuntimeParserException("Invalid receiver type: " + firstParameterType.getText() + " is not compatible with " + typeOrTargetRefType.getText(), typeOrTargetRef);
@@ -259,7 +271,7 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
 
         return chooseMethodRefMethodCandidate(typeOrTargetRef, methods.stream().filter(method -> {
             Parameter[] parameters = method.getParameters();
-            if (isTypeReferingInstanceMethod(typeOrTargetRef, method)) {
+            if (isTypeReferringInstanceMethod(typeOrTargetRef, method)) {
                 // there is an implicit parameter for "String::length"
                 ClassNode firstParamType = method.getDeclaringClass();
 
@@ -298,7 +310,7 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
         return (methodRefMethod instanceof ExtensionMethodNode);
     }
 
-    private static boolean isTypeReferingInstanceMethod(final Expression typeOrTargetRef, final MethodNode mn) {
+    private static boolean isTypeReferringInstanceMethod(final Expression typeOrTargetRef, final MethodNode mn) {
         // class::instanceMethod
         return (typeOrTargetRef instanceof ClassExpression) && ((mn != null && !mn.isStatic())
                 || (isExtensionMethod(mn) && !((ExtensionMethodNode) mn).isStaticExtension()));

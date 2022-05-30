@@ -1559,8 +1559,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 // only conditionally 'move stuff around'
                 if (inlineStaticFieldInitializersIntoClinit) {
                 // GRECLIPSE end
-                // GROOVY-3311: pre-defined constants added by groovy compiler for numbers/characters should be
-                // initialized first so that code dependent on it does not see their values as empty
+                // GROOVY-3311: pre-defined constants added by compiler for numbers/characters should be
+                // initialized first so that code dependent on them does not see their values as empty
                 Expression initialValueExpression = fieldNode.getInitialValueExpression();
                 Expression transformed = transformInlineConstants(initialValueExpression, fieldNode.getType());
                 if (transformed instanceof ConstantExpression) {

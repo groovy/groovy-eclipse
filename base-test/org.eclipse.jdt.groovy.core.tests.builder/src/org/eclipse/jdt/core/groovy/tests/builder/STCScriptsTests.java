@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,7 +126,11 @@ public final class STCScriptsTests extends BuilderTestSuite {
         //@formatter:off
         env.addGroovyClass(projPath.append("src"), "TypeChecker",
             "onMethodSelection { expr, node ->\n" +
-            "  context.enclosingBinaryExpression.putNodeMetaData('notified', true)\n" +
+            "  if (node.name == 'setS') {\n" +
+            "    def closure = context.enclosingClosure.closureExpression\n" +
+            "    def setting = closure.code.statements[0].expression\n" +
+            "    setting.putNodeMetaData('notified', true)\n" +
+            "  }\n" +
             "}\n");
         //@formatter:on
 
