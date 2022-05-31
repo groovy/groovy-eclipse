@@ -355,14 +355,16 @@ public class GenericsUtils {
     public static MethodNode correctToGenericsSpec(Map<String, ClassNode> genericsSpec, MethodNode mn) {
         if (genericsSpec == null) return mn;
         if (mn.getGenericsTypes() != null) genericsSpec = addMethodGenerics(mn, genericsSpec);
-        ClassNode correctedType = correctToGenericsSpecRecurse(genericsSpec, mn.getReturnType());
-        Parameter[] origParameters = mn.getParameters();
-        Parameter[] newParameters = new Parameter[origParameters.length];
-        for (int i = 0; i < origParameters.length; i++) {
-            Parameter origParameter = origParameters[i];
-            newParameters[i] = new Parameter(correctToGenericsSpecRecurse(genericsSpec, origParameter.getType()), origParameter.getName(), origParameter.getInitialExpression());
+        ClassNode returnType = correctToGenericsSpecRecurse(genericsSpec, mn.getReturnType());
+        Parameter[] oldParameters = mn.getParameters(); int nParameters= oldParameters.length;
+        Parameter[] newParameters = new Parameter[nParameters];
+        for (int i = 0; i < nParameters; i += 1) {
+            Parameter oldParameter = oldParameters[i];
+            newParameters[i] = new Parameter(correctToGenericsSpecRecurse(genericsSpec, oldParameter.getType()), oldParameter.getName(), oldParameter.getInitialExpression());
         }
-        return new MethodNode(mn.getName(), mn.getModifiers(), correctedType, newParameters, mn.getExceptions(), mn.getCode());
+        MethodNode newMethod = new MethodNode(mn.getName(), mn.getModifiers(), returnType, newParameters, mn.getExceptions(), mn.getCode());
+        newMethod.setGenericsTypes(mn.getGenericsTypes());
+        return newMethod;
     }
 
     public static ClassNode correctToGenericsSpecRecurse(Map<String, ClassNode> genericsSpec, ClassNode type) {
@@ -591,15 +593,6 @@ public class GenericsUtils {
         return superClass;
     }
 
-    private static GenericsType asGenericsType(ClassNode type) {
-        if (!type.isGenericsPlaceHolder()) {
-            return new GenericsType(type);
-        } else {
-            ClassNode upper = (type.redirect() != null ? type.redirect() : type);
-            return new GenericsType(type, new ClassNode[]{upper}, null);
-        }
-    }
-
     private static void extractSuperClassGenerics(GenericsType[] usage, GenericsType[] declaration, Map<String, ClassNode> spec) {
         // if declaration does not provide generics, there is no connection to make
         if (declaration == null || declaration.length == 0) return;
@@ -611,7 +604,7 @@ public class GenericsUtils {
                 ClassNode type = spec.get(name);
                 if (type != null && type.isGenericsPlaceHolder()
                         && type.getUnresolvedName().equals(name)) {
-                    type = asGenericsType(type).getUpperBounds()[0];
+                    type = type.asGenericsType().getUpperBounds()[0];
                     spec.put(name, type);
                 }
             }

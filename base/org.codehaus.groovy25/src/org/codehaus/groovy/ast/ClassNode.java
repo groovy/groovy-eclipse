@@ -1460,7 +1460,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return this.annotated;
     }
 
-    // GRECLIPSE add
     public GenericsType asGenericsType() {
         if (!isGenericsPlaceHolder()) {
             return new GenericsType(this);
@@ -1469,7 +1468,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             return new GenericsType(this, new ClassNode[]{upper}, null);
         }
     }
-    // GRECLIPSE end
 
     public GenericsType[] getGenericsTypes() {
         return genericsTypes;

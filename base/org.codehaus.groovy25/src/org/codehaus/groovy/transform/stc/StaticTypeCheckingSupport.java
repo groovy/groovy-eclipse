@@ -543,16 +543,16 @@ public abstract class StaticTypeCheckingSupport {
         switch (op) {
             case COMPARE_EQUAL:
             case COMPARE_NOT_EQUAL:
-                // this is only correct in this context here, normally
+                // this is only correct in this specific context; normally
                 // we would have to compile against compareTo if available
                 // but since we don't compile here, this one is enough
                 return "equals";
 
             case COMPARE_TO:
-            case COMPARE_GREATER_THAN:
-            case COMPARE_GREATER_THAN_EQUAL:
             case COMPARE_LESS_THAN:
             case COMPARE_LESS_THAN_EQUAL:
+            case COMPARE_GREATER_THAN:
+            case COMPARE_GREATER_THAN_EQUAL:
                 return "compareTo";
 
             case BITWISE_AND:
@@ -1442,34 +1442,6 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     protected static ClassNode fullyResolveType(final ClassNode type, final Map<GenericsTypeName, GenericsType> placeholders) {
-        /* GRECLIPSE edit -- GROOVY-9033
-        if (type.isUsingGenerics() && !type.isGenericsPlaceHolder()) {
-            GenericsType[] gts = type.getGenericsTypes();
-            if (gts != null) {
-                GenericsType[] copy = new GenericsType[gts.length];
-                for (int i = 0; i < gts.length; i++) {
-                    GenericsType genericsType = gts[i];
-                    if (genericsType.isPlaceholder() && placeholders.containsKey(new GenericsTypeName(genericsType.getName()))) {
-                        copy[i] = placeholders.get(new GenericsTypeName(genericsType.getName()));
-                    } else {
-                        copy[i] = fullyResolve(genericsType, placeholders);
-                    }
-                }
-                gts = copy;
-            }
-            ClassNode result = type.getPlainNodeReference();
-            result.setGenericsTypes(gts);
-            return result;
-        } else if (type.isUsingGenerics() && OBJECT_TYPE.equals(type) && type.getGenericsTypes() != null) {
-            // Object<T>
-            GenericsType genericsType = placeholders.get(new GenericsTypeName(type.getGenericsTypes()[0].getName()));
-            if (genericsType != null) {
-                return genericsType.getType();
-            }
-        } else if (type.isArray()) {
-            return fullyResolveType(type.getComponentType(), placeholders).makeArray();
-        }
-        */
         if (type.isArray()) {
             return fullyResolveType(type.getComponentType(), placeholders).makeArray();
         }
@@ -1483,21 +1455,25 @@ public abstract class StaticTypeCheckingSupport {
                 return cn != type ? cn : OBJECT_TYPE;
             } else {
                 GenericsType[] gts = type.getGenericsTypes();
-                if (gts != null) {
-                    gts = Arrays.stream(gts).map(gt -> {
+                if (gts != null) {  final int n = gts.length;
+                    GenericsType[] copy = new GenericsType[n];
+                    for (int i = 0; i < n; i += 1) {
+                        GenericsType gt = gts[i];
                         if (gt.isPlaceholder()) {
                             GenericsTypeName gtn = new GenericsTypeName(gt.getName());
-                            return placeholders.getOrDefault(gtn, extractType(gt).asGenericsType());
+                            copy[i] = placeholders.containsKey(gtn)
+                                ? placeholders.get(gtn) : extractType(gt).asGenericsType();
+                        } else {
+                            copy[i] = fullyResolve(gt, placeholders);
                         }
-                        return fullyResolve(gt, placeholders);
-                    }).toArray(GenericsType[]::new);
+                    }
+                    gts = copy;
                 }
                 ClassNode cn = type.getPlainNodeReference();
                 cn.setGenericsTypes(gts);
                 return cn;
             }
         }
-        // GRECLIPSE end
         return type;
     }
 
@@ -1778,23 +1754,11 @@ public abstract class StaticTypeCheckingSupport {
         }
     }
 
-    public static ClassNode resolveClassNodeGenerics(Map<GenericsTypeName, GenericsType> resolvedPlaceholders, final Map<GenericsTypeName, GenericsType> placeholdersFromContext, ClassNode currentType) {
-        /* GRECLIPSE edit -- GROOVY-10280
-        ClassNode target = currentType.redirect();
-        resolvedPlaceholders = new HashMap<GenericsTypeName, GenericsType>(resolvedPlaceholders);
-        applyContextGenerics(resolvedPlaceholders, placeholdersFromContext);
-
-        Map<GenericsTypeName, GenericsType> connections = new HashMap<GenericsTypeName, GenericsType>();
-        extractGenericsConnections(connections, currentType, target);
-        applyGenericsConnections(connections, resolvedPlaceholders);
-        currentType = applyGenericsContext(resolvedPlaceholders, currentType);
-        return currentType;
-        */
-        ClassNode type = currentType;
+    public static ClassNode resolveClassNodeGenerics(final Map<GenericsTypeName, GenericsType> resolvedPlaceholders, final Map<GenericsTypeName, GenericsType> placeholdersFromContext, final ClassNode currentType) {
+        ClassNode type = currentType; // GROOVY-10280, et al.
         type = applyGenericsContext(resolvedPlaceholders, type);
         type = applyGenericsContext(placeholdersFromContext, type);
         return type;
-        // GRECLIPSE end
     }
 
     static void applyGenericsConnections(
@@ -1971,11 +1935,7 @@ public abstract class StaticTypeCheckingSupport {
 
     public static ClassNode getCorrectedClassNode(ClassNode type, ClassNode superClass, boolean handlingGenerics) {
         ClassNode corrected;
-        /* GRECLIPSE edit -- GROOVY-9033
-        if (handlingGenerics && missesGenericsTypes(type)) {
-        */
         if (handlingGenerics && GenericsUtils.hasUnresolvedGenerics(type)) {
-        // GRECLIPSE end
             corrected = superClass.getPlainNodeReference();
         } else {
             corrected = GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.createGenericsSpec(type), superClass);

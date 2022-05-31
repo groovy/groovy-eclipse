@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("Waiting on GROOVY-9064")
 public final class Groovy25InferencingTests extends InferencingTestSuite {
 
     @Test
@@ -27,9 +25,9 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
             "  List list = Collections.emptyList()\n" +
-            "}";
+            "}\n";
 
-        assertType(contents, "list", "java.util.List");
+        assertType(contents, "list", "java.util.List<java.lang.Object>");
     }
 
     @Test
@@ -37,10 +35,10 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
-            "  List list = new ArrayList()\n" +
-            "}";
+            "  List list = new ArrayList<>()\n" +
+            "}\n";
 
-        assertType(contents, "list", "java.util.List");
+        assertType(contents, "list", "java.util.ArrayList<java.lang.Object>");
     }
 
     @Test
@@ -49,9 +47,9 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
             "  List list = [1, 2]\n" +
-            "}";
+            "}\n";
 
-        assertType(contents, "list", "java.util.List");
+        assertType(contents, "list", "java.util.ArrayList<java.lang.Integer>");
     }
 
     @Test
@@ -63,9 +61,9 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  if (flag) {\n" +
             "    list = [3, 'four']\n" +
             "  }\n" +
-            "}";
+            "}\n";
 
-        assertType(contents, "list", "java.util.List");
+        assertType(contents, "list", "java.util.ArrayList<java.io.Serializable or java.lang.Comparable>");
     }
 
     @Test
@@ -74,9 +72,9 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
             "  Map map = Collections.emptyMap()\n" +
-            "}";
+            "}\n";
 
-        assertType(contents, "map", "java.util.Map");
+        assertType(contents, "map", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
 
     @Test
@@ -84,10 +82,10 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
-            "  Map map = new HashMap()\n" +
-            "}";
+            "  Map map = new HashMap<>()\n" +
+            "}\n";
 
-        assertType(contents, "map", "java.util.Map");
+        assertType(contents, "map", "java.util.HashMap<java.lang.Object,java.lang.Object>");
     }
 
     @Test
@@ -96,9 +94,9 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
             "  Map map = [:]\n" +
-            "}";
+            "}\n";
 
-        assertType(contents, "map", "java.util.Map");
+        assertType(contents, "map", "java.util.LinkedHashMap");
     }
 
     @Test
@@ -110,8 +108,8 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  if (flag) {\n" +
             "    map = [a: 1, b: '2']\n" +
             "  }\n" +
-            "}";
+            "}\n";
 
-        assertType(contents, "map", "java.util.Map");
+        assertType(contents, "map", "java.util.LinkedHashMap<java.lang.String,java.io.Serializable or java.lang.Comparable>");
     }
 }

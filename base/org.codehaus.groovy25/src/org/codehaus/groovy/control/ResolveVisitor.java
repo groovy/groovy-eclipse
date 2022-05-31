@@ -61,6 +61,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.ClosureUtils;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -78,8 +79,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-
-import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 
 /**
  * Visitor to resolve Types and convert VariableExpression to
@@ -795,11 +794,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (importNode != null && importNode != currImportNode) {
                     // static alias only for inner classes and must be at end of chain
                     ClassNode tmp = new ConstructedNestedClass(importNode.getType(), importNode.getFieldName());
-                    if (resolve(tmp, false, false, true)) {
-                        if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
-                            type.setRedirect(tmp.redirect());
-                            return true;
-                        }
+                    if (resolve(tmp, false, false, true) && (tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
+                        type.setRedirect(tmp.redirect());
+                        return true;
                     }
                 }
             }
@@ -821,9 +818,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     // It is either completely a inner static class or it is not.
                     // Since we do not want to have useless lookups we create the name
                     // completely and use a ConstructedClassWithPackage to prevent lookups against the package.
-                    String className = aliasedNode.getNameWithoutPackage() + '$' +
-                            name.substring(pname.length() + 1).replace('.', '$');
-                    ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(aliasedNode.getPackageName() + ".", className);
+                    String className = aliasedNode.getNameWithoutPackage() + '$' + name.substring(pname.length() + 1).replace('.', '$');
+                    ClassNode tmp = new ConstructedClassWithPackage(aliasedNode.getPackageName() + ".", className);
                     if (resolve(tmp, true, true, false)) {
                         type.setRedirect(tmp.redirect());
                         return true;
@@ -881,13 +877,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // check package this class is defined in. The usage of ConstructedClassWithPackage here
                 // means, that the module package will not be involved when the
                 // compiler tries to find an inner class.
-                ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(module.getPackageName(), name);
+                ClassNode tmp = new ConstructedClassWithPackage(module.getPackageName(), name);
                 // GRECLIPSE add
                 if (!resolutionFailed.contains(tmp.getName())) {
                 // GRECLIPSE end
                 if (resolve(tmp, false, false, false)) {
                     ambiguousClass(type, tmp, name);
-                    type.setRedirect(tmp.redirect());
                     return true;
                 }
                 // GRECLIPSE add
@@ -895,65 +890,65 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
                 // GRECLIPSE end
             }
-
-            // check module static imports (for static inner classes)
+            // check static imports for static inner types
             for (ImportNode importNode : module.getStaticImports().values()) {
                 if (importNode.getFieldName().equals(name)) {
                     ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
                     // GRECLIPSE add
                     if (resolutionFailed.contains(tmp.getName())) continue;
                     // GRECLIPSE end
-                    if (resolve(tmp, false, false, true)) {
-                        if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
-                            type.setRedirect(tmp.redirect());
-                            return true;
-                        }
+                    if (resolve(tmp, false, false, true) && (tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
+                        type.setRedirect(tmp.redirect());
+                        return true;
                     }
                     // GRECLIPSE add
                     resolutionFailed.add(tmp.getName());
                     // GRECLIPSE end
                 }
             }
-
-            // check module node import packages
-            for (ImportNode importNode : module.getStarImports()) {
-                String packagePrefix = importNode.getPackageName();
-                // We limit the inner class lookups here by using ConstructedClassWithPackage.
-                // This way only the name will change, the packagePrefix will
-                // not be included in the lookup. The case where the
-                // packagePrefix is really a class is handled elsewhere.
-                ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(packagePrefix, name);
+            for (ImportNode importNode : module.getStaticStarImports().values()) {
+                ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
                 // GRECLIPSE add
                 if (resolutionFailed.contains(tmp.getName())) continue;
                 // GRECLIPSE end
-                if (resolve(tmp, false, false, true)) {
+                if (resolve(tmp, false, false, true) && (tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
                     ambiguousClass(type, tmp, name);
-                    type.setRedirect(tmp.redirect());
                     return true;
                 }
                 // GRECLIPSE add
                 resolutionFailed.add(tmp.getName());
                 // GRECLIPSE end
             }
-
-            // check for star imports (import static pkg.Outer.*) matching static inner classes
-            for (ImportNode importNode : module.getStaticStarImports().values()) {
-                ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
-                // GRECLIPSE add
-                if (resolutionFailed.contains(tmp.getName())) continue;
-                // GRECLIPSE end
-                if (resolve(tmp, false, false, true)) {
-                    if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
+            // check star imports ("import foo.*" or "import foo.Bar.*")
+            for (ImportNode importNode : module.getStarImports()) {
+                if (importNode.getType() != null) {
+                    ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
+                    // GRECLIPSE add
+                    if (resolutionFailed.contains(tmp.getName())) continue;
+                    // GRECLIPSE end
+                    if (resolve(tmp, false, false, true) && (tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
                         ambiguousClass(type, tmp, name);
-                        type.setRedirect(tmp.redirect());
                         return true;
                     }
+                    // GRECLIPSE add
+                    resolutionFailed.add(tmp.getName());
+                    // GRECLIPSE end
+                } else {
+                    ClassNode tmp = new ConstructedClassWithPackage(importNode.getPackageName(), name);
+                    // GRECLIPSE add
+                    if (resolutionFailed.contains(tmp.getName())) continue;
+                    // GRECLIPSE end
+                    if (resolve(tmp, false, false, true)) {
+                        ambiguousClass(type, tmp, name);
+                        return true;
+                    }
+                    // GRECLIPSE add
+                    resolutionFailed.add(tmp.getName());
+                    // GRECLIPSE end
                 }
-                // GRECLIPSE add
-                resolutionFailed.add(tmp.getName());
-                // GRECLIPSE end
             }
         }
+
         return false;
     }
 
@@ -1366,7 +1361,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected Expression transformClosureExpression(ClosureExpression ce) {
         boolean oldInClosure = inClosure;
         inClosure = true;
-        for (Parameter para : getParametersSafe(ce)) {
+        for (Parameter para : ClosureUtils.getParametersSafe(ce)) {
             ClassNode t = para.getType();
             resolveOrFail(t, ce);
             visitAnnotations(para);
@@ -1580,22 +1575,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 currImportNode = null;
                 addError("unable to resolve class " + type.getName(), type);
             }
-            /* GRECLIPSE edit
-            for (ImportNode importNode : module.getStaticStarImports().values()) {
-                ClassNode type = importNode.getType();
-                if (resolve(type, false, false, true)) continue;
-                // Maybe this type belongs in the same package as the node that is doing the
-                // static import. In that case, the package may not have been explicitly specified.
-                // Try with the node's package too. If still not found, revert to original type name.
-                if (type.getPackageName() == null && node.getPackageName() != null) {
-                    String oldTypeName = type.getName();
-                    type.setName(node.getPackageName() + "." + oldTypeName);
-                    if (resolve(type, false, false, true)) continue;
-                    type.setName(oldTypeName);
-                }
-                addError("unable to resolve class " + type.getName(), type);
-            }
-            */
             for (ImportNode importNode : module.getStarImports()) {
                 if (importNode.getEnd() > 0) {
                     currImportNode = importNode;
@@ -1604,13 +1583,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     ClassNode type = ClassHelper.makeWithoutCaching(importName);
                     if (resolve(type, false, false, true)) {
                         importNode.setType(type);
+                        // GRECLIPSE add
                         type.setStart(importNode.getStart() + 7);
                         type.setEnd(type.getStart() + importName.length());
+                        // GRECLIPSE end
                     }
                     currImportNode = null;
                 }
             }
-            // GRECLIPSE end
             for (ImportNode importNode : module.getStaticImports().values()) {
                 ClassNode type = importNode.getType();
                 if (!resolve(type, false, false, true))
