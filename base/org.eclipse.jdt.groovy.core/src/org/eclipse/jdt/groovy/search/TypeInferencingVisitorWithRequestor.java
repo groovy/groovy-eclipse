@@ -2533,7 +2533,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             MethodNode sam;
             // check for SAM-type coercion of closure/lambda expression
             if (primaryType != null && (sam = ClassHelper.findSAM(primaryType)) != null) {
-                GenericsMapper m = GenericsMapper.gatherGenerics(primaryType);
+                GenericsMapper m = GenericsMapper.gatherGenerics(primaryType, sam.getDeclaringClass());
                 for (ClassNode t : GroovyUtils.getParameterTypes(sam.getParameters())) {
                     if (i == inferredTypes.length) break;
                     inferredTypes[i++] = VariableScope.resolveTypeParameterization(m, t);

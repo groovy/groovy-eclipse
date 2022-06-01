@@ -1068,6 +1068,26 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "e", "java.lang.Object");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1368
+    public void testClosure24() {
+        createUnit("F",
+            "import java.util.function.Function\n" +
+            "interface F extends Function<Number,String> {\n" +
+            "}\n");
+
+        String contents =
+            "def m(F function) {}\n" +
+            "m {it.intValue().toString()}\n";
+        assertType(contents, "it", "java.lang.Number");
+
+        if (isParrotParser()) {
+            contents =
+                "def m(F function) {}\n" +
+                "m(x -> x.intValue().toString())\n";
+            assertType(contents, "x", "java.lang.Number");
+        }
+    }
+
     @Test
     public void testArrayDGM() {
         String contents =
