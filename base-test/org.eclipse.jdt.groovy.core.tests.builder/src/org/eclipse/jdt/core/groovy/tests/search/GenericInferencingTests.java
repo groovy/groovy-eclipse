@@ -1184,6 +1184,32 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "val", "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1369
+    public void testNestedGenerics9() {
+        String contents =
+            "interface Buildable<R> {\n" +
+            "  R build()\n" +
+            "}\n" +
+            "abstract class WhereDSL<S> {\n" +
+            "  abstract S where()\n" +
+            "}\n" +
+            "abstract class Input<T> extends WhereDSL<ReferencesOuterClassTP> {\n" +
+            "  class ReferencesOuterClassTP implements Buildable<T> {\n" +
+            "    @Override T build() {\n" +
+            "      return null\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class Model {\n" +
+            "}\n" +
+            "void m(Input<Model> input) {\n" +
+            "  def where = input.where();\n" +
+            "  def model = where.build();\n" +
+            "}";
+        assertType(contents, "where", "Input$ReferencesOuterClassTP");
+        assertType(contents, "model", "Model");
+    }
+
     @Test
     public void testGetClass1() {
         String contents = "''.getClass()", toFind = "getClass";

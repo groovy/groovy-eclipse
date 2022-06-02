@@ -1008,74 +1008,59 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * first (in declared order with traits reversed) and then any non-duplicate
      * interfaces declared on super interfaces.
      *
-     * @param allInterfaces an accumulator set that will ensure that each interface exists at most once and in a predictible order
+     * @param accumulator ensures that each interface exists at most once and in a predictible order
      * @param useResolved whether or not to use the resolved interfaces
      */
-    public static void findAllInterfaces(ClassNode type, final Set<ClassNode> allInterfaces, final boolean useResolved) {
+    public static void findAllInterfaces(ClassNode type, final Set<ClassNode> accumulator, final boolean useResolved) {
         if (!useResolved) type = type.redirect();
         boolean isInterface = type.isInterface();
-        if (!isInterface || allInterfaces.add(type)) {
-            // Urrrgh...I don't like this.
-            // Groovy compiler has a different notion of 'resolved' than we do here.
-            // Groovy compiler considers a resolved ClassNode one that has no redirect.
-            // However, we consider a ClassNode to be resolved if its type parameters are resolved.
-            ClassNode[] interfaces = !useResolved ? type.getInterfaces() : type.getUnresolvedInterfaces();
+        if (!isInterface || accumulator.add(type)) {
+            ClassNode[] interfaces = type.getInterfaces();
             if (interfaces != null && interfaces.length > 0) {
-                // put traits first in reverse declared order
-                Deque<ClassNode> deque = new LinkedList<>();
+                // put traits first, in reverse declared order
+                Deque<ClassNode> todo = new LinkedList<>();
                 for (ClassNode face : interfaces) {
                     if (Traits.isTrait(face)) {
-                        deque.addFirst(face);
+                        todo.addFirst(face);
                     } else {
-                        deque.addLast(face);
+                        todo.addLast(face);
                     }
                 }
-
-                for (ClassNode face : deque) {
-                    findAllInterfaces(face, allInterfaces, useResolved);
+                for (ClassNode face : todo) {
+                    findAllInterfaces(face, accumulator, useResolved);
                 }
             }
-
             if (!isInterface) {
-                ClassNode superType = type.getSuperClass();
-                if (superType != null && !superType.equals(OBJECT_CLASS_NODE)) {
-                    findAllInterfaces(superType, allInterfaces, useResolved);
+                ClassNode sc = type.getUnresolvedSuperClass();
+                if (sc != null && !sc.equals(OBJECT_CLASS_NODE)) {
+                    findAllInterfaces(sc, accumulator, useResolved);
                 }
             }
         }
     }
 
     /**
-     * Creates a type hierarchy for the <code>clazz</code>>, including self.
-     * Classes come first and then interfaces.
+     * Creates a type hierarchy for {@code type}, including itself. Classes come
+     * first, followed by interfaces.
      * <p>
-     * TODO: The ordering of super interfaces will not be the same as in {@link VariableScope#findAllInterfaces}. Should it be the same?
+     * TODO: The order of super interfaces will not be the same as in {@link #findAllInterfaces}.  Should it be the same?
      */
-    public static void createTypeHierarchy(ClassNode type, Set<ClassNode> allClasses, boolean useResolved) {
-        if (!useResolved) {
-            type = type.redirect();
-        }
-        if (!allClasses.contains(type)) {
+    public static void createTypeHierarchy(ClassNode type, final Set<ClassNode> accumulator, final boolean useResolved) {
+        if (!useResolved) type = type.redirect();
+        if (!accumulator.contains(type)) {
             if (!type.isInterface()) {
-                allClasses.add(type);
-                ClassNode superClass;
-                // Urrrgh...I don't like this.
+                accumulator.add(type);
                 // Groovy compiler has a different notion of 'resolved' than we do here.
-                // Groovy compiler considers a resolved ClassNode one that has no redirect.
-                // however, we consider a ClassNode to be resolved if its type parameters are resolved.
-                // that is why we call getUnresolvedSuperClass if useResolved is true (and vice versa).
-                if (useResolved) {
-                    superClass = type.getUnresolvedSuperClass();
-                } else {
-                    superClass = type.getSuperClass();
-                }
-
-                if (superClass != null) {
-                    createTypeHierarchy(superClass, allClasses, useResolved);
+                // It considers a ClassNode resolved if it is primary or has type class.
+                // We consider a ClassNode resolved if it has resolved type argument(s).
+                ClassNode sc = type.getUnresolvedSuperClass();
+                if (sc != null) { // includes java.lang.Object
+                    createTypeHierarchy(sc, accumulator, useResolved);
                 }
             }
-            // interfaces will be added from the top-most type first
-            findAllInterfaces(type, allClasses, useResolved);
+            if (!type.equals(OBJECT_CLASS_NODE)) {
+                findAllInterfaces(type, accumulator, useResolved);
+            }
         }
     }
 

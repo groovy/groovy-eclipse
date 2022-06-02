@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ public enum AccessorSupport {
                 // abstract types do not track undeclared abstract methods; concrete types do not track interface default methods
                 if (declaringType.isAbstract() || declaringType.isInterface() || GroovyUtils.implementsTrait(declaringType)) {
                     Set<ClassNode> faces = new LinkedHashSet<>();
-                    VariableScope.findAllInterfaces(declaringType, faces, true);
+                    VariableScope.findAllInterfaces(declaringType, faces, false);
                     faces.remove(declaringType); // checked already
                     for (ClassNode face : faces) {
                         methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, face, isCategory, kind));

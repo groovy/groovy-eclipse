@@ -504,7 +504,7 @@ public class GroovyUtils {
         if (getGenericsTypes(node).length > 0) {
             return true;
         }
-        if (!node.isStatic() && getGenericsTypes(node.getDeclaringClass()).length > 0) {
+        if (!node.isStatic() && node.getDeclaringClass().isUsingGenerics()) {
             Stream<ClassNode> types = Stream.concat(Stream.of(node.getReturnType()),
                                         getParameterTypes(node.getParameters()).stream());
             return types.anyMatch(type -> type.isUsingGenerics() || type.isGenericsPlaceHolder());

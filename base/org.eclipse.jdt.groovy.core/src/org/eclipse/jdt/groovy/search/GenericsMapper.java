@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -87,6 +88,12 @@ public class GenericsMapper {
             rCandidate = rIterator.next();
             uCandidate = uIterator.next();
 
+            Map<String, ClassNode> resolved = null;
+            ClassNode oc = rCandidate.getNodeMetaData("outer.class");
+            if (oc != null) { GenericsMapper gm = gatherGenerics(oc);
+                if (gm.hasGenerics()) resolved = gm.allGenerics.getLast();
+            }
+
             GenericsType[] rgts = GroovyUtils.getGenericsTypes(rCandidate);
             GenericsType[] ugts = GroovyUtils.getGenericsTypes(uCandidate);
 
@@ -100,7 +107,7 @@ public class GenericsMapper {
             }
             assert rgts.length == ugts.length;
 
-            Map<String, ClassNode> resolved = (n > 0 ? new TreeMap<>() : Collections.EMPTY_MAP);
+            if (resolved == null) resolved = (n > 0 ? new TreeMap<>() : Collections.emptyMap());
             for (int i = 0; i < n; i += 1) {
                 // now try to resolve the parameter in the context of the
                 // most recently visited type. If it doesn't exist, then
@@ -210,11 +217,12 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
     }
 
     /**
-     * takes this type or type parameter and determines what its type should be based on the type parameter resolution in the top level of the mapper
+     * Takes type or type parameter and determines what its type should be based
+     * on the type parameter resolution in the top level of the mapper.
      *
-     * @param depth ensure that we don't recur forever, bottom out after a certain depth
+     * @param depth ensures that we don't cycle; bottom out after a chosen depth
      */
-    public ClassNode resolveParameter(final GenericsType topGT, final int depth) {
+    public ClassNode resolveParameter(final GenericsType topGT, final int depth) { assert depth >= 0;
         if (allGenerics.isEmpty()) {
             if (!topGT.isWildcard()) {
                 return topGT.getType();
@@ -229,32 +237,34 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
         }
 
         if (depth > 10) {
-            // don't recur forever
             // FIXADE This problem is believed fixed. If this conidtional is never reached, then we should be able to delete this section.
             Util.log(new Status(IStatus.WARNING, "org.eclipse.jdt.groovy.core", "GRECLIPSE-1040: prevent infinite recursion when resolving type parameters on generics type: " + topGT));
             return topGT.getType();
         }
 
-        ClassNode origType = findParameter(topGT.getName(), topGT.getType());
-
-        // now recur down all type parameters inside of this type
-        // class Enum<E extends Enum<E>>
-        if (origType.getGenericsTypes() != null) {
-            origType = VariableScope.clone(origType);
-            GenericsType[] genericsTypes = origType.getGenericsTypes();
+        ClassNode theType = findParameter(topGT.getName(), topGT.getType());
+        // recur for type parameters of the type: class Enum<E extends Enum<E>>
+        if (theType.redirect().isUsingGenerics()) {
+            theType = VariableScope.clone(theType);
+            GenericsType[] genericsTypes = theType.getGenericsTypes();
+            if (genericsTypes == null) genericsTypes = GenericsType.EMPTY_ARRAY;
             for (GenericsType genericsType : genericsTypes) {
                 if (genericsType.getName().equals(topGT.getName())) {
-                    // avoid infinite loops
-                    // I still don't like this solution, but better than using a depth counter.
-                    continue;
+                    continue; // avoid infinite loops -- not ideal but better than using a depth counter
                 }
                 genericsType.setType(findParameter(genericsType.getName(), resolveParameter(genericsType, depth + 1)));
-                genericsType.setLowerBound(null);
-                genericsType.setUpperBounds(null);
                 genericsType.setName(genericsType.getType().getName());
+                genericsType.setUpperBounds(null);
+                genericsType.setLowerBound(null);
+            }
+
+            ClassNode oc = theType.getOuterClass(); // non-static inner class may use outer class type param
+            if (oc != null && oc.getGenericsTypes() != null && !Modifier.isStatic(theType.getModifiers())) {
+                oc = resolveParameter(new GenericsType(oc), depth + 1);
+                theType.putNodeMetaData("outer.class", oc);
             }
         }
-        return origType;
+        return theType;
     }
 
     //--------------------------------------------------------------------------
@@ -289,14 +299,13 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
      * @param defaultType type to return if parameter name doesn't exist
      */
     protected ClassNode findParameter(final String parameterName, final ClassNode defaultType) {
-        if (allGenerics.isEmpty()) {
-            return defaultType;
+        if (hasGenerics()) {
+            ClassNode type = allGenerics.getLast().get(parameterName);
+            if (type != null) {
+                return type;
+            }
         }
-        ClassNode type = allGenerics.getLast().get(parameterName);
-        if (type == null) {
-            return defaultType;
-        }
-        return type;
+        return defaultType;
     }
 
     protected static Iterator<ClassNode> getTypeHierarchy(final ClassNode type, final boolean useResolved) {
