@@ -647,6 +647,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked27() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface A {\n" +
+            "  def getX()\n" +
+            "}\n" +
+            "interface B {\n" +
+            "  def getY()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(A a) {\n" +
+            "  if (a instanceof B) {\n" +
+            "    @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "      def type = node.rightExpression.objectExpression.getNodeMetaData(\n" +
+            "        org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+            "      assert type.toString(false) == '<UnionType:A+B>'\n" +
+            "    })\n" +
+            "    def x = a.x\n" +
+            "    def y = a.y\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked5450() {
         //@formatter:off
         String[] sources = {
@@ -2448,6 +2477,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "[123]");
+    }
+
+    @Test
+    public void testTypeChecked9769() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface A {\n" +
+            "  def m()\n" +
+            "}\n" +
+            "interface B extends A {\n" +
+            "  def n()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(A a) {\n" +
+            "  if (a instanceof B) {\n" +
+            "    @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "      def type = node.rightExpression.objectExpression.getNodeMetaData(\n" +
+            "        org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+            "      assert type.toString(false) == 'B'\n" + // not <UnionType:A+B>
+            "    })\n" +
+            "    def x = a.m()\n" +
+            "    def y = a.n()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
@@ -5661,6 +5719,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  B<Float> x = new B<>(new A<>())\n" + // Cannot assign B<Object> to B<Float>
             "}\n" +
             "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10651() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(NodeType node) {\n" +
+            "  node.each { child ->\n" +
+            "    test(child)\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+
+            "NodeType.java",
+            "public abstract class NodeType<T extends NodeType<?>> implements Iterable<T> {\n" +
+            "}\n",
         };
         //@formatter:on
 

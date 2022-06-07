@@ -6985,23 +6985,31 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     /**
      * Wrapper for a Parameter so it can be treated like a VariableExpression
-     * and tracked in the ifElseForWhileAssignmentTracker.
-     * <p>
-     * This class purposely does not adhere to the normal equals and hashCode
-     * contract on the Object class and delegates those calls to the wrapped
-     * variable.
+     * and tracked in the {@code ifElseForWhileAssignmentTracker}.
      */
-    private static class ParameterVariableExpression extends VariableExpression {
+    private class ParameterVariableExpression extends VariableExpression {
 
         private final Parameter parameter;
 
-        ParameterVariableExpression(Parameter parameter) {
+        ParameterVariableExpression(final Parameter parameter) {
             super(parameter);
             this.parameter = parameter;
+            /* GRECLIPSE edit -- GROOVY-10651
             ClassNode inferred = parameter.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
             if (inferred == null) {
                 parameter.setNodeMetaData(StaticTypesMarker.INFERRED_TYPE, parameter.getOriginType());
             }
+            */
+            ClassNode inferredType = getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+            if (inferredType == null) {
+                inferredType = typeCheckingContext.controlStructureVariables.get(parameter); // for/catch/closure
+                if (inferredType == null) {
+                    TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
+                    if (enclosingClosure != null) inferredType = getTypeFromClosureArguments(parameter, enclosingClosure);
+                }
+                setNodeMetaData(StaticTypesMarker.INFERRED_TYPE, inferredType != null ? inferredType : parameter.getType());
+            }
+            // GRECLIPSE end
         }
 
         @Override
@@ -7030,14 +7038,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
 
         @Override
+        /* GRECLIPSE edit
         public void setNodeMetaData(Object key, Object value) {
             parameter.setNodeMetaData(key, value);
-        }
-        // GRECLIPSE add
-        @Override
-        public <T> T getNodeMetaData(Object key, java.util.function.Function<?, ? extends T> valFn) {
+        */
+        public <T> T getNodeMetaData(Object key, Function<?, ? extends T> valFn) {
             return parameter.getNodeMetaData(key, valFn);
-        }
         // GRECLIPSE end
+        }
     }
 }

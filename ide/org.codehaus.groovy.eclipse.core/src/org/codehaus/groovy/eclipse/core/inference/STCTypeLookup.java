@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -149,7 +150,7 @@ public class STCTypeLookup implements ITypeLookup {
     }
 
     @Override
-    public TypeLookupResult lookupType(final FieldNode node, final VariableScope scope) {
+    public TypeLookupResult lookupType(final FieldNode  node, final VariableScope scope) {
         if (isEnabled) {
             Object inferredType = node.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
             if (inferredType instanceof ClassNode) {
@@ -165,6 +166,17 @@ public class STCTypeLookup implements ITypeLookup {
             Object inferredType = node.getNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE);
             if (inferredType instanceof ClassNode) {
                 return new TypeLookupResult((ClassNode) inferredType, node.getDeclaringClass(), node, TypeConfidence.INFERRED, scope);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public TypeLookupResult lookupType(final Parameter param, final VariableScope scope) {
+        if (isEnabled) {
+            Object inferredType = param.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+            if (inferredType instanceof ClassNode) {
+                return new TypeLookupResult((ClassNode) inferredType, scope.getEnclosingTypeDeclaration(), param, TypeConfidence.INFERRED, scope);
             }
         }
         return null;
