@@ -1790,7 +1790,7 @@ public final class InferencingTests extends InferencingTestSuite {
             if (!qual.startsWith("C")) {
                 assertUnknown(contents, "naturalOrder");
             } else {
-                assertType(contents, "naturalOrder", "java.util.Comparator<java.lang." + (qual.endsWith(">") ? "String" : "Comparable<? super T>") + ">");
+                assertType(contents, "naturalOrder", "java.util.Comparator<java.lang." + (qual.endsWith(">") ? "String" : "Object") + ">");
             }
         }
     }

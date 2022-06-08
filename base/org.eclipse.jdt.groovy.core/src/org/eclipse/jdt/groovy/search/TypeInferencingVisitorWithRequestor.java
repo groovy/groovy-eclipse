@@ -979,10 +979,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (node.isParameterSpecified()) {
                 Parameter[] parameters = node.getParameters();
                 for (int i = 0, n = parameters.length; i < n; i += 1) {
-                    // only change the parameter's type if it's not declared explicitly
-                    if (parameters[i].isDynamicTyped() && inferredParamTypes[i] != null &&
-                            (!inferredParamTypes[i].equals(VariableScope.OBJECT_CLASS_NODE) || inferredParamTypes[i].isGenericsPlaceHolder())) {
-                        parameters[i].setType(inferredParamTypes[i]);
+                    if (parameters[i].isDynamicTyped() && isNotNullOrObject(inferredParamTypes[i])) {
+                        scope.addVariable(parameters[i].getName(), inferredParamTypes[i], null);
                     }
                 }
                 handleParameters(parameters);
@@ -3247,6 +3245,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     private static boolean isNotEmpty(final Stream<?> stream) {
         return (stream != null && stream.anyMatch(x -> true));
+    }
+
+    private static boolean isNotNullOrObject(final ClassNode type) {
+        return (type != null && (!type.equals(VariableScope.OBJECT_CLASS_NODE) || type.isGenericsPlaceHolder()));
     }
 
     private static VariableExpression isNotNullTest(final Expression node) {

@@ -110,7 +110,7 @@ public class GenericsMapper {
             if (resolved == null) resolved = (n > 0 ? new TreeMap<>() : Collections.emptyMap());
             for (int i = 0; i < n; i += 1) {
                 // now try to resolve the parameter in the context of the
-                // most recently visited type. If it doesn't exist, then
+                // most recently visited type; if it does not exist, then
                 // default to the resovled type
                 resolved.put(ugts[i].getName(), mapper.resolveParameter(rgts[i], 0));
             }
@@ -242,7 +242,7 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
             return topGT.getType();
         }
 
-        ClassNode theType = findParameter(topGT.getName(), topGT.getType());
+        ClassNode theType = allGenerics.getLast().getOrDefault(topGT.getName(), topGT.getType());
         // recur for type parameters of the type: class Enum<E extends Enum<E>>
         if (theType.redirect().isUsingGenerics()) {
             theType = VariableScope.clone(theType);
@@ -252,7 +252,7 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
                 if (genericsType.getName().equals(topGT.getName())) {
                     continue; // avoid infinite loops -- not ideal but better than using a depth counter
                 }
-                genericsType.setType(findParameter(genericsType.getName(), resolveParameter(genericsType, depth + 1)));
+                genericsType.setType(allGenerics.getLast().getOrDefault(genericsType.getName(), resolveParameter(genericsType, depth + 1)));
                 genericsType.setName(genericsType.getType().getName());
                 genericsType.setUpperBounds(null);
                 genericsType.setLowerBound(null);
@@ -299,7 +299,7 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
      * @param defaultType type to return if parameter name doesn't exist
      */
     protected ClassNode findParameter(final String parameterName, final ClassNode defaultType) {
-        if (hasGenerics()) {
+        if (!allGenerics.isEmpty()) {
             ClassNode type = allGenerics.getLast().get(parameterName);
             if (type != null) {
                 return type;
@@ -309,10 +309,11 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
     }
 
     protected static Iterator<ClassNode> getTypeHierarchy(final ClassNode type, final boolean useResolved) {
-        Set<ClassNode> hierarchy = new LinkedHashSet<>();
+        Set<ClassNode> hierarchy = new LinkedHashSet<>(); // keeps order
         VariableScope.createTypeHierarchy(type, hierarchy, useResolved);
-        hierarchy.remove(VariableScope.GROOVY_OBJECT_CLASS_NODE);
         hierarchy.remove(VariableScope.OBJECT_CLASS_NODE);
+        hierarchy.removeIf(cn -> cn.isInterface() &&
+          cn.redirect().getGenericsTypes() == null);
         return hierarchy.iterator();
     }
 

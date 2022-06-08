@@ -5731,15 +5731,15 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
-            "void test(NodeType node) {\n" +
+            "void test(TreeNode node) {\n" +
             "  node.each { child ->\n" +
             "    test(child)\n" +
             "  }\n" +
             "}\n" +
             "test()\n",
 
-            "NodeType.java",
-            "public abstract class NodeType<T extends NodeType<?>> implements Iterable<T> {\n" +
+            "TreeNode.java",
+            "public abstract class TreeNode<TN extends TreeNode<?>> implements Iterable<TN> {\n" +
             "}\n",
         };
         //@formatter:on

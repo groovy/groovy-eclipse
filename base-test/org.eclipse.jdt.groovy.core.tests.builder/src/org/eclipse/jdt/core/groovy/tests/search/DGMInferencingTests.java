@@ -1013,6 +1013,23 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testDGMClosure26() {
+        createJavaUnit("TreeNode",
+            "public abstract class TreeNode<TN extends TreeNode<?>>\n" +
+            "  implements Appendable, Iterable<TN> {\n" +
+            "}\n");
+
+        //@formatter:off
+        String contents =
+            "void test(TreeNode node) {\n" +
+            "  node.each { child ->\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+        assertExprType(contents, "child", "TreeNode");
+    }
+
+    @Test
     public void testDGMDeclaring1() {
         //@formatter:off
         String contents =
