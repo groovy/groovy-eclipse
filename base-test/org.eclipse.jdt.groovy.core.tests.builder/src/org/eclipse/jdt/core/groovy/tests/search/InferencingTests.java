@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class InferencingTests extends InferencingTestSuite {
@@ -2704,21 +2705,33 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testObjectMethodOnClassVar1() {
+        String contents = "int m(Class c) {\n c.toString()\n}\n";
+
+        assertDeclaringType(contents, "toString", "java.lang.Class");
+    }
+
+    @Test @Ignore("TODO")
+    public void testObjectMethodOnClassVar2() {
+        String contents = "int m(Class c) {\n c.hashCode()\n}\n";
+
+        assertDeclaringType(contents, "hashCode", "java.lang.Object");
+    }
+
+    @Test
     public void testObjectMethodOnInterface() {
         // Object is not in explicit type hierarchy of List
-        String contents = "def meth(List list) {\n list.getClass()\n}\n";
+        String contents = "def m(List list) {\n list.getClass()\n}\n";
 
-        String target = "getClass", source = "java.lang.Object";
-        assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
+        assertDeclaringType(contents, "getClass", "java.lang.Object");
     }
 
     @Test
     public void testObjectMethodOnInterfaceAsProperty() {
         // Object is not in explicit type hierarchy of List
-        String contents = "def meth(List list) {\n list.class\n}\n";
+        String contents = "def m(List list) {\n list.class\n}\n";
 
-        String target = "class", source = "java.lang.Object";
-        assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
+        assertDeclaringType(contents, "class", "java.lang.Object");
     }
 
     @Test

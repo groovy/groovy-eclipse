@@ -170,7 +170,7 @@ public class TypeLookupResult {
                 objectType = ClassHelper.getWrapper(objectType);
             } else if (objectType.equals(VariableScope.CLASS_CLASS_NODE) &&
                    !declaringType.equals(VariableScope.CLASS_CLASS_NODE) && !isGroovy) {
-                objectType = objectType.getGenericsTypes()[0].getType(); // peel Class<>
+                objectType = VariableScope.getFirstGenerics(objectType); // peel Class<>
             }
 
             if (!(declaration instanceof MethodNode)) {

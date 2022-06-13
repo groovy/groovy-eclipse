@@ -1142,6 +1142,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return elementType;
     }
 
+    public static ClassNode getFirstGenerics(ClassNode type) {
+        GenericsType[] genericsTypes = type.getGenericsTypes();
+        if (genericsTypes != null) return genericsTypes[0].getType();
+        return type.redirect().getGenericsTypes()[0].getType().redirect();
+    }
+
     public static boolean isPlainClosure(ClassNode type) {
         return CLOSURE_CLASS_NODE.equals(type) && type.getGenericsTypes() == null;
     }
@@ -1331,11 +1337,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
          */
         public ClassNode getPerceivedDeclaringType() {
             if (declaringType.equals(CLASS_CLASS_NODE)) {
-                if (declaringType.getGenericsTypes() != null) {
-                    GenericsType genericsType = declaringType.getGenericsTypes()[0];
-                    return genericsType.getType();
-                }
-                return OBJECT_CLASS_NODE;
+                return getFirstGenerics(declaringType);
             }
             return declaringType;
         }
