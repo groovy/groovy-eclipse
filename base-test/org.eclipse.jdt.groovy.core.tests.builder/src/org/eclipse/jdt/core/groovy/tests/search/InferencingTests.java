@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class InferencingTests extends InferencingTestSuite {
@@ -2711,7 +2710,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, "toString", "java.lang.Class");
     }
 
-    @Test @Ignore("TODO")
+    @Test
     public void testObjectMethodOnClassVar2() {
         String contents = "int m(Class c) {\n c.hashCode()\n}\n";
 

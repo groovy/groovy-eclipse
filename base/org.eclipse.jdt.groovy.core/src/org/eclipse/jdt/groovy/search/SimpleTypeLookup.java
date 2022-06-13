@@ -390,7 +390,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         if (declaration != null) {
-            if (!resolvedDeclaringType.equals(VariableScope.CLASS_CLASS_NODE) && !(resolvedDeclaringType.equals(VariableScope.OBJECT_CLASS_NODE) && "getClass".equals(name))) {
+            if (!resolvedDeclaringType.equals(VariableScope.CLASS_CLASS_NODE) && !resolvedDeclaringType.equals(VariableScope.OBJECT_CLASS_NODE)) {
                 // check to see if the object expression is static but the declaration is not -- and some other conditions
                 if (declaration instanceof FieldNode) {
                     FieldNode field = (FieldNode) declaration;
