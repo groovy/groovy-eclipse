@@ -676,6 +676,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked28() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Map<String,Number> map = [:].withDefault { 0 }\n" +
+            "  map.put('foo', 1)\n" +
+            "  map['bar'] = 2\n" +
+            "  map.baz = 3.14\n" +
+            "  print map\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo:1, bar:2, baz:3.14]");
+    }
+
+    @Test
     public void testTypeChecked5450() {
         //@formatter:off
         String[] sources = {
