@@ -124,7 +124,7 @@
 				<repository>
 					<id>milestone</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.24-I-builds/I20220601-1800</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.24-I-builds/I20220607-0700</url>
 				</repository>
 			</repositories>
 			<modules>
