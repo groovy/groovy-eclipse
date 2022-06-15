@@ -121,11 +121,6 @@
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.24</url>
 				</repository>
-				<repository>
-					<id>milestone</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.24-I-builds/I20220607-0700</url>
-				</repository>
 			</repositories>
 			<modules>
 				<module>jdt-patch/e424/org.eclipse.jdt.core</module>
