@@ -5707,13 +5707,13 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
-            "  print Face.getValue()\n" +
-            "  print Face.value\n" +
+            "  print(Face.getValue())\n" +
+            "  print(Face.value)\n" +
             "}\n" +
             "test()\n",
 
             "Face.java",
-            "interface Face {\n" +
+            "public interface Face {\n" +
             "  static String getValue() {\n" +
             "    return \"works\";\n" +
             "  }\n" +
@@ -5732,13 +5732,13 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "class Impl implements Face {}\n" +
             "@groovy.transform.TypeChecked\n" +
             "void test(Impl impl) {\n" +
-            "  print impl.getValue()\n" +
-            "  print impl.value\n" +
+            "  print(impl.getValue())\n" +
+            "  print(impl.value)\n" +
             "}\n" +
             "test(new Impl())\n",
 
             "Face.java",
-            "interface Face {\n" +
+            "public interface Face {\n" +
             "  default String getValue() {\n" +
             "    return \"works\";\n" +
             "  }\n" +
