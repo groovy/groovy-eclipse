@@ -7410,4 +7410,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "worksworks");
     }
+
+    @Test
+    public void testTypeChecked10592a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Impl implements Face {  }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Impl impl) {\n" +
+            "  print impl.getValue()\n" +
+            "  print impl.value\n" +
+            "}\n" +
+            "test(new Impl())\n",
+
+            "Face.java",
+            "interface Face {\n" +
+            "  default String getValue() {\n" +
+            "    return \"works\";\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "worksworks");
+    }
 }

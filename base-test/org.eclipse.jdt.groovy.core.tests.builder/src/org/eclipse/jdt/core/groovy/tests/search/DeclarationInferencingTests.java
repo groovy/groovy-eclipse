@@ -1312,7 +1312,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
             "List<String> list = []\n" +
             "list.toArray { n ->\n" +
             "  new String[n]\n" +
-            "}\n";
+            "}";
         //@formatter:on
 
         int offset = contents.indexOf("toArray");
@@ -1325,26 +1325,6 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
             MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.List<java.lang.String>", "toArray", DeclarationKind.METHOD);
             assertEquals("T[]", printTypeName(method.getParameters()[0].getType()));
         }
-    }
-
-    @Test // GROOVY-10592
-    public void testJavaInterfaceWithStaticMethod() {
-        //@formatter:off
-        createJavaUnit("I",
-            "public interface I {\n" +
-            "  static C getP() {\n" +
-            "  }\n" +
-            "  class C {\n" +
-            "  }\n" +
-            "}");
-
-        String contents =
-            "I.getP();" +
-            "I.p"; // XXX
-        //@formatter:on
-
-        assertKnown(contents, "getP", "I", "getP", DeclarationKind.METHOD);
-        assertUnknown(contents, "p");
     }
 
     @Test // GRECLIPSE-1105

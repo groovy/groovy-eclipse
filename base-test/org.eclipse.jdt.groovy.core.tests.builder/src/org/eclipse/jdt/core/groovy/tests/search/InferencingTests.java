@@ -2645,10 +2645,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
         String contents = "def meth(foo.Baz b) {\n b.one + b.two\n}";
 
-        int start = contents.indexOf("one");
-        assertDeclaringType(contents, start, start + 3, "foo.Bar");
-        start = contents.indexOf("two");
-        assertDeclaringType(contents, start, start + 3, "foo.Baz");
+        int offset = contents.indexOf("one");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Bar");
+        /**/offset = contents.indexOf("two");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Baz");
     }
 
     @Test
@@ -2658,10 +2658,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
         String contents = "def meth(foo.Baz b) {\n b.one + b.two\n}";
 
-        int start = contents.indexOf("one");
-        assertDeclaringType(contents, start, start + 3, "foo.Bar");
-        start = contents.indexOf("two");
-        assertDeclaringType(contents, start, start + 3, "foo.Baz");
+        int offset = contents.indexOf("one");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Bar");
+        /**/offset = contents.indexOf("two");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Baz");
     }
 
     @Test
@@ -2671,10 +2671,48 @@ public final class InferencingTests extends InferencingTestSuite {
 
         String contents = "abstract class C extends foo.Baz {}\ndef meth(C c) {\n c.one + c.two\n}\n";
 
-        int start = contents.indexOf("one");
-        assertDeclaringType(contents, start, start + 3, "foo.Bar");
-        start = contents.indexOf("two");
-        assertDeclaringType(contents, start, start + 3, "foo.Baz");
+        int offset = contents.indexOf("one");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Bar");
+        /**/offset = contents.indexOf("two");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Baz");
+    }
+
+    @Test
+    public void testInterfaceMethodAsProperty4() {
+        createJavaUnit("foo", "Bar", "package foo; public interface Bar {\n default int getOne() {\n return 1;\n}\n}\n");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n abstract def getTwo()\n}\n");
+
+        String contents = "abstract class C extends foo.Baz {}\ndef meth(C c) {\n c.one + c.two\n}\n";
+
+        int offset = contents.indexOf("one");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Bar");
+        /**/offset = contents.indexOf("two");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Baz");
+    }
+
+    @Test // GROOVY-10592
+    public void testInterfaceMethodAsProperty5() {
+        createJavaUnit("foo", "Bar", "package foo; public interface Bar {\n static int getOne() {\n return 1;\n}\n}\n");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n abstract def getTwo()\n}\n");
+
+        String contents = "abstract class C extends foo.Baz {}\ndef meth(C c) {\n c.one + c.two\n}\n";
+
+        assertUnknown(contents, "one");
+        int offset = contents.indexOf("two");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Baz");
+    }
+
+    @Test
+    public void testInterfaceMethodAsProperty6() {
+        createUnit("foo", "Bar", "package foo; trait Bar {\n int getOne() {\n 1\n}\n}\n");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n int getTwo() {\n 2\n}\n}\n");
+
+        String contents = "class C extends foo.Baz {}\ndef meth(C c) {\n c.one + c.two\n}\n";
+
+        int offset = contents.indexOf("one");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Bar");
+        /**/offset = contents.indexOf("two");
+        assertDeclaringType(contents, offset, offset + 3, "foo.Baz");
     }
 
     @Test
@@ -2684,10 +2722,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
         String contents = "abstract class C extends foo.Baz {}\ndef meth(C c) {\n c.getOne() + c.getTwo()\n}\n";
 
-        int start = contents.indexOf("getOne");
-        assertDeclaringType(contents, start, start + 6, "foo.Bar");
-        start = contents.indexOf("getTwo");
-        assertDeclaringType(contents, start, start + 6, "foo.Baz");
+        int offset = contents.indexOf("getOne");
+        assertDeclaringType(contents, offset, offset + 6, "foo.Bar");
+        /**/offset = contents.indexOf("getTwo");
+        assertDeclaringType(contents, offset, offset + 6, "foo.Baz");
     }
 
     @Test
@@ -2697,10 +2735,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
         String contents = "abstract class B extends A {}\nB b; b.ONE; b.TWO\n";
 
-        int start = contents.indexOf("ONE");
-        assertDeclaringType(contents, start, start + 3, "I");
-        start = contents.indexOf("TWO");
-        assertDeclaringType(contents, start, start + 3, "A");
+        int offset = contents.indexOf("ONE");
+        assertDeclaringType(contents, offset, offset + 3, "I");
+        /**/offset = contents.indexOf("TWO");
+        assertDeclaringType(contents, offset, offset + 3, "A");
     }
 
     @Test

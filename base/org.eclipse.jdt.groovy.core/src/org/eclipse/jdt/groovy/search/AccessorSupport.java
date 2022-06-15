@@ -15,7 +15,8 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import static org.eclipse.jdt.groovy.search.GenericsMapper.isVargs;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -26,7 +27,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.runtime.MetaClassHelper;
-import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
@@ -52,7 +52,7 @@ public enum AccessorSupport {
         case GETTER:
             return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && !node.isVoidMethod();
         case SETTER:
-            return (parameters != null && parameters.length == (!isCategory ? 1 : 2)) && (!isCategory || !isVargs(parameters));
+            return (parameters != null && parameters.length == (!isCategory ? 1 : 2)) && (!isCategory || !GenericsMapper.isVargs(parameters));
         case ISSER:
             return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && node.getReturnType().equals(ClassHelper.boolean_TYPE);
         default:
@@ -107,7 +107,7 @@ public enum AccessorSupport {
                 methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, declaringType, isCategory, kind));
 
                 // abstract types do not track undeclared abstract methods; concrete types do not track interface default methods
-                if (declaringType.isAbstract() || declaringType.isInterface() || GroovyUtils.implementsTrait(declaringType)) {
+                if (declaringType.isAbstract() || asBoolean(declaringType.getInterfaces()) || implementsTrait(declaringType)) {
                     Set<ClassNode> faces = new LinkedHashSet<>();
                     VariableScope.findAllInterfaces(declaringType, faces, false);
                     faces.remove(declaringType); // checked already
