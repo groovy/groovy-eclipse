@@ -507,11 +507,11 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "def <T> T m(java.util.function.Consumer<? super T> c) {\n" +
             "  c.accept(null)\n" +
-            "  null\n" +
+            "  return null\n" +
             "}\n" +
             "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
-            "  this." + (isAtLeastGroovy(40) ? "<Number>" : "" ) + "m { Number n ->\n" + // TODO: GROOVY-10436
+            "  m { Number n ->\n" + // GROOVY-10436
             "    n?.toBigInteger()\n" +
             "  }\n" +
             "}\n" +
