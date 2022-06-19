@@ -937,6 +937,23 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "z", "java.util.regex.Pattern");
     }
 
+    @Test
+    public void testCoercedClosure3() {
+        for (String head : isParrotParser() ? new String[]{"(text, list) -> {", "{ text, list ->"} : new String[]{"{ text, list ->"}) {
+            //@formatter:off
+            String contents =
+                "def <T> java.util.function.BiConsumer<String, List<T>> m() {\n" +
+                "  return " + head + "\n" +
+                "    for (item in list) consumer.accept(text, item)\n" +
+                "  }\n" +
+                "}";
+            //@formatter:on
+            assertType(contents, "text", "java.lang.String");
+            assertType(contents, "list", "java.util.List<T>");
+            assertType(contents, "item", "T");
+        }
+    }
+
     @Test // Closure type inference without @CompileStatic
     public void testCompileStaticClosure0() {
         //@formatter:off

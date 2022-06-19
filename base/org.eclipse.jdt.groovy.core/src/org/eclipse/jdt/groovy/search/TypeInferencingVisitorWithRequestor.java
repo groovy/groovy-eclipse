@@ -1665,18 +1665,20 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         boolean shouldContinue = handleStatement(node);
         if (shouldContinue) {
             ClosureExpression closure = scopes.getLast().getEnclosingClosure();
-            if (closure == null || closure.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE) != null) {
+            if (closure == null) {
+                MethodNode method = scopes.getLast().getEnclosingMethodDeclaration();
+                if (method != null) node.putNodeMetaData("targetType", method.getReturnType());
+            }
+            completeExpressionStack.add(node);
+            try {
                 super.visitReturnStatement(node);
-            } else { // capture return type
-                completeExpressionStack.add(node);
-                try {
-                    super.visitReturnStatement(node);
-                } finally {
-                    completeExpressionStack.removeLast();
-                }
-                ClassNode returnType = primaryTypeStack.removeLast();
+            } finally {
+                completeExpressionStack.removeLast();
+            }
+            ClassNode returnType = primaryTypeStack.removeLast();
+            if (closure != null && closure.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE) == null) {
                 ClassNode closureType = (ClassNode) closure.putNodeMetaData("returnType", returnType);
-                if (closureType != null && !closureType.equals(returnType)) {
+                if (closureType != null && !closureType.equals(returnType)) { // merge with previous type
                     closure.putNodeMetaData("returnType", WideningCategories.lowestUpperBound(closureType, returnType));
                 }
             }
@@ -2469,6 +2471,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                           ((CastExpression) completeExpressionStack.getLast()).getExpression() == node) {
             primaryType = ((CastExpression) completeExpressionStack.getLast()).getType();
 
+        } else if (!completeExpressionStack.isEmpty() && completeExpressionStack.getLast() instanceof ReturnStatement &&
+                          ((ReturnStatement) completeExpressionStack.getLast()).getExpression() == node) {
+            primaryType = completeExpressionStack.getLast().getNodeMetaData("targetType");
+
         } else if (inferredTypes.length > 0 && scope.isCasePredicate(node)) {
             inferredTypes[0] = scope.lookupName("##").type; // switch type maps to first param
             Arrays.fill(inferredTypes, 1, inferredTypes.length, VariableScope.OBJECT_CLASS_NODE);
@@ -2705,7 +2711,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                 @Override public void visitReturnStatement(final ReturnStatement statement) {
                     // used to capture the return type of a closure or statement lambda
-                    result[0] = (expr == statement.getExpression());
+                    if (expr == statement.getExpression()) {
+                        result[0] = true;
+                    } else if ( statement.getExpression() instanceof ListOfExpressionsExpression) {
+                        // statically-compiled assignment chains need a little help
+                        List<Expression> list = ReflectionUtils.getPrivateField(ListOfExpressionsExpression.class, "expressions", statement.getExpression());
+                        // list.get(0) should be TemporaryVariableExpression (skip)
+                        result[0] = (expr == list.get(1));
+                    }
                 }
 
                 @Override public void visitExpressionStatement(final ExpressionStatement statement) {
