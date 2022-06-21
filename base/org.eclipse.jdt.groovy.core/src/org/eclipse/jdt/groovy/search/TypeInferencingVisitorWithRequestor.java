@@ -914,8 +914,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (param != null) {
                 // add param to scope, accounting for multi-catch
                 List<ClassNode> types = node.getNodeMetaData("catch.types");
-                scopes.getLast().addVariable(param.getName(), types == null ? param.getType()
-                                            : WideningCategories.lowestUpperBound(types), null);
+                scopes.getLast().addVariable(param.getName(), types == null ? param.getType() : GroovyUtils.intersect(types), null);
                 handleParameters(param);
             }
             super.visitCatchStatement(node);
@@ -1992,8 +1991,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 }
 
-                TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, param, TypeConfidence.EXACT, scope);
-                VisitStatus status = notifyRequestor(param, requestor, parameterResult);
+                VisitStatus status = notifyRequestor(param, requestor, result);
                 switch (status) {
                 case CONTINUE:
                     break;

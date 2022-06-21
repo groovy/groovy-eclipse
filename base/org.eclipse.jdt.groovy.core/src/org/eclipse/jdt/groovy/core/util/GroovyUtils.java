@@ -219,13 +219,17 @@ public class GroovyUtils {
      * @see org.eclipse.jdt.core.Signature
      */
     public static String getTypeSignature(ClassNode node, boolean qualified, boolean resolved) {
-        if (getBaseType(node).getName().startsWith("<UnionType:")) {
+        ClassNode baseType = getBaseType(node);
+        if (baseType.getName().startsWith("<UnionType:")) {
             return getUnionTypeSignature(node, type -> getTypeSignature(type, qualified, resolved));
+        }
+        if (baseType instanceof IntersectionType) {
+            return getIntersectionTypeSignature(node, type -> getTypeSignature(type, qualified, resolved));
         }
 
         String signature = getTypeSignatureWithoutGenerics(node, qualified, resolved);
 
-        if (getBaseType(node).getGenericsTypes() != null && !getBaseType(node).isGenericsPlaceHolder()) {
+        if (baseType.getGenericsTypes() != null && !baseType.isGenericsPlaceHolder()) {
             GenericsType[] generics = getGenericsTypes(node);
             if (generics.length > 0) {
                 StringBuilder builder = new StringBuilder(signature);
@@ -253,8 +257,12 @@ public class GroovyUtils {
     }
 
     public static String getTypeSignatureWithoutGenerics(ClassNode node, boolean qualified, boolean resolved) {
-        if (getBaseType(node).getName().startsWith("<UnionType:")) {
+        ClassNode baseType = getBaseType(node);
+        if (baseType.getName().startsWith("<UnionType:")) {
             return getUnionTypeSignature(node, type -> getTypeSignatureWithoutGenerics(type, qualified, resolved));
+        }
+        if (baseType instanceof IntersectionType) {
+            return getIntersectionTypeSignature(node, type -> getTypeSignatureWithoutGenerics(type, qualified, resolved));
         }
 
         StringBuilder builder = new StringBuilder();
@@ -300,6 +308,19 @@ public class GroovyUtils {
 
         ClassNode[] types = ReflectionUtils.executePrivateMethod(node.getClass(), "getDelegates", node);
         String signature = Signature.createUnionTypeSignature(Stream.of(types).map(signer).toArray(String[]::new));
+
+        return builder.append(signature).toString();
+    }
+
+    private static String getIntersectionTypeSignature(ClassNode node, java.util.function.Function<ClassNode, String> signer) {
+        StringBuilder builder = new StringBuilder();
+        while (node.isArray()) {
+            builder.append('[');
+            node = node.getComponentType();
+        }
+
+        Stream<ClassNode> types = ((IntersectionType) node).types.stream();
+        String signature = Signature.createIntersectionTypeSignature(types.map(signer).toArray(String[]::new));
 
         return builder.append(signature).toString();
     }
@@ -400,6 +421,24 @@ public class GroovyUtils {
             }
         }
         return null;
+    }
+
+    public static boolean implementsTrait(ClassNode concreteType) {
+        return concreteType.getNodeMetaData(Traits.class, x -> {
+            ClassNode type = concreteType.redirect();
+            do {
+                if (Traits.isTrait(type) || Arrays.stream(type.getInterfaces()).anyMatch(Traits::isTrait)) {
+                    return Boolean.TRUE;
+                }
+                type = type.getSuperClass();
+            } while (type != null);
+            return Boolean.FALSE;
+        }).booleanValue();
+    }
+
+    public static ClassNode intersect(List<ClassNode> types) {
+        assert types != null && types.size() > 1;
+        return new IntersectionType(types);
     }
 
     public static boolean isAnonymous(ClassNode node) {
@@ -512,19 +551,6 @@ public class GroovyUtils {
         return false;
     }
 
-    public static boolean implementsTrait(ClassNode concreteType) {
-        return concreteType.getNodeMetaData(Traits.class, x -> {
-            ClassNode type = concreteType.redirect();
-            do {
-                if (Traits.isTrait(type) || Arrays.stream(type.getInterfaces()).anyMatch(Traits::isTrait)) {
-                    return Boolean.TRUE;
-                }
-                type = type.getSuperClass();
-            } while (type != null);
-            return Boolean.FALSE;
-        }).booleanValue();
-    }
-
     public static ClassNode makeType(String typeNameWithoutGenerics) {
         int i = typeNameWithoutGenerics.lastIndexOf('[');
         if (i < 0) {
@@ -533,10 +559,9 @@ public class GroovyUtils {
         return makeType(typeNameWithoutGenerics.substring(0, i)).makeArray();
     }
 
-    public static void updateClosureWithInferredTypes(ClassNode closure, ClassNode returnType, Parameter[] parameters) {
-        if (!"groovy.lang.Closure".equals(closure.getName()) || closure == closure.redirect()) {
-            return;
+    public static void updateClosureWithInferredTypes(ClassNode closureType, ClassNode returnType, Parameter[] parameters) {
+        if (closureType.getName().equals("groovy.lang.Closure") && closureType.isRedirectNode()) {
+            closureType.setGenericsTypes(new GenericsType[] {getWrapperTypeIfPrimitive(returnType).asGenericsType()});
         }
-        closure.setGenericsTypes(new GenericsType[] {new GenericsType(getWrapperTypeIfPrimitive(returnType))});
     }
 }

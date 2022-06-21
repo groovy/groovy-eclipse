@@ -2395,7 +2395,7 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "try {\n} catch (Exception | Error e) {\n}\n";
 
         int offset = contents.lastIndexOf("e");
-        assertType(contents, offset, offset + 1, "java.lang.Throwable");
+        assertType(contents, offset, offset + 1, "java.lang.Exception or java.lang.Error");
     }
 
     private static final String CONTENTS_GETAT1 =
