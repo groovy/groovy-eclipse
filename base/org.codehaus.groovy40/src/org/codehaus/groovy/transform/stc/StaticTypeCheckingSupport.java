@@ -1609,9 +1609,11 @@ public abstract class StaticTypeCheckingSupport {
 
     static void applyGenericsConnections(final Map<GenericsTypeName, GenericsType> connections, final Map<GenericsTypeName, GenericsType> resolvedPlaceholders) {
         if (connections == null || connections.isEmpty()) return;
+        /* GRECLIPSE edit -- GROOVY-10633, GROOVY-10662
         int count = 0;
         while (count++ < 10000) {
             boolean checkForMorePlaceholders = false;
+        */
             for (Map.Entry<GenericsTypeName, GenericsType> entry : resolvedPlaceholders.entrySet()) {
                 // entry could be T=T, T=T extends U, T=V, T=String, T=? extends String, etc.
                 GenericsType oldValue = entry.getValue();
@@ -1627,9 +1629,11 @@ public abstract class StaticTypeCheckingSupport {
                     }
                     if (newValue == null) {
                         entry.setValue(newValue = applyGenericsContext(connections, oldValue));
+                        /* GRECLIPSE edit
                         if (!checkForMorePlaceholders) {
                             checkForMorePlaceholders = !equalIncludingGenerics(oldValue, newValue);
                         }
+                        */
                     } else if (!newValue.isPlaceholder() || newValue != resolvedPlaceholders.get(name)) {
                         // GROOVY-6787: Don't override the original if the replacement doesn't respect the bounds otherwise
                         // the original bounds are lost, which can result in accepting an incompatible type as an argument!
@@ -1645,18 +1649,22 @@ public abstract class StaticTypeCheckingSupport {
                             } else {
                                 entry.setValue(newValue);
                             }
+                            /* GRECLIPSE edit
                             if (!checkForMorePlaceholders && newValue.isPlaceholder()) {
                                 checkForMorePlaceholders = !equalIncludingGenerics(oldValue, newValue);
                             }
+                            */
                         }
                     }
                 }
             }
+        /* GRECLIPSE edit
             if (!checkForMorePlaceholders) break;
         }
         if (count >= 10000) {
             throw new GroovyBugError("unable to handle generics in " + resolvedPlaceholders + " with connections " + connections);
         }
+        */
     }
 
     private static ClassNode extractType(GenericsType gt) {

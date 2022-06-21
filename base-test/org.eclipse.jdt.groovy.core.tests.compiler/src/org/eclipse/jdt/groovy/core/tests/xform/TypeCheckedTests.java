@@ -5757,11 +5757,39 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "class A<T> {\n" +
             "}\n" +
             "class B<T> {\n" +
-            "  B(A<T> a) { }\n" +
+            "  B(A<T> a_of_t) {\n" +
+            "  }\n" +
             "}\n" +
             "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
             "  B<Float> x = new B<>(new A<>())\n" + // Cannot assign B<Object> to B<Float>
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10633() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T, Y> {\n" +
+            "  public B<Y> f\n" +
+            "  A(B<Y> b_of_y, T t) {\n" +
+            "    f = b_of_y\n" +
+            "  }\n" +
+            "}\n" +
+            "class B<T> {\n" +
+            "  void m(T t) {\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <T extends Number> void test() {\n" +
+            "  def x = new B<T>()\n" +
+            "  new A<>(x, '').f.m((T) null)\n" +
             "}\n" +
             "test()\n",
         };
@@ -5786,6 +5814,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "TreeNode.java",
             "public abstract class TreeNode<TN extends TreeNode<?>> implements Iterable<TN> {\n" +
             "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10662() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<X, T> {\n" +
+            "  A(T t, X x) {}\n" +
+            "  void m(X x) {}\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class B<T extends Number> {\n" +
+            "  void test() {\n" +
+            "    T t = (T) null\n" +
+            "    Character c = 'c'\n" +
+            "    def a = new A<>(c, t)\n" +
+            "    a.m((T) null)\n" + // Cannot find matching method A#m(T)
+            "  }\n" +
+            "}\n" +
+            "new B<Integer>().test()\n",
         };
         //@formatter:on
 

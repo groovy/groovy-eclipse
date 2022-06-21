@@ -1666,8 +1666,10 @@ public abstract class StaticTypeCheckingSupport {
 
     static void applyGenericsConnections(final Map<GenericsTypeName, GenericsType> connections, final Map<GenericsTypeName, GenericsType> resolvedPlaceholders) {
         if (connections == null || connections.isEmpty()) return;
+        /* GRECLIPSE edit -- GROOVY-10633, GROOVY-10662
         int count = 0;
         while (count++ < 10000) {
+        */
             boolean checkForMorePlaceholders = false;
             for (Map.Entry<GenericsTypeName, GenericsType> entry : resolvedPlaceholders.entrySet()) {
                 // entry could be T=T, T=T extends U, T=V, T=String, T=? extends String, etc.
@@ -1712,11 +1714,13 @@ public abstract class StaticTypeCheckingSupport {
                     }
                 }
             }
+        /* GRECLIPSE edit
             if (!checkForMorePlaceholders) break;
         }
         if (count >= 10000) {
             throw new GroovyBugError("unable to handle generics in " + resolvedPlaceholders + " with connections " + connections);
         }
+        */
     }
 
     private static ClassNode extractType(GenericsType gt) {
