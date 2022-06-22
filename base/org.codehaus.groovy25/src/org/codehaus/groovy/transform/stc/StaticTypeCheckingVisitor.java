@@ -2650,6 +2650,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitReturnStatement(ReturnStatement statement) {
+        // GRECLIPSE add -- GROOVY-10660
+        if (typeCheckingContext.getEnclosingClosure() == null) {
+            MethodNode method = typeCheckingContext.getEnclosingMethod();
+            if (method != null && !method.isVoidMethod() && !method.isDynamicReturnType()) {
+                ClassNode returnType = method.getReturnType(); Expression returnValue = statement.getExpression();
+                if (isFunctionalInterface(returnType)) {
+                    processFunctionalInterfaceAssignment(returnType, returnValue);
+                } else if (isClosureWithType(returnType) && returnValue instanceof ClosureExpression) {
+                    storeInferredReturnType(returnValue, getCombinedBoundType(returnType.getGenericsTypes()[0]));
+                }
+            }
+        }
+        // GRECLIPSE end
         typeCheckingContext.pushEnclosingReturnStatement(statement);
         try {
             super.visitReturnStatement(statement);

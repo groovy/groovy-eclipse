@@ -5821,6 +5821,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10660() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <T> BiConsumer<String, List<T>> m(BiConsumer<String, ? super T> proc) {\n" +
+            "  return { text, list ->\n" +
+            "    for (item in list) proc.accept(text, item)\n" +
+            "  }\n" +
+            "}\n" +
+            "m { text, item -> }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+
+        if (isParrotParser()) {
+            sources[1] = sources[1].replace("{ text, list ->", "(text, list) -> {");
+
+            runConformTest(sources);
+        }
+    }
+
+    @Test
     public void testTypeChecked10662() {
         //@formatter:off
         String[] sources = {
