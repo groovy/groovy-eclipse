@@ -76,6 +76,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -544,7 +545,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             type.setGenericsPlaceHolder(true);
             return true;
         }
-
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         if (currentClass.getNameWithoutPackage().equals(typeName)) {
             type.setRedirect(currentClass);
             return true;
@@ -556,6 +559,21 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 (testDefaultImports && !type.hasPackageName() && resolveFromDefaultImports(type, true)) ||
                 resolveToOuter(type) ||
                 (testStaticInnerClasses && type.hasPackageName() && resolveFromStaticInnerClasses(type, true));
+        // GRECLIPSE add -- GROOVY-10153: deal with "Foo<? super Bar> -> Foo<T extends Baz>"
+        } finally {
+            if (type.isRedirectNode()) Optional.ofNullable(type.getGenericsTypes()).ifPresent(arguments -> {
+                for (int i = 0, n = arguments.length; i < n; i += 1) { GenericsType argument = arguments[i];
+                    if (!argument.isWildcard() || argument.getUpperBounds() != null) continue;
+                    GenericsType[] parameters = type.redirect().getGenericsTypes();
+                    if (parameters != null && i < parameters.length) {
+                        ClassNode implicitBound = parameters[i].getType();
+                        if (!implicitBound.equals(ClassHelper.OBJECT_TYPE))
+                            argument.getType().setRedirect(implicitBound);
+                    }
+                }
+            });
+        }
+        // GRECLIPSE end
     }
 
     protected boolean resolveNestedClass(final ClassNode type) {

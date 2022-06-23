@@ -4272,6 +4272,36 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10153() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A {}\n" +
+            "class B extends A {}\n" +
+            "class C extends B {}\n" +
+            "class Foo<T extends A> {}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Foo<? super C> foo = new Foo<B>()\n" + // ? is not a valid substitute for <T extends A>
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(30)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 7)\n" +
+                "\tFoo<? super C> foo = new Foo<B>()\n" +
+                "\t    ^^^^^^^^^\n" +
+                "Groovy:The type ? is not a valid substitute for the bounded parameter <T extends A>\n" +
+                "----------\n");
+        }
+    }
+
+    @Test
     public void testTypeChecked10166() {
         //@formatter:off
         String[] sources = {
