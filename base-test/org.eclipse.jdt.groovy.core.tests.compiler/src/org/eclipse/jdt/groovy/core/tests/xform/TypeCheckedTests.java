@@ -5899,4 +5899,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10667() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "trait Tagged {\n" +
+            "  String tag\n" +
+            "}\n" +
+            "class TaggedException extends Exception implements Tagged {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void accept1(Exception e) {\n" +
+            "  if (e instanceof Tagged) {\n" +
+            "    print e.tag\n" +
+            "    accept2(e)\n" + // Cannot find matching method #accept2(Tagged)
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void accept2(Exception e) {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  accept1(new TaggedException(tag:'foo'))\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo");
+    }
 }

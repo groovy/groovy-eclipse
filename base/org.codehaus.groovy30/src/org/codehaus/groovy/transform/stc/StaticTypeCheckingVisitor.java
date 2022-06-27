@@ -2679,7 +2679,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected ClassNode[] getArgumentTypes(final ArgumentListExpression args) {
         return args.getExpressions().stream().map(exp ->
+            /* GRECLIPSE edit -- GROOVY-10667
             isNullConstant(exp) ? UNKNOWN_PARAMETER_TYPE : getInferredTypeFromTempInfo(exp, getType(exp))
+            */
+            isNullConstant(exp) ? UNKNOWN_PARAMETER_TYPE : getType(exp)
+            // GRECLIPSE end
         ).toArray(ClassNode[]::new);
     }
 

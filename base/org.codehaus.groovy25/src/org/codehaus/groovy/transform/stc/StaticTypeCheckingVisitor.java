@@ -2879,7 +2879,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (isNullConstant(exp)) {
                 ret[i] = UNKNOWN_PARAMETER_TYPE;
             } else {
+                /* GRECLIPSE edit -- GROOVY-10667
                 ret[i] = getInferredTypeFromTempInfo(exp, getType(exp));
+                */
+                ret[i] = getType(exp);
+                // GRECLIPSE end
             }
         }
         return ret;

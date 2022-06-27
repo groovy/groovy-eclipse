@@ -763,10 +763,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         typeCheckingContext.pushEnclosingBinaryExpression(expression);
         try {
             int op = expression.getOperation().getType();
-            // GRECLIPSE add -- GROOVY-7971
-            if (op == LOGICAL_OR) {
+            // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
+            if (op == LOGICAL_OR)
                 typeCheckingContext.pushTemporaryTypeInfo();
-            }
             // GRECLIPSE end
             Expression leftExpression = expression.getLeftExpression();
             Expression rightExpression = expression.getRightExpression();
@@ -776,7 +775,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode lType = null;
             if (setterInfo != null) {
                 if (ensureValidSetter(expression, leftExpression, rightExpression, setterInfo)) {
-                    // GRECLIPSE add -- GROOVY-7971
+                    // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
                     if (op == LOGICAL_OR)
                         typeCheckingContext.popTemporaryTypeInfo();
                     // GRECLIPSE end
@@ -815,7 +814,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                     resultType = getType(fullExpression);
                 }
-                // GRECLIPSE add -- GROOVY-7971
+                // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
                 else if (op == LOGICAL_OR)
                     typeCheckingContext.popTemporaryTypeInfo();
                 // GRECLIPSE end
@@ -2395,7 +2394,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected ClassNode[] getArgumentTypes(final ArgumentListExpression args) {
         return args.getExpressions().stream().map(exp ->
+            /* GRECLIPSE edit -- GROOVY-10667
             isNullConstant(exp) ? UNKNOWN_PARAMETER_TYPE : getInferredTypeFromTempInfo(exp, getType(exp))
+            */
+            isNullConstant(exp) ? UNKNOWN_PARAMETER_TYPE : getType(exp)
+            // GRECLIPSE end
         ).toArray(ClassNode[]::new);
     }
 
