@@ -1862,6 +1862,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8965() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def test(o) {\n" +
+            "  if (o instanceof Integer || o instanceof Double)\n" +
+            "    o.floatValue()\n" + // CCE: Double cannot be cast to Integer
+            "}\n" +
+            "print test(1.2d)\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\to.floatValue()\n" +
+            "\t^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#floatValue(). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked8974() {
         //@formatter:off
         String[] sources = {
@@ -5929,5 +5952,54 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "foo");
+    }
+
+    @Test
+    public void testTypeChecked10668() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def toArray(value) {\n" +
+            "  def result\n" +
+            "  if (value instanceof List)\n" +
+            "    result = value.toArray()\n" +
+            "  else if (value instanceof String || value instanceof GString)\n" +
+            "    result = value.toString().split(',')\n" +
+            "  else\n" +
+            "    throw new Exception('not supported')\n" +
+            "  return result\n" +
+            "}\n" +
+            "print(toArray([1,2,3]))\n" +
+            "print(toArray('1,2,3'))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[1, 2, 3][1, 2, 3]");
+    }
+
+    @Test
+    public void testTypeChecked10673() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Consumer\n" +
+            "void proc(Consumer<Number> action) {\n" +
+            "  action.accept(1.234)\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  proc { n ->\n" +
+            "    def c = {\n" +
+            "      print n.intValue()\n" +
+            "    }\n" +
+            "    c()\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
     }
 }

@@ -757,10 +757,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         typeCheckingContext.pushEnclosingBinaryExpression(expression);
         try {
             int op = expression.getOperation().getType();
-            // GRECLIPSE add
-            if (op == LOGICAL_OR) {
+            // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
+            if (op == LOGICAL_OR)
                 typeCheckingContext.pushTemporaryTypeInfo();
-            }
             // GRECLIPSE end
             Expression leftExpression = expression.getLeftExpression();
             Expression rightExpression = expression.getRightExpression();
@@ -4192,19 +4191,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     Receiver.make(typeCheckingContext.getEnclosingClassNode()));
             addReceivers(owners, enclosingClass, typeCheckingContext.delegationMetadata.getParent(), "owner.");
         } else {
-            if (!typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) { // GROOVY-10180, et al.
-                List<ClassNode> instanceofTypes = getTemporaryTypesForExpression(objectExpression);
-                if (instanceofTypes != null && !instanceofTypes.isEmpty()) {
-                    ClassNode instanceofType = instanceofTypes.size() == 1 ? instanceofTypes.get(0)
-                            : new UnionTypeClassNode(instanceofTypes.toArray(ClassNode.EMPTY_ARRAY));
-                    owners.add(Receiver.make(instanceofType));
-                }
-            }
-            if (typeCheckingContext.lastImplicitItType != null
-                    && objectExpression instanceof VariableExpression
-                    && ((Variable) objectExpression).getName().equals("it")) {
-                owners.add(Receiver.make(typeCheckingContext.lastImplicitItType));
-            }
             if (isClassClassNodeWrappingConcreteType(receiver)) {
                 ClassNode staticType = receiver.getGenericsTypes()[0].getType();
                 owners.add(Receiver.make(staticType)); // Type from Class<Type>
@@ -4216,6 +4202,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 addTraitType(receiver, owners);
                 if (receiver.redirect().isInterface()) {
                     owners.add(Receiver.make(OBJECT_TYPE));
+                }
+            }
+            if (typeCheckingContext.lastImplicitItType != null
+                    && objectExpression instanceof VariableExpression
+                    && ((Variable) objectExpression).getName().equals("it")) {
+                owners.add(Receiver.make(typeCheckingContext.lastImplicitItType));
+            }
+            if (!typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) {
+                List<ClassNode> instanceofTypes = getTemporaryTypesForExpression(objectExpression);
+                if (instanceofTypes != null && !instanceofTypes.isEmpty()) {
+                    ClassNode instanceofType = instanceofTypes.size() == 1 ? instanceofTypes.get(0)
+                            : new UnionTypeClassNode(instanceofTypes.toArray(ClassNode.EMPTY_ARRAY));
+                    owners.add(Receiver.make(instanceofType));
                 }
             }
         }
@@ -5509,9 +5508,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     type = typeCheckingContext.controlStructureVariables.get(parameter);
                 }
                 // now check for closure override
-                TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
-                if (type == null && enclosingClosure != null && temporaryTypesForExpression == null) {
-                    type = getTypeFromClosureArguments(parameter, enclosingClosure);
+                if (type == null && temporaryTypesForExpression == null) {
+                    type = getTypeFromClosureArguments(parameter);
                 }
                 if (type != null) {
                     storeType(vexp, type);
@@ -5601,25 +5599,26 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return ((Expression) exp).getType();
     }
 
-    private ClassNode getTypeFromClosureArguments(final Parameter parameter, final TypeCheckingContext.EnclosingClosure enclosingClosure) {
-        ClosureExpression closureExpression = enclosingClosure.getClosureExpression();
-        ClassNode[] closureParamTypes = closureExpression.getNodeMetaData(CLOSURE_ARGUMENTS);
-        if (closureParamTypes == null) return null;
-        Parameter[] parameters = closureExpression.getParameters();
-        String name = parameter.getName();
-
-        if (parameters != null) {
-            if (parameters.length == 0) {
-                return "it".equals(name) && closureParamTypes.length != 0 ? closureParamTypes[0] : null;
-            }
-
-            for (int index = 0; index < parameters.length; index++) {
-                if (name.equals(parameters[index].getName())) {
-                    return closureParamTypes.length > index ? closureParamTypes[index] : null;
+    private ClassNode getTypeFromClosureArguments(final Parameter parameter) {
+        for (TypeCheckingContext.EnclosingClosure enclosingClosure : typeCheckingContext.getEnclosingClosureStack()) {
+            ClosureExpression closureExpression = enclosingClosure.getClosureExpression();
+            ClassNode[] closureParamTypes = closureExpression.getNodeMetaData(CLOSURE_ARGUMENTS);
+            if (closureParamTypes != null) {
+                Parameter[] parameters = closureExpression.getParameters();
+                if (parameters != null) {
+                    final int n = parameters.length;
+                    String parameterName = parameter.getName();
+                    if (n == 0 && parameterName.equals("it")) {
+                        return closureParamTypes.length > 0 ? closureParamTypes[0] : null;
+                    }
+                    for (int i = 0; i < n; i += 1) {
+                        if (parameterName.equals(parameters[i].getName())) {
+                            return closureParamTypes.length > i ? closureParamTypes[i] : null;
+                        }
+                    }
                 }
             }
         }
-
         return null;
     }
 
@@ -6664,8 +6663,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (inferredType == null) {
                 inferredType = typeCheckingContext.controlStructureVariables.get(parameter); // for/catch/closure
                 if (inferredType == null) {
-                    TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
-                    if (enclosingClosure != null) inferredType = getTypeFromClosureArguments(parameter, enclosingClosure);
+                    inferredType = getTypeFromClosureArguments(parameter); // @ClosureParams or SAM-type coercion
                 }
                 setNodeMetaData(INFERRED_TYPE, inferredType != null ? inferredType : parameter.getType()); // to parameter
             }
