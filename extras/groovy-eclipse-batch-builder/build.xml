@@ -146,6 +146,7 @@
             <include name="org.eclipse.jdt.compiler.apt_*.jar"/>
             <include name="org.eclipse.osgi_*.jar"/>
             <include name="org.eclipse.text_*.jar"/>
+            <include name="org.osgi.service.prefs_*.jar"/>
         </fileset>
 
         <fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
