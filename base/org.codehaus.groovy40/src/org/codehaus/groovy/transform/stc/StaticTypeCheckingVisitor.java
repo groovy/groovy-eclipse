@@ -3804,12 +3804,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         List<Receiver<String>> owners = new ArrayList<>();
         if (typeCheckingContext.delegationMetadata != null
                 && objectExpression instanceof VariableExpression
-                && ((VariableExpression) objectExpression).getName().equals("owner")
+                && ((Variable) objectExpression).getName().equals("owner")
                 && /*isNested:*/typeCheckingContext.delegationMetadata.getParent() != null) {
             List<Receiver<String>> enclosingClass = Collections.singletonList(
                     Receiver.make(typeCheckingContext.getEnclosingClassNode()));
             addReceivers(owners, enclosingClass, typeCheckingContext.delegationMetadata.getParent(), "owner.");
         } else {
+            /* GRECLIPSE edit -- GROOVY-8965, GROOVY-10180, GROOVY-10668
             if (!typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) {
                 List<ClassNode> potentialReceiverType = getTemporaryTypesForExpression(objectExpression);
                 if (potentialReceiverType != null && !potentialReceiverType.isEmpty()) {
@@ -3818,9 +3819,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
+            */
+            List<ClassNode> temporaryTypes = getTemporaryTypesForExpression(objectExpression);
+            if (asBoolean(temporaryTypes)) owners.add(Receiver.make(lowestUpperBound(temporaryTypes)));
+            // GRECLIPSE end
             if (typeCheckingContext.lastImplicitItType != null
                     && objectExpression instanceof VariableExpression
-                    && ((VariableExpression) objectExpression).getName().equals("it")) {
+                    && ((Variable) objectExpression).getName().equals("it")) {
                 owners.add(Receiver.make(typeCheckingContext.lastImplicitItType));
             }
             if (isClassClassNodeWrappingConcreteType(receiver)) {
