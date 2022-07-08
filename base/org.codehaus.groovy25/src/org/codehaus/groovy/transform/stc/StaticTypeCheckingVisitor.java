@@ -4719,7 +4719,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     public void visitSwitch(final SwitchStatement statement) {
         Map<VariableExpression, List<ClassNode>> oldTracker = pushAssignmentTracking();
         try {
+            /* GRECLIPSE edit -- GROOVY-9854
             super.visitSwitch(statement);
+            */
+            visitStatement(statement);
+            statement.getExpression().visit(this);
+            ClassNode type = getType(statement.getExpression());
+            for (CaseStatement caseStatement : statement.getCaseStatements()) {
+                if (caseStatement.getExpression() instanceof ClosureExpression) // propagate the type
+                    caseStatement.getExpression().putNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS, new ClassNode[]{type});
+
+                caseStatement.visit(this);
+            }
+            statement.getDefaultStatement().visit(this);
+            // GRECLIPSE end
         } finally {
             popAssignmentTracking(oldTracker);
         }

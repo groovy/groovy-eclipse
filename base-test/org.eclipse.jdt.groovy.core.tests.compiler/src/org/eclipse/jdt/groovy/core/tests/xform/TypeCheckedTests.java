@@ -2671,6 +2671,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[key:val][key:val]");
     }
 
+    @Test
+    public void testTypeChecked9854() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  switch (42) {\n" +
+            "    case { it > 1 }:\n" +
+            "      print 'works'\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
     @Test(expected = AssertionError.class)
     public void testTypeChecked9873() {
         Map<String, String> options = getCompilerOptions();
