@@ -2379,7 +2379,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             if (classNode.isInterface()) {
                 if (!asBoolean(initialValue)) {
-                    initialValue = !asBoolean(defaultValue) ? null : new ConstantExpression(defaultValue);
+                    initialValue = !asBoolean(defaultValue) ? null : new ConstantExpression(defaultValue, true);
                 }
 
                 modifiers |= Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL;
@@ -3265,9 +3265,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public ConstantExpression visitStringLiteral(final StringLiteralContext ctx) {
         String text = parseStringLiteral(ctx.StringLiteral().getText());
 
-        ConstantExpression constantExpression = new ConstantExpression(text, true);
-        constantExpression.putNodeMetaData(IS_STRING, true);
-
+        ConstantExpression constantExpression = new ConstantExpression(text);
+        constantExpression.putNodeMetaData(IS_STRING, Boolean.TRUE);
         return configureAST(constantExpression, ctx);
     }
 
@@ -3437,7 +3436,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         String integerLiteralText = constantExpression.getNodeMetaData(INTEGER_LITERAL_TEXT);
                         if (null != integerLiteralText) {
 
-                            ConstantExpression result = new ConstantExpression(Numbers.parseInteger(SUB_STR + integerLiteralText));
+                            ConstantExpression result = new ConstantExpression(Numbers.parseInteger(SUB_STR + integerLiteralText), true);
 
                             this.numberFormatError = null; // reset the numberFormatError
 
@@ -3446,7 +3445,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
                         String floatingPointLiteralText = constantExpression.getNodeMetaData(FLOATING_POINT_LITERAL_TEXT);
                         if (null != floatingPointLiteralText) {
-                            ConstantExpression result = new ConstantExpression(Numbers.parseDecimal(SUB_STR + floatingPointLiteralText));
+                            ConstantExpression result = new ConstantExpression(Numbers.parseDecimal(SUB_STR + floatingPointLiteralText), true);
 
                             this.numberFormatError = null; // reset the numberFormatError
 
@@ -4110,10 +4109,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             this.numberFormatError = tuple(ctx, e);
         }
 
-        ConstantExpression constantExpression = new ConstantExpression(num, !text.startsWith(SUB_STR));
-        constantExpression.putNodeMetaData(IS_NUMERIC, Boolean.TRUE);
+        ConstantExpression constantExpression = new ConstantExpression(num, true);
         constantExpression.putNodeMetaData(INTEGER_LITERAL_TEXT, text);
-
+        constantExpression.putNodeMetaData(IS_NUMERIC, Boolean.TRUE);
         return configureAST(constantExpression, ctx);
     }
 
@@ -4128,10 +4126,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             this.numberFormatError = tuple(ctx, e);
         }
 
-        ConstantExpression constantExpression = new ConstantExpression(num, !text.startsWith(SUB_STR));
-        constantExpression.putNodeMetaData(IS_NUMERIC, Boolean.TRUE);
+        ConstantExpression constantExpression = new ConstantExpression(num, true);
         constantExpression.putNodeMetaData(FLOATING_POINT_LITERAL_TEXT, text);
-
+        constantExpression.putNodeMetaData(IS_NUMERIC, Boolean.TRUE);
         return configureAST(constantExpression, ctx);
     }
 

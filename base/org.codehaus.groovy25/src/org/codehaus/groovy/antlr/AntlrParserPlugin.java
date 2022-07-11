@@ -1396,28 +1396,28 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (type != null) type = type.redirect();
 
         if (type == ClassHelper.int_TYPE) {
-            return new ConstantExpression(0);
+            return new ConstantExpression(0, true);
         }
         if (type == ClassHelper.long_TYPE) {
-            return new ConstantExpression(0L);
+            return new ConstantExpression(0L, true);
         }
         if (type == ClassHelper.double_TYPE) {
-            return new ConstantExpression(0.0);
+            return new ConstantExpression(0.0, true);
         }
         if (type == ClassHelper.float_TYPE) {
-            return new ConstantExpression(0.0F);
+            return new ConstantExpression(0.0F, true);
         }
         if (type == ClassHelper.boolean_TYPE) {
-            return ConstantExpression.FALSE;
-        }
-        if (type == ClassHelper.short_TYPE) {
-            return new ConstantExpression((short) 0);
+            return ConstantExpression.PRIM_FALSE;
         }
         if (type == ClassHelper.byte_TYPE) {
-            return new ConstantExpression((byte) 0);
+            return new ConstantExpression((byte) 0, true);
         }
         if (type == ClassHelper.char_TYPE) {
-            return new ConstantExpression((char) 0);
+            return new ConstantExpression((char) 0, true);
+        }
+        if (type == ClassHelper.short_TYPE) {
+            return new ConstantExpression((short) 0, true);
         }
         return null;
     }
@@ -2585,7 +2585,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected ConstantExpression literalExpression(AST node, Object value) {
-        ConstantExpression constantExpression = new ConstantExpression(value, value instanceof Boolean);
+        ConstantExpression constantExpression = new ConstantExpression(value, true);
         configureAST(constantExpression, node);
         return constantExpression;
     }
@@ -3347,7 +3347,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             case NUM_DOUBLE:
             case NUM_FLOAT:
             case NUM_BIG_DECIMAL:
-                ConstantExpression constantExpression = new ConstantExpression(Numbers.parseDecimal("-" + text));
+                ConstantExpression constantExpression = new ConstantExpression(Numbers.parseDecimal("-" + text), true);
                 configureAST(constantExpression, unaryMinusExpr);
                 // GRECLIPSE add
                 setSourceEnd(constantExpression, expression(node));
@@ -3357,7 +3357,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             case NUM_BIG_INT:
             case NUM_INT:
             case NUM_LONG:
-                ConstantExpression constantLongExpression = new ConstantExpression(Numbers.parseInteger("-" + text));
+                ConstantExpression constantLongExpression = new ConstantExpression(Numbers.parseInteger("-" + text), true);
                 configureAST(constantLongExpression, unaryMinusExpr);
                 // GRECLIPSE add
                 setSourceEnd(constantLongExpression, expression(node));
@@ -3401,17 +3401,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected ConstantExpression decimalExpression(AST node) {
         String text = node.getText();
         Object number = Numbers.parseDecimal(text);
-        ConstantExpression constantExpression = new ConstantExpression(number,
-                number instanceof Double || number instanceof Float);
+        ConstantExpression constantExpression = new ConstantExpression(number, true);
         configureAST(constantExpression, node);
         return constantExpression;
     }
 
     protected ConstantExpression integerExpression(AST node) {
         String text = node.getText();
-        Object number = Numbers.parseInteger(node, text);
-        boolean keepPrimitive = number instanceof Integer || number instanceof Long;
-        ConstantExpression constantExpression = new ConstantExpression(number, keepPrimitive);
+        Object number = Numbers.parseInteger(text);
+        ConstantExpression constantExpression = new ConstantExpression(number, true);
         configureAST(constantExpression, node);
         return constantExpression;
     }
@@ -3430,7 +3428,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             switch (type) {
 
                 case STRING_LITERAL:
-                    if (isPrevString) assertNodeType(IDENT, node);  // parser bug
+                    if (isPrevString) assertNodeType(IDENT, node); // parser bug
                     isPrevString = true;
                     text = node.getText();
                     ConstantExpression constantExpression = new ConstantExpression(text);
@@ -3440,7 +3438,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     break;
 
                 default: {
-                    if (!isPrevString) assertNodeType(IDENT, node);  // parser bug
+                    if (!isPrevString) assertNodeType(IDENT, node); // parser bug
                     isPrevString = false;
                     Expression expression = expression(node);
                     values.add(expression);
