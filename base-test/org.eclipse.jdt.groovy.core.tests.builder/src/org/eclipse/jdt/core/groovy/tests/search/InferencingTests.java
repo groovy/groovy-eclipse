@@ -1642,7 +1642,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  protected void method() {}\n" +
             "}\n" +
             "class B extends A {\n" +
-            "  void something() {\n" +
+            "  void test() {\n" +
             "    method()\n" +
             "  }\n" +
             "}\n";
@@ -1656,7 +1656,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  private void method() {}\n" +
             "}\n" +
             "class B extends A {\n" +
-            "  void something() {\n" +
+            "  void test() {\n" +
             "    method()\n" +
             "  }\n" +
             "}\n";
@@ -1670,25 +1670,29 @@ public final class InferencingTests extends InferencingTestSuite {
             "  private void method() {}\n" +
             "}\n" +
             "class B extends A {\n" +
-            "  void something() {\n" +
+            "  void test() {\n" +
             "    this.method()\n" +
             "  }\n" +
             "}\n";
         assertUnknown(contents, "method");
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1378
     public void testSuperClassMethod4b() {
         String contents =
             "class A {\n" +
             "  private void method() {}\n" +
             "}\n" +
             "class B extends A {\n" +
-            "  void something() {\n" +
-            "    super.method()\n" + // this is ok
+            "  void test() {\n" +
+            "    super.method()\n" + // GROOVY-9851
             "  }\n" +
             "}\n";
-        assertDeclaringType(contents, "method", "A");
+        if (isAtLeastGroovy(40)) {
+            assertUnknown(contents, "method");
+        } else {
+            assertDeclaringType(contents, "method", "A");
+        }
     }
 
     @Test
@@ -1698,11 +1702,11 @@ public final class InferencingTests extends InferencingTestSuite {
             "  private void method() {}\n" +
             "}\n" +
             "class B extends A {\n" +
-            "  void something() {\n" +
-            "    super.&method\n" + // GROOVY-8999: resolves to MethodClosure, but it NPEs when called
+            "  void test() {\n" +
+            "    super.&method\n" + // GROOVY-9851: resolves to MethodClosure, but it fails when called
             "  }\n" +
             "}\n";
-        assertDeclaringType(contents, "method", "A");
+        assertUnknown(contents, "method");
     }
 
     @Test

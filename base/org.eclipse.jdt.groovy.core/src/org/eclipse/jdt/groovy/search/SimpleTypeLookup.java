@@ -397,7 +397,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (isStaticObjectExpression && !field.isStatic()) {
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (field.isPrivate()) {
-                        // "super.field" reference to private field yields MissingMethodException
+                        // "super.field" reference to private field yields MissingPropertyException
                         if (isSuperObjectExpression(scope)) {
                             confidence = TypeConfidence.UNKNOWN;
                         // "this.field" reference to private field of super class yields MissingPropertyException
@@ -417,9 +417,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     MethodNode method = (MethodNode) declaration;
                     if (isStaticObjectExpression && !method.isStatic() && !isStaticReferenceToInstanceMethod(scope)) {
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (method.isPrivate() && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
-                        // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
-                        confidence = TypeConfidence.UNKNOWN;
+                    } else if (method.isPrivate()) {
+                        // "super.method()" reference to private method yields MissingMethodException
+                        if (isSuperObjectExpression(scope)) {
+                            if (scope.getEnclosingNode() instanceof MethodPointerExpression || // GROOVY-8999
+                                                GroovyUtils.getGroovyVersion().getMajor() > 3) // GROOVY-9851
+                                confidence = TypeConfidence.UNKNOWN;
+                        // "this.method()" reference to private method of super class yields MissingMethodException
+                        } else if (isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
+                            confidence = TypeConfidence.UNKNOWN;
+                        }
                     } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 4) {
                         // GROOVY-1736, GROOVY-6097: "super.name" => "super.getName()" in AsmClassGenerator
                         String newName = "get" + MetaClassHelper.capitalize(name);
@@ -1101,6 +1108,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
         if (node instanceof MethodCallExpression) {
             return ((MethodCallExpression) node).getObjectExpression();
+        }
+        if (node instanceof MethodPointerExpression) {
+            return ((MethodPointerExpression) node).getExpression();
         }
         return null;
     }
