@@ -272,7 +272,7 @@ public class GenericsUtils {
             }
             return target;
         }
-        // GRECLIPSE add -- GROOVY-8984, GROOVY-9891
+        // GRECLIPSE add -- GROOVY-8984
         if (hint.isGenericsPlaceHolder()) {
             ClassNode bound = hint.redirect();
             return parameterizeType(bound, target);
@@ -402,16 +402,17 @@ public class GenericsUtils {
             }
             */
             if (type != null && type.isGenericsPlaceHolder()) {
+                if (type.hasMultiRedirect()) {
+                    // convert "S -> T -> U" to "T -> U"
+                    type = type.asGenericsType().getUpperBounds()[0];
+                    // continue to resolve "T -> U" if "T" is a placeholder
+                    return correctToGenericsSpecRecurse(genericsSpec, type, exclusions);
+                }
                 if (type.getGenericsTypes() == null) {
                     // correct "T -> U" (no generics)
                     ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
                     placeholder.setGenericsPlaceHolder(true);
                     return makeClassSafeWithGenerics(type, new GenericsType(placeholder));
-                } else if (type.hasMultiRedirect()) {
-                    // convert "S -> T -> U" to "T -> U"
-                    type = type.asGenericsType().getUpperBounds()[0];
-                    // continue to resolve "T -> U" if "T" is a placeholder
-                    return correctToGenericsSpecRecurse(genericsSpec, type, exclusions);
                 }
             }
             // GRECLIPSE end
@@ -457,15 +458,14 @@ public class GenericsUtils {
         if (type.isPlaceholder()) {
             String name = type.getName();
             ret = genericsSpec.get(name);
-        }
-        // GRECLIPSE add -- GROOVY-8984, GROOVY-9891
-        else if (type.isWildcard()) {
-          //ret = type.getLowerBound(); // use lower or upper
+        } else if (type.isWildcard()) { // GROOVY-9891
+            /* GRECLIPSE edit -- GROOVY-8984: "? super T" RHS
+            ret = type.getLowerBound(); // use lower or upper
+            */
             if (ret == null && type.getUpperBounds() != null) {
                 ret = type.getUpperBounds()[0]; // ? supports 1
             }
         }
-        // GRECLIPSE end
         if (ret == null) ret = type.getType();
         return ret;
     }

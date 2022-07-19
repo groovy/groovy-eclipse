@@ -2076,7 +2076,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAbstractCovariance_1() {
+    public void testAbstractCovariance1() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -2091,7 +2091,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAbstractCovariance_2() {
+    public void testAbstractCovariance2() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -2110,8 +2110,108 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test
-    public void testAbstractCovariance_3() {
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance3() {
+        //@formatter:off
+        String[] sources = {
+            "Face.java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "class Impl implements Face<CharSequence> { \n" +
+            "  @Override\n" +
+            "  def <Chars extends CharSequence> Chars process(Chars chars) { chars }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance4() {
+        //@formatter:off
+        String[] sources = {
+            "Face.java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<CharSequence>() { \n" +
+            "  @Override\n" +
+            "  def <Chars extends CharSequence> Chars process(Chars chars) { chars }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance5() {
+        //@formatter:off
+        String[] sources = {
+            "Face.java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<CharSequence>() { \n" +
+            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  CharSequence process(CharSequence chars) { chars }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance6() {
+        //@formatter:off
+        String[] sources = {
+            "Face.java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<String>() { \n" +
+            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  String process(String string) { string }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance7() {
+        //@formatter:off
+        String[] sources = {
+            "Face.groovy",
+            "interface Face<T> {\n" +
+            "  def <O extends T> O process(O o)\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<String>() { \n" +
+            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  String process(String string) { string }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-10675
+    public void testAbstractCovariance8() {
         //@formatter:off
         String[] sources = {
             "Face1.java",
@@ -2129,86 +2229,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "class Impl implements Face2<Number, String> {\n" +
             "  @Override String apply(Number n) { '' }\n" +
             "  @Override Object another() { null }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
-    public void testAbstractCovariance_GROOVY9059() {
-        //@formatter:off
-        String[] sources = {
-            "Face.java",
-            "interface Face<T> {\n" +
-            "  <O extends T> O process(O o);\n" +
-            "}\n",
-
-            "Impl.groovy",
-            "class Impl implements Face<CharSequence> { \n" +
-            "  @Override\n" +
-            "  public <Chars extends CharSequence> Chars process(Chars chars) { chars }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
-    public void testAbstractCovariance_GROOVY9059a() {
-        //@formatter:off
-        String[] sources = {
-            "Face.java",
-            "interface Face<T> {\n" +
-            "  <O extends T> O process(O o);\n" +
-            "}\n",
-
-            "Impl.groovy",
-            "def impl = new Face<CharSequence>() { \n" +
-            "  @Override\n" +
-            "  public <Chars extends CharSequence> Chars process(Chars chars) { chars }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
-    public void testAbstractCovariance_GROOVY9059b() {
-        //@formatter:off
-        String[] sources = {
-            "Face.java",
-            "interface Face<T> {\n" +
-            "  <O extends T> O process(O o);\n" +
-            "}\n",
-
-            "Impl.groovy",
-            "def impl = new Face<CharSequence>() { \n" +
-            "  @Override @SuppressWarnings('unchecked')\n" +
-            "  public CharSequence process(CharSequence chars) { chars }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
-    public void testAbstractCovariance_GROOVY9059c() {
-        //@formatter:off
-        String[] sources = {
-            "Face.java",
-            "interface Face<T> {\n" +
-            "  <O extends T> O process(O o);\n" +
-            "}\n",
-
-            "Impl.groovy",
-            "def impl = new Face<String>() { \n" +
-            "  @Override @SuppressWarnings('unchecked')\n" +
-            "  public String process(String string) { string }\n" +
             "}\n",
         };
         //@formatter:on

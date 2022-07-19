@@ -382,23 +382,22 @@ public class GenericsUtils {
             exclusions = plus(exclusions, name); // GROOVY-7722
             type = genericsSpec.get(name);
             if (type != null && type.isGenericsPlaceHolder()) {
-                if (type.getGenericsTypes() == null) {
-                    // correct "T -> U" (no generics)
-                    ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
-                    placeholder.setGenericsPlaceHolder(true);
-                    return makeClassSafeWithGenerics(type, new GenericsType(placeholder));
-                /* GRECLIPSE edit -- GROOVY-9059
-                } else if (!name.equals(type.getUnresolvedName())) {
-                    return correctToGenericsSpecRecurse(genericsSpec, type, exclusions);
-                }
-                */
-                } else if (type.hasMultiRedirect()) {
+                // GRECLIPSE add -- GROOVY-9059
+                if (type.hasMultiRedirect()) {
                     // convert "S -> T -> U" to "T -> U"
                     type = type.asGenericsType().getUpperBounds()[0];
                     // continue to resolve "T -> U" if "T" is a placeholder
                     return correctToGenericsSpecRecurse(genericsSpec, type, exclusions);
                 }
                 // GRECLIPSE end
+                if (type.getGenericsTypes() == null) {
+                    // correct "T -> U" (no generics)
+                    ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
+                    placeholder.setGenericsPlaceHolder(true);
+                    return makeClassSafeWithGenerics(type, new GenericsType(placeholder));
+                } else if (!name.equals(type.getUnresolvedName())) {
+                    return correctToGenericsSpecRecurse(genericsSpec, type, exclusions);
+                }
             }
         }
         if (type == null) type = ClassHelper.OBJECT_TYPE;
@@ -445,7 +444,7 @@ public class GenericsUtils {
             String name = type.getName();
             ret = genericsSpec.get(name);
         } else if (type.isWildcard()) { // GROOVY-9891
-            /* GRECLIPSE edit -- GROOVY-8984
+            /* GRECLIPSE edit -- GROOVY-8984: "? super T" RHS
             ret = type.getLowerBound(); // use lower or upper
             */
             if (ret == null && type.getUpperBounds() != null) {
