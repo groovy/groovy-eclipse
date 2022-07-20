@@ -63,7 +63,9 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
 
-        assertType(contents, "list", "java.util.ArrayList<java.io.Serializable or java.lang.Comparable>");
+        float version = Float.parseFloat(System.getProperty("java.specification.version"));
+        assertType(contents, "list", "java.util.ArrayList<java.io.Serializable or java.lang.Comparable" +
+            (version > 11 ? " or java.lang.constant.Constable or java.lang.constant.ConstantDesc" : "") + ">");
     }
 
     @Test
@@ -110,6 +112,8 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
 
-        assertType(contents, "map", "java.util.LinkedHashMap<java.lang.String,java.io.Serializable or java.lang.Comparable>");
+        float version = Float.parseFloat(System.getProperty("java.specification.version"));
+        assertType(contents, "map", "java.util.LinkedHashMap<java.lang.String,java.io.Serializable or java.lang.Comparable" +
+                            (version > 11 ? " or java.lang.constant.Constable or java.lang.constant.ConstantDesc" : "") + ">");
     }
 }

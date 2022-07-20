@@ -2392,13 +2392,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return node;
     }
 
-    protected ClassNode[] getArgumentTypes(final ArgumentListExpression args) {
-        return args.getExpressions().stream().map(exp ->
-            /* GRECLIPSE edit -- GROOVY-10667
-            isNullConstant(exp) ? UNKNOWN_PARAMETER_TYPE : getInferredTypeFromTempInfo(exp, getType(exp))
-            */
+    protected ClassNode[] getArgumentTypes(final ArgumentListExpression argumentList) {
+        return argumentList.getExpressions().stream().map(exp ->
             isNullConstant(exp) ? UNKNOWN_PARAMETER_TYPE : getType(exp)
-            // GRECLIPSE end
         ).toArray(ClassNode[]::new);
     }
 
@@ -4127,6 +4123,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             SwitchStatement switchStatement = typeCheckingContext.getEnclosingSwitchStatement();
             ClassNode inf = switchStatement.getExpression().getNodeMetaData(TYPE);
             expression.putNodeMetaData(CLOSURE_ARGUMENTS, new ClassNode[]{inf});
+
+            Parameter[] params = ((ClosureExpression) expression).getParameters();
+            if (params != null && params.length == 1) {
+                boolean lambda = (expression instanceof LambdaExpression);
+                checkParamType(params[0], wrapTypeIfNecessary(inf), false, lambda);
+            } else if (params == null || params.length > 1) {
+                int paramCount = (params != null ? params.length : 0);
+                addError("Incorrect number of parameters. Expected 1 but found " + paramCount, expression);
+            }
         }
         super.visitCaseStatement(statement);
         restoreTypeBeforeConditional();

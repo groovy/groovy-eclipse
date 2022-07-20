@@ -31,7 +31,6 @@ import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.apache.groovy.util.BeanUtils;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
@@ -123,7 +122,6 @@ import static org.apache.groovy.ast.tools.ExpressionUtils.transformInlineConstan
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.methodDescriptorWithoutReturnType;
-import static org.codehaus.groovy.ast.AnnotationNode.METHOD_TARGET;
 import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
 import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveBoolean;
 import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveDouble;
@@ -1078,7 +1076,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             setter.setSynthetic(true);
             addPropertyMethod(setter);
             if (!field.isSynthetic()) {
-                copyMethodAnnotations(node, setter);
+                copyAnnotations(node, setter);
             }
             visitMethod(setter);
         }
@@ -1091,18 +1089,15 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         // GRECLIPSE end
         getter.setSynthetic(true);
         addPropertyMethod(getter);
-        if (!field.isSynthetic()) {
-            copyMethodAnnotations(node, getter);
+        if (classNode.getNodeMetaData("_RECORD_HEADER") != null || !field.isSynthetic()) {
+            copyAnnotations(node, getter);
         }
         visitMethod(getter);
     }
 
-    private static void copyMethodAnnotations(final PropertyNode node, final MethodNode accessor) {
-        for (AnnotationNode annotationNode : node.getAnnotations()) {
-            if (annotationNode.isTargetAllowed(METHOD_TARGET)) {
-                accessor.addAnnotation(annotationNode);
-            }
-        }
+    private static void copyAnnotations(final PropertyNode node, final MethodNode accessor) {
+        accessor.addAnnotations(node.getAnnotations());
+        accessor.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
     }
 
     protected void addPropertyMethod(final MethodNode method) {
@@ -1408,7 +1403,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         ConstructorCallExpression specialCtorCall = getFirstIfSpecialConstructorCall(firstStatement);
 
         // in case of this(...) let the other constructor initialize
-        if (specialCtorCall != null && (specialCtorCall.isThisCall())) return;
+        if (specialCtorCall != null && specialCtorCall.isThisCall()) return;
 
         boolean isEnum = node.isEnum();
         List<Statement> statements = new ArrayList<>();

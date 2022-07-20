@@ -102,6 +102,7 @@ public class MethodNode extends AnnotatedNode {
     public void setModifiers(int modifiers) {
         invalidateCachedData();
         this.modifiers = modifiers;
+        getVariableScope().setInStaticContext(isStatic());
     }
 
     public String getName() {
@@ -312,18 +313,17 @@ public class MethodNode extends AnnotatedNode {
     public String getText() {
         int mask = this instanceof ConstructorNode ? Modifier.constructorModifiers() : Modifier.methodModifiers();
         String name = getName(); if (name.indexOf(' ') != -1) name = "\"" + name + "\""; // GROOVY-10417
-        return new StringBuilder(AstToTextHelper.getModifiersText(getModifiers() & mask))
-            .append(' ')
-            .append(toGenericTypesString(getGenericsTypes()))
-            .append(AstToTextHelper.getClassText(getReturnType()))
-            .append(' ')
-            .append(name)
-            .append('(')
-            .append(AstToTextHelper.getParametersText(getParameters()))
-            .append(')')
-            .append(AstToTextHelper.getThrowsClauseText(getExceptions()))
-            .append(" { ... }")
-            .toString();
+        return AstToTextHelper.getModifiersText(getModifiers() & mask) +
+                ' ' +
+                toGenericTypesString(getGenericsTypes()) +
+                AstToTextHelper.getClassText(getReturnType()) +
+                ' ' +
+                name +
+                '(' +
+                AstToTextHelper.getParametersText(getParameters()) +
+                ')' +
+                AstToTextHelper.getThrowsClauseText(getExceptions()) +
+                " { ... }";
     }
 
     @Override

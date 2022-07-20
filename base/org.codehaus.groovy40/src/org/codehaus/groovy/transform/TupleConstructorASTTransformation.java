@@ -247,6 +247,11 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
             FieldNode fNode = pNode.getField();
             if (shouldSkipUndefinedAware(name, excludes, includes, allNames)) continue;
             Parameter nextParam = createParam(fNode, name, defaultsMode, xform, makeImmutable);
+            if (cNode.getNodeMetaData("_RECORD_HEADER") != null) {
+                nextParam.addAnnotations(pNode.getAnnotations());
+                nextParam.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
+                fNode.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
+            }
             params.add(nextParam);
         }
 
@@ -274,6 +279,10 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
         // GRECLIPSE add -- apply compact constructor source position to primary constructor
         java.util.Optional.<ASTNode>ofNullable(cNode.getNodeMetaData("compact.constructor")).ifPresent(ctorNode::setSourcePosition);
         // GRECLIPSE end
+        if (cNode.getNodeMetaData("_RECORD_HEADER") != null) {
+            ctorNode.addAnnotations(cNode.getAnnotations());
+            ctorNode.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
+        }
         if (namedVariant) {
             BlockStatement inner = new BlockStatement();
             Parameter mapParam = param(ClassHelper.MAP_TYPE.getPlainNodeReference(), NAMED_ARGS);
@@ -312,7 +321,11 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
     }
 
     private static Parameter createParam(FieldNode fNode, String name, DefaultsMode defaultsMode, AbstractASTTransformation xform, boolean makeImmutable) {
-        Parameter param = new Parameter(fNode.getType(), name);
+        ClassNode fType = fNode.getType();
+        ClassNode type = fType.getPlainNodeReference();
+        type.setGenericsPlaceHolder(fType.isGenericsPlaceHolder());
+        type.setGenericsTypes(fType.getGenericsTypes());
+        Parameter param = new Parameter(type, name);
         if (defaultsMode == ON) {
             param.setInitialExpression(providedOrDefaultInitialValue(fNode));
         } else if (defaultsMode == AUTO && fNode.hasInitialExpression()) {

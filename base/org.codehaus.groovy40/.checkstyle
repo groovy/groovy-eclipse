@@ -64,7 +64,6 @@
         <file-match-pattern match-pattern="groovy/transform/trait/TraitComposer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitReceiverTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/Traits.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/vmplugin/v8/Java8.java" include-pattern="false" />
     </fileset>
     <filter name="DerivedFiles" enabled="true" />
 </fileset-config>
