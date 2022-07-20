@@ -752,22 +752,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void addInterface(ClassNode type) {
-        /* GRECLIPSE edit
-        boolean skip = false;
-        ClassNode[] interfaces = redirect().interfaces;
-        for (ClassNode existing : interfaces) {
-            if (type.equals(existing)) {
-                skip = true;
-                break;
-            }
-        }
-        if (!skip) {
-            ClassNode[] newInterfaces = new ClassNode[interfaces.length + 1];
-            System.arraycopy(interfaces, 0, newInterfaces, 0, interfaces.length);
-            newInterfaces[interfaces.length] = type;
-            redirect().interfaces = newInterfaces;
-        }
-        */
         ClassNode[] interfaces = getInterfaces();
         for (ClassNode face : interfaces) {
             if (face.equals(type)) return;
@@ -777,7 +761,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         System.arraycopy(interfaces, 0, interfaces = new ClassNode[n + 1], 0, n);
         interfaces[n] = type; // append interface
         setInterfaces(interfaces);
-        // GRECLIPSE end
     }
 
     public boolean equals(Object that) {

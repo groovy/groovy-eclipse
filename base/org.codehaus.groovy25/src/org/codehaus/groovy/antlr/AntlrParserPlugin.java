@@ -552,7 +552,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE end
                 addImport(type, name, alias, annotations);
                 imp = last(output.getImports());
-                // GRECLIPSE edit
+                /* GRECLIPSE edit
+                configureAST(imp, importNode);
+                */
                 configureAST(imp, importNode, node, null);
                 // GRECLIPSE end
                 return;
@@ -574,14 +576,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // GRECLIPSE end
                     addStaticStarImport(type, packageName, annotations);
                     imp = output.getStaticStarImports().get(packageName);
-                    // GRECLIPSE edit
+                    /* GRECLIPSE edit
+                    configureAST(imp, importNode);
+                    */
                     configureAST(imp, importNode, packageNode, null);
                     // GRECLIPSE end
                 } else {
                     // import is like "import foo.*"
                     addStarImport(packageName, annotations);
                     imp = last(output.getStarImports());
-                    // GRECLIPSE edit
+                    /* GRECLIPSE edit
+                    configureAST(imp, importNode);
+                    */
                     configureAST(imp, importNode, packageNode, null);
                     // GRECLIPSE end
                 }
@@ -602,7 +608,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // GRECLIPSE end
                     addStaticImport(type, name, alias, annotations);
                     imp = output.getStaticImports().get(alias == null ? name : alias);
-                    // GRECLIPSE edit
+                    /* GRECLIPSE edit
+                    configureAST(imp, importNode);
+                    */
                     imp.setFieldNameExpr(literalExpression(nameNode, name));
                     configureAST(imp, importNode, packageNode, nameNode);
                     // GRECLIPSE end
@@ -622,7 +630,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // GRECLIPSE end
                     addImport(type, name, alias, annotations);
                     imp = last(output.getImports());
-                    // GRECLIPSE edit
+                    /* GRECLIPSE edit
+                    configureAST(imp, importNode);
+                    */
                     configureAST(imp, importNode, packageNode, nameNode);
                     // GRECLIPSE end
                 }
