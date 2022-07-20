@@ -317,10 +317,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
 
     @Override
     public String toString() {
-        /* GRECLIPSE edit
-        return super.toString() + "[" + getDeclaringClass().getName() + "#" + getTypeDescriptor() + "]";
-        */
-        return super.toString() + "[" + getTypeDescriptor() + " from " + ClassNodeUtils.formatTypeName(getDeclaringClass()) + "]";
-        // GRECLIPSE end
+        ClassNode declaringClass = getDeclaringClass();
+        return super.toString() + "[" + getTypeDescriptor() + (declaringClass == null ? "" : " from " + ClassNodeUtils.formatTypeName(declaringClass)) + "]";
     }
 }

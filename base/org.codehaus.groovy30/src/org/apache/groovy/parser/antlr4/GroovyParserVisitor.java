@@ -82,7 +82,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code listPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -90,7 +90,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code mapPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */

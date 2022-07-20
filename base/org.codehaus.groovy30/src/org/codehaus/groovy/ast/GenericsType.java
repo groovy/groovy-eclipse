@@ -381,7 +381,7 @@ public class GenericsType extends ASTNode {
                 GenericsTypeName name = new GenericsTypeName(classNodeType.getName());
                 if (redirectBoundType.isPlaceholder()) {
                     GenericsTypeName gtn = new GenericsTypeName(redirectBoundType.getName());
-                    match = name.equals(gtn) // GRECLIPSE add
+                    match = name.equals(gtn) // GRECLIPSE add -- GROOVY-10067, et al.
                             || name.equals(new GenericsTypeName("#" + redirectBoundType.getName()));
                     if (!match) {
                         GenericsType boundGenericsType = boundPlaceHolders.get(gtn);
@@ -469,18 +469,8 @@ public class GenericsType extends ASTNode {
         return match;
     }
 
-    /**
-     * Represents {@link GenericsType} name.
-     * <p>
-     * TODO: In order to distinguish GenericsType with same name, we should add a property to keep the declaring class.
-     * <ol>
-     * <li> change the signature of constructor GenericsTypeName to `GenericsTypeName(String name, ClassNode declaringClass)`
-     * <li> try to fix all compilation errors(if `GenericsType` has declaringClass property, the step would be a bit easy to fix...)
-     * <li> run all tests to see whether the change breaks anything
-     * <li> if all tests pass, congratulations! but if some tests are broken, try to debug and find why...
-     * </ol>
-     * We should find a way to set declaring class for `GenericsType` first, it can be completed at the resolving phase.
-     */
+    //--------------------------------------------------------------------------
+
     public static class GenericsTypeName {
         private final String name;
 
