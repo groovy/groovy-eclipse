@@ -446,7 +446,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "def <T,U extends Configurable<T>> U configure(Class<U> type, @DelegatesTo(type='T',strategy=Closure.DELEGATE_FIRST) Closure<?> spec) {\n" +
+            "def <T,U extends Configurable<T>> U configure(Class<U> type, @DelegatesTo(type=\"T\",strategy=Closure.DELEGATE_FIRST) Closure<?> spec) {\n" +
             "  Configurable<T> obj = (Configurable<T>) type.newInstance()\n" +
             "  obj.configure(spec)\n" +
             "  obj\n" +
@@ -600,7 +600,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "@groovy.transform.TupleConstructor(defaults=false)\n" +
             "class Type<T,U> {\n" +
             "  final T value\n" +
-            "  U map(@DelegatesTo(type='T') Closure<U> producer) {\n" +
+            "  U map(@DelegatesTo(type=\"T\") Closure<U> producer) {\n" +
             "    producer.delegate = value\n" +
             "    producer()\n" +
             "  }\n" +
@@ -3766,7 +3766,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "import groovy.transform.*\n" +
             "int getAnswer() { return 42 }\n" +
             "void m(@NamedParams([\n" +
-            "  @NamedParam(value='n', type=Number)\n" +
+            "  @NamedParam(value=\"n\", type=Number)\n" +
             "]) Map<String,?> map) { print map.n }\n" +
             "@TypeChecked\n" +
             "void test() {\n" +
