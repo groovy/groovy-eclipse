@@ -6021,4 +6021,77 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "1");
     }
+
+    @Test
+    public void testTypeChecked10699() {
+        for (String type : new String[] {"java.util.function.Function<T,T>", "java.util.function.UnaryOperator<T>"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "def <T> void m(" + type + " f) {\n" +
+                "  print(f.apply(null))\n" +
+                "}\n" +
+                "@groovy.transform.TypeChecked\n" +
+                "void test() {\n" +
+                "  m { Double d -> d }\n" +
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "null");
+        }
+    }
+
+    @Test
+    public void testTypeChecked10700() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class D extends C {\n" + // implements A
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    print(decode('works'))\n" +
+            "  }\n" +
+            "}\n" +
+            "new D().test()\n",
+
+            "Peer.groovy",
+            "interface A {\n" +
+            "  String decode(String s)\n" +
+            "}\n" +
+            "class B implements A {\n" +
+            "  String decode(String s) { s }\n" +
+            "}\n" +
+            "class C implements A {\n" +
+            "  @Delegate(interfaces=false)\n" +
+            "  private final B b = new B()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTypeChecked10701() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T m1(java.util.function.UnaryOperator<T> op) {\n" +
+            "  return op.apply(null)\n" +
+            "}\n" +
+            "double m2(double d) {\n" +
+            "  return Math.PI\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  print(m1(true ? { Double d -> 42.0d } : this.&m2))\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
 }

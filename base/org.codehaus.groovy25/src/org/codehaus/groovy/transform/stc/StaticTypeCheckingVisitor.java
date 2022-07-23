@@ -4840,13 +4840,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         falseExpression.visit(this);
         ClassNode resultType;
         ClassNode typeOfFalse = getType(falseExpression);
-        // handle instanceof cases
+        /* GRECLIPSE edit -- GROOVY-10701
         if (hasInferredReturnType(falseExpression)) {
             typeOfFalse = getInferredReturnType(falseExpression);
         }
         if (hasInferredReturnType(trueExpression)) {
             typeOfTrue = getInferredReturnType(trueExpression);
         }
+        */
         /* GRECLIPSE edit -- GROOVY-9972
         typeOfFalse = checkForTargetType(falseExpression, typeOfFalse);
         typeOfTrue = checkForTargetType(trueExpression, typeOfTrue);

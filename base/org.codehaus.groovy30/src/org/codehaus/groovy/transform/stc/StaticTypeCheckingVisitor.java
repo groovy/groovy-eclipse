@@ -4654,8 +4654,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * @param type the inferred type of {@code expr}
      */
     private ClassNode checkForTargetType(final Expression expr, final ClassNode type) {
+        /* GRECLIPSE edit -- GROOVY-10701
         ClassNode sourceType = Optional.ofNullable(getInferredReturnType(expr)).orElse(type);
-
+        */
+        ClassNode sourceType = type;
+        // GRECLIPSE end
         ClassNode targetType = null;
         MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
         BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
