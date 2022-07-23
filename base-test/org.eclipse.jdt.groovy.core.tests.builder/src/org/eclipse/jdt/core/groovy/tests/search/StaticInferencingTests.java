@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -567,17 +567,59 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     @Test
     public void testStaticReference28() {
         String contents =
+            "class C {\n" +
+            "  static String getName() {'foo'}\n" +
+            "  static void sm() {\n" +
+            "    this.getName()\n" +
+            "    this.name\n" +
+            "  }\n" +
+            "}\n";
+        assertKnown(contents, "getName", "C", "java.lang.String");
+        assertKnown(contents, "name",    "C", "java.lang.String");
+    }
+
+    @Test
+    public void testStaticReference29() {
+        String contents =
+            "class C {\n" +
+            "  final static String name = 'foo'\n" +
+            "  static void sm() {\n" +
+            "    this.getName()\n" +
+            "    this.name\n" +
+            "  }\n" +
+            "}\n";
+        assertKnown(contents, "getName", "C", "java.lang.String");
+        assertKnown(contents, "name",    "C", "java.lang.String");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1382
+    public void testStaticReference30() {
+        String contents =
+            "class C {\n" +
+            "  private static String name = 'foo'\n" +
+            "  static void sm() {\n" +
+            "    this.getName()\n" +
+            "    this.name\n" +
+            "  }\n" +
+            "}\n";
+        assertKnown(contents, "getName", "java.lang.Class", "java.lang.String");
+        assertKnown(contents, "name",    "C",               "java.lang.String");
+    }
+
+    @Test
+    public void testStaticReference31() {
+        String contents =
             "static getStaticProperty() {}\n" +
             "static staticMethod() {\n" +
             "  getStaticProperty()\n" +
             "  staticProperty\n" +
             "}\n";
         assertKnown(contents, "getStaticProperty", "Search", "java.lang.Object");
-        assertKnown(contents, "staticProperty", "Search", "java.lang.Object");
+        assertKnown(contents, "staticProperty",    "Search", "java.lang.Object");
     }
 
     @Test
-    public void testStaticReference29() {
+    public void testStaticReference32() {
         String contents =
             "static getStaticProperty() {}\n" +
             "def scriptMethod() {\n" +
@@ -585,7 +627,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "  staticProperty\n" +
             "}\n";
         assertKnown(contents, "getStaticProperty", "Search", "java.lang.Object");
-        assertKnown(contents, "staticProperty", "Search", "java.lang.Object");
+        assertKnown(contents, "staticProperty",    "Search", "java.lang.Object");
     }
 
     //
