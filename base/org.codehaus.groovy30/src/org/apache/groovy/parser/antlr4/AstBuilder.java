@@ -4147,8 +4147,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             if (!asBoolean(ctx.type())) {
                 GenericsType genericsType = new GenericsType(baseType);
                 genericsType.setWildcard(true);
+                /* GRECLIPSE edit -- already set
                 genericsType.setName(QUESTION_STR);
-
+                */
                 return configureAST(genericsType, ctx);
             }
 

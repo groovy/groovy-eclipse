@@ -1271,19 +1271,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private void visitGenericTypes(final GenericsType[] generics, final String typeName) {
-        if (generics == null) return;
-        for (GenericsType gt : generics) {
-            if (gt.getType() != null && gt.getName().charAt(0) != '?') {
-                visitClassReference(gt.getType());
-            }
-            if (gt.getLowerBound() != null) {
-                visitClassReference(gt.getLowerBound());
-            }
-            if (gt.getUpperBounds() != null) {
-                for (ClassNode upper : gt.getUpperBounds()) {
-                    // handle enums where the upper bound is the same as the type
-                    if (!upper.getName().equals(typeName)) {
-                        visitClassReference(upper);
+        if (generics != null) {
+            for (GenericsType gt : generics) {
+                ClassNode type = gt.getType();
+                if (type != null && !type.getUnresolvedName().startsWith("?")) {
+                    visitClassReference(type);
+                }
+                if (gt.getLowerBound() != null) {
+                    visitClassReference(gt.getLowerBound());
+                }
+                if (gt.getUpperBounds() != null) {
+                    for (ClassNode upper : gt.getUpperBounds()) {
+                        // handle enums where the upper bound is the same as the type
+                        if (!upper.getName().equals(typeName)) {
+                            visitClassReference(upper);
+                        }
                     }
                 }
             }
