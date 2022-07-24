@@ -6023,6 +6023,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10698() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T> {\n" +
+            "  A(T t, B<T> b_of_t) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class B<U> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new A<>('string', new B<>())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10699() {
         for (String type : new String[] {"java.util.function.Function<T,T>", "java.util.function.UnaryOperator<T>"}) {
             //@formatter:off

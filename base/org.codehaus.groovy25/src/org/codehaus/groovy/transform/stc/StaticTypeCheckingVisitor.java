@@ -2788,11 +2788,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             && parameters.length == argumentTypes.length - 1) {
                         ctor = typeCheckMapConstructor(call, receiver, arguments);
                     } else {
+                        /* GRECLIPSE edit -- GROOVY-10698
                         if (parameters.length > 0 && asBoolean(receiver.getGenericsTypes())) { // GROOVY-10283, GROOVY-10316, GROOVY-10482, GROOVY-10624, et al.
                             Map<GenericsTypeName, GenericsType> context = extractPlaceHolders(null, receiver, ctor.getDeclaringClass());
                             parameters = parameters.clone(); for (int i = 0; i < parameters.length; i += 1)
                                 parameters[i] = new Parameter(applyGenericsContext(context, parameters[i].getType()), parameters[i].getName());
                         }
+                        */
+                        GenericsType[] typeParameters = ctor.getDeclaringClass().getGenericsTypes(); if (typeParameters != null && typeParameters.length > 0) {
+                            Map<GenericsTypeName, GenericsType> context = extractGenericsConnectionsFromArguments(typeParameters, parameters, argumentList, receiver.getGenericsTypes());
+                            if (!context.isEmpty()) parameters = Arrays.stream(parameters).map(p -> new Parameter(applyGenericsContext(context, p.getType()), p.getName())).toArray(Parameter[]::new);
+                        }
+                        // GRECLIPSE end
                         resolvePlaceholdersFromImplicitTypeHints(argumentTypes, argumentList, parameters);
                         typeCheckMethodsWithGenericsOrFail(receiver, argumentTypes, ctor, call);
                         visitMethodCallArguments(receiver, argumentList, true, ctor);
@@ -6203,7 +6210,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private Map<GenericsTypeName, GenericsType> extractGenericsConnectionsFromArguments(final GenericsType[] methodGenericTypes, final Parameter[] parameters, final Expression arguments, final GenericsType[] explicitTypeHints) {
         Map<GenericsTypeName, GenericsType> resolvedPlaceholders = new HashMap<>();
 
-        if (explicitTypeHints != null) { // resolve type parameters from type arguments
+        if (asBoolean(explicitTypeHints)) { // resolve type parameters from type arguments
             int n = methodGenericTypes.length;
             if (n == explicitTypeHints.length) {
                 for (int i = 0; i < n; i += 1) {
