@@ -4610,22 +4610,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
             vmArguments = new String[] {"--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED"};
 
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
-            "void test() {\n" +
-            "  Set<Integer> integers = java.util.concurrent.ConcurrentHashMap.newKeySet()\n" +
-            "  printSet(integers)\n" + // Cannot call printSet(Set<Integer>) with arguments [KeySetView<Object,Object>]
-            "}\n" +
-            "void printSet(Set<Integer> integers) {\n" +
-            "  println(integers)\n" +
-            "}\n" +
-            "test()\n",
-        };
-        //@formatter:on
+        for (String x : new String[] {"", "true?new HashSet<>():", "false?new HashSet<>():"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "@groovy.transform.TypeChecked\n" +
+                "void test() {\n" +
+                "  Set<Integer> integers = " + x + "java.util.concurrent.ConcurrentHashMap.newKeySet()\n" +
+                "  printSet(integers)\n" + // Cannot call printSet(Set<Integer>) with arguments [KeySetView<Object,Object>]
+                "}\n" +
+                "void printSet(Set<Integer> integers) {\n" +
+                "  println(integers)\n" +
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
 
-        runConformTest(sources, "[]");
+            runConformTest(sources, "[]");
+        }
     }
 
     @Test
@@ -6020,6 +6022,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testTypeChecked10688() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T, X> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <T> void test(\n" +
+            "  A<Double, ? extends T> x) {\n" +
+            "  A<Double, ? extends T> y = x\n" +
+            "  A<Double, ? extends T> z = true ? y : x\n" +
+            "}\n" +
+            "test(null)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
