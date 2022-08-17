@@ -988,6 +988,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6504() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "\n" +
+            "@CompileStatic void test() {\n" +
+            "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def target = node.rightExpression.getNodeMetaData(DIRECT_METHOD_CALL_TARGET)\n" +
+            "    assert target.declaringClass.name == 'java.util.Collection'\n" + // not java.lang.Object
+            "  })\n" +
+            "  int sum = ['a','bb','ccc'].inject(0) { int acc, String str -> acc += str.length(); acc }\n" +
+            "  print sum" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "6");
+    }
+
+    @Test
     public void testCompileStatic6610() {
         //@formatter:off
         String[] sources = {
@@ -1097,6 +1120,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6849() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface ObservableList<E> extends List<E> {\n" +
+            "  boolean addAll(E... elements)\n" +
+            "}\n" +
+            "def <E> ObservableList<E> wrap(List<E> list) {\n" +
+            "  list as ObservableList\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(ObservableList<String> tags) {\n" +
+            "  tags.addAll('bug')\n" + // Collection#addAll(T[]) (dgm) vs ObservableList#addAll(E[])
+            "  print tags\n" +
+            "}\n" +
+            "test(wrap(['add']))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[add, bug]");
+    }
+
+    @Test
     public void testCompileStatic6851() {
         //@formatter:off
         String[] sources = {
@@ -1166,6 +1212,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "[x supports 1, y supports 1, y supports 2]");
+    }
+
+    @Test
+    public void testCompileStatic6970() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface A { void m() }\n" +
+            "interface B { void m() }\n" +
+            "interface C extends A, B { }\n" +
+            "class D {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  D(C c) {\n" +
+            "    c.m()\n" +
+            "  }\n" +
+            "}\n" +
+            "class CImpl implements C {\n" +
+            "  void m() { println 'works' }\n" +
+            "}\n" +
+            "new D(new CImpl())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 
     @Test
@@ -2903,6 +2973,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic8788() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "\n" +
+            "@CompileStatic void test(Set one, Set two) {\n" +
+            "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def target = node.rightExpression.getNodeMetaData(DIRECT_METHOD_CALL_TARGET)\n" +
+            "    assert target.declaringClass.name == 'java.util.Set'\n" +
+            "  })\n" +
+            "  def three = one.intersect(two)\n" + // Set#intersect(Iterable) vs Collection#intersect(Collection)
+            "  print three\n" +
+            "}\n" +
+            "test(Collections.emptySet(), Collections.emptySet())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[]");
     }
 
     @Test
@@ -5521,6 +5614,22 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t      ^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot assign value of type java.lang.Integer to variable of type java.lang.Character\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9420() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Map<String,String> map, Object key) {\n" +
+            "  String str = map[key]\n" + // Map#getAt(Object) vs Object#getAt(String)
+            "}\n" +
+            "test([:],'')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test

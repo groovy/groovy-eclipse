@@ -1353,6 +1353,32 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7307() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T extends Number> T zero(T value) {\n" +
+            "  value\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <U extends Integer> U one(U value) {\n" +
+            "  zero(value)\n" + // narrower generic type
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <U extends Integer> U two(U value) {\n" +
+            "  this.<U>zero(value)\n" + // narrower generic type
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def Integer three(Integer value) {\n" +
+            "  zero(value)\n" + // fixed type
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked7316() {
         //@formatter:off
         String[] sources = {
@@ -1784,6 +1810,22 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTypeChecked8788() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<String,Number> map, String key) {\n" +
+            "  Number num = map[key]\n" + // Map#getAt(Object) vs Object#getAt(String)
+            "}\n" +
+            "test([:],'')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
