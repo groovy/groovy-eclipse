@@ -4962,7 +4962,9 @@ public void invalidType(ASTNode location, TypeBinding type) {
 		if (isRecoveredName(ref.tokens)) return;
 		if (type instanceof ReferenceBinding) {
 			char[][] name = ((ReferenceBinding) type).compoundName;
-			end = (int) ref.sourcePositions[name.length - 1];
+			if (name.length <= ref.sourcePositions.length) {
+				end = (int) ref.sourcePositions[name.length - 1];
+			}
 		}
 	} else if (location instanceof ArrayQualifiedTypeReference) {
 		ArrayQualifiedTypeReference arrayQualifiedTypeReference = (ArrayQualifiedTypeReference) location;
@@ -4970,7 +4972,9 @@ public void invalidType(ASTNode location, TypeBinding type) {
 		TypeBinding leafType = type.leafComponentType();
 		if (leafType instanceof ReferenceBinding) {
 			char[][] name = ((ReferenceBinding) leafType).compoundName; // problem type will tell how much got resolved
-			end = (int) arrayQualifiedTypeReference.sourcePositions[name.length-1];
+			if (name.length <= arrayQualifiedTypeReference.sourcePositions.length) {
+				end = (int) arrayQualifiedTypeReference.sourcePositions[name.length-1];
+			}
 		} else {
 			long[] positions = arrayQualifiedTypeReference.sourcePositions;
 			end = (int) positions[positions.length - 1];

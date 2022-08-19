@@ -254,11 +254,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 				"----------\n" +
 				"1. ERROR in X.java (at line 9)\n" +
 				"	foo(false ? (a,b)->a+b :new StringCatenation());\n" +
-				"	^^^\n" +
-				"The method foo(BinaryOperation<Integer>) in the type X is not applicable for the arguments ((false ? (<no type> a, <no type> b) -> (a + b) : new StringCatenation()))\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 9)\n" +
-				"	foo(false ? (a,b)->a+b :new StringCatenation());\n" +
 				"	                        ^^^^^^^^^^^^^^^^^^^^^^\n" +
 				"Type mismatch: cannot convert from StringCatenation to BinaryOperation<Integer>\n" +
 				"----------\n"
@@ -288,11 +283,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 				},
 				"----------\n" +
 				"1. ERROR in X.java (at line 9)\n" +
-				"	foo(false ? new StringCatenation() : (a,b)->a+b);\n" +
-				"	^^^\n" +
-				"The method foo(BinaryOperation<Integer>) in the type X is not applicable for the arguments ((false ? new StringCatenation() : (<no type> a, <no type> b) -> (a + b)))\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 9)\n" +
 				"	foo(false ? new StringCatenation() : (a,b)->a+b);\n" +
 				"	            ^^^^^^^^^^^^^^^^^^^^^^\n" +
 				"Type mismatch: cannot convert from StringCatenation to BinaryOperation<Integer>\n" +

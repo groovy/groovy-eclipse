@@ -1790,7 +1790,7 @@ public class ClasspathEntry implements IClasspathEntry {
 						CRC32 checksumCalculator = new CRC32();
 						checksumCalculator.update(pathString.getBytes());
 						String fileName = Long.toString(checksumCalculator.getValue()) + ".index"; //$NON-NLS-1$
-						return new URL("file", null, Paths.get(SHARED_INDEX_LOCATION, fileName).toString()); //$NON-NLS-1$
+						return Paths.get(SHARED_INDEX_LOCATION, fileName).toUri().toURL();
 					} catch (MalformedURLException e1) {
 						Util.log(e1); // should not happen if protocol known (eg. 'file')
 					}

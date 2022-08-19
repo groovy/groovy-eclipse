@@ -64,7 +64,9 @@ public abstract class JobManager implements Runnable {
 		return this.activated ? this.awaitingJobs.size() : 1;
 	}
 	/**
-	 * Answers the first job in the queue, or null if there is no job available
+	 * Answers the first job in the queue, or null if there is no job available or
+	 * index manager is disabled
+	 *
 	 * Until the job has completed, the job manager will keep answering the same job.
 	 */
 	public synchronized IJob currentJob() {
@@ -73,6 +75,19 @@ public abstract class JobManager implements Runnable {
 		}
 		return null;
 	}
+
+	/**
+	 * Answers the first job in the queue, or null if there is no job available,
+	 * independently on job manager enablement state.
+	 * Until the job has completed, the job manager will keep answering the same job.
+	 */
+	public synchronized IJob currentJobForced() {
+		if (!this.awaitingJobs.isEmpty()) {
+			return this.awaitingJobs.get(0);
+		}
+		return null;
+	}
+
 	public synchronized void disable() {
 		this.enableCount--;
 		if (VERBOSE)
@@ -208,6 +223,9 @@ public abstract class JobManager implements Runnable {
 		try {
 			SubMonitor subMonitor = SubMonitor.convert(monitor);
 			if (awaitingJobsCount() > 0) {
+				if (VERBOSE)
+					Util.verbose("-> NOT READY - " + awaitingJobsCount() + " awaiting jobs - " + searchJob);//$NON-NLS-1$ //$NON-NLS-2$
+
 				switch (waitingPolicy) {
 
 					case IJob.ForceImmediate :
@@ -251,16 +269,25 @@ public abstract class JobManager implements Runnable {
 							while ((awaitingJobsCount = awaitingJobsCount()) > 0) {
 								if (waitMonitor.isCanceled() || this.processingThread == null)
 									throw new OperationCanceledException();
-								IJob currentJob = currentJob();
-								// currentJob can be null when jobs have been added to the queue but job manager is not enabled
-								if (currentJob != null ) {
+
+								boolean shouldDisable = false;
+								IJob currentJob = currentJobForced();
+								if (currentJob != null) {
+									if (!isEnabled()) {
+										if (VERBOSE)
+											Util.verbose("-> NOT READY (" + this.enableCount //$NON-NLS-1$
+													+ ") - enabling indexer to process " //$NON-NLS-1$
+													+ awaitingJobsCount + " jobs - " + searchJob);//$NON-NLS-1$
+										enable();
+										shouldDisable = true;
+									}
 									synchronized (this.idleMonitor) {
 										this.idleMonitor.notifyAll(); // wake up idle sleepers
 									}
 								}
 								if (currentJob != null && currentJob != previousJob) {
 									if (VERBOSE)
-										Util.verbose("-> NOT READY - waiting until ready - " + searchJob);//$NON-NLS-1$
+										Util.verbose("-> NOT READY - waiting until ready  to process " + awaitingJobsCount + " awaiting jobs - " + searchJob);//$NON-NLS-1$ //$NON-NLS-2$
 									String indexing = Messages.bind(Messages.jobmanager_filesToIndex, currentJob.getJobFamily(), Integer.toString(awaitingJobsCount));
 									waitMonitor.subTask(indexing);
 									// ratio of the amount of work relative to the total work
@@ -286,6 +313,12 @@ public abstract class JobManager implements Runnable {
 											// ignore
 										}
 									}
+								}
+								if (shouldDisable) {
+									if (VERBOSE)
+										Util.verbose("-> NOT READY (" + this.enableCount + ") - disabling indexer again, still awaiting jobs: " //$NON-NLS-1$ //$NON-NLS-2$
+												+ awaitingJobsCount + " - " + searchJob);//$NON-NLS-1$
+									disable();
 								}
 							}
 						} finally {

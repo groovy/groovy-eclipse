@@ -16,7 +16,6 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.EclipseHasABug;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 
 import junit.framework.Test;
@@ -71,9 +70,7 @@ public void test001() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=446317, java.lang.VerifyError: Bad type on operand stack with Lambdas and/or inner classes
 public void test002() {
-	this.runNegativeTest(
-			false,
-			EclipseHasABug.EclipseBug529197,
+	this.runConformTest(
 			new String[] {
 				"X.java",
 				"import java.util.function.Consumer;\n" +
@@ -98,13 +95,7 @@ public void test002() {
 				"  }\n" +
 				"}\n",
 			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 17)\n" +
-			"	super(s -> System.out.println(text));\n" +
-			"	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Cannot refer to \'this\' nor \'super\' while explicitly invoking a constructor\n" +
-			"----------\n"
-			);
+			"");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=446317, java.lang.VerifyError: Bad type on operand stack with Lambdas and/or inner classes
 public void test003() {

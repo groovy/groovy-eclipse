@@ -1089,20 +1089,25 @@ class DocCommentParser extends AbstractCommentParser {
 	}
 
 	@Override
-	protected void pushSnippetText(int start, int end, boolean addNewLine, Object snippetTag) {
-
+	protected void pushSnippetText(char[] text, int start, int end, boolean addNewLine, Object snippetTag) {
+		boolean isExternalSnippet = false;
 		// Create text element
-		TextElement text = this.ast.newTextElement();
-		String textToBeAdded= new String( this.source, start, end-start);
+		TextElement textElem = this.ast.newTextElement();
+		String textToBeAdded= new String( text, start, end-start);
 		int iindex = textToBeAdded.indexOf('*');
 		if (iindex > -1 && textToBeAdded.substring(0, iindex+1).trim().equals("*")) { //$NON-NLS-1$
 			textToBeAdded = textToBeAdded.substring(iindex+1);
 			if (addNewLine) {
 				textToBeAdded += System.lineSeparator();
 			}
+		} else if (iindex == -1){
+			isExternalSnippet = true;
+			if (addNewLine) {
+				textToBeAdded += System.lineSeparator();
+			}
 		}
-		text.setText(textToBeAdded);
-		text.setSourceRange(start, end-start);
+		textElem.setText(textToBeAdded);
+		textElem.setSourceRange(start, end-start);
 
 		// Search previous tag on which to add the text element
 		AbstractTagElement previousTag = null;
@@ -1155,7 +1160,7 @@ class DocCommentParser extends AbstractCommentParser {
 		// Add the text
 		if (prevTag != null && !isNotDummyJavaDocRegion) {
 
-			prevTag.fragments().add(text);
+			prevTag.fragments().add(textElem);
 			int curStart = prevTag.getStartPosition();
 			int curEnd = curStart + prevTag.getLength();
 			int finStart = start;
@@ -1167,9 +1172,10 @@ class DocCommentParser extends AbstractCommentParser {
 			}
 			prevTag.setSourceRange(finStart, finEnd - finStart);
 		} else {
-			previousTag.fragments().add(text);
+			previousTag.fragments().add(textElem);
 		}
-		previousTag.setSourceRange(previousStart, finEnd-previousStart);
+		if (!isExternalSnippet)
+			previousTag.setSourceRange(previousStart, finEnd-previousStart);
 		this.textStart = -1;
 
 		if (snippetTag instanceof TagElement) {
@@ -1188,7 +1194,7 @@ class DocCommentParser extends AbstractCommentParser {
 						}
 						Object textVal = region.getProperty(TagProperty.TAG_PROPERTY_SNIPPET_REGION_TEXT);
 						if (!(textVal instanceof TextElement)) {
-							region.setProperty(TagProperty.TAG_PROPERTY_SNIPPET_REGION_TEXT, text);
+							region.setProperty(TagProperty.TAG_PROPERTY_SNIPPET_REGION_TEXT, textElem);
 						}
 						region.setSourceRange(startPos, endPos-startPos);
 						if (isRegionToBeEnded(region)) {

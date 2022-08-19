@@ -18485,4 +18485,43 @@ public void testBug561280() {
 			"}\n"
 		});
 }
+public void testBug380786() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5)
+		return; // uses foreach
+	runNegativeTest(
+		new String[] {
+			"PNA.java",
+			"public class PNA {\n" +
+			"  void missedPNA(String s) {\n" +
+			"    if (s != null)\n" +
+			"      s = \"1,2\";\n" +
+			"    final String[] sa = s.split(\",\");\n" +
+			"    for (final String ss : sa)\n" +
+			"      System.out.println(ss);\n" +
+			"  }\n" +
+			"\n" +
+			"  void detectedPNA(final String ps) {\n" +
+			"    String s = ps;\n" +
+			"    if (s != null)\n" +
+			"      s = \"1,2\";\n" +
+			"    final String[] sa = s.split(\",\");\n" +
+			"    for (final String ss : sa)\n" +
+			"      System.out.println(ss);\n" +
+			"  }\n" +
+			"  \n" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in PNA.java (at line 5)\n" +
+		"	final String[] sa = s.split(\",\");\n" +
+		"	                    ^\n" +
+		"Potential null pointer access: The variable s may be null at this location\n" +
+		"----------\n" +
+		"2. ERROR in PNA.java (at line 14)\n" +
+		"	final String[] sa = s.split(\",\");\n" +
+		"	                    ^\n" +
+		"Potential null pointer access: The variable s may be null at this location\n" +
+		"----------\n"
+			);
+}
 }

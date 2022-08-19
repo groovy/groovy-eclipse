@@ -14,8 +14,10 @@
 package org.eclipse.jdt.core.dom;
 
 import org.eclipse.jdt.core.IBuffer;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.compiler.IScanner;
@@ -111,7 +113,7 @@ public final class NodeFinder {
 	/**
 	 * Maps a selection to an ASTNode, where the selection is defined using a source range.
 	 * Calls <code>perform(root, range.getOffset(), range.getLength())</code>.
-	 * 
+	 *
 	 * @param root the root node from which the search starts
 	 * @param range the selection range
 	 * @return the innermost node that exactly matches the selection, or the first node that contains the selection
@@ -148,7 +150,15 @@ public final class NodeFinder {
 		if (start <= nodeStart && ((nodeStart + result.getLength()) <= (start + length))) {
 			IBuffer buffer= source.getBuffer();
 			if (buffer != null) {
-				IScanner scanner= ToolFactory.createScanner(false, false, false, false);
+				IScanner scanner;
+		        IJavaProject project = source.getJavaProject();
+		        if (project != null) {
+		            String sourceLevel = project.getOption(JavaCore.COMPILER_SOURCE, true);
+		            String complianceLevel = project.getOption(JavaCore.COMPILER_COMPLIANCE, true);
+		            scanner = ToolFactory.createScanner(false, false, false, sourceLevel, complianceLevel);
+		        } else {
+		        	scanner= ToolFactory.createScanner(false, false, false, false);
+		        }
 				try {
 					scanner.setSource(buffer.getText(start, length).toCharArray());
 					int token= scanner.getNextToken();

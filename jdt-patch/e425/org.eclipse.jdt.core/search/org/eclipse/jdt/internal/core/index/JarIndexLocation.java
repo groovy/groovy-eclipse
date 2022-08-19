@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Objects;
 import java.util.jar.JarEntry;
@@ -61,11 +60,7 @@ public class JarIndexLocation extends IndexLocation {
 	@Override
 	public boolean equals(Object other) {
 		if (!(other instanceof JarIndexLocation)) return false;
-		try {
-			return Objects.equals(this.localUrl.toURI(),((JarIndexLocation) other).localUrl.toURI());
-		} catch (URISyntaxException e) {
-			return false;
-		}
+		return Objects.equals(this.localUrl, ((JarIndexLocation) other).localUrl);
 	}
 
 	@Override

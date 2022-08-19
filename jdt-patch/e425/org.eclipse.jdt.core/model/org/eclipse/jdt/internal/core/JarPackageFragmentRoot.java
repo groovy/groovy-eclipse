@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -132,7 +132,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 				List<String> versions = new ArrayList<>();
 				if (projectLevel >= ClassFileConstants.JDK9 && jar.getEntry(version) != null) {
 					int earliestJavaVersion = ClassFileConstants.MAJOR_VERSION_9;
-					long latestJDK = CompilerOptions.releaseToJDKLevel(projectCompliance);
+					long latestJDK = CompilerOptions.versionToJdkLevel(projectCompliance);
 					int latestJavaVer = (int) (latestJDK >> 16);
 
 					for(int i = latestJavaVer; i >= earliestJavaVersion; i--) {

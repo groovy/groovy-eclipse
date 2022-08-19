@@ -450,13 +450,6 @@ public abstract class AbstractBatchCompilerTest extends AbstractRegressionTest {
 		return String.valueOf(buffer);
 	}
 
-	protected String getJCEJarAsQuotedString() {
-		if (Util.isMacOS()) {
-			return "\"" + JRE_HOME_DIR + "/../Classes/jce.jar\"";
-		}
-		return "\"" + JRE_HOME_DIR + "/lib/jce.jar\"";
-	}
-
 	protected String getExtDirectory() {
 		return JRE_HOME_DIR + "/lib/ext";
 	}

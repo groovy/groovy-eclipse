@@ -8591,10 +8591,43 @@ public void testBug446217() {
 	runner.javacTestOptions = new JavacTestOptions.SuppressWarnings("auxiliaryclass");
 	runner.runConformTest();
 }
-public void testBug456584() {
+public void testBug456584orig() {
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(JavaCore.COMPILER_PB_PESSIMISTIC_NULL_ANALYSIS_FOR_FREE_TYPE_VARIABLES, JavaCore.WARNING);
 	runWarningTestWithLibs(
+		true/*flush*/,
+		new String[] {
+			"MyObjects.java",
+			"public class MyObjects {\n" +
+			"	public static <T> T requireNonNull(T in) { return in; }\n" +
+			"}\n",
+			"Test.java",
+			"\n" +
+			"import java.util.function.*;\n" +
+			"import org.eclipse.jdt.annotation.*;\n" +
+			"\n" +
+			"@NonNullByDefault\n" +
+			"public class Test {\n" +
+			"\n" +
+			"  public static final <T,R> @NonNull R applyRequired(final T input, final Function<? super T,? extends R> function) { // Warning on '@NonNull R': \"The nullness annotation is redundant with a default that applies to this location\"\n" +
+			"    return MyObjects.requireNonNull(function.apply(input));\n" +
+			"  }\n" +
+			"\n" +
+			"}\n"
+		},
+		compilerOptions,
+		"----------\n" +
+		"1. WARNING in Test.java (at line 9)\n" +
+		"	return MyObjects.requireNonNull(function.apply(input));\n" +
+		"	                                ^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Null type safety: required \'@NonNull\' but this expression has type \'capture#2-of ? extends R\', a free type variable that may represent a \'@Nullable\' type\n" +
+		"----------\n");
+}
+public void testBug456584() {
+	// the compiler now has special information regarding Objects.requireNonNull
+	Map compilerOptions = getCompilerOptions();
+	compilerOptions.put(JavaCore.COMPILER_PB_PESSIMISTIC_NULL_ANALYSIS_FOR_FREE_TYPE_VARIABLES, JavaCore.WARNING);
+	runConformTestWithLibs(
 		true/*flush*/,
 		new String[] {
 			"Test.java",
@@ -8612,17 +8645,7 @@ public void testBug456584() {
 			"}\n"
 		},
 		compilerOptions,
-		"----------\n" +
-		"1. INFO in Test.java (at line 9)\n" +
-		"	return Objects.requireNonNull(function.apply(input));\n" +
-		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Unsafe interpretation of method return type as \'@NonNull\' based on substitution \'T=@NonNull capture#of ? extends R\'. Declaring type \'Objects\' doesn\'t seem to be designed with null type annotations in mind\n" +
-		"----------\n" +
-		"2. WARNING in Test.java (at line 9)\n" +
-		"	return Objects.requireNonNull(function.apply(input));\n" +
-		"	                              ^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Null type safety: required \'@NonNull\' but this expression has type \'capture#2-of ? extends R\', a free type variable that may represent a \'@Nullable\' type\n" +
-		"----------\n");
+		"");
 }
 public void testBug447661() {
 	runConformTestWithLibs(
@@ -18293,4 +18316,33 @@ public void testBug578300() {
 			"----------\n";
 	runner.runNegativeTest();
 }
+
+public void testRequireNonNull() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"X.java",
+			"import org.eclipse.jdt.annotation.*;\n" +
+			"public class X {\n" +
+			"	@Nullable Object o;\n" +
+			"	@NonNull X foo(X x) {\n" +
+			"		return java.util.Objects.requireNonNull(x);\n" + // was: Unsafe interpretation of method return type as '@NonNull' based on substitution 'T=@NonNull X'. Declaring type 'Objects' doesn't seem to be designed with null type annotations in mind
+			"	}\n" +
+			"	public static void main(String... args) {\n" +
+			"		try {\n" +
+			"			new X().foo(null);\n" +
+			"		} catch (NullPointerException e) {\n" +
+			"			System.out.print(\"caught\");\n" +
+			"		}\n" +
+			"	}\n" +
+			"}\n"
+		};
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(JavaCore.COMPILER_PB_NONNULL_TYPEVAR_FROM_LEGACY_INVOCATION, JavaCore.ERROR);
+	runner.classLibraries = this.LIBS;
+	runner.expectedCompilerLog = "";
+	runner.expectedOutputString = "caught";
+	runner.expectedErrorString = "";
+	runner.runConformTest();
+}
+
 }

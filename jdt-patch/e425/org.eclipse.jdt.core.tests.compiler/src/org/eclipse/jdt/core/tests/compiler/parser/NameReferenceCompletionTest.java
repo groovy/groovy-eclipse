@@ -499,7 +499,40 @@ public void testInIfThenStatement() {
 		"  Bar() {\n" +
 		"  }\n" +
 		"  void foo() {\n" +
-		"    if (bar())\n" +
+		"    <CompleteOnName:>;\n" +
+		"  }\n" +
+		"}\n",
+		// expectedCompletionIdentifier:
+		"",
+		// expectedReplacedSource:
+		"",
+		// test name
+		"<complete in if then statement>"
+	);
+}
+/*
+ * Completion in the statement following an if expression.
+ */
+public void testInIfThenWithInstanceOfStatement() {
+	this.runTestCheckMethodParse(
+		// compilationUnit:
+		"class Bar {								\n" +
+		"	void foo() {							\n" +
+		"		if (this instanceof Bar) 			\n" +
+		"											\n" +
+		"											\n" +
+		"	}										\n" +
+		"}											\n",
+		// completeBehind:
+		"\n			",
+		// expectedCompletionNodeToString:
+		"<CompleteOnName:>",
+		// expectedUnitDisplayString:
+		"class Bar {\n" +
+		"  Bar() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    if ((this instanceof Bar))\n" +
 		"        <CompleteOnName:>;\n" +
 		"  }\n" +
 		"}\n",

@@ -1270,12 +1270,15 @@ private Statement buildMoreCompletionEnclosingContext(Statement statement) {
 		index = blockIndex != -1 && controlIndex < blockIndex ? blockIndex : controlIndex;
 	}
 	while (index >= 0) {
-		// Try to find an enclosing if statement even if one is not found immediately preceding the completion node.
+		// Try to find an enclosing if statement with instanceof even if one is not found immediately preceding the completion node.
+		// A if statement is only chosen if it has a instanceof or the completion node is in the if statment it self.
+		Object elementObjectInfo = this.elementObjectInfoStack[index];
 		int kind = this.elementKindStack[index];
 		if ((kind == K_BLOCK_DELIMITER || kind == K_CONTROL_STATEMENT_DELIMITER || kind == K_BETWEEN_INSTANCEOF_AND_RPAREN) // same set as above
-			&& this.elementInfoStack[index] == IF && this.elementObjectInfoStack[index] != null)
+			&& this.elementInfoStack[index] == IF && elementObjectInfo != null
+			&& (isInstanceOfGuard(elementObjectInfo) || (this.assistNode == elementObjectInfo)))
 		{
-			Expression condition = (Expression)this.elementObjectInfoStack[index];
+			Expression condition = (Expression)elementObjectInfo;
 
 			// If currentElement is a RecoveredLocalVariable then it can be contained in the if statement
 			if (this.currentElement instanceof RecoveredLocalVariable &&

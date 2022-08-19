@@ -10361,4 +10361,22 @@ public void testBug508834_comment0() {
 				"}\n"
 			});
 	}
+	public void testBug543842() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"import java.math.BigDecimal;\n" +
+				"import java.util.Optional;\n" +
+				"import java.util.function.Function;\n" +
+				"\n" +
+				"public class X {\n" +
+				"	void test() {\n" +
+				"		BigDecimal b =\n" +
+				"		Optional.ofNullable(BigDecimal.ZERO)\n" +
+				"			.map((1 == 2) ? BigDecimal::negate : java.util.function.Function.identity())\n" +
+				"			.orElse(BigDecimal.ZERO);\n" +
+				"	}\n" +
+				"}\n"
+			});
+	}
 }

@@ -565,7 +565,7 @@ public class ClasspathChange {
 									try {
 										pathHasChanged = !Objects.equals(newurl.toURI(),oldurl.toURI());
 									} catch (URISyntaxException e) {
-										// ignore
+										pathHasChanged = !Objects.equals(newurl, oldurl);
 									}
 								} else if (oldurl != null) {
 									indexManager.removeIndex(newPath);

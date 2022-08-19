@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2020 IBM Corporation.
+ * Copyright (c) 2015, 2022 IBM Corporation.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,19 +10,21 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Christoph Läubrich - adding helper for getting a JarFileSystem
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystemAlreadyExistsException;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -30,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.ProviderNotFoundException;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,16 +40,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class JRTUtil {
 
 	public static final boolean DISABLE_CACHE = Boolean.getBoolean("org.eclipse.jdt.disable_JRT_cache"); //$NON-NLS-1$
+	public static final boolean PROPAGATE_IO_ERRORS = Boolean.getBoolean("org.eclipse.jdt.propagate_io_errors"); //$NON-NLS-1$
 
 	public static final String JAVA_BASE = "java.base".intern(); //$NON-NLS-1$
 	public static final char[] JAVA_BASE_CHAR = JAVA_BASE.toCharArray();
@@ -73,19 +79,26 @@ public class JRTUtil {
 
 	public interface JrtFileVisitor<T> {
 
-		public FileVisitResult visitPackage(T dir, T mod, BasicFileAttributes attrs) throws IOException;
+		public default FileVisitResult visitPackage(T dir, T mod, BasicFileAttributes attrs) throws IOException {
+			return FileVisitResult.CONTINUE;
+		}
 
-		public FileVisitResult visitFile(T file, T mod, BasicFileAttributes attrs) throws IOException;
+		public default FileVisitResult visitFile(T file, T mod, BasicFileAttributes attrs) throws IOException {
+			return FileVisitResult.CONTINUE;
+		}
+
 		/**
 		 * Invoked when a root directory of a module being visited. The element returned
 		 * contains only the module name segment - e.g. "java.base". Clients can use this to control
 		 * how the JRT needs to be processed, for e.g., clients can skip a particular module
 		 * by returning FileVisitResult.SKIP_SUBTREE
 		 */
-		public FileVisitResult visitModule(T path, String name) throws IOException;
+		public default FileVisitResult visitModule(T path, String name) throws IOException  {
+			return FileVisitResult.CONTINUE;
+		}
 	}
 
-	static abstract class AbstractFileVisitor<T> implements FileVisitor<T> {
+	public static abstract class AbstractFileVisitor<T> implements FileVisitor<T> {
 		@Override
 		public FileVisitResult preVisitDirectory(T dir, BasicFileAttributes attrs) throws IOException {
 			return FileVisitResult.CONTINUE;
@@ -111,22 +124,76 @@ public class JRTUtil {
 		return getJrtSystem(image, null);
 	}
 
+	/**
+	 * @param image the path to the root of the JRE whose libraries we are interested in.
+	 * @param release <code>--release</code> version
+	 */
 	public static JrtFileSystem getJrtSystem(File image, String release) {
 		String key = image.toString();
-		if (release != null) key = key + "|" + release; //$NON-NLS-1$
+		Jdk jdk;
+		try {
+			jdk = new Jdk(image);
+		} catch (IOException e) {
+			// Needs better error handling downstream? But for now, make sure
+			// a dummy JrtFileSystem is not created.
+			String errorMessage = "Error: failed to create JrtFileSystem from " + image; //$NON-NLS-1$
+			if (PROPAGATE_IO_ERRORS) {
+				throw new IllegalStateException(errorMessage, e);
+			}
+			System.err.println(errorMessage);
+			e.printStackTrace();
+			return null;
+		}
+		if (release != null && !jdk.sameRelease(release)) {
+			key = key + "|" + release; //$NON-NLS-1$
+		}
 		JrtFileSystem system = images.computeIfAbsent(key, x -> {
 			try {
-				return JrtFileSystem.getNewJrtFileSystem(image, release);
+				return JrtFileSystem.getNewJrtFileSystem(jdk, release);
 			} catch (IOException e) {
 				// Needs better error handling downstream? But for now, make sure
 				// a dummy JrtFileSystem is not created.
-				System.err.println("Error: failed to create JrtFileSystem from " + image); //$NON-NLS-1$
+				String errorMessage = "Error: failed to create JrtFileSystem from " + image; //$NON-NLS-1$
+				if (PROPAGATE_IO_ERRORS) {
+					throw new IllegalStateException(errorMessage, e);
+				}
+				System.err.println(errorMessage);
 				e.printStackTrace();
 				// Don't save value in the map, may be we can recover later
 				return null;
 			}
 		});
 		return system;
+	}
+
+	/**
+	 * Convenient method to get access to the given archive as a {@link FileSystem}.
+	 * <p>
+	 * <b>Note:</b> if the file system for given archive was already created before, the method will reuse existing file
+	 * system, otherwise a new {@link FileSystem} object will be created.
+	 * <p>
+	 * The caller should not close returned {@link FileSystem} as it might be shared with others.
+	 *
+	 * @param path
+	 *            absolute file path to a jar archive
+	 * @return never null
+	 * @throws IOException
+	 */
+	public static FileSystem getJarFileSystem(Path path) throws IOException {
+		URI uri = URI.create("jar:file:" + path.toUri().getRawPath()); //$NON-NLS-1$
+		try {
+			try {
+				return FileSystems.getFileSystem(uri);
+			} catch (FileSystemNotFoundException fne) {
+				try {
+					return FileSystems.newFileSystem(uri, Map.of(), ClassLoader.getSystemClassLoader());
+				} catch (FileSystemAlreadyExistsException e) {
+					return FileSystems.getFileSystem(uri);
+				}
+			}
+		} catch (ProviderNotFoundException e) {
+			throw new IOException("No provider for uri " + uri, e); //$NON-NLS-1$
+		}
 	}
 
 	public static CtSym getCtSym(Path jdkHome) throws IOException {
@@ -224,44 +291,49 @@ public class JRTUtil {
 	public static byte[] safeReadBytes(Path path) throws IOException {
 		try {
 			return Files.readAllBytes(path);
-		} catch (ClosedByInterruptException | NoSuchFileException e) {
+		} catch (ClosedByInterruptException e) {
+			// retry once again
+			try {
+				return Files.readAllBytes(path);
+			} catch (NoSuchFileException e2) {
+				return null;
+			} catch (ClosedByInterruptException e2) {
+				if (PROPAGATE_IO_ERRORS) {
+					throw e2;
+				}
+				return null;
+			}
+		} catch (NoSuchFileException e) {
 			return null;
 		}
+	}
+
+	/**
+	 * @param image jrt file path
+	 * @return JDK release corresponding to given jrt file, read from "release" file, if available. May return null.
+	 */
+	public static String getJdkRelease(File image) {
+		JrtFileSystem jrt = getJrtSystem(image);
+		return jrt == null ? null : jrt.getJdkRelease();
 	}
 }
 
 class JrtFileSystemWithOlderRelease extends JrtFileSystem {
 
-	final String release;
-	private List<Path> releaseRoots = Collections.emptyList();
-	protected Path modulePath;
+	private List<Path> releaseRoots;
 	private CtSym ctSym;
 
 	/**
 	 * The jrt file system is based on the location of the JRE home whose libraries
 	 * need to be loaded.
 	 *
-	 * @param jrt the path to the root of the JRE whose libraries we are interested in.
 	 * @param release the older release where classes and modules should be searched for.
 	 * @throws IOException
 	 */
-	JrtFileSystemWithOlderRelease(File jrt, String release) throws IOException {
-		super(jrt);
-		this.release = release;
-		initialize(jrt, release);
-	}
-
-	@Override
-	void initialize(File jdk) throws IOException {
-		// Just to make sure we don't do anything in super.initialize()
-		// before setting this.release
-	}
-
-	private void initialize(File jdk, String rel) throws IOException {
-		super.initialize(jdk);
-		this.fs = null;// reset and proceed, TODO: this is crude and need to be removed.
+	JrtFileSystemWithOlderRelease(Jdk jdkHome, String release) throws IOException {
+		super(jdkHome, release);
 		String releaseCode = CtSym.getReleaseCode(this.release);
-		this.ctSym = JRTUtil.getCtSym(Paths.get(this.jdkHome));
+		this.ctSym = JRTUtil.getCtSym(Paths.get(this.jdk.path));
 		this.fs = this.ctSym.getFs();
 		if (!Files.exists(this.fs.getPath(releaseCode))
 				|| Files.exists(this.fs.getPath(releaseCode, "system-modules"))) { //$NON-NLS-1$
@@ -329,6 +401,75 @@ final class RuntimeIOException extends RuntimeException {
 	}
 }
 
+class Jdk {
+	final String path;
+	final String release;
+	static final Map<String, String> pathToRelease = new ConcurrentHashMap<>();
+
+	public Jdk(File jrt) throws IOException {
+		this.path = toJdkHome(jrt);
+		try {
+			String rel = pathToRelease.computeIfAbsent(this.path, key -> {
+				try {
+					return readJdkReleaseFile(this.path);
+				} catch (IOException e) {
+					throw new RuntimeIOException(e);
+				}
+			});
+			this.release = rel;
+		} catch (RuntimeIOException rio) {
+			throw rio.getCause();
+		}
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Jdk ["); //$NON-NLS-1$
+		if (this.path != null) {
+			builder.append("path="); //$NON-NLS-1$
+			builder.append(this.path);
+			builder.append(", "); //$NON-NLS-1$
+		}
+		if (this.release != null) {
+			builder.append("release="); //$NON-NLS-1$
+			builder.append(this.release);
+		}
+		builder.append("]"); //$NON-NLS-1$
+		return builder.toString();
+	}
+
+	boolean sameRelease(String other) {
+		long jdkLevel = CompilerOptions.versionToJdkLevel(this.release);
+		long otherJdkLevel = CompilerOptions.versionToJdkLevel(other);
+		return Long.compare(jdkLevel, otherJdkLevel) == 0;
+	}
+
+	static String toJdkHome(File jrt) {
+		String home;
+		Path normalized = jrt.toPath().normalize();
+		if (jrt.getName().equals(JRTUtil.JRT_FS_JAR)) {
+			home = normalized.getParent().getParent().toString();
+		} else {
+			home = normalized.toString();
+		}
+		return home;
+	}
+
+	static String readJdkReleaseFile(String javaHome) throws IOException {
+		Properties properties = new Properties();
+		try(FileReader reader = new FileReader(new File(javaHome, "release"))){ //$NON-NLS-1$
+			properties.load(reader);
+		}
+		// Something like JAVA_VERSION="1.8.0_05"
+		String ver = properties.getProperty("JAVA_VERSION"); //$NON-NLS-1$
+		if (ver != null) {
+			ver = ver.replace("\"", "");  //$NON-NLS-1$//$NON-NLS-2$
+		}
+		return ver;
+	}
+}
+
 class JrtFileSystem {
 
 	private final Map<String, String> packageToModule = new HashMap<String, String>();
@@ -340,50 +481,33 @@ class JrtFileSystem {
 
 	FileSystem fs;
 	Path modRoot;
-	String jdkHome;
+	Jdk jdk;
+	final String release;
 
-	public static JrtFileSystem getNewJrtFileSystem(File jrt, String release) throws IOException {
-		return (release == null) ? new JrtFileSystem(jrt) :
-				new JrtFileSystemWithOlderRelease(jrt, release);
-
+	public static JrtFileSystem getNewJrtFileSystem(Jdk jdk, String release) throws IOException {
+		if (release == null || jdk.sameRelease(release)) {
+			return new JrtFileSystem(jdk, null);
+		} else {
+			return new JrtFileSystemWithOlderRelease(jdk, release);
+		}
 	}
 
 	/**
 	 * The jrt file system is based on the location of the JRE home whose libraries
 	 * need to be loaded.
 	 *
-	 * @param jrt the path to the root of the JRE whose libraries we are interested in.
+	 * @param jdkHome
 	 * @throws IOException
 	 */
-	JrtFileSystem(File jrt) throws IOException {
-		initialize(jrt);
-	}
-
-	void initialize(File jrt) throws IOException {
-		URL jrtPath = null;
-		this.jdkHome = null;
-		if (jrt.toString().endsWith(JRTUtil.JRT_FS_JAR)) {
-			jrtPath = jrt.toPath().toUri().toURL();
-			this.jdkHome = jrt.getParentFile().getParent();
-		} else {
-			this.jdkHome = jrt.toPath().toString();
-			jrtPath = Paths.get(this.jdkHome, "lib", JRTUtil.JRT_FS_JAR).toUri().toURL(); //$NON-NLS-1$
-
-		}
+	JrtFileSystem(Jdk jdkHome, String release) throws IOException {
+		this.jdk = jdkHome;
+		this.release = release;
 		JRTUtil.MODULE_TO_LOAD = System.getProperty("modules.to.load"); //$NON-NLS-1$
-		String javaVersion = System.getProperty("java.version"); //$NON-NLS-1$
-		if (javaVersion != null && javaVersion.startsWith("1.8")) { //$NON-NLS-1$
-			try (URLClassLoader loader = new URLClassLoader(new URL[] { jrtPath })) {
-				HashMap<String, ?> env = new HashMap<>();
-				this.fs = FileSystems.newFileSystem(JRTUtil.JRT_URI, env, loader);
-			}
-		} else {
-			HashMap<String, String> env = new HashMap<>();
-			env.put("java.home", this.jdkHome); //$NON-NLS-1$
-			this.fs = FileSystems.newFileSystem(JRTUtil.JRT_URI, env);
-		}
+		HashMap<String, String> env = new HashMap<>();
+		env.put("java.home", this.jdk.path); //$NON-NLS-1$
+		this.fs = FileSystems.newFileSystem(JRTUtil.JRT_URI, env);
 		this.modRoot = this.fs.getPath(JRTUtil.MODULES_SUBDIR);
-		// Set up the root directory wherere modules are located
+		// Set up the root directory where modules are located
 		walkJrtForModules();
 	}
 
@@ -654,5 +778,13 @@ class JrtFileSystem {
 			this.packageToModules.put(packageName, list);
 			this.packageToModule.put(packageName, JRTUtil.MULTIPLE);
 		}
+	}
+
+	/**
+	 * @return JDK release string (something like <code>1.8.0_05<code>) read from the "release" file from JDK home
+	 *         directory
+	 */
+	public String getJdkRelease() {
+		return this.jdk.release;
 	}
 }

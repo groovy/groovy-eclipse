@@ -304,7 +304,7 @@ public synchronized IndexLocation computeIndexLocation(IPath containerPath, fina
 			try {
 				urisarequal = Objects.equals(newIndexURL.toURI(), existingURL.toURI());
 			} catch (URISyntaxException e) {
-				// ignore missing RFC 2396 compliance
+				urisarequal = Objects.equals(newIndexURL, existingURL);
 			}
 			if(!urisarequal) {
 				// URL has changed so remove the old index and create a new one

@@ -225,9 +225,8 @@ public abstract class AbstractMethodDeclaration
 						flowInfo.markAsDefinitelyNonNull(methodArguments[i].binding);
 					else if (tagBits == TagBits.AnnotationNullable)
 						flowInfo.markPotentiallyNullBit(methodArguments[i].binding);
-					else if (methodBinding.parameters[i].isFreeTypeVariable()) {
+					else if (methodBinding.parameters[i].isFreeTypeVariable())
 						flowInfo.markNullStatus(methodArguments[i].binding, FlowInfo.FREE_TYPEVARIABLE);
-					}
 				} else {
 					if (methodBinding.parameterNonNullness != null) {
 						// leverage null-info from parameter annotations:
@@ -240,6 +239,8 @@ public abstract class AbstractMethodDeclaration
 						}
 					}
 				}
+				if (!flowInfo.hasNullInfoFor(methodArguments[i].binding))
+					flowInfo.markNullStatus(methodArguments[i].binding, FlowInfo.UNKNOWN); // ensure nullstatus is initialized
 				// tag parameters as being set:
 				flowInfo.markAsDefinitelyAssigned(methodArguments[i].binding);
 			}

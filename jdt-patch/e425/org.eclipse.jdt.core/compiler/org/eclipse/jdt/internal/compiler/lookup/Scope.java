@@ -5481,17 +5481,26 @@ public abstract class Scope {
 		while (methodScope != null) {
 			while (methodScope != null && methodScope.referenceContext instanceof LambdaExpression) {
 				LambdaExpression lambda = (LambdaExpression) methodScope.referenceContext;
-				if (!typeVariableAccess && !lambda.scope.isStatic)
+				SourceTypeBinding lambdaEnclosingType = methodScope.classScope().referenceContext.binding;
+				if (methodScope.isConstructorCall) {
+					ReferenceBinding tmp = lambdaEnclosingType;
+					while ((tmp = tmp.enclosingType()) != null) {
+						if (!TypeBinding.equalsEquals(enclosingType, tmp)) continue;
+						lambda.mapSyntheticEnclosingTypes.computeIfAbsent((SourceTypeBinding) enclosingType, lambda::addSyntheticArgument);
+						lambda.hasOuterClassMemberReference = true; // ref to Outer class members allowed - interpreting 8.8.7.1
+						break;
+					}
+				}
+				if (!typeVariableAccess && !lambda.scope.isStatic && !lambda.hasOuterClassMemberReference)
 					lambda.shouldCaptureInstance = true;  // lambda can still be static, only when `this' is touched (implicitly or otherwise) it cannot be.
 				methodScope = methodScope.enclosingMethodScope();
 			}
 			if (methodScope != null) {
-				if (methodScope.referenceContext instanceof MethodDeclaration) {
-					MethodDeclaration methodDeclaration = (MethodDeclaration) methodScope.referenceContext;
-					if (methodDeclaration.binding == enclosingMethod)
-						break;
-					methodDeclaration.bits &= ~ASTNode.CanBeStatic;
-				}
+				AbstractMethodDeclaration methodDecl = methodScope.referenceMethod();
+				if (methodDecl != null && methodDecl.binding == enclosingMethod)
+					break;
+				if (methodDecl instanceof MethodDeclaration)
+					methodDecl.bits &= ~ASTNode.CanBeStatic;
 				ClassScope enclosingClassScope = methodScope.enclosingClassScope();
 				if (enclosingClassScope != null) {
 					TypeDeclaration type = enclosingClassScope.referenceContext;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022 Andrey Loskujtov, and others.
+ * Copyright (c) 2022 Andrey Loskutov, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -18,6 +18,7 @@ import static org.eclipse.jdt.internal.compiler.util.HashtableOfObject.calculate
 
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
+import org.junit.Test;
 
 public class HashtableOfObjectTest extends TestCase {
 
@@ -25,6 +26,7 @@ public class HashtableOfObjectTest extends TestCase {
 		super(name);
 	}
 
+	@Test
 	public void testCalculateNewSize() {
 		int input;
 		int expected;
@@ -124,6 +126,7 @@ public class HashtableOfObjectTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testCreateNewTable() {
 		int input;
 		int expected;

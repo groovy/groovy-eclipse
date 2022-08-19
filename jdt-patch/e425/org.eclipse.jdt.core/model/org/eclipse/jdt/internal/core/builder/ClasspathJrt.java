@@ -23,7 +23,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import org.eclipse.core.runtime.IPath;
@@ -37,18 +39,20 @@ import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
 import org.eclipse.jdt.internal.compiler.env.IMultiModuleEntry;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.util.JRTUtil;
+import org.eclipse.jdt.internal.compiler.util.JRTUtil.JrtFileVisitor;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.JavaProject;
+import org.eclipse.jdt.internal.core.util.Util;
 
 public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry {
 
 //private HashMap<String, SimpleSet> packagesInModule = null;
-protected static HashMap<String, HashMap<String, SimpleSet>> PackageCache = new HashMap<>();
-protected static HashMap<String, HashMap<String, IModule>> ModulesCache = new HashMap<>();
+protected static Map<String, Map<String, SimpleSet>> PackageCache = new ConcurrentHashMap<>();
+protected static Map<String, Map<String, IModule>> ModulesCache = new ConcurrentHashMap<>();
 String zipFilename; // keep for equals
 File jrtFile;
-static final Set<String> NO_LIMIT_MODULES = new HashSet<>();
+static final Set<String> NO_LIMIT_MODULES = Collections.emptySet();
 
 /*
  * Only for use from ClasspathJrtWithReleaseOption
@@ -75,110 +79,90 @@ void setZipFile(String zipFilename) {
  * @param jrt The ClasspathJar to use
  * @return A SimpleSet with the all the package names in the zipFile.
  */
-static HashMap<String, SimpleSet> findPackagesInModules(final ClasspathJrt jrt) {
-	String zipFileName = jrt.zipFilename;
-	HashMap<String, SimpleSet> cache = PackageCache.get(jrt.getKey());
-	if (cache != null) {
-		return cache;
+static Map<String, SimpleSet> findPackagesInModules(final ClasspathJrt jrt) {
+	if (jrt.zipFilename == null) {
+		return Map.of();
 	}
-	final HashMap<String, SimpleSet> packagesInModule = new HashMap<>();
-	PackageCache.put(zipFileName, packagesInModule);
-	try {
-		final File imageFile = jrt.jrtFile;
-		org.eclipse.jdt.internal.compiler.util.JRTUtil.walkModuleImage(imageFile,
-				new org.eclipse.jdt.internal.compiler.util.JRTUtil.JrtFileVisitor<Path>() {
-			SimpleSet packageSet = null;
-			@Override
-			public FileVisitResult visitPackage(Path dir, Path mod, BasicFileAttributes attrs) throws IOException {
-				ClasspathJar.addToPackageSet(this.packageSet, dir.toString(), true);
-				return FileVisitResult.CONTINUE;
-			}
+	Map<String, SimpleSet> cache = PackageCache.computeIfAbsent(jrt.zipFilename, zipFileName -> {
+		final Map<String, SimpleSet> packagesInModule = new HashMap<>();
+		try {
+			JRTUtil.walkModuleImage(jrt.jrtFile, new JrtPackageVisitor(packagesInModule), JRTUtil.NOTIFY_PACKAGES | JRTUtil.NOTIFY_MODULES);
+		} catch (IOException e) {
+			Util.log(e, "Failed to init packages for " + zipFileName); //$NON-NLS-1$
+		}
+		return packagesInModule.isEmpty() ? null : Collections.unmodifiableMap(packagesInModule);
+	});
+	return cache;
+}
 
-			@Override
-			public FileVisitResult visitFile(Path file, Path mod, BasicFileAttributes attrs) throws IOException {
-				return FileVisitResult.CONTINUE;
-			}
+static final class JrtPackageVisitor implements JRTUtil.JrtFileVisitor<Path> {
+	private final Map<String, SimpleSet> packagesInModule;
+	SimpleSet packageSet;
 
-			@Override
-			public FileVisitResult visitModule(Path path, String name) throws IOException {
-				jrt.acceptModule(JRTUtil.getClassfileContent(imageFile, IModule.MODULE_INFO_CLASS, name), name);
-				this.packageSet = new SimpleSet(41);
-				this.packageSet.add(""); //$NON-NLS-1$
-				if (name.endsWith("/")) { //$NON-NLS-1$
-					name = name.substring(0, name.length() - 1);
-				}
-				packagesInModule.put(name, this.packageSet);
-				return FileVisitResult.CONTINUE;
-			}
-		}, JRTUtil.NOTIFY_PACKAGES | JRTUtil.NOTIFY_MODULES);
-	} catch (IOException e) {
-		// TODO: Java 9 Should report better
+	JrtPackageVisitor(Map<String, SimpleSet> packagesInModule) {
+		this.packagesInModule = packagesInModule;
 	}
-	return packagesInModule;
+
+	@Override
+	public FileVisitResult visitPackage(Path dir, Path mod, BasicFileAttributes attrs) throws IOException {
+		ClasspathJar.addToPackageSet(this.packageSet, dir.toString(), true);
+		return FileVisitResult.CONTINUE;
+	}
+
+	@Override
+	public FileVisitResult visitModule(Path path, String name) throws IOException {
+		this.packageSet = new SimpleSet(41);
+		this.packageSet.add(""); //$NON-NLS-1$
+		if (name.endsWith("/")) { //$NON-NLS-1$
+			name = name.substring(0, name.length() - 1);
+		}
+		this.packagesInModule.put(name, this.packageSet);
+		return FileVisitResult.CONTINUE;
+	}
 }
 
 public static void loadModules(final ClasspathJrt jrt) {
-	HashMap<String, IModule> cache = ModulesCache.get(jrt.getKey());
-
-	if (cache == null) {
+	String jrtKey = jrt.getKey();
+	if (jrtKey == null) {
+		return;
+	}
+	ModulesCache.computeIfAbsent(jrtKey, key -> {
+		Map<String, IModule> newCache = new HashMap<>();
 		try {
 			final File imageFile = jrt.jrtFile;
-			org.eclipse.jdt.internal.compiler.util.JRTUtil.walkModuleImage(imageFile,
-					new org.eclipse.jdt.internal.compiler.util.JRTUtil.JrtFileVisitor<Path>() {
-				SimpleSet packageSet = null;
-
-				@Override
-				public FileVisitResult visitPackage(Path dir, Path mod, BasicFileAttributes attrs)
-						throws IOException {
-					ClasspathJar.addToPackageSet(this.packageSet, dir.toString(), true);
-					return FileVisitResult.CONTINUE;
-				}
-
-				@Override
-				public FileVisitResult visitFile(Path file, Path mod, BasicFileAttributes attrs)
-						throws IOException {
-					return FileVisitResult.CONTINUE;
-				}
-
+			JRTUtil.walkModuleImage(imageFile, new JrtFileVisitor<Path>() {
 				@Override
 				public FileVisitResult visitModule(Path path, String name) throws IOException {
-					jrt.acceptModule(JRTUtil.getClassfileContent(imageFile, IModule.MODULE_INFO_CLASS, name), name);
+					jrt.acceptModule(JRTUtil.getClassfileContent(imageFile, IModule.MODULE_INFO_CLASS, name), name,	newCache);
 					return FileVisitResult.SKIP_SUBTREE;
 				}
 			}, JRTUtil.NOTIFY_MODULES);
 		} catch (IOException e) {
-			// TODO: Java 9 Should report better
+			Util.log(e, "Failed to init packages for " + jrt); //$NON-NLS-1$
 		}
-	} else {
-//		for (IModuleDeclaration iModule : cache) {
-//			jimage.env.acceptModule(iModule, jimage);
-//		}
-	}
+		return newCache.isEmpty() ? null : Collections.unmodifiableMap(newCache);
+	});
 }
+
 protected String getKey() {
 	return this.zipFilename;
 }
-void acceptModule(byte[] content, String name) {
-	if (content == null)
+
+void acceptModule(byte[] content, String name, Map<String, IModule> cache) {
+	if (content == null) {
 		return;
-	ClassFileReader reader = null;
-	try {
-		reader = new ClassFileReader(content, IModule.MODULE_INFO_CLASS.toCharArray());
-	} catch (ClassFormatException e) {
-		e.printStackTrace();
 	}
-	if (reader != null) {
-		String key = getKey();
+	try {
+		ClassFileReader reader = new ClassFileReader(content, IModule.MODULE_INFO_CLASS.toCharArray());
 		IModule moduleDecl = reader.getModuleDeclaration();
 		if (moduleDecl != null) {
-			HashMap<String, IModule> cache = ModulesCache.get(key);
-			if (cache == null) {
-				ModulesCache.put(key, cache = new HashMap<String, IModule>());
-			}
 			cache.put(name, moduleDecl);
 		}
+	} catch (ClassFormatException e) {
+		Util.log(e, "Failed to read module-info.class for " + name + " in " + this.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
+
 @Override
 public void cleanup() {
 	if (this.annotationZipFile != null) {
@@ -263,7 +247,10 @@ public IModule getModule(char[] moduleName) {
 	return getModule(String.valueOf(moduleName));
 }
 public IModule getModule(String moduleName) {
-	HashMap<String, IModule> modules = ModulesCache.get(getKey());
+	if (!hasModule()) {
+		return null;
+	}
+	Map<String, IModule> modules = ModulesCache.get(getKey());
 	if (modules != null) {
 		return modules.get(moduleName);
 	}
@@ -271,7 +258,7 @@ public IModule getModule(String moduleName) {
 }
 @Override
 public Collection<String> getModuleNames(Collection<String> limitModules) {
-	HashMap<String, SimpleSet> cache = findPackagesInModules(this);
+	Map<String, SimpleSet> cache = findPackagesInModules(this);
 	if (cache != null)
 		return selectModules(cache.keySet(), limitModules);
 	return Collections.emptyList();

@@ -933,9 +933,10 @@ public Object[] getEmulationPath(ReferenceBinding targetEnclosingType, boolean o
 		}
 	}
 	FieldBinding syntheticField = sourceType.getSyntheticField(targetEnclosingType, onlyExactMatch);
+	Object[] synEAoL = currentMethodScope.getSyntheticEnclosingArgumentOfLambda(targetEnclosingType);
 	if (syntheticField != null) {
 		if (currentMethodScope.isConstructorCall){
-			return BlockScope.NoEnclosingInstanceInConstructorCall;
+			return synEAoL != null ? synEAoL : BlockScope.NoEnclosingInstanceInConstructorCall;
 		}
 		return new Object[] { syntheticField };
 	}
@@ -947,7 +948,7 @@ public Object[] getEmulationPath(ReferenceBinding targetEnclosingType, boolean o
 		path[0] = ((NestedTypeBinding) sourceType).getSyntheticArgument(currentType, onlyExactMatch, currentMethodScope.isConstructorCall);
 	} else {
 		if (currentMethodScope.isConstructorCall){
-			return BlockScope.NoEnclosingInstanceInConstructorCall;
+			return synEAoL != null ? synEAoL : BlockScope.NoEnclosingInstanceInConstructorCall;
 		}
 		path[0] = sourceType.getSyntheticField(currentType, onlyExactMatch);
 	}

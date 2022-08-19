@@ -23,6 +23,8 @@ import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -43,7 +45,6 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -66,8 +67,7 @@ static class PackageCacheEntry {
 	}
 }
 
-protected static SimpleLookupTable PackageCache = new SimpleLookupTable();
-protected static SimpleLookupTable ModuleCache = new SimpleLookupTable();
+protected static Map<String, PackageCacheEntry> PackageCache = new ConcurrentHashMap<>();
 
 protected static void addToPackageSet(SimpleSet packageSet, String fileName, boolean endsWithSep) {
 	int last = endsWithSep ? fileName.length() : fileName.lastIndexOf('/');
@@ -85,22 +85,23 @@ protected static void addToPackageSet(SimpleSet packageSet, String fileName, boo
  * @return A SimpleSet with the all the package names in the zipFile.
  */
 protected SimpleSet findPackageSet() {
-	String zipFileName = this.zipFilename;
-	PackageCacheEntry cacheEntry = (PackageCacheEntry) PackageCache.get(zipFileName);
-	if(cacheEntry != null && cacheEntry.zipFile.get() == this.zipFile) {
-		return cacheEntry.packageSet;
-	}
-	long timestamp = this.lastModified();
-	long fileSize = new File(zipFileName).length();
-	if (cacheEntry != null && cacheEntry.lastModified == timestamp && cacheEntry.fileSize == fileSize) {
-		cacheEntry.zipFile = new WeakReference<ZipFile>(this.zipFile);
-		return cacheEntry.packageSet;
-	}
-	final SimpleSet packageSet = new SimpleSet(41);
-	packageSet.add(""); //$NON-NLS-1$
-	readJarContent(packageSet);
-	PackageCache.put(zipFileName, new PackageCacheEntry(this.zipFile, timestamp, fileSize, packageSet));
-	return packageSet;
+	PackageCacheEntry entry = PackageCache.compute(this.zipFilename, (zipFileName, cacheEntry) -> {
+		if(cacheEntry != null && cacheEntry.zipFile.get() == this.zipFile) {
+			return cacheEntry;
+		}
+		long timestamp = this.lastModified();
+		long fileSize = new File(zipFileName).length();
+		if (cacheEntry != null && cacheEntry.lastModified == timestamp && cacheEntry.fileSize == fileSize) {
+			cacheEntry.zipFile = new WeakReference<>(this.zipFile);
+			return cacheEntry;
+		}
+		final SimpleSet packageSet = new SimpleSet(41);
+		packageSet.add(""); //$NON-NLS-1$
+		readJarContent(packageSet);
+		return new PackageCacheEntry(this.zipFile, timestamp, fileSize, packageSet);
+	});
+
+	return entry.packageSet;
 }
 protected String readJarContent(final SimpleSet packageSet) {
 	String modInfo = null;

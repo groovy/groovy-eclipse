@@ -1977,7 +1977,8 @@ public class JavaProject
 						propertyName.equals(JavaCore.CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE) ||
 						propertyName.equals(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL) ||
 						propertyName.equals(JavaCore.CORE_MAIN_ONLY_PROJECT_HAS_TEST_ONLY_DEPENDENCY) ||
-						propertyName.equals(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM))
+						propertyName.equals(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM) ||
+						propertyName.equals(JavaCore.COMPILER_RELEASE))
 					{
 						manager.deltaState.addClasspathValidation(JavaProject.this);
 					}

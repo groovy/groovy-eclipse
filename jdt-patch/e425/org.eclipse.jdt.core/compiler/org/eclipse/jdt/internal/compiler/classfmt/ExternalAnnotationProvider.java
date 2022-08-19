@@ -29,7 +29,10 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryElementValuePair;
 import org.eclipse.jdt.internal.compiler.env.ITypeAnnotationWalker;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.SignatureWrapper;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
+
+import static org.eclipse.jdt.internal.compiler.util.Util.*;
 
 public class ExternalAnnotationProvider {
 
@@ -53,6 +56,7 @@ public class ExternalAnnotationProvider {
 
 	private static final String TYPE_PARAMETER_PREFIX = " <"; //$NON-NLS-1$
 
+	private static final ExternalAnnotationProvider OUTER_FOR_PARTIAL_WALKERS= new ExternalAnnotationProvider();
 
 	private String typeName;
 	String typeParametersAnnotationSource;
@@ -71,7 +75,12 @@ public class ExternalAnnotationProvider {
 		initialize(input);
 	}
 
-	private void initialize(InputStream input) throws IOException {
+	// only for OUTER_FOR_PARTIAL_WALKERS:
+	private ExternalAnnotationProvider() {
+		// no initialization here, we don't have any input
+	}
+
+	void initialize(InputStream input) throws IOException {
 		try (LineNumberReader reader = new LineNumberReader(new InputStreamReader(input))) {
 			assertClassHeader(reader.readLine(), this.typeName);
 
@@ -96,17 +105,29 @@ public class ExternalAnnotationProvider {
 				String rawSig = null, annotSig = null;
 				// selector:
 				String selector = line;
+				if (!Character.isJavaIdentifierStart(selector.charAt(0)) && !new String(TypeConstants.INIT).equals(trimTail(selector))) {
+					throw new IOException("Illegal selector in external annotation file for "+this.typeName+" at line "+reader.getLineNumber()+": \""+selector+'"'); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
 				boolean isSuper = selector.startsWith(SUPER_PREFIX);
 				if (isSuper)
 					selector = selector.substring(SUPER_PREFIX.length());
 				int errLine = -1;
+				String errDetail = ""; //$NON-NLS-1$
+				readSignatures:
 				try {
 					// raw signature:
 					line = reader.readLine();
-					if (line != null && !line.isEmpty() && line.charAt(0) == ' ') // first signature line is mandatory
+					if (line != null && !line.isEmpty() && line.charAt(0) == ' ') { // first signature line is mandatory
 						rawSig = line.substring(1);
-					else
+						String trimmed = trimTail(rawSig.trim());
+						if (!isValidSignature(trimmed, isSuper)) {
+							errDetail = ": invalid signature \""+trimmed+'"'; //$NON-NLS-1$
+							break readSignatures;
+						}
+					} else {
 						errLine = reader.getLineNumber();
+						errDetail = ": illegal signature line \""+line+"\""; //$NON-NLS-1$ //$NON-NLS-2$
+					}
 					// annotated signature:
 					line = reader.readLine();
 					if (line == null || line.isEmpty())
@@ -116,13 +137,18 @@ public class ExternalAnnotationProvider {
 						continue;
 					}
 					annotSig = line.substring(1);
+					String trimmed = trimTail(annotSig.trim());
+					if (!isValidSignature(trimmed, isSuper))
+						errDetail = ": invalid signature \""+trimmed+'"'; //$NON-NLS-1$
 				} catch (Exception ex) {
 					// continue to escalate below
+					errDetail = ": "+ex.toString(); //$NON-NLS-1$
 				}
-				if (rawSig == null || annotSig == null) {
+				if (rawSig == null || annotSig == null || !errDetail.isEmpty()) {
 					if (errLine == -1) errLine = reader.getLineNumber();
-					throw new IOException("Illegal format in annotation file for "+this.typeName+" at line "+errLine); //$NON-NLS-1$ //$NON-NLS-2$
+					throw new IOException("Illegal format in external annotation file for "+this.typeName+" at line "+errLine+errDetail); //$NON-NLS-1$ //$NON-NLS-2$
 				}
+
 				// discard optional meta data (separated by whitespace):
 				annotSig = trimTail(annotSig);
 				if (isSuper) {
@@ -139,6 +165,68 @@ public class ExternalAnnotationProvider {
 					this.fieldAnnotationSources.put(selector+':'+rawSig, annotSig);
 				}
 			} while (((line = pendingLine) != null) || (line = reader.readLine()) != null);
+		}
+	}
+
+	private boolean isValidSignature(String trim, boolean expectTypeArguments) {
+		if (trim.length() > 0) {
+			char first = trim.charAt(0);
+			if (expectTypeArguments) {
+				return first == '<'; // looks like a type argument
+			}
+			if (first == '(' || (first == '<' && trim.indexOf('(') != -1)) {
+				return true; // looks like a message signature
+			}
+			return isValidTypeSignature(trim.toCharArray()); // looks like a field signature
+		}
+		return false;
+	}
+	private boolean isValidTypeSignature(char[] typeSignature) {
+		// simplified variant of org.eclipse.jdt.core.Signature.getTypeSignatureKind(char[]) -- which is inaccessible here
+		// need a minimum 1 char
+		if (typeSignature.length < 1) {
+			return false;
+		}
+		char c = typeSignature[0];
+		if (c == C_GENERIC_START) {
+			int count = 1;
+			for (int i = 1, length = typeSignature.length; i < length; i++) {
+				switch (typeSignature[i]) {
+					case 	C_GENERIC_START:
+						count++;
+						break;
+					case C_GENERIC_END:
+						count--;
+						break;
+				}
+				if (count == 0) {
+					if (i+1 < length)
+						c = typeSignature[i+1];
+					break;
+				}
+			}
+		}
+		switch (c) {
+			case C_ARRAY :
+			case C_RESOLVED :
+			case C_UNRESOLVED :
+			case C_TYPE_VARIABLE :
+			case C_BOOLEAN :
+			case C_BYTE :
+			case C_CHAR :
+			case C_DOUBLE :
+			case C_FLOAT :
+			case C_INT :
+			case C_LONG :
+			case C_SHORT :
+			case C_VOID :
+			case C_STAR :
+			case C_SUPER :
+			case C_EXTENDS :
+			case C_CAPTURE :
+				return true;
+			default :
+				return false;
 		}
 	}
 
@@ -714,5 +802,9 @@ public class ExternalAnnotationProvider {
 		public ITypeAnnotationWalker toThrows(int index) {
 			throw new UnsupportedOperationException("Field has no throws"); //$NON-NLS-1$
 		}
+	}
+
+	public static ITypeAnnotationWalker synthesizeForMethod(char[] source, LookupEnvironment env) {
+		return OUTER_FOR_PARTIAL_WALKERS.new MethodAnnotationWalker(source, 0, env);
 	}
 }

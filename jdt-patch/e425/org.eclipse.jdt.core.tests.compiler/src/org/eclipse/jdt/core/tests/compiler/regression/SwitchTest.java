@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2019 IBM Corporation and others.
+ * Copyright (c) 2005, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -3185,6 +3185,89 @@ public void testBug576093b() {
 				+ "}",
 			},
 			"Success");
+}
+public void testBug443576_1() {
+	if (this.complianceLevel < ClassFileConstants.JDK11) {
+		return;
+	}
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportFallthroughCase, CompilerOptions.ERROR);
+	this.runNegativeTest(new String[] {
+		"X.java",
+		"public class X {\n"
+		+ "    public enum E { A, B; }\n"
+		+ "    public String f(E e) {\n"
+		+ "        switch (e) {\n"
+		+ "            case A: return \"a\";\n"
+		+ "                break; //<-- ERROR: Unreachable code\n"
+		+ "            case B: return \"b\";   //<-- WARNING: Switch case may be entered by falling through previous case\n"
+		+ "                break; //<-- ERROR: Unreachable code\n"
+		+ "            default: return \"?\";  //<-- WARNING: Switch case may be entered by falling through previous case\n"
+		+ "                break; //<-- ERROR: Unreachable code\n"
+		+ "        }\n"
+		+ "    }  \n"
+		+ "}",
+	},
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	break; //<-- ERROR: Unreachable code\n" +
+		"	^^^^^^\n" +
+		"Unreachable code\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 8)\n" +
+		"	break; //<-- ERROR: Unreachable code\n" +
+		"	^^^^^^\n" +
+		"Unreachable code\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 10)\n" +
+		"	break; //<-- ERROR: Unreachable code\n" +
+		"	^^^^^^\n" +
+		"Unreachable code\n" +
+		"----------\n",
+	null,
+	true,
+	options);
+}
+// Same as above, but keep swap the return and break statements
+public void testBug443576_2() {
+	if (this.complianceLevel < ClassFileConstants.JDK11) {
+		return;
+	}
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportFallthroughCase, CompilerOptions.ERROR);
+	this.runNegativeTest(new String[] {
+		"X.java",
+		"public class X {\n"
+		+ "    public enum E { A, B; }\n"
+		+ "    public String f(E e) {\n"
+		+ "        switch (e) {\n"
+		+ "            case A: break;\n"
+		+ "                return \"a\"; //<-- ERROR: Unreachable code\n"
+		+ "            default: return \"?\";  //<-- WARNING: Switch case may be entered by falling through previous case\n"
+		+ "                break; //<-- ERROR: Unreachable code\n"
+		+ "        }\n"
+		+ "    }  \n"
+		+ "}",
+	},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	public String f(E e) {\n" +
+			"	              ^^^^^^\n" +
+			"This method must return a result of type String\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 6)\n" +
+			"	return \"a\"; //<-- ERROR: Unreachable code\n" +
+			"	^^^^^^^^^^^\n" +
+			"Unreachable code\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 8)\n" +
+			"	break; //<-- ERROR: Unreachable code\n" +
+			"	^^^^^^\n" +
+			"Unreachable code\n" +
+			"----------\n",
+	null,
+	true,
+	options);
 }
 public static Class testClass() {
 	return SwitchTest.class;

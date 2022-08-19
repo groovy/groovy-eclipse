@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2021 IBM Corporation and others.
+ * Copyright (c) 2016, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.core.builder;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import org.eclipse.core.runtime.CoreException;
@@ -87,7 +87,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 	 * if the compliance is below 6, we simply return the lowest supported
 	 * release, which is 6.
 	 */
-	private String getReleaseOptionFromCompliance(String comp) {
+	private String getReleaseOptionFromCompliance(String comp) throws CoreException {
 		if (JavaCore.compareJavaVersions(comp, JavaCore.VERSION_1_5) <= 0) {
 			return "6"; //$NON-NLS-1$
 		}
@@ -95,7 +95,11 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		if (index != -1) {
 			return comp.substring(index + 2, comp.length());
 		} else {
-			return comp;
+			if (comp.indexOf('.') == -1) {
+				return comp;
+			}
+			throw new CoreException(new Status(IStatus.ERROR, ClasspathJrtWithReleaseOption.class,
+						"Invalid value for --release argument:" + comp)); //$NON-NLS-1$
 		}
 	}
 
@@ -124,50 +128,25 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		}
 	}
 
-	HashMap<String, SimpleSet> findPackagesInModules() {
+	Map<String, SimpleSet> findPackagesInModules() {
 		// In JDK 11 and before, classes are not listed under their respective modules
 		// Hence, we simply go to the default module system for package-module mapping
 		if (this.fs == null || !this.ctSym.isJRE12Plus()) {
 			return ClasspathJrt.findPackagesInModules(this);
 		}
-		HashMap<String, SimpleSet> cache = PackageCache.get(this.modPathString);
-		if (cache != null) {
-			return cache;
+		if (this.modPathString == null) {
+			return Map.of();
 		}
-		final HashMap<String, SimpleSet> packagesInModule = new HashMap<>();
-		PackageCache.put(this.modPathString, packagesInModule);
-		try {
-			JRTUtil.walkModuleImage(this.jrtFile, this.release, new JRTUtil.JrtFileVisitor<Path>() {
-						SimpleSet packageSet = null;
-
-						@Override
-						public FileVisitResult visitPackage(Path dir, Path mod, BasicFileAttributes attrs)
-								throws IOException {
-							ClasspathJar.addToPackageSet(this.packageSet, dir.toString(), true);
-							return FileVisitResult.CONTINUE;
-						}
-
-						@Override
-						public FileVisitResult visitFile(Path file, Path mod, BasicFileAttributes attrs)
-								throws IOException {
-							return FileVisitResult.CONTINUE;
-						}
-
-						@Override
-						public FileVisitResult visitModule(Path path, String name) throws IOException {
-							this.packageSet = new SimpleSet(41);
-							this.packageSet.add(""); //$NON-NLS-1$
-							if (name.endsWith("/")) { //$NON-NLS-1$
-								name = name.substring(0, name.length() - 1);
-							}
-							packagesInModule.put(name, this.packageSet);
-							return FileVisitResult.CONTINUE;
-						}
-					}, JRTUtil.NOTIFY_PACKAGES | JRTUtil.NOTIFY_MODULES);
-		} catch (IOException e) {
-			// return empty handed
-		}
-		return packagesInModule;
+		Map<String, SimpleSet> cache = PackageCache.computeIfAbsent(this.modPathString, key -> {
+			final Map<String, SimpleSet> packagesInModule = new HashMap<>();
+			try {
+				JRTUtil.walkModuleImage(this.jrtFile, this.release, new JrtPackageVisitor(packagesInModule), JRTUtil.NOTIFY_PACKAGES | JRTUtil.NOTIFY_MODULES);
+			} catch (IOException e) {
+				Util.log(e, "Failed to init packages for " + this.modPathString); //$NON-NLS-1$
+			}
+			return packagesInModule.isEmpty() ? null : Collections.unmodifiableMap(packagesInModule);
+		});
+		return cache;
 	}
 
 	public void loadModules() {
@@ -178,21 +157,14 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		if (this.modPathString == null) {
 			return;
 		}
-		HashMap<String, IModule> cache = ModulesCache.get(this.modPathString);
-		if (cache == null) {
+		ModulesCache.computeIfAbsent(this.modPathString, key -> {
 			List<Path> releaseRoots = this.ctSym.releaseRoots(this.releaseCode);
+			Map<String, IModule> newCache = new HashMap<>();
 			for (Path root : releaseRoots) {
 				try {
-					Files.walkFileTree(root, Collections.EMPTY_SET, 2, new FileVisitor<java.nio.file.Path>() {
+					Files.walkFileTree(root, Collections.emptySet(), 2, new JRTUtil.AbstractFileVisitor<Path>() {
 						@Override
-						public FileVisitResult preVisitDirectory(java.nio.file.Path dir, BasicFileAttributes attrs)
-								throws IOException {
-							return FileVisitResult.CONTINUE;
-						}
-
-						@Override
-						public FileVisitResult visitFile(java.nio.file.Path f, BasicFileAttributes attrs)
-								throws IOException {
+						public FileVisitResult visitFile(Path f, BasicFileAttributes attrs)	throws IOException {
 							if (attrs.isDirectory() || f.getNameCount() < 3) {
 								return FileVisitResult.CONTINUE;
 							}
@@ -201,28 +173,17 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 								if (content == null) {
 									return FileVisitResult.CONTINUE;
 								}
-								ClasspathJrtWithReleaseOption.this.acceptModule(content, f.getParent().getFileName().toString());
+								ClasspathJrtWithReleaseOption.this.acceptModule(content, f.getParent().getFileName().toString(), newCache);
 							}
 							return FileVisitResult.SKIP_SIBLINGS;
 						}
-
-						@Override
-						public FileVisitResult visitFileFailed(java.nio.file.Path f, IOException exc)
-								throws IOException {
-							return FileVisitResult.CONTINUE;
-						}
-
-						@Override
-						public FileVisitResult postVisitDirectory(java.nio.file.Path dir, IOException exc)
-								throws IOException {
-							return FileVisitResult.CONTINUE;
-						}
 					});
 				} catch (IOException e) {
-					// Nothing much to do
+					Util.log(e, "Failed to init modules cache for " + key); //$NON-NLS-1$
 				}
 			}
-		}
+			return newCache.isEmpty() ? null : Collections.unmodifiableMap(newCache);
+		});
 	}
 
 
@@ -278,7 +239,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 
 	@Override
 	public Collection<String> getModuleNames(Collection<String> limitModules) {
-		HashMap<String, SimpleSet> cache = findPackagesInModules();
+		Map<String, SimpleSet> cache = findPackagesInModules();
 		if (cache != null)
 			return selectModules(cache.keySet(), limitModules);
 		return Collections.emptyList();

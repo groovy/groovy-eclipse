@@ -56,6 +56,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.classfmt.AnnotationInfo;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider.IMethodAnnotationWalker;
 import org.eclipse.jdt.internal.compiler.classfmt.MethodInfoWithAnnotations;
 import org.eclipse.jdt.internal.compiler.classfmt.NonNullDefaultAwareTypeAnnotationWalker;
@@ -1033,6 +1034,9 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 		if (sourceLevel >= ClassFileConstants.JDK1_8) { // below 1.8, external annotations will be attached later
 			walker = binaryType.enrichWithExternalAnnotationsFor(walker, method, this.environment);
 		}
+		if (walker == ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER && this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+			walker = provideSyntheticEEA(method, argumentNames, walker);
+		}
 		methodModifiers |= ExtraCompilerModifiers.AccGenericSignature;
 		// MethodTypeSignature = ParameterPart(optional) '(' TypeSignatures ')' return_typeSignature ['^' TypeSignature (optional)]
 		SignatureWrapper wrapper = new SignatureWrapper(methodSignature, use15specifics);
@@ -1143,6 +1147,23 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 		this.environment.typeSystem.fixTypeVariableDeclaringElement(typeVars[i], result);
 
 	return result;
+}
+
+protected ITypeAnnotationWalker provideSyntheticEEA(IBinaryMethod method, char[][] argumentNames, ITypeAnnotationWalker walker) {
+	switch (this.id) {
+		case TypeIds.T_JavaUtilObjects:
+			if (this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_8
+					&& CharOperation.equals(method.getSelector(), TypeConstants.REQUIRE_NON_NULL)
+					&& argumentNames != null && argumentNames.length > 0)
+			{
+				String eeaSource = argumentNames.length == 1
+						? "<TT;>(T0T;)T1T;" //$NON-NLS-1$
+						: "<TT;>(T0T;L0java/lang/String;)T1T;"; //$NON-NLS-1$
+				walker = ExternalAnnotationProvider.synthesizeForMethod(eeaSource.toCharArray(), this.environment);
+			}
+			break;
+	}
+	return walker;
 }
 
 /**

@@ -3871,7 +3871,7 @@ public final class CompletionEngine
 			findTypesAndSubpackages(this.completionToken, (PackageBinding) qualifiedBinding, scope);
 		}
 		// alternatively interpret tokens in a misclassified LocalDeclaration like a QualifiedNameReference:
-		if (astNodeParent instanceof LocalDeclaration && enclosingNode != null) { // enclosingNode == null when called from completionOnProvidesInterfacesQualifiedTypeReference
+		if (!(qualifiedBinding instanceof PackageBinding) && astNodeParent instanceof LocalDeclaration && enclosingNode != null) { // enclosingNode == null when called from completionOnProvidesInterfacesQualifiedTypeReference
 			if (scope instanceof BlockScope) {
 				// resolve tokens like it's done in CompletionOnQualifiedNameReference:
 				qualifiedBinding = ((BlockScope) scope).getBinding(ref.tokens, FakeInvocationSite);

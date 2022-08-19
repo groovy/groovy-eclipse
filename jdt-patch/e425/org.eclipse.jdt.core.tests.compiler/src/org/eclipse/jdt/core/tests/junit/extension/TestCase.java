@@ -824,8 +824,8 @@ public boolean isIndexDisabledForTest() {
 }
 
 protected void setUp() throws Exception {
-	if (JavaCore.getPlugin() != null && isIndexDisabledForTest() && JavaModelManager.getIndexManager().isEnabled()) {
-		JavaModelManager.getIndexManager().disable();
+	if (JavaCore.getPlugin() != null && isIndexDisabledForTest()) {
+		disableIndexer();
 	}
 	super.setUp();
 
@@ -871,6 +871,19 @@ protected void setUp() throws Exception {
 		}
 	}
 }
+
+protected void disableIndexer() {
+	while(JavaModelManager.getIndexManager().isEnabled()) {
+		JavaModelManager.getIndexManager().disable();
+	}
+}
+
+protected void enableIndexer() {
+	while(!JavaModelManager.getIndexManager().isEnabled()) {
+		JavaModelManager.getIndexManager().enable();
+	}
+}
+
 private String format(long number) {
 	long n = number;
 	long q = n;
@@ -916,7 +929,7 @@ protected void tearDown() throws Exception {
 	super.tearDown();
 
 	if (JavaCore.getPlugin() != null && isIndexDisabledForTest()) {
-		JavaModelManager.getIndexManager().enable();
+		enableIndexer();
 	}
 
 	// Memory storage if specified
@@ -948,6 +961,7 @@ protected void tearDown() throws Exception {
 		}
 	}
 }
+
 static public void assertSame(int expected, int actual) {
 	assertSame(null, expected, actual);
 }

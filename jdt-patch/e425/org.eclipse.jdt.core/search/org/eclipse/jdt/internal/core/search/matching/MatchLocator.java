@@ -455,6 +455,9 @@ protected BinaryTypeBinding cacheBinaryType(IType type, IBinaryType binaryType) 
 		cacheBinaryType(enclosingType, null); // cache enclosing types first, so that binary type can be found in lookup enviroment
 	if (binaryType == null) {
 		ClassFile classFile = (ClassFile) type.getClassFile();
+		if (classFile == null) {
+			return null;
+		}
 		try {
 			binaryType = getBinaryInfo(classFile, classFile.resource());
 		} catch (CoreException e) {
@@ -531,7 +534,14 @@ protected IJavaElement createHandle(AbstractMethodDeclaration method, IJavaEleme
 			for (int i = 0; i < argCount; i++) {
 				char[] typeName = null;
 				if (i == 0 && firstIsSynthetic) {
-					typeName = type.getDeclaringType().getFullyQualifiedName().toCharArray();
+					IType declaringType = type.getDeclaringType();
+					if(declaringType != null) {
+						typeName = declaringType.getFullyQualifiedName().toCharArray();
+					} else {
+						if (BasicSearchEngine.VERBOSE) {
+							System.out.println("Null declaring type for " + type); //$NON-NLS-1$
+						}
+					}
 				} else if (arguments != null) {
 					TypeReference typeRef = arguments[firstIsSynthetic ? i - 1 : i].type;
 					typeName = CharOperation.concatWith(typeRef.getTypeName(), '.');

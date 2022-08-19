@@ -16,6 +16,7 @@ package org.eclipse.jdt.internal.compiler.util;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystemAlreadyExistsException;
@@ -197,7 +198,14 @@ public class CtSym {
 					}
 				}
 			} catch (IOException e) {
-				return Collections.emptyList();
+				String error = "Failed to init CtSym for release code " + releaseCode + " and path " + this.root; //$NON-NLS-1$ //$NON-NLS-2$
+				if (JRTUtil.PROPAGATE_IO_ERRORS) {
+					throw new IllegalStateException(error, e);
+				} else {
+					System.err.println(error);
+					e.printStackTrace();
+					return Collections.emptyList();
+				}
 			}
 			return Collections.unmodifiableList(rootDirs);
 		});
@@ -297,7 +305,13 @@ public class CtSym {
 					}
 				}
 			} catch (IOException e) {
-				// not found...
+				String error = "Failed to read directory " + rroot + " contents in " + this.root; //$NON-NLS-1$ //$NON-NLS-2$
+				if (JRTUtil.PROPAGATE_IO_ERRORS) {
+					throw new IllegalStateException(error, e);
+				} else {
+					System.err.println(error);
+					e.printStackTrace();
+				}
 			}
 		}
 		return null;
@@ -336,8 +350,15 @@ public class CtSym {
 						}
 					});
 				} catch (IOException e) {
-					// Not much do to if we can't list the dir; anything in there will be treated
-					// as if it were missing.
+					String error = "Failed to read directory " + start + " contents in " + this.root; //$NON-NLS-1$ //$NON-NLS-2$
+					if (JRTUtil.PROPAGATE_IO_ERRORS) {
+						throw new IllegalStateException(error, e);
+					} else {
+						// Not much do to if we can't list the dir; anything in there will be treated
+						// as if it were missing.
+						System.err.println(error);
+						e.printStackTrace();
+					}
 				}
 			}
 			return Collections.unmodifiableMap(allReleaseFiles);
@@ -352,14 +373,18 @@ public class CtSym {
 			Optional<byte[]> bytes = this.fileCache.computeIfAbsent(path, key -> {
 				try {
 					return Optional.ofNullable(JRTUtil.safeReadBytes(key));
+				} catch (ClosedByInterruptException e) {
+					// Don't cache
+					return null;
 				} catch (IOException e) {
+					// remember there is nothing to return
 					return Optional.empty();
 				}
 			});
 			if (VERBOSE) {
 				System.out.println("got bytes: " + path); //$NON-NLS-1$
 			}
-			return bytes.orElse(null);
+			return bytes == null ? null : bytes.orElse(null);
 		}
 	}
 

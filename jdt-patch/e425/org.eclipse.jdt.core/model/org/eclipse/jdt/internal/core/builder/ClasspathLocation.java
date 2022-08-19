@@ -18,6 +18,7 @@ package org.eclipse.jdt.internal.core.builder;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.io.File;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -29,6 +30,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationDecorator;
@@ -41,6 +43,7 @@ import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.UpdateKind;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
+import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public abstract class ClasspathLocation {
@@ -53,6 +56,7 @@ public abstract class ClasspathLocation {
 	private Collection<ClasspathLocation> allLocationsForEEA; // when configured to search all classpath locations for external annotations (eea) this is where to look
 	protected ZipFile annotationZipFile;
 	protected AccessRuleSet accessRuleSet;
+
 	// In the following signatures, passing a null moduleName signals "don't care":
 	abstract public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName);
 	abstract public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName,
@@ -152,9 +156,18 @@ static ClasspathLocation forLibrary(String libraryPathname,
 				new ClasspathMultiReleaseJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, isOnModulePath, compliance));
 
 }
+
 public static ClasspathJrt forJrtSystem(String jrtPath, AccessRuleSet accessRuleSet, IPath annotationsPath, String release) throws CoreException {
-	return (release == null || release.equals("")) ? new ClasspathJrt(jrtPath, accessRuleSet, annotationsPath) : //$NON-NLS-1$
-						new ClasspathJrtWithReleaseOption(jrtPath, accessRuleSet, annotationsPath, release);
+	boolean useRelease = release != null && !release.isEmpty();
+	if(useRelease) {
+		String jrtVersion = JRTUtil.getJdkRelease(new File(jrtPath));
+		boolean sameRelease = JavaCore.compareJavaVersions(jrtVersion, release) == 0;
+		if(sameRelease) {
+			useRelease = false;
+		}
+	}
+	return useRelease ? new ClasspathJrtWithReleaseOption(jrtPath, accessRuleSet, annotationsPath, release)
+			: new ClasspathJrt(jrtPath, accessRuleSet, annotationsPath);
 }
 
 public static ClasspathLocation forLibrary(String libraryPathname, AccessRuleSet accessRuleSet, IPath annotationsPath,

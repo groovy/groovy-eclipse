@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019, 2021 IBM Corporation.
+ * Copyright (c) 2019, 2022 IBM Corporation.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -7,15 +7,13 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Christoph Läubrich - use Filesystem helper method
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -117,20 +115,10 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 		}
 		this.releaseInHex = CtSym.getReleaseCode(this.compliance);
 		Path filePath = this.jdkHome.toPath().resolve("lib").resolve("ct.sym"); //$NON-NLS-1$ //$NON-NLS-2$
-		URI t = filePath.toUri();
 		if (!Files.exists(filePath)) {
 			return;
 		}
-		URI uri = URI.create("jar:file:" + t.getRawPath()); //$NON-NLS-1$
-		try {
-			this.fs = FileSystems.getFileSystem(uri);
-		} catch(FileSystemNotFoundException fne) {
-			// Ignore and move on
-		}
-		if (this.fs == null) {
-			HashMap<String, ?> env = new HashMap<>();
-			this.fs = FileSystems.newFileSystem(uri, env);
-		}
+		this.fs = JRTUtil.getJarFileSystem(filePath);
 		this.releasePath = this.fs.getPath("/"); //$NON-NLS-1$
 		if (!Files.exists(this.fs.getPath(this.releaseInHex))) {
 			throw new IllegalArgumentException("release " + this.compliance + " is not found in the system");  //$NON-NLS-1$//$NON-NLS-2$
@@ -144,7 +132,13 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 			}
 			this.subReleases = sub.toArray(new String[sub.size()]);
 		} catch (IOException e) {
-			//e.printStackTrace();
+			String error = "Failed to walk subreleases for release " + this.releasePath + " in " + filePath; //$NON-NLS-1$ //$NON-NLS-2$
+			if (JRTUtil.PROPAGATE_IO_ERRORS) {
+				throw new IllegalStateException(error, e);
+			} else {
+				System.err.println(error);
+				e.printStackTrace();
+			}
 		}
 		super.initialize();
 	}
@@ -157,16 +151,15 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 		}
 		final Path modPath = this.fs.getPath(this.releaseInHex);
 		this.modulePath = this.file.getPath() + "|" + modPath.toString(); //$NON-NLS-1$
-		this.modules = ModulesCache.get(this.modulePath);
-		if (this.modules == null) {
+		Map<String, IModule> cache = ModulesCache.computeIfAbsent(this.modulePath, key -> {
+			HashMap<String,IModule> newCache = new HashMap<>();
 			try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(this.releasePath)) {
-				HashMap<String,IModule> newCache = new HashMap<>();
 				for (final java.nio.file.Path subdir: stream) {
 					String rel = JRTUtil.sanitizedFileName(subdir);
 					if (!rel.contains(this.releaseInHex)) {
 						continue;
 					}
-					Files.walkFileTree(subdir, Collections.EMPTY_SET, 2, new FileVisitor<java.nio.file.Path>() {
+					Files.walkFileTree(subdir, Collections.emptySet(), 2, new FileVisitor<java.nio.file.Path>() {
 
 						@Override
 						public FileVisitResult preVisitDirectory(java.nio.file.Path dir, BasicFileAttributes attrs)
@@ -176,16 +169,17 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 
 						@Override
 						public FileVisitResult visitFile(java.nio.file.Path f, BasicFileAttributes attrs) throws IOException {
-							if (attrs.isDirectory() || f.getNameCount() < 3)
+							if (attrs.isDirectory() || f.getNameCount() < 3) {
 								return FileVisitResult.CONTINUE;
+							}
 							if (f.getFileName().toString().equals(MODULE_INFO) && Files.exists(f)) {
 								byte[] content = JRTUtil.safeReadBytes(f);
-								if (content == null)
+								if (content == null) {
 									return FileVisitResult.CONTINUE;
+								}
 								Path m = f.subpath(1, f.getNameCount() - 1);
 								String name = JRTUtil.sanitizedFileName(m);
 								ClasspathJep247Jdk12.this.acceptModule(name, content, newCache);
-								ClasspathJep247Jdk12.this.moduleNamesCache.add(name);
 							}
 							return FileVisitResult.SKIP_SIBLINGS;
 						}
@@ -201,18 +195,20 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 						}
 					});
 				}
-				synchronized(ModulesCache) {
-					if (ModulesCache.get(this.modulePath) == null) {
-						this.modules = Collections.unmodifiableMap(newCache);
-						ModulesCache.put(this.modulePath, this.modules);
-					}
-				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				String error = "Failed to walk modules for " + key; //$NON-NLS-1$
+				if (JRTUtil.PROPAGATE_IO_ERRORS) {
+					throw new IllegalStateException(error, e);
+				} else {
+					System.err.println(error);
+					e.printStackTrace();
+					return null;
+				}
 			}
-		} else {
-			this.moduleNamesCache.addAll(this.modules.keySet());
-		}
+			return newCache.isEmpty() ? null : Collections.unmodifiableMap(newCache);
+		});
+		this.modules = cache;
+		this.moduleNamesCache.addAll(cache.keySet());
 	}
 	@Override
 	public Collection<String> getModuleNames(Collection<String> limitModule, Function<String, IModule> getModule) {
@@ -307,8 +303,14 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 					}
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
-				// Rethrow
+				String error = "Failed to find module " + moduleName + " defining package " + qualifiedPackageName //$NON-NLS-1$ //$NON-NLS-2$
+						+ " in release " + this.releasePath + " in " + this; //$NON-NLS-1$ //$NON-NLS-2$
+				if (JRTUtil.PROPAGATE_IO_ERRORS) {
+					throw new IllegalStateException(error, e);
+				} else {
+					System.err.println(error);
+					e.printStackTrace();
+				}
 			}
 		}
 		return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));

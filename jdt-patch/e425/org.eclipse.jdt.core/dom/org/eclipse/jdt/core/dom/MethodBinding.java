@@ -18,6 +18,7 @@ package org.eclipse.jdt.core.dom;
 
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
@@ -613,5 +614,10 @@ class MethodBinding implements IMethodBinding {
 	public boolean isSyntheticRecordMethod() {
 		return ((getDeclaringClass().isRecord()) &&
 				(this.binding instanceof SyntheticMethodBinding));
+	}
+
+	@Override
+	public String[] getParameterNames() {
+		return CharOperation.toStrings(this.binding.parameterNames);
 	}
 }

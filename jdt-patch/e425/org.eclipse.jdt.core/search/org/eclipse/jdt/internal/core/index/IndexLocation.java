@@ -73,7 +73,7 @@ public abstract class IndexLocation {
 			tempUrl = tempUri.toURL();
 		} catch (MalformedURLException e) {
 			// should not happen
-			Util.log(e, "Unexpected uri to url failure"); //$NON-NLS-1$
+			Util.log(e, "Unexpected uri to url conversion failure"); //$NON-NLS-1$
 		}
 		this.url = tempUrl;
 		this.uri = tempUri;
@@ -85,8 +85,11 @@ public abstract class IndexLocation {
 		try {
 			tempUri = url.toURI();
 		} catch (URISyntaxException e) {
-			// should not happen
-			Util.log(e, "Unexpected url to uri failure"); //$NON-NLS-1$
+			if (this instanceof JarIndexLocation) {
+				// ignore this: we have jar:file: URL's that can't be converted to URI's
+			} else {
+				Util.log(e, "Unexpected uri to url conversion failure"); //$NON-NLS-1$
+			}
 		}
 		this.uri = tempUri;
 	}
@@ -124,10 +127,6 @@ public abstract class IndexLocation {
 		return this.url;
 	}
 
-	public URI getUri() {
-		return this.uri;
-	}
-
 	@Override
 	public int hashCode() {
 		return this.uri != null ? this.uri.hashCode() : this.url.hashCode();
@@ -151,6 +150,8 @@ public abstract class IndexLocation {
 
 	@Override
 	public String toString() {
-		return this.uri.toString();
+		// Note: this is used in IndexManager.writeIndexMapFile() to persist index location and
+		// in readIndexMap() to read it back to URL
+		return this.url.toString();
 	}
 }

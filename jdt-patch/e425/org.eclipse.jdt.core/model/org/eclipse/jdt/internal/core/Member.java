@@ -313,7 +313,15 @@ public ISourceRange getJavadocRange() throws JavaModelException {
 	final int start= range.getOffset();
 	final int length= range.getLength();
 	if (length > 0 && buf.getChar(start) == '/') {
-		IScanner scanner= ToolFactory.createScanner(true, false, false, false);
+		IScanner scanner;
+		IJavaProject project = getJavaProject();
+        if (project != null) {
+            String sourceLevel = project.getOption(JavaCore.COMPILER_SOURCE, true);
+            String complianceLevel = project.getOption(JavaCore.COMPILER_COMPLIANCE, true);
+            scanner = ToolFactory.createScanner(true, false, false, sourceLevel, complianceLevel);
+        } else {
+        	scanner= ToolFactory.createScanner(true, false, false, false);
+        }
 		try {
 			scanner.setSource(buf.getText(start, length).toCharArray());
 			int docOffset= -1;

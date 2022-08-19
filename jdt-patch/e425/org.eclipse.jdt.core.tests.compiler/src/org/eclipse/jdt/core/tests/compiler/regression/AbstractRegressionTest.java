@@ -839,8 +839,6 @@ protected static class JavacTestOptions {
 			EclipseBug510528 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=510528
 				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) : null,
 			EclipseBug531531 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=531531
-					new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) : null,
-			EclipseBug529197 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=529197
 					new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) : null;
 	}
 	// Justification based upon:

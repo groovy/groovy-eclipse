@@ -451,4 +451,13 @@ public interface IMethodBinding extends IBinding {
 	 */
 	public boolean isSyntheticRecordMethod();
 
+	/**
+	 * Returns the ordered list of parameter names for this method. This is useful when there is no corresponding method
+	 * element associated with the binding.
+	 *
+	 * @return an array of the parameter names (in order)
+	 * @since 3.31
+	 */
+	public String[] getParameterNames();
+
 }
