@@ -6180,4 +6180,22 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "42.0");
     }
+
+    @Test
+    public void testTypeChecked10725() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(List<String> strings) {\n" +
+            "  Set<Map<String,String>> set_of_maps = []\n" +
+            "  set_of_maps.addAll(strings.collectEntries{ [it,it.toUpperCase()] })\n" +
+            "  print set_of_maps\n" +
+            "}\n" +
+            "test(['foo','bar'])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[foo:FOO, bar:BAR]]");
+    }
 }
