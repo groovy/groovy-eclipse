@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -679,6 +679,11 @@ public class ASTRewriteFlattener extends ASTVisitor {
 		return false;
 	}
 
+	@Override
+	public boolean visit(JavaDocTextElement node) {
+		this.result.append(getAttribute(node, JavaDocTextElement.TEXT_PROPERTY));
+		return false;
+	}
 	@Override
 	public boolean visit(LabeledStatement node) {
 		getChildNode(node, LabeledStatement.LABEL_PROPERTY).accept(this);

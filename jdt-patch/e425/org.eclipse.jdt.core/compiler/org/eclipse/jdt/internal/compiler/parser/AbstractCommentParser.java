@@ -1876,14 +1876,15 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 				previousPosition = indexPos;
 				tokenType = snippetScanner.getNextToken();
 
-				if (tokenType == TokenNameEOF)
+				if (tokenType == TokenNameEOF) {
+					if (!resetTextStartPos) {
+						pushExternalSnippetText(snippetScanner.source, textStartPosition, textEndPosition, false, snippetTag);
+					}
 					break;
+				}
 
 				indexPos = snippetScanner.currentPosition;
 				textEndPosition = indexPos;
-				if (tokenType == TerminalTokens.TokenNameEOF) {
-					break;
-				}
 				if (resetTextStartPos) {
 					textStartPosition = snippetScanner.getCurrentTokenStartPosition();
 					newLineStarted = true;
@@ -1892,7 +1893,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 				switch (tokenType) {
 					case TerminalTokens.TokenNameWHITESPACE:
 						if (containsNewLine(snippetScanner.getCurrentTokenString())) {
-							pushSnippetText(snippetScanner.source, textStartPosition, textEndPosition, false, snippetTag);
+							pushExternalSnippetText(snippetScanner.source, textStartPosition, textEndPosition, false, snippetTag);
 							resetTextStartPos = true;
 							newLineStarted = false;
 						}
@@ -1928,7 +1929,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 								textStartPosition = previousPosition;
 							}
 							if (textStartPosition != -1 && textStartPosition < indexPos) {
-								pushSnippetText(snippetScanner.source, textStartPosition,(innerTag!=null &&  indexOfLastComment >=0) ? textPos+indexOfLastComment+2:textPos, true, snippetTag);
+								pushExternalSnippetText(snippetScanner.source, textStartPosition,(innerTag!=null &&  indexOfLastComment >=0) ? textPos+indexOfLastComment+2:textPos, true, snippetTag);
 								resetTextStartPos = true;
 								newLineStarted = false;
 								if (handleNow) {
@@ -3055,7 +3056,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 	protected abstract void closeJavaDocRegion(String name, Object snippetTag, int end);
 	protected abstract boolean areRegionsClosed();
 
-	protected void pushExternalSnippetText(String text, int start, int end) {
+	protected void pushExternalSnippetText(char[] text, int start, int end, boolean addNewLine, Object snippetTag) {
 		// do not store text by default
 	}
 

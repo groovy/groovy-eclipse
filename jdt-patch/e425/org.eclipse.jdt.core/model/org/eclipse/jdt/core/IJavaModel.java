@@ -224,10 +224,11 @@ void move(IJavaElement[] elements, IJavaElement[] containers, IJavaElement[] sib
  * <p> In case an archive is used by multiple projects, the delta issued will account for
  * all of them. This means that even if a project was not part of the elements scope, it
  * may still be notified of changes if it is referencing a library comprised in the scope.
+ * </p>
  * <p>
  * <b>Since 3.7</b>, a project refresh automatically triggers a refresh of external archives.
  * Hence, this method doesn't need to be explicitly called after a project refresh.
- * <p>
+ * </p>
  * @param elementsScope - a collection of elements defining the scope of the refresh
  * @param monitor - a progress monitor used to report progress
  * @exception JavaModelException in one of the corresponding situation:

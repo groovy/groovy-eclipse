@@ -118,10 +118,10 @@ boolean hasUnsavedChanges() throws JavaModelException;
 boolean isConsistent() throws JavaModelException;
 /**
  * Returns whether this openable is open. This is a handle-only method.
- * 
+ *
  * <p>Note: This method doesn't tell whether an {@link IJavaProject}'s {@link IJavaProject#getProject() getProject()} is open.
  * It is <b>not</b> equivalent to {@link IProject#isOpen()}!</p>
- * 
+ *
  * <p>Note: Although {@link #isOpen} is exposed in the API, clients
  * rarely have a need to rely on this internal state of the Java model.</p>
 
@@ -138,7 +138,7 @@ boolean isOpen();
  * {@link ICompilationUnit#reconcile(int, boolean, boolean, WorkingCopyOwner, IProgressMonitor)}
  * operation will not account for changes which occurred before an
  * explicit use of {@link #makeConsistent(IProgressMonitor)}
- * <p>
+ * </p>
  * @param progress the given progress monitor
  * @exception JavaModelException if the element is unable to access the contents
  * 		of its underlying resource. Reasons include:

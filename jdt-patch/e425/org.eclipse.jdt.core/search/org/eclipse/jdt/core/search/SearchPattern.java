@@ -186,6 +186,7 @@ public abstract class SearchPattern {
 	 * Match rule: The search pattern contains a Camel Case expression.
 	 * <p>
 	 * Examples:
+	 * </p>
 	 * <ul>
 	 * 	<li>'NPE' type string pattern will match
 	 * 		'NullPointerException' and 'NoPermissionException' types,</li>
@@ -197,7 +198,7 @@ public abstract class SearchPattern {
 	 * of other match rule flags are combined with this one, then match rule validation
 	 * will return a modified rule in order to perform a better appropriate search request
 	 * (see {@link #validateMatchRule(String, int)} for more details).
-	 * <p>
+	 *
 	 * @see #camelCaseMatch(String, String) for a detailed explanation of Camel
 	 * 	Case matching.
 	 *
@@ -223,10 +224,10 @@ public abstract class SearchPattern {
 	 * of other match rule flags are combined with this one, then match rule validation
 	 * will return a modified rule in order to perform a better appropriate search request
 	 * (see {@link #validateMatchRule(String, int)} for more details).
-	 * <p>
+	 *
 	 * @see CharOperation#camelCaseMatch(char[], char[], boolean) for a detailed
 	 * explanation of Camel Case matching.
-	 *<p>
+	 *
 	 * @since 3.4
 	 */
 	public static final int R_CAMELCASE_SAME_PART_COUNT_MATCH = 0x0100;
@@ -1532,7 +1533,6 @@ private static SearchPattern createPackagePattern(String patternString, int limi
  *				<li><code>/pack.X</code> find in the unnamed module.</li>
  *				<li><code>ALL-UNNAMED/pack.X</code> find in the unnamed module.</li>
  *			</ul>
- *			<p>
  * 	</li>
  * 	<li>Method patterns have the following syntax:
  * 		<p><b><code>[declaringType '.'] ['&lt;' typeArguments '&gt;'] methodName ['(' parameterTypes ')'] [returnType]</code></b></p>
@@ -2717,7 +2717,6 @@ public boolean matchesName(char[] pattern, char[] name) {
  * 	that as soon as the string pattern contains one pattern character, the pattern
  * 	match flag will be set and all other match flags reset: validation of rule 2)
  * 	followed by rule 3)...</i>
- *<p>
  *
  * @param stringPattern The string pattern
  * @param matchRule The match rule

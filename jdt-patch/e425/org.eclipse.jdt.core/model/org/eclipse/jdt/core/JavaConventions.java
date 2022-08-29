@@ -446,7 +446,6 @@ public final class JavaConventions {
 	/**
 	 * Validate the given Java type name, either simple or qualified.
 	 * For example, <code>"java.lang.Object"</code>, or <code>"Object"</code>.
-	 * <p>
 	 *
 	 * @param name the name of a type
 	 * @return a status object with code <code>IStatus.OK</code> if
@@ -794,7 +793,7 @@ public final class JavaConventions {
 	 *  <p>
 	 *  This validation is intended to anticipate classpath issues prior to assigning it to a project. In particular, it will automatically
 	 *  be performed during the classpath setting operation (if validation fails, the classpath setting will not complete).
-	 *  <p>
+	 *  </p>
 	 * @param javaProject the given java project
 	 * @param rawClasspath the given classpath
 	 * @param projectOutputLocation the given output location

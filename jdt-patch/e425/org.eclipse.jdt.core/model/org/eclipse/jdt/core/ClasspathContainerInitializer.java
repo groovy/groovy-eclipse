@@ -137,7 +137,7 @@ public abstract class ClasspathContainerInitializer {
      * Returns <code>true</code> if this container initializer can be requested to perform updates
      * on its own container values. If so, then an update request will be performed using
      * {@link #requestClasspathContainerUpdate(IPath, IJavaProject, IClasspathContainer)}.
-     * <p>
+     *
      * @param containerPath the path of the container which requires to be updated
      * @param project the project for which the container is to be updated
      * @return returns <code>true</code> if the container can be updated
@@ -159,10 +159,11 @@ public abstract class ClasspathContainerInitializer {
 	 * container definition (after reconciling changes) at its earliest convenience, using
 	 * {@link JavaCore#setClasspathContainer(IPath, IJavaProject[], IClasspathContainer[], IProgressMonitor)}.
 	 * Until it does so, the update will not be reflected in the Java Model.
+	 * </p>
 	 * <p>
 	 * In order to anticipate whether the container initializer allows to update its containers, the predicate
 	 * {@link #canUpdateClasspathContainer(IPath, IJavaProject)} should be used.
-	 * <p>
+	 * </p>
 	 * @param containerPath the path of the container which requires to be updated
      * @param project the project for which the container is to be updated
 	 * @param containerSuggestion a suggestion to update the corresponding container definition
@@ -244,7 +245,7 @@ public abstract class ClasspathContainerInitializer {
 	 * should ensure using its corresponding container initializer. Indeed, a random container
 	 * initializer cannot be held responsible for determining comparison IDs for arbitrary
 	 * containers.
-	 * <p>
+	 *
 	 * @param containerPath the path of the container which is being checked
 	 * @param project the project for which the container is to being checked
 	 * @return returns an Object identifying the container for comparison

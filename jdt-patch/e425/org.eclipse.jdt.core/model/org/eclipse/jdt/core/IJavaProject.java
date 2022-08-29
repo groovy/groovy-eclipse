@@ -814,7 +814,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
 	 * unit had been deleted.
-	 * <p>
+	 * </p>
 	 *
 	 * @param monitor the given progress monitor
 	 * @param region the given region
@@ -859,7 +859,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
 	 * unit had been deleted.
-	 * <p>
+	 * </p>
 	 *
 	 * @param type the given type
 	 * @param region the given region
@@ -891,6 +891,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * However, if the file is modified within an operation, where this change needs to be taken into account before the
 	 * operation ends, then the output location from disk can be read using this method, and further assigned to the project
 	 * using <code>setRawClasspath(...)</code>.
+	 * </p>
 	 * <p>
 	 * The default output location is where class files are ordinarily generated
 	 * (and resource files, copied). Each source classpath entry can also
@@ -901,12 +902,12 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * necessarily the default output folder. This means that the generated
 	 * class files for the project may end up scattered across several folders,
 	 * rather than all in the default output folder (which is more standard).
-	 * <p>
+	 * </p><p>
 	 * In order to manually force a project classpath refresh, one can simply assign the project classpath using the result of this
 	 * method, as follows:
 	 * <code>proj.setRawClasspath(proj.readRawClasspath(), proj.readOutputLocation(), monitor)</code>
 	 * (note that the <code>readRawClasspath/readOutputLocation</code> methods could return <code>null</code>).
-	 * <p>
+	 * </p>
 	 * @return the workspace-relative absolute path of the default output folder
 	 * @see #getOutputLocation()
 	 * @since 3.0

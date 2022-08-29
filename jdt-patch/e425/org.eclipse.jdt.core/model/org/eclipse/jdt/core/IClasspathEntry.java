@@ -463,11 +463,12 @@ public interface IClasspathEntry {
 	 * </ul>
 	 * <p>
 	 * Variable source attachment is also resolved and recorded in the resulting classpath entry.
-	 * <p>
+	 * </p>
+	 * Note that this deprecated API doesn't handle CPE_CONTAINER entries.
+	 *
 	 * @return the resolved library or project classpath entry, or <code>null</code>
 	 *   if the given path could not be resolved to a classpath entry
-	 *	<p>
-	 * Note that this deprecated API doesn't handle CPE_CONTAINER entries.
+
 	 *
 	 * @deprecated Use {@link JavaCore#getResolvedClasspathEntry(IClasspathEntry)} instead
 	 */

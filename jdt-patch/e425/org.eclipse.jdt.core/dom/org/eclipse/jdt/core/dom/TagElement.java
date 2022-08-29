@@ -453,10 +453,10 @@ public final class TagElement extends AbstractTagElement {
 	public List tagRegionsStartingAtTextElement(ASTNode docElem) {
 		unsupportedBelow18();
 		List<JavaDocRegion> regions = new ArrayList<>();
-		if (docElem == null || !(docElem instanceof TextElement)) {
+		if (docElem == null || !(docElem instanceof AbstractTextElement)) {
 			return regions;
 		} else {
-			TextElement textElem= (TextElement) docElem;
+			AbstractTextElement textElem= (AbstractTextElement) docElem;
 			List<JavaDocRegion> javaDocRegions = this.tagRegions();
 			for (JavaDocRegion region : javaDocRegions) {
 				if (!region.isDummyRegion()) {

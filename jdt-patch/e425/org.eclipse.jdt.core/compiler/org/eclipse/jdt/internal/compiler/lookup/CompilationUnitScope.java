@@ -327,13 +327,15 @@ private int resolveImports(int numberOfStatements, ImportBinding[] resolvedImpor
 		// skip duplicates or imports of the current package
 		for (int j = 0; j < index; j++) {
 			ImportBinding resolved = resolvedImports[j];
-			if (resolved.onDemand == ((importReference.bits & ASTNode.OnDemand) != 0) && resolved.isStatic() == importReference.isStatic())
+			if (resolved.onDemand == ((importReference.bits & ASTNode.OnDemand) != 0) && resolved.isStatic() == importReference.isStatic()) {
 				/* GROOVY edit
-				if (CharOperation.equals(compoundName, resolvedImports[j].compoundName))
+				if (CharOperation.equals(compoundName, resolvedImports[j].compoundName)) {
 				*/
-				if (CharOperation.equals(compoundName, resolvedImports[j].compoundName) && CharOperation.equals(importReference.getSimpleName(), resolvedImports[j].getSimpleName()))
+				if (CharOperation.equals(compoundName, resolvedImports[j].compoundName) && CharOperation.equals(importReference.getSimpleName(), resolvedImports[j].getSimpleName())) {
 				// GROOVY end
 					continue nextImport;
+				}
+			}
 		}
 
 		if ((importReference.bits & ASTNode.OnDemand) != 0) {

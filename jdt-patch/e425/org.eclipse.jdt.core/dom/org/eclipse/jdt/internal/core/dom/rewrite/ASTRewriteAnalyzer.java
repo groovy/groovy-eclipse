@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -3226,6 +3226,17 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		String separator= getLineDelimiter() + getIndentAtOffset(node.getStartPosition())  + " * "; //$NON-NLS-1$
 
 		rewriteNodeList(node, Javadoc.TAGS_PROPERTY, startPos, separator, separator);
+		return false;
+	}
+
+	@Override
+	public boolean visit(JavaDocTextElement node) {
+		if (!hasChildrenChanges(node)) {
+			return doVisitUnchangedChildren(node);
+		}
+		String newText= (String) getNewValue(node, JavaDocTextElement.TEXT_PROPERTY);
+		TextEditGroup group = getEditGroup(node, JavaDocTextElement.TEXT_PROPERTY);
+		doTextReplace(node.getStartPosition(), node.getLength(), newText, group);
 		return false;
 	}
 

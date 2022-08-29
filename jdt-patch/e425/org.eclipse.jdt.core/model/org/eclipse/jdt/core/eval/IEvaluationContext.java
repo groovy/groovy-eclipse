@@ -100,7 +100,7 @@ public interface IEvaluationContext {
 	 * reporting results to the given completion requestor.
 	 * <p>
 	 * Note that code completion does not involve evaluation.
-	 * <p>
+	 * </p>
 	 *
 	 * @param codeSnippet the code snippet to complete in
 	 * @param position the character position in the code snippet to complete at,
@@ -132,7 +132,7 @@ public interface IEvaluationContext {
 	 * </p>
 	 * <p>
 	 * Note that code completion does not involve evaluation.
-	 * <p>
+	 * </p>
 	 *
 	 * @param codeSnippet the code snippet to complete in
 	 * @param position the character position in the code snippet to complete at,
@@ -159,7 +159,7 @@ public interface IEvaluationContext {
 	 * reporting results to the given completion requestor.
 	 * <p>
 	 * Note that code completion does not involve evaluation.
-	 * <p>
+	 * </p>
 	 *
 	 * @param codeSnippet the code snippet to complete in
 	 * @param position the character position in the code snippet to complete at,
@@ -178,18 +178,19 @@ public interface IEvaluationContext {
 		int position,
 		CompletionRequestor requestor)
 		throws JavaModelException;
-	
+
 	/**
 	 * Performs a code completion at the given position in the given code snippet,
 	 * reporting results to the given completion requestor.
 	 * <p>
 	 * Note that code completion does not involve evaluation.
-	 * <p>
+	 * </p><p>
 	 * If {@link IProgressMonitor} is not <code>null</code> then some proposals which
 	 * can be very long to compute are proposed. To avoid that the code assist operation
 	 * take too much time a {@link IProgressMonitor} which automatically cancel the code
 	 * assist operation when a specified amount of time is reached could be used.
-	 * 
+	 * </p>
+	 *
 	 * <pre>
 	 * new IProgressMonitor() {
 	 *     private final static int TIMEOUT = 500; //ms
@@ -203,7 +204,6 @@ public interface IEvaluationContext {
 	 *     ...
 	 * };
 	 * </pre>
-	 * <p>
 	 *
 	 * @param codeSnippet the code snippet to complete in
 	 * @param position the character position in the code snippet to complete at,
@@ -224,7 +224,7 @@ public interface IEvaluationContext {
 		CompletionRequestor requestor,
 		IProgressMonitor monitor)
 		throws JavaModelException;
-	
+
 	/**
 	 * Performs a code completion at the given position in the given code snippet,
 	 * reporting results to the given completion requestor.
@@ -237,7 +237,7 @@ public interface IEvaluationContext {
 	 * </p>
 	 * <p>
 	 * Note that code completion does not involve evaluation.
-	 * <p>
+	 * </p>
 	 *
 	 * @param codeSnippet the code snippet to complete in
 	 * @param position the character position in the code snippet to complete at,
@@ -258,7 +258,7 @@ public interface IEvaluationContext {
 		CompletionRequestor requestor,
 		WorkingCopyOwner owner)
 		throws JavaModelException;
-	
+
 	/**
 	 * Performs a code completion at the given position in the given code snippet,
 	 * reporting results to the given completion requestor.
@@ -271,12 +271,13 @@ public interface IEvaluationContext {
 	 * </p>
 	 * <p>
 	 * Note that code completion does not involve evaluation.
-	 * <p>
+	 * </p><p>
 	 * If {@link IProgressMonitor} is not <code>null</code> then some proposals which
 	 * can be very long to compute are proposed. To avoid that the code assist operation
 	 * take too much time a {@link IProgressMonitor} which automatically cancel the code
 	 * assist operation when a specified amount of time is reached could be used.
-	 * 
+	 * </p>
+	 *
 	 * <pre>
 	 * new IProgressMonitor() {
 	 *     private final static int TIMEOUT = 500; //ms
@@ -290,7 +291,6 @@ public interface IEvaluationContext {
 	 *     ...
 	 * };
 	 * </pre>
-	 * <p>
 	 *
 	 * @param codeSnippet the code snippet to complete in
 	 * @param position the character position in the code snippet to complete at,
@@ -313,14 +313,14 @@ public interface IEvaluationContext {
 		WorkingCopyOwner owner,
 		IProgressMonitor monitor)
 		throws JavaModelException;
-	
+
 	/**
 	 * Resolves and returns a collection of Java elements corresponding to the source
 	 * code at the given positions in the given code snippet.
 	 * <p>
 	 * Note that code select does not involve evaluation, and problems are never
 	 * reported.
-	 * <p>
+	 * </p>
 	 *
 	 * @param codeSnippet the code snippet to resolve in
 	 * @param offset the position in the code snippet of the first character
@@ -349,7 +349,7 @@ public interface IEvaluationContext {
 	 * <p>
 	 * Note that code select does not involve evaluation, and problems are never
 	 * reported.
-	 * <p>
+	 * </p>
 	 *
 	 * @param codeSnippet the code snippet to resolve in
 	 * @param offset the position in the code snippet of the first character
@@ -542,7 +542,7 @@ public interface IEvaluationContext {
 	 * reporting results to the given completion requestor.
 	 * <p>
 	 * Note that code completion does not involve evaluation.
-	 * <p>
+	 * </p>
 	 *
 	 * @param codeSnippet the code snippet to complete in
 	 * @param position the character position in the code snippet to complete at,

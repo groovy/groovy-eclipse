@@ -2109,6 +2109,22 @@ public final class AST {
 	}
 
 	/**
+	 * Creates and returns a new text element node.
+	 * Initially the new node has an empty text string.
+	 * <p>
+	 * Note that this node type is used only inside doc comments
+	 * ({@link Javadoc Javadoc}).
+	 * </p>
+	 *
+	 * @return a new unparented JavaDoc text element node
+	 * @since 3.31
+	 */
+	public JavaDocTextElement newJavaDocTextElement() {
+		JavaDocTextElement result = new JavaDocTextElement(this);
+		return result;
+	}
+
+	/**
 	 * Creates a new unparented labeled statement node owned by this AST.
 	 * By default, the label and statement are both unspecified, but legal.
 	 *

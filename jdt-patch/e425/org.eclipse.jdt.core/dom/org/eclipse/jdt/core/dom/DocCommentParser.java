@@ -1090,18 +1090,26 @@ class DocCommentParser extends AbstractCommentParser {
 
 	@Override
 	protected void pushSnippetText(char[] text, int start, int end, boolean addNewLine, Object snippetTag) {
-		boolean isExternalSnippet = false;
+		pushSnippetText(text, start, end, addNewLine, snippetTag, false);
+	}
+
+	private void pushSnippetText(char[] text, int start, int end, boolean addNewLine, Object snippetTag, boolean isExternalSnippet) {
 		// Create text element
-		TextElement textElem = this.ast.newTextElement();
 		String textToBeAdded= new String( text, start, end-start);
+		AbstractTextElement textElem= null;
+		if (isExternalSnippet && textToBeAdded.indexOf("*/") > 0) { //$NON-NLS-1$
+			textElem = this.ast.newJavaDocTextElement();
+		} else {
+			textElem = this.ast.newTextElement();
+		}
+
 		int iindex = textToBeAdded.indexOf('*');
 		if (iindex > -1 && textToBeAdded.substring(0, iindex+1).trim().equals("*")) { //$NON-NLS-1$
 			textToBeAdded = textToBeAdded.substring(iindex+1);
 			if (addNewLine) {
 				textToBeAdded += System.lineSeparator();
 			}
-		} else if (iindex == -1){
-			isExternalSnippet = true;
+		} else if (isExternalSnippet){
 			if (addNewLine) {
 				textToBeAdded += System.lineSeparator();
 			}
@@ -1193,7 +1201,7 @@ class DocCommentParser extends AbstractCommentParser {
 							endPos = end;
 						}
 						Object textVal = region.getProperty(TagProperty.TAG_PROPERTY_SNIPPET_REGION_TEXT);
-						if (!(textVal instanceof TextElement)) {
+						if (!(textVal instanceof AbstractTextElement)) {
 							region.setProperty(TagProperty.TAG_PROPERTY_SNIPPET_REGION_TEXT, textElem);
 						}
 						region.setSourceRange(startPos, endPos-startPos);
@@ -1242,38 +1250,8 @@ class DocCommentParser extends AbstractCommentParser {
 	}
 
 	@Override
-	protected void pushExternalSnippetText(String text,int start, int end) {
-		String snippetLangHeader = "<pre>"; //$NON-NLS-1$ //the code snippets comes as preformatted so need to prefix them with <pre> tag
-		String snipperLangFooter = "</pre>"; //$NON-NLS-1$
-		text = snippetLangHeader + text + snipperLangFooter;
-		TextElement textElement = this.ast.newTextElement();
-		textElement.setText(text);
-		textElement.setSourceRange(start, end-start);
-
-		// Search previous tag on which to add the text element
-		TagElement previousTag = null;
-		int previousStart = start;
-		int previousEnd = end;
-		if (this.astPtr == -1) {
-			previousTag = this.ast.newTagElement();
-			previousTag.setSourceRange(start, end-start);
-			pushOnAstStack(previousTag, true);
-		} else {
-			previousTag = (TagElement) this.astStack[this.astPtr];
-			previousStart = previousTag.getStartPosition();
-			previousEnd = previousStart + previousTag.getLength();
-		}
-		previousTag.fragments().add(textElement);
-		int curStart = previousStart;
-		int curEnd = previousEnd;
-		if (start < previousStart) {
-			curStart = start;
-		}
-		if (end > previousEnd) {
-			curEnd = end;
-		}
-		previousTag.setSourceRange(curStart, curEnd-curStart);
-		this.textStart = -1;
+	protected void pushExternalSnippetText(char[] text, int start, int end, boolean addNewLine, Object snippetTag) {
+		pushSnippetText(text, start, end, addNewLine, snippetTag, true);
 	}
 
 

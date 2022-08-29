@@ -178,6 +178,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * can be very long to compute are proposed. To avoid that the code assist operation
 	 * take too much time a {@link IProgressMonitor} which automatically cancel the code
 	 * assist operation when a specified amount of time is reached could be used.
+	 * </p>
 	 *
 	 * <pre>
 	 * new IProgressMonitor() {
@@ -192,7 +193,6 @@ public interface IType extends IMember, IAnnotatable {
 	 *     ...
 	 * };
 	 * </pre>
-	 * <p>
 	 *
 	 * @param snippet the code snippet
 	 * @param insertion the position with in source where the snippet
@@ -288,6 +288,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * can be very long to compute are proposed. To avoid that the code assist operation
 	 * take too much time a {@link IProgressMonitor} which automatically cancel the code
 	 * assist operation when a specified amount of time is reached could be used.
+	 * </p>
 	 *
 	 * <pre>
 	 * new IProgressMonitor() {
@@ -302,7 +303,6 @@ public interface IType extends IMember, IAnnotatable {
 	 *     ...
 	 * };
 	 * </pre>
-	 * <p>
 	 *
 	 * @param snippet the code snippet
 	 * @param insertion the position with in source where the snippet
@@ -1104,7 +1104,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
 	 * unit had been deleted.
-	 * <p>
+	 * </p>
 	 *
 	 * @param owner the owner of working copies that take precedence over their original compilation units
 	 * @param monitor the given progress monitor
@@ -1141,7 +1141,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
 	 * unit had been deleted.
-	 * <p>
+	 * </p>
 	 *
 	 * @param project the given project
 	 * @param owner the owner of working copies that take precedence over their original compilation units
@@ -1215,7 +1215,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
 	 * unit had been deleted.
-	 * <p>
+	 * </p>
 	 *
 	 * @param owner the owner of working copies that take precedence over their original compilation units
 	 * @param monitor the given progress monitor

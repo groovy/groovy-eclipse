@@ -211,7 +211,7 @@ public interface IJavaElement extends IAdaptable {
 	 * contained in an archive has no corresponding resource. Similarly, there
 	 * are no corresponding resources for <code>IMethods</code>,
 	 * <code>IFields</code>, etc.
-	 * <p>
+	 * </p>
 	 *
 	 * @return the corresponding resource, or <code>null</code> if none
 	 * @exception JavaModelException if this element does not exist or if an

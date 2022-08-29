@@ -25,20 +25,22 @@ import org.eclipse.core.runtime.IPath;
  * to a different container object.
  * <p>
  * The set of entries associated with a classpath container may contain any of the following:
+ * </p>
  * <ul>
  * <li> library entries (<code>CPE_LIBRARY</code>) </li>
  * <li> project entries (<code>CPE_PROJECT</code>) </li>
  * </ul>
  * In particular, a classpath container can neither reference further classpath containers or classpath variables.
- * <p> 
+ * <p>
  * A library entry can reference other libraries through the Class-Path section of the JAR's MANIFEST.MF file. If the
  * container wants such referenced entries to be part of the classpath, the container must explicitly add them to the
  * array returned from {@link #getClasspathEntries()}.
+ * </p>
  * <p>
  * Classpath container values are persisted locally to the workspace, but are not preserved from a
  * session to another. It is thus highly recommended to register a <code>ClasspathContainerInitializer</code>
  * for each referenced container (through the extension point "org.eclipse.jdt.core.ClasspathContainerInitializer").
- * <p>
+ * </p>
  * @see IClasspathEntry
  * @since 2.0
  */
@@ -135,7 +137,7 @@ public interface IClasspathContainer {
 	 * The container ID is also used to identify a<code>ClasspathContainerInitializer</code>
 	 * registered on the extension point "org.eclipse.jdt.core.classpathContainerInitializer", which can
 	 * be invoked if needing to resolve the container before it is explicitly set.
-	 * <p>
+	 * </p>
 	 * @return IPath - the container path that is associated with this container
 	 */
     IPath getPath();

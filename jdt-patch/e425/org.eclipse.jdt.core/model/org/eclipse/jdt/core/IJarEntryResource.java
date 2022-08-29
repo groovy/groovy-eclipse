@@ -24,7 +24,7 @@ import org.eclipse.core.runtime.IPath;
  * Files don't have any children and the returned array is always empty.
  * </p><p>
  * Jar entry resources that refer to the same element are guaranteed to be equal, but not necessarily identical.
- * <p>
+ * </p>
  *
  * @since 3.3
  */

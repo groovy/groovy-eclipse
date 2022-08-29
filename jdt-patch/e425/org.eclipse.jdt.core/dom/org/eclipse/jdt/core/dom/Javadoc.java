@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -270,7 +270,7 @@ public class Javadoc extends Comment {
 	 * The first tag element of a typical doc comment represents
 	 * all the material before the first explicit doc tag; this
 	 * first tag element has a <code>null</code> tag name and
-	 * generally contains 1 or more {@link TextElement}s,
+	 * generally contains 1 or more {@link AbstractTextElement}s,
 	 * and possibly interspersed with tag elements for nested tags
 	 * like "{@link String String}".
 	 * Subsequent tag elements represent successive top-level doc

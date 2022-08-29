@@ -1,11 +1,11 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  *
  * SPDX-License-Identifier: EPL-2.0
  *
@@ -129,14 +129,14 @@ public final class ASTRewriteFormatter {
 	public ASTRewriteFormatter(NodeInfoStore placeholders, RewriteEventStore eventStore, Map options, String lineDelimiter) {
 		this.placeholders= placeholders;
 		this.eventStore= eventStore;
-	
+
 		this.options= options == null ? JavaCore.getOptions() : (Map) new HashMap(options);
 		this.options.put(
 				DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_RESOURCES_IN_TRY,
 				DefaultCodeFormatterConstants.createAlignmentValue(true, DefaultCodeFormatterConstants.WRAP_NEXT_PER_LINE, DefaultCodeFormatterConstants.INDENT_DEFAULT));
 
 		this.lineDelimiter= lineDelimiter;
-	
+
 		this.tabWidth= IndentManipulation.getTabWidth(options);
 		this.indentWidth= IndentManipulation.getIndentWidth(options);
 	}
@@ -348,6 +348,7 @@ public final class ASTRewriteFormatter {
 				case ASTNode.METHOD_REF_PARAMETER:
 				case ASTNode.TAG_ELEMENT:
 				case ASTNode.TEXT_ELEMENT:
+				case ASTNode.JAVADOC_TEXT_ELEMENT:
 					// javadoc formatting disabled due to bug 93644
 					return null;
 
@@ -569,12 +570,12 @@ public final class ASTRewriteFormatter {
 	public final Prefix VARARGS= new FormattingPrefix("void foo(A ... a) { }", "A ." , CodeFormatter.K_CLASS_BODY_DECLARATIONS); //$NON-NLS-1$ //$NON-NLS-2$
 	public final Prefix TRY_RESOURCES = new FormattingPrefix("try (A a = new A(); B b = new B()) {}", "; B" , CodeFormatter.K_STATEMENTS); //$NON-NLS-1$ //$NON-NLS-2$
 	public final Prefix TRY_RESOURCES_PAREN = new FormattingPrefix("try (A a = new A(); B b = new B()) {}", "y (" , CodeFormatter.K_STATEMENTS); //$NON-NLS-1$ //$NON-NLS-2$
-	
+
 	public final BlockContext IF_BLOCK_WITH_ELSE= new BlockFormattingPrefixSuffix("if (true)", "else{}", 8); //$NON-NLS-1$ //$NON-NLS-2$
 	public final BlockContext IF_BLOCK_NO_ELSE= new BlockFormattingPrefix("if (true)", 8); //$NON-NLS-1$
 	public final BlockContext ELSE_AFTER_STATEMENT= new BlockFormattingPrefix("if (true) foo();else ", 15); //$NON-NLS-1$
 	public final BlockContext ELSE_AFTER_BLOCK= new BlockFormattingPrefix("if (true) {}else ", 11); //$NON-NLS-1$
-	
+
 	public final Prefix CASE_SEPARATION= new FormattingPrefix("case A, B", "A" , CodeFormatter.K_EXPRESSION); //$NON-NLS-1$ //$NON-NLS-2$
 
 	public final BlockContext FOR_BLOCK= new BlockFormattingPrefix("for (;;) ", 7); //$NON-NLS-1$
