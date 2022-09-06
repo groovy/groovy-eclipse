@@ -59,7 +59,7 @@ public class Parameter extends AnnotatedNode implements Variable {
 
     @Override
     public String toString() {
-        return super.toString() + "[name:" + name + ((type == null) ? "" : " type: " + type.getName()) + ", hasDefaultValue: " + this.hasInitialExpression() + "]";
+        return super.toString() + "[name: " + name + (type == null ? "" : ", type: " + type.toString(false)) + ", hasDefaultValue: " + this.hasInitialExpression() + "]";
     }
 
     @Override

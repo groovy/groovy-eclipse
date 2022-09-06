@@ -1335,6 +1335,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7247() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "import static org.codehaus.groovy.ast.ClassHelper.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "@TypeChecked void test() {\n" +
+            "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def type = node.getNodeMetaData(INFERRED_TYPE)\n" +
+            "    assert type.genericsTypes[0].type == STRING_TYPE\n" +
+            "    assert type.genericsTypes[1].type != Integer_TYPE\n" +
+            "    assert type.genericsTypes[1].type.isDerivedFrom(Number_TYPE)\n" +
+            "  })\n" +
+            "  def map = [*:[A:1], *:[B:2.3]]\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked7274() {
         //@formatter:off
         String[] sources = {
@@ -1822,6 +1846,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  Number num = map[key]\n" + // Map#getAt(Object) vs Object#getAt(String)
             "}\n" +
             "test([:],'')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked8828() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface Foo {}\n" +
+            "interface Bar {String name()}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Map<String, Foo> map = [:]\n" +
+            "  map.values().each { foo ->\n" +
+            "    if (foo instanceof Bar) {\n" +
+            "      String name = foo.name()\n" + // method available through Bar
+            "      map.put(name, foo)      \n" + // second parameter expects Foo
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
         };
         //@formatter:on
 
@@ -5915,6 +5963,41 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10646() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "class Model {\n" +
+            "}\n" +
+            "interface Output<T> {\n" +
+            "  T getT()\n" +
+            "}\n" +
+            "abstract class WhereDSL<Type> {\n" +
+            "  abstract Type where()\n" +
+            "}\n" +
+            "abstract class Input<T> extends WhereDSL<ReferencesOuterClassTP> {\n" +
+            "  class ReferencesOuterClassTP implements Output<T> {\n" +
+            "    @Override T getT() { return null }\n" +
+            "  }\n" +
+            "}\n" +
+            "@TypeChecked\n" +
+            "void test(Input<Model> input) {\n" +
+            "  def output = input?.where()\n" +
+            "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    assert node.getNodeMetaData(INFERRED_TYPE).toString(false) == 'Model'\n" +
+            "  })\n" +
+            "  def result = output?.getT()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10651() {
         //@formatter:off
         String[] sources = {
@@ -6182,6 +6265,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10720() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Double[] array = new Double[1]\n" +
+            "  def stream = Arrays.stream(array)\n" + //stream(T[])
+            "  print stream.map{d -> 'string'}.toList().get(0)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "string");
+    }
+
+    @Test
     public void testTypeChecked10725() {
         //@formatter:off
         String[] sources = {
@@ -6197,5 +6298,90 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "[[foo:FOO, bar:BAR]]");
+    }
+
+    @Test
+    public void testTypeChecked10741() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C { def foo }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(C pogo) {\n" +
+            "  def proc = pogo.&setFoo\n" + // Cannot find matching method C#setFoo
+            "  proc.call('baz')\n" +
+            "  print pogo.foo\n" +
+            "}\n" +
+            "test(new C(foo:'bar'))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "baz");
+    }
+
+    @Test
+    public void testTypeChecked10741a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C { final foo }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(C pogo) {\n" +
+            "  def proc = pogo.&setFoo\n" +
+            "}\n" +
+            "test(new C(foo:'bar'))\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tdef proc = pogo.&setFoo\n" +
+            "\t                 ^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method C#setFoo. Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10744() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Serializable x = -1\n" +
+            "  print(x.class.name)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "java.lang.Integer");
+    }
+
+    @Test
+    public void testTypeChecked10749() {
+        for (String arg : !isParrotParser() ? new String[] {"Named.&getName", "{Named named -> named.getName()}"}
+                                            : new String[] {"Named.&getName", "{Named named -> named.getName()}",
+                                                            "Named::getName", "(Named named) -> named.getName()"}
+        ) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "import groovy.transform.*\n" +
+                "class Named {String name}\n" +
+                "@TypeChecked void test(){\n" +
+                "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+                "    def type = node.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+                "    assert type.toString(false) == 'java.util.stream.Collector<Named, ?, java.util.Map<java.lang.String, java.util.List<Named>>>'\n" +
+                "  })\n" +
+                "  def c = java.util.stream.Collectors.groupingBy(" + arg + ")\n" +
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+        }
     }
 }

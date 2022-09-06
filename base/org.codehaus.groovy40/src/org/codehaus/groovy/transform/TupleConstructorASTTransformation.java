@@ -275,13 +275,13 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
 
         boolean hasMapCons = AnnotatedNodeUtils.hasAnnotation(cNode, MapConstructorASTTransformation.MY_TYPE);
         int modifiers = getVisibility(anno, cNode, ConstructorNode.class, groovyjarjarasm.asm.Opcodes.ACC_PUBLIC);
-        ConstructorNode ctorNode = addGeneratedConstructor(cNode, modifiers, params.toArray(Parameter.EMPTY_ARRAY), ClassNode.EMPTY_ARRAY, body);
+        ConstructorNode consNode = addGeneratedConstructor(cNode, modifiers, params.toArray(Parameter.EMPTY_ARRAY), ClassNode.EMPTY_ARRAY, body);
         // GRECLIPSE add -- apply compact constructor source position to primary constructor
-        java.util.Optional.<ASTNode>ofNullable(cNode.getNodeMetaData("compact.constructor")).ifPresent(ctorNode::setSourcePosition);
+        java.util.Optional.<ASTNode>ofNullable(cNode.getNodeMetaData("compact.constructor")).ifPresent(consNode::setSourcePosition);
         // GRECLIPSE end
         if (cNode.getNodeMetaData("_RECORD_HEADER") != null) {
-            ctorNode.addAnnotations(cNode.getAnnotations());
-            ctorNode.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
+            consNode.addAnnotations(cNode.getAnnotations());
+            consNode.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
         }
         if (namedVariant) {
             BlockStatement inner = new BlockStatement();
@@ -292,9 +292,9 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
             List<String> propNames = new ArrayList<>();
             Map<Parameter, Expression> seen = new HashMap<>();
             for (Parameter p : params) {
-                if (!processImplicitNamedParam(xform, ctorNode, mapParam, inner, args, propNames, p, false, seen)) return;
+                if (!processImplicitNamedParam(xform, consNode, mapParam, inner, args, propNames, p, false, seen)) return;
             }
-            NamedVariantASTTransformation.createMapVariant(xform, ctorNode, anno, mapParam, genParams, cNode, inner, args, propNames);
+            NamedVariantASTTransformation.createMapVariant(xform, consNode, anno, mapParam, genParams, cNode, inner, args, propNames);
         }
 
         if (sourceUnit != null && !body.isEmpty()) {

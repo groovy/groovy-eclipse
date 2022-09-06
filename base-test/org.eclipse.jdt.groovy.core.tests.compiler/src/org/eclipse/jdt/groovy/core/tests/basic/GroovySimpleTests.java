@@ -700,6 +700,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "66436643");
     }
 
+    @Test // GROOVY-10743
+    public void testInterfaceCategoryMethods() {
+        assumeTrue(isAtLeastJava(JDK9));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "use (java.util.stream.Stream) {\n" +
+            "  assert 16.iterate({it < 500}, {it * 2}).toList() == [16, 32, 64, 128, 256]\n" +
+            "  assert [1, 1].iterate{f -> [f[1], f.sum()]}.limit(8).toList()*.head() == [1, 1, 2, 3, 5, 8, 13, 21]\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testGreclipse719() {
         //@formatter:off
@@ -6758,6 +6775,40 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         } else {
             runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: A.m() is applicable for argument types: () values: []");
         }
+    }
+
+    @Test // GROOVY-10747
+    public void testSuperDotClone() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C implements Cloneable {\n" +
+            "  C clone() {\n" +
+            "    super.clone()\n" +
+            "  }\n" +
+            "}\n" +
+            "def pogo = new C()\n" +
+            "def copy = pogo.clone()\n" +
+            "assert !copy.is( pogo )\n" +
+            "assert copy instanceof C\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // GROOVY-10733
+    public void testArrayDotClone() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "int[] numbers = [1,2,3]\n" +
+            "assert numbers.clone() == [1,2,3]\n" +
+            "assert numbers.clone() instanceof int[]\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test

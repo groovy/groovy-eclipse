@@ -1816,6 +1816,29 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "local then getter");
     }
 
+    @Test // GROOVY-7370
+    public void testAnonymousInnerClass36() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String[] strings\n" +
+            "  C(String... args) {\n" +
+            "    strings = args\n" +
+            "  }\n" +
+            "}\n" +
+            "def c = new C() { }\n" +
+            "assert c.strings.length == 0\n" +
+            "c = new C('xy') { }\n" +
+            "assert c.strings.length == 1\n" +
+            "c = new C('x','y') { }\n" +
+            "assert c.strings.length == 2\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off

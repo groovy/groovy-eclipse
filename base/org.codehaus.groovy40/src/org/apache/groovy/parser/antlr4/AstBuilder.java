@@ -4602,9 +4602,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             if (!asBoolean(ctx.type())) {
                 GenericsType genericsType = new GenericsType(baseType);
                 genericsType.setWildcard(true);
-                /* GRECLIPSE edit -- already set
-                genericsType.setName(QUESTION_STR);
-                */
+
                 return configureAST(genericsType, ctx);
             }
 
@@ -4623,11 +4621,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             return configureAST(genericsType, ctx);
         } else if (asBoolean(ctx.type())) {
-            /* GRECLIPSE edit
-            ClassNode baseType = configureAST(this.visitType(ctx.type()), ctx);
-            */
             ClassNode baseType = this.visitType(ctx.type());
-            // GRECLIPSE end
             return configureAST(this.createGenericsType(baseType), ctx);
         }
 

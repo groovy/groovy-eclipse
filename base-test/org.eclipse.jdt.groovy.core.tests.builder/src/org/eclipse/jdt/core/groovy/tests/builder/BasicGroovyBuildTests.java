@@ -102,14 +102,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     private void addJUnitAndSpock(final IPath projectPath) throws Exception {
         String spockCorePath;
-        if (!isAtLeastGroovy(30)) {
-            spockCorePath = "lib/spock-core-2.1-groovy-2.5.jar";
-            env.addJar(projectPath, "lib/spock-groovy2-compat-2.1.jar");
+        if (isAtLeastGroovy(40)) {
+            spockCorePath = "lib/spock-core-2.2-groovy-4.0.jar";
+        } else if (isAtLeastGroovy(30)) {
+            spockCorePath = "lib/spock-core-2.2-groovy-3.0.jar";
         } else {
-            spockCorePath = "lib/spock-core-2.1-groovy-3.0.jar";
-            if (isAtLeastGroovy(40)) {
-                System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
-            }
+            spockCorePath = "lib/spock-core-2.2-groovy-2.5.jar";
+            env.addJar(projectPath, "lib/spock-groovy2-compat-2.2.jar");
         }
         env.addJar(projectPath, spockCorePath);
         env.addEntry(projectPath, JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));

@@ -1693,6 +1693,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7506() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  public String[] strings\n" +
+            "  void setP(String[] strings) {\n" +
+            "    this.strings = strings\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = new C()\n" +
+            "  c.p = ['foo', 123 ]\n" +
+            "  assert c.strings == ['foo','123']\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testCompileStatic7526() {
         //@formatter:off
         String[] sources = {
@@ -2452,6 +2476,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8074() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class M extends HashMap<String,Number> {\n" +
+            "  def foo = 1\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def map = new M()\n" +
+            "  map.put('foo',42)\n" +
+            "  print map.foo\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testCompileStatic8133() {
         //@formatter:off
         String[] sources = {
@@ -2973,6 +3018,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic8737() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "String m(String key, Object[] args) {\n" +
+            "  \"key=$key, args=$args\"\n" +
+            "}\n" +
+            "String m(String key, Object[] args, Object[] parts) {\n" +
+            "  \"key=$key, args=$args, parts=$parts\"\n" +
+            "}\n" +
+            "String m(String key, Object[] args, String[] names) {\n" +
+            "  \"key=$key, args=$args, names=$names\"\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  print m('hello', ['world'] as Object[])\n" + // exact match for m(String,Object[])
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "key=hello, args=[world]");
     }
 
     @Test
@@ -7543,5 +7613,104 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "worksworks");
+    }
+
+    @Test
+    public void testCompileStatic10712() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  final list = ['foo','bar']\n" +
+            "  for (item in list.iterator()) print item.toUpperCase()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "FOOBAR");
+    }
+
+    @Test
+    public void testCompileStatic10714() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.*\n" +
+            "class C {\n" +
+            "  String which\n" +
+            "  void m(int i) { which = 'int' }\n" +
+            "  void m(Number n) { which = 'Number' }\n" +
+            "}\n" +
+            "interface I {\n" +
+            "  I andThen(Consumer<? super Number> c)\n" +
+            "  I andThen(BiConsumer<? super Number, ?> bc)\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(I i, C c) {\n" +
+            "  i = i.andThen(c::m)\n" + // "andThen" is ambiguous unless parameters of "m" overloads are taken into account
+            "}\n" +
+            "C x= new C()\n" +
+            "test(new I() {\n" +
+            "  I andThen(Consumer<? super Number> c) {\n" +
+            "    c.accept(42)\n" +
+            "    return this\n" +
+            "  }\n" +
+            "  I andThen(BiConsumer<? super Number, ?> bc) {\n" +
+            "    bc.accept(1234, null)\n" +
+            "    return this\n" +
+            "  }\n" +
+            "}, x)\n" +
+            "print x.which\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Number");
+    }
+
+    @Test
+    public void testCompileStatic10725() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  List<String> list = ['foo','bar']\n" +
+            "  Set<Map<String,String>> set_of_maps = []\n" +
+            "  set_of_maps.addAll(list.collectEntries { [it, it.toUpperCase()] })\n" +
+            "  print set_of_maps.first()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo:FOO, bar:BAR]");
+    }
+
+    @Test
+    public void testCompileStatic10742() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void foo(bar) { }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  java.util.function.Function<?,String> f = this::foo\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tjava.util.function.Function<?,String> f = this::foo\n" +
+            "\t                                          ^^^^^^^^^\n" +
+            "Groovy:Invalid return type: void is not convertible to java.lang.String\n" +
+            "----------\n");
     }
 }

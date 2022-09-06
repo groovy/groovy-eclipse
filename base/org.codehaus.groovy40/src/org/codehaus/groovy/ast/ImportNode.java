@@ -93,6 +93,31 @@ public class ImportNode extends AnnotatedNode {
         this.fieldName = requireNonNull(fieldName);
     }
 
+    // GRECLIPSE add
+    private Expression aliasExpr;
+    private Expression fieldNameExpr;
+
+    public Expression getAliasExpr() {
+        return aliasExpr;
+    }
+
+    public void setAliasExpr(Expression aliasExpr) {
+        this.aliasExpr = aliasExpr;
+    }
+
+    public Expression getFieldNameExpr() {
+        return fieldNameExpr;
+    }
+
+    public void setFieldNameExpr(Expression fieldNameExpr) {
+        this.fieldNameExpr = fieldNameExpr;
+    }
+
+    public String toString() {
+        return super.toString() + '[' + getText() + ']';
+    }
+    // GRECLIPSE end
+
     /**
      * @return the text display of this import
      */
@@ -148,31 +173,6 @@ public class ImportNode extends AnnotatedNode {
     public void setType(final ClassNode type) {
         this.type = requireNonNull(type);
     }
-
-    // GRECLIPSE add
-    private Expression aliasExpr;
-    private Expression fieldNameExpr;
-
-    public Expression getAliasExpr() {
-        return aliasExpr;
-    }
-
-    public void setAliasExpr(Expression aliasExpr) {
-        this.aliasExpr = aliasExpr;
-    }
-
-    public Expression getFieldNameExpr() {
-        return fieldNameExpr;
-    }
-
-    public void setFieldNameExpr(Expression fieldNameExpr) {
-        this.fieldNameExpr = fieldNameExpr;
-    }
-
-    public String toString() {
-        return super.toString() + '[' + getText() + ']';
-    }
-    // GRECLIPSE end
 
     @Override
     public void visit(final GroovyCodeVisitor visitor) {
