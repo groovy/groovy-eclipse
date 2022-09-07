@@ -140,7 +140,7 @@ public char[] getModuleName() {
 
 // GROOVY add
 public IPath getOutputLocation() {
-	return this.sourceLocation.getProjectRelativePath();
+	return this.sourceLocation.binaryFolder.getLocation();
 }
 // GROOVY end
 }
