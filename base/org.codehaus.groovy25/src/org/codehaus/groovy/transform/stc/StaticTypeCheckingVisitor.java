@@ -1435,13 +1435,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private void addMapAssignmentConstructorErrors(final ClassNode leftRedirect, final Expression leftExpression, final Expression rightExpression) {
-        /* GRECLIPSE edit -- GROOVY-6802, GROOVY-6803, et al.
+        /* GRECLIPSE edit -- GROOVY-6802, GROOVY-6803, GROOVY-8136, et al.
         if (!(rightExpression instanceof MapExpression) || (leftExpression instanceof VariableExpression && ((VariableExpression) leftExpression).isDynamicTyped())
                 || leftRedirect.equals(OBJECT_TYPE) || implementsInterfaceOrIsSubclassOf(leftRedirect, MAP_TYPE)) {
         */
-        if ((leftExpression instanceof VariableExpression && ((VariableExpression) leftExpression).isDynamicTyped())
-                || (isWildcardLeftHandSide(leftRedirect) && !leftRedirect.equals(CLASS_Type))
-                || implementsInterfaceOrIsSubclassOf(leftRedirect, MAP_TYPE)) {
+        if (!isConstructorAbbreviation(leftRedirect, rightExpression)
+                || (isWildcardLeftHandSide(leftRedirect) && !leftRedirect.equals(CLASS_Type))) {
         // GRECLIPSE end
             return;
         }
@@ -1624,13 +1623,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // in that case, we are facing a list constructor assigned to a def or object
             return null;
         }
-        List<ConstructorNode> constructors = node.getDeclaredConstructors();
+        List<? extends MethodNode> constructors = node.getDeclaredConstructors();
         if (constructors.isEmpty() && arguments.length == 0) {
             return null;
         }
-        List<MethodNode> constructorList = findMethod(node, "<init>", arguments);
-        if (constructorList.isEmpty()) {
-            if (isBeingCompiled(node) && arguments.length == 1 && LINKEDHASHMAP_CLASSNODE.equals(arguments[0])) {
+        constructors = findMethod(node, "<init>", arguments);
+        if (constructors.isEmpty()) {
+            if (isBeingCompiled(node) && !node.isInterface() && arguments.length == 1 && arguments[0].equals(LINKEDHASHMAP_CLASSNODE)) {
                 // there will be a default hash map constructor added later
                 ConstructorNode cn = new ConstructorNode(Opcodes.ACC_PUBLIC, new Parameter[]{
                         new Parameter(LINKEDHASHMAP_CLASSNODE, "args")
@@ -1640,11 +1639,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 addStaticTypeError("No matching constructor found: " + prettyPrintTypeName(node) + toMethodParametersString("", arguments), source);
                 return null;
             }
-        } else if (constructorList.size() > 1) {
+        } else if (constructors.size() > 1) {
             addStaticTypeError("Ambiguous constructor call " + prettyPrintTypeName(node) + toMethodParametersString("", arguments), source);
             return null;
         }
-        return constructorList.get(0);
+        return constructors.get(0);
     }
 
     /**
