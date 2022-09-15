@@ -99,6 +99,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         this.javaAgentClass = javaAgentClass;
     }
 
+    //--------------------------------------------------------------------------
+
     @Override
     public CompilerResult performCompile(final CompilerConfiguration config) throws CompilerException {
         // groovy-eclipse-batch must be depended upon explicitly; if it is not there, then raise a nice, readable error
@@ -232,7 +234,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.put("-verbose", null);
         }
 
-        String cp = getPathString(config.getClasspathEntries());
+        String cp = getPathString(filterEntries(config.getClasspathEntries()));
         if (verbose) {
             getLogger().info("Classpath: " + cp);
         }
@@ -240,7 +242,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.put("-cp", cp.trim());
         }
 
-        String mp = getPathString(config.getModulepathEntries());
+        String mp = getPathString(filterEntries(config.getModulepathEntries()));
         if (verbose) {
             getLogger().info("Modulepath: " + mp);
         }
@@ -625,14 +627,14 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     /**
-     * Returns content of the Map as an array of Strings. Ignores {@code null} and empty Strings.
-     * Implementation note {@link LinkedHashMap} is preferred Map implementation as it preserves order
+     * Returns content of the map as an array of strings. Ignores {@code null}
+     * and empty values.
+     *
      * @param args Map to be converted
      * @return Array with {@code args} converted to an array
      */
     private static String[] flattenArgumentsMap(final Map<String, String> args) {
         List<String> argsList = new ArrayList<>(args.size() * 2);
-
         for (Map.Entry<String, String> entry : args.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
@@ -644,7 +646,14 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 }
             }
         }
-
         return argsList.toArray(new String[0]);
+    }
+
+    private static List<String> filterEntries(final List<String> entries) {
+        List<String> result = new ArrayList<>(entries.size());
+        for (String entry : entries) {
+            if (!entry.endsWith(".pom")) result.add(entry);
+        }
+        return result;
     }
 }

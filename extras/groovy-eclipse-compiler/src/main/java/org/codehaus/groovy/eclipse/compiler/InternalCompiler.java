@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 
 /**
- * Simple progress monitor to keep track of number of files compiled.
- * Also, this is the launcher for the JDT compiler.
+ * Simple progress monitor to keep track of number of files compiled. Also, this
+ * is the launcher for the JDT compiler.
  */
 class InternalCompiler extends CompilationProgress {
 
