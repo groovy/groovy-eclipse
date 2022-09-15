@@ -134,6 +134,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.thisPropX;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PROPERTY_OWNER;
@@ -1103,13 +1104,14 @@ public class AsmClassGenerator extends ClassGenerator {
         if (ExpressionUtils.isThisExpression(objectExpression)) return true;
         if (objectExpression instanceof ClassExpression) return false;
 
+        // GROOVY-9195, GROOVY-9288: uniform treatment for "foo.bar" and "foo.with { bar }" using TypeChooser (not getType())
         ClassNode objectExpressionType = controller.getTypeChooser().resolveType(objectExpression, controller.getClassNode());
-        if (objectExpressionType.equals(ClassHelper.OBJECT_TYPE)) objectExpressionType = objectExpression.getType();
-        return implementsGroovyObject(objectExpressionType); // GRECLIPSE edit
+        return implementsGroovyObject(objectExpressionType) // GROOVY-10540
+            && !isOrImplements(objectExpressionType, ClassHelper.MAP_TYPE); // GROOVY-5517, GROOVY-8074
     }
 
     private static boolean implementsGroovyObject(final ClassNode cn) {
-        return cn.isDerivedFromGroovyObject() || (!cn.isInterface() && cn.getCompileUnit() != null);
+        return cn.isDerivedFromGroovyObject() || (cn.getCompileUnit() != null && !cn.isInterface());
     }
 
     @Override

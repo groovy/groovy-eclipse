@@ -73,6 +73,13 @@
     </plugins>
   </build>
 
+  <repositories>
+    <repository>
+      <id>groovy-libs-release</id>
+      <url>https://groovy.jfrog.io/artifactory/libs-release</url>
+    </repository>
+  </repositories>
+
   <pluginRepositories>
     <pluginRepository>
       <id>groovy-plugins-release</id>

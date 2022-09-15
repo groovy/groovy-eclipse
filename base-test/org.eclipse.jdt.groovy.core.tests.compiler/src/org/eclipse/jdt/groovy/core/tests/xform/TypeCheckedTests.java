@@ -3737,7 +3737,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\tList<String> list = ['a','b',3]\n" +
             "\t                    ^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Incompatible generic argument types." +
-            " Cannot assign java.util.ArrayList<java.io.Serializable<? extends " + (isAtLeastGroovy(40) ? "java.io.Serializable<java.lang.String>" : "java.lang.Object") + ">> to: java.util.List<java.lang.String>\n" +
+            " Cannot assign java.util.ArrayList<java.io.Serializable<? extends java.io.Serializable<java.lang.String>>> to: java.util.List<java.lang.String>\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 4)\n" +
             "\tDeque<String> deque = ['x','y']\n" +
@@ -5339,7 +5339,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked10327() {
+    public void testTypeChecked10328() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -5600,6 +5600,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testTypeChecked10364() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T> {\n" +
+            "}\n" +
+            "class B<T> {\n" +
+            "  void m(A<T> a_of_t, T t) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class C<X, Y extends X> {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    B<Y> b_of_y = new B<Y>()\n" +
+            "    b_of_y.m(new A<Y>(), (Y) null)\n" + // Cannot call B#m(A<Y extends X>, Y) with arguments [A<Y>, Y]
+            "  }\n" +
+            "}\n" +
+            "new C<Number,Integer>().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
@@ -6009,7 +6034,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "void test(Input<Model> input) {\n" +
             "  def output = input?.where()\n" +
             "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
-            "    assert node.getNodeMetaData(INFERRED_TYPE).toString(false) == 'Model'\n" +
+            "    assert node.getNodeMetaData(INFERRED_TYPE).toString(false) == '" + (isAtLeastGroovy(40) ? "Model" : "java.lang.Object") + "'\n" +
             "  })\n" +
             "  def result = output?.getT()\n" +
             "}\n" +

@@ -702,7 +702,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test // GROOVY-10743
     public void testInterfaceCategoryMethods() {
-        assumeTrue(isAtLeastJava(JDK9));
+        assumeTrue(isAtLeastGroovy(40) && isAtLeastJava(JDK9));
 
         //@formatter:off
         String[] sources = {

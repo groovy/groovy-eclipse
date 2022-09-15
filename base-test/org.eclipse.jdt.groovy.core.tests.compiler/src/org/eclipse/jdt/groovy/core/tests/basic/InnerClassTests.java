@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assume.assumeTrue;
 
@@ -1830,7 +1831,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "def c = new C() { }\n" +
             "assert c.strings.length == 0\n" +
             "c = new C('xy') { }\n" +
-            "assert c.strings.length == 1\n" +
+            "assert c.strings.length == " + (isAtLeastGroovy(40) ? 1 : 2) + "\n" +
             "c = new C('x','y') { }\n" +
             "assert c.strings.length == 2\n",
         };

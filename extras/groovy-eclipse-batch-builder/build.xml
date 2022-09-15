@@ -120,8 +120,8 @@
             <fileset refid="orig.groovy.jars"/>
         </unzip>
 
-        <!-- Overwrite existing with classes from workspace bin folders-->
-        <copy todir="${stage.dir}">
+        <!-- Overwrite existing with classes from workspace output folders -->
+        <copy overwrite="true" preservelastmodified="true" todir="${stage.dir}">
             <fileset refid="gdt.core.class.files"/>
             <fileset refid="jdt.core.class.files"/>
             <fileset refid="groovy.ant.class.files"/>

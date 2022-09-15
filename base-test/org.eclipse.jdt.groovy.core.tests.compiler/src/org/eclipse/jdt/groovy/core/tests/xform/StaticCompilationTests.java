@@ -850,6 +850,35 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic5517() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class M extends HashMap<String,Number> {\n" +
+            "  public static int version = 666\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def map = new M()\n" +
+            "  map['foo'] = 123\n" +
+            "  map.foo = 123\n" +
+            "  def value = map.foo\n" +
+            "  assert value == 123\n" +
+            "  map['foo'] = 4.5\n" +
+            "  value = map['foo']\n" +
+            "  assert value == 4.5\n" +
+            "  value = map.version\n" +
+            "  assert value == null\n" +
+            "  assert M.version == 666\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testCompileStatic5746() {
         //@formatter:off
         String[] sources = {
@@ -2670,6 +2699,33 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             //@formatter:on
 
             runNegativeTest(sources, "");
+        }
+    }
+
+    @Test
+    public void testCompileStatic8487() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  final list = ['foo','bar']\n" +
+            "  for (item in list.iterator()) print item.toUpperCase()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "FOOBAR");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 4)\n" +
+                "\tfor (item in list.iterator()) print item.toUpperCase()\n" +
+                "\t                                    ^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toUpperCase(). Please check if the declared type is correct and if the method exists.\n" +
+                "----------\n");
         }
     }
 
@@ -7616,23 +7672,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic10712() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "void test() {\n" +
-            "  final list = ['foo','bar']\n" +
-            "  for (item in list.iterator()) print item.toUpperCase()\n" +
-            "}\n" +
-            "test()\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "FOOBAR");
-    }
-
-    @Test
     public void testCompileStatic10714() {
         assumeTrue(isParrotParser());
 
@@ -7668,7 +7707,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "Number");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "Number");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 13)\n" +
+                "\ti = i.andThen(c::m)\n" +
+                "\t    ^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [I I#andThen(java.util.function.Consumer<? super java.lang.Number>), I I#andThen(java.util.function.BiConsumer<? super java.lang.Number, ?>)]\n" +
+                "----------\n");
+        }
     }
 
     @Test

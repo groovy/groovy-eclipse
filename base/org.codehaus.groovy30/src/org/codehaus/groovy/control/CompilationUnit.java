@@ -581,10 +581,10 @@ public class CompilationUnit extends ProcessingUnit {
     // EXTERNAL CALLBACKS
 
     /**
-     * A callback interface you can use to "accompany" the classgen()
-     * code as it traverses the ClassNode tree.  You will be called-back
-     * for each primary and inner class.  Use setClassgenCallback() before
-     * running compile() to set your callback.
+     * A callback interface you can use during the {@code classgen}
+     * phase of compilation as the compiler traverses the ClassNode tree.
+     * You will be called-back for each primary and inner class.
+     * Use setClassgenCallback() before running compile() to set your callback.
      */
     @FunctionalInterface
     public interface ClassgenCallback {
