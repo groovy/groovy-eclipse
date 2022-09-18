@@ -1982,7 +1982,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |}
             |'''
 
-        createGroovyType 'main', 'One', '''\
+        createGroovyType '', 'One', '''\
             |@Canonical
             |class One {
             |  String string
@@ -2040,6 +2040,24 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |}
             |'''
         doContentsCompareTest(contents, contents - ~/\|import static foo.Bar.\*\s+/)
+    }
+
+    @Test
+    void testOrganizeWithExtraImports9() {
+        addConfigScript '''\
+            |withConfig(configuration) {
+            |  imports {
+            |    star 'java.time'
+            |  }
+            |}
+            |'''
+
+        String contents = '''\
+            |import groovy.transform.*
+            |/*
+            |*/
+            |'''
+        doContentsCompareTest(contents, contents - ~/\|import groovy.transform.\*\s+/)
     }
 
     @Test @NotYetImplemented

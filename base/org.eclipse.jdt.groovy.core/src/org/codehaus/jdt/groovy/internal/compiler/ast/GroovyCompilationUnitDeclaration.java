@@ -1094,12 +1094,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 if (!importReferences.isEmpty()) {
+                    ImportReference last = unitDeclaration.currentPackage;
                     ImportReference[] refs = importReferences.values().toArray(unitDeclaration.imports);
                     for (ImportReference ref : refs) {
-                        if (ref.declarationSourceStart > 0 && (ref.declarationEnd - ref.declarationSourceStart + 1) < 0) {
-                            throw new IllegalStateException(String.format(
-                                "Import reference alongside class %s will trigger later failure: %s declSourceStart=%d declEnd=%d",
-                                  moduleNode.getClasses().get(0), ref.toString(), ref.declarationSourceStart, ref.declarationEnd));
+                        if (ref.sourceStart >= 0) {
+                            last = ref;
+                        } else if (last != null) { // place after package/import
+                            ref.declarationSourceStart = last.sourceEnd + 1;
+                            ref.sourceStart = ref.declarationSourceStart;
+                            ref.declarationSourceEnd = last.sourceEnd;
+                            ref.trailingStarPosition = last.sourceEnd;
+                            ref.declarationEnd = last.sourceEnd;
+                            ref.sourceEnd = last.sourceEnd;
                         }
                     }
                     unitDeclaration.imports = refs;
@@ -2685,10 +2691,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * Ensures lexical ordering and synthetic de-duplication.
          */
         private static String lexicalKey(ImportReference ref) {
-            StringBuilder key = new StringBuilder();
-            key.append(Prefix.format(ref.declarationSourceStart));
+            StringBuilder key = new StringBuilder(64);
+            int pos = ref.sourceStart;
+            if (pos < 0) pos = 999999;
+            key.append(Prefix.format(pos));
             key.append(CharOperation.concatWith(ref.tokens, '.'));
-            if ((ref.bits & ASTNode.OnDemand) == 0) {
+            if (ref instanceof AliasImportReference) {
                 key.append(" as ").append(ref.getSimpleName());
             }
             return key.toString();
@@ -2696,7 +2704,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private static final NumberFormat Prefix;
         static {
             Prefix = NumberFormat.getInstance();
-            Prefix.setMinimumIntegerDigits(5);
+            Prefix.setMinimumIntegerDigits(6);
             Prefix.setGroupingUsed(false);
         }
 

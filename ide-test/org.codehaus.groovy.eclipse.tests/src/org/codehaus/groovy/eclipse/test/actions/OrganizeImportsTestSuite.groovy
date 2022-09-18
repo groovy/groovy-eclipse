@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,21 +146,19 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents = originalContents) {
-        def unit = addGroovySource(originalContents.stripMargin(), nextUnitName(), 'main')
+        def unit = addGroovySource(originalContents.stripMargin(), nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
             Assert.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
         })
         TextEdit edit = organize.calculateMissingImports()
-        // NOTE: Must match TestProject.createGroovyType()!
-        String prefix = 'package main;\n\n'
 
-        Document doc = new Document(prefix + originalContents.stripMargin())
+        Document doc = new Document(originalContents.stripMargin())
         if (edit != null) edit.apply(doc)
 
         // deal with some variance in JDT Core handling of package only
-        String expect = prefix + expectedContents.stripMargin()
+        String expect = expectedContents.stripMargin()
         String actual = doc.get()
         if (expectedContents.toString().isEmpty()) {
             expect = expect.trim()

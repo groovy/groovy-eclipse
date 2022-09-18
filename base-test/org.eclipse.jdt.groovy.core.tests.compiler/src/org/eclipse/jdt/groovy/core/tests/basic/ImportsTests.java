@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -775,6 +775,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
             "com/foo/Type.groovy",
             "package com.foo\n" +
+            "import java.lang.Object\n" +
             "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
@@ -782,6 +783,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "done", options);
+
+        // implicit import placed at end of package statement
+        ImportReference ref = getCUDeclFor("Runner.groovy").imports[0];
+        assertEquals(15, ref.sourceStart);
+        assertEquals(14, ref.sourceEnd);
+
+        // implicit import placed at end of explicit import
+        ref = getCUDeclFor("Type.groovy").imports[1];
+        assertEquals(39, ref.sourceStart);
+        assertEquals(38, ref.sourceEnd);
     }
 
     @Test
