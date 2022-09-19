@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,12 +53,9 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.ui.actions.IRunToLineTarget;
 import org.eclipse.debug.ui.actions.IToggleBreakpointsTarget;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IImportDeclaration;
-import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.manipulation.search.IOccurrencesFinder.OccurrenceLocation;
@@ -687,58 +684,6 @@ public class GroovyEditor extends CompilationUnitEditor {
     @Override
     protected void setTitleImage(Image titleImage) {
         // prevent JavaEditor from replacing image set via plugin.xml
-    }
-
-    @Override
-    protected void setSelection(ISourceReference reference, boolean moveCursor) {
-        super.setSelection(reference, moveCursor);
-        // must override functionality because JavaEditor expects that there is a ';' at end of declaration
-        try {
-            if (reference instanceof IImportDeclaration && moveCursor) {
-                int offset;
-                int length;
-                ISourceRange range = reference.getSourceRange();
-                String content = reference.getSource();
-                if (content != null) {
-                    int start = Math.max(content.indexOf("import") + 6, 7);
-                    while (start < content.length() && content.charAt(start) == ' ') {
-                        start += 1;
-                    }
-                    int end = content.trim().length();
-                    do {
-                        end -= 1;
-                    } while (end >= 0 && (content.charAt(end) == ' ' || content.charAt(end) == ';'));
-
-                    offset = range.getOffset() + start;
-                    length = end - start + 1; // Note, original JDT code has 8 here
-
-                    // just in case...
-                    int docLength = ((IImportDeclaration) reference).getOpenable().getBuffer().getLength();
-                    if (docLength < offset + length) {
-                        offset = docLength;
-                    }
-                } else {
-                    // fallback
-                    offset = range.getOffset() + 1;
-                    length = range.getLength() - 2;
-                }
-
-                if (offset > -1 && length > 0) {
-                    try {
-                        getSourceViewer().getTextWidget().setRedraw(false);
-                        getSourceViewer().revealRange(offset, length);
-                        getSourceViewer().setSelectedRange(offset, length);
-                    } finally {
-                        getSourceViewer().getTextWidget().setRedraw(true);
-                    }
-
-                    markInNavigationHistory();
-                }
-
-            }
-        } catch (JavaModelException e) {
-            GroovyPlugin.getDefault().logError("Error selecting import statement", e);
-        }
     }
 
     private IFile getFile() {
