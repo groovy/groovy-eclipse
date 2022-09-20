@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,12 +35,11 @@ class GroovyCompilationUnitStructureRequestor extends CompilationUnitStructureRe
     protected GrapesContainer grapesContainer;
     protected GrapesContainerInfo grapesContainerInfo;
 
-    @SuppressWarnings("rawtypes")
-    protected GroovyCompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUnitElementInfo unitInfo, Map newElements) {
-        super(unit, unitInfo, newElements);
+    protected GroovyCompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUnitElementInfo unitInfo, @SuppressWarnings("rawtypes") Map elements) {
+        super(unit, unitInfo, elements);
     }
 
-    @Override @SuppressWarnings({"rawtypes", "unchecked"})
+    @Override
     protected IAnnotation acceptAnnotation(Annotation annotation, AnnotatableInfo parentInfo, JavaElement parentHandle) {
         IAnnotation result = super.acceptAnnotation(annotation, parentInfo, parentHandle);
 
@@ -48,41 +47,48 @@ class GroovyCompilationUnitStructureRequestor extends CompilationUnitStructureRe
         if (result.getElementName().endsWith("Grab")) {
             String group = null, module = null, version = null;
             for (MemberValuePair mvp : annotation.memberValuePairs()) {
-                String key = String.valueOf(mvp.name);
-                if (key.equals("group")) {
+                switch (String.valueOf(mvp.name)) {
+                case "group":
                     group = mvp.value.toString();
                     group = group.substring(1, group.length() - 1);
-                } else if (key.equals("module")) {
+                    break;
+                case "module":
                     module = mvp.value.toString();
                     module = module.substring(1, module.length() - 1);
-                } else if (key.equals("version")) {
+                    break;
+                case "version":
                     version = mvp.value.toString();
                     version = version.substring(1, version.length() - 1);
+                    break;
                 }
             }
             if (group != null && module != null && version != null) {
                 if (grapesContainer == null) {
                     grapesContainer = new GrapesContainer(unit);
                     grapesContainerInfo = new GrapesContainerInfo();
-                    children.put(grapesContainerInfo, new ArrayList());
-                    ((List) children.get(unitInfo)).add(grapesContainer);
+                    addToChildren(grapesContainerInfo, grapesContainer);
                     newElements.put(grapesContainer, grapesContainerInfo);
                 }
-                ((List) children.get(grapesContainerInfo)).add(
-                    new GrabDeclaration(grapesContainer, annotation.sourceStart, annotation.sourceEnd, group, module, version));
+                addToChildren(grapesContainerInfo, new GrabDeclaration(grapesContainer, annotation.sourceStart, annotation.sourceEnd, group, module, version));
             }
         }
 
         return result;
     }
 
+    private   void addToChildren(Object parentInfo, JavaElement handle) {
+        @SuppressWarnings("unchecked")
+        List<JavaElement> list = (List<JavaElement>) children.computeIfAbsent(parentInfo, x -> new ArrayList<>());
+        list.add(handle);
+    }
+
     @Override
-    public void exitCompilationUnit(int unitDeclarationEnd) {
+    public    void exitCompilationUnit(int unitDeclarationEnd) {
         super.exitCompilationUnit(unitDeclarationEnd);
         if (grapesContainerInfo != null) {
             @SuppressWarnings("unchecked")
-            List<IJavaElement> grapes = (List<IJavaElement>) children.get(grapesContainerInfo);
-            grapesContainerInfo.children = grapes.toArray(new IJavaElement[grapes.size()]);
+            List<JavaElement> elements = (List<JavaElement>) children.get(grapesContainerInfo);
+            grapesContainerInfo.children = elements.toArray(new IJavaElement[elements.size()]);
         }
     }
 

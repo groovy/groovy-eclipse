@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2008, 2017 IBM Corporation and others.
  *
@@ -580,12 +581,18 @@ protected void notifySourceElementRequestor(
 		this.requestor.acceptPackage(importReference);
 	} else {
 		final boolean onDemand = (importReference.bits & ASTNode.OnDemand) != 0;
+		// GROOVY add
+		char[][] tokens = importReference.tokens; final int length = tokens.length;
+		if (!onDemand && !CharOperation.equals(tokens[length - 1], importReference.getSimpleName())) { tokens = tokens.clone();
+			tokens[length - 1] = CharOperation.concat(tokens[length - 1], ' ', new char[] {'a','s'}, ' ', importReference.getSimpleName());
+		}
+		// GROOVY end
 		this.requestor.acceptImport(
 			importReference.declarationSourceStart,
 			importReference.declarationSourceEnd,
 			importReference.sourceStart,
 			onDemand ? importReference.trailingStarPosition : importReference.sourceEnd,
-			importReference.tokens,
+			tokens,
 			onDemand,
 			importReference.modifiers);
 	}

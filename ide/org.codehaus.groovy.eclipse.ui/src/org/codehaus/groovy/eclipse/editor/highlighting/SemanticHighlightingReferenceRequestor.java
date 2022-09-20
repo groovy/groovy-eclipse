@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+import static org.eclipse.jdt.core.IJavaElement.IMPORT_DECLARATION;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -50,13 +51,11 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.eclipse.jdt.internal.core.ImportDeclaration;
 import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.Position;
@@ -140,7 +139,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 Iterable<ASTNode> words = node.getNodeMetaData("special.keyword");
                 words.forEach(word -> typedPositions.add(new HighlightedTypedPosition(word.getStart(), word.getLength(), HighlightKind.KEYWORD)));
             }
-            if (!(enclosingElement instanceof IImportDeclaration || ClassHelper.isPrimitiveType((ClassNode) node) || ((ClassNode) node).isScriptBody())) {
+            if (!(enclosingElement.getElementType() == IMPORT_DECLARATION || ClassHelper.isPrimitiveType((ClassNode) node) || ((ClassNode) node).isScriptBody())) {
                 pos = handleClassReference((ClassNode) node, result.type);
             }
 
@@ -192,8 +191,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 if (((MethodNode) result.declaration).isSynthetic() && !((MethodNode) result.declaration).getName().equals(node.getText())) {
                     pos = handleFieldOrProperty((Expression) node, result.declaration);
                 } else {
-                    boolean isStaticImport = enclosingElement instanceof ImportDeclaration;
-                    pos = handleMethodReference((Expression) node, result, isStaticImport);
+                    pos = handleMethodReference((Expression) node, result, enclosingElement.getElementType() == IMPORT_DECLARATION);
                 }
             } else if (result.declaration instanceof VariableExpression) {
                 pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), HighlightKind.VARIABLE);
