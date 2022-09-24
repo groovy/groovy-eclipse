@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -231,6 +231,12 @@ final class RenameFieldTests extends RefactoringTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1091
     void test16() {
         def status = runTest('MyBean', 'fooBar', 'foo')
+        assert status.isOK()
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1396
+    void test17() {
+        def status = runTest('Foo', 'bar', 'baz', renameGetters: true, renameSetters: true)
         assert status.isOK()
     }
 }

@@ -106,7 +106,7 @@ public abstract class StaticPropertyAccessHelper {
             super(receiver, new ConstantExpression(setterMethod.getName()) {
                 @Override
                 public String getText() {
-                    // retaian property semantic for method expression
+                    // retain property semantics for method expression
                     return decapitalize(super.getText().substring(3));
                 }
             }, tmp);

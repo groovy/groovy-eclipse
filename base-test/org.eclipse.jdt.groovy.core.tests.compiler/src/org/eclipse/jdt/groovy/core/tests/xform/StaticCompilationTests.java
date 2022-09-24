@@ -923,6 +923,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6097() {
+        for (String mod : new String[] {"", "public", "protected", "@groovy.transform.PackageScope"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "abstract class A {\n" +
+                "  " + mod + " boolean isX() { true }\n" +
+                "}\n" +
+                "class C extends A {\n" +
+                "  @groovy.transform.CompileStatic\n" +
+                "  def m() {\n" +
+                "    '' + x + this.x + super.x\n" + // hardwired to "super.getX()"
+                "  }\n" +
+                "}\n" +
+                "print(new C().m())\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "truetruetrue");
+        }
+    }
+
+    @Test
     public void testCompileStatic6137() {
         //@formatter:off
         String[] sources = {
@@ -6109,6 +6132,32 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9609() {
+        for (String mod : new String[] {"", "public", "protected", "@groovy.transform.PackageScope"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "abstract class A {\n" +
+                "  " + mod + " def getX() { 'A' }\n" +
+                "}\n" +
+                "@groovy.transform.CompileStatic\n" +
+                "class C extends A {\n" +
+                "  def getX() {\n" +
+                "    '' + super.x + 'C' \n" + // no stack overflow
+                "  }\n" +
+                "  def m() {\n" +
+                "    '' + x + this.x + super.x\n" +
+                "  }\n" +
+                "}\n" +
+                "print(new C().m())\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "ACACA");
+        }
+    }
+
+    @Test
     public void testCompileStatic9635() {
         //@formatter:off
         String[] sources = {
@@ -7005,16 +7054,16 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "class C {\n" +
             "  private int f\n" +
             "  int getP() { f }\n" +
-            "  Integer calc() { 123456 - p }\n" +
+            "  Integer calc() { 1 - this.p }\n" +
             "  Integer calc(int i) { i - p }\n" +
             "}\n" +
             "def c = new C()\n" +
             "print c.calc()\n" +
-            "print c.calc(123)\n",
+            "print c.calc(2)\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "123456123");
+        runConformTest(sources, "12");
     }
 
     @Test

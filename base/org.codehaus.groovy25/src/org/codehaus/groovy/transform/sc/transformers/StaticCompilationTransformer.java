@@ -138,7 +138,7 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
             if (dmct != null && dmct.getParameters().length == 0) {
                 PropertyExpression pe = (PropertyExpression) expr;
 
-                MethodCallExpression mce = new MethodCallExpression(transform(pe.getObjectExpression()), dmct.getName(), MethodCallExpression.NO_ARGUMENTS);
+                MethodCallExpression mce = new MethodCallExpression(transform(pe.getObjectExpression()), pe.getPropertyAsString(), MethodCallExpression.NO_ARGUMENTS);
                 mce.setImplicitThis(pe.isImplicitThis());
                 mce.setSpreadSafe(pe.isSpreadSafe());
                 mce.setMethodTarget(dmct);
@@ -155,12 +155,12 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
         // GRECLIPSE end
         if (expr instanceof VariableExpression) {
             // GRECLIPSE edit -- GROOVY-6097, GROOVY-7300, et al.
-            Expression exp2 = variableExpressionTransformer.transformVariableExpression((VariableExpression)expr);
+            Expression exp2 = variableExpressionTransformer.transformVariableExpression((VariableExpression) expr);
             if (exp2 == expr) {
                 MethodNode dmct = expr.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                 // NOTE: BinaryExpressionTransformer handles the setter
                 if (dmct != null && dmct.getParameters().length == 0) {
-                    MethodCallExpression mce = new MethodCallExpression(new VariableExpression("this"), dmct.getName(), MethodCallExpression.NO_ARGUMENTS);
+                    MethodCallExpression mce = new MethodCallExpression(new VariableExpression("this"), expr.getText(), MethodCallExpression.NO_ARGUMENTS);
                     mce.getMethod().setSourcePosition(expr);
                     mce.setMethodTarget(dmct);
                     exp2 = mce;
