@@ -3314,14 +3314,13 @@ class ASTConverter {
 		return getName(importReference, importReference.tokens, importReference.sourcePositions);
 	}
 
-	private Name getName(org.eclipse.jdt.internal.compiler.ast.ASTNode node, final char[][] tokens,
-			final long[] positions) {
+	private Name getName(org.eclipse.jdt.internal.compiler.ast.ASTNode node, char[][] tokens, final long[] positions) {
 		Name name;
 		int length = tokens != null ? tokens.length : 0;
 		// GROOVY add
 		if (node instanceof org.eclipse.jdt.internal.compiler.ast.ImportReference) {
-			org.eclipse.jdt.internal.compiler.ast.ImportReference importReference = (org.eclipse.jdt.internal.compiler.ast.ImportReference) node;
-			if (!CharOperation.equals(tokens[length - 1], importReference.getSimpleName())) {
+			org.eclipse.jdt.internal.compiler.ast.ImportReference importReference= (org.eclipse.jdt.internal.compiler.ast.ImportReference)node;
+			if (!CharOperation.equals(tokens[length - 1], importReference.getSimpleName())) { tokens = tokens.clone();
 				tokens[length - 1] = CharOperation.concat(tokens[length - 1], ' ', new char[] {'a','s'}, ' ', importReference.getSimpleName());
 			}
 		}
