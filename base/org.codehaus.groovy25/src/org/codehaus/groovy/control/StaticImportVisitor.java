@@ -407,13 +407,13 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         Map<String, ImportNode> importNodes = module.getStaticImports();
         Expression expression = null;
         String accessorName = getAccessorName(name);
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         // look for one of these:
         //   import static MyClass.setProp [as setOtherProp]
         //   import static MyClass.getProp [as getOtherProp]
         // when resolving prop reference
-        // GRECLIPSE add
-        try {
-        // GRECLIPSE end
         if (importNodes.containsKey(accessorName)) {
             expression = findStaticProperty(importNodes, accessorName);
             if (expression != null) return expression;
@@ -427,17 +427,16 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         }
         // GRECLIPSE add
         } finally {
-            // store the accessor name to facilitate organizing static imports
-            if (expression != null) expression.putNodeMetaData("static.import.alias", accessorName);
+            // store alias to facilitate organizing static imports
+            if (expression != null && importNodes.get(accessorName).getAliasExpr() != null) {
+                expression.putNodeMetaData("static.import.alias", accessorName);
+            }
         }
+        try {
         // GRECLIPSE end
-
         // look for one of these:
         //   import static MyClass.prop [as otherProp]
         // when resolving prop or field reference
-        // GRECLIPSE add
-        try {
-        // GRECLIPSE end
         if (importNodes.containsKey(name)) {
             ImportNode importNode = importNodes.get(name);
             expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
@@ -445,6 +444,15 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             expression = findStaticField(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
         }
+        // GRECLIPSE add
+        } finally {
+            // store alias to facilitate organizing static imports
+            if (expression != null && (importNodes.get(name).getAliasExpr() != null
+                                    || (expression instanceof MethodCall && !((MethodCall)expression).getMethodAsString().equals(name)))) {
+                expression.putNodeMetaData("static.import.alias", name);
+            }
+        }
+        // GRECLIPSE end
         // look for one of these:
         //   import static MyClass.*
         // when resolving prop or field reference
@@ -455,12 +463,6 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             expression = findStaticField(node, name);
             if (expression != null) return expression;
         }
-        // GRECLIPSE add
-        } finally {
-            // store the identifier to facilitate organizing static imports
-            if (expression != null) expression.putNodeMetaData("static.import.alias", name);
-        }
-        // GRECLIPSE end
         return null;
     }
 

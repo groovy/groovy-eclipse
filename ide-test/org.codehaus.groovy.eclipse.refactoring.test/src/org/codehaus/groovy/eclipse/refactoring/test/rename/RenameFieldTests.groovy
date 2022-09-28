@@ -120,6 +120,18 @@ final class RenameFieldTests extends RefactoringTestSuite {
     }
 
     @Test
+    void testScript1() {
+        def status = runTest('B', 'f', 'g')
+        assert status.isOK()
+    }
+
+    @Test
+    void testScript2() {
+        def status = runTest('B', 'f', 'g')
+        assert status.isOK()
+    }
+
+    @Test
     void test1() {
         def status = runTest('A', 'f', 'g')
         assert status.isOK()
@@ -193,18 +205,6 @@ final class RenameFieldTests extends RefactoringTestSuite {
     }
 
     @Test
-    void testScript1() {
-        def status = runTest('B', 'f', 'g')
-        assert status.isOK()
-    }
-
-    @Test
-    void testScript2() {
-        def status = runTest('B', 'f', 'g')
-        assert status.isOK()
-    }
-
-    @Test
     void test12() {
         def status = runTest('A', 'f', 'g', updateTextualOccurrences: true)
         assert status.isOK()
@@ -237,6 +237,24 @@ final class RenameFieldTests extends RefactoringTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1396
     void test17() {
         def status = runTest('Foo', 'bar', 'baz', renameGetters: true, renameSetters: true)
+        assert status.isOK()
+    }
+
+    @Test
+    void test18() {
+        def status = runTest('A', 'p', 'q')
+        assert status.isOK()
+    }
+
+    @Test
+    void test19() {
+        def status = runTest('A', 'p', 'q')
+        assert status.isOK()
+    }
+
+    @Test
+    void test20() {
+        def status = runTest('A', 'CONST', 'VALUE')
         assert status.isOK()
     }
 }

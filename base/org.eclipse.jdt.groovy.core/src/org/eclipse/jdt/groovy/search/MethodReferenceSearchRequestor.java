@@ -76,7 +76,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         this.requestor = requestor;
         this.participant = participant;
 
-        this.methodName = String.valueOf(pattern.selector);
+        methodName = String.valueOf(pattern.selector);
         parameterTypeSignatures = getParameterTypeSignatures(pattern);
         IType declaringType = ReflectionUtils.getPrivateField(MethodPattern.class, "declaringType", pattern);
 
@@ -210,30 +210,31 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         }
 
         boolean isDeclaration = (node instanceof MethodNode);
-        int start = 0;
-        int end = 0;
+        int start = 0, end = 0;
 
         if (methodName.equals(((MethodNode) result.declaration).getName())) {
             if (isDeclaration || node instanceof StaticMethodCallExpression) {
                 start = ((AnnotatedNode) node).getNameStart();
                 end = ((AnnotatedNode) node).getNameEnd() + 1;
 
-                // check for "foo.bar" where "bar" refers to "getBar()", "isBar()" or "setBar(...)"
-                if (!isDeclaration && skipPseudoProperties && (end - start) < ((StaticMethodCallExpression) node).getMethod().length()) {
+                // check for "foo as bar" or "foo.bar" where "bar" refers to "isBar()", "getBar()" or "setBar(...)"
+                if (!isDeclaration && skipPseudoProperties && (isStaticImportAlias(node) ||
+                        (end - start) < ((StaticMethodCallExpression) node).getMethod().length())) {
                     start = 0;
                     end = 0;
                 } else if (end < 1 && isDeclaration && ((MethodNode) node).isStatic() && "main".equals(methodName)) {
                     end = 1;
                 }
 
-            // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "bar" to generated "getBar()", "isBar()" or "setBar(...)"
-            } else if (methodName.equals(node.getText()) || (!skipPseudoProperties && !((MethodNode) result.declaration).isSynthetic())) {
+            // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "bar" to generated accessors
+            } else if ((methodName.equals(node.getText()) && !isStaticImportAlias(result.scope.getEnclosingNode())) ||
+                                        (!skipPseudoProperties && !((MethodNode) result.declaration).isSynthetic())) {
                 start = node.getStart();
                 end = node.getEnd();
             }
 
         // check for pseudo-property match on behalf of SyntheticAccessorsRenameParticipant
-        } else if ((node instanceof ConstantExpression || node instanceof VariableExpression) && methodName.equals(node.getText())) {
+        } else if (methodName.equals(node.getText()) && (node instanceof ConstantExpression || node instanceof VariableExpression)) {
             if (parameterTypesMatch((MethodNode) result.declaration)) {
                 start = node.getStart();
                 end = node.getEnd();
@@ -428,6 +429,10 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     private static boolean supportsOverride(IMethod method) throws JavaModelException {
         int flags = method.getFlags();
         return !Flags.isPrivate(flags) && !Flags.isStatic(flags);
+    }
+
+    private static boolean isStaticImportAlias(ASTNode node) {
+        return (node != null && node.getNodeMetaData("static.import.alias") != null);
     }
 
     private static boolean equal(char[] arr, CharSequence seq) {

@@ -1,19 +1,40 @@
 package p
 
+import static p.A.f as x
+import static p.A.sm as m
+
 class A {
-    public static def f
-    static def s() {
-        f = A.f
+    public static f
+    static sm(... args) {
+        f = A.f = this.f
+    }
+    void proc() {
+        m(f)
+        m(x)
     }
 }
 
 class B extends A {
-    public def f
+    public f
     void m() {
-        f = A.f
-        f = super.f
+        f = A.f = super.f
     }
-    static def s2() {
+    static m2() {
         f = A.f
+        f = x
+        x = f
+    }
+}
+
+@groovy.transform.CompileStatic
+class C extends A {
+    public f
+    void m() {
+        f = A.f = super.f
+    }
+    static m2() {
+        f = A.f
+        f = x
+        x = f
     }
 }

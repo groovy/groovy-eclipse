@@ -565,15 +565,14 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitPropertyExpression(PropertyExpression expression) {
-            if (expression.getEnd() > 0 && !expression.isStatic()) {
+            if (expression.getEnd() > 0 &&
+                    expression.getObjectExpression().getEnd() < 1 &&
+                    expression.getProperty() instanceof ConstantExpression &&
+                    expression.getObjectExpression() instanceof ClassExpression){
+                String staticImportText = expression.getText().replace('$', '.');
                 Object alias = expression.getNodeMetaData("static.import.alias");
-                if (alias != null) {
-                    String staticImport = expression.getText().replace('$', '.');
-                    if (!alias.equals(expression.getPropertyAsString())) {
-                        staticImport += " as " + alias;
-                    }
-                    doNotRemoveImport(staticImport);
-                }
+                if (alias != null) staticImportText += " as " + alias;
+                doNotRemoveImport(staticImportText);
             }
             super.visitPropertyExpression(expression);
         }

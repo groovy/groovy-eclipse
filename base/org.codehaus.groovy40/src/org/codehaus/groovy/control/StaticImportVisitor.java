@@ -327,7 +327,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         }
 
         MethodCallExpression result = new MethodCallExpression(object, method, args);
-        result.setGenericsTypes(mce.getGenericsTypes());
+        result.setGenericsTypes(mce.getGenericsTypes()); // GROOVY-6757
         result.setMethodTarget(mce.getMethodTarget());
         result.setImplicitThis(mce.isImplicitThis());
         result.setSpreadSafe(mce.isSpreadSafe());
@@ -429,11 +429,15 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         // look for one of these:
         //   import static MyClass.prop [as otherProp]
         // when resolving property or field reference
-        // GRECLIPSE add
-        try {
-        // GRECLIPSE end
         if (staticImports.containsKey(name)) { ImportNode importNode = staticImports.get(name);
             expression = findStaticPropertyOrField(importNode.getType(), importNode.getFieldName());
+            // GRECLIPSE add
+            if (expression != null && (importNode.getAliasExpr() != null
+                                    || (expression instanceof MethodCall && !((MethodCall)expression).getMethodAsString().equals(name)))) {
+                // store alias to facilitate organizing static imports
+                expression.putNodeMetaData("static.import.alias", name);
+            }
+            // GRECLIPSE end
             if (expression != null) return expression;
         }
 
@@ -444,12 +448,6 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             expression = findStaticPropertyOrField(importNode.getType(), name);
             if (expression != null) return expression;
         }
-        // GRECLIPSE add
-        } finally {
-            // store the identifier to facilitate organizing static imports
-            if (expression != null) expression.putNodeMetaData("static.import.alias", name);
-        }
-        // GRECLIPSE end
         return null;
     }
 

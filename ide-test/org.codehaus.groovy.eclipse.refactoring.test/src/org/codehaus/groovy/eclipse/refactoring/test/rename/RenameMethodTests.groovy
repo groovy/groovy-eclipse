@@ -69,13 +69,13 @@ final class RenameMethodTests extends RefactoringTestSuite {
     @Test
     void test1() {
         def status = runTest('A', 'm', 'k')
-        assert status.isOK() : 'rename failed'
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
     void test2() {
         def status = runTest('A', 'm', 'k')
-        assert status.isOK() : 'rename failed'
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
@@ -170,6 +170,12 @@ final class RenameMethodTests extends RefactoringTestSuite {
 
         def status = runTest('o.Other', 'FOO', 'BAR')
         assert status.entries[0].message.startsWith('This name is discouraged.')
+    }
+
+    @Test
+    void testStaticImportAlias() {
+        def status = runTest('A', 'm', 'k', ['[Ljava.lang.Object;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
@@ -205,15 +206,25 @@ public class PropertyAccessRenameParticipant extends RenameParticipant {
     @Override
     public Change createChange(final IProgressMonitor pm) throws CoreException, OperationCanceledException {
         CompositeChange change = new CompositeChange(getName());
-        createMatchedChanges(matches, change, getNameMap());
+        Map<String, String> names = getNameMap();
+        for (SearchMatch searchMatch : matches) {
+            Object el = searchMatch.getElement();
+            if (el instanceof IMember || el instanceof IImportDeclaration) {
+                String oldName = findMatchName(searchMatch, names.keySet());
+                if (oldName != null) {
+                    String newName = names.get(oldName);
+                    addChange(change, (ICompilationUnit) ((IJavaElement) el).getAncestor(IJavaElement.COMPILATION_UNIT), searchMatch.getOffset(), oldName.length(), newName);
+                }
+            }
+        }
         if (change.getChildren().length > 0) {
             return change;
         }
         return null;
     }
 
-    private void addChange(final CompositeChange finalChange, final IMember enclosingElement, final int offset, final int length, final String newName) {
-        CompilationUnitChange existingChange = findOrCreateChange(enclosingElement, finalChange);
+    private void addChange(final CompositeChange finalChange, final ICompilationUnit compilationUnit, final int offset, final int length, final String newName) {
+        CompilationUnitChange existingChange = findOrCreateChange(compilationUnit, finalChange);
         TextEditChangeGroup[] groups = existingChange.getTextEditChangeGroups();
         TextEdit occurrenceEdit = new ReplaceEdit(offset, length, newName);
 
@@ -233,19 +244,6 @@ public class PropertyAccessRenameParticipant extends RenameParticipant {
             new TextEditGroup("Update synthetic Groovy accessor", occurrenceEdit)));
     }
 
-    private void createMatchedChanges(final List<SearchMatch> references, final CompositeChange finalChange, final Map<String, String> nameMap) throws JavaModelException {
-        for (SearchMatch searchMatch : references) {
-            Object elt = searchMatch.getElement();
-            if (elt instanceof IMember) {
-                String oldName = findMatchName(searchMatch, nameMap.keySet());
-                if (oldName != null) {
-                    String newName = nameMap.get(oldName);
-                    addChange(finalChange, (IMember) elt, searchMatch.getOffset(), oldName.length(), newName);
-                }
-            }
-        }
-    }
-
     private String findMatchName(final SearchMatch searchMatch, final Set<String> keySet) throws JavaModelException {
         IJavaElement element = JavaCore.create(searchMatch.getResource());
         if (element.getElementType() == IJavaElement.COMPILATION_UNIT) {
@@ -260,8 +258,8 @@ public class PropertyAccessRenameParticipant extends RenameParticipant {
         return null;
     }
 
-    private CompilationUnitChange findOrCreateChange(final IMember accessor, final CompositeChange finalChange) {
-        TextChange textChange = getTextChange(accessor.getCompilationUnit());
+    private CompilationUnitChange findOrCreateChange(final ICompilationUnit compilationUnit, final CompositeChange finalChange) {
+        TextChange textChange = getTextChange(compilationUnit);
         CompilationUnitChange existingChange = null;
         if (textChange instanceof CompilationUnitChange) {
             // check to see if change exists from some other part of the
@@ -272,7 +270,7 @@ public class PropertyAccessRenameParticipant extends RenameParticipant {
             Change[] children = finalChange.getChildren();
             for (Change change : children) {
                 if (change instanceof CompilationUnitChange) {
-                    if (((CompilationUnitChange) change).getCompilationUnit().equals(accessor.getCompilationUnit())) {
+                    if (((CompilationUnitChange) change).getCompilationUnit().equals(compilationUnit)) {
                         existingChange = (CompilationUnitChange) change;
                         break;
                     }
@@ -282,9 +280,7 @@ public class PropertyAccessRenameParticipant extends RenameParticipant {
 
         if (existingChange == null) {
             // nope...must create a new change
-            existingChange = new CompilationUnitChange(
-                "Synthetic Groovy Accessor changes for " + accessor.getCompilationUnit().getElementName(),
-                accessor.getCompilationUnit());
+            existingChange = new CompilationUnitChange("Synthetic Groovy Accessor changes for " + compilationUnit.getElementName(), compilationUnit);
             existingChange.setEdit(new MultiTextEdit());
             finalChange.add(existingChange);
         }
