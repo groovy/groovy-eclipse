@@ -78,12 +78,12 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
 
     // various helpers in order to avoid a potential very big class
     private final StaticMethodCallExpressionTransformer staticMethodCallExpressionTransformer = new StaticMethodCallExpressionTransformer(this);
-    private final ConstructorCallTransformer constructorCallTransformer = new ConstructorCallTransformer(this);
     private final MethodCallExpressionTransformer methodCallExpressionTransformer = new MethodCallExpressionTransformer(this);
-    private final BinaryExpressionTransformer binaryExpressionTransformer = new BinaryExpressionTransformer(this);
+    private final ConstructorCallTransformer constructorCallTransformer = new ConstructorCallTransformer(this);
+    private final VariableExpressionTransformer variableExpressionTransformer = new VariableExpressionTransformer();
     private final ClosureExpressionTransformer closureExpressionTransformer = new ClosureExpressionTransformer(this);
     private final BooleanExpressionTransformer booleanExpressionTransformer = new BooleanExpressionTransformer(this);
-    private final VariableExpressionTransformer variableExpressionTransformer = new VariableExpressionTransformer();
+    private final BinaryExpressionTransformer binaryExpressionTransformer = new BinaryExpressionTransformer(this);
     private final RangeExpressionTransformer rangeExpressionTransformer = new RangeExpressionTransformer(this);
     private final ListExpressionTransformer listExpressionTransformer = new ListExpressionTransformer(this);
     private final CastExpressionOptimizer castExpressionTransformer = new CastExpressionOptimizer(this);
@@ -112,24 +112,15 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
     }
 
     @Override
-    public Expression transform(Expression expr) {
+    public Expression transform(final Expression expr) {
         if (expr instanceof StaticMethodCallExpression) {
             return staticMethodCallExpressionTransformer.transformStaticMethodCallExpression((StaticMethodCallExpression) expr);
-        }
-        if (expr instanceof BinaryExpression) {
-            return binaryExpressionTransformer.transformBinaryExpression((BinaryExpression)expr);
         }
         if (expr instanceof MethodCallExpression) {
             return methodCallExpressionTransformer.transformMethodCallExpression((MethodCallExpression) expr);
         }
-        if (expr instanceof ClosureExpression) {
-            return closureExpressionTransformer.transformClosureExpression((ClosureExpression) expr);
-        }
         if (expr instanceof ConstructorCallExpression) {
             return constructorCallTransformer.transformConstructorCall((ConstructorCallExpression) expr);
-        }
-        if (expr instanceof BooleanExpression) {
-            return booleanExpressionTransformer.transformBooleanExpression((BooleanExpression)expr);
         }
         // GRECLIPSE add -- GROOVY-6097, GROOVY-7300, et al.
         if (expr instanceof PropertyExpression) {
@@ -154,29 +145,25 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
         }
         // GRECLIPSE end
         if (expr instanceof VariableExpression) {
-            // GRECLIPSE edit -- GROOVY-6097, GROOVY-7300, et al.
-            Expression exp2 = variableExpressionTransformer.transformVariableExpression((VariableExpression) expr);
-            if (exp2 == expr) {
-                MethodNode dmct = expr.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                // NOTE: BinaryExpressionTransformer handles the setter
-                if (dmct != null && dmct.getParameters().length == 0) {
-                    MethodCallExpression mce = new MethodCallExpression(new VariableExpression("this"), expr.getText(), MethodCallExpression.NO_ARGUMENTS);
-                    mce.getMethod().setSourcePosition(expr);
-                    mce.setMethodTarget(dmct);
-                    exp2 = mce;
-                }
-            }
-            return exp2;
-            // GRECLIPSE end
+            return variableExpressionTransformer.transformVariableExpression((VariableExpression) expr);
+        }
+        if (expr instanceof ClosureExpression) {
+            return closureExpressionTransformer.transformClosureExpression((ClosureExpression) expr);
+        }
+        if (expr instanceof BooleanExpression) {
+            return booleanExpressionTransformer.transformBooleanExpression((BooleanExpression) expr);
+        }
+        if (expr instanceof BinaryExpression) {
+            return binaryExpressionTransformer.transformBinaryExpression((BinaryExpression) expr);
         }
         if (expr instanceof RangeExpression) {
-            return rangeExpressionTransformer.transformRangeExpression(((RangeExpression)expr));
+            return rangeExpressionTransformer.transformRangeExpression((RangeExpression) expr);
         }
         if (expr instanceof ListExpression) {
             return listExpressionTransformer.transformListExpression((ListExpression) expr);
         }
         if (expr instanceof CastExpression) {
-            return castExpressionTransformer.transformCastExpression(((CastExpression)expr));
+            return castExpressionTransformer.transformCastExpression((CastExpression) expr);
         }
         return super.transform(expr);
     }
@@ -184,7 +171,7 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
     /**
      * Called by helpers when super.transform() is needed.
      */
-    final Expression superTransform(Expression expr) {
+    final Expression superTransform(final Expression expr) {
         return super.transform(expr);
     }
     

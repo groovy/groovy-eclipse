@@ -5291,6 +5291,9 @@ class ASTConverter {
 		int trimRightPosition = end;
 		boolean first = true;
 		Scanner removeBlankScanner = this.ast.scanner;
+		// GROOVY prevent infinite loop
+		if (start >= 0 && end >= start)
+		// GROOVY end
 		try {
 			removeBlankScanner.setSource(this.compilationUnitSource);
 			removeBlankScanner.resetTo(start, end);

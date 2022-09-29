@@ -697,7 +697,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "Main.groovy",
             "class Main {\n" +
-            "  @Separator(';')\n" +
+            "  @Separator((char)';')\n" +
             "  String tokens\n" +
             "}\n",
         };
@@ -709,9 +709,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             runNegativeTest(sources,
                 "----------\n" +
                 "1. ERROR in Main.groovy (at line 2)\n" +
-                "\t@Separator(';')\n" +
-                "\t           ^^^\n" +
-                "Groovy:Attribute 'value' should have type 'java.lang.Character'; but found type 'java.lang.String' in @Separator\n" +
+                "\t@Separator((char)';')\n" +
+                "\t           ^^^^^^^^^\n" +
+                "Groovy:Expected '(char) ;' to be an inline constant of type char in @Separator\n" +
+                "----------\n" +
+                "2. ERROR in Main.groovy (at line 2)\n" +
+                "\t@Separator((char)';')\n" +
+                "\t           ^^^^^^^^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Character'; but found type 'java.lang.Object' in @Separator\n" +
                 "----------\n");
         }
     }
@@ -2631,7 +2636,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/Main.groovy",
             "package p;\n" +
             "public class Main {\n" +
-            "  void m(@Anno(\"x\") String s) {}\n" +
+            "  void m(@Anno('x') String s) {}\n" +
             "  static main(args) {\n" +
             "    print getMethod('m', String).annotatedParameterTypes[0].annotations[0].value()\n" +
             "  }\n" +
@@ -2652,7 +2657,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             runNegativeTest(sources,
                 "----------\n" +
                 "1. ERROR in p\\Main.groovy (at line 3)\n" +
-                "\tvoid m(@Anno(\"x\") String s) {}\n" +
+                "\tvoid m(@Anno('x') String s) {}\n" +
                 "\t       ^^^^^\n" +
                 "Groovy:Annotation @p.Anno is not allowed on element PARAMETER\n" +
                 "----------\n");

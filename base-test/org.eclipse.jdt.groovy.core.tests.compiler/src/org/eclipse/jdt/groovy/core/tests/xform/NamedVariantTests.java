@@ -62,7 +62,7 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
             "import groovy.transform.*\n" +
             "\n" +
             "@NamedVariant\n" +
-            "String m(@NamedDelegate Color color, @NamedParam(value=\"a\", required=true) int alpha) {\n" +
+            "String m(@NamedDelegate Color color, @NamedParam(value='a', required=true) int alpha) {\n" +
             "  return [color, alpha].join(' ')\n" +
             "}\n" +
             "\n" +
@@ -84,7 +84,7 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
             "import groovy.transform.*\n" +
             "\n" +
             "@NamedVariant\n" +
-            "String m(@NamedDelegate Color color, @NamedParam(value=\"a\", type=Number) alpha) {\n" +
+            "String m(@NamedDelegate Color color, @NamedParam(value='a', type=Number) alpha) {\n" +
             "  return [color, alpha].join(' ')\n" +
             "}\n" +
             "print m(r:1, g:2, b:3, a: 0.0)\n",

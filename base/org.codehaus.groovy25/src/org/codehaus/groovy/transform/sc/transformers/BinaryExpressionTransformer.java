@@ -244,7 +244,7 @@ public class BinaryExpressionTransformer {
                 call.setImplicitThis(false);
             }
             call.setSourcePosition(bin);
-            if (!isAssignment) return call;
+            if (!StaticTypeCheckingSupport.isAssignment(operationType)) return call;
             // case of +=, -=, /=, ...
             // the method represents the operation type only, and we must add an assignment
             return new BinaryExpression(left, Token.newSymbol("=", operation.getStartLine(), operation.getStartColumn()), call);

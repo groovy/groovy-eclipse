@@ -1366,8 +1366,8 @@ public abstract class StaticTypeCheckingSupport {
             if (gt != null) {
                 return gt.getType();
             }
-            ClassNode cn = type.redirect();
-            return cn != type ? cn : OBJECT_TYPE;
+            ClassNode cn = extractType(type.asGenericsType()); // GROOVY-10756
+            return cn != type ? cn : OBJECT_TYPE; // do not return placeholder
         }
 
         GenericsType[] gts = type.getGenericsTypes();
@@ -1828,7 +1828,7 @@ public abstract class StaticTypeCheckingSupport {
                 */
                 } else if (!isUnboundedWildcard(di)) {
                     ClassNode boundType = lowerBound != null ? lowerBound : upperBounds[0];
-                    if (boundType.isGenericsPlaceHolder()) {
+                    if (boundType.isGenericsPlaceHolder() /* GROOVY-10765: */&& boundType != ui.getType()) {
                         ui = new GenericsType(ui.getType()); ui.setPlaceHolder(false); ui.setWildcard(true);
                         connections.put(new GenericsTypeName(boundType.getUnresolvedName()), ui);
                     } else { // di like "? super Iterable<T>" and ui like "Collection<Type>"

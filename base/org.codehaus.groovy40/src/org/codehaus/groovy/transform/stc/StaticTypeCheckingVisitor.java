@@ -997,8 +997,30 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // but we must check if the binary expression is an assignment
         // because we need to check if a setter uses @DelegatesTo
         VariableExpression receiver = varX("%", setterInfo.receiverType);
-        // for "x op= y" expression, find type as if it was "x = x op y"
+        receiver.setType(setterInfo.receiverType); // same as origin type
+
+        Function<Expression, MethodNode> setterCall = (value) -> {
+            typeCheckingContext.pushEnclosingBinaryExpression(null); // GROOVY-10628: LHS re-purposed
+            try {
+                MethodCallExpression call = callX(receiver, setterInfo.name, value);
+                call.setImplicitThis(false);
+                visitMethodCallExpression(call);
+                return call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
+            } finally {
+                typeCheckingContext.popEnclosingBinaryExpression();
+            }
+        };
+
+        Function<MethodNode, ClassNode> setterType = (setter) -> {
+            ClassNode type = setter.getParameters()[0].getOriginType();
+            if (!setter.isStatic() && !(setter instanceof ExtensionMethodNode) && GenericsUtils.hasUnresolvedGenerics(type)) {
+                type = applyGenericsContext(extractPlaceHolders(setterInfo.receiverType, setter.getDeclaringClass()), type);
+            }
+            return type;
+        };
+
         Expression valueExpression = rightExpression;
+        // for "x op= y", find type as if it was "x = x op y"
         if (isCompoundAssignment(expression)) {
             Token op = ((BinaryExpression) expression).getOperation();
             if (op.getType() == ELVIS_EQUAL) { // GROOVY-10419: "x ?= y"
@@ -1008,26 +1030,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 valueExpression = binX(leftExpression, op, rightExpression);
             }
         }
-
-        Function<Expression, MethodNode> setterCall = right -> {
-            typeCheckingContext.pushEnclosingBinaryExpression(null); // GROOVY-10628: LHS re-purposed
-            try {
-                MethodCallExpression call = new MethodCallExpression(receiver, setterInfo.name, right);
-                call.setImplicitThis(false);
-                visitMethodCallExpression(call);
-                return call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
-            } finally {
-                typeCheckingContext.popEnclosingBinaryExpression();
-            }
-        };
-
-        Function<MethodNode, ClassNode> setterType = setter -> {
-            ClassNode type = setter.getParameters()[0].getOriginType();
-            if (!setter.isStatic() && !(setter instanceof ExtensionMethodNode) && GenericsUtils.hasUnresolvedGenerics(type)) {
-                type = applyGenericsContext(extractPlaceHolders(setterInfo.receiverType, setter.getDeclaringClass()), type);
-            }
-            return type;
-        };
 
         MethodNode methodTarget = setterCall.apply(valueExpression);
         if (methodTarget == null && !isCompoundAssignment(expression)) {
@@ -4462,22 +4464,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             VariableExpression var = (VariableExpression) exp;
             Variable accessedVariable = var.getAccessedVariable();
             if (accessedVariable instanceof VariableExpression) {
-                if (accessedVariable != exp)
+                if (accessedVariable != var)
                     storeType((VariableExpression) accessedVariable, cn);
-            } else if (accessedVariable instanceof Parameter
-                    || accessedVariable instanceof PropertyNode
-                    && ((PropertyNode) accessedVariable).getField().isSynthetic()) {
-                ((AnnotatedNode) accessedVariable).putNodeMetaData(INFERRED_TYPE, cn);
+            } else if (accessedVariable instanceof Parameter) {
+                ((Parameter) accessedVariable).putNodeMetaData(INFERRED_TYPE, cn);
             }
             if (cn != null && var.isClosureSharedVariable()) {
-                List<ClassNode> assignedTypes = typeCheckingContext.closureSharedVariablesAssignmentTypes.computeIfAbsent(var, k -> new LinkedList<ClassNode>());
+                List<ClassNode> assignedTypes = typeCheckingContext.closureSharedVariablesAssignmentTypes.computeIfAbsent(var, k -> new LinkedList<>());
                 assignedTypes.add(cn);
             }
             if (!typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) {
-                List<ClassNode> temporaryTypesForExpression = getTemporaryTypesForExpression(exp);
+                List<ClassNode> temporaryTypesForExpression = getTemporaryTypesForExpression(var);
                 if (temporaryTypesForExpression != null && !temporaryTypesForExpression.isEmpty()) {
                     // a type inference has been made on a variable whose type was defined in an instanceof block
-                    // we erase available information with the new type
+                    // erase available information with the new type
                     temporaryTypesForExpression.clear();
                 }
             }

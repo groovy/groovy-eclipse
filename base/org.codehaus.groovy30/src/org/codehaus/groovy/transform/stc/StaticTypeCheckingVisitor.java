@@ -988,20 +988,32 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // we know that the RHS type is a closure
         // but we must check if the binary expression is an assignment
         // because we need to check if a setter uses @DelegatesTo
-        VariableExpression ve = varX("%", setterInfo.receiverType);
-        ve.setType(setterInfo.receiverType); // same as origin type
+        VariableExpression receiver = varX("%", setterInfo.receiverType);
+        receiver.setType(setterInfo.receiverType); // same as origin type
 
-        Function<MethodNode, ClassNode> firstParamType = (method) -> {
-            ClassNode type = method.getParameters()[0].getOriginType();
-            if (!method.isStatic() && !(method instanceof ExtensionMethodNode) && GenericsUtils.hasUnresolvedGenerics(type)) {
-                Map<GenericsTypeName, GenericsType> spec = extractPlaceHolders(setterInfo.receiverType, method.getDeclaringClass());
-                type = applyGenericsContext(spec, type);
+        // GRECLIPSE edit -- GROOVY-7506, GROOVY-8983
+        Function<Expression, MethodNode> setterCall = (value) -> {
+            typeCheckingContext.pushEnclosingBinaryExpression(null); // GROOVY-10628: LHS re-purposed
+            try {
+                MethodCallExpression call = callX(receiver, setterInfo.name, value);
+                call.setImplicitThis(false);
+                visitMethodCallExpression(call);
+                return call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
+            } finally {
+                typeCheckingContext.popEnclosingBinaryExpression();
+            }
+        };
+
+        Function<MethodNode, ClassNode> setterType = (setter) -> {
+            ClassNode type = setter.getParameters()[0].getOriginType();
+            if (!setter.isStatic() && !(setter instanceof ExtensionMethodNode) && GenericsUtils.hasUnresolvedGenerics(type)) {
+                type = applyGenericsContext(extractPlaceHolders(setterInfo.receiverType, setter.getDeclaringClass()), type);
             }
             return type;
         };
 
-        // for compound assignment "x op= y" find type as if it was "x = (x op y)"
         Expression valueExpression = rightExpression;
+        // for "x op= y", find type as if it was "x = x op y"
         if (isCompoundAssignment(expression)) {
             Token op = ((BinaryExpression) expression).getOperation();
             if (op.getType() == ELVIS_EQUAL) { // GROOVY-10419: "x ?= y"
@@ -1011,65 +1023,37 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 valueExpression = binX(leftExpression, op, rightExpression);
             }
         }
-        MethodCallExpression call = new MethodCallExpression(ve, setterInfo.name, valueExpression);
-        typeCheckingContext.pushEnclosingBinaryExpression(null); // GROOVY-10628: LHS re-purposed
-        try {
-            call.setImplicitThis(false);
-            visitMethodCallExpression(call);
-        } finally {
-            typeCheckingContext.popEnclosingBinaryExpression();
-        }
-        MethodNode directSetterCandidate = call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
-        if (directSetterCandidate == null) {
-            // this may happen if there's a setter of type boolean/String/Class, and that we are using the property
-            // notation AND that the RHS is not a boolean/String/Class
+
+        MethodNode methodTarget = setterCall.apply(valueExpression);
+        if (methodTarget == null && !isCompoundAssignment(expression)) {
+            // if no direct match, try implicit conversion
             for (MethodNode setter : setterInfo.setters) {
-                /* GRECLIPSE edit -- GROOVY-7506, GROOVY-10628, et al.
-                ClassNode type = getWrapper(firstParamType.apply(setter));
-                if (Boolean_TYPE.equals(type) || STRING_TYPE.equals(type) || CLASS_Type.equals(type)) {
-                    call = new MethodCallExpression(ve, setterInfo.name, castX(type, valueExpression));
-                    call.setImplicitThis(false);
-                    visitMethodCallExpression(call);
-                    directSetterCandidate = call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
-                    if (directSetterCandidate != null) {
+                ClassNode lType = setterType.apply(setter);
+                ClassNode rType = getDeclaredOrInferredType(valueExpression);
+                if (lType.isArray() && valueExpression instanceof ListExpression) {
+                    rType = inferLoopElementType(rType).makeArray(); // GROOVY-7506
+                }
+                if (checkCompatibleAssignmentTypes(lType, rType, valueExpression, false)) {
+                    methodTarget = setterCall.apply(castX(lType, valueExpression));
+                    if (methodTarget != null) {
                         break;
                     }
                 }
-                */
-                ClassNode lType = firstParamType.apply(setter);
-                ClassNode rType = getDeclaredOrInferredType(valueExpression);
-                if (lType.isArray() && valueExpression instanceof ListExpression) {
-                    rType = inferLoopElementType(rType).makeArray();
-                }
-                if (checkCompatibleAssignmentTypes(lType, rType, valueExpression, false)) {
-                    typeCheckingContext.pushEnclosingBinaryExpression(null);
-                    try {
-                        call = callX(ve, setterInfo.name, castX(lType, valueExpression));
-                        call.setImplicitThis(false);
-                        visitMethodCallExpression(call);
-                        directSetterCandidate = call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
-                        if (directSetterCandidate != null) {
-                            break;
-                        }
-                    } finally {
-                        typeCheckingContext.popEnclosingBinaryExpression();
-                    }
-                }
-                // GRECLIPSE end
             }
         }
-        if (directSetterCandidate != null) {
+
+        if (methodTarget != null) {
             for (MethodNode setter : setterInfo.setters) {
-                if (setter == directSetterCandidate) {
-                    leftExpression.putNodeMetaData(DIRECT_METHOD_CALL_TARGET, directSetterCandidate);
+                if (setter == methodTarget) {
+                    leftExpression.putNodeMetaData(DIRECT_METHOD_CALL_TARGET, methodTarget);
                     leftExpression.removeNodeMetaData(INFERRED_TYPE); // clear assumption
-                    storeType(leftExpression, firstParamType.apply(setter));
+                    storeType(leftExpression, setterType.apply(methodTarget));
                     break;
                 }
             }
             return false;
         } else {
-            ClassNode firstSetterType = firstParamType.apply(setterInfo.setters.get(0));
+            ClassNode firstSetterType = setterType.apply(setterInfo.setters.get(0));
             addAssignmentError(firstSetterType, getType(valueExpression), expression);
             return true;
         }
@@ -4805,22 +4789,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             VariableExpression var = (VariableExpression) exp;
             Variable accessedVariable = var.getAccessedVariable();
             if (accessedVariable instanceof VariableExpression) {
-                if (accessedVariable != exp)
+                if (accessedVariable != var)
                     storeType((VariableExpression) accessedVariable, cn);
-            } else if (accessedVariable instanceof Parameter
-                    || accessedVariable instanceof PropertyNode
-                    && ((PropertyNode) accessedVariable).getField().isSynthetic()) {
-                ((AnnotatedNode) accessedVariable).putNodeMetaData(INFERRED_TYPE, cn);
+            } else if (accessedVariable instanceof Parameter) {
+                ((Parameter) accessedVariable).putNodeMetaData(INFERRED_TYPE, cn);
             }
             if (cn != null && var.isClosureSharedVariable()) {
-                List<ClassNode> assignedTypes = typeCheckingContext.closureSharedVariablesAssignmentTypes.computeIfAbsent(var, k -> new LinkedList<ClassNode>());
+                List<ClassNode> assignedTypes = typeCheckingContext.closureSharedVariablesAssignmentTypes.computeIfAbsent(var, k -> new LinkedList<>());
                 assignedTypes.add(cn);
             }
             if (!typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) {
-                List<ClassNode> temporaryTypesForExpression = getTemporaryTypesForExpression(exp);
+                List<ClassNode> temporaryTypesForExpression = getTemporaryTypesForExpression(var);
                 if (temporaryTypesForExpression != null && !temporaryTypesForExpression.isEmpty()) {
                     // a type inference has been made on a variable whose type was defined in an instanceof block
-                    // we erase available information with the new type
+                    // erase available information with the new type
                     temporaryTypesForExpression.clear();
                 }
             }
@@ -5247,19 +5229,28 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
 
         List<MethodNode> methods = receiver.getMethods(name);
+        /* GRECLIPSE edit -- GROOVY-10700, GROOVY-10767
         if (receiver.isAbstract()) {
             collectAllInterfaceMethodsByName(receiver, name, methods);
         } else { // GROOVY-9890: always search for default methods
             List<MethodNode> interfaceMethods = new ArrayList<>();
             collectAllInterfaceMethodsByName(receiver, name, interfaceMethods);
-            /* GRECLIPSE edit
             interfaceMethods.stream().filter(MethodNode::isDefault).forEach(methods::add);
-            */
-            interfaceMethods.stream().filter(mn -> mn.isDefault() || (mn.isPublic()
-                && !mn.isStatic() && !mn.isAbstract() && Traits.isTrait(mn.getDeclaringClass()))
-            ).forEach(methods::add);
-            // GRECLIPSE end
         }
+        */
+        Set<ClassNode> done = new HashSet<>();
+        if (!(receiver instanceof WideningCategories.LowestUpperBoundClassNode))
+        for (ClassNode next = receiver; next != null; next = next.getSuperClass()) {
+            done.add(next);
+            for (ClassNode face : next.getAllInterfaces()) {
+                if (done.add(face)) {
+                    for (MethodNode mn : face.getDeclaredMethods(name)) {
+                        if (mn.isPublic() && !mn.isStatic()) methods.add(mn);
+                    }
+                }
+            }
+        }
+        // GRECLIPSE end
         if (receiver.isInterface()) {
             methods.addAll(OBJECT_TYPE.getMethods(name));
         }
@@ -5463,7 +5454,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return null;
     }
 
-    @Deprecated
+    /* GRECLIPSE edit
     protected void collectAllInterfaceMethodsByName(final ClassNode type, final String name, final List<MethodNode> methods) {
         Set<ClassNode> done = new LinkedHashSet<>();
         for (ClassNode next = type; next != null; next = next.getSuperClass()) {
@@ -5475,6 +5466,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
+    */
 
     protected ClassNode getType(final ASTNode exp) {
         ClassNode cn = exp.getNodeMetaData(INFERRED_TYPE);

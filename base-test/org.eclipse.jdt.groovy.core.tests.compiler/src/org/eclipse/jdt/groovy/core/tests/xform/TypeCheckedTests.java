@@ -446,7 +446,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "def <T,U extends Configurable<T>> U configure(Class<U> type, @DelegatesTo(type=\"T\",strategy=Closure.DELEGATE_FIRST) Closure<?> spec) {\n" +
+            "def <T,U extends Configurable<T>> U configure(Class<U> type, @DelegatesTo(type='T',strategy=Closure.DELEGATE_FIRST) Closure<?> spec) {\n" +
             "  Configurable<T> obj = (Configurable<T>) type.newInstance()\n" +
             "  obj.configure(spec)\n" +
             "  obj\n" +
@@ -600,7 +600,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "@groovy.transform.TupleConstructor(defaults=false)\n" +
             "class Type<T,U> {\n" +
             "  final T value\n" +
-            "  U map(@DelegatesTo(type=\"T\") Closure<U> producer) {\n" +
+            "  U map(@DelegatesTo(type='T') Closure<U> producer) {\n" +
             "    producer.delegate = value\n" +
             "    producer()\n" +
             "  }\n" +
@@ -2107,8 +2107,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "@groovy.transform.TypeChecked\n" +
             "void test(Set<String> set) {\n" +
             "  def c = new C()\n" +
-            "  c.x = m()" + (isAtLeastGroovy(40) ? "\n" : " as String[]\n") +
-            "  c.x = set" + (isAtLeastGroovy(40) ? "\n" : " as String[]\n") +
+            "  c.x = m()\n" +
+            "  c.x = set\n" +
             "  print(c.list)\n" +
             "}\n" +
             "test(['bar'].toSet())\n",
@@ -3879,7 +3879,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "import groovy.transform.*\n" +
             "int getAnswer() { return 42 }\n" +
             "void m(@NamedParams([\n" +
-            "  @NamedParam(value=\"n\", type=Number)\n" +
+            "  @NamedParam(value='n', type=Number)\n" +
             "]) Map<String,?> map) { print map.n }\n" +
             "@TypeChecked\n" +
             "void test() {\n" +
@@ -5984,6 +5984,58 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10628() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  int getP() { print(4); return 0 }\n" +
+            "  void setP(int p) { print(p) }\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    this.p ?= 1\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def c = new C()\n" +
+            "  c.p ?= 2\n" + // visited as "c.p = c.p ?: 2"; RHS is Ternary not Binary
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testTypeChecked10628a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  int getP() { print(4); return 0 }\n" +
+            "  void setP(int p) { print(p) }\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    this.p += 1\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def c = new C()\n" +
+            "  c.p += 2\n" + // visited as "c.p = c.p + 42"
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testTypeChecked10633() {
         //@formatter:off
         String[] sources = {
@@ -6431,5 +6483,73 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
             runConformTest(sources);
         }
+    }
+
+    @Test
+    public void testTypeChecked10756() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import org.codehaus.groovy.ast.expr.*\n" +
+            "new Expression() {\n" +
+            "  Expression transformExpression(ExpressionTransformer transformer) {\n" +
+            "  }\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void whatever() {\n" +
+            "    def expr = transformExpressions([], null, null)[0]\n" +
+            "    expr.text\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10765() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.BiFunction\n" +
+            "def <X, Y, Z> Map<X, Z> transform(Map<X, Y> map, BiFunction<? super X, ? super Y, Z> transformer) {\n" +
+            "  map.collectEntries { k, v -> [k, transformer.apply(k, v)] }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<String, ? extends Object> input) {\n" +
+            "  Map<String, Integer> hashes = transform(input) { k, v -> v.hashCode() }\n" +
+            "}\n" +
+            "test([:])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10767() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "trait A {\n" +
+            "  void methodA() {\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "@groovy.transform.SelfType(C)\n" +
+            "trait B implements A {\n" +
+            "  void methodB() {\n" +
+            "    methodA()\n" + // Cannot find matching method <UnionType:C+B>#methodA()
+            "  }\n" +
+            "}\n" +
+            "class C {\n" +
+            "  void methodC() {\n" +
+            "  }\n" +
+            "}\n" +
+            "42\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }

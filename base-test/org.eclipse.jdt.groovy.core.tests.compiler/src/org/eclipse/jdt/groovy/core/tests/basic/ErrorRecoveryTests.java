@@ -372,7 +372,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "X.groovy",
-            "@A(foo=\"1\",)\n" +
+            "@A(foo='1',)\n" +
             "class X {\n" +
             "}\n",
 
@@ -387,7 +387,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
-            "\t@A(foo=\"1\",)\n" +
+            "\t@A(foo='1',)\n" +
             "\t^^\n" +
             "Groovy:No explicit/default value found for annotation attribute 'bar' in @A\n" +
             "----------\n");
@@ -404,7 +404,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "X.groovy",
-            "@A(foo=[\"1\",\"2\"],)\n" +
+            "@A(foo=['1','2'],)\n" +
             "class X {\n" +
             "}\n",
 
@@ -419,7 +419,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
-            "\t@A(foo=[\"1\",\"2\"],)\n" +
+            "\t@A(foo=['1','2'],)\n" +
             "\t^^\n" +
             "Groovy:No explicit/default value found for annotation attribute 'bar' in @A\n" +
             "----------\n");
@@ -436,7 +436,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "X.groovy",
-            "@A(foo=\"1\", b)\n" +
+            "@A(foo='1', b)\n" +
             "class X {\n" +
             "}\n",
 
@@ -454,7 +454,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "The attribute b is undefined for the annotation type A\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 1)\n" +
-            "\t@A(foo=\"1\", b)\n" +
+            "\t@A(foo='1', b)\n" +
             "\t^^\n" +
             "Groovy:No explicit/default value found for annotation attribute 'bar' in @A\n" +
             "----------\n");
@@ -471,7 +471,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "X.groovy",
-            "@A(foo=\"1\", bar=)\n" +
+            "@A(foo='1', bar=)\n" +
             "class X {\n" +
             "}\n",
 

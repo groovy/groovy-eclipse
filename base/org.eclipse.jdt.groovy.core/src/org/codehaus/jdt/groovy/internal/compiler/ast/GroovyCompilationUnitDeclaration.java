@@ -1956,12 +1956,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     return new CharLiteral(chars, start, until);
 
                 case "java.lang.String":
-                    if (((String) value).length() == 1) {
-                        if (ClassHelper.char_TYPE.equals(type)) {
-                            return new CharLiteral(new char[] {'\'', ((String) value).charAt(0), '\''}, start, until);
-                        } else if (type == null && chars[0] == '\'' && chars[chars.length - 1] == '\'') {//GROOVY-9206
-                            return new CharLiteral(chars, start, until);
-                        }
+                    if (ClassHelper.char_TYPE.equals(type) && ((String) value).length() == 1) {
+                        return new CharLiteral(new char[] {'\'', ((String) value).charAt(0), '\''}, start, until);
                     }
 
                     if (CharOperation.prefixEquals(TRIPLE_QUOTE1, chars) ||
