@@ -226,6 +226,11 @@ final class RenameTypeTests extends RefactoringTestSuite {
 
     @Test
     void testAlias1() {
+        helper('A', 'B')
+    }
+
+    @Test
+    void testAlias2() {
         IPackageFragment p2 = root.createPackageFragment('p2', true, null)
         String folder = 'p2/'
         String type = 'A'
