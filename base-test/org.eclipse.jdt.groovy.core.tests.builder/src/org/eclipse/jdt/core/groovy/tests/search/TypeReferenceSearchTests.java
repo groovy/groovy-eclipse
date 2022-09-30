@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesClosure1() throws Exception {
-        doTestForTwoInScript("{ First first, First second -> print first; print second;}");
+        doTestForTwoInScript("{ First first, First second -> ;}");
     }
 
     @Test
@@ -108,7 +108,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesClass5() throws Exception {
-        doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, "class Second extends First { def x(y = new First()) {}\n}", false, 0);
+        doTestForTwoInClass("class Second extends First { def x(y = new First()) {}\n}");
     }
 
     @Test
@@ -118,7 +118,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesClass7() throws Exception {
-        createUnit("other", "First", "class First {}");
+        createUnit("other", "First", FIRST_CONTENTS_INTERFACE);
         doTestForTwoInClass("class Second extends First {\n" + // yes
             "  def x() {\n" +
             "    y = new other.First()\n" + // no
@@ -203,6 +203,34 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         String secondContents = "print 'me'";
         List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
         assertEquals("Should find no matches", 0, matches.size());
+    }
+
+    @Test
+    public void testImport1() {
+        String secondContents = "import First\n new First()";
+
+        List<SearchMatch> matches = getAllMatches(FIRST_CONTENTS_CLASS, secondContents, "", "");
+        assertEquals(2, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
+
+        match = matches.get(1);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.lastIndexOf("First"), match.getOffset());
+    }
+
+    @Test
+    public void testImport2() {
+        String secondContents = "import First as Alpha\n new Alpha()";
+
+        List<SearchMatch> matches = getAllMatches(FIRST_CONTENTS_CLASS, secondContents, "", "");
+        assertEquals(1, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/468

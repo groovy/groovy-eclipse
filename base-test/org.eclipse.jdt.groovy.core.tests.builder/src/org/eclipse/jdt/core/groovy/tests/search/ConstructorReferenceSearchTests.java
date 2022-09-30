@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.internal.compiler.impl.CompilerOptions.OPTIONG_GroovyCompilerConfigScript;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -428,6 +429,76 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         assertEquals(2, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
     }
 
+    @Test
+    public void testAliasConstructorReferences1() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo( ) {}\n" + // search for this
+            "  Foo(a) {}\n" +
+            "}");
+        createUnit("", "Other", "import p.Foo as Bar\n" +
+            "new Bar()\n" + // yes
+            "new Bar(a)\n" + // no
+            "new p.Foo()\n" + // yes
+            "new p.Foo(a)\n"); // no
+
+        IMethod constructor = foo.getType("Foo").getMethods()[0];
+        List<SearchMatch> matches = searchForReferences(constructor);
+        assertEquals("Incorrect number of matches;", 2, matches.size());
+
+        int fooCount = 0, otherCount = 0;
+        for (SearchMatch match : matches) {
+            if (match.getElement() instanceof IMethod) {
+                if (((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy")) {
+                    fooCount += 1;
+                } else if (((IMethod) match.getElement()).getResource().getName().equals("Other.groovy")) {
+                    otherCount += 1;
+                }
+            }
+        }
+        assertEquals("Should have found 2 matches in Foo.groovy", 0, fooCount);
+        assertEquals("Should have found 4 matches in Other.groovy", 2, otherCount);
+    }
+
+    @Test
+    public void testAliasConstructorReferences2() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo( ) {}\n" + // search for this
+            "  Foo(a) {}\n" +
+            "}");
+        createUnit("", "Other", "import p.Foo as Bar\n" +
+            "new Bar()\n" + // yes
+            "new Bar(a)\n"); // no
+
+        IMethod constructor = foo.getType("Foo").getMethods()[0];
+        List<SearchMatch> matches = searchForReferences(constructor);
+        assertEquals("Incorrect number of matches;", 0, matches.size());
+    }
+
+    @Test
+    public void testAliasConstructorReferences3() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo( ) {}\n" + // search for this
+            "  Foo(a) {}\n" +
+            "}");
+        createUnit("", "Other", // import p.Foo as Bar
+            "new Bar()\n" + // yes
+            "new Bar(a)\n"); // no
+
+        createConfigScript(
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    alias 'Bar', 'p.Foo'\n" +
+            "  }\n" +
+            "}");
+
+        IMethod constructor = foo.getType("Foo").getMethods()[0];
+        List<SearchMatch> matches = searchForReferences(constructor);
+        assertEquals("Incorrect number of matches;", 0, matches.size());
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/796
     public void testNewifyConstructorReferences1() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
@@ -513,6 +584,11 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     //--------------------------------------------------------------------------
+
+    private void createConfigScript(final String script) {
+        env.addFile(project.getFullPath(), "config.groovy", script);
+        env.getJavaProject(project.getFullPath()).setOption(OPTIONG_GroovyCompilerConfigScript, "config.groovy");
+    }
 
     private List<SearchMatch> searchForReferences(final IMethod method) throws CoreException {
         return search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
