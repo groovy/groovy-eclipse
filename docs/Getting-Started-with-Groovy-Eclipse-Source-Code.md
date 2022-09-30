@@ -167,7 +167,7 @@ This minimal project set should be open in your workspace:
 * org.eclipse.jdt.groovy.core.tests.builder
 * org.eclipse.jdt.groovy.core.tests.compiler
 
-Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.tests.builder`, `org.eclipse.jdt.core.tests.compiler`) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e425` folder is for Eclipse 4.25 (2022-09).
+Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.tests.builder`, `org.eclipse.jdt.core.tests.compiler`) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e426` folder is for Eclipse 4.26 (2022-12).
 
 
 ## Test with Eclipse
@@ -185,14 +185,15 @@ For manual testing and debugging, right-click on the org.codehaus.groovy.eclipse
 
 [Download and install Maven](https://maven.apache.org/).
 
-From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.25 (2022-09).
+From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.26 (2022-12).
 
 	```
-	mvn -Pe4.25 clean install
+	mvn -Pe4.26 clean install
 	```
 
-Replace e4.25 with a different option to build it for another Eclipse version:
+Replace e4.26 with a different option to build it for another Eclipse version:
 
+* e4.25
 * e4.24
 * e4.23
 * e4.22
