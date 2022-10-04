@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,15 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
-import java.util.List;
-
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.builder.AstBuilder;
-import org.codehaus.groovy.control.CompilePhase;
+import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 
@@ -42,24 +39,35 @@ public class ParameterContribution {
     }
 
     public ParameterContribution(Parameter value) {
+        this(value.getName(), DSLContributionGroup.getTypeName(value.getType()));
         this.value = value;
-        this.name = value.getName();
-        this.type = DSLContributionGroup.getTypeName(value.getType());
     }
 
     public Parameter toParameter(ResolverCache resolver) {
         if (value == null) {
-            if (type.indexOf('@') >= 0) {
-                try {
-                    List<ASTNode> nodes = new AstBuilder().buildFromString(CompilePhase.CANONICALIZATION, false,
+            String typeName = type;
+            if (type.indexOf('@') != -1) {
+                try { // process annotation(s) using groovy compiler
+                    CompilerConfiguration conf = new CompilerConfiguration(resolver.module.getContext().getConfiguration());
+                    conf.setPreviewFeatures(false);
+                    conf.setScriptBaseClass(null);
+                    conf.setTargetBytecode(CompilerConfiguration.DEFAULT.getTargetBytecode());
+
+                    CompilationUnit unit = new CompilationUnit(conf, null, resolver.module.getContext().getClassLoader());
+                    unit.addSource("Script" + java.util.UUID.randomUUID().toString().replace('-', '$'),
                         "import groovy.transform.stc.*\n" + "void meth(" + type + " " + name + ") {}");
-                    MethodNode meth = ((ClassNode) nodes.get(1)).getMethods("meth").get(0);
+                    unit.compile(Phases.CANONICALIZATION);
+
+                    MethodNode meth = unit.getFirstClassNode().getMethods("meth").get(0);
                     return meth.getParameters()[0];
-                } catch (Exception e) {
+                } catch (Exception | LinkageError e) {
                     GroovyDSLCoreActivator.logException(e);
                 }
+
+                String i = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
+                typeName = type.replaceAll("@(?:"+i+"\\.)*"+i+"(?:\\([^\\)]*\\))?\\s*", "");
             }
-            value = new Parameter(resolver != null ? resolver.resolve(type) : ClassHelper.DYNAMIC_TYPE, name);
+            value = new Parameter(resolver != null ? resolver.resolve(typeName) : ClassHelper.dynamicType(), name);
         }
         return value;
     }

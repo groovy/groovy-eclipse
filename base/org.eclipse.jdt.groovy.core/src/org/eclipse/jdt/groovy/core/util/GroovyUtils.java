@@ -74,7 +74,7 @@ public class GroovyUtils {
         String version = GroovySystem.getVersion();
         // convert "2.5.0-beta-2" -> "2.5.0.beta-2"
         version = version.replaceFirst("-", ".");
-        return new Version(version);
+        return Version.valueOf(version);
     }
 
     // FIXASC don't use this any more?

@@ -707,7 +707,7 @@ public class OrganizeGroovyImports {
                     name = name.replaceAll(Pattern.quote(name.substring(i)) + "(?= |$)", "");
                 }
                 doNotRemoveImport(name.replace('$', '.'));
-            } else if (current.getModule().getClasses().contains(node)) {
+            } else if (length < 1 || current.getModule().getClasses().contains(node)) {
                 // keep in importsSlatedForRemoval and leave out of missingTypes
             } else if (!node.isResolved()) {
                 String[] parts = name.split("\\.");
@@ -722,7 +722,7 @@ public class OrganizeGroovyImports {
                     SourceRange range = new SourceRange(node.getStart(), node.getEnd() - node.getStart());
                     missingTypes.put(name, new UnresolvedTypeData(name, isAnnotation, range));
                 }
-            } else if (length > 0 && length < name.length()) {
+            } else if (length < name.length()) {
                 char[] chars = current.getModule().getContext().readSourceRange(start, length);
                 if (chars != null) {
                     int i = 0;

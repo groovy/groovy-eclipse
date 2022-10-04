@@ -103,6 +103,7 @@ import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.osgi.framework.Version;
 
 /**
  * Groovy implementation of LanguageSupport. This class is dynamically loaded by
@@ -243,6 +244,17 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
         if (compilerOptions.defaultEncoding != null && !compilerOptions.defaultEncoding.isEmpty()) {
             config.setSourceEncoding(compilerOptions.defaultEncoding);
+        }
+
+        if (compilerOptions.buildGroovyFiles > 2) {
+            // create type-checking script configuration
+            ImportCustomizer ic = new ImportCustomizer();
+            ic.addStarImports("org.codehaus.groovy.ast.expr");
+            if (GroovyUtils.getGroovyVersion().compareTo(new Version(4, 0, 6)) >= 0) ic.addStarImports("org.codehaus.groovy.ast");
+            ic.addStaticStars("org.codehaus.groovy.ast.ClassHelper","org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport");
+            config.addCompilationCustomizers(ic).setScriptBaseClass("org.codehaus.groovy.transform.stc.GroovyTypeCheckingExtensionSupport.TypeCheckingDSL");
+
+            return config;
         }
 
         if (compilerOptions.buildGroovyFiles > 1 && compilerOptions.groovyCompilerConfigScript != null) {

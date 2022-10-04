@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,22 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Adapters;
@@ -188,6 +197,10 @@ public class GroovyExtraInformationHover extends JavadocHover {
         return "<b>" + label + "</b><br>\n";
     }
 
+    private String createTypeLabel(final ClassNode node) { // TODO: create link html
+        return Signature.toString(GroovyUtils.getTypeSignature(node, false, false));
+    }
+
     private String createFieldLabel(final FieldNode node) {
         StringBuilder sb = new StringBuilder();
         sb.append(createTypeLabel(node.getType()));
@@ -210,9 +223,31 @@ public class GroovyExtraInformationHover extends JavadocHover {
         Parameter[] params = node.getParameters();
         if (params != null) {
             for (int i = 0, n = params.length; i < n; i += 1) {
-                if (i > 0) {
-                    sb.append(", ");
+                if (i > 0) sb.append(", ");
+
+                List<AnnotationNode> annotations = params[i].getAnnotations();
+                if (!annotations.isEmpty()) {
+                    sb.append("<span style='font-weight:normal;'>");
+                    for (AnnotationNode annotation : annotations) {
+                        sb.append('@').append(createTypeLabel(annotation.getClassNode()));
+
+                        Map<String, Expression> attributes = annotation.getMembers();
+                        if (!attributes.isEmpty()) {
+                            sb.append('(');
+                            int j = 0;
+                            for (Map.Entry<String, Expression> e : attributes.entrySet()) {
+                                if (j++ > 0) sb.append(", ");
+                                sb.append(e.getKey());
+                                sb.append('=');
+                                sb.append(createValueLabel(e.getValue()));
+                            }
+                            sb.append(')');
+                        }
+                        sb.append(' ');
+                    }
+                    sb.append("</span>");
                 }
+
                 sb.append(createTypeLabel(params[i].getType()));
                 sb.append(' ').append(params[i].getName());
             }
@@ -222,7 +257,25 @@ public class GroovyExtraInformationHover extends JavadocHover {
         return sb.toString();
     }
 
-    private String createTypeLabel(final ClassNode node) {
-        return Signature.toString(GroovyUtils.getTypeSignature(node, false, false));
+    private String createValueLabel(final Expression value) {
+        if (value instanceof ListExpression) {
+            StringJoiner sj = new StringJoiner(", ", "[", "]");
+            for (Expression e : ((ListExpression) value).getExpressions()) {
+                sj.add(createValueLabel(e));
+            }
+            return sj.toString();
+        }
+        if (value instanceof ClassExpression) {
+            return createTypeLabel(value.getType()) + ".class";
+        }
+        if (value instanceof ConstantExpression) {
+            if (value.getType().equals(ClassHelper.STRING_TYPE)) {
+                return "\"" + value.getText() + "\"";
+            }
+            if (value.getType().equals(ClassHelper.char_TYPE)) {
+                return "'" + value.getText() + "'";
+            }
+        }
+        return value.getText();
     }
 }

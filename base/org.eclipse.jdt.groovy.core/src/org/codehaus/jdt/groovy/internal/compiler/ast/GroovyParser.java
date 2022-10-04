@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,6 +126,8 @@ public class GroovyParser {
 
     private static final Pattern GROOVY_SOURCE_DISCRIMINATOR = Pattern.compile("\\A(/\\*.*?\\*/\\s*)?package\\s+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*(?:\\s*\\.\\s*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)*\\s++(?!;)", Pattern.DOTALL);
 
+    private static final Pattern STC_EXTENSION_DISCRIMINATOR = Pattern.compile("^(?:unresolvedVariable|unresolvedProperty|unresolvedAttribute|methodNotFound|ambiguousMethods|onMethodSelection|incompatibleAssignment|incompatibleReturnType|(?:before|after)(?:MethodCall|VisitMethod|VisitClass))\\b", Pattern.MULTILINE);
+
     //--------------------------------------------------------------------------
 
     public GroovyParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
@@ -209,7 +211,9 @@ public class GroovyParser {
 
         if (compilationUnit == null) {
             if (isInJar || isScript || (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
-                    !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile))) {
+                                    !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile))){
+                if (isScript && STC_EXTENSION_DISCRIMINATOR.matcher(new CharArraySequence(contents)).find())
+                    compilerOptions.buildGroovyFiles |= 4; // need type-checking script config
                 compilerOptions.groovyCompilerConfigScript = null;
             }
             compilationUnit = unitFactory.get();

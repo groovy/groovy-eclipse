@@ -62,16 +62,15 @@ public final class STCScriptsTests extends BuilderTestSuite {
         IPath projPath = createGenericProject();
         //@formatter:off
         env.addGroovyClass(projPath.append("src"), "RobotMove",
-            "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
-            "unresolvedVariable { VariableExpression var ->\n" +
-            "  if ('robot' == var.name) {\n" +
-            "    def robotClass = context.source.AST.classes.find { it.name == 'Robot' }\n" +
-            "    storeType(var, robotClass)\n" +
+            "unresolvedVariable { VariableExpression vexp ->\n" +
+            "  if ('robot' == vexp.name) {\n" +
+            "    def robotClass = lookupClassNodeFor('Robot')\n" +
+            "    storeType(vexp, robotClass)\n" +
             "    handled = true\n" +
             "  }\n" +
             "}\n");
         env.addGroovyClass(projPath.append("src"), "Robot",
-            "@groovy.transform.TypeChecked(extensions = 'RobotMove.groovy')\n" +
+            "@groovy.transform.TypeChecked(extensions='RobotMove.groovy')\n" +
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
             "}\n");
@@ -92,21 +91,19 @@ public final class STCScriptsTests extends BuilderTestSuite {
         IPath projPath = createGenericProject();
         //@formatter:off
         env.addGroovyClass(projPath.append("src"), "RobotMove",
-            "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
-            "unresolvedVariable { VariableExpression var ->\n" +
-            "  if ('robot' == var.name) {\n" +
-            "    def robotClass = context.source.AST.classes.find { it.name == 'Robot' }\n" +
-            "    storeType(var, robotClass)\n" +
+            "unresolvedVariable { VariableExpression vexp ->\n" +
+            "  if ('robot' == vexp.name) {\n" +
+            "    def robotClass = lookupClassNodeFor('Robot')\n" +
+            "    storeType(vexp, robotClass)\n" +
             "    handled = true\n" +
             "  }\n" +
             "}\n");
         env.addGroovyClass(projPath.append("src"), "RobotScript",
-            "import groovy.transform.TypeChecked\n" +
             "class Robot {\n" +
             "  void move(String dist) { println \"Moved $dist\" }\n" +
             "}\n" +
             "robot = new Robot()\n" +
-            "@TypeChecked(extensions = 'RobotMove.groovy')\n" +
+            "@groovy.transform.TypeChecked(extensions='RobotMove.groovy')\n" +
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
             "}\n");
@@ -127,7 +124,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
         env.addGroovyClass(projPath.append("src"), "TypeChecker",
             "onMethodSelection { expr, node ->\n" +
             "  if (node.name == 'setS') {\n" +
-            "    def closure = context.enclosingClosure.closureExpression\n" +
+            "    def closure = enclosingClosure.closureExpression\n" +
             "    def setting = closure.code.statements[0].expression\n" +
             "    setting.putNodeMetaData('notified', true)\n" +
             "  }\n" +
