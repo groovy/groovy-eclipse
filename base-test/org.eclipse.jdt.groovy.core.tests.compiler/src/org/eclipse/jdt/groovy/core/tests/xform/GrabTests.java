@@ -35,7 +35,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "Test.groovy",
-            "@Grab('joda-time:joda-time:2.10.13;transitive=false')\n" +
+            "@Grab('joda-time:joda-time:2.11.2;transitive=false')\n" +
             "import org.joda.time.DateTime\n" +
             "void printDate() {\n" +
             "  def now = new DateTime()\n" +
@@ -67,7 +67,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
             "Test.groovy",
             "@Grapes([\n" +
-            "  @Grab('joda-time:joda-time:2.10.13;transitive=false'),\n" +
+            "  @Grab('joda-time:joda-time:2.11.2;transitive=false'),\n" +
             "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.x')\n" +
             "])\n" +
             "class Test {\n" +
@@ -107,7 +107,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
             "Test.groovy",
             "@GrabConfig(systemClassLoader=true)\n" +
-            "@Grab(group='mysql', module='mysql-connector-java', version='5.1.15', transitive=false)\n" +
+            "@Grab(group='mysql', module='mysql-connector-java', version='5.1.49', transitive=false)\n" +
             "class Test {\n" +
             "}\n",
         };

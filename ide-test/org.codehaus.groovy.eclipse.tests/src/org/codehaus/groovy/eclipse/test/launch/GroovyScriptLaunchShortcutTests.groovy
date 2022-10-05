@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -277,7 +277,7 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
     void testScriptLaunch13() {
         def unit = addGroovySource('''\
             |@GrabConfig(systemClassLoader=true)
-            |@Grab('mysql:mysql-connector-java:5.1.6')
+            |@Grab('mysql:mysql-connector-java:5.1.49')
             |def xxx
             |
             |println "Why won't this run?"
