@@ -136,7 +136,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -1493,23 +1492,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void checkGroovyConstructorMap(final Expression receiver, final ClassNode receiverType, final MapExpression mapExpression) {
-        // workaround for map-style checks putting setter info on wrong AST nodes
+        // workaround for map-style checks putting setter info on wrong AST node
         typeCheckingContext.pushEnclosingBinaryExpression(null);
         for (MapEntryExpression entryExpression : mapExpression.getMapEntryExpressions()) {
             Expression keyExpression = entryExpression.getKeyExpression();
             if (!(keyExpression instanceof ConstantExpression)) {
                 addStaticTypeError("Dynamic keys in map-style constructors are unsupported in static type checking", keyExpression);
             } else {
-                String pName = keyExpression.getText();
-                AtomicReference<ClassNode> pType = new AtomicReference<>();
-                if (!existsProperty(new PropertyExpression(varX("_", receiverType), pName), false, new PropertyLookupVisitor(pType))) {
-                    addStaticTypeError("No such property: " + pName + " for class: " + receiverType.getText(), receiver);
+                String propName = keyExpression.getText();
+                PropertyLookup requestor = new PropertyLookup(receiverType);
+                if (!existsProperty(new PropertyExpression(varX("_", receiverType), propName), false, requestor)) {
+                    addStaticTypeError("No such property: " + propName + " for class: " + prettyPrintTypeName(receiverType), receiver);
                 } else {
-                    MethodNode setter = receiverType.getSetterMethod("set" + MetaClassHelper.capitalize(pName), false);
-                    ClassNode targetType = setter != null ? setter.getParameters()[0].getType() : pType.get();
                     Expression valueExpression = entryExpression.getValueExpression();
-                    ClassNode valueType = getType(valueExpression);
+                    ClassNode  valueType = getType(valueExpression);
 
+                    ClassNode targetType = requestor.propertyType;
                     ClassNode resultType = getResultType(targetType, ASSIGN, valueType,
                                 assignX(keyExpression, valueExpression, entryExpression));
                     if (!checkCompatibleAssignmentTypes(targetType, resultType, valueExpression)
@@ -1745,8 +1743,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 List<MethodNode> setters = findSetters(current, setterName, false);
                 setters = allowStaticAccessToMember(setters, staticOnly);
 
-                // need to visit even if we only look for a setters for compatibility
-                if (visitor != null && getter != null) visitor.visitMethod(getter);
+                if (readMode && getter != null && visitor != null) visitor.visitMethod(getter);
 
                 PropertyNode propertyNode = current.getProperty(propertyName);
                 propertyNode = allowStaticAccessToMember(propertyNode, staticOnly);
@@ -1771,15 +1768,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else if (!readMode && checkGetterOrSetter) {
                     if (!setters.isEmpty()) {
                         if (visitor != null) {
-                            if (field != null) {
-                                visitor.visitField(field);
-                            } else {
-                                for (MethodNode setter : setters) {
-                                    // visiting setter will not infer the property type since return type is void, so visit a dummy field instead
-                                    FieldNode virtual = new FieldNode(propertyName, 0, setter.getParameters()[0].getOriginType(), current, null);
-                                    virtual.setDeclaringClass(setter.getDeclaringClass());
-                                    visitor.visitField(virtual);
-                                }
+                            for (MethodNode setter : setters) {
+                                // visiting setter will not infer the property type since return type is void, so visit a dummy field instead
+                                FieldNode virtual = new FieldNode(propertyName, 0, setter.getParameters()[0].getOriginType(), current, null);
+                                virtual.setDeclaringClass(setter.getDeclaringClass());
+                                visitor.visitField(virtual);
                             }
                         }
                         SetterInfo info = new SetterInfo(current, setterName, setters);
@@ -1923,12 +1916,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 GenericsType[] gts = iteratorType.getGenericsTypes();
                 ClassNode itemType = (gts != null && gts.length == 1 ? getCombinedBoundType(gts[0]) : OBJECT_TYPE);
 
-                PropertyExpression subExp = new PropertyExpression(varX("{}", itemType), pexp.getPropertyAsString());
-                AtomicReference<ClassNode> result = new AtomicReference<>();
-                if (existsProperty(subExp, true, new PropertyLookupVisitor(result))) {
-                    ClassNode listType = LIST_TYPE.getPlainNodeReference();
-                    listType.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(result.get()))});
-                    return listType;
+                PropertyLookup requestor = new PropertyLookup(itemType);
+                if (existsProperty(new PropertyExpression(varX("{}", itemType), pexp.getPropertyAsString()), true, requestor)) {
+                    return GenericsUtils.makeClassSafe0(LIST_TYPE, new GenericsType(wrapTypeIfNecessary(requestor.propertyType)));
                 }
             }
         }
@@ -1936,24 +1926,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private ClassNode getTypeForListPropertyExpression(ClassNode testClass, ClassNode objectExpressionType, PropertyExpression pexp) {
-        if (!implementsInterfaceOrIsSubclassOf(testClass, LIST_TYPE)) return null;
-        /* GRECLIPSE edit -- GROOVY-9821
-        ClassNode intf = GenericsUtils.parameterizeType(objectExpressionType, LIST_TYPE.getPlainNodeReference());
-        GenericsType[] types = intf.getGenericsTypes();
-        if (types == null || types.length != 1) return OBJECT_TYPE;
-
-        PropertyExpression subExp = new PropertyExpression(varX("{}", types[0].getType()), pexp.getPropertyAsString());
-        */
-        GenericsType[] types = (testClass.equals(LIST_TYPE) ? testClass : GenericsUtils.parameterizeType(testClass, LIST_TYPE)).getGenericsTypes();
-        ClassNode itemType = (types != null && types.length == 1 ? getCombinedBoundType(types[0]) : OBJECT_TYPE);
-
-        PropertyExpression subExp = new PropertyExpression(varX("{}", itemType), pexp.getPropertyAsString());
-        // GRECLIPSE end
-        AtomicReference<ClassNode> result = new AtomicReference<ClassNode>();
-        if (existsProperty(subExp, true, new PropertyLookupVisitor(result))) {
-            ClassNode intf = LIST_TYPE.getPlainNodeReference();
-            intf.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(result.get()))});
-            return intf;
+        if (implementsInterfaceOrIsSubclassOf(testClass, LIST_TYPE)) {
+            /* GRECLIPSE edit -- GROOVY-9821
+            ClassNode listType = GenericsUtils.parameterizeType(objectExpressionType, LIST_TYPE.getPlainNodeReference());
+            GenericsType[] gts = listType.getGenericsTypes();
+            ClassNode itemType = (gts != null && gts.length == 1 ? gts[0].getType() : OBJECT_TYPE);
+            */
+            GenericsType[] gts = (testClass.equals(LIST_TYPE) ? testClass : GenericsUtils.parameterizeType(testClass, LIST_TYPE)).getGenericsTypes();
+            ClassNode itemType = (gts != null && gts.length == 1 ? getCombinedBoundType(gts[0]) : OBJECT_TYPE);
+            // GRECLIPSE end
+            PropertyLookup requestor = new PropertyLookup(itemType);
+            if (existsProperty(new PropertyExpression(varX("{}", itemType), pexp.getPropertyAsString()), true, requestor)) {
+                return GenericsUtils.makeClassSafe0(LIST_TYPE, new GenericsType(wrapTypeIfNecessary(requestor.propertyType)));
+            }
         }
         return null;
     }
@@ -6792,12 +6777,48 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    private class PropertyLookup extends ClassCodeVisitorSupport {
+        ClassNode propertyType, receiverType;
+
+        PropertyLookup(final ClassNode type) {
+            receiverType = type;
+        }
+
+        @Override
+        protected SourceUnit getSourceUnit() {
+            return StaticTypeCheckingVisitor.this.getSourceUnit();
+        }
+
+        @Override
+        public void visitField(final FieldNode node) {
+            storePropertyType(node.getType(), node.isStatic() ? null : node.getDeclaringClass());
+        }
+
+        @Override
+        public void visitMethod(final MethodNode node) {
+            storePropertyType(node.getReturnType(), node.isStatic() ? null : node.getDeclaringClass());
+        }
+
+        @Override
+        public void visitProperty(final PropertyNode node) {
+            storePropertyType(node.getOriginType(), node.isStatic() ? null : node.getDeclaringClass());
+        }
+
+        private void storePropertyType(ClassNode type, final ClassNode declaringClass) {
+            if (declaringClass != null && GenericsUtils.hasUnresolvedGenerics(type)) { // GROOVY-10787
+                Map<GenericsTypeName, GenericsType> spec = extractPlaceHolders(null, receiverType, declaringClass);
+                type = applyGenericsContext(spec, type);
+            }
+            // TODO: if (propertyType != null) merge types
+            propertyType = type;
+        }
+    }
+
     /**
      * Wrapper for a Parameter so it can be treated like a VariableExpression
      * and tracked in the {@code ifElseForWhileAssignmentTracker}.
      */
     private class ParameterVariableExpression extends VariableExpression {
-
         private final Parameter parameter;
 
         ParameterVariableExpression(final Parameter parameter) {

@@ -1335,6 +1335,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7164() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  private long timestamp\n" +
+            "  Date getTimestamp() {\n" +
+            "    timestamp ? new Date(timestamp) : null\n" +
+            "  }\n" +
+            "  void setTimestamp(Date timestamp) {\n" +
+            "      this.timestamp = timestamp.time\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new C(timestamp: new Date())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked7247() {
         //@formatter:off
         String[] sources = {
@@ -6547,6 +6572,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "42\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10787() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A<X extends Serializable> {\n" +
+            "  X x\n" +
+            "}\n" +
+            "class C<Y extends Serializable> extends A<Y> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def <Z extends Number> C<Z> fn(List<Z> list_of_z) {\n" +
+            "  new C<Z>(x: list_of_z.first())\n" +
+            "}\n" +
+            "def c = fn([42])\n" +
+            "assert c.x == 42\n",
         };
         //@formatter:on
 
