@@ -453,12 +453,15 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleConstantExpression(ConstantExpression expr) {
+        HighlightKind kind = null;
         if (isNumber(expr.getType())) {
-            return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), HighlightKind.NUMBER);
-        } else if (!lastGString.includes(expr.getStart()) && isSlashy(expr)) {
-            return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), HighlightKind.REGEXP);
+            kind = HighlightKind.NUMBER;
+        } else if (!lastGString.includes(expr.getStart())) {
+            if (isSlashy(expr)) kind = HighlightKind.REGEXP;
+        } else if (expr.getType().equals(ClassHelper.boolean_TYPE)) {
+            kind = HighlightKind.KEYWORD; // "true" / "false" literal
         }
-        return null;
+        return kind == null ? null : new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
     }
 
     private HighlightedTypedPosition handleGStringExpression(GStringExpression expr) {

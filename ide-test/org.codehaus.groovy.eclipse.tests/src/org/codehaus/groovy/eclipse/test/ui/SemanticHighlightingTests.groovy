@@ -1902,6 +1902,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('"'), '"$this ${this.name} ${super.name}"'.length(), GSTRING))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1404
+    void testGStringTrueAndFalse() {
+        // the keywords false and true are identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix ${true; false} suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('true'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('false'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"prefix ${true; false} suffix"'.length(), GSTRING))
+    }
+
     @Test // see testDeprecated10 for case where this and super calls are highlighted
     void testCtorCalls() {
         // the keywords super and this are identified/highlighted by GroovyTagScanner
