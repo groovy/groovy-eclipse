@@ -2456,6 +2456,74 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('Iterator'), 8, INTERFACE))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    void testAnnoElems12() {
+        String contents = '''\
+            |@groovy.transform.TupleConstructor(pre={
+            |  assert number.intValue() >= 42
+            |},post={
+            |  assert string?.size() > 1
+            |})
+            |class Pogo {
+            |  Number number
+            |  String string
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('pre'), 3, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('number'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('intValue'), 8, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('42'), 2, NUMBER),
+            //
+            new HighlightedTypedPosition(contents.indexOf('post'), 4, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('size'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            //
+            new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('number'), 6, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    void testAnnoElems13() {
+        for (annotation in ['Canonical','Immutable']) {
+            String contents = """\
+                |@groovy.transform.$annotation(pre={
+                |  assert number.intValue() >= 42
+                |},post={
+                |  assert string?.size() > 1
+                |})
+                |class Pogo {
+                |  Number number
+                |  String string
+                |}
+                |""".stripMargin()
+
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('pre'), 3, TAG_KEY),
+                new HighlightedTypedPosition(contents.indexOf('number'), 6, FIELD),
+                new HighlightedTypedPosition(contents.indexOf('number'), 6, PARAMETER),
+                new HighlightedTypedPosition(contents.indexOf('intValue'), 8, METHOD_CALL),
+                new HighlightedTypedPosition(contents.indexOf('42'), 2, NUMBER),
+                //
+                new HighlightedTypedPosition(contents.indexOf('post'), 4, TAG_KEY),
+                new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+                new HighlightedTypedPosition(contents.indexOf('string'), 6, PARAMETER),
+                new HighlightedTypedPosition(contents.indexOf('size'), 4, GROOVY_CALL),
+                new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+                //
+                new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+                new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+                new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+                new HighlightedTypedPosition(contents.lastIndexOf('number'), 6, FIELD),
+                new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, FIELD))
+        }
+    }
+
     @Test
     void testGString1() {
         String contents = '''\

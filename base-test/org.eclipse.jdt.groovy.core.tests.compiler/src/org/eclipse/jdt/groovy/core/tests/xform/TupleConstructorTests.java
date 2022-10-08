@@ -1,0 +1,265 @@
+/*
+ * Copyright 2009-2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.eclipse.jdt.groovy.core.tests.xform;
+
+import java.util.Map;
+
+import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Test;
+
+/**
+ * Test cases for {@link groovy.transform.TupleConstructor}.
+ */
+public final class TupleConstructorTests extends GroovyCompilerTestSuite {
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    public void testTupleConstructor1() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "@groovy.transform.ToString\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test
+    public void testTupleConstructor2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "import groovy.transform.*\n" +
+            "@TupleConstructor @ToString\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test
+    public void testTupleConstructor3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "import groovy.transform.TupleConstructor as POGO\n" +
+            "import groovy.transform.*\n" +
+            "@POGO @ToString\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test
+    public void testTupleConstructor4() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    normal 'groovy.transform.TupleConstructor'\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.ToString\n" +
+            "@TupleConstructor\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)", options);
+    }
+
+    @Test
+    public void testTupleConstructor5() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    alias 'POGO', groovy.transform.TupleConstructor\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.ToString\n" +
+            "@POGO\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)", options);
+    }
+
+    @Test
+    public void testTupleConstructor6() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  ast(groovy.transform.TupleConstructor)\n" +
+            "}\n"
+        ).getAbsolutePath());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy", // TODO: java
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.ToString\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)", options);
+    }
+
+    @Test
+    public void testTupleConstructor7() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "@groovy.transform.ToString\n" +
+            "class Foo {\n" +
+            "  String bar\n" +
+            "  public baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one)");
+    }
+
+    @Test
+    public void testTupleConstructor8() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.TupleConstructor(includeFields=true)\n" +
+            "@groovy.transform.ToString(includeFields=true)\n" +
+            "class Foo {\n" +
+            "  String bar\n" +
+            "  public baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test
+    public void testTupleConstructor9() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy", // TODO: java
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "class C {\n" +
+            "  String bar\n" +
+            "}\n" +
+            "@groovy.transform.TupleConstructor(includeSuperProperties=true)\n" +
+            "@groovy.transform.ToString(includeNames=true, includeSuperProperties=true)\n" +
+            "class Foo extends C {\n" +
+            "  String baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(baz:two, bar:one)");
+    }
+}

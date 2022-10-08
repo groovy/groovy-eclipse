@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,5 +69,27 @@ public final class ImmutableTests extends GroovyCompilerTestSuite {
             return name.matches("groovy.transform.(Known)?Immutable");
         }).findFirst();
         assertTrue(anno.isPresent());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    public void testImmutable2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.Immutable\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
     }
 }

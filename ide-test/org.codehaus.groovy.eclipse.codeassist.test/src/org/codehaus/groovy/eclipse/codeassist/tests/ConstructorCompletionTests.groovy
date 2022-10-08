@@ -466,7 +466,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new Anno'), 'Annotation')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testConstructorCompletionCanonicalTransform() {
         String contents = '''\
             |@groovy.transform.Canonical
@@ -482,10 +482,26 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkUniqueProposal(contents, 'One', 'One(Number two)', '(null)')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testConstructorCompletionImmutableTransform() {
         String contents = '''\
             |@groovy.transform.Immutable
+            |class One {
+            |  Number two
+            |}
+            |class Foo {
+            |  def bar() {
+            |    def baz = new One
+            |  }
+            |}
+            |'''.stripMargin()
+        checkUniqueProposal(contents, 'One', 'One(Number two)', '(null)')
+    }
+
+    @Test
+    void testConstructorCompletionTupleConstructorTransform() {
+        String contents = '''\
+            |@groovy.transform.TupleConstructor
             |class One {
             |  Number two
             |}

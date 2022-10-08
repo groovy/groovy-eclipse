@@ -92,6 +92,7 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.tools.GroovyClass;
+import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
@@ -1372,7 +1373,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * Build JDT representations of all the constructors on the Groovy type.
          */
         private void createConstructorDeclarations(ClassNode classNode, boolean isEnum, List<AbstractMethodDeclaration> methodDeclarations) {
-            List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
+            List<ConstructorNode> constructorNodes = getDeclaredAndGeneratedConstructors(classNode);
 
             char[] ctorName; boolean isAnon = false;
             if (classNode instanceof InnerClassNode) {
@@ -2653,20 +2654,22 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return true;
             }
             int dot = expect.lastIndexOf('.');
-            if (dot != -1 && actual.equals(expect.substring(dot + 1))) {
+            if (dot != -1) {
                 ModuleNode mod = sourceUnit.getAST();
-                ClassNode imp = mod.getImportType(actual);
+                ClassNode  imp = mod.getImportType(actual); // handles aliases
                 if (imp != null) {
                     return imp.getName().equals(expect);
                 }
-                String pkg = expect.substring(0, dot + 1);
-                for (ImportNode sin : mod.getStarImports()) {
-                    if (sin.getPackageName().equals(pkg)) {
-                        return true;
+                if (actual.equals(expect.substring(dot + 1))){
+                    String pkg = expect.substring(0, dot + 1);
+                    for (ImportNode sin : mod.getStarImports()) {
+                        if (sin.getPackageName().equals(pkg)) {
+                            return true;
+                        }
                     }
+                    return "groovy.lang.".equals(pkg);
+                  //return Stream.of(org.codehaus.groovy.control.ResolveVisitor.DEFAULT_IMPORTS).anyMatch(pkg::equals);
                 }
-                return "groovy.lang.".equals(pkg);
-              //return Stream.of(org.codehaus.groovy.control.ResolveVisitor.DEFAULT_IMPORTS).anyMatch(pkg::equals);
             }
             return false;
         }
@@ -2934,6 +2937,59 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (fieldDecl.initialization != null && fieldDecl.initialization.sourceStart < fieldDecl.sourceEnd) {
                 fieldDecl.initialization.sourceStart = fieldDecl.initialization.sourceEnd = fieldDecl.sourceEnd;
             }
+        }
+
+        private List<ConstructorNode> getDeclaredAndGeneratedConstructors(ClassNode classNode) {
+            List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
+
+            for (AnnotationNode annotation : classNode.getAnnotations()) {
+                String annotationType = annotation.getClassNode().getName();
+                if (isType("groovy.transform.Canonical", annotationType) ||
+                    isType("groovy.transform.Immutable", annotationType) ||
+                    isType("groovy.transform.TupleConstructor", annotationType)){
+                    Map<String, Expression> attributes = annotation.getMembers();
+                    if (!attributes.containsKey("includeSuperFields") &&
+                        !attributes.containsKey("includeSuperProperties")) {
+
+                        List<ConstructorNode> generated = new ArrayList<>();
+
+                        AnnotationNode anno = new AnnotationNode(ClassHelper.make(groovy.transform.TupleConstructor.class));
+                        if (isType("groovy.transform.Immutable", annotationType))
+                            anno.addMember("defaults", ConstantExpression.FALSE);
+                        attributes.forEach((name, value) -> anno.addMember(name, value));
+
+                        // create type that intercepts generated constructors
+                        ClassNode type = new ClassNode(classNode.getName(), 0, null) {
+                            {
+                                isPrimaryNode = false;
+                                setRedirect(classNode);
+                            }
+
+                            @Override
+                            public void addConstructor(ConstructorNode ctor) {
+                                // remove source offsets from param type
+                                for (Parameter p : ctor.getParameters()) {
+                                    p.setType(p.getType().getPlainNodeReference());
+                                }
+                                ctor.setDeclaringClass(classNode);
+                                generated.add(ctor);
+                            }
+                        };
+
+                        ASTTransformation astt = new org.codehaus.groovy.transform.TupleConstructorASTTransformation();
+                        // apply TupleConstructorASTTransformation early to generate constructor(s)
+                        astt.visit(new org.codehaus.groovy.ast.ASTNode[] {anno, type}, sourceUnit);
+
+                        if (!generated.isEmpty()) {
+                            constructorNodes = new ArrayList<>(constructorNodes);
+                            constructorNodes.addAll(generated);
+                        }
+                    }
+                    break;
+                }
+            }
+
+            return constructorNodes;
         }
 
         /**

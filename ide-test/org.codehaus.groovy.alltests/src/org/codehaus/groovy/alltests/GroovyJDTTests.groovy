@@ -59,6 +59,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.groovy.core.tests.xform.SingletonTests,
     org.eclipse.jdt.groovy.core.tests.xform.SortableTests,
     org.eclipse.jdt.groovy.core.tests.xform.StaticCompilationTests,
+    org.eclipse.jdt.groovy.core.tests.xform.TupleConstructorTests,
     org.eclipse.jdt.groovy.core.tests.xform.TypeCheckedTests,
     org.eclipse.jdt.groovy.core.tests.xform.UserDefinedTests,
 

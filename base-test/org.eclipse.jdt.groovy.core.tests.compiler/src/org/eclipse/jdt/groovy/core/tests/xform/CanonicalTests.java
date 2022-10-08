@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import java.util.Map;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -27,7 +26,7 @@ import org.junit.Test;
  */
 public final class CanonicalTests extends GroovyCompilerTestSuite {
 
-    @Test @Ignore("https://github.com/groovy/groovy-eclipse/issues/421")
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
     public void testCanonical1() {
         //@formatter:off
         String[] sources = {
@@ -187,5 +186,49 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "Outer$Inner(foo:bar)");
+    }
+
+    @Test
+    public void testCanonical8() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.Canonical(defaults=false, includeNames=true)\n" +
+            "  static class Inner {\n" +
+            "    String foo\n" +
+            "    private baz\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked void test() {\n" +
+            "  print new Outer.Inner('bar')\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Outer$Inner(foo:bar)");
+    }
+
+    @Test
+    public void testCanonical9() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.Canonical(defaults=false, includeFields=true, includeNames=true)\n" +
+            "  static class Inner {\n" +
+            "    String foo\n" +
+            "    private baz\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked void test() {\n" +
+            "  print new Outer.Inner('bar',null)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Outer$Inner(foo:bar, baz:null)");
     }
 }
