@@ -35,7 +35,6 @@ import org.apache.xbean.classloader.MultiParentClassLoader;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
@@ -207,18 +206,17 @@ public class GroovyLanguageSupport implements LanguageSupport {
             }
 
             CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, problemReporter);
-            GroovyClassLoader classLoader = null; // TODO: missing the GroovyClassLoader configuration
-            ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilerConfig);
-            SourceUnit groovySourceUnit = new SourceUnit(unitName, unitSource, compilerConfig, classLoader, errorCollector);
+            GroovyClassLoader classLoader = new GroovyClassLoaderFactory(problemReporter.options, null).getGroovyClassLoaders(compilerConfig)[0];
+            SourceUnit sourceUnit = new SourceUnit(unitName, unitSource, compilerConfig, null, new GroovyErrorCollectorForJDT(compilerConfig)  );
 
             org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig, null, classLoader, null, /*allowTransforms:*/false, null);
             JDTResolver resolver = new JDTResolver(gcu);
             gcu.setResolveVisitor(resolver);
-            gcu.addSource(groovySourceUnit);
+            gcu.addSource(sourceUnit);
 
             compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(unitText); // TODO: get from parser
 
-            GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, groovySourceUnit, problemReporter.options);
+            GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, sourceUnit, problemReporter.options);
 
             decl.processToPhase(Phases.CONVERSION);
 

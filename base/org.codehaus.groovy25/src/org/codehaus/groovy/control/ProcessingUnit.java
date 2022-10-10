@@ -62,16 +62,16 @@ public abstract class ProcessingUnit {
      * Initializes the ProcessingUnit to the empty state.
      */
     public ProcessingUnit(final CompilerConfiguration configuration, final GroovyClassLoader classLoader, final ErrorCollector errorCollector) {
-        setConfiguration(configuration != null ? configuration : CompilerConfiguration.DEFAULT); setClassLoader(classLoader);
-        this.errorCollector = errorCollector != null ? errorCollector : new ErrorCollector(getConfiguration());
-        configure(getConfiguration());
+        this.classLoader = classLoader;
+        this.configuration = configuration != null ? configuration : CompilerConfiguration.DEFAULT;
+        this.errorCollector = errorCollector != null ? errorCollector : new ErrorCollector(this.configuration);
+        configure(this.configuration);
     }
 
     /**
      * Reconfigures the ProcessingUnit.
      */
-    public void configure(CompilerConfiguration configuration) {
-        setConfiguration(configuration);
+    protected void configure(CompilerConfiguration configuration) {
     }
 
     public CompilerConfiguration getConfiguration() {
@@ -79,7 +79,7 @@ public abstract class ProcessingUnit {
     }
 
     public final void setConfiguration(CompilerConfiguration configuration) {
-        this.configuration = java.util.Objects.requireNonNull(configuration);
+        this.configuration= java.util.Objects.requireNonNull(configuration);
     }
 
     /**
@@ -93,16 +93,12 @@ public abstract class ProcessingUnit {
      * Sets the class loader for use by this ProcessingUnit.
      */
     public void setClassLoader(final GroovyClassLoader loader) {
-        // ClassLoaders should only be created inside a doPrivileged block in case
-        // this method is invoked by code that does not have security permissions.
+        // ClassLoaders should only be created inside doPrivileged block in case
+        // this method is invoked by code that does not have security permission
         this.classLoader = loader != null ? loader : AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
             public GroovyClassLoader run() {
-                /* GRECLIPSE edit -- async content assist cannot process DelegatesTo/ClosureParams
                 ClassLoader parent = Thread.currentThread().getContextClassLoader();
                 if (parent == null) parent = ProcessingUnit.class.getClassLoader();
-                */
-                ClassLoader parent = this.getClass().getClassLoader();
-                // GRECLIPSE end
                 return new GroovyClassLoader(parent, getConfiguration());
             }
         });

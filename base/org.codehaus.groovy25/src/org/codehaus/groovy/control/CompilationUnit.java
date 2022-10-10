@@ -363,8 +363,7 @@ public class CompilationUnit extends ProcessingUnit {
      * Configures its debugging mode and classloader classpath from a given compiler configuration.
      * This cannot be done more than once due to limitations in {@link java.net.URLClassLoader URLClassLoader}.
      */
-    public void configure(CompilerConfiguration configuration) {
-        super.configure(configuration);
+    protected void configure(CompilerConfiguration configuration) {
         this.debug = configuration.getDebug();
         this.configured = true;
     }
@@ -491,7 +490,7 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public SourceUnit addSource(SourceUnit source) {
         String name = source.getName();
-        source.setClassLoader(this.classLoader);
+        source.setClassLoader(getClassLoader());
         for (SourceUnit su : queuedSources) {
             if (name.equals(su.getName())) return su;
         }

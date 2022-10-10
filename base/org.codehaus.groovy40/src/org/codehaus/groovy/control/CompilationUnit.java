@@ -428,9 +428,8 @@ public class CompilationUnit extends ProcessingUnit {
      * This cannot be done more than once due to limitations in {@link java.net.URLClassLoader URLClassLoader}.
      */
     @Override
-    public void configure(final CompilerConfiguration configuration) {
-        super.configure(configuration);
-        this.debug = getConfiguration().getDebug();
+    protected void configure(final CompilerConfiguration configuration) {
+        this.debug = configuration.getDebug();
         this.configured = true;
     }
 
