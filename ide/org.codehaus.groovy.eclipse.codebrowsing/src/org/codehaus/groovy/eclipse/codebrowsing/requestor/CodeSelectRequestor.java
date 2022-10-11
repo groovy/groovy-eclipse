@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -855,13 +855,12 @@ if (GroovyLogManager.manager.hasLoggers()) {
             return field;
         }
 
-        String setMethod = AccessorSupport.SETTER.createAccessorName(text);
-        String getMethod = AccessorSupport.GETTER.createAccessorName(text);
         String isMethod = AccessorSupport.ISSER.createAccessorName(text);
+        String getMethod = AccessorSupport.GETTER.createAccessorName(text);
+        String setMethod = AccessorSupport.SETTER.createAccessorName(text);
 
-        for (IMethod method : type.getMethods()) {
-            String methodName = method.getElementName();
-            if (methodName.equals(setMethod) || methodName.equals(getMethod) || methodName.equals(isMethod)) {
+        for (IMethod method : type.getMethods()) { String methodName = method.getElementName();
+            if (methodName.equals(isMethod) || methodName.equals(getMethod) || methodName.equals(setMethod)) {
                 return method;
             }
         }

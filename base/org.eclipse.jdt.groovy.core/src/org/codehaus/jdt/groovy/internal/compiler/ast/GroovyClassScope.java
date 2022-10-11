@@ -29,7 +29,6 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -126,25 +125,26 @@ public class GroovyClassScope extends ClassScope {
             for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).getClassNode().getProperties()) {
                 int modifiers = getModifiers(property);
                 if (Flags.isPackageDefault(modifiers)) continue;
-                String capitalizedName = MetaClassHelper.capitalize(property.getName());
+
+                String capitalizedName = org.codehaus.groovy.runtime.MetaClassHelper.capitalize(property.getName());
 
                 if (property.getType().equals(ClassHelper.boolean_TYPE)) {
                     if (!createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings).isPresent()) {
                         continue; // only generate accessor method(s) if one or both are not explicitly declared
                     }
-                    createGetterMethod(property, "is" + capitalizedName, modifiers, methodBindings)
+                    createGetterMethod(property, "is" + capitalizedName, modifiers, methodBindings) // TODO: PropertyNode#getGetterNameOrDefault
                         .ifPresent(binding -> {
                             groovyMethods.add(binding);
                             createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings)
                                 .ifPresent(groovyMethods::add);
                         });
                 } else {
-                    createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings)
+                    createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings) // TODO: PropertyNode#getGetterNameOrDefault
                         .ifPresent(groovyMethods::add);
                 }
 
                 if (!Flags.isFinal(property.getModifiers())) {
-                    createSetterMethod(property, "set" + capitalizedName, modifiers, methodBindings)
+                    createSetterMethod(property, "set" + capitalizedName, modifiers, methodBindings) // TODO: PropertyNode#getSetterNameOrDefault
                         .ifPresent(groovyMethods::add);
                 }
             }

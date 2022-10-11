@@ -761,7 +761,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         Set<ClassNode> interfaces = new LinkedHashSet<>();
         VariableScope.findAllInterfaces(declaringType, interfaces, false);
 
-        // concrete types (without mixins/traits) return all methods from getMethods(String), except interface default methods
+        // concrete types (without mixins/traits) return all methods from getMethods(String), except interface default and transform generated methods
         if (!declaringType.isAbstract() && !declaringType.isInterface() && !implementsTrait(declaringType)) {
             List<MethodNode> candidates = getMethods(name, declaringType);
             for (ClassNode face : interfaces) {

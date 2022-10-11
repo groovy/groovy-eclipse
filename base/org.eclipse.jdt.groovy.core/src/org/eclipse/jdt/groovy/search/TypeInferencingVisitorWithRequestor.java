@@ -87,6 +87,7 @@ import org.codehaus.groovy.ast.stmt.BreakStatement;
 import org.codehaus.groovy.ast.stmt.CaseStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ContinueStatement;
+import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.IfStatement;
@@ -1135,6 +1136,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         handleSimpleExpression(node, () -> {
             super.visitEmptyExpression(node);
         });
+    }
+
+    @Override
+    public void visitEmptyStatement(final EmptyStatement node) {
     }
 
     @Override

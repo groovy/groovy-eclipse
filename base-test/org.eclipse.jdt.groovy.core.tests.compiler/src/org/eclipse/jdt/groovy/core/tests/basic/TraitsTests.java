@@ -1731,6 +1731,28 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Ignore @Test
+    public void testTraits7135() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "trait T {\n" +
+            "  def foo() {\n" +
+            "    super.bar()\n" + // $self.Ttrait$super$bar(); should fail STC
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "new C().foo()\n", // MissingMethodException
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+        /*runNegativeTest(sources,
+            "No such method Object#bar()");*/
+    }
+
     @Test
     public void testTraits7242() {
         //@formatter:off
@@ -1751,7 +1773,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1774,10 +1796,10 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
-    @Test @Ignore
+    @Test
     public void testTraits7288() {
         //@formatter:off
         String[] sources = {
@@ -1791,13 +1813,28 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "class C {\n" + // The class must be declared abstract or the method 'java.lang.String T__foo$get()' must be implemented
-            "  @Delegate D delegates = new D()\n" +
+            "  @Delegate D provider = new D()\n" +
             "}\n" +
             "new C().m()\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "works");
+        if (isAtLeastGroovy(30)) {
+            runConformTest(sources, "works");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 9)\n" +
+                "\tclass C {\n" +
+                "\t      ^\n" +
+                "Groovy:Can't have an abstract method in a non-abstract class. The class 'C' must be declared abstract or the method 'java.lang.Object T__foo$set(java.lang.Object)' must be implemented.\n" +
+                "----------\n" +
+                "2. ERROR in Script.groovy (at line 9)\n" +
+                "\tclass C {\n" +
+                "\t      ^\n" +
+                "Groovy:Can't have an abstract method in a non-abstract class. The class 'C' must be declared abstract or the method 'java.lang.Object T__foo$get()' must be implemented.\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -1823,7 +1860,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1850,7 +1887,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -1872,7 +1909,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2012,6 +2049,25 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "OneTwoThreeFour");
     }
 
+    @Ignore @Test
+    public void testTraits7950() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  String bar\n" +
+            "}\n" +
+            "@groovy.transform.TupleConstructor(includes='foo,bar')\n" +
+            "class C implements T {\n" +
+            "  String foo\n" +
+            "}\n" +
+            "new C('foo','bar')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testTraits8000() {
         //@formatter:off
@@ -2029,6 +2085,27 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Ignore @Test // see also GROOVY-7135
+    public void testTraits8021() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "trait T {\n" +
+            "  void m() {\n" +
+            "    super.m()\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "new C().m()\n", // MissingMethodException
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
@@ -2060,7 +2137,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "WORKS");
     }
 
-    @Test @Ignore // see also GROOVY-7950
+    @Ignore @Test // see also GROOVY-7950
     public void testTraits8219() {
         //@formatter:off
         String[] sources = {
@@ -2068,19 +2145,42 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "trait T {\n" +
             "  def x = 42\n" +
             "}\n" +
-            "@groovy.transform.TupleConstructor(includeFields=true)\n" +
+            "@groovy.transform.TupleConstructor(includeFields=true)\n" + // works without includeFields or with trait field T__x excluded
             "class A implements T {\n" +
             "  def a\n" +
             "  private b\n" +
             "}\n" +
-            "print new A().x\n",
+            "print new A().x\n", // overrides default
         };
         //@formatter:on
 
         runConformTest(sources, "42");
     }
 
-    @Test @Ignore
+    @Test
+    public void testTraits8244() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  abstract def foo(a, b = 1)\n" +
+            "}\n" +
+            "T t = { one, two ->\n" + // should proxy only foo(a,b)
+            "  print one\n" +
+            "  assert two == 1\n" +
+            "}\n" +
+            "t.foo(42)\n", // MissingMethodException
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(30)) {
+            runConformTest(sources, "42");
+        } else {
+            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Script$_run_closure1.doCall() is applicable for argument types: (Integer) values: [42]");
+        }
+    }
+
+    @Ignore @Test
     public void testTraits8587() {
         //@formatter:off
         String[] sources = {
@@ -2127,7 +2227,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "0");
     }
 
-    @Test @Ignore
+    @Ignore @Test
     public void testTraits8854() {
         //@formatter:off
         String[] sources = {
@@ -2145,7 +2245,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Auditable.groovy",
             "trait Auditable {\n" +
             "  boolean audit() {\n" +
-            "    if (check()) {\n" +
+            "    if (check()) {\n" + // MissingMethodException
             "      print ' '\n" +
             "    }\n" +
             "    print 'audited'\n" +
@@ -2165,7 +2265,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     public void testTraits8856() {
         //@formatter:off
         String[] sources = {
-            "MyTrait.groovy",
+            "Main.groovy",
             "class Main {\n" +
             "  static T myMethod() {\n" +
             "    return [1, 2, 3]\n" +
@@ -2176,7 +2276,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in MyTrait.groovy (at line 2)\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
             "\tstatic T myMethod() {\n" +
             "\t       ^\n" +
             "Groovy:unable to resolve class T\n" +
@@ -2745,7 +2845,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "");
+        runConformTest(sources);
     }
 
     @Test
@@ -2872,6 +2972,35 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "xx");
+    }
+
+    @Ignore @Test // see also GROOVY-10000
+    public void testTraits10312a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T1 {\n" +
+            "  public static final String BANG = '!'\n" +
+            "}\n" +
+            "trait T2 implements T1 {\n" +
+            "  static void staticMethodWithDefaultArgument(String string = 'x') {\n" +
+            "    print(string + BANG)\n" + // MissingPropertyException
+            "  }\n" +
+            "}\n" +
+            "class X implements T2 {\n" +
+            "  static test1() {\n" +
+            "    staticMethodWithDefaultArgument()\n" +
+            "  }\n" +
+            "  void test2() {\n" +
+            "    staticMethodWithDefaultArgument()\n" +
+            "  }\n" +
+            "}\n" +
+            "X.test1()\n" +
+            "new X().test2()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x!x!");
     }
 
     @Test
