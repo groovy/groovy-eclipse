@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,14 +40,12 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
 
             "Alias.groovy",
             "import groovy.transform.*\n" +
-            "@AnnotationCollector\n" +
-            "@EqualsAndHashCode\n" +
-            "@ToString\n" +
+            "@AnnotationCollector([EqualsAndHashCode, ToString])\n" +
             "@interface Alias { }\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
+        runConformTest(sources, "Type(123)");
     }
 
     @Test
@@ -67,7 +65,39 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
 
             "Alias.groovy",
             "import groovy.transform.*\n" +
-            "@AnnotationCollector([EqualsAndHashCode, ToString])\n" +
+            "@AnnotationCollector\n" +
+            "@EqualsAndHashCode\n" +
+            "@ToString\n" +
+            "@interface Alias { }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Type(123)");
+    }
+
+    @Test
+    public void testAnnotationCollector3() {
+        //@formatter:off
+        String[] sources = {
+            "Type.groovy",
+            "@Alias(includes='id')\n" +
+            "class Type {\n" +
+            "  String id\n" +
+            "  String hidden = '456'\n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    \"Type($id)\"\n" +
+            "  }\n" +
+            "  \n" +
+            "  static main(args) {\n" +
+            "    print(new Type('123'))\n" +
+            "  }\n" +
+            "}\n",
+
+            "Alias.groovy",
+            "import groovy.transform.*\n" +
+            "@AnnotationCollector\n" +
+            "@TupleConstructor(defaults=false)\n" +
             "@interface Alias { }\n",
         };
         //@formatter:on
@@ -76,7 +106,7 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-10121
-    public void testAnnotationCollector3() {
+    public void testAnnotationCollector4() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -97,7 +127,7 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAnnotationCollector4() {
+    public void testAnnotationCollector5() {
         //@formatter:off
         String[] sources = {
             "Book.groovy",

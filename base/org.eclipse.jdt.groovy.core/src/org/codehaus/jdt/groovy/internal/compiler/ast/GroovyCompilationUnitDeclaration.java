@@ -1373,7 +1373,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * Build JDT representations of all the constructors on the Groovy type.
          */
         private void createConstructorDeclarations(ClassNode classNode, boolean isEnum, List<AbstractMethodDeclaration> methodDeclarations) {
-            List<ConstructorNode> constructorNodes = getDeclaredAndGeneratedConstructors(classNode);
+            List<ConstructorNode> constructorNodes = classNode.isInterface() ? Collections.emptyList() : getDeclaredAndGeneratedConstructors(classNode);
 
             char[] ctorName; boolean isAnon = false;
             if (classNode instanceof InnerClassNode) {
