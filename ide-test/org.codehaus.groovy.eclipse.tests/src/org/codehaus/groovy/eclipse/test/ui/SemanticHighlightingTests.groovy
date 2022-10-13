@@ -2342,8 +2342,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/959
     void testAnnoElems7() {
         String contents = '''\
-            |@groovy.transform.EqualsAndHashCode
             |@groovy.transform.AnnotationCollector
+            |@groovy.transform.EqualsAndHashCode
+            |@groovy.transform.TupleConstructor
             |@interface A {
             |}
             |@A(excludes = 'temporary')
@@ -2362,8 +2363,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/959
     void testAnnoElems8() {
         addGroovySource '''\
-            |@groovy.transform.EqualsAndHashCode
             |@groovy.transform.AnnotationCollector
+            |@groovy.transform.EqualsAndHashCode
             |@interface A {
             |}
             |'''.stripMargin(), 'A'
@@ -2465,6 +2466,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |  assert string?.size() > 1
             |})
             |class Pogo {
+            |  double floats
             |  Number number
             |  String string
             |}
@@ -2482,9 +2484,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
             //
             new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('floats'), 6, FIELD),
             new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
-            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('number'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, FIELD))
     }
 

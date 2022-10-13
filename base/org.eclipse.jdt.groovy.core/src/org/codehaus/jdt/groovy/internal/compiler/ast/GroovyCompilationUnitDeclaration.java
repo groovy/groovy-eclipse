@@ -2969,7 +2969,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             public void addConstructor(ConstructorNode ctor) {
                                 // remove source offsets from param type
                                 for (Parameter p : ctor.getParameters()) {
-                                    p.setType(p.getType().getPlainNodeReference());
+                                    ClassNode pt = p.getType().redirect();
+                                    if (!ClassHelper.isPrimitiveType(pt)){
+                                        pt = pt.getPlainNodeReference();
+                                    }
+                                    p.setType(pt);
                                 }
                                 ctor.setDeclaringClass(classNode);
                                 generated.add(ctor);
