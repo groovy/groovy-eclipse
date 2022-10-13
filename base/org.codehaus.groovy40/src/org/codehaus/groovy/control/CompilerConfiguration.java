@@ -93,6 +93,8 @@ public class CompilerConfiguration {
     public static final String JDK18 = "18";
     /** This (<code>"19"</code>) is the value for targetBytecode to compile for a JDK 19. */
     public static final String JDK19 = "19";
+    /** This (<code>"20"</code>) is the value for targetBytecode to compile for a JDK 20. */
+    public static final String JDK20 = "20";
 
     /**
      * This constant is for comparing targetBytecode to ensure it is set to JDK 1.5 or later.
@@ -127,7 +129,8 @@ public class CompilerConfiguration {
             JDK16, Opcodes.V16,
             JDK17, Opcodes.V17,
             JDK18, Opcodes.V18,
-            JDK19, Opcodes.V19
+            JDK19, Opcodes.V19,
+            JDK20, Opcodes.V20
     );
 
     /**
@@ -922,7 +925,7 @@ public class CompilerConfiguration {
         */
         int index;
         try { ALLOWED_JDKS[5] = "1.9"; // 9 is out of order for binary search
-            index = Arrays.binarySearch(ALLOWED_JDKS, !version.startsWith("1") ? "1." + version : version);
+            index = Arrays.binarySearch(ALLOWED_JDKS, (!version.startsWith("1") && !version.startsWith("2")) ? "1." + version : version);
         } finally {
             ALLOWED_JDKS[5] = "9";
         }

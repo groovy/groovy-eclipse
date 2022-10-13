@@ -448,6 +448,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             expression = findStaticPropertyOrField(importNode.getType(), name);
             if (expression != null) return expression;
         }
+
         return null;
     }
 

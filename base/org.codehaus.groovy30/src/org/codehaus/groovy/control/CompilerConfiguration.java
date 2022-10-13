@@ -952,7 +952,7 @@ public class CompilerConfiguration {
         */
         int index;
         try { ALLOWED_JDKS[5] = "1.9"; // 9 is out of order for binary search
-            index = Arrays.binarySearch(ALLOWED_JDKS, !version.startsWith("1") ? "1." + version : version);
+            index = Arrays.binarySearch(ALLOWED_JDKS, (!version.startsWith("1") && !version.startsWith("2")) ? "1." + version : version);
         } finally {
             ALLOWED_JDKS[5] = "9";
         }
