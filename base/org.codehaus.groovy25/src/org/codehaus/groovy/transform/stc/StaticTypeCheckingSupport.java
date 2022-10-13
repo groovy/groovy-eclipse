@@ -1716,14 +1716,8 @@ public abstract class StaticTypeCheckingSupport {
                     GenericsTypeName name = new GenericsTypeName(oldValue.getName());
                     GenericsType newValue = connections.get(name); // find "V" in T=V
                     if (newValue == oldValue) continue;
-                    // GRECLIPSE add -- GROOVY-10067, GROOVY-10315, GROOVY-10317
+                    // GRECLIPSE add -- GROOVY-10067
                     if (oldValue.getName().charAt(0) == '#') continue;
-//                    if (newValue == null) {
-//                        newValue = connections.get(entry.getKey());
-//                        if (newValue != null) {
-//                            newValue = getCombinedGenericsType(oldValue, newValue);
-//                        }
-//                    }
                     // GRECLIPSE end
                     if (newValue == null) {
                         entry.setValue(newValue = applyGenericsContext(connections, oldValue));
@@ -2088,7 +2082,7 @@ public abstract class StaticTypeCheckingSupport {
         return genericsType.getType();
     }
 
-    // GRECLIPSE add -- GROOVY-9998, GROOVY-10315, GROOVY-10317, GROOVY-10339, GROOVY-10499
+    // GRECLIPSE add -- GROOVY-9998, GROOVY-10339, GROOVY-10499
     static GenericsType getCombinedGenericsType(GenericsType gt1, GenericsType gt2) {
         if (isUnboundedWildcard(gt1)) gt1 = gt1.getType().asGenericsType();
         if (isUnboundedWildcard(gt2)) gt2 = gt2.getType().asGenericsType();

@@ -2158,26 +2158,43 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits8243() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  abstract foo(int n)\n" +
+            "  def bar(double n) {\n" +
+            "    print \"bar $n;\"\n" +
+            "  }\n" +
+            "}\n" +
+            "interface I extends T {\n" +
+            "}\n" +
+            "I i = { print \"foo $it;\" }\n" + // should proxy only foo
+            "i.foo(123)\n" +
+            "i.bar(4.5)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo 123;bar 4.5;");
+    }
+
+    @Test
     public void testTraits8244() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
             "trait T {\n" +
-            "  abstract def foo(a, b = 1)\n" +
+            "  abstract def foo(a, b = 2)\n" +
             "}\n" +
-            "T t = { one, two ->\n" + // should proxy only foo(a,b)
-            "  print one\n" +
-            "  assert two == 1\n" +
+            "T t = { x, y ->\n" + // should proxy only foo(a,b)
+            "  print \"$x,$y\"\n" +
             "}\n" +
-            "t.foo(42)\n", // MissingMethodException
+            "t.foo(1)\n", // MissingMethodException
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(30)) {
-            runConformTest(sources, "42");
-        } else {
-            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Script$_run_closure1.doCall() is applicable for argument types: (Integer) values: [42]");
-        }
+        runConformTest(sources, "1,2");
     }
 
     @Ignore @Test

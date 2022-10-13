@@ -512,6 +512,27 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
+    @Test // GROOVY-10717
+    public void testClosureMapAsType() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  String b,c\n" +
+            "}\n" +
+            "def a = [getB:{->'b'}, getX:{->'x'}] as A\n" +
+            "print a.b\n" + // overrides accessor
+            "print a.c\n" + // generated accessor
+            "try {\n" +
+            "  print a.x\n" +
+            "} catch (MissingPropertyException mpe) {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "bnull");
+    }
+
     @Test
     public void testLambdaBasic() {
         assumeTrue(isParrotParser());
