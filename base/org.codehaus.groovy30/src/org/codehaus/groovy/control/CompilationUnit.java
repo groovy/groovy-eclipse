@@ -179,8 +179,8 @@ public class CompilationUnit extends ProcessingUnit {
                            final GroovyClassLoader loader, final GroovyClassLoader transformLoader
                            /*GRECLIPSE add*/, final boolean allowTransforms, final String legacyString/*GRECLIPSE end*/) {
         super(configuration, loader, null);
-
         // GRECLIPSE add
+        if (loader==null) setClassLoader(null);
         this.allowTransforms = allowTransforms;
         // GRECLIPSE end
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,6 @@ public final class FullProjectTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
         ICompilationUnit icu = env.getUnit(foo);
-        icu.becomeWorkingCopy(null);
 
         ClassNode cn = ((GroovyCompilationUnit) icu).getModuleNode().getClasses().get(0);
         assertContainsMethod(cn, "getInstance");
@@ -100,7 +99,6 @@ public final class FullProjectTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
         ICompilationUnit icu = env.getUnit(foo);
-        icu.becomeWorkingCopy(null);
 
         ClassNode cn = ((GroovyCompilationUnit) icu).getModuleNode().getClasses().get(0);
         assertContainsMethod(cn, "getInstance");
@@ -203,6 +201,80 @@ public final class FullProjectTests extends BuilderTestSuite {
             "Problem : Groovy:[Static type checking] - Cannot call p.X#getString(##) with arguments [java.util.ArrayList<java.lang.Number>] ##",
             "Problem : Groovy:[Static type checking] - No such property: sequence for class: java.util.ArrayList ##",
             "Problem : Groovy:[Static type checking] - No such property: string for class: java.util.ArrayList ##"));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1409
+    public void testLocalTransformationFromTestBuildPathEntry() throws Exception {
+        IPath[] paths = createGroovyProject();
+
+        env.addGroovyClass(paths[1], "p", "Main",
+            "package p\n" +
+            "import java.lang.annotation.*\n" +
+            "import org.codehaus.groovy.ast.*\n" +
+            "import org.codehaus.groovy.ast.builder.AstBuilder\n" +
+            "import org.codehaus.groovy.control.CompilePhase\n" +
+            "import org.codehaus.groovy.control.SourceUnit\n" +
+            "import org.codehaus.groovy.transform.ASTTransformation\n" +
+            "import org.codehaus.groovy.transform.GroovyASTTransformation\n" +
+            "import org.codehaus.groovy.transform.GroovyASTTransformationClass\n" +
+            "import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod\n" +
+            "\n" +
+            "@GroovyASTTransformationClass('p.MainMethodTransform')\n" +
+            "@Retention(RetentionPolicy.SOURCE)\n" +
+            "@Target(ElementType.METHOD)\n" +
+            "@interface Main {\n" +
+            "}\n" +
+            "\n" +
+            "@GroovyASTTransformation\n" +
+            "class MainMethodTransform implements ASTTransformation {\n" +
+            "  @Override\n" +
+            "  void visit(ASTNode[] nodes, SourceUnit source) {\n" +
+            "    if (!nodes || !nodes[0] || !nodes[1]) return\n" +
+            "    if (!(nodes[1] instanceof MethodNode)) return\n" +
+            "    if (!(nodes[0] instanceof AnnotationNode)) return\n" +
+            "    if (nodes[0].classNode?.name != Main.name) return\n" +
+            "    try {\n" +
+            "      MethodNode annotatedMethod = nodes[1]\n" +
+            "      addGeneratedMethod(annotatedMethod.declaringClass, newMainMethod(annotatedMethod))\n" +
+            "    } catch (e) {\n" +
+            "      e.printStackTrace()\n" +
+            "    }\n" +
+            "  }\n" +
+            "  private static MethodNode newMainMethod(MethodNode target) {\n" +
+            "    def packageName = target.declaringClass.packageName\n" +
+            "    def   className = target.declaringClass.name\n" +
+            "    def  methodName = target.name\n" +
+            "    \n" +
+            "    def ast = new AstBuilder().buildFromString(CompilePhase.CANONICALIZATION, false, \"\"\"\n" +
+            "      ${packageName ? 'package ' + packageName : ''}\n" +
+            "      \n" +
+            "      class ${target.declaringClass.nameWithoutPackage} {\n" +
+            "        public static void main(String[] args) {\n" +
+            "          new ${className}().${methodName}()\n" +
+            "        }\n" +
+            "      }\n" +
+            "    \"\"\")\n" +
+            "    // ast[0] is BlockStatement\n" +
+            "    return (ast[1] as ClassNode).getDeclaredMethods('main')[0]\n" +
+            "  }\n" +
+            "}\n");
+        env.fullBuild(paths[0]);
+        expectingNoProblemsFor(paths[0]);
+
+        //
+
+        IPath shm = env.addGroovyClass(env.addTestPackageFragmentRoot(paths[0], "tests"), "q", "ShouldHaveMain",
+            "package q\n" +
+            "import p.Main\n" +
+            "class ShouldHaveMain {\n" +
+            "  @Main def foo() {\n" +
+            "    println 'bar'\n" +
+            "  }\n" +
+            "}\n");
+        env.incrementalBuild(paths[0]);
+        expectingNoProblemsFor(paths[0]);
+
+        assertContainsMethod(((GroovyCompilationUnit) env.getUnit(shm)).getModuleNode().getClasses().get(0), "main");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/903

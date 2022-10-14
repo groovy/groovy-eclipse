@@ -158,8 +158,8 @@ public class CompilationUnit extends ProcessingUnit {
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security,
                            GroovyClassLoader loader, GroovyClassLoader transformLoader/*GRECLIPSE add*/, boolean allowTransforms, String legacyString/*GRECLIPSE end*/) {
         super(configuration, loader, null);
-
         // GRECLIPSE add
+        if (loader==null) setClassLoader(null);
         this.allowTransforms = allowTransforms;
         // GRECLIPSE end
         this.ast = new CompileUnit(this.classLoader, security, this.configuration);
