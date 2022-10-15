@@ -200,15 +200,14 @@ protected boolean buildStructure(OpenableElementInfo info, final IProgressMonito
 		}
 
 		if (createAST) {
-			int astLevel = ((ASTHolderCUInfo) info).astLevel;
-			org.eclipse.jdt.core.dom.CompilationUnit cu = AST.convertCompilationUnit(astLevel, compilationUnitDeclaration, options, computeProblems, source, reconcileFlags, pm);
-			((ASTHolderCUInfo) info).ast = cu;
+			ASTHolderCUInfo astHolder = (ASTHolderCUInfo) info;
+			astHolder.ast = AST.convertCompilationUnit(astHolder.astLevel, compilationUnitDeclaration, options, computeProblems, source, reconcileFlags, pm);
 		}
 	} finally {
-	    if (compilationUnitDeclaration != null) {
-	    	unitInfo.hasFunctionalTypes = compilationUnitDeclaration.hasFunctionalTypes();
-	        compilationUnitDeclaration.cleanUp();
-	    }
+		if (compilationUnitDeclaration != null) {
+			unitInfo.hasFunctionalTypes = compilationUnitDeclaration.hasFunctionalTypes();
+			compilationUnitDeclaration.cleanUp();
+		}
 	}
 
 	return unitInfo.isStructureKnown();

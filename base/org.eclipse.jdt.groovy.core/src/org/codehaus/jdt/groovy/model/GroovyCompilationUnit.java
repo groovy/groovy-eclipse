@@ -47,7 +47,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
@@ -196,19 +195,18 @@ public class GroovyCompilationUnit extends CompilationUnit {
             // generate structure and compute syntax problems if needed
             GroovyCompilationUnitStructureRequestor requestor = new GroovyCompilationUnitStructureRequestor(this, (CompilationUnitElementInfo) info, newElements);
             JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo = getPerWorkingCopyInfo();
-            JavaProject project = (JavaProject) getJavaProject();
+            IJavaProject project = getJavaProject();
 
-            // determine what kind of buildStructure we are doing
             boolean createAST;
-            int reconcileFlags;
             boolean resolveBindings;
-            HashMap<String, CategorizedProblem[]> problems;
+            int reconcileFlags;
+            HashMap problems;
             if (info instanceof ASTHolderCUInfo) {
                 ASTHolderCUInfo astHolder = (ASTHolderCUInfo) info;
-                createAST = ((Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "astLevel", astHolder)) != NO_AST;
-                resolveBindings = (Boolean) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "resolveBindings", astHolder);
-                reconcileFlags = (Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "reconcileFlags", astHolder);
-                problems = ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "problems", astHolder);
+                createAST = astHolder.astLevel != NO_AST;
+                resolveBindings = astHolder.resolveBindings;
+                reconcileFlags = astHolder.reconcileFlags;
+                problems = astHolder.problems;
             } else {
                 createAST = false;
                 resolveBindings = false;
@@ -218,21 +216,23 @@ public class GroovyCompilationUnit extends CompilationUnit {
             boolean hasJavaNature = (project != null && JavaProject.hasJavaNature(project.getProject()));
             boolean computeProblems = (hasJavaNature && perWorkingCopyInfo != null && perWorkingCopyInfo.isActive());
 
-            // compiler options
             Map<String, String> options = (hasJavaNature ? project.getOptions(true) : JavaCore.getOptions());
             options.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getElementName());
             options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
             if (!computeProblems) {
-                // disable task tags processing to streamline parsing
+                // disable task tags checking to speed up parsing
                 options.remove(CompilerOptions.OPTION_TaskTags);
             }
+            options.putAll(getCustomOptions());
+
             CompilerOptions compilerOptions = new CompilerOptions(options);
+            compilerOptions.ignoreMethodBodies = (reconcileFlags & IGNORE_METHOD_BODIES) != 0;
 
             ProblemReporter reporter = new ProblemReporter(new GroovyErrorHandlingPolicy(!computeProblems), compilerOptions, new DefaultProblemFactory());
 
             SourceElementParser parser = new MultiplexingSourceElementRequestorParser(
                 reporter,
-                requestor, // not needed if computing groovy only
+                requestor,
                 reporter.problemFactory,
                 compilerOptions,
                 true, // report local declarations
@@ -259,9 +259,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
             GroovyCompilationUnitDeclaration compilationUnitDeclaration = null;
             CompilationUnit source = cloneCachingContents();
             try {
-                // GROOVY
-                // note that this is a slightly different approach than taken by super.buildStructure
-                // in super.buildStructure, there is a test here to see if computeProblems is true.
+                // note that this is a slightly different approach than taken by super.buildStructure,
+                // where there is a test here to see if computeProblems is true.
                 // if false, then parser.parserCompilationUnit is called.
                 // this will not work for Groovy because we need to ensure bindings are resolved
                 // for many operations (content assist and code select) to work.
@@ -289,10 +288,9 @@ public class GroovyCompilationUnit extends CompilationUnit {
                         if (computeProblems) {
                             try {
                                 perWorkingCopyInfo.beginReporting();
-                                for (Iterator<CategorizedProblem[]> iteraror = problems.values().iterator(); iteraror.hasNext();) {
-                                    CategorizedProblem[] categorizedProblems = iteraror.next();
-                                    if (categorizedProblems == null)
-                                        continue;
+                                for (Iterator<CategorizedProblem[]> iterator = problems.values().iterator(); iterator.hasNext();) {
+                                    CategorizedProblem[] categorizedProblems = iterator.next();
+                                    if (categorizedProblems == null) continue;
                                     for (int i = 0, n = categorizedProblems.length; i < n; i += 1) {
                                         perWorkingCopyInfo.acceptProblem(categorizedProblems[i]);
                                     }
@@ -302,6 +300,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                             }
                         }
                     } else {
+                        // collect problems
                         compilationUnitDeclaration =
                             (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
                                 source,
@@ -316,48 +315,46 @@ public class GroovyCompilationUnit extends CompilationUnit {
                     compilationUnitDeclaration =
                         (GroovyCompilationUnitDeclaration) parser.parseCompilationUnit(
                             source,
-                            true /* full parse to find local elements */,
+                            true, // full parse to find local elements
                             pm);
                 }
 
-                // GROOVY
                 // if this is a working copy, then we have more work to do
                 maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
 
                 // create the DOM AST from the compiler AST
                 if (createAST) {
-                    org.eclipse.jdt.core.dom.CompilationUnit ast;
                     try {
-                        ast = AST.convertCompilationUnit(JavaConstants.AST_LEVEL, compilationUnitDeclaration, options, computeProblems, source, reconcileFlags, pm);
-                        ReflectionUtils.setPrivateField(ASTHolderCUInfo.class, "ast", info, ast);
+                        ASTHolderCUInfo astHolder = (ASTHolderCUInfo) info;
+                        astHolder.ast = AST.convertCompilationUnit(astHolder.astLevel, compilationUnitDeclaration, options, computeProblems, source, reconcileFlags, pm);
                     } catch (OperationCanceledException e) {
-                        // catch this exception so as to not enter the catch(RuntimeException e) below
+                        // don't enter the catch(Exception e) block below
                         // might need to do the same for AbortCompilation
                         throw e;
                     } catch (IllegalArgumentException e) {
-                        // if necessary, we can do some better reporting here.
-                        Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " + this.getParent().getElementName() + "." + this.name);
+                        // if necessary, we can do some better reporting here
+                        Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " + getParent().getElementName() + "." + this.name);
                     } catch (Exception e) {
                         Util.log(e, "Problem with build structure for " + this.name);
                     }
                 }
             } catch (OperationCanceledException e) {
-                // catch this exception so as to not enter the catch(RuntimeException e) below
+                // don't enter the catch(Exception e) block below
                 // might need to do the same for AbortCompilation
                 throw e;
             } catch (JavaModelException e) {
-                // GRECLIPSE-1480 don't log element does not exist exceptions. since this could occur when element is in a non-java
-                // project
-                if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST || this.getJavaProject().exists()) {
+                // GRECLIPSE-1480 don't log element does not exist exceptions for non-java project
+                if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST || getJavaProject().exists()) {
                     Util.log(e, "Problem with build structure for " + this.name);
                 }
             } catch (Exception e) {
-                // GROOVY: The groovy compiler does not handle broken code well in many situations
+                // The groovy compiler doesn't handle broken code well in many situations
                 // use this general catch clause so that exceptions thrown by broken code
                 // do not bubble up the stack.
                 Util.log(e, "Problem with build structure for " + this.name);
             } finally {
                 if (compilationUnitDeclaration != null) {
+                    ((CompilationUnitElementInfo) info).hasFunctionalTypes = compilationUnitDeclaration.hasFunctionalTypes();
                     compilationUnitDeclaration.cleanUp();
                 }
             }

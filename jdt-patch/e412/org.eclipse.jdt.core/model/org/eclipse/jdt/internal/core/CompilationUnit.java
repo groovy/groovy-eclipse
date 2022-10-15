@@ -732,6 +732,10 @@ public IResource getCorrespondingResource() throws JavaModelException {
 		return getUnderlyingResource();
 	}
 }
+// GROOVY add
+protected Map<String, String> getCustomOptions() {
+	return Collections.emptyMap();
+}
 /**
  * @see ICompilationUnit#getElementAt(int)
  */

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  *
@@ -19,9 +20,9 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 @SuppressWarnings("rawtypes")
 public class ASTHolderCUInfo extends CompilationUnitElementInfo {
-	int astLevel;
-	boolean resolveBindings;
-	int reconcileFlags;
-	HashMap problems = null;
-	CompilationUnit ast;
+	public int astLevel;
+	public boolean resolveBindings;
+	public int reconcileFlags;
+	public HashMap problems;
+	public CompilationUnit ast;
 }

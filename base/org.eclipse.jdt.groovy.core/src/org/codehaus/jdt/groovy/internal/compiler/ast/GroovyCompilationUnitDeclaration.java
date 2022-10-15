@@ -224,12 +224,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         // replacement error collector doesn't cause an exception, instead errors are checked post 'compile'
         try {
             problemReporter.referenceContext = this;
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            Thread currentThread = Thread.currentThread();
+            ClassLoader contextLoader = currentThread.getContextClassLoader();
             try {
-                Thread.currentThread().setContextClassLoader(compilationUnit.getTransformLoader());
+                currentThread.setContextClassLoader(compilationUnit.getTransformLoader());
                 compilationUnit.compile(phase);
             } finally {
-                Thread.currentThread().setContextClassLoader(cl);
+                currentThread.setContextClassLoader(contextLoader);
             }
 
             ErrorCollector collector = groovySourceUnit.getErrorCollector();
