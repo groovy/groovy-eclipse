@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  *
@@ -50,9 +51,10 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class JavaSearchScope extends AbstractJavaSearchScope {
 
-	private ArrayList elements;
+	private HashSet elements;
+	private boolean[] elementTypes;
 
-	/* The paths of the resources in this search scope
+	/** The paths of the resources in this search scope
 	    (or the classpath entries' paths if the resources are projects)
 	*/
 	private ArrayList projectPaths = new ArrayList(); // container paths projects
@@ -271,9 +273,11 @@ public void add(IJavaElement element) throws JavaModelException {
 			// remember sub-cu (or sub-class file) java elements
 			if (element instanceof IMember) {
 				if (this.elements == null) {
-					this.elements = new ArrayList();
+					this.elements = new HashSet();
+					this.elementTypes = new boolean[IJavaElement.JAVA_MODULE+1];
 				}
 				this.elements.add(element);
+				this.elementTypes[element.getElementType()] = true;
 			}
 			root = (PackageFragmentRoot) element.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 			projectPath = root.getJavaProject().getPath().toString();
@@ -448,6 +452,7 @@ private boolean encloses(String enclosingPath, String path, int index) {
 @Override
 public boolean encloses(IJavaElement element) {
 	if (this.elements != null) {
+		/* GROOVY -- https://bugs.eclipse.org/bugs/show_bug.cgi?id=540712
 		for (int i = 0, length = this.elements.size(); i < length; i++) {
 			IJavaElement scopeElement = (IJavaElement)this.elements.get(i);
 			IJavaElement searchedElement = element;
@@ -457,6 +462,12 @@ public boolean encloses(IJavaElement element) {
 				searchedElement = searchedElement.getParent();
 			}
 		}
+		*/
+		do {
+			if (this.elementTypes[element.getElementType()] && this.elements.contains(element))
+				return true;
+		} while ((element = element.getParent()) != null);
+		// GROOVY end
 		return false;
 	}
 	IPackageFragmentRoot root = (IPackageFragmentRoot) element.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
@@ -638,13 +649,12 @@ private void rehash() {
 
 @Override
 public String toString() {
-	StringBuffer result = new StringBuffer("JavaSearchScope on "); //$NON-NLS-1$
+	StringBuilder result = new StringBuilder("JavaSearchScope on "); //$NON-NLS-1$
 	if (this.elements != null) {
 		result.append("["); //$NON-NLS-1$
-		for (int i = 0, length = this.elements.size(); i < length; i++) {
-			JavaElement element = (JavaElement)this.elements.get(i);
+		for (Object element : this.elements) {
 			result.append("\n\t"); //$NON-NLS-1$
-			result.append(element.toStringWithAncestors());
+			result.append(((JavaElement) element).toStringWithAncestors());
 		}
 		result.append("\n]"); //$NON-NLS-1$
 	} else {
