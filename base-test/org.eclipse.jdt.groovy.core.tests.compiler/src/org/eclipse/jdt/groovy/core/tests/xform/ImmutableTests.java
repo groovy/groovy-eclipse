@@ -77,7 +77,7 @@ public final class ImmutableTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -86,6 +86,50 @@ public final class ImmutableTests extends GroovyCompilerTestSuite {
             "@groovy.transform.Immutable\n" +
             "class Foo {\n" +
             "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    public void testImmutable3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.Immutable(defaults=false)\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    public void testImmutable4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(new Foo(\"one\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.Immutable(defaults=true,noArg=false)\n" + //TODO: GROOVY-10790
+            "class Foo {\n" +
+            "  String bar, baz = \"two\"\n" +
             "}\n",
         };
         //@formatter:on

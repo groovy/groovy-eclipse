@@ -262,4 +262,51 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "Foo(baz:two, bar:one)");
     }
+
+    @Test
+    public void testTupleConstructor10() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(includeFields=true)\n" +
+            "class Person {\n" +
+            "  String firstName = 'John'\n" +
+            "  private String lastName = 'Doe'\n" +
+            "  String getLastName() { lastName }\n" +
+            "}\n" +
+            "def p = new Person()\n" +
+            "assert p.firstName == 'John'\n" +
+            "assert p.lastName == 'Doe'\n" +
+            "p = new Person('Jane')\n" +
+            "assert p.firstName == 'Jane'\n" +
+            "assert p.lastName == 'Doe'\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTupleConstructor11() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TupleConstructor(force=true)\n" +
+            "class Person {\n" +
+            "  String firstName, lastName\n" +
+            "  Person(Person that) {\n" +
+            "    this.firstName = that.firstName\n" +
+            "  }\n" +
+            "}\n" +
+            "def p = new Person('John', 'Doe')\n" +
+            "assert p.firstName == 'John'\n" +
+            "assert p.lastName == 'Doe'\n" +
+            "p = new Person(p)\n" +
+            "assert p.firstName == 'John'\n" +
+            "assert p.lastName == null\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }

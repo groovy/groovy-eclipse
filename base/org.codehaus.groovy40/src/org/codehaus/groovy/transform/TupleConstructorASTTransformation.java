@@ -340,7 +340,6 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
     private static Expression providedOrDefaultInitialValue(final FieldNode fNode) {
         ClassNode fType = fNode.getType();
         Expression init = fNode.getInitialExpression();
-        fNode.setInitialValueExpression(null); // GROOVY-10238
         if (init == null || (ClassHelper.isPrimitiveType(fType) && ExpressionUtils.isNullConstant(init))) {
             init = defaultValueX(fType);
         }

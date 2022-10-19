@@ -231,4 +231,26 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "Outer$Inner(foo:bar, baz:null)");
     }
+
+    @Test // GROOVY-10238
+    public void testCanonical10() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  @groovy.transform.Canonical\n" +
+            "  static class Inner {\n" +
+            "    Map<String,Object> map = [:].withDefault { new Object() }\n" + // NoSuchMethodError: java.util.Map.withDefault(Lgroovy/lang/Closure;)
+            "  }\n" +
+            "}\n" +
+            "def obj = new Outer.Inner()\n" +
+            "assert obj.toString() == 'Outer$Inner([:])'\n" +
+            "assert obj.map['foo'] != null\n" +
+            "assert obj.toString() != 'Outer$Inner([:])'\n" ,
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }

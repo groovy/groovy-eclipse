@@ -1026,6 +1026,7 @@ public class InvocationWriter {
             if (sameHashNode != null) {
                 controller.getSourceUnit().addError(new SyntaxException(
                     "Unable to compile class "+controller.getClassNode().getName() + " due to hash collision in constructors", call.getLineNumber(), call.getColumnNumber()));
+                return; // GRECLIPSE add
             }
         }
         Label[] targets = new Label[constructors.size()];

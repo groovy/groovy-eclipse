@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import groovy.lang.GroovyRuntimeException;
+import groovy.transform.CompilationUnitAware;
 import groovy.transform.PackageScopeTarget;
 
 import org.codehaus.groovy.GroovyBugError;
@@ -2957,7 +2958,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         AnnotationNode anno = new AnnotationNode(ClassHelper.make(groovy.transform.TupleConstructor.class));
                         if (isType("groovy.transform.Immutable", annotationType))
                             anno.addMember("defaults", ConstantExpression.FALSE);
-                        attributes.forEach((name, value) -> anno.addMember(name, value));
+                        attributes.forEach((name, value) -> anno.setMember(name, value));
 
                         // create type that intercepts generated constructors
                         ClassNode type = new ClassNode(classNode.getName(), 0, null) {
@@ -2981,9 +2982,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             }
                         };
 
-                        ASTTransformation astt = new org.codehaus.groovy.transform.TupleConstructorASTTransformation();
+                        ASTTransformation astt = new org.codehaus.groovy.transform.TupleConstructorASTTransformation() {
+                            @Override public void addError(String msg, org.codehaus.groovy.ast.ASTNode node) {}
+                        };
+                        ((CompilationUnitAware) astt).setCompilationUnit(unitDeclaration.compilationUnit);
                         // apply TupleConstructorASTTransformation early to generate constructor(s)
-                        astt.visit(new org.codehaus.groovy.ast.ASTNode[] {anno, type}, sourceUnit);
+                        astt.visit(new org.codehaus.groovy.ast.ASTNode[] {anno, type}, null);
 
                         if (!generated.isEmpty()) {
                             constructorNodes = new ArrayList<>(constructorNodes);
