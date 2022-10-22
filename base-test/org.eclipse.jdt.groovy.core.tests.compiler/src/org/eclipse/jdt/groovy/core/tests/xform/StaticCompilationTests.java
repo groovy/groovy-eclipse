@@ -754,6 +754,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1411
+    public void testCompileStatic29() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Pogo pogo) {\n" +
+            "  def key = 'aaa'\n" +
+            "  pogo.map[key] = 1\n" +
+            "}\n" +
+            "test(new Pogo())\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  Map<String,?> getMap() {\n" +
+            "    return [:]\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testCompileStatic1505() {
         //@formatter:off

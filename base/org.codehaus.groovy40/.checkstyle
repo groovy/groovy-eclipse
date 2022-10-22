@@ -40,6 +40,7 @@
         <file-match-pattern match-pattern="groovy/classgen/asm/WriterController.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesBinaryExpressionMultiTypeDispatcher.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypes(CallSite|MethodReferenceExpression)Writer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
