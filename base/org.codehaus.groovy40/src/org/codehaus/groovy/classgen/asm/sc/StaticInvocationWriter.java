@@ -18,14 +18,7 @@
  */
 package org.codehaus.groovy.classgen.asm.sc;
 
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GroovyCodeVisitor;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.decompiled.DecompiledClassNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -119,6 +112,10 @@ public class StaticInvocationWriter extends InvocationWriter {
     private final AtomicInteger labelCounter = new AtomicInteger();
 
     private MethodCallExpression currentCall;
+
+    public MethodCallExpression getCurrentCall() {
+        return currentCall;
+    }
 
     public StaticInvocationWriter(final WriterController wc) {
         super(wc);
@@ -341,7 +338,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             return true;
         }
 
-        Expression fixedReceiver = null;
+        Expression  fixedReceiver = receiver;
         boolean fixedImplicitThis = implicitThis;
         if (target.isProtected()) {
             ClassNode node = receiver == null ? ClassHelper.OBJECT_TYPE : controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
@@ -376,8 +373,9 @@ public class StaticInvocationWriter extends InvocationWriter {
             }
         }
         if (receiver != null && !isSuperExpression(receiver)) {
-            // in order to avoid calls to castToType, which is the dynamic behaviour, we make sure that we call CHECKCAST instead then replace the top operand type
-            return super.writeDirectMethodCall(target, fixedImplicitThis, new CheckcastReceiverExpression(fixedReceiver != null ? fixedReceiver : receiver, target), args);
+            // in order to avoid calls to castToType, which is the dynamic behaviour, make sure that we call CHECKCAST instead then replace the top operand type
+            if (currentCall.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER) == null) fixedReceiver = new CheckcastReceiverExpression(fixedReceiver, target);
+            return super.writeDirectMethodCall(target, fixedImplicitThis, fixedReceiver, args);
         }
         return super.writeDirectMethodCall(target, implicitThis, receiver, args);
     }
@@ -727,9 +725,13 @@ public class StaticInvocationWriter extends InvocationWriter {
                         type = ClassHelper.getWrapper(type);
                     }
                     ClassNode declaringClass = target.getDeclaringClass();
-                    if (type.getClass() != ClassNode.class
-                            && type.getClass() != InnerClassNode.class
-                            && type.getClass() != DecompiledClassNode.class) {
+                    Class typeClass= type.getClass();
+                    if (typeClass != ClassNode.class
+                            && typeClass != InnerClassNode.class
+                            && typeClass != ImmutableClassNode.class
+                            && typeClass != DecompiledClassNode.class
+                            && typeClass != EnumConstantClassNode.class
+                            && !"JDTClassNode".equals(typeClass.getSimpleName())) {
                         type = declaringClass; // ex: LUB type
                     }
                     if (isObjectType(declaringClass)) {
@@ -746,10 +748,6 @@ public class StaticInvocationWriter extends InvocationWriter {
             }
             return type;
         }
-    }
-
-    public MethodCallExpression getCurrentCall() {
-        return currentCall;
     }
 
     @Override

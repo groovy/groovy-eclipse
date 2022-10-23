@@ -116,7 +116,7 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
         if (expr instanceof ConstructorCallExpression) {
             return constructorCallTransformer.transformConstructorCall((ConstructorCallExpression) expr);
         }
-        // GRECLIPSE add -- GROOVY-6097, GROOVY-7300, et al.
+        // GRECLIPSE add -- GROOVY-6097, GROOVY-7300, GROOVY-9089, et al.
         if (expr instanceof PropertyExpression) {
             MethodNode dmct = expr.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             // NOTE: BinaryExpressionTransformer handles the setter
@@ -129,10 +129,7 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
                 mce.setMethodTarget(dmct);
                 mce.setSourcePosition(pe);
                 mce.setSafe(pe.isSafe());
-                // check if method return type is incomplete
-                if (org.codehaus.groovy.ast.tools.GenericsUtils.hasPlaceHolders(mce.getType()))
-                    mce.putNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE,
-                        pe.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE));
+                mce.copyNodeMetaData(pe);
                 return mce;
             }
             return super.transform(expr);

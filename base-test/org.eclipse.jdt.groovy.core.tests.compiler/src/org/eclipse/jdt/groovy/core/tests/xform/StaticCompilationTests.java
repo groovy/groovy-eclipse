@@ -4676,15 +4676,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "@SuppressWarnings('rawtypes')\n" +
-            "void outer(@DelegatesTo(value = C1) Closure block) {\n" +
-            "  block.delegate = new C1()\n" +
-            "  block()\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  new C1().with(block)\n" +
             "}\n" +
-            "@SuppressWarnings('rawtypes')\n" +
             "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
-            "  block.delegate = new C2()\n" +
-            "  block()\n" +
+            "  new C2().with(block)\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
@@ -4707,6 +4703,42 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "class C1 {\n" +
+            "  String getP() {\n" +
+            "    'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  String getP() {\n" +
+            "    'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  new C1().with(block)\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  new C2().with(block)\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      this.print(owner.p)\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate");
+    }
+
+    @Test
+    public void testCompileStatic9089b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C1 {\n" +
             "  void m() {\n" +
             "    print 'outer delegate'\n" +
             "  }\n" +
@@ -4716,15 +4748,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "@SuppressWarnings('rawtypes')\n" +
             "void outer(@DelegatesTo(value = C1) Closure block) {\n" +
             "  block.delegate = new C1()\n" +
-            "  block()\n" +
+            "  block.call()\n" +
             "}\n" +
-            "@SuppressWarnings('rawtypes')\n" +
-            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "void inner(@DelegatesTo(value = C2) Closure block) {\n" +
             "  block.delegate = new C2()\n" +
-            "  block()\n" +
+            "  block.call()\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
