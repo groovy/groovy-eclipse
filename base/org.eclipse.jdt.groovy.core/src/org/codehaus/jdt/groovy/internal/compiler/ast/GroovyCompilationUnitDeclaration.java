@@ -15,6 +15,8 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.NumberFormat;
@@ -2977,7 +2979,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                     }
                                     p.setType(pt);
                                 }
-                                ctor.setDeclaringClass(classNode);
                                 generated.add(ctor);
                             }
                         };
@@ -2995,6 +2996,37 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         }
                     }
                     break;
+                }
+            }
+
+            boolean map = false, noArg = false;
+            for (AnnotationNode annotation : classNode.getAnnotations()) {
+                String annotationType = annotation.getClassNode().getName();
+                if (isType("groovy.transform.MapConstructor", annotationType)) {
+                    map = true;
+                    Expression value = annotation.getMember("noArg");
+                    if (value instanceof ConstantExpression) {
+                        noArg = Boolean.TRUE.equals(((ConstantExpression) value).getValue());
+                    }
+                } else if (isType("groovy.transform.Immutable", annotationType)) {
+                    map = true;
+                    Expression value = annotation.getMember("noArg");
+                    if (value instanceof ConstantExpression) {
+                        noArg = Boolean.TRUE.equals(((ConstantExpression) value).getValue());
+                    } else {
+                        noArg = true; // declared by Immutable
+                    }
+                }
+            }
+            if (map) {
+                constructorNodes = new ArrayList<>(constructorNodes);
+                if (constructorNodes.stream().map(MethodNode::getParameters)
+                        .noneMatch(pa -> pa.length == 1 && pa[0].getType().equals(ClassHelper.MAP_TYPE))) {
+                    Parameter[] pa = {new Parameter(ClassHelper.MAP_TYPE.getPlainNodeReference(), "args")};
+                    constructorNodes.add(markAsGenerated(classNode, new ConstructorNode(Flags.AccPublic, pa, ClassNode.EMPTY_ARRAY, null)));
+                }
+                if (noArg && constructorNodes.stream().map(MethodNode::getParameters).noneMatch(pa -> pa.length == 0)) {
+                    constructorNodes.add(markAsGenerated(classNode, new ConstructorNode(Flags.AccPublic, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null)));
                 }
             }
 

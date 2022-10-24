@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.groovy.core.tests.xform.ImmutableTests,
     org.eclipse.jdt.groovy.core.tests.xform.InheritConstructorsTests,
     org.eclipse.jdt.groovy.core.tests.xform.LoggingTests,
+    org.eclipse.jdt.groovy.core.tests.xform.MapConstructorTests,
     org.eclipse.jdt.groovy.core.tests.xform.MixinTests,
     org.eclipse.jdt.groovy.core.tests.xform.NamedVariantTests,
     org.eclipse.jdt.groovy.core.tests.xform.NullCheckTests,

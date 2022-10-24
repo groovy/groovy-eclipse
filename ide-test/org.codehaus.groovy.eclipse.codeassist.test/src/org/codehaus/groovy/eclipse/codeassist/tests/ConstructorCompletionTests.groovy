@@ -495,7 +495,10 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        checkUniqueProposal(contents, 'One', 'One(Number two)', '(null)')
+        def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'One'))
+        proposalExists(proposals, 'One(Number two) - One', 1)
+        proposalExists(proposals, 'One(Map args) - One', 1)
+        proposalExists(proposals, 'One() - One', 1)
     }
 
     @Test
