@@ -7287,6 +7287,26 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic10109() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "String test(String string) {\n" +
+            "  new StringBuilder().with {\n" +
+            "    int len = length()\n" + // IllegalAccessError
+            "    append(string)\n" +
+            "    toString()\n" +
+            "  }\n" +
+            "}\n" +
+            "print test('works')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic10197() {
         for (String override : new String[] {"int getBaz() {1}", "final int baz = 1"}) {
             //@formatter:off
