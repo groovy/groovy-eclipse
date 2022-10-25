@@ -44,6 +44,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.groovy.core.tests.xform.AutoFinalTests,
     org.eclipse.jdt.groovy.core.tests.xform.AutoImplementTests,
     org.eclipse.jdt.groovy.core.tests.xform.BaseScriptTests,
+    org.eclipse.jdt.groovy.core.tests.xform.BindableTests,
     org.eclipse.jdt.groovy.core.tests.xform.CanonicalTests,
     org.eclipse.jdt.groovy.core.tests.xform.CategoryTests,
     org.eclipse.jdt.groovy.core.tests.xform.DelegateTests,
