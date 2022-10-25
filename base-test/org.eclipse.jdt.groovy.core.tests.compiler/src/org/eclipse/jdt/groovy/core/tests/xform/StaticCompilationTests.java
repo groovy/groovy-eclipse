@@ -7885,4 +7885,26 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Groovy:Invalid return type: void is not convertible to java.lang.String\n" +
             "----------\n");
     }
+
+    @Test
+    public void testCompileStatic10791() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.*\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(List list) {\n" +
+            "  BiConsumer<List,Consumer> bc = List::forEach\n" + // default method of Iterator
+            "  Consumer printer = { print(it) }\n" +
+            "  bc.accept(list, printer)\n" +
+            "}\n" +
+            "test(['works'])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
