@@ -32,7 +32,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -55,7 +55,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -78,7 +78,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -111,7 +111,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -143,7 +143,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -173,7 +173,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy", // TODO: java
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -195,7 +195,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\"));\n" +
             "  }\n" +
             "}\n",
@@ -219,7 +219,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -243,7 +243,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy", // TODO: java
             "public class Main {\n" +
-            "  public static void main(String... args) {\n" +
+            "  public static void main(String[] args) {\n" +
             "    System.out.print(new Foo(\"one\", \"two\"));\n" +
             "  }\n" +
             "}\n",
@@ -267,6 +267,33 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
     public void testTupleConstructor10() {
         //@formatter:off
         String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.TupleConstructor(allProperties=true)\n" +
+            "@groovy.transform.ToString(includeFields=true)\n" +
+            "class Foo {\n" +
+            "  String bar\n" +
+            "  private baz\n" +
+            "  void setBaz(value) {\n" +
+            "    this.@baz = value\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test
+    public void testTupleConstructor11() {
+        //@formatter:off
+        String[] sources = {
             "Main.groovy",
             "@groovy.transform.TupleConstructor(includeFields=true)\n" +
             "class Person {\n" +
@@ -287,7 +314,7 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTupleConstructor11() {
+    public void testTupleConstructor12() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
