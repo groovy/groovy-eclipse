@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -249,38 +248,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 return new TypeLookupResult(nodeType, null, null, TypeConfidence.UNKNOWN, scope);
             }
 
-        } else if (node instanceof BooleanExpression) {
-            return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
-
-        } else if (node instanceof GStringExpression) {
-            return new TypeLookupResult(VariableScope.GSTRING_CLASS_NODE, null, null, confidence, scope);
-
-        } else if (node instanceof EmptyExpression) {
-            return new TypeLookupResult(null, null, null, confidence, scope);
-
-        } else if (node instanceof ArrayExpression || node instanceof CastExpression) {
-            return new TypeLookupResult(nodeType, null, null, confidence, scope);
-
-        } else if (node instanceof ClassExpression) {
-            ClassNode classType = VariableScope.newClassClassNode(nodeType);
-            return new TypeLookupResult(classType, null, nodeType, confidence, scope);
-
-        } else if (node instanceof ClosureExpression) {
-            if (VariableScope.isPlainClosure(nodeType)) {
-                ClassNode returnType = node.getNodeMetaData("returnType");
-                if (returnType != null && !VariableScope.isVoidOrObject(returnType))
-                    GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
-            }
-            return new TypeLookupResult(nodeType, null, node, confidence, scope);
-
-        } else if (node instanceof BitwiseNegationExpression) {
-            ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
-            // check for ~/.../ (a.k.a. Pattern literal)
-            if (VariableScope.STRING_CLASS_NODE.equals(type)) {
-                type = VariableScope.PATTERN_CLASS_NODE;
-            }
-            return new TypeLookupResult(type, null, null, confidence, scope);
-
         } else if (node instanceof ConstructorCallExpression) {
             ConstructorCallExpression call = (ConstructorCallExpression) node;
             ClassNode resolvedDeclaringType = declaringType;
@@ -314,37 +281,59 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(nodeType, resolvedDeclaringType, declaration, confidence, scope);
 
         } else if (node instanceof StaticMethodCallExpression) {
-            List<MethodNode> candidates = new LinkedList<>();
-            java.util.function.BiConsumer<ClassNode, String> collector = (classNode, methodName) -> {
-                // concrete types (without mixins/traits) return all methods from getMethods(String)
-                if (classNode.isAbstract() || classNode.isInterface() || implementsTrait(classNode)) {
-                    Set<ClassNode> hierarchy = new LinkedHashSet<>();
-                    VariableScope.createTypeHierarchy(classNode, hierarchy, false);
-                    hierarchy.forEach(type -> candidates.addAll(type.getMethods(methodName)));
-                } else {
-                    candidates.addAll(classNode.getMethods(methodName));
-                }
-            };
-
+            List<MethodNode> candidates = new ArrayList<>(12);
             String methodName = ((StaticMethodCallExpression) node).getMethod();
-            collector.accept(((StaticMethodCallExpression) node).getOwnerType(), methodName);
-
-            // Workaround for https://issues.apache.org/jira/browse/GROOVY-7744:
-            /*String alias = node.getNodeMetaData("static.import.alias");
-            // deal with "import static a.B.C as Z" and "import static d.E.F as Z"
-            for (ImportNode staticImport : scope.getEnclosingModuleNode().getStaticImports().values()) {
-                if (staticImport.getAlias().equals(alias != null ? alias : methodName)) {
-                    collector.accept(staticImport.getType(), staticImport.getFieldName());
+            ClassNode theType = ((StaticMethodCallExpression) node).getOwnerType();
+            if (theType.isAbstract() || theType.isInterface() || implementsTrait(theType)) {
+                Set<ClassNode> hierarchy = new LinkedHashSet<>();
+                VariableScope.createTypeHierarchy(theType, hierarchy, false);
+                for (ClassNode type : hierarchy) {
+                    for (MethodNode candidate : type.getDeclaredMethods(methodName)) {
+                        if (candidate.isStatic()) candidates.add(candidate);
+                    }
+                }
+            } else {
+                for (ClassNode type = theType; type != null && type != VariableScope.OBJECT_CLASS_NODE; type = type.getSuperClass()) {
+                    for (MethodNode candidate : type.getDeclaredMethods(methodName)) {
+                        if (candidate.isStatic()) candidates.add(candidate);
+                    }
                 }
             }
-            // deal with "import static a.B.C as Z" and "import static d.E.*" where type E has member Z
-            for (ImportNode staticImport : scope.getEnclosingModuleNode().getStaticStarImports().values()) {
-                collector.accept(staticImport.getType(), alias != null ? alias : methodName);
-            }*/
 
-            candidates.removeIf(candidate -> !candidate.isStatic());
             MethodNode closestMatch = findMethodDeclaration0(candidates, scope.getMethodCallArgumentTypes(), true);
             return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, TypeConfidence.INFERRED, scope);
+
+        } else if (node instanceof ClosureExpression) {
+            if (VariableScope.isPlainClosure(nodeType)) {
+                ClassNode returnType = node.getNodeMetaData("returnType");
+                if (returnType != null && !VariableScope.isVoidOrObject(returnType))
+                    GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
+            }
+            return new TypeLookupResult(nodeType, null, node, confidence, scope);
+
+        } else if (node instanceof BooleanExpression) {
+            return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
+
+        } else if (node instanceof GStringExpression) {
+            return new TypeLookupResult(VariableScope.GSTRING_CLASS_NODE, null, null, confidence, scope);
+
+        } else if (node instanceof ArrayExpression || node instanceof CastExpression) {
+            return new TypeLookupResult(nodeType, null, null, confidence, scope);
+
+        } else if (node instanceof ClassExpression) {
+            ClassNode classType = VariableScope.newClassClassNode(nodeType);
+            return new TypeLookupResult(classType, null, nodeType, confidence, scope);
+
+        } else if (node instanceof EmptyExpression) {
+            return new TypeLookupResult(null, null, null, confidence, scope);
+
+        } else if (node instanceof BitwiseNegationExpression) {
+            ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
+            // check for ~/.../ (a.k.a. Pattern literal)
+            if (VariableScope.STRING_CLASS_NODE.equals(type)) {
+                type = VariableScope.PATTERN_CLASS_NODE;
+            }
+            return new TypeLookupResult(type, null, null, confidence, scope);
         }
 
         if (VariableScope.OBJECT_CLASS_NODE.equals(nodeType)) {

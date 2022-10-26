@@ -431,7 +431,7 @@ public class GroovyUtils {
                     return Boolean.TRUE;
                 }
                 type = type.getSuperClass();
-            } while (type != null);
+            } while (type != null && type != ClassHelper.OBJECT_TYPE);
             return Boolean.FALSE;
         }).booleanValue();
     }
