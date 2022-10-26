@@ -44,11 +44,13 @@ public class AnnotatedNode extends ASTNode {
     }
 
     public List<AnnotationNode> getAnnotations(ClassNode type) {
-        List<AnnotationNode> ret = new ArrayList<AnnotationNode>(annotations.size());
-        for (AnnotationNode node: annotations) {
-            if (type.equals(node.getClassNode())) ret.add(node);
+        List<AnnotationNode> annotations = new ArrayList<>();
+        for (AnnotationNode node : getAnnotations()) {
+            if (type.equals(node.getClassNode())) {
+                annotations.add(node);
+            }
         }
-        return ret;
+        return annotations;
     }
 
     public void addAnnotation(AnnotationNode value) {

@@ -3120,14 +3120,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ClassNode[] args = getArgumentTypes(argumentList);
 
         try {
-
-            // method call receivers are :
-            //   - possible "with" receivers
-            //   - the actual receiver as found in the method call expression
-            //   - any of the potential receivers found in the instanceof temporary table
-            // in that order
+            /* GRECLIPSE edit
             List<Receiver<String>> receivers = new LinkedList<Receiver<String>>();
             addReceivers(receivers, makeOwnerList(new ClassExpression(receiver)), false);
+            */
+            List<Receiver<String>> receivers = Collections.singletonList(Receiver.make(receiver));
+            // GRECLIPSE end
             List<MethodNode> mn = null;
             Receiver<String> chosenReceiver = null;
             for (Receiver<String> currentReceiver : receivers) {
@@ -5490,8 +5488,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
 
         if (!"<init>".equals(name) && !"<clinit>".equals(name)) {
-            // lookup in DGM methods too
+            /* GRECLIPSE edit
             findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), receiver, name, args, methods);
+            */
+            methods.addAll(findDGMMethodsForClassNode(getSourceUnit().getClassLoader(), receiver, name));
+            // GRECLIPSE end
         }
         methods = filterMethodsByVisibility(methods);
         List<MethodNode> chosen = chooseBestMethod(receiver, methods, args);
