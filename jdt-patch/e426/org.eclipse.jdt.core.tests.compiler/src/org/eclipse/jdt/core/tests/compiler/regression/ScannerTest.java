@@ -1836,4 +1836,25 @@ public class ScannerTest extends AbstractRegressionTest {
 			assertTrue(false);
 		}
 	}
+
+	public void testWhenAsIdentifier() {
+		String source =
+				"public void when(Object when) {\n" +
+				"	Predicate<Object> condition = o -> when(o);\n" +
+				"	SomeClass.when(condition).when();\n" +
+				"	SomeClass./*comment*/when(condition,/*comment*/when(false)). when(true);\n" +
+				"}";
+		IScanner scanner = ToolFactory.createScanner(true, true, true, "19", "19", true);
+		scanner.setSource(source.toCharArray());
+		try {
+			int token;
+			while ((token = scanner.getNextToken()) != ITerminalSymbols.TokenNameEOF) {
+				if (token == ITerminalSymbols.TokenNameRestrictedIdentifierWhen) {
+					fail("TokenNameRestrictedIdentifierWhen must not be detected");
+				}
+			}
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
 }

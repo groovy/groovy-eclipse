@@ -182,10 +182,12 @@ public class SpacePreparator extends ASTVisitor {
 		List<TypeParameter> typeParameters = node.typeParameters();
 		handleTypeParameters(typeParameters);
 
-		if (!node.isInterface() && !node.superInterfaceTypes().isEmpty()) {
-			// fix for: class A<E> extends ArrayList<String>implements Callable<String>
-			handleToken(node.getName(), TokenNameimplements, true, false);
-		}
+		if (!node.superInterfaceTypes().isEmpty())
+			handleTokenAfter(node.getName(), node.isInterface() ? TokenNameextends : TokenNameimplements, true, true);
+		if (node.getSuperclassType() != null)
+			handleTokenAfter(node.getName(), TokenNameextends, true, true);
+		if (!node.permittedTypes().isEmpty())
+			handleTokenAfter(node.getName(), TokenNameRestrictedIdentifierpermits, true, true);
 
 		handleToken(node.getName(), TokenNameLBRACE,
 				this.options.insert_space_before_opening_brace_in_type_declaration, false);
@@ -265,18 +267,19 @@ public class SpacePreparator extends ASTVisitor {
 		}
 
 		List<SingleVariableDeclaration> components = node.recordComponents();
-		if (handleEmptyParens(node, this.options.insert_space_between_empty_parens_in_constructor_declaration)) {
-			handleToken(node, TokenNameLPAREN,
+		ASTNode nodeBeforeLParen = typeParameters.isEmpty() ? node.getName()
+				: typeParameters.get(typeParameters.size() - 1);
+		ASTNode nodeBeforeRParen = components.isEmpty() ? nodeBeforeLParen
+				: components.get(components.size() - 1);
+		if (handleEmptyParens(nodeBeforeLParen, this.options.insert_space_between_empty_parens_in_constructor_declaration)) {
+			handleTokenAfter(nodeBeforeLParen, TokenNameLPAREN,
 					this.options.insert_space_before_opening_paren_in_record_declaration, false);
 		} else {
-			handleToken(node, TokenNameLPAREN,
+			handleTokenAfter(nodeBeforeLParen, TokenNameLPAREN,
 					this.options.insert_space_before_opening_paren_in_record_declaration,
 					this.options.insert_space_after_opening_paren_in_record_declaration);
-
-			if (this.options.insert_space_before_closing_paren_in_record_declaration) {
-				ASTNode nodeBeforeBrace = components.isEmpty() ? node.getName() : components.get(components.size() - 1);
-				handleTokenAfter(nodeBeforeBrace, TokenNameRPAREN, true, false);
-			}
+			handleTokenAfter(nodeBeforeRParen, TokenNameRPAREN,
+					this.options.insert_space_before_closing_paren_in_record_declaration, false);
 		}
 		handleCommas(components, this.options.insert_space_before_comma_in_record_components,
 				this.options.insert_space_after_comma_in_record_components);
@@ -366,7 +369,8 @@ public class SpacePreparator extends ASTVisitor {
 					this.options.insert_space_after_opening_angle_bracket_in_type_parameters);
 			handleTokenAfter(typeParameters.get(typeParameters.size() - 1), TokenNameGREATER,
 					this.options.insert_space_before_closing_angle_bracket_in_type_parameters,
-					this.options.insert_space_after_closing_angle_bracket_in_type_parameters);
+					typeParameters.get(0).getParent() instanceof RecordDeclaration ? false
+							: this.options.insert_space_after_closing_angle_bracket_in_type_parameters);
 			handleCommas(typeParameters, this.options.insert_space_before_comma_in_type_parameters,
 					this.options.insert_space_after_comma_in_type_parameters);
 		}

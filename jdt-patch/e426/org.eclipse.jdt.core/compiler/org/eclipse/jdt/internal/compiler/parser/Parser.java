@@ -12823,12 +12823,12 @@ protected boolean moveRecoveryCheckpoint() {
 	do {
 		try {
 			this.scanner.multiCaseLabelComma = false;
-			this.scanner.lookBack[0] = this.scanner.lookBack[1] = TokenNameNotAToken; // stay clear of the voodoo in the present method
+			this.scanner.resetLookBack(); // stay clear of the voodoo in the present method
 			this.nextIgnoredToken = this.scanner.getNextNotFakedToken();
 		} catch(InvalidInputException e){
 			pos = this.scanner.currentPosition;
 		} finally {
-			this.scanner.lookBack[0] = this.scanner.lookBack[1] = TokenNameNotAToken; // steer clear of the voodoo in the present method
+			this.scanner.resetLookBack(); // steer clear of the voodoo in the present method
 			this.scanner.multiCaseLabelComma = false;
 		}
 	} while (this.nextIgnoredToken < 0);

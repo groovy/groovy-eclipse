@@ -177,6 +177,17 @@ public class Scanner implements TerminalTokens {
 	public boolean returnOnlyGreater = false;
 
 	public boolean insideRecovery = false;
+	/**
+	 * Look back for the two most recent tokens.
+	 * <ul>
+	 * <li><code>lookBack[1]</code> is the previous token</li>
+	 * <li><code>lookBack[0]</code> is the token before <code>lookBack[1]</code></li>
+	 * </ul>
+	 * As this look back is intended for resolving ambiguities and conflicts, it ignores whitespace and comments.
+	 *
+	 * @see #resetLookBack() Reset the look back and clear all stored tokens
+	 * @see #addTokenToLookBack(int) Add a token to the look back, removing the oldest entry
+	 */
 	int lookBack[] = new int[2]; // fall back to spring forward.
 	protected int nextToken = TokenNameNotAToken; // allows for one token push back, only the most recent token can be reliably ungotten.
 	private VanguardScanner vanguardScanner;
@@ -223,7 +234,8 @@ public Scanner(
 	this.tokenizeComments = tokenizeComments;
 	this.tokenizeWhiteSpace = tokenizeWhiteSpace;
 	this.sourceLevel = sourceLevel;
-	this.lookBack[0] = this.lookBack[1] = this.nextToken = TokenNameNotAToken;
+	this.resetLookBack();
+	this.nextToken = TokenNameNotAToken;
 	this.consumingEllipsisAnnotations = false;
 	this.complianceLevel = complianceLevel;
 	this.checkNonExternalizedStringLiterals = checkNonExternalizedStringLiterals;
@@ -1413,8 +1425,7 @@ public int getNextToken() throws InvalidInputException {
 	}
 	if (this.activeParser == null) { // anybody interested in the grammatical structure of the program should have registered.
 		if (token != TokenNameWHITESPACE) {
-			this.lookBack[0] = this.lookBack[1];
-			this.lookBack[1] = token;
+			addTokenToLookBack(token);
 			this.multiCaseLabelComma = false;
 		}
 		return token;
@@ -1426,8 +1437,7 @@ public int getNextToken() throws InvalidInputException {
 	} else if (mayBeAtCasePattern(token)) {
 		token = disambiguateCasePattern(token, this);
 	}
-	this.lookBack[0] = this.lookBack[1];
-	this.lookBack[1] = token;
+	addTokenToLookBack(token);
 	this.multiCaseLabelComma = false;
 	return token;
 }
@@ -3020,13 +3030,34 @@ public void resetTo(int begin, int end, boolean isModuleInfo, ScanContext contex
 	}
 	this.commentPtr = -1; // reset comment stack
 	this.foundTaskCount = 0;
-	this.lookBack[0] = this.lookBack[1] = this.nextToken = TokenNameNotAToken;
+	resetLookBack();
+	this.nextToken = TokenNameNotAToken;
 	this.consumingEllipsisAnnotations = false;
 	this.insideModuleInfo = isModuleInfo;
 	this.scanContext = context == null ? getScanContext(begin) : context;
 	this.multiCaseLabelComma = false;
 }
-
+/**
+ * @see #lookBack
+ */
+final void resetLookBack() {
+	this.lookBack[0] = this.lookBack[1] = TokenNameNotAToken;
+}
+/**
+ * @see #lookBack
+ */
+final void addTokenToLookBack(int newToken) {
+	// ignore whitespace and comments
+	switch (newToken) {
+		case TokenNameWHITESPACE:
+		case TokenNameCOMMENT_LINE:
+		case TokenNameCOMMENT_BLOCK:
+		case TokenNameCOMMENT_JAVADOC:
+			return;
+	}
+	this.lookBack[0] = this.lookBack[1];
+	this.lookBack[1] = newToken;
+}
 private ScanContext getScanContext(int begin) {
 	if (!isInModuleDeclaration())
 		return ScanContext.INACTIVE;
@@ -4731,8 +4762,7 @@ private static final class VanguardScanner extends Scanner {
 				token = TokenNameAT308;
 			}
 		}
-		this.lookBack[0] = this.lookBack[1];
-		this.lookBack[1] = token;
+		this.addTokenToLookBack(token);
 		this.multiCaseLabelComma = false;
 		return token == TokenNameEOF ? TokenNameNotAToken : token;
 	}
@@ -5051,16 +5081,18 @@ protected boolean mayBeAtGuard(int token) {
 		return false;
 	if (!JavaFeature.PATTERN_MATCHING_IN_SWITCH.isSupported(this.complianceLevel, this.previewEnabled))
 		return false;
-	switch (this.lookBack[1]) { // a simple elimination optimization for some common possible cases
-		case TokenNameCOMMA:
-		case TokenNamecase:
-		case TokenNamedefault:
-		case TokenNameSEMICOLON:
-		case TokenNameRestrictedIdentifierWhen:
-		case TokenNameOR_OR:
-			return false;
+	/*
+	 * A simple elimination optimization for some common possible cases. According to the JLS 19 including
+	 * patterns-switch and record-patterns Section 14.30.1, a guard may only be preceded by either right parentheses or
+	 * an identifier. However, we may still encounter comments, whitespace or the not-a-token token.
+	 */
+	switch (this.lookBack[1]) {
+		case TokenNameRPAREN:
+		case TokenNameIdentifier:
+		case TokenNameNotAToken: // TODO is this useful? Some tests start scanning at "when", but this makes no sense as a Pattern is required by the JLS
+			return true;
 	}
-	return true;
+	return false;
 }
 protected final boolean mayBeAtBreakPreview() {
 	return !isInModuleDeclaration() && this.breakPreviewAllowed && this.lookBack[1] != TokenNameARROW;
@@ -5159,7 +5191,7 @@ protected final boolean atTypeAnnotation() { // Did the '@' we saw just now hera
 
 public void setActiveParser(ConflictedParser parser) {
 	this.activeParser  = parser;
-	this.lookBack[0] = this.lookBack[1] = TokenNameNotAToken;  // no hand me downs please.
+	this.resetLookBack();  // no hand me downs please.
 	if (parser != null) {
 		this.insideModuleInfo = parser.isParsingModuleDeclaration();
 	}

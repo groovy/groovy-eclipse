@@ -9131,5 +9131,36 @@ public void testBug577251_001() {
 		"Erasure incompatibility in argument X.Entry of canonical constructor in record\n" +
 		"----------\n");
 }
-
+public void testBug576806_001() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportUndocumentedEmptyBlock, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		false /* skipJavac */,
+		new JavacTestOptions("Xlint:empty"),
+		new String[] {
+				"X.java",
+				"public class X {\n"+
+				"  public static void main(String[] args){\n"+
+				"     System.out.println(0);\n" +
+				"  }\n"+
+				"}\n"+
+				"record Empty(){\n"+
+				"}\n"+
+				"record DocumentedEmpty(){\n"+
+				"  // intentionally empty\n"+
+				"}\n"+
+				"record Point(int x, int y){\n"+
+				"}"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	record Empty(){\n" +
+		"}\n" +
+		"	             ^^^^\n" +
+		"Empty block should be documented\n" +
+		"----------\n",
+		null,
+		false,
+		options);
+}
 }

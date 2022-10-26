@@ -17,7 +17,7 @@
     <artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
     <version>4.8.0-SNAPSHOT</version>
   </parent>
-  <groupId>eclipse.jdt.core</groupId>
+  <groupId>org.eclipse.jdt</groupId>
   <artifactId>tests-pom</artifactId>
   <version>4.26.0-SNAPSHOT</version>
   <packaging>pom</packaging>

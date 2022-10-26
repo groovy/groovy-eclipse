@@ -115,7 +115,14 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 	public boolean isParameterizedType() {
 		return true;
 	}
-
+	@Override
+	public boolean isRecord() {
+		return this.type.isRecord();
+	}
+	@Override
+	public RecordComponentBinding[] components() {
+		return this.type.components();
+	}
 	/**
 	 * Iterate type arguments, and validate them according to corresponding variable bounds.
 	 */

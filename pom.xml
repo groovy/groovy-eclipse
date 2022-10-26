@@ -129,7 +129,7 @@
 				<repository>
 					<id>milestone</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.26-I-builds/I20220928-1800</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.26-I-builds/I20221020-1800</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -142,8 +142,8 @@
 				<dist.target>e4.26</dist.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2212${dist.qualifier}'</greclipse.build.qualifier>
 
-				<tycho-version>2.5.0</tycho-version>
-				<tycho-extras-version>2.5.0</tycho-extras-version>
+				<tycho-version>2.7.5</tycho-version>
+				<tycho-extras-version>2.7.5</tycho-extras-version>
 			</properties>
 		</profile>
 

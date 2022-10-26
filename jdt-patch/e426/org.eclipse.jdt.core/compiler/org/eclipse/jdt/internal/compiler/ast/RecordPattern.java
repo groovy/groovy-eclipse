@@ -119,10 +119,13 @@ public class RecordPattern extends TypePattern {
 		initSecretPatternVariable(scope);
 
 		// check whether the give type reference is a record
+		// check whether a raw type is being used in pattern types
 		// check whether the pattern signature matches that of the record declaration
 		if (!this.resolvedType.isRecord()) {
 			scope.problemReporter().unexpectedTypeinRecordPattern(this.resolvedType, this.type);
 			return this.resolvedType;
+		} else if (this.resolvedType.isRawType()) {
+			scope.problemReporter().rawTypeInRecordPattern(this.resolvedType, this.type);
 		}
 		this.isTotalTypeNode = isTotalForType(this.resolvedType);
 		RecordComponentBinding[] components = this.resolvedType.components();

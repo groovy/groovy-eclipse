@@ -4074,11 +4074,16 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 	private void closeChildren(Object info) {
 		if (info instanceof JavaElementInfo) {
-			IJavaElement[] children = ((JavaElementInfo)info).getChildren();
-			for (int i = 0, size = children.length; i < size; ++i) {
-				JavaElement child = (JavaElement) children[i];
+			for (IJavaElement child: ((JavaElementInfo)info).getChildren()) {
 				try {
-					child.close();
+					((JavaElement)child).close();
+				} catch (JavaModelException e) {
+					// ignore
+				}
+			}
+			for (IJavaElement child: ((JavaElementInfo)info).getExtendedChildren()) {
+				try {
+					((JavaElement)child).close();
 				} catch (JavaModelException e) {
 					// ignore
 				}

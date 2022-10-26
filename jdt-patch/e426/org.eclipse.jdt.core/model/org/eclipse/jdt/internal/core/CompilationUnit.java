@@ -525,6 +525,12 @@ public boolean equals(Object obj) {
 	CompilationUnit other = (CompilationUnit)obj;
 	return this.owner.equals(other.owner) && super.equals(obj);
 }
+
+@Override
+public int hashCode() {
+	return Util.combineHashCodes(super.hashCode(), this.owner.hashCode());
+}
+
 /**
  * @see ICompilationUnit#findElements(IJavaElement)
  */

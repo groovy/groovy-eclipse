@@ -1321,7 +1321,7 @@ public void resolve() {
 			}
 		}
 
-		if ((this.bits & ASTNode.UndocumentedEmptyBlock) != 0) {
+		if ((this.bits & ASTNode.UndocumentedEmptyBlock) != 0 && this.nRecordComponents == 0) {
 			this.scope.problemReporter().undocumentedEmptyBlock(this.bodyStart-1, this.bodyEnd);
 		}
 		boolean needSerialVersion =

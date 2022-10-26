@@ -1,3 +1,4 @@
 /target
 /s3.properties
 /s3-access.properties
+.tycho-consumer-pom.xml

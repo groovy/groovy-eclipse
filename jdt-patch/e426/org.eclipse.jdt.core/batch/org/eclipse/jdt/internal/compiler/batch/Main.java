@@ -195,7 +195,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		private static final String INFO = "INFO"; //$NON-NLS-1$
 
 		public static final int XML = 1;
-		private static final String XML_DTD_DECLARATION = "<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.006 Compiler//EN\" \"http://www.eclipse.org/jdt/core/compiler_32_006.dtd\">"; //$NON-NLS-1$
+		private static final String XML_DTD_DECLARATION = "<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.006 Compiler//EN\" \"https://www.eclipse.org/jdt/core/compiler_32_006.dtd\">"; //$NON-NLS-1$
 		static {
 			try {
 				Class<?> c = IProblem.class;

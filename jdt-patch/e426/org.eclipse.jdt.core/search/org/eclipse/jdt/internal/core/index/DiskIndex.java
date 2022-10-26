@@ -252,7 +252,7 @@ HashtableOfObject addQueryResults(char[][] categories, char[] key, int matchRule
 
 	return results;
 }
-private void cacheDocumentNames() throws IOException {
+private synchronized void cacheDocumentNames() throws IOException {
 	// will need all document names so get them now
 	this.cachedChunks = new String[this.numberOfChunks][];
 	try (InputStream stream = this.indexLocation.getInputStream()) {

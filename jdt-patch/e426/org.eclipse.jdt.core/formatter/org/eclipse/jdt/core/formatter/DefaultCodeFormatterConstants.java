@@ -1178,6 +1178,10 @@ public class DefaultCodeFormatterConstants {
 	 *     - possible values:   { COMMON_LINES, SEPARATE_LINES_IF_NOT_EMPTY, SEPARATE_LINES_IF_WRAPPED, SEPARATE_LINES, PRESERVE_POSITIONS }
 	 *     - default:           COMMON_LINES
 	 * </pre>
+	 *
+	 * Note that there is a typo ({@code delcaration} vs. {@code declaration})
+	 * in the option name. It has to remain, as fixing it would be a breaking
+	 * change.
 	 * @see #COMMON_LINES
 	 * @see #SEPARATE_LINES_IF_NOT_EMPTY
 	 * @see #SEPARATE_LINES_IF_WRAPPED

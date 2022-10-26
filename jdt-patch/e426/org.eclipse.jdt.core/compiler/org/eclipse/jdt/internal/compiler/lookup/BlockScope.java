@@ -598,6 +598,13 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 						CharOperation.subarray(compoundName, 0, currentIndex),
 						(ReferenceBinding) binding,
 						ProblemReasons.NotVisible);
+				if (packageBinding instanceof SplitPackageBinding) {
+					packageBinding = packageBinding.getVisibleFor(module(), false);
+					if (packageBinding instanceof SplitPackageBinding) {
+						problemReporter().conflictingPackagesFromModules((SplitPackageBinding) packageBinding, module(),
+								invocationSite.sourceStart(), invocationSite.sourceEnd());
+					}
+				}
 				break foundType;
 			}
 			packageBinding = (PackageBinding) binding;

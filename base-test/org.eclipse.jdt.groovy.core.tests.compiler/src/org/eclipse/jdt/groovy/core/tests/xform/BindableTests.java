@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Test;
 
@@ -65,6 +63,6 @@ public final class BindableTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "ready;changed", isAtLeastGroovy(30) ? "" : "WARNING");
+        runConformTest(sources, "ready;changed");
     }
 }

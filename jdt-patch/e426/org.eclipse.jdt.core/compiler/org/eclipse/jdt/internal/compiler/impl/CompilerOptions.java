@@ -212,6 +212,8 @@ public class CompilerOptions {
 	// Internally used option to allow debug framework compile evaluation snippets in context of modules, see bug 543604
 	public static final String OPTION_JdtDebugCompileMode = "org.eclipse.jdt.internal.debug.compile.mode"; //$NON-NLS-1$
 
+	public static final String OPTION_IgnoreUnnamedModuleForSplitPackage = "org.eclipse.jdt.core.compiler.ignoreUnnamedModuleForSplitPackage"; //$NON-NLS-1$
+
 	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	public static final String OPTIONG_BuildGroovyFiles           = "org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles"; //$NON-NLS-1$
@@ -563,6 +565,9 @@ public class CompilerOptions {
 
 	/** Enable a less restrictive compile mode for JDT debug. */
 	public boolean enableJdtDebugCompileMode;
+
+	/** Should the compiler ignore the unnamed module when a package is defined in both a named module and the unnamed module? */
+	public boolean ignoreUnnamedModuleForSplitPackage;
 
 	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
 	public final static String[] warningTokens = {
@@ -1411,6 +1416,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_EnablePreviews, this.enablePreviewFeatures ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportPreviewFeatures, getSeverityString(PreviewFeatureUsed));
 		optionsMap.put(OPTION_ReportSuppressWarningNotFullyAnalysed, getSeverityString(SuppressWarningsNotAnalysed));
+		optionsMap.put(OPTION_IgnoreUnnamedModuleForSplitPackage, this.ignoreUnnamedModuleForSplitPackage ? ENABLED : DISABLED);
 		return optionsMap;
 	}
 
@@ -1612,6 +1618,7 @@ public class CompilerOptions {
 		this.enablePreviewFeatures = false;
 
 		this.enableJdtDebugCompileMode = false;
+		this.ignoreUnnamedModuleForSplitPackage = false;
 	}
 
 	public void set(Map<String, String> optionsMap) {
@@ -2168,6 +2175,14 @@ public class CompilerOptions {
 				this.enableJdtDebugCompileMode = false;
 			}
 		}
+
+		if ((optionValue = optionsMap.get(OPTION_IgnoreUnnamedModuleForSplitPackage)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.ignoreUnnamedModuleForSplitPackage = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.ignoreUnnamedModuleForSplitPackage = false;
+			}
+		}
 	}
 
 	private String[] stringToNameList(String optionValue) {
@@ -2309,6 +2324,7 @@ public class CompilerOptions {
 		buf.append("\n\t- API leak: ").append(getSeverityString(APILeak)); //$NON-NLS-1$
 		buf.append("\n\t- unstable auto module name: ").append(getSeverityString(UnstableAutoModuleName)); //$NON-NLS-1$
 		buf.append("\n\t- SuppressWarnings not fully analysed: ").append(getSeverityString(SuppressWarningsNotAnalysed)); //$NON-NLS-1$
+		buf.append("\n\t- ignore package from unnamed module: ").append(this.ignoreUnnamedModuleForSplitPackage ? ENABLED : DISABLED); //$NON-NLS-1$
 		return buf.toString();
 	}
 

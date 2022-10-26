@@ -1567,4 +1567,101 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 			"An enhanced switch statement should be exhaustive; a default label expected\n" +
 			"----------\n");
 	}
+	public void test46() {
+		runConformTest(new String[] {
+			"X.java",
+				"  @SuppressWarnings(\"preview\")\n"
+				+ "public class X {\n"
+				+ "  static void printGenericBoxString1(Box<Object> objectBox) {\n"
+				+ "	  if (objectBox instanceof Box<Object>(String s)) {\n"
+				+ "		  System.out.println(s); \n"
+				+ "	  }\n"
+				+ "  }\n"
+				+ "static void printGenericBoxString2(Box<String> stringBox) {\n"
+				+ "    if (stringBox instanceof Box<String>(var s)) {\n"
+				+ "      System.out.println(s);\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "public static void main(String[] args) {\n"
+				+ "	printGenericBoxString1(new Box(\"Hello\"));\n"
+				+ "	Object o = new Integer(10);\n"
+				+ "	Box<Object> box = new Box(o);\n"
+				+ "	printGenericBoxString1(box);\n"
+				+ "}\n"
+				+ "}\n"
+				+ "record Box<T>(T t) {} "
+			},
+				"Hello");
+	}
+	public void test47() {
+		runNegativeTest(new String[] {
+			"X.java",
+				"  @SuppressWarnings(\"preview\")\n"
+				+ "public class X {\n"
+				+ "  static void printGenericBoxString1(Box<Object> objectBox) {\n"
+				+ "    if (objectBox instanceof Box<String>(String s)) {\n"
+				+ "      System.out.println(s); // this one should report an unsafe cast error\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "  public static void main(String[] args) {}\n"
+				+ "}\n"
+				+ "record Box<T>(T t) {} "
+			},
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	if (objectBox instanceof Box<String>(String s)) {\n" +
+				"	    ^^^^^^^^^\n" +
+				"Type Box<Object> cannot be safely cast to Box<String>\n" +
+				"----------\n");
+	}
+	public void test48() {
+		runNegativeTest(new String[] {
+			"X.java",
+				"  @SuppressWarnings(\"preview\")\n"
+				+ "public class X {\n"
+				+ "	public static void main(String[] args) {\n"
+				+ "		erroneousTest1(new Box<>(\"A\"));\n"
+				+ "		erroneousTest2(new Box<>(\"B\"));\n"
+				+ "	}\n"
+				+ "	static void erroneousTest1(Box<Object> bo) {\n"
+				+ "		if (bo instanceof Box(var s)) {\n"
+				+ "			System.out.println(\"I'm a box\");\n"
+				+ "		}\n"
+				+ "	}\n"
+				+ "	static void erroneousTest2(Box b) {\n"
+				+ "		if (b instanceof Box(var t)) {\n"
+				+ "			System.out.println(\"I'm a box\");\n"
+				+ "		}\n"
+				+ "	}\n"
+				+ "	record Box<T> (T t) {\n"
+				+ "	}\n"
+				+ "}"
+			},
+				"----------\n" +
+				"1. WARNING in X.java (at line 8)\n" +
+				"	if (bo instanceof Box(var s)) {\n" +
+				"	                  ^^^\n" +
+				"X.Box is a raw type. References to generic type X.Box<T> should be parameterized\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 8)\n" +
+				"	if (bo instanceof Box(var s)) {\n" +
+				"	                  ^^^\n" +
+				"Raw types are not allowed in record patterns\n" +
+				"----------\n" +
+				"3. WARNING in X.java (at line 12)\n" +
+				"	static void erroneousTest2(Box b) {\n" +
+				"	                           ^^^\n" +
+				"X.Box is a raw type. References to generic type X.Box<T> should be parameterized\n" +
+				"----------\n" +
+				"4. WARNING in X.java (at line 13)\n" +
+				"	if (b instanceof Box(var t)) {\n" +
+				"	                 ^^^\n" +
+				"X.Box is a raw type. References to generic type X.Box<T> should be parameterized\n" +
+				"----------\n" +
+				"5. ERROR in X.java (at line 13)\n" +
+				"	if (b instanceof Box(var t)) {\n" +
+				"	                 ^^^\n" +
+				"Raw types are not allowed in record patterns\n" +
+				"----------\n");
+	}
 }

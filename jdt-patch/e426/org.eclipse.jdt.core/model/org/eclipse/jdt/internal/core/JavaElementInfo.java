@@ -38,4 +38,7 @@ public class JavaElementInfo implements Cloneable {
 	public IJavaElement[] getChildren() {
 		return JavaElement.NO_ELEMENTS;
 	}
+	public IJavaElement[] getExtendedChildren() {
+		return JavaElement.NO_ELEMENTS;
+	}
 }

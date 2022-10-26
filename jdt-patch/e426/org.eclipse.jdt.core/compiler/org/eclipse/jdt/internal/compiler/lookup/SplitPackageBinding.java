@@ -258,23 +258,35 @@ public class SplitPackageBinding extends PackageBinding {
 
 	@Override
 	public PackageBinding getVisibleFor(ModuleBinding clientModule, boolean preferLocal) {
-		int visibleCount = 0;
-		PlainPackageBinding unique = null;
+		int visibleCountInNamedModules = 0;
+		PlainPackageBinding uniqueInNamedModules = null;
+		PlainPackageBinding bindingInUnnamedModule = null;
 		for (PlainPackageBinding incarnation : this.incarnations) {
 			if (incarnation.hasCompilationUnit(false)) {
 				if (preferLocal && incarnation.enclosingModule == clientModule) {
 					return incarnation;
 				} else {
 					if (clientModule.canAccess(incarnation)) {
-						visibleCount++;
-						unique = incarnation;
+						if (incarnation.enclosingModule.isUnnamed()) {
+							bindingInUnnamedModule = incarnation;
+						} else {
+							visibleCountInNamedModules++;
+							uniqueInNamedModules = incarnation;
+						}
 					}
 				}
 			}
 		}
-		if (visibleCount > 1)
+		if (visibleCountInNamedModules > 1) {
 			return this; // conflict, return split
-		return unique;
+		} else if (visibleCountInNamedModules == 1) {
+			if (this.environment.globalOptions.ignoreUnnamedModuleForSplitPackage || bindingInUnnamedModule == null) {
+				return uniqueInNamedModules;
+			} else {
+				return this;
+			}
+		}
+		return bindingInUnnamedModule;
 	}
 
 	@Override
