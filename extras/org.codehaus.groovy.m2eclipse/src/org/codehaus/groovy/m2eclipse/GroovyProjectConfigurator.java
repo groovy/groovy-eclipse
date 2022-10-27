@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,19 @@ package org.codehaus.groovy.m2eclipse;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.maven.plugin.MojoExecution;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.JavaCore;
@@ -34,7 +38,6 @@ import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
 import org.eclipse.m2e.jdt.IClasspathDescriptor;
 import org.eclipse.m2e.jdt.IJavaProjectConfigurator;
 import org.eclipse.m2e.jdt.internal.AbstractJavaProjectConfigurator;
-import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator implements IJavaProjectConfigurator {
 
@@ -47,6 +50,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
     @Override
     public void configure(ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
         super.configure(request, monitor); // drives calls to configureClasspath and configureRawClasspath
+
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
         if (sourceType != null) {
             addNature(request.getProject(), GROOVY_NATURE, monitor);
@@ -55,7 +59,19 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
             if (description.hasNature(GROOVY_NATURE)) {
                 description.setNatureIds(Arrays.stream(description.getNatureIds())
                     .filter(n -> !n.equals(GROOVY_NATURE)).toArray(String[]::new));
-                request.getProject().setDescription(description, null);
+                request.getProject().setDescription(description, IResource.KEEP_HISTORY, null);
+            }
+        }
+
+        IEclipsePreferences preferences = new ProjectScope(request.getProject()).getNode("org.eclipse.jdt.groovy.core");
+        String filters = getScriptFilters(preferences, request.getMavenProjectFacade());
+        if (!filters.isEmpty()) {
+            preferences.put("groovy.script.filters", filters);
+            preferences.putBoolean("org.codehaus.groovy.eclipse.preferences.compiler.project", true);
+            try {
+                preferences.flush();
+            } catch (Exception ex) {
+              //org.slf4j.LoggerFactory.getLogger(getClass()).error(ex);
             }
         }
     }
@@ -127,6 +143,25 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
 
     //--------------------------------------------------------------------------
 
+    private static String getScriptFilters(IEclipsePreferences preferences, IMavenProjectFacade facade) {
+        Set<String> scriptFilters = new java.util.TreeSet<>();
+
+        String[] tokens = preferences.get("groovy.script.filters", "").split(",");
+        for (int i = 0, n = tokens.length; i < n; i += 1) {
+            scriptFilters.add(tokens[i++] + "," + (i < n ? tokens[i] : "y"));
+        }
+        for (IPath path : facade.getResourceLocations()) {
+            if (facade.getProject().exists(path))
+                scriptFilters.add(path.toString() + "/**/*.groovy,y");
+        }
+        for (IPath path : facade.getTestResourceLocations()) {
+            if (facade.getProject().exists(path))
+                scriptFilters.add(path.toString() + "/**/*.groovy,y");
+        }
+
+        return scriptFilters.stream().collect(java.util.stream.Collectors.joining(","));
+    }
+
     protected static boolean isAbsent(IClasspathDescriptor classpath, IPath path) {
         if (classpath.containsPath(path)) {
             classpath.touchEntry(path);
@@ -136,8 +171,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
     }
 
     protected static boolean isAddDslSupport() {
-        ScopedPreferenceStore prefs = new ScopedPreferenceStore(InstanceScope.INSTANCE, "org.codehaus.groovy.eclipse.dsl");
-        boolean value = prefs.getBoolean("org.codehaus.groovy.eclipse.dsl.auto.add.support");
-        return value;
+        IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode("org.codehaus.groovy.eclipse.dsl");
+        return prefs.getBoolean("org.codehaus.groovy.eclipse.dsl.auto.add.support", true);
     }
 }
