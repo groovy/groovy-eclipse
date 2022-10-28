@@ -281,6 +281,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             if (parent.isCategoryBeingDeclared()) {
                 categories = new LinkedHashSet<>(categories);
                 categories.add(parent.categoryBeingDeclared);
+                for (ClassNode superClass = parent.categoryBeingDeclared.getSuperClass();
+                        superClass != OBJECT_CLASS_NODE && superClass != null;
+                        superClass = superClass.getSuperClass()) {
+                    categories.add(superClass);
+                }
             }
         } else {
             categories = scopeNode.getNodeMetaData(DefaultGroovyMethods.class, key -> {

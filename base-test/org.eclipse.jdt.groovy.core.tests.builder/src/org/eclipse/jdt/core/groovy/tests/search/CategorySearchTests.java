@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,77 +36,74 @@ import org.junit.Test;
 public final class CategorySearchTests extends SearchTestSuite {
 
     //@formatter:off
-    private static String CATEGORY_DEFN =
-        "class Cat {\n" +
-        "  static String doNothing(CatTarget e, msg) {\n" +
-        "    print msg\n" +
-        "  }\n" +
-        "}\n" +
+    private static String CATEGORY_CLASSES =
         "class CatTarget {\n" +
         "  CatTarget self\n" +
         "}\n" +
-        "class Cat2 {\n" +
-        "  static String doNothing2(CatTarget e, msg) {\n" +
+        "class Cat {\n" +
+        "  static String printMessage(CatTarget e, msg) {\n" +
         "    print msg\n" +
         "  }\n" +
+        "}\n" +
+        "class Cat2 {\n" +
+        "  static String printMessage2(CatTarget e, msg) {\n" +
+        "    print msg\n" +
+        "  }\n" +
+        "}\n" +
+        "class Cat3 extends Cat {\n" +
         "}";
 
     private static String SIMPLE_CATEGORY =
         "use (Cat) {\n" +
-        "  new CatTarget().doNothing 'jello'\n" +
+        "  new CatTarget().printMessage 'jello'\n" +
         "  def x = new CatTarget()\n" +
-        "  x.doNothing 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
         "  x.self = x\n" +
-        "  x.doNothing 'jello'\n" +
-        "  Cat.doNothing x, 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
+        "  Cat.printMessage x, 'jello'\n" +
         "}";
 
     private static String CATEGORY_WITH_SUBTYPE =
         "class Sub extends CatTarget { }\n" +
         "use (Cat) {\n" +
-        "  new Sub().doNothing 'jello'\n" +
+        "  new Sub().printMessage 'jello'\n" +
         "  def x = new Sub()\n" +
-        "  x.doNothing 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
         "  x.self = x\n" +
-        "  x.doNothing 'jello'\n" +
-        "  Cat.doNothing x, 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
+        "  Cat.printMessage x, 'jello'\n" +
         "}";
 
     private static String CATEGORY_ASSIGNED =
         "def y = Cat\n" +
         "use (y) {\n" +
-        "  new CatTarget().doNothing 'jello'\n" +
+        "  new CatTarget().printMessage 'jello'\n" +
         "  def x = new CatTarget()\n" +
-        "  x.doNothing 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
         "  x.self = x\n" +
-        "  x.doNothing 'jello'\n" +
-        "  y.doNothing x, 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
+        "  y.printMessage x, 'jello'\n" +
         "}";
 
     private static String CATEGORY_MULTIPLE_OUTER =
         "use (Cat) { use (Cat2) {\n" +
-        "  new CatTarget().doNothing 'jello'\n" +
+        "  new CatTarget().printMessage 'jello'\n" +
         "  def x = new CatTarget()\n" +
-        "  x.doNothing 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
         "  x.self = x\n" +
-        "  x.doNothing 'jello'\n" +
-        "  Cat.doNothing x, 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
+        "  Cat.printMessage x, 'jello'\n" +
         "} }";
 
     private static String CATEGORY_MULTIPLE_INNER =
         "use (Cat2) { use (Cat) {\n" +
-        "  new CatTarget().doNothing 'jello'\n" +
+        "  new CatTarget().printMessage 'jello'\n" +
         "  def x = new CatTarget()\n" +
-        "  x.doNothing 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
         "  x.self = x\n" +
-        "  x.doNothing 'jello'\n" +
-        "  Cat.doNothing x, 'jello'\n" +
+        "  x.printMessage 'jello'\n" +
+        "  Cat.printMessage x, 'jello'\n" +
         "} }";
-
-    private static String NO_CATEGORY =
-        "use (Cat) {\n" +
-        "}\n" +
-        "new CatTarget().doNothing 'jello'\n";
     //@formatter:on
 
     @Test
@@ -136,7 +133,15 @@ public final class CategorySearchTests extends SearchTestSuite {
 
     @Test
     public void testCategorySearch6() throws Exception {
-        doCategorySearchTest(NO_CATEGORY, 0);
+        doCategorySearchTest("use (Cat) {}\n" +
+            "new CatTarget().printMessage('')\n", 0);
+    }
+
+    @Test
+    public void testCategorySearch7() throws Exception {
+        doCategorySearchTest("use (Cat3) {\n" +
+            "  new CatTarget().printMessage('')\n" +
+            "}", 1);
     }
 
     //--------------------------------------------------------------------------
@@ -146,12 +151,12 @@ public final class CategorySearchTests extends SearchTestSuite {
     }
 
     private List<SearchMatch> findMatches(final String contents) throws JavaModelException {
-        GroovyCompilationUnit catUnit = createUnit("Cat", CATEGORY_DEFN);
-        GroovyCompilationUnit unit = createUnit("Other", contents);
+        GroovyCompilationUnit catUnit = createUnit("Cat", CATEGORY_CLASSES);
+        GroovyCompilationUnit unit = createUnit("Script", contents);
         expectingNoProblems();
 
-        IMethod searchFor = (IMethod) catUnit.getElementAt(CATEGORY_DEFN.indexOf("doNothing"));
-        assertEquals("Wrong IJavaElement found: " + searchFor, "doNothing", searchFor.getElementName());
+        IMethod searchFor = (IMethod) catUnit.getElementAt(CATEGORY_CLASSES.indexOf("printMessage"));
+        assertEquals("Wrong IJavaElement found: " + searchFor, "printMessage", searchFor.getElementName());
         return search(SearchPattern.createPattern(searchFor, IJavaSearchConstants.REFERENCES), unit);
     }
 
@@ -159,12 +164,12 @@ public final class CategorySearchTests extends SearchTestSuite {
         assertEquals("Wrong number of matches found:\n" + toString(matches), nExpected, matches.size());
         if (nExpected > 0) {
             Iterator<SearchMatch> it = matches.iterator();
-            Pattern p = Pattern.compile("doNothing");
+            Pattern p = Pattern.compile("printMessage");
             Matcher m = p.matcher(contents);
             while (m.find()) {
                 SearchMatch match = it.next();
                 assertEquals("Wrong starting location for " + toString(match), m.start(), match.getOffset());
-                assertEquals("Wrong length for " + toString(match), "doNothing".length(), match.getLength());
+                assertEquals("Wrong length for " + toString(match), "printMessage".length(), match.getLength());
             }
         }
     }

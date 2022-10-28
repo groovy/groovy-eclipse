@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 
             if (isMethodPointer || scope.isMethodCall()) {
                 for (ClassNode category : scope.getCategoryNames()) {
-                    for (MethodNode method : category.getMethods(simpleName)) {
+                    for (MethodNode method : category.getDeclaredMethods(simpleName)) {
                         if (isCompatibleCategoryMethod(method, selfType, scope)) {
                             candidates.add(method);
                         }
@@ -74,7 +74,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                     String methodName = kind.createAccessorName(simpleName);
                     if (methodName != null) {
                         for (ClassNode category : scope.getCategoryNames()) {
-                            for (MethodNode method : category.getMethods(methodName)) {
+                            for (MethodNode method : category.getDeclaredMethods(methodName)) {
                                 if (kind.isAccessorKind(method, true) && isCompatibleCategoryMethod(method, selfType, scope) &&
                                         // GROOVY-5245: isPropName() methods cannot be used for bean-style property expressions
                                         (kind != AccessorSupport.ISSER || isDefaultGroovyMethod(method, scope) || isDefaultGroovyStaticMethod(method, scope) || GroovyUtils.getGroovyVersion().getMajor() > 3)) {

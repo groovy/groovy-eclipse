@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -318,6 +318,13 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset('List<String> strings = []; strings.findA', 40)
         proposalExists(proposals, 'findAll(Closure closure) : List<T>', 1) // not Collection<T>
         proposalExists(proposals, 'findAll() : List<T>', 1) // not Collection<T>
+    }
+
+    @Test
+    void testNoSuper() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('void m(InputStream s){s.c}\n', 25)
+        proposalExists(proposals, 'closeQuietly()', 0) // from DefaultGroovyMethodsSupport
+        proposalExists(proposals, 'withCloseable', 1)
     }
 
     @Test
