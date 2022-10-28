@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Test;
 
@@ -63,6 +65,12 @@ public final class BindableTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "ready;changed");
+        runConformTest(sources, "ready;changed", isAtLeastGroovy(30) || isAtLeastJRE(16) ? "" : "WARNING");
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static boolean isAtLeastJRE(final float minimum) {
+        return Float.parseFloat(System.getProperty("java.specification.version")) >= minimum;
     }
 }

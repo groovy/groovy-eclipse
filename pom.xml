@@ -51,7 +51,7 @@
 	<pluginRepositories>
 		<pluginRepository>
 			<id>groovy-plugins-release</id>
-			<url>https://groovy.jfrog.io/artifactory/plugins-release</url>
+			<url>https://groovy.jfrog.io/artifactory/plugins-release-local</url>
 		</pluginRepository>
 	</pluginRepositories>
 
