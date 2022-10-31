@@ -234,7 +234,7 @@ public void setProgressPerCompilationUnit(float progress) {
 
 public void subTask(String message) {
 	String pm = problemsMessage();
-	String msg = pm.length() == 0 ? message : pm + " " + message; //$NON-NLS-1$
+	String msg = pm.isEmpty() ? message : pm + ' ' + message;
 
 	if (msg.equals(this.previousSubtask)) return; // avoid refreshing with same one
 	//if (JavaBuilder.DEBUG) System.out.println(msg);

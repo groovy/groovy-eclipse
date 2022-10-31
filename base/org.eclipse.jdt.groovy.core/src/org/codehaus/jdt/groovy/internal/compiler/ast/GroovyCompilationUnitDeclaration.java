@@ -614,9 +614,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     @Override
     public void resolve() {
-        processToPhase(Phases.SEMANTIC_ANALYSIS);
-        checkForTags();
-        setComments();
+        if (processToPhase(Phases.SEMANTIC_ANALYSIS)) {
+            checkForTags();
+            setComments();
+        }
     }
 
     /**

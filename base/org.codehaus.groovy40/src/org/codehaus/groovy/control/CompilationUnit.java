@@ -196,10 +196,14 @@ public class CompilationUnit extends ProcessingUnit {
 
         addPhaseOperation(source -> {
             source.convert();
-            // add module to compile unit
+            // add module node to compile unit
             getAST().addModule(source.getAST());
-            Optional.ofNullable(getProgressCallback())
-                .ifPresent(callback -> callback.call(source, getPhase()));
+            if (progressCallback != null)
+                progressCallback.call(source, getPhase());
+            // GRECLIPSE add
+            if (progressListener != null)
+                progressListener.parseComplete(getPhase(), source.getName());
+            // GRECLIPSE end
         }, Phases.CONVERSION);
 
         addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
@@ -821,13 +825,11 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Handle any callback that's been set
             //
-            if (classgenCallback != null) {
+            if (classgenCallback != null)
                 classgenCallback.call(classVisitor, classNode);
-            }
             // GRECLIPSE add
-            if (progressListener != null) {
-                progressListener.generateComplete(phase, classNode);
-            }
+            if (progressListener != null)
+                progressListener.generateComplete(getPhase(), classNode);
             // GRECLIPSE end
 
             //
@@ -924,11 +926,6 @@ public class CompilationUnit extends ProcessingUnit {
                 if (source.phase < unit.phase || (source.phase == unit.phase && !source.phaseComplete)) {
                     try {
                         this.call(source);
-                        // GRECLIPSE add
-                        if (unit.phase == Phases.CONVERSION && unit.phaseOperations[unit.phase].getLast() == this) {
-                            if (unit.progressListener != null) unit.progressListener.parseComplete(unit.phase, name);
-                        }
-                        // GRECLIPSE end
                     } catch (CompilationFailedException e) {
                         throw e;
                     } catch (Exception e) {

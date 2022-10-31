@@ -37,6 +37,7 @@ import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -269,10 +270,6 @@ public class GroovyParser {
         return gcuDeclaration;
     }
 
-    private static IFile getWorkspaceFile(final String filePath) {
-        return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(filePath));
-    }
-
     /**
      * ProgressListener is called when parsing of a source unit or generation of
      * a class file completes.  By calling back to the build notifier we prevent
@@ -281,25 +278,26 @@ public class GroovyParser {
      * Note: this does not move the progress bar, it merely updates the text
      */
     private static ProgressListener newProgressListener(final BuildNotifier notifier) {
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         return new ProgressListener() {
             @Override
             public void parseComplete(final int phase, final String sourceUnitName) {
                 try {
-                    IFile sourceUnitFile = getWorkspaceFile(sourceUnitName);
+                    IFile sourceUnitFile = root.getFileForLocation(new Path(sourceUnitName));
                     notifier.subTask("Parsing groovy sources in " + sourceUnitFile.getParent().getFullPath());
-                } catch (Exception ignore) {
+                } catch (RuntimeException ignore) {
                 }
-                notifier.checkCancel();
+                notifier.checkCancelWithinCompiler();
             }
 
             @Override
             public void generateComplete(final int phase, final ClassNode classNode) {
                 try {
-                    IFile sourceUnitFile = getWorkspaceFile(classNode.getModule().getContext().getName());
+                    IFile sourceUnitFile = root.getFileForLocation(new Path(classNode.getModule().getContext().getName()));
                     notifier.subTask("Writing groovy classes for " + sourceUnitFile.getParent().getFullPath());
-                } catch (Exception ignore) {
+                } catch (RuntimeException ignore) {
                 }
-                notifier.checkCancel();
+                notifier.checkCancelWithinCompiler();
             }
         };
     }
