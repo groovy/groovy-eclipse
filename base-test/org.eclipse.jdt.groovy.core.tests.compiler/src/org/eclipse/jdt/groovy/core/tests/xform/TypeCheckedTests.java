@@ -1335,6 +1335,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7141() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@PackageScope\n" +
+            "interface I {\n" +
+            "  String f(String s)\n" +
+            "}\n" +
+            "@TypeChecked\n" +
+            "void test(){\n" +
+            "  I impl = [\n" +
+            "    f: { it.toUpperCase() }\n" + // parameter type not inferred for coerced map
+            "  ] as I\n" +
+            "  print impl.f('works')\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "WORKS");
+    }
+
+    @Test
     public void testTypeChecked7164() {
         //@formatter:off
         String[] sources = {

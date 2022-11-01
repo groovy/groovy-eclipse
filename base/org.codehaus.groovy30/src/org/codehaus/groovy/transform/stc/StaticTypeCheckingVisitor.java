@@ -663,7 +663,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode inferredType = localVariable.getNodeMetaData(INFERRED_TYPE);
             inferredType = getInferredTypeFromTempInfo(localVariable, inferredType);
             if (inferredType != null && !inferredType.equals(OBJECT_TYPE)
-                    && !inferredType.equals(accessedVariable.getType())){
+                    && !inferredType.equals(accessedVariable.getOriginType())) {
                 /* GRECLIPSE edit -- GROOVY-10308
                 vexp.putNodeMetaData(INFERRED_RETURN_TYPE, inferredType);
                 */
@@ -940,6 +940,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private void processFunctionalInterfaceAssignment(final ClassNode lhsType, final Expression rhsExpression) {
         if (rhsExpression instanceof ClosureExpression) {
             inferParameterAndReturnTypesOfClosureOnRHS(lhsType, (ClosureExpression) rhsExpression);
+        } else if (rhsExpression instanceof MapExpression) { // GROOVY-7141
+            List<MapEntryExpression> spec = ((MapExpression) rhsExpression).getMapEntryExpressions();
+            if (spec.size() == 1 && spec.get(0).getValueExpression() instanceof ClosureExpression
+                    && findSAM(lhsType).getName().equals(spec.get(0).getKeyExpression().getText())) {
+                inferParameterAndReturnTypesOfClosureOnRHS(lhsType, (ClosureExpression) spec.get(0).getValueExpression());
+            }
         } else if (rhsExpression instanceof MethodReferenceExpression) {
             LambdaExpression lambdaExpression = constructLambdaExpressionForMethodReference(lhsType, (MethodReferenceExpression) rhsExpression);
 
@@ -954,14 +960,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         Parameter[] closureParameters = getParametersSafe(rhsExpression);
         ClassNode[] samParameterTypes = typeInfo.getV1();
 
-        int n = closureParameters.length, m = samParameterTypes.length;
-        if (n == m || (1 == m && hasImplicitParameter(rhsExpression))) {
+        if (samParameterTypes.length == 1 && hasImplicitParameter(rhsExpression)) {
+            Variable it = rhsExpression.getVariableScope().getDeclaredVariable("it"); // GROOVY-7141
+            closureParameters = new Parameter[] {it instanceof Parameter ? (Parameter) it : new Parameter(DYNAMIC_TYPE, "")};
+        }
+
+        int n = closureParameters.length;
+        if (n == samParameterTypes.length) {
             for (int i = 0; i < n; i += 1) {
                 if (samParameterTypes[i] == null) continue;
                 Parameter parameter = closureParameters[i];
                 if (parameter.isDynamicTyped()) {
                     parameter.setType(samParameterTypes[i]);
-                    parameter.setOriginType(samParameterTypes[i]);
                 }
             }
         } else {
@@ -6571,7 +6581,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             super(parameter);
             this.parameter = parameter;
             /* GRECLIPSE edit -- GROOVY-10651
-            this.parameter.getNodeMetaData(INFERRED_TYPE, x -> parameter.getOriginType());
+            this.parameter.getNodeMetaData(INFERRED_TYPE, x -> parameter.getType());
             */
             ClassNode inferredType = getNodeMetaData(INFERRED_TYPE);
             if (inferredType == null) {

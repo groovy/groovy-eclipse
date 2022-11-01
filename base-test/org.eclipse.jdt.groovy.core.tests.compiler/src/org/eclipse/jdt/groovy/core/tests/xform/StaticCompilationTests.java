@@ -779,6 +779,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic30() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Function\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Function<String, String> lower = String::toLowerCase\n" +
+            "  Function<String, String> upper = String::toUpperCase\n" +
+            "  Function<String, String> lu = lower.andThen(upper)\n" +
+            "  Function<? super String, String> ul = upper.andThen(lower)\n" +
+            "  assert lower('Hi') == ul('Hi')\n" +
+            "  assert upper('Hi') == lu('Hi')\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
