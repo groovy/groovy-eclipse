@@ -105,6 +105,16 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                 } else if (!ctor.isPrivate()) {
                     addError(ctor, "Illegal modifier for the enum constructor; only private is permitted.");
                 }
+                // GRECLIPSE add
+                if (ctor.firstStatementIsSpecialConstructorCall()) {
+                    ConstructorCallExpression ctorCall = (ConstructorCallExpression) ((ExpressionStatement) ctor.getFirstStatement()).getExpression();
+                    if (ctorCall.isSuperCall()) {
+                        java.util.StringJoiner spec = new java.util.StringJoiner(",", enumClass.getNameWithoutPackage() + "(", ")");
+                        for (Parameter param : ctor.getParameters()) spec.add(param.getType().getUnresolvedName());
+                        addError(ctorCall, "Cannot invoke super constructor from enum constructor " + spec);
+                    }
+                }
+                // GRECLIPSE end
             }
 
             addMethods(enumClass, values);

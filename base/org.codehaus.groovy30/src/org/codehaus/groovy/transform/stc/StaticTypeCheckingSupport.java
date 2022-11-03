@@ -1400,12 +1400,9 @@ public abstract class StaticTypeCheckingSupport {
             // called with null
             return !isPrimitiveType(parameterType);
         }
-        if (!isAssignableTo(argumentType, parameterType) && !lastArg) {
-            // incompatible assignment
-            return false;
-        }
-        if (!isAssignableTo(argumentType, parameterType) && lastArg) {
-            if (parameterType.isArray()) {
+        boolean isArrayParameter = parameterType.isArray();
+        if (!isAssignableTo(argumentType, parameterType)) {
+            if (isArrayParameter && lastArg) {
                 if (!isAssignableTo(argumentType, parameterType.getComponentType())) {
                     return false;
                 }
@@ -1413,20 +1410,21 @@ public abstract class StaticTypeCheckingSupport {
                 return false;
             }
         }
-        if (parameterType.isUsingGenerics() && argumentType.isUsingGenerics()) {
-            GenericsType gt = GenericsUtils.buildWildcardType(parameterType);
-            if (!gt.isCompatibleWith(argumentType)) {
-                boolean samCoercion = isSAMType(parameterType) && argumentType.equals(CLOSURE_TYPE);
-                if (!samCoercion) return false;
-            }
-        } else if (parameterType.isArray() && argumentType.isArray()) {
+        if (isArrayParameter && argumentType.isArray()) {
             // verify component type
             return typeCheckMethodArgumentWithGenerics(parameterType.getComponentType(), argumentType.getComponentType(), lastArg);
-        } else if (lastArg && parameterType.isArray()) {
+
+        } else if (isArrayParameter && lastArg) {
             // verify component type, but if we reach that point, the only possibility is that the argument is
             // the last one of the call, so we're in the cast of a vargs call
             // (otherwise, we face a type checker bug)
             return typeCheckMethodArgumentWithGenerics(parameterType.getComponentType(), argumentType, lastArg);
+
+        } else if (parameterType.isUsingGenerics() && argumentType.isUsingGenerics()) {
+            if (!GenericsUtils.buildWildcardType(parameterType).isCompatibleWith(argumentType)) {
+                boolean samCoercion = argumentType.equals(CLOSURE_TYPE) && isSAMType(parameterType);
+                if (!samCoercion) return false;
+            }
         }
         return true;
     }

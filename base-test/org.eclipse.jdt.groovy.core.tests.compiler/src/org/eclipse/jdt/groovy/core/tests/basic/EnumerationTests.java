@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -722,6 +722,29 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testEnum14() {
+        //@formatter:off
+        String[] sources = {
+            "E.groovy",
+            "enum E {\n" +
+            "  FOO(0,'');\n" +
+            "  E(int i, String s) {\n" +
+            "    super();\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in E.groovy (at line 4)\n" +
+            "\tsuper();\n" +
+            "\t^^^^^^^^\n" +
+            "Groovy:Cannot invoke super constructor from enum constructor E(int,String)\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testEnum4219() {
         //@formatter:off
         String[] sources = {
@@ -971,7 +994,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "static final BEATS = [\n" +
             "   [Move.ROCK,     Move.SCISSORS],\n" +
             "   [Move.PAPER,    Move.ROCK    ],\n" +
-            "   [Move.SCISSORS, Move.PAPER   ]\n" +
+            "   [Move.SCISSORS, Move.PAPER   ] \n" +
             "].asImmutable()\n",
         };
         //@formatter:on
@@ -985,7 +1008,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-8444
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8444
     public void testSwitchCasesWithoutQualifier() {
         assumeTrue(isAtLeastGroovy(30));
 

@@ -2181,7 +2181,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     int implicitParamCount = 0;
                     if (method.getDeclaringType().isEnum()) implicitParamCount = 2;
                     if (groovyParams.length > 0 && groovyParams[0].getName().startsWith("$")) implicitParamCount = 1;
-                    if (implicitParamCount > 0) {
+                    if (groovyParams.length >= implicitParamCount && implicitParamCount > 0) {
                         Parameter[] newGroovyParams = new Parameter[groovyParams.length - implicitParamCount];
                         System.arraycopy(groovyParams, implicitParamCount, newGroovyParams, 0, newGroovyParams.length);
                         groovyParams = newGroovyParams;

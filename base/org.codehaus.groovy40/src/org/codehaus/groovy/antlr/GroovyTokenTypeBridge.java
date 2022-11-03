@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ public class GroovyTokenTypeBridge {
     public static int LITERAL_as        = GroovyTokenTypes.LITERAL_as;
     public static int LITERAL_if        = GroovyTokenTypes.LITERAL_if;
     public static int LITERAL_else      = GroovyTokenTypes.LITERAL_else;
+    public static int LITERAL_enum      = GroovyTokenTypes.LITERAL_enum;
     public static int LITERAL_for       = GroovyTokenTypes.LITERAL_for;
     public static int LITERAL_switch    = GroovyTokenTypes.LITERAL_switch;
     public static int LITERAL_while     = GroovyTokenTypes.LITERAL_while;

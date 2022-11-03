@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,12 +131,22 @@ final class SemicolonRemoverTests {
 
     @Test
     void testClosureOnNextLine1() {
-        assertContentUnchanged 'def a = m();\n\t{ -> print a }'
+        assertContentUnchanged('def a = m();\n\t{ -> print a }')
     }
 
     @Test
     void testClosureOnNextLine2() {
-        assertContentUnchanged 'def b = "123";\n\t{ -> b = 123 }'
+        assertContentUnchanged('def b = "123";\n\t{ -> b = 123 }')
+    }
+
+    @Test
+    void testConstructorOnNextLine() {
+        assertContentUnchanged('enum E {\nFOO;\nE() {\n}\n}\n')
+        assertContentUnchanged('enum E {\nFOO;\n// bar\nE() {\n}\n}\n')
+        assertContentChangedFromTo('enum E {\nFOO;\nprivate E() {\n}\n}\n', 'enum E {\nFOO\nprivate E() {\n}\n}\n')
+        assertContentChangedFromTo('enum E {\nFOO;\nprotected E() {\n}\n}\n', 'enum E {\nFOO\nprotected E() {\n}\n}\n')
+        assertContentChangedFromTo('enum E {\nFOO;\n@PackasgeScope E() {\n}\n}\n', 'enum E {\nFOO\n@PackasgeScope E() {\n}\n}\n')
+        assertContentChangedFromTo('enum E {\nFOO;\n/**/\nE(){\nprint("");\n}\n}\n', 'enum E {\nFOO;\n/**/\nE(){\nprint("")\n}\n}\n')
     }
 
     @Test

@@ -2924,6 +2924,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             } else if (candidates.size() > 1) {
                 candidates = extension.handleAmbiguousMethods(candidates, expression);
             }
+
             int n = candidates.size();
             if (n > 0) {
                 /* GRECLIPSE edit -- GROOVY-10053
@@ -3753,7 +3754,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 Expression type = annotation.getMember("type");
                 Integer stInt = Closure.OWNER_FIRST;
                 if (strategy != null) {
-                    stInt = (Integer) evaluateExpression(castX(Integer_TYPE, strategy), typeCheckingContext.source.getConfiguration());
+                    stInt = (Integer) evaluateExpression(castX(Integer_TYPE, strategy), getSourceUnit().getConfiguration());
                 }
                 if (value instanceof ClassExpression && !value.getType().equals(DELEGATES_TO_TARGET)) {
                     if (genericTypeIndex != null) {
