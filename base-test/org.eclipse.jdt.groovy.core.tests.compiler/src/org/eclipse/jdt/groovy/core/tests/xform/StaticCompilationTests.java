@@ -7931,4 +7931,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testCompileStatic10807() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  public static final Comparator<String> BY_DISPLAY_NAME = Comparator.<String,String>comparing(C::getDisplayName)\n" +
+            "  static String getDisplayName(String component) {\n" +
+            "    return component\n" +
+            "  }\n" +
+            "}\n" +
+            "def list = ['foo','bar','baz']\n" +
+            "list.sort(C.BY_DISPLAY_NAME)\n" +
+            "print list\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[bar, baz, foo]");
+    }
 }
