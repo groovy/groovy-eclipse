@@ -8,7 +8,7 @@ Bundle-Version: 4.0.6.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
  groovy-parser2.jar,
- lib/ivy-2.5.0.jar,
+ lib/ivy-2.5.1.jar,
  lib/groovy-4.0.6.jar,
  lib/groovy-test-4.0.6.jar
 Export-Package: groovy.beans;version="4.0.6",
