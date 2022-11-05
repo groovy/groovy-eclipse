@@ -1434,7 +1434,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
                 constructorDecl.selector = ctorName;
 
-                constructorDecl.bodyEnd = -2;
                 constructorDecl.sourceEnd = -1;
                 constructorDecl.declarationSourceEnd = -1;
                 if (methodDeclarations.add(constructorDecl)) {
@@ -2789,7 +2788,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
                 typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart() - 1);
 
-                // start and end of the entire declaration including Javadoc and ending at the last close bracket
+                // start and end of the entire declaration including Javadoc and ending at the last close brace
                 Javadoc doc = findJavadoc(classNode.getLineNumber());
                 if (doc != null) {
                     if (unitDeclaration.imports.length > 0) {
@@ -2843,12 +2842,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             constructorDecl.sourceStart = constructorNode.getNameStart();
             constructorDecl.sourceEnd = rparenOffset(constructorNode);
 
-            // opening bracket -- should it be first character after?
+            // opening brace -- should it be first character after?
             constructorDecl.bodyStart = (constructorNode.getCode() != null ? constructorNode.getCode().getStart()
                 : constructorDecl.sourceEnd + 1); // approximate position of anticipated '{'
 
-            // last character before closing bracket
-            constructorDecl.bodyEnd = constructorDecl.declarationSourceEnd - 1;
+            // last character before closing brace
+            constructorDecl.bodyEnd = Math.max(constructorDecl.bodyStart - 1, constructorDecl.declarationSourceEnd - 1);
         }
 
         /**
@@ -2862,15 +2861,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             methodDecl.modifiersSourceStart = methodNode.getStart();
             methodDecl.declarationSourceEnd = methodNode.getEnd()-1;
 
-            // script run() methods have no name, so use the start of the method instead
+            // script run() method has no name, so use the start of the method instead
             methodDecl.sourceStart = Math.max(methodNode.getNameStart(), methodNode.getStart());
             methodDecl.sourceEnd = Math.max(rparenOffset(methodNode), methodNode.getStart());
 
-            // opening bracket -- abstract methods, annotation methods, and script run() methods have no opening bracket
+            // opening brace -- except for abstract method, annotation method or script run() method
             methodDecl.bodyStart = (methodNode.getCode() != null ? methodNode.getCode().getStart() : methodDecl.sourceEnd + 1);
 
-            // last character before closing bracket or semicolon -- annotation method has no '}' and usually no ';'
-            methodDecl.bodyEnd = methodDecl.declarationSourceEnd - (methodDecl instanceof AnnotationMethodDeclaration ? 0 : 1);
+            // last character before closing brace or semicolon -- except for abstract method, annotation method or script run() method
+            methodDecl.bodyEnd = Math.max(methodDecl.bodyStart - 1, methodDecl.declarationSourceEnd - (methodDecl instanceof AnnotationMethodDeclaration ? 0 : 1));
         }
 
         /**

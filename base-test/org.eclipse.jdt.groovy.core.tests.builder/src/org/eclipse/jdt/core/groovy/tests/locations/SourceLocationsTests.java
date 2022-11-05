@@ -246,13 +246,13 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             //assertEquals(body + "\nhas incorrect body start value", bodyStart, td.???.getStartPosition());
         } else if (astKind == 'i') {
             assertEquals(body + "\nhas incorrect body start value", bodyStart, ((Initializer) body).getBody().getStartPosition());
-        } else if (astKind == 'm' && !Flags.isAbstract(((IMethod) decl).getFlags())) {
+        } else if (astKind == 'm' && end > 0 && !Flags.isAbstract(decl.getFlags())) {
             assertEquals(body + "\nhas incorrect body start value", bodyStart, ((MethodDeclaration) body).getBody().getStartPosition());
         }
 
         int bodyEnd = body.getStartPosition() + body.getLength();
         if (bodyEnd > 0 && decl instanceof IMethod && (decl.getNameRange().getLength() == 0 ||
-                (Flags.isAbstract(((IMethod) decl).getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
+                (Flags.isAbstract(decl.getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
             bodyEnd += 1; // construcotrs and methods with a body have been set back by 1 for JDT compatibility
         } else if (body instanceof FieldDeclaration && source.charAt(source.indexOf(endTag) - 1) != ';') {
             end -= endTag.length();
