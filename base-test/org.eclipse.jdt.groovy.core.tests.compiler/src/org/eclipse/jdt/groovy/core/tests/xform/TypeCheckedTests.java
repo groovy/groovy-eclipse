@@ -1579,6 +1579,39 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7789() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.stc.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def list_size = this.<List>wrap({ list -> list.size() })\n" +
+            "  print list_size([])\n" +
+            "}\n" +
+            "def <U> Monad<U> wrap(@ClosureParams(value=FromString, options='U') Closure c) {\n" +
+            "  new Monad<>(c)\n" +
+            "}\n" +
+            "test()\n",
+
+            "Monad.groovy",
+            "import groovy.transform.stc.*\n" +
+            "class Monad<T> {\n" +
+            "  private final Closure c\n" +
+            "  Monad(@ClosureParams(value=FromString, options='T') Closure c) {\n" +
+            "    this.c = c\n" +
+            "  }\n" +
+            "  def call(T t) {\n" +
+            "    c.call(t)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0");
+    }
+
+    @Test
     public void testTypeChecked7804() {
         //@formatter:off
         String[] sources = {
