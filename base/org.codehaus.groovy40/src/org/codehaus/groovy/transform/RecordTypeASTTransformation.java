@@ -173,10 +173,10 @@ public class RecordTypeASTTransformation extends AbstractASTTransformation imple
             String sName = cNode.getUnresolvedSuperClass().getName();
             // don't expect any parent to be set at this point but we only check at grammar
             // level when using the record keyword so do a few more sanity checks here
-            if (!sName.equals("java.lang.Object") && !sName.equals(RECORD_CLASS_NAME)) {
+            if (!sName.equals(ClassHelper.OBJECT) && !sName.equals(RECORD_CLASS_NAME)) {
                 addError("Invalid superclass for native record found: " + sName, cNode);
             }
-            cNode.setSuperClass(ClassHelper.makeWithoutCaching(RECORD_CLASS_NAME));
+            cNode.setSuperClass(compilationUnit.getResolveVisitor().resolve(RECORD_CLASS_NAME));
             cNode.setModifiers(cNode.getModifiers() | Opcodes.ACC_RECORD);
             final List<PropertyNode> pList = getInstanceProperties(cNode);
             if (!pList.isEmpty()) {
@@ -276,15 +276,14 @@ public class RecordTypeASTTransformation extends AbstractASTTransformation imple
     @Incubating
     public static boolean recordNative(ClassNode node) {
         return node.getUnresolvedSuperClass() != null &&
-                "java.lang.Record".equals(node.getUnresolvedSuperClass().getName());
+                RECORD_CLASS_NAME.equals(node.getUnresolvedSuperClass().getName());
     }
 
     private void createComponents(ClassNode cNode, List<PropertyNode> pList) {
         if (pList.size() > 16) { // Groovy currently only goes to Tuple16
             addError("Record has too many components for a components() method", cNode);
         }
-        ClassNode tupleClass = getClass(cNode, "groovy.lang.Tuple" + pList.size());
-        if (tupleClass == null) return;
+        ClassNode tupleClass = makeWithoutCaching(ClassHelper.TUPLE_CLASSES[pList.size()], false);
         Statement body;
         if (pList.isEmpty()) {
             body = returnS(propX(classX(tupleClass), "INSTANCE"));
@@ -299,15 +298,6 @@ public class RecordTypeASTTransformation extends AbstractASTTransformation imple
             body = returnS(ctorX(tupleClass, args));
         }
         addGeneratedMethod(cNode, COMPONENTS, PUBLIC_FINAL, tupleClass, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, body);
-    }
-
-    private ClassNode getClass(ClassNode cNode, String tupleName) {
-        try {
-            return ClassHelper.makeWithoutCaching(Class.forName(tupleName)).getPlainNodeReference();
-        } catch(ClassNotFoundException cnfe) {
-            addError("Unable to find Tuple class '" + tupleName + "'", cNode);
-            return null;
-        }
     }
 
     private void createToList(ClassNode cNode, List<PropertyNode> pList) {

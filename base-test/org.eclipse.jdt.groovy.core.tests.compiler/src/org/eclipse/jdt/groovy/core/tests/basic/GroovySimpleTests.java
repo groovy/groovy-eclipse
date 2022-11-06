@@ -5558,6 +5558,27 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9857
+    public void testGroovy9857() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A {\n" +
+            "  A(boolean b) { }\n" +
+            "}\n" +
+            "class C extends A {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tclass C extends A {}\n" +
+            "\t      ^\n" +
+            "Groovy:Implicit super constructor A() is undefined for generated constructor. Must define an explicit constructor.\n" +
+            "----------\n");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-9906
     public void testGroovy9906() {
         //@formatter:off

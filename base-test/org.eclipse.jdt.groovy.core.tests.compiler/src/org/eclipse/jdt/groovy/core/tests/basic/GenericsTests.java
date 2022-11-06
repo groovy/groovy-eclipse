@@ -454,6 +454,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "p/B.groovy",
             "package p\n" +
             "class B extends A {\n" +
+            "  B() {\n" +
+            "    super(42)\n" +
+            "  }\n" +
             "  void m() {\n" +
             "    new A(42)\n" +
             "  }\n" +

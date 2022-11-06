@@ -494,13 +494,22 @@ public class AsmClassGenerator extends ClassGenerator {
                 }
             }
             if (!hasCallToSuper) {
-                // GRECLIPSE add -- GROOVY-9373
+                // GRECLIPSE add -- GROOVY-9373, GROOVY-9857
                 if (code != null) {
                     int line = code.getLineNumber();
                     if (line > 0) {
                         mv.visitLineNumber(line, l0);
                         controller.setLineNumber(line);
                     }
+                }
+                if (controller.getClassNode().getSuperClass().getDeclaredConstructor(Parameter.EMPTY_ARRAY) == null) { ASTNode where = node;
+                    String error = "Implicit super constructor " + controller.getClassNode().getSuperClass().getNameWithoutPackage() + "() is undefined";
+                    if (node.getLineNumber() > 0) error += ". Must explicitly invoke another constructor.";
+                    else {
+                        error += " for generated constructor. Must define an explicit constructor.";
+                        where = controller.getClassNode();
+                    }
+                    addError(error, where);
                 }
                 // GRECLIPSE end
                 // add call to "super()"

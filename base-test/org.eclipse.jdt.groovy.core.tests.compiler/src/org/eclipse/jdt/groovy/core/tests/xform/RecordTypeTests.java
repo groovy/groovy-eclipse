@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.core.tests.xform;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
@@ -40,7 +41,8 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
             "import static java.lang.reflect.Modifier.isFinal\n" +
             "assert isFinal(Simple.class.modifiers)\n" +
             "def obj = new Simple(1,'x')\n" +
-            "print obj.n\n" +
+            "print obj.n()\n" +
+            "print obj.s\n" +
             "print obj\n",
 
             "Simple.groovy",
@@ -52,6 +54,29 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "1Simple[n=1, s=x]");
+        runConformTest(sources, "1xSimple[n=1, s=x]");
+    }
+
+    @Test
+    public void testRecordType2() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import static java.lang.reflect.Modifier.isFinal\n" +
+            "assert isFinal(Simple.class.modifiers)\n" +
+            "def obj = new Simple(1,'x')\n" +
+            "print obj.n()\n" +
+            "print obj.s\n" +
+            "print obj\n",
+
+            "Simple.groovy",
+            "record Simple(Integer n, String s) {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1xSimple[n=1, s=x]");
     }
 }
