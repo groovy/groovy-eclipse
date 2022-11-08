@@ -183,7 +183,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             if (annotation.getClassNode().getName().equals(AnnotationCollector.class.getName())) {
                 Expression mode = annotation.getMember("mode");
                 modes.put(index, Optional.ofNullable(mode)
-                    .map(exp -> evaluateExpression(exp, source.getConfiguration()))
+                    .map(exp -> evaluateExpression(exp, source.getConfiguration(), transformLoader))
                     .map(val -> (AnnotationCollectorMode) val)
                     .orElse(AnnotationCollectorMode.DUPLICATE)
                 );
@@ -191,7 +191,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 Expression processor = annotation.getMember("processor");
                 AnnotationCollectorTransform act = null;
                 if (processor != null) {
-                    String className = (String) evaluateExpression(processor, source.getConfiguration());
+                    String className = (String) evaluateExpression(processor, source.getConfiguration(), transformLoader);
                     Class<?> klass = loadTransformClass(className, alias);
                     if (klass != null) {
                         try {
@@ -272,7 +272,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             annotation.getClassNode().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals(GroovyASTTransformationClass.class.getName())).findFirst().ifPresent(transformClassAnnotation -> {
 
                 String[] transformClassNames = Optional.ofNullable(transformClassAnnotation.getMember("value")).map(value -> {
-                    Object result = evaluateExpression(value, source.getConfiguration());
+                    Object result = evaluateExpression(value, source.getConfiguration(), transformLoader);
                     if (result instanceof String[]) {
                         return (String[]) result;
                     } else if (result instanceof String) {
@@ -285,7 +285,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 }).orElseGet(() -> new String[0]);
 
                 Class[] transformClasses = Optional.ofNullable(transformClassAnnotation.getMember("classes")).map(classes -> {
-                    Object result = evaluateExpression(classes, source.getConfiguration());
+                    Object result = evaluateExpression(classes, source.getConfiguration(), transformLoader);
                     if (result instanceof Class[]) {
                         return (Class[]) result;
                     } else if (result instanceof Class) {

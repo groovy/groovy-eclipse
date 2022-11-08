@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.transform.stc;
 
+import groovy.lang.GroovyClassLoader;
 import org.apache.groovy.util.Maps;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ClassNode;
@@ -2195,24 +2196,34 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     /**
-     * A helper method that can be used to evaluate expressions as found in annotation
-     * parameters. For example, it will evaluate a constant, be it referenced directly as
-     * an integer or as a reference to a field.
+     * @deprecated Use {@link #evaluateExpression(Expression, CompilerConfiguration, GroovyClassLoader)} instead
+     */
+    @Deprecated
+    public static Object evaluateExpression(final Expression expr, final CompilerConfiguration config) {
+        return evaluateExpression(expr, config, null);
+    }
+
+    /**
+     * Evaluates expressions as found in annotation parameters.  For example, it
+     * will evaluate a constant, be it referenced directly as an integer or as a
+     * reference to a field.
      * <p>
-     * If this method throws an exception, then the expression cannot be evaluated on its own.
+     * If the expression cannot be evaluated on its own, an exception is thrown.
      *
      * @param expr   the expression to be evaluated
      * @param config the compiler configuration
+     * @param loader the compiler class loader
      * @return the result of the expression
+     * @throws GroovyBugError
      */
-    public static Object evaluateExpression(final Expression expr, final CompilerConfiguration config) {
+    public static Object evaluateExpression(final Expression expr, final CompilerConfiguration config, /*@Nullable*/ final GroovyClassLoader loader) {
         Expression ce = expr instanceof CastExpression ? ((CastExpression) expr).getExpression() : expr;
         if (ce instanceof ConstantExpression) {
-            if (expr.getType().equals(ce.getType()))
-                return ((ConstantExpression) ce).getValue();
+            if (expr.getType().equals(getWrapper(ce.getType())) || ((ConstantExpression) ce).isNullExpression())
+                return ((ConstantExpression) ce).getValue(); // boolean, number, string, or null
         } else if (ce instanceof ListExpression) {
-            if (expr.getType().isArray() && expr.getType().getComponentType().equals(STRING_TYPE))
-                return ((ListExpression) ce).getExpressions().stream().map(e -> evaluateExpression(e, config)).toArray(String[]::new);
+            if (expr.getType().isArray() && isStringType(expr.getType().getComponentType()))
+                return ((ListExpression) ce).getExpressions().stream().map(e -> evaluateExpression(e, config, loader)).toArray(String[]::new);
         }
 
         String className = "Expression$"+UUID.randomUUID().toString().replace('-', '$');
@@ -2224,11 +2235,8 @@ public abstract class StaticTypeCheckingSupport {
         cc.setPreviewFeatures(false);
         cc.setScriptBaseClass(null);
         cc.setTargetBytecode(CompilerConfiguration.DEFAULT.getTargetBytecode());
-        /* GRECLIPSE edit -- supply GroovyClassLoader
-        CompilationUnit cu = new CompilationUnit(cc);
-        */
-        CompilationUnit cu = new CompilationUnit(cc, null, new groovy.lang.GroovyClassLoader(classNode.getClass().getClassLoader(), cc));
-        // GRECLIPSE end
+
+        CompilationUnit cu = new CompilationUnit(cc, null, loader);
         try {
             cu.addClassNode(classNode);
             cu.compile(Phases.CLASS_GENERATION);
@@ -2239,7 +2247,8 @@ public abstract class StaticTypeCheckingSupport {
         } catch (ReflectiveOperationException e) {
             throw new GroovyBugError(e);
         } finally {
-            closeQuietly(cu.getClassLoader());
+            if (loader == null)
+                closeQuietly(cu.getClassLoader());
         }
     }
 

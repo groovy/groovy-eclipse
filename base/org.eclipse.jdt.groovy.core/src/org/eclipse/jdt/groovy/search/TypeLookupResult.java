@@ -296,16 +296,17 @@ public class TypeLookupResult {
             .isPresent();
     }
 
-    private static Optional<ClassNode[]> findClosureSignature(final Parameter target, final MethodNode source, final SourceUnit unit, final MethodCall call) {
+    private static Optional<ClassNode[]> findClosureSignature(final Parameter target, final MethodNode origin, final SourceUnit unit, final MethodCall call) {
         return GroovyUtils.getAnnotations(target, VariableScope.CLOSURE_PARAMS.getName()).findFirst().map(cp -> {
+            org.codehaus.groovy.control.CompilationUnit cu = ((EclipseSourceUnit) unit).resolver.compilationUnit;
             try {
-                @SuppressWarnings("unchecked") Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.CLASS_CLASS_NODE, cp.getMember("value")), unit.getConfiguration());
-                String[] opts = (String[]) (cp.getMember("options") == null ? ClosureParams.class.getMethod("options").getDefaultValue() : StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.STRING_CLASS_NODE.makeArray(), cp.getMember("options")), unit.getConfiguration()));
+                @SuppressWarnings("unchecked") Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.CLASS_CLASS_NODE, cp.getMember("value")), unit.getConfiguration(), cu.getTransformLoader());
+                String[] opts = (String[]) (cp.getMember("options") == null ? ClosureParams.class.getMethod("options").getDefaultValue() : StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.STRING_CLASS_NODE.makeArray(), cp.getMember("options")), unit.getConfiguration(), cu.getTransformLoader()));
 
                 // determine closure param types from ClosureSignatureHint
-                List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(source, unit, ((EclipseSourceUnit) unit).resolver.compilationUnit, opts, (Expression) call);
+                List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(origin, unit, cu, opts, (Expression) call);
                 if (sigs != null) {
-                    List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(source.getParameters());
+                    List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(origin.getParameters());
                     for (ClassNode[] sig : sigs) {
                         if (sig.length == parameterTypes.size() && range(0, sig.length).allMatch(i -> GroovyUtils.isAssignable(sig[i], parameterTypes.get(i)))) {
                             return sig;

@@ -2363,13 +2363,17 @@ public abstract class StaticTypeCheckingSupport {
      */
     public static Object evaluateExpression(final Expression expr, final CompilerConfiguration config) {
         // GRECLIPSE add
+        return evaluateExpression(expr, config, null);
+    }
+
+    public static Object evaluateExpression(final Expression expr, final CompilerConfiguration config, /*@Nullable*/ final groovy.lang.GroovyClassLoader loader) {
         Expression ce = expr instanceof CastExpression ? ((CastExpression) expr).getExpression() : expr;
         if (ce instanceof ConstantExpression) {
-            if (expr.getType().equals(ce.getType()))
-                return ((ConstantExpression) ce).getValue();
+            if (expr.getType().equals(getWrapper(ce.getType())) || ((ConstantExpression) ce).isNullExpression())
+                return ((ConstantExpression) ce).getValue(); // boolean, number, string, or null
         } else if (ce instanceof ListExpression) {
             if (expr.getType().isArray() && expr.getType().getComponentType().equals(STRING_TYPE))
-                return ((ListExpression) ce).getExpressions().stream().map(e -> evaluateExpression(e, config)).toArray(String[]::new);
+                return ((ListExpression) ce).getExpressions().stream().map(e -> evaluateExpression(e, config, loader)).toArray(String[]::new);
         }
         // GRECLIPSE end
         String className = "Expression$"+UUID.randomUUID().toString().replace('-', '$');
@@ -2383,7 +2387,7 @@ public abstract class StaticTypeCheckingSupport {
         /* GRECLIPSE edit -- supply the GroovyClassLoader
         CompilationUnit cu = new CompilationUnit(copyConf);
         */
-        CompilationUnit cu = new CompilationUnit(copyConf, null, new groovy.lang.GroovyClassLoader(classNode.getClass().getClassLoader(), copyConf));
+        CompilationUnit cu = new CompilationUnit(copyConf, null, loader);
         // GRECLIPSE end
         try {
             cu.addClassNode(classNode);
@@ -2395,6 +2399,9 @@ public abstract class StaticTypeCheckingSupport {
         } catch (ReflectiveOperationException e) {
             throw new GroovyBugError(e);
         } finally {
+            // GRECLIPSE add
+            if (loader == null)
+            // GRECLIPSE end
             org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport.closeQuietly(cu.getClassLoader());
         }
     }
