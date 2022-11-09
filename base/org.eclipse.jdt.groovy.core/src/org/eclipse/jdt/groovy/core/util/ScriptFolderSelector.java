@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@ package org.eclipse.jdt.groovy.core.util;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -92,30 +93,28 @@ public class ScriptFolderSelector implements IEclipsePreferences.IPreferenceChan
         }
     }
 
-    private void initFilters(List<String> listStringPreference) {
-        if (listStringPreference == null) {
+    private void initFilters(final List<String> filterTokens) {
+        if (filterTokens == null || filterTokens.isEmpty()) {
             scriptPatterns = CharOperation.NO_CHAR_CHAR;
             doCopy = new boolean[0];
+            return;
         }
-        int size = listStringPreference.size();
-        if (size % 2 == 0) {
-            scriptPatterns = new char[size / 2][];
-            doCopy = new boolean[size / 2];
-        } else {
-            // preferences are a little bit wacky
-            scriptPatterns = new char[1 + size / 2][];
-            doCopy = new boolean[1 + size / 2];
-        }
-        int count = 0;
-        int index = 0;
 
-        for (String patternStr : listStringPreference) {
-            if (count++ % 2 == 0) {
-                scriptPatterns[index] = patternStr.toCharArray();
-            } else {
-                char[] pattern = patternStr.toCharArray();
-                doCopy[index++] = pattern.length > 0 && pattern[0] == 'y';
-            }
+        Map<String, Boolean> spec = new java.util.TreeMap<>();
+        for (int i = 0, n = filterTokens.size(); i < n; i += 1) {
+            String pattern = filterTokens.get(i++).trim();
+            boolean isCopy = (i < n ? filterTokens.get(i).trim().startsWith("y") : true);
+            spec.put(pattern, isCopy);
+        }
+
+        spec.remove("");
+        doCopy = new boolean[spec.size()];
+        scriptPatterns = new char[spec.size()][];
+
+        int index = 0;
+        for (Map.Entry<String, Boolean> entry : spec.entrySet()) {
+            scriptPatterns[index] = entry.getKey().toCharArray();
+            doCopy[index++] = entry.getValue();
         }
     }
 
@@ -128,8 +127,8 @@ public class ScriptFolderSelector implements IEclipsePreferences.IPreferenceChan
      */
     public FileKind getFileKind(char[] filepath) {
         if (enabled) {
-            if (filepath != null) {
-                for (int i = 0; i < scriptPatterns.length; i++) {
+            if (filepath != null && filepath.length > 0) {
+                for (int i = 0, n = scriptPatterns.length; i < n; i += 1) {
                     char[] pattern = scriptPatterns[i];
                     if (CharOperation.pathMatch(pattern, filepath, true, '/')) {
                         return doCopy[i] ? FileKind.SCRIPT : FileKind.SCRIPT_NO_COPY;

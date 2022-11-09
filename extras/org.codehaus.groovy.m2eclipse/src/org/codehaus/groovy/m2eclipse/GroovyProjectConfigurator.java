@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.maven.plugin.MojoExecution;
+import org.codehaus.plexus.util.StringUtils;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -64,12 +65,20 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
         }
 
         IEclipsePreferences preferences = new ProjectScope(request.getProject()).getNode("org.eclipse.jdt.groovy.core");
-        String filters = getScriptFilters(preferences, request.getMavenProjectFacade());
-        if (!filters.isEmpty()) {
-            preferences.put("groovy.script.filters", filters);
-            preferences.putBoolean("org.codehaus.groovy.eclipse.preferences.compiler.project", true);
+        if (sourceType != null) {
+            String filters = getScriptFilters(preferences, request.getMavenProjectFacade());
+            if (!filters.isEmpty()) {
+                preferences.put("groovy.script.filters", filters);
+                preferences.putBoolean("org.codehaus.groovy.eclipse.preferences.compiler.project", true);
+                try {
+                    preferences.flush();
+                } catch (Exception ex) {
+                  //org.slf4j.LoggerFactory.getLogger(getClass()).error(ex);
+                }
+            }
+        } else {
             try {
-                preferences.flush();
+                preferences.removeNode();
             } catch (Exception ex) {
               //org.slf4j.LoggerFactory.getLogger(getClass()).error(ex);
             }
@@ -146,7 +155,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
     private static String getScriptFilters(IEclipsePreferences preferences, IMavenProjectFacade facade) {
         Set<String> scriptFilters = new java.util.TreeSet<>();
 
-        String[] tokens = preferences.get("groovy.script.filters", "").split(",");
+        String[] tokens = StringUtils.split(preferences.get("groovy.script.filters", ""), ",");
         for (int i = 0, n = tokens.length; i < n; i += 1) {
             scriptFilters.add(tokens[i++] + "," + (i < n ? tokens[i] : "y"));
         }
@@ -159,7 +168,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
                 scriptFilters.add(path.toString() + "/**/*.groovy,y");
         }
 
-        return scriptFilters.stream().collect(java.util.stream.Collectors.joining(","));
+        return StringUtils.join(scriptFilters.iterator(), ",");
     }
 
     protected static boolean isAbsent(IClasspathDescriptor classpath, IPath path) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,22 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testScriptFolderDisabled() throws Exception {
+        ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, false);
+        assertSource("scripts/f/g/Foo.groovy", selector);
+        assertSource("src/main/resources/f/g/Foo.groovy", selector);
+        assertSource("src/test/resources/f/g/Foo.groovy", selector);
+
+        assertSource("h/scripts/Foo.groovy", selector);
+        assertSource("h/src/main/resources/Foo.groovy", selector);
+        assertSource("h/src/test/resources/Foo.groovy", selector);
+
+        assertSource("scripts/Foo.java", selector);
+        assertSource("src/main/resources/Foo.java", selector);
+        assertSource("src/test/resources/Foo.java", selector);
+    }
+
+    @Test
     public void testScriptFolderDefaultSettings() throws Exception {
         ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, true);
         assertScript("some.dsld", selector);
@@ -76,27 +92,17 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testScriptFolderDisabled() throws Exception {
-        ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, false);
-        assertSource("scripts/f/g/Foo.groovy", selector);
-        assertSource("src/main/resources/f/g/Foo.groovy", selector);
-        assertSource("src/test/resources/f/g/Foo.groovy", selector);
-
-        assertSource("h/scripts/Foo.groovy", selector);
-        assertSource("h/src/main/resources/Foo.groovy", selector);
-        assertSource("h/src/test/resources/Foo.groovy", selector);
-
-        assertSource("scripts/Foo.java", selector);
-        assertSource("src/main/resources/Foo.java", selector);
-        assertSource("src/test/resources/Foo.java", selector);
-    }
-
-    @Test
     public void testScriptFolderCustomSettings() throws Exception {
         ScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,y,scroo/**/*.groovy,n", true);
         assertScript("scri/f/g/Foo.groovy", selector);
         assertScriptNoCopy("scroo/main/resources/f/g/Foo.groovy", selector);
         assertSource("src/test/resources/Foo.java", selector);
+    }
+
+    @Test
+    public void testScriptFolderGarbledSettings() throws Exception {
+        ScriptFolderSelector selector = new MockScriptFolderSelector(",y, ,y,\t,n,tail", true);
+        assertScript("tail", selector);
     }
 
     @Test // mostly ensure that nothing horrific happens
