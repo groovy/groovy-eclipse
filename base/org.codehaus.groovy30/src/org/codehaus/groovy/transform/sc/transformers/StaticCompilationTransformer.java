@@ -125,9 +125,9 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
 
                 MethodCallExpression mce = new MethodCallExpression(transform(pe.getObjectExpression()), pe.getPropertyAsString(), MethodCallExpression.NO_ARGUMENTS);
                 mce.setImplicitThis(pe.isImplicitThis());
-                mce.setSpreadSafe(pe.isSpreadSafe());
                 mce.setMethodTarget(dmct);
                 mce.setSourcePosition(pe);
+                mce.setSpreadSafe(pe.isSpreadSafe());
                 mce.setSafe(pe.isSafe());
                 mce.copyNodeMetaData(pe);
                 return mce;

@@ -7954,4 +7954,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[bar, baz, foo]");
     }
+
+    @Test
+    public void testCompileStatic10815() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Pogo pogo = new Pogo(name:'Frank Grimes')\n" +
+            "  def props = pogo.properties\n" +
+            "  print props.keySet().sort()\n" +
+            "}\n" +
+            "test()\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  String name\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[class, name]");
+    }
 }
