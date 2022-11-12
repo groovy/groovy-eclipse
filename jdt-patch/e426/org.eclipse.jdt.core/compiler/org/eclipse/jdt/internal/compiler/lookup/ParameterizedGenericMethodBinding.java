@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -560,10 +560,10 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	    this.parameters = Scope.substitute(this, originalMethod.parameters);
 	    // error case where exception type variable would have been substituted by a non-reference type (207573)
 	    if (inferredWithUncheckConversion) { // JSL 18.5.2: "If unchecked conversion was necessary..."
-	    	this.returnType = getErasure18_5_2(originalMethod.returnType, environment, hasReturnProblem); // propagate simulation of Bug JDK_8026527
+	    	this.returnType = getErasure18_5_2(originalMethod.returnType, environment);
 	    	this.thrownExceptions = new ReferenceBinding[originalMethod.thrownExceptions.length];
 	    	for (int i = 0; i < originalMethod.thrownExceptions.length; i++) {
-	    		this.thrownExceptions[i] = (ReferenceBinding) getErasure18_5_2(originalMethod.thrownExceptions[i], environment, false); // no excuse for exceptions
+	    		this.thrownExceptions[i] = (ReferenceBinding) getErasure18_5_2(originalMethod.thrownExceptions[i], environment);
 			}
 	    } else {
 	    	this.returnType = Scope.substitute(this, originalMethod.returnType);
@@ -608,13 +608,12 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	    }
 	}
 
-	TypeBinding getErasure18_5_2(TypeBinding type, LookupEnvironment env, boolean substitute) {
+	TypeBinding getErasure18_5_2(TypeBinding type, LookupEnvironment env) {
 		// opportunistic interpretation of (JLS 18.5.2):
 		// "If unchecked conversion was necessary ..., then ...
 		// the return type and thrown types of the invocation type of m are given by
 		// the erasure of the return type and thrown types of m's type."
-		if (substitute)
-			type = Scope.substitute(this, type);
+		type = Scope.substitute(this, type); // compliant with Bug JDK-8135087: Erasure for unchecked invocation happens after inference
 		return env.convertToRawType(type.erasure(), true);
 	}
 

@@ -50642,23 +50642,10 @@ public void test1436() {
 			"	^^^^^^^^^^^\n" +
 			"Type safety: Unchecked invocation foo(List, IllegalArgumentException) of the generic method foo(List<U>, T) of type X\n" +
 			"----------\n" +
-			(this.complianceLevel < ClassFileConstants.JDK1_8
-			?
-				"3. WARNING in X.java (at line 8)\n" +
-				"	foo(l, iae);\n" +
-				"	    ^\n" +
-				"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n"
-			:
-				"3. ERROR in X.java (at line 8)\n" +
-				"	foo(l, iae);\n" +
-				"	^^^^^^^^^^^\n" +
-				"Unhandled exception type Throwable\n" + // new error since 1.8 (bug 473657)
-				"----------\n" +
-				"4. WARNING in X.java (at line 8)\n" +
-				"	foo(l, iae);\n" +
-				"	    ^\n" +
-				"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n"
-			) +
+			"3. WARNING in X.java (at line 8)\n" +
+			"	foo(l, iae);\n" +
+			"	    ^\n" +
+			"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n" +
 			"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=258798 - variation
@@ -50690,23 +50677,10 @@ public void test1437() {
 			"	^^^^^^^^^^^^^\n" +
 			"Type safety: Unchecked invocation X(List, IllegalArgumentException) of the generic constructor X(List<U>, T) of type X\n" +
 			"----------\n" +
-			(this.complianceLevel < ClassFileConstants.JDK1_8
-			?
-				"3. WARNING in X.java (at line 8)\n" +
-				"	new X(l, iae);\n" +
-				"	      ^\n" +
-				"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n"
-			:
-				"3. ERROR in X.java (at line 8)\n" +
-				"	new X(l, iae);\n" +
-				"	^^^^^^^^^^^^^\n" +
-				"Unhandled exception type Throwable\n" + // new error since 1.8 (bug 473657)
-				"----------\n" +
-				"4. WARNING in X.java (at line 8)\n" +
-				"	new X(l, iae);\n" +
-				"	      ^\n" +
-				"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n"
-			) +
+			"3. WARNING in X.java (at line 8)\n" +
+			"	new X(l, iae);\n" +
+			"	      ^\n" +
+			"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n" +
 			"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=258798 - variation
@@ -50738,23 +50712,10 @@ public void test1438() {
 			"	^^^^^^^^^^^^^^^\n" +
 			"Type safety: Unchecked invocation X(List, IllegalArgumentException) of the generic constructor X(List<U>, T) of type X\n" +
 			"----------\n" +
-			(this.complianceLevel < ClassFileConstants.JDK1_8
-			?
-				"3. WARNING in X.java (at line 8)\n" +
-				"	new X(l, iae){};\n" +
-				"	      ^\n" +
-				"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n"
-			:
-				"3. ERROR in X.java (at line 8)\n" +
-				"	new X(l, iae){};\n" +
-				"	^^^^^^^^^^^^^^^\n" +
-				"Unhandled exception type Throwable\n" + // new error since 1.8 (bug 473657)
-				"----------\n" +
-				"4. WARNING in X.java (at line 8)\n" +
-				"	new X(l, iae){};\n" +
-				"	      ^\n" +
-				"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n"
-			) +
+			"3. WARNING in X.java (at line 8)\n" +
+			"	new X(l, iae){};\n" +
+			"	      ^\n" +
+			"Type safety: The expression of type List needs unchecked conversion to conform to List<List<?>>\n" +
 			"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=258798 - variation
@@ -50783,11 +50744,14 @@ public void test1439() {
 			"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Type safety: Unchecked invocation X(List, null) of the generic constructor X(List<U>, T) of type X\n" +
 			"----------\n" +
+			(this.complianceLevel < ClassFileConstants.JDK1_8 ?
 			"2. ERROR in X.java (at line 7)\n" +
 			"	this((List) null, null);\n" +
 			"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Unhandled exception type Throwable\n" +
-			"----------\n" +
+			"----------\n"
+			: "" // no error in 1.8 (bug GH472)
+			) +
 			"3. WARNING in X.java (at line 7)\n" +
 			"	this((List) null, null);\n" +
 			"	     ^^^^^^^^^^^\n" +
@@ -51071,16 +51035,22 @@ public void test1445() {
 			"	^^^^^^^^^^^^^^^\n" +
 			"Type safety: Unchecked invocation foo(List) of the generic method foo(List<T>) of type X\n" +
 			"----------\n" +
+			(this.complianceLevel < ClassFileConstants.JDK1_8 ?
 			"4. ERROR in X.java (at line 9)\n" +
 			"	new X(l).foo(l);\n" +
 			"	^^^^^^^^\n" +
 			"Unhandled exception type Throwable\n" +
-			"----------\n" +
+			"----------\n"
+			: "" // no error in 1.8 (bug GH472)
+			) +
+			(this.complianceLevel < ClassFileConstants.JDK1_8 ?
 			"5. ERROR in X.java (at line 9)\n" +
 			"	new X(l).foo(l);\n" +
 			"	^^^^^^^^^^^^^^^\n" +
 			"Unhandled exception type Throwable\n" +
-			"----------\n" +
+			"----------\n"
+			: "" // no error in 1.8 (bug GH472)
+			) +
 			"6. WARNING in X.java (at line 9)\n" +
 			"	new X(l).foo(l);\n" +
 			"	      ^\n" +

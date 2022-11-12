@@ -8,6 +8,7 @@ Bundle-ClassPath: .
 Bundle-Vendor: Eclipse.org
 Export-Package: org.eclipse.jdt.core,
  org.eclipse.jdt.core.compiler,
+ org.eclipse.jdt.core.compiler.batch,
  org.eclipse.jdt.internal.antadapter;x-internal:=true,
  org.eclipse.jdt.internal.compiler;x-internal:=true,
  org.eclipse.jdt.internal.compiler.apt.dispatch;x-internal:=true,

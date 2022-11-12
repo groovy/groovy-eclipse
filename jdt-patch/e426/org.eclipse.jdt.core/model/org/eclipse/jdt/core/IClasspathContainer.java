@@ -14,6 +14,7 @@
 package org.eclipse.jdt.core;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * Interface of a classpath container.
@@ -141,5 +142,16 @@ public interface IClasspathContainer {
 	 * @return IPath - the container path that is associated with this container
 	 */
     IPath getPath();
+
+	/**
+	 * Answer the IDs of all registered classpath containers (extensions at extension point
+	 * {@link JavaModelManager#CPCONTAINER_INITIALIZER_EXTPOINT_ID}).
+	 * @return array of strings as extracted from the "id" attribute from all registered
+	 * 	classpath containers.
+	 * @since 3.32
+	 */
+	public static String[] getRegisteredContainerIds() {
+		return JavaModelManager.getRegisteredContainerIDs();
+	}
 }
 

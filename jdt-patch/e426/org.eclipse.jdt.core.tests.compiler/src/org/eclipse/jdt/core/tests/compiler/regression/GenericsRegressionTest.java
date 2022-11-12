@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -6678,6 +6678,95 @@ public void testBug576524() {
 				"}"
 			},
 			"SUCCESS"
+		);
+	}
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/472
+// If unchecked conversion was necessary for the arguments,
+// substitute and erase the return type.
+public void testBugGH472_a() {
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		this.runConformTest(
+			new String[] {
+				"ReturnTypeTest.java",
+				"public class ReturnTypeTest {\n"
+				+ "    <T> T m(Class<T> arg1, Class<T> arg2) { return null; }\n"
+				+ "\n"
+				+ "    void test(Class c1, Class<Class<String>> c2) throws Exception {\n"
+				+ "        m(c1, c2).newInstance();\n"
+				+ "    }\n"
+				+ "}"
+			}
+		);
+	}
+}
+
+// A variation for the unchecked conversion test case.
+// the type arguments contain wildcards like <? extends T>.
+public void testBugGH472_b() {
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		this.runConformTest(
+			new String[] {
+				"ReturnTypeTest.java",
+				"public class ReturnTypeTest {\n"
+				+ "    <T> T m(Class<T> arg1, Class<? extends T> arg2) { return null; }\n"
+				+ "\n"
+				+ "    void test(Class c1, Class<Class<String>> c2) throws Exception {\n"
+				+ "        m(c1, c2).newInstance();\n"
+				+ "    }\n"
+				+ "}"
+			}
+		);
+	}
+}
+
+// A variation for the unchecked conversion test case.
+// the type arguments contain wildcards like <? super T>.
+public void testBugGH472_c() {
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		this.runConformTest(
+			new String[] {
+				"ReturnTypeTest.java",
+				"public class ReturnTypeTest {\n"
+				+ "    <T> T m(Class<T> arg1, Class<? super T> arg2) { return null; }\n"
+				+ "\n"
+				+ "    void test(Class c1, Class<Class<String>> c2) throws Exception {\n"
+				+ "        m(c1, c2).newInstance();\n"
+				+ "    }\n"
+				+ "}"
+			}
+		);
+	}
+}
+
+// If unchecked conversion was necessary for the arguments,
+// substitute and erase the thrown type.
+public void testBugGH472_d() {
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		this.runConformTest(
+			new String[] {
+				"ThrowTest.java",
+				"public class ThrowTest {\n"
+				+ "\n"
+				+ "    public static void test(MyDerivedException e, MyType t) {\n"
+				+ "        try {\n"
+				+ "            new Foo(e, t);\n"
+				+ "        } catch (MyDerivedException e2) {}\n"
+				+ "    }\n"
+				+ "}\n"
+				+ "\n"
+				+ "class MyException extends Exception {}\n"
+				+ "class MyDerivedException extends MyException {}\n"
+				+ "\n"
+				+ "class MyType<T> {}\n"
+				+ "\n"
+				+ "class Foo {\n"
+				+ "    public <E1 extends MyException> Foo(E1 e, MyType<String> a) throws E1 {\n"
+				+ "        throw e;\n"
+				+ "    }\n"
+				+ "}"
+			}
 		);
 	}
 }

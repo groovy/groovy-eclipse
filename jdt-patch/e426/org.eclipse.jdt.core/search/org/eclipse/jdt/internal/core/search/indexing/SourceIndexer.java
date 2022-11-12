@@ -82,7 +82,7 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 	private CompilationUnit compilationUnit;
 	private CompilationUnitDeclaration cud;
 	private static final boolean DEBUG = false;
-	
+
 	public SourceIndexer(SearchDocument document) {
 		super(document);
 		this.requestor = new SourceIndexerRequestor(this);
@@ -120,7 +120,7 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 			}
 		}
 	}
-	
+
 	@Override
 	public void accept(IBinaryType binaryType, PackageBinding packageBinding, AccessRestriction accessRestriction) {
 		this.lookupEnvironment.createBinaryTypeFrom(binaryType, packageBinding, accessRestriction);
@@ -142,9 +142,9 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 		SourceTypeElementInfo elementInfo = (SourceTypeElementInfo) sourceType;
 		IType type = elementInfo.getHandle();
 		ICompilationUnit sourceUnit = (ICompilationUnit) type.getCompilationUnit();
-		accept(sourceUnit, accessRestriction);		
+		accept(sourceUnit, accessRestriction);
 	}
-	
+
 	public void resolveDocument() {
 		try {
 			IPath path = new Path(this.document.getPath());
@@ -196,7 +196,14 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 		AbstractMethodDeclaration[] methods = type.methods;
 		for (int j = 0, length = methods == null ? 0 : methods.length; j < length; j++) {
 			AbstractMethodDeclaration method = methods[j];
-			if (method != null && (method.bits & ASTNode.HasFunctionalInterfaceTypes) == 0) {
+			/*
+			 * In case the method defines a local type, skip purging the method body.
+			 * We don't know if the local type defines a method that uses a method reference or a lambda.
+			 * See:
+			 *   https://github.com/eclipse-jdt/eclipse.jdt.core/issues/432
+			 *   https://bugs.eclipse.org/bugs/show_bug.cgi?id=566435
+			 */
+			if (method != null && (method.bits & (ASTNode.HasFunctionalInterfaceTypes | ASTNode.HasLocalType)) == 0) {
 				method.statements = null;
 				method.javadoc = null;
 			}
@@ -219,11 +226,11 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 					if (lambdaExpression.binding != null && lambdaExpression.binding.isValidBinding()) {
 						final char[] superinterface = lambdaExpression.resolvedType.sourceName();
 						if (DEBUG) {
-							System.out.println('\t' + new String(superinterface) + '.' + 
+							System.out.println('\t' + new String(superinterface) + '.' +
 									new String(lambdaExpression.descriptor.selector) + "-> {}"); //$NON-NLS-1$
 						}
 						SourceIndexer.this.addIndexEntry(IIndexConstants.METHOD_DECL, MethodPattern.createIndexKey(lambdaExpression.descriptor.selector, lambdaExpression.descriptor.parameters.length));
-					
+
 						addClassDeclaration(0,  // most entries are blank, that is fine, since lambda type/method cannot be searched.
 								CharOperation.NO_CHAR, // package name
 								ONE_ZERO,
