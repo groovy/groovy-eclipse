@@ -2115,6 +2115,38 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1417
+    void testEnumInit() {
+        String contents = '''\
+            |enum X {
+            |  Y;
+            |  public static Set<String> NAMES;
+            |  static {
+            |    NAMES = Collections.singleton('why')
+            |  }
+            |  Object object;
+            |  {
+            |    object = new Object()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('Set'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('NAMES'), 5, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('NAMES'), 5, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Collections'), 11, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('singleton'), 9, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('object'), 6, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('object'), 6, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CTOR_CALL))
+    }
+
     @Test
     void testEnumInner1() {
         String contents = '''\

@@ -706,11 +706,15 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "  TEST_C1,\n" +
             "  private @groovy.transform.Generated C1() {\n" +
             "  }\n" +
+            "  private @groovy.transform.Generated C1(java.util.LinkedHashMap __namedArgs) {\n" +
+            "  }\n" +
             "}\n" +
             "public class A {\n" +
             "  public static enum C2 {\n" +
             "    TEST_C2,\n" +
             "    private @groovy.transform.Generated C2() {\n" +
+            "    }\n" +
+            "    private @groovy.transform.Generated C2(java.util.LinkedHashMap __namedArgs) {\n" +
             "    }\n" +
             "  }\n" +
             "  public @groovy.transform.Generated A() {\n" +
@@ -851,20 +855,38 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testEnum10823() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "enum E {\n" +
+            "  X(number:42, string:'x')\n" + // generated constructor
+            "  final Number number\n" +
+            "  public String string\n" +
+            "}\n" +
+            "print E.X.number\n" +
+            "print E.X.string\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42null");
+    }
+
+    @Test
     public void testEnumValues_GRE1071() {
         //@formatter:off
         String[] sources = {
-            "H.groovy",
-            "enum H {\n" +
+            "E.groovy",
+            "enum E {\n" +
             "  RED,\n" +
             "  BLUE\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
         runConformTest(sources);
 
-        assertEquals("[LH;", getReturnTypeOfMethod("H.groovy", "values"));
+        assertEquals("[LE;", getReturnTypeOfMethod("E.groovy", "values"));
     }
 
     @Test
@@ -954,6 +976,8 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "    }\n" +
             "  },\n" +
             "  private @groovy.transform.Generated Good() {\n" +
+            "  }\n" +
+            "  private @groovy.transform.Generated Good(java.util.LinkedHashMap __namedArgs) {\n" +
             "  }\n" +
             "  public abstract int foo();\n" +
             "}");

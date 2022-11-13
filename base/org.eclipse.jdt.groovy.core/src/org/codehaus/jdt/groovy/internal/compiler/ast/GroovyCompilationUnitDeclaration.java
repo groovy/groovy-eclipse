@@ -1424,13 +1424,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 constructorDecl.annotations = new Annotation[] {
                     new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(groovy.transform.Generated.class)), -1)
                 };
-                if (classNode.getObjectInitializerStatements().isEmpty()) {
-                    constructorDecl.bits |= ASTNode.IsDefaultConstructor;
-                }
-                if (isEnum) {
-                    constructorDecl.modifiers = Flags.AccPrivate;
-                } else {
+                if (!isEnum) {
+                    if (classNode.getObjectInitializerStatements().isEmpty()) {
+                        constructorDecl.bits |= ASTNode.IsDefaultConstructor;
+                    }
                     constructorDecl.modifiers = getModifiers(classNode) & ExtraCompilerModifiers.AccVisibilityMASK;
+                } else {
+                    constructorDecl.modifiers = Flags.AccPrivate;
                 }
                 constructorDecl.selector = ctorName;
 
@@ -1438,6 +1438,25 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 constructorDecl.declarationSourceEnd = -1;
                 if (methodDeclarations.add(constructorDecl)) {
                     unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);
+                }
+
+                if (isEnum) { // named arguments constructor
+                    constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                    constructorDecl.annotations = new Annotation[] {
+                        new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(groovy.transform.Generated.class)), -1)
+                    };
+                    constructorDecl.arguments = createArguments(new Parameter[] {
+                        new Parameter(ClassHelper.makeWithoutCaching(java.util.LinkedHashMap.class, false), "__namedArgs")
+                    });
+                    constructorDecl.arguments[0].type.bits |= ASTNode.IgnoreRawTypeCheck;
+                    constructorDecl.modifiers = Flags.AccPrivate;
+                    constructorDecl.selector = ctorName;
+
+                    constructorDecl.sourceEnd = -1;
+                    constructorDecl.declarationSourceEnd = -1;
+                    if (methodDeclarations.add(constructorDecl)) {
+                        unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);
+                    }
                 }
             }
 

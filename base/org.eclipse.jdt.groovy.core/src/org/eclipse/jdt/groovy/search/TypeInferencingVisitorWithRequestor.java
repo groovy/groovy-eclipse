@@ -365,9 +365,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             }
                         }
                     }
-                    if (!node.isEnum()) {
-                        visitMethodInternal(clinit);
-                    }
+                    visitMethodInternal(clinit);
                 }
 
                 for (IMember member : members) {
@@ -2180,7 +2178,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                     // ignore implicit parameters of constructors for enums or inner types
                     int implicitParamCount = 0;
-                    if (method.getDeclaringType().isEnum()) implicitParamCount = 2;
+                    if (method.getDeclaringType().isEnum()) implicitParamCount = 2; // String and int
                     if (groovyParams.length > 0 && groovyParams[0].getName().startsWith("$")) implicitParamCount = 1;
                     if (groovyParams.length >= implicitParamCount && implicitParamCount > 0) {
                         Parameter[] newGroovyParams = new Parameter[groovyParams.length - implicitParamCount];

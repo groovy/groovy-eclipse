@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -136,7 +136,8 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         }
         if (runMethod != null) {
             // allow visit method to pass guard condition
-            MethodNode run = runMethod; runMethod = null;
+            MethodNode run = runMethod;
+            runMethod = null;
             visitMethod(run);
         }
     }
@@ -159,8 +160,15 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
         // visit "<clinit>" statements before visitContents
         MethodNode clinit = node.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
-        if (clinit != null && !node.isEnum()) {
-            visitIfPresent(clinit.getCode());
+        if (clinit != null) {
+            if (!node.isEnum() || !(clinit.getCode() instanceof BlockStatement))
+                visitIfPresent(clinit.getCode());
+            else {
+                BlockStatement block = (BlockStatement) clinit.getCode();
+                for (Statement stmt : block.getStatements()) { // some generated
+                    if (!(stmt instanceof ExpressionStatement)) stmt.visit(this);
+                }
+            }
         }
         for (Statement stmt : node.getObjectInitializerStatements()) {
             stmt.visit(this);
@@ -224,7 +232,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
             }
         }
 
-        // visit enum field initializer inline with field
+        // visit enum constant initializer inline with field
         if (node.isEnum() && node.isStatic() && !node.getName().matches("(MAX|MIN)_VALUE|\\$VALUES")) {
             MethodNode clinit = node.getDeclaringClass().getMethod("<clinit>", Parameter.EMPTY_ARRAY);
             for (Statement stmt : ((BlockStatement) clinit.getCode()).getStatements()) {
