@@ -2119,7 +2119,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Face.java",
             "interface Face<T> {\n" +
-            "  <O extends T> O process(O o);\n" +
+            "  <IO extends T> IO process(IO in);\n" +
             "}\n",
 
             "Impl.groovy",
@@ -2139,7 +2139,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Face.java",
             "interface Face<T> {\n" +
-            "  <O extends T> O process(O o);\n" +
+            "  <IO extends T> IO process(IO in);\n" +
             "}\n",
 
             "Impl.groovy",
@@ -2159,18 +2159,28 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Face.java",
             "interface Face<T> {\n" +
-            "  <O extends T> O process(O o);\n" +
+            "  <IO extends T> IO process(IO in);\n" +
             "}\n",
 
             "Impl.groovy",
             "def impl = new Face<CharSequence>() { \n" +
-            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  @Override\n" +
             "  CharSequence process(CharSequence chars) { chars }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runWarningFreeTest(sources);
+        if (isAtLeastJava(JDK9)) {
+            runWarningFreeTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. WARNING in Impl.groovy (at line 3)\n" +
+                "\tCharSequence process(CharSequence chars) { chars }\n" +
+                "\t^^^^^^^^^^^^\n" +
+                "Type safety: The return type CharSequence for process(CharSequence) from the type new Face<CharSequence>(){} needs unchecked conversion to conform to IO from the type Face<T>\n" +
+                "----------\n");
+        }
     }
 
     @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
@@ -2179,18 +2189,28 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Face.java",
             "interface Face<T> {\n" +
-            "  <O extends T> O process(O o);\n" +
+            "  <IO extends T> IO process(IO in);\n" +
             "}\n",
 
             "Impl.groovy",
             "def impl = new Face<String>() { \n" +
-            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  @Override\n" +
             "  String process(String string) { string }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runWarningFreeTest(sources);
+        if (isAtLeastJava(JDK9)) {
+            runWarningFreeTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. WARNING in Impl.groovy (at line 3)\n" +
+                "\tString process(String string) { string }\n" +
+                "\t^^^^^^\n" +
+                "Type safety: The return type String for process(String) from the type new Face<String>(){} needs unchecked conversion to conform to IO from the type Face<T>\n" +
+                "----------\n");
+        }
     }
 
     @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
@@ -2204,13 +2224,23 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "Impl.groovy",
             "def impl = new Face<String>() { \n" +
-            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  @Override\n" +
             "  String process(String string) { string }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runWarningFreeTest(sources);
+        if (isAtLeastJava(JDK9)) {
+            runWarningFreeTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. WARNING in Impl.groovy (at line 3)\n" +
+                "\tString process(String string) { string }\n" +
+                "\t^^^^^^\n" +
+                "Type safety: The return type String for process(String) from the type new Face<String>(){} needs unchecked conversion to conform to O from the type Face<T>\n" +
+                "----------\n");
+        }
     }
 
     @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-10675

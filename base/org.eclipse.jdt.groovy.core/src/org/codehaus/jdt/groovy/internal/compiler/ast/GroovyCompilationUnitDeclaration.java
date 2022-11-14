@@ -1203,11 +1203,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (innerClassNode.isAnonymous()) {
                         typeDeclaration.name = CharOperation.NO_CHAR;
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
-                        //typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
+                      //typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
                         QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration);
                         allocation.sourceStart = isEnum ? typeDeclaration.sourceStart : typeDeclaration.sourceStart - 4; // approx. offset of "new"
                         allocation.sourceEnd = typeDeclaration.bodyEnd;
-                        if (!isEnum) allocation.type = typeDeclaration.superclass;
+                        if (!isEnum) {
+                            allocation.type = typeDeclaration.superclass;
+                            if (allocation.type.isParameterizedTypeReference() && unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
+                                allocation.type.bits |= ASTNode.IsDiamond; // https://github.com/groovy/groovy-eclipse/issues/1358
+                            }
+                        }
                         // TODO: allocation.typeArguments = something
                     } else {
                         typeDeclaration.name = innerClassNode.getNameWithoutPackage().substring(outerClassNode.getNameWithoutPackage().length() + 1).toCharArray();
