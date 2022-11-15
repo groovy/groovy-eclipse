@@ -1115,7 +1115,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     visitClassCodeContainer(node.getCode());
                 } else {
                     for (Statement stmt : ((BlockStatement) node.getCode()).getStatements()) {
-                        if (stmt.getEnd() > 0) { // skip inlined initialization expressions
+                        // skip inlined initialization expressions of the constructor body
+                        if (stmt.getEnd() > 0 || !(stmt instanceof ExpressionStatement)) {
                             stmt.visit(this);
                         }
                     }

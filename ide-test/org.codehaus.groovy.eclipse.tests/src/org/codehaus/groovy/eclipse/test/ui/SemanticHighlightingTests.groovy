@@ -193,6 +193,27 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testFields5() {
+        String contents = '''\
+            |@groovy.transform.Immutable
+            |class C {
+            |  String name = 'nil'
+            |  boolean flag = true
+            |  BigDecimal number = 3.14159
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('name'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('flag'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('BigDecimal'), 10, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('number'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('3.14159'), 7, NUMBER))
+    }
+
+    @Test
     void testScriptFields1() {
         String contents = '''\
             |@groovy.transform.Field List list = [1, 2]

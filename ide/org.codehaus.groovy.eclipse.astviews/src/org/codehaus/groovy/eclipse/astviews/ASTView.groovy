@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -288,8 +288,9 @@ class ASTView extends ViewPart {
                 return "$label : \"$value\""
             case stmt.Statement:
             case expr.Expression:
-                def valueType = value.class.simpleName
-                return "$label : ${valueType - ~/(Expression|Statement)$/}"
+                def valueClass = value.class
+                if (valueClass.isAnonymousClass()) valueClass = valueClass.superclass
+                return "$label : ${valueClass.simpleName - ~/(Expression|Statement)$/}"
             case ClassNode:
                 def clazz = (ClassNode) value
                 return "$label : ${clazz.toString(false).replace(' ', '')}"
