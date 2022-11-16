@@ -21,6 +21,7 @@ import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -68,15 +69,93 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
             "assert isFinal(Simple.class.modifiers)\n" +
             "def obj = new Simple(1,'x')\n" +
             "print obj.n()\n" +
-            "print obj.s\n" +
+            "print obj.s()\n" +
             "print obj\n",
 
             "Simple.groovy",
-            "record Simple(Integer n, String s) {\n" +
+            "record Simple(Number n, String s) {\n" +
             "}\n",
         };
         //@formatter:on
 
         runConformTest(sources, "1xSimple[n=1, s=x]");
+    }
+
+    @Test
+    public void testRecordType3() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "def obj = new Simple(n:1, s:'x')\n" +
+            "print obj.n\n" +
+            "print obj.s\n" +
+            "print obj\n",
+
+            "Simple.groovy",
+            "record Simple(Number n, String s) {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1xSimple[n=1, s=x]");
+    }
+
+    @Test @Ignore("TODO")
+    public void testRecordType4() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "print new Simple(n:1)\n",
+
+            "Simple.groovy",
+            "record Simple(Number n, String s = 'x') {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Simple[n=1, s=x]");
+    }
+
+    @Test
+    public void testRecordType5() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "new Simple(n:1)\n",
+
+            "Simple.groovy",
+            "record Simple(Number n, String s) {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "java.lang.AssertionError: Missing required named argument 's'. Keys found: [n].");
+    }
+
+    @Test
+    public void testRecordType6() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "new Simple(1,'x')\n",
+
+            "Simple.groovy",
+            "record Simple(Number n, String s) {\n" +
+            "  Simple {\n" +
+            "    assert n > 1\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "Assertion failed");
     }
 }

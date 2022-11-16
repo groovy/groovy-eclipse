@@ -73,6 +73,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.ParameterUtils;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -1396,7 +1397,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             Parameter[] components = classNode.getNodeMetaData("_RECORD_HEADER");
             if (components != null) {
-                if (classNode.getDeclaredConstructor(components) == null) {
+                if (!constructorNodes.stream().filter(cn -> ParameterUtils.parametersEqual(cn.getParameters(), components)).findFirst().isPresent()) {
                     ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult); // TODO: TypeDeclaration.createDefaultConstructorForRecord()
                     constructorDecl.arguments = createArguments(components);
                     constructorDecl.bits |= ASTNode.Bit10;//ASTNode.IsCanonicalConstructor
@@ -1474,6 +1475,22 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 constructorDecl.selector = ctorName;
                 constructorDecl.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
 
+                if (components != null && ParameterUtils.parametersEqual(components, constructorNode.getParameters())) {
+                    constructorDecl.bits |= ASTNode.Bit10;//ASTNode.IsCanonicalConstructor
+                    AnnotatedNode compactCtor = classNode.getNodeMetaData("compact.constructor");
+                    if (compactCtor == null) {
+                        constructorDecl.declarationSourceStart = constructorDecl.sourceStart = constructorDecl.bodyStart = classNode.getNameStart();
+                        constructorDecl.declarationSourceEnd = constructorDecl.sourceEnd = constructorDecl.bodyEnd = classNode.getNameEnd();
+                    } else {
+                      //constructorDecl.modifiers |= ExtraCompilerModifiers.AccCompactConstructor;
+                        constructorDecl.declarationSourceStart = compactCtor.getStart();
+                        constructorDecl.declarationSourceEnd = compactCtor.getEnd();
+                        constructorDecl.sourceStart = compactCtor.getNameStart();
+                        constructorDecl.bodyStart = compactCtor.getNameEnd() + 1;
+                        constructorDecl.sourceEnd = compactCtor.getNameEnd();
+                        constructorDecl.bodyEnd = compactCtor.getEnd();
+                    }
+                }
                 if (methodDeclarations.add(constructorDecl)) {
                     unitDeclaration.sourceEnds.put(constructorDecl, constructorNode.getNameEnd());
                 }
@@ -2974,6 +2991,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 String annotationType = annotation.getClassNode().getName();
                 if (isType("groovy.transform.Canonical", annotationType) ||
                     isType("groovy.transform.Immutable", annotationType) ||
+                    isType("groovy.transform.RecordType", annotationType) ||
                     isType("groovy.transform.TupleConstructor", annotationType)){
                     Map<String, Expression> attributes = annotation.getMembers();
                     if (!attributes.containsKey("includeSuperFields") &&
@@ -2984,6 +3002,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         AnnotationNode anno = new AnnotationNode(ClassHelper.make(groovy.transform.TupleConstructor.class));
                         if (isType("groovy.transform.Immutable", annotationType))
                             anno.addMember("defaults", ConstantExpression.FALSE);
+                        else if (isType("groovy.transform.RecordType", annotationType)) {
+                            anno.addMember("defaultsMode", new PropertyExpression(new ClassExpression(ClassHelper.make("groovy.transform.DefaultsMode")), "AUTO"));
+                            anno.addMember("namedVariant", ConstantExpression.TRUE);
+                            anno.addMember("force", ConstantExpression.TRUE);
+                        }
                         attributes.forEach((name, value) -> anno.setMember(name, value));
 
                         // create type that intercepts generated constructors
