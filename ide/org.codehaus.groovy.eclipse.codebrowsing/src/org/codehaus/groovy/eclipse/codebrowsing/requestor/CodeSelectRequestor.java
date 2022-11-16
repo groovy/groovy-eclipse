@@ -50,6 +50,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMet
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceType;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.transform.trait.Traits;
+import org.codehaus.jdt.groovy.ast.MethodNodeWithNamedParams;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -518,7 +519,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     Parameter[] parameters = null;
                     if (declaration instanceof MethodNode) {
                         name = ((MethodNode) declaration).getName();
-                        parameters = ((MethodNode) declaration).getParameters();
+                        parameters = declaration instanceof MethodNodeWithNamedParams
+                            ? ((MethodNodeWithNamedParams) declaration).getPositionalParams() : ((MethodNode) declaration).getParameters();
                     }
                     maybeRequested = findElement(jdtDeclaringType, name, parameters);
                 }
@@ -733,11 +735,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
         // call parameters
         sb.append(Signature.C_PARAM_START);
-        Parameter[] parameters = node.getParameters();
-        if (parameters != null) {
-            for (Parameter p : parameters) {
-                sb.append(signer.apply(p.getType()));
-            }
+        Parameter[] parameters = (node instanceof MethodNodeWithNamedParams) ? ((MethodNodeWithNamedParams) node).getPositionalParams() : node.getParameters();
+        for (Parameter p : parameters) {
+            sb.append(signer.apply(p.getType()));
         }
         sb.append(Signature.C_PARAM_END);
 
@@ -747,7 +747,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         // type parameter resolution
         if (generics.length > 0) {
             // generics have been resolved for returnType, declaringType and parameterTypes; mappings can be recovered using original method reference
-            GenericsMapper mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(node.getParameters()), declaringType, node.getOriginal());
+            GenericsMapper mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(parameters), declaringType, node.getOriginal());
 
             sb.append('%');
             sb.append(Signature.C_GENERIC_START);

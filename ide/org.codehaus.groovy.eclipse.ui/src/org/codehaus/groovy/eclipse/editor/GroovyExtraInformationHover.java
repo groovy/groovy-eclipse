@@ -218,7 +218,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         sb.append(' ');
         sb.append(createTypeLabel(node.getDeclaringClass()));
         sb.append('.');
-        sb.append(node.getName());
+        sb.append("<init>".equals(node.getName()) ? createTypeLabel(node.getDeclaringClass()) : node.getName());
         sb.append('(');
         Parameter[] params = node.getParameters();
         if (params != null) {
