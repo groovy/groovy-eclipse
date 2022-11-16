@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -289,7 +289,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1528
     void testGetterSetter1() {
-        String contents = 'class A { private int value\n}'
+        String contents = 'class C {\n private int value\n}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'getValue', 1)
         proposalExists(proposals, 'setValue', 1)
@@ -297,7 +297,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testGetterSetter2() {
-        String contents = 'class A { private final int value\n}'
+        String contents = 'class C {\n private final int value\n}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'getValue', 1)
         proposalExists(proposals, 'setValue', 0)
@@ -305,10 +305,29 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testGetterSetter3() {
-        String contents = 'class A { private boolean value\n}'
+        String contents = 'class C {\n private boolean value\n}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'isValue', 1)
         proposalExists(proposals, 'setValue', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/820
+    void testGetterSetter4() {
+        String contents = 'enum E {\n VALUE\n}'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
+        proposalExists(proposals, 'getVALUE', 0)
+        proposalExists(proposals, 'setVALUE', 0)
+    }
+
+    @Test
+    void testGetterSetter5() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = 'record R(String value) {\n}'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
+        proposalExists(proposals, 'getValue', 0)
+        proposalExists(proposals, 'setValue', 0)
+        proposalExists(proposals, 'value', 0)
     }
 
     @Test

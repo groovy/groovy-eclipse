@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionPro
     }
 
     @Override
-    public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
+    public List<ICompletionProposal> generateProposals(final IProgressMonitor monitor) {
         List<ICompletionProposal> proposals = new ArrayList<>();
 
         ContentAssistContext context = getContext();
@@ -53,9 +53,8 @@ public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionPro
             int length = context.completionExpression.length(), offset = context.completionLocation - length;
             try {
                 for (IField field : enclosingType.getFields()) {
-                    if (field.getSourceRange().getLength() > 0 && ProposalUtils.matches(context.completionExpression,
-                        MetaClassHelper.capitalize(field.getElementName()), options.camelCaseMatch, options.substringMatch)) {
-
+                    if (field.getSourceRange().getLength() > 0 && !field.isEnumConstant() && !isRecordComponent(field) && ProposalUtils.matches(
+                            context.completionExpression, MetaClassHelper.capitalize(field.getElementName()), options.camelCaseMatch, options.substringMatch)) {
                         IMethod getter = GetterSetterUtil.getGetter(field);
                         if (getter == null || !getter.exists()) {
                             proposals.add(new GetterSetterCompletionProposal(field, offset, length, true, Relevance.HIGH.getRelevance()));
@@ -75,5 +74,10 @@ public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionPro
         }
 
         return proposals;
+    }
+
+    // 3.26+ can use field.isRecordComponent()
+    private static boolean isRecordComponent(final IField field) throws JavaModelException {
+        return !Flags.isStatic(field.getFlags()) && (field.getDeclaringType().getFlags() & 0x1000000) != 0;
     }
 }
