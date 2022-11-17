@@ -873,6 +873,29 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testEnum10845() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "enum E {\n" +
+            "  X\n" +
+            "  final Number number\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 4)\n" +
+            "\tX\n" +
+            "\t^\n" +
+            "Groovy:[Static type checking] - Cannot find matching constructor E()\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testEnumValues_GRE1071() {
         //@formatter:off
         String[] sources = {

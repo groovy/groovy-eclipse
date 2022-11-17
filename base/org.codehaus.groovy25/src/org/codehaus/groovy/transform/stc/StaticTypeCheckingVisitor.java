@@ -3115,7 +3115,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             addStaticTypeError("cannot resolve dynamic method name at compile time.", call);
             return;
         }
-
+        // GRECLIPSE add -- GROOVY-10845: $INIT(Object[]) delegates
+        if (name.equals("$INIT") && call.getOwnerType().isEnum()) {
+            FieldExpression target = (FieldExpression) typeCheckingContext.getEnclosingBinaryExpression().getLeftExpression();
+            ConstructorCallExpression cce = new ConstructorCallExpression(call.getOwnerType(), call.getArguments());
+            cce.setSourcePosition(target.getField());
+            visitConstructorCallExpression(cce);
+            //
+            MethodNode init = call.getOwnerType().getDeclaredMethods("$INIT").get(0);
+            call.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, init.getReturnType());
+            call.putNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET, init);
+            return;
+        }
+        // GRECLIPSE end
         if (extension.beforeMethodCall(call)) {
             extension.afterMethodCall(call);
             return;
@@ -6612,6 +6624,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void addNoMatchingMethodError(ClassNode receiver, final String name, final ClassNode[] args, final Expression call) {
+        // GRECLIPSE add -- GROOVY-10845
+        if ("<init>".equals(name)) {
+            // remove implicit agruments [String, int] from enum constant construction
+            ClassNode[] actual = (receiver.isEnum() && args.length >= 2) ? Arrays.copyOfRange(args, 2, args.length) : args;
+            addStaticTypeError("Cannot find matching constructor " + prettyPrintTypeName(receiver) + toMethodParametersString("", actual), call);
+            return;
+        }
+        // GRECLIPSE end
         if (isClassClassNodeWrappingConcreteType(receiver)) {
             receiver = receiver.getGenericsTypes()[0].getType();
         }
