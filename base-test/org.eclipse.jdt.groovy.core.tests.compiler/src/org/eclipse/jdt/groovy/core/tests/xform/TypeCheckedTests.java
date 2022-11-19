@@ -6677,4 +6677,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10847() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class A<T, U> {\n" +
+            "}\n" +
+            "class B {\n" +
+            "  def <X extends A<Character, Boolean>, Y extends X> void m(X x, Y y) {\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "test() {\n" +
+            "  new B().m(null, new A<>())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }
