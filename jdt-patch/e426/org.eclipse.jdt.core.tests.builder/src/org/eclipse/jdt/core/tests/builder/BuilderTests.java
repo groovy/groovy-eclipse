@@ -445,14 +445,8 @@ public class BuilderTests extends TestCase {
 		printProblemsFor(env.getWorkspaceRootPath());
 	}
 
-	protected void printProblemsFor(IPath root) {
-		printProblemsFor(new IPath[] { root });
-	}
-
-	protected void printProblemsFor(IPath[] roots) {
-		for (int i = 0; i < roots.length; i++) {
-			IPath path = roots[i];
-
+	protected void printProblemsFor(IPath... roots) {
+		for (IPath path : roots) {
 			/* get the leaf problems for this type */
 			Problem[] problems = env.getProblemsFor(path);
 			System.out.println(arrayToString(problems));

@@ -64,7 +64,7 @@ public class JrtUtilTest extends TestCase {
 		Object jrtSystem2 = JRTUtil.getJrtSystem(this.image, String.valueOf(majorVersionSegment));
 		assertSame(jrtSystem, jrtSystem2);
 
-		jrtSystem2 = JRTUtil.getJrtSystem(this.image, String.valueOf(--majorVersionSegment));
+		jrtSystem2 = JRTUtil.getJrtSystem(this.image, String.valueOf(majorVersionSegment-2));
 		assertNotSame(jrtSystem, jrtSystem2);
 
 		Object jrtSystem3 = JRTUtil.getJrtSystem(this.image);

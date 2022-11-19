@@ -321,6 +321,15 @@ public class AbstractCompilerTest extends TestCase {
 	public static int getPossibleComplianceLevels() {
 		if (possibleComplianceLevels == UNINITIALIZED) {
 			String specVersion = System.getProperty("java.specification.version");
+			// During the EA phase of development, the above property is set to the
+			// latest version, for e.g. "20", but the java.version that will be tested
+			// inside initReflectionVersion() later on will be of the format "20-ea" thus
+			// causing an exception. The following code will ensure that we ignore such cases
+			// until the latest version has been properly added in CompilerOptions.
+			int spec = Integer.parseInt(specVersion);
+			if (spec > Integer.parseInt(CompilerOptions.getLatestVersion())) {
+				specVersion = CompilerOptions.getLatestVersion();
+			}
 			isJRE19Plus = CompilerOptions.VERSION_19.equals(specVersion);
 			isJRE18Plus = isJRE19Plus || CompilerOptions.VERSION_18.equals(specVersion);
 			isJRE17Plus = isJRE18Plus || CompilerOptions.VERSION_17.equals(specVersion);
