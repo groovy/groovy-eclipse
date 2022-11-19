@@ -220,7 +220,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
             options.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getElementName());
             options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
             if (!computeProblems) {
-                // disable task tags checking to speed up parsing
+                // disable task tags checking for faster parsing
                 options.remove(CompilerOptions.OPTION_TaskTags);
             }
             options.putAll(getCustomOptions());

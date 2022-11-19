@@ -696,6 +696,56 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked29() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  def m() {\n" +
+            "  }\n" +
+            "  static {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tm()\n" +
+            "\t^^^\n" +
+            "Groovy:[Static type checking] - Non-static method C#m cannot be called from static context\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked30() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C {\n" +
+            "  def m() {\n" +
+            "  }\n" +
+            "  static sm() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tm()\n" +
+            "\t^^^\n" +
+            "Groovy:[Static type checking] - Non-static method C#m cannot be called from static context\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked5450() {
         //@formatter:off
         String[] sources = {
@@ -2539,6 +2589,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked9415() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  static <T> T getAt(T t) { t }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  print C[1]\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "1");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 6)\n" +
+                "\tprint C[1]\n" +
+                "\t      ^^^^\n" +
+                "Groovy:[Static type checking] - Cannot find matching method java.lang.Class#getAt(int). Please check if the declared type is correct and if the method exists.\n" +
+                "----------\n");
+        }
     }
 
     @Test

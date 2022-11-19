@@ -1812,10 +1812,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         boolean isStatic;
         if (member instanceof FieldNode) {
             isStatic = ((FieldNode) member).isStatic();
-        } else if (member instanceof MethodNode) {
-            isStatic = ((MethodNode) member).isStatic();
-        } else {
+        } else if (member instanceof PropertyNode) {
             isStatic = ((PropertyNode) member).isStatic();
+        } else { // assume member instanceof MethodNode
+            isStatic = member instanceof ExtensionMethodNode ? ((ExtensionMethodNode) member).isStaticExtension() : ((MethodNode) member).isStatic();
         }
         return (isStatic ? member : null);
     }

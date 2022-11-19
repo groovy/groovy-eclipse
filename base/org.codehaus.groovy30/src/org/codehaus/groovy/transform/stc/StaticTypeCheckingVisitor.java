@@ -1965,6 +1965,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private <T> T allowStaticAccessToMember(final T member, final boolean staticOnly) {
         if (member == null) return null;
         if (!staticOnly) return member;
+        /* GRECLIPSE edit
         boolean isStatic;
         if (member instanceof Variable) {
             Variable v = (Variable) member;
@@ -1981,6 +1982,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         if (staticOnly && !isStatic) return null;
         return member;
+        */
+        if (member instanceof List) {
+            return (T) ((List<MethodNode>) member).stream()
+                .map(m -> allowStaticAccessToMember(m,true))
+                .filter(Objects::nonNull).collect(toList());
+        }
+        boolean isStatic;
+        if (member instanceof Variable) {
+            isStatic = Modifier.isStatic(((Variable) member).getModifiers());
+        } else { // assume member instanceof MethodNode
+            isStatic = member instanceof ExtensionMethodNode ? ((ExtensionMethodNode) member).isStaticExtension() : ((MethodNode) member).isStatic();
+        }
+        return (isStatic ? member : null);
+        // GRECLIPSE end
     }
 
     private void storeWithResolve(ClassNode type, final ClassNode receiver, final ClassNode declaringClass, final boolean isStatic, final Expression expressionToStoreOn) {
@@ -3840,7 +3855,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             // choose an arbitrary method to display an error message
                             MethodNode node = inaccessibleMethods.get(0);
                             ClassNode owner = node.getDeclaringClass();
-                            addStaticTypeError("Non static method " + owner.getName() + "#" + node.getName() + " cannot be called from static context", call);
+                            addStaticTypeError("Non-static method " + owner.getName() + "#" + node.getName() + " cannot be called from static context", call);
                         }
                     }
 
@@ -3873,7 +3888,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 && !directMethodCallCandidate.isStatic() && objectExpression instanceof ClassExpression
                                 && !"java.lang.Class".equals(directMethodCallCandidate.getDeclaringClass().getName())) {
                             ClassNode owner = directMethodCallCandidate.getDeclaringClass();
-                            addStaticTypeError("Non static method " + owner.getName() + "#" + directMethodCallCandidate.getName() + " cannot be called from static context", call);
+                            addStaticTypeError("Non-static method " + owner.getName() + "#" + directMethodCallCandidate.getName() + " cannot be called from static context", call);
                         }
                         // GRECLIPSE add -- GROOVY-10341
                         else if (directMethodCallCandidate.isAbstract() && isSuperExpression(objectExpression))

@@ -2823,4 +2823,37 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "Groovy:The type Integer is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
             "----------\n");
     }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10797
+    public void testUpperBounds6() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    p.C.test();\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/A.java",
+            "package p;\n" +
+            "public class A<T> {\n" +
+            "}\n",
+
+            "p/B.java",
+            "package p;\n" +
+            "public class B<T extends A<?>> {\n" +
+            "}\n",
+
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  static <T extends A> B<T> test() {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }
