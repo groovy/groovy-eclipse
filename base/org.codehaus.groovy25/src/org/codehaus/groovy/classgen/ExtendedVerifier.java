@@ -196,7 +196,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                 }
                 if (repeatable != null) {
                     AnnotationNode collector = new AnnotationNode(repeatable);
-                    /* GRECLIPSE edit
+                    /* GRECLIPSE edit -- GROOVY-4156, GROOVY-9541, et al.
                     if (repeatable.isResolved()) {
                         Class repeatableType = repeatable.getTypeClass();
                         Retention retAnn = (Retention) repeatableType.getAnnotation(Retention.class);
@@ -214,8 +214,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                     collector.setClassRetention(repeatee.hasClassRetention());
                     collector.setRuntimeRetention(repeatee.hasRuntimeRetention());
                     // GRECLIPSE end
-
-                    List<Expression> annos = new ArrayList<Expression>();
+                    List<Expression> annos = new ArrayList<>();
                     for (AnnotationNode an : next.getValue()) {
                         annos.add(new AnnotationConstantExpression(an));
                     }
