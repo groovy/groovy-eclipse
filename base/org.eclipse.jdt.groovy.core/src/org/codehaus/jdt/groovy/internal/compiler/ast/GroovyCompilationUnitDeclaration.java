@@ -162,9 +162,11 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
@@ -1205,16 +1207,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         typeDeclaration.name = CharOperation.NO_CHAR;
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
                       //typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
-                        QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration);
+                        QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration) {
+                            @Override
+                            public void checkTypeArgumentRedundancy(ParameterizedTypeBinding atype, BlockScope scope) {
+                                // https://github.com/groovy/groovy-eclipse/issues/1358
+                            }
+                        };
                         allocation.sourceStart = isEnum ? typeDeclaration.sourceStart : typeDeclaration.sourceStart - 4; // approx. offset of "new"
                         allocation.sourceEnd = typeDeclaration.bodyEnd;
                         if (!isEnum) {
                             allocation.type = typeDeclaration.superclass;
-                            if (allocation.type.isParameterizedTypeReference() && unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
-                                allocation.type.bits |= ASTNode.IsDiamond; // https://github.com/groovy/groovy-eclipse/issues/1358
-                            }
                         }
-                        // TODO: allocation.typeArguments = something
+                        // TODO (GROOVY-10501): allocation.typeArguments = something
                     } else {
                         typeDeclaration.name = innerClassNode.getNameWithoutPackage().substring(outerClassNode.getNameWithoutPackage().length() + 1).toCharArray();
                     }
@@ -1707,7 +1711,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (e instanceof VariableExpression) {
                     char[] simpleName = e.getText().toCharArray(); // assume it's a type name
                     TypeReference t = verify(new SingleTypeReference(simpleName, toPos(e.getStart(), e.getEnd() - 1)));
-                    t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
                     return t;
                 }
                 if (e instanceof PropertyExpression) {
@@ -1717,7 +1721,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                     char[][] compoundName = CharOperation.splitOn('.', e.getText().toCharArray()); // assume it's a type name
                     TypeReference t = new QualifiedTypeReference(compoundName, positionsFor(compoundName, e.getStart(), e.getEnd()));
-                    t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
                     return t;
                 }
                 Util.log(IStatus.WARNING, "Unhandled reference type: " + e.getClass().getName());
@@ -2307,27 +2311,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             if (compoundName.length == 1) {
                 if (typeArguments == null) {
-                    TypeReference tr = verify(new SingleTypeReference(typeName, toPos(sourceStart, sourceEnd - 1)));
-                    if (!checkGenerics) {
-                        tr.bits |= ASTNode.IgnoreRawTypeCheck;
-                    }
-                    return tr;
+                    TypeReference t = verify(new SingleTypeReference(typeName, toPos(sourceStart, sourceEnd - 1)));
+                    if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    return t;
                 } else {
                     TypeReference[] typeRefs = typeArguments.toArray(new TypeReference[typeArguments.size()]);
                     return new ParameterizedSingleTypeReference(typeName, typeRefs, 0, toPos(sourceStart, sourceEnd - 1));
                 }
             } else {
                 if (typeArguments == null) {
-                    TypeReference tr = new QualifiedTypeReference(compoundName, positionsFor(compoundName, sourceStart, sourceEnd));
-                    if (!checkGenerics) {
-                        tr.bits |= ASTNode.IgnoreRawTypeCheck;
-                    }
-                    return tr;
+                    TypeReference t = new QualifiedTypeReference(compoundName, positionsFor(compoundName, sourceStart, sourceEnd));
+                    if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    return t;
                 } else {
                     // TODO: Support individual component parameterization: A<X>.B<Y>
-                    TypeReference[][] typeRefs = new TypeReference[compoundName.length][];
-                    typeRefs[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
-                    return new ParameterizedQualifiedTypeReference(compoundName, typeRefs, 0, positionsFor(compoundName, sourceStart, sourceEnd));
+                    TypeReference[][] types = new TypeReference[compoundName.length][];
+                    types[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
+                    return new ParameterizedQualifiedTypeReference(compoundName, types, 0, positionsFor(compoundName, sourceStart, sourceEnd));
                 }
             }
         }
@@ -2360,8 +2360,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
                 // FIXASC what does the check on this next really line mean?
             } else if (!genericsType.getType().isGenericsPlaceHolder()) {
-                TypeReference typeReference = createTypeReferenceForClassNode(genericsType.getType());
-                return typeReference;
+                return createTypeReferenceForClassNode(genericsType.getType());
             } else {
                 // this means it is a placeholder. As an example, if the reference is to 'List'
                 // then the genericsType info may include a placeholder for the type variable (as the user
