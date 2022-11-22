@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2013, 2018 IBM Corporation and others.
  *
@@ -123,6 +124,10 @@ public class TypeSystem {
 			public int hashCode() {
 				final int prime=31;
 				int hashCode = 1 + hash(this.type);
+				// GROOVY add -- https://github.com/eclipse-jdt/eclipse.jdt.core/issues/549
+				if (this.enclosingType != null && this.enclosingType.isParameterizedType())
+					hashCode = hashCode * prime + System.identityHashCode(this.enclosingType);
+				// GROOVY end
 				for (int i = 0, length = this.arguments == null ? 0 : this.arguments.length; i < length; i++) {
 					hashCode = hashCode * prime + hash(this.arguments[i]);
 				}
