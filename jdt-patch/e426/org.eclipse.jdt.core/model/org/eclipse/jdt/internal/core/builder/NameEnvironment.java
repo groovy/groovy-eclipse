@@ -1,4 +1,3 @@
-// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
@@ -511,11 +510,6 @@ private void createParentFolder(IContainer parent) throws CoreException {
 	}
 }
 
-// GROOVY add
-public boolean avoidAdditionalGroovyAnswers = false;
-private static final char[] groovySuffixAsChars = ".groovy".toCharArray(); //$NON-NLS-1$
-// GROOVY end
-
 private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeName, LookupStrategy strategy, String moduleName) {
 	if (this.notifier != null)
 		this.notifier.checkCancelWithinCompiler();
@@ -537,22 +531,12 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		// Also take care of $ in the name of the class (https://bugs.eclipse.org/377401)
 		// and prefer name with '$' if unit exists rather than failing to search for nested class (https://bugs.eclipse.org/392727)
 		SourceFile unit = (SourceFile) this.additionalUnits.get(qualifiedTypeName); // doesn't have file extension
-		// GROOVY add
-		if (this.avoidAdditionalGroovyAnswers && unit != null && CharOperation.endsWith(unit.getFileName(), groovySuffixAsChars)) {
-			unit = null;
-		}
-		// GROOVY end
 		if (unit != null)
 			return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 		int index = qualifiedTypeName.indexOf('$');
 		if (index > 0) {
 			String enclosingTypeName = qualifiedTypeName.substring(0, index);
 			unit = (SourceFile) this.additionalUnits.get(enclosingTypeName); // doesn't have file extension
-			// GROOVY add
-			if (this.avoidAdditionalGroovyAnswers && unit != null && CharOperation.endsWith(unit.getFileName(), groovySuffixAsChars)) {
-				unit = null;
-			}
-			// GROOVY end
 			if (unit != null)
 				return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 		}

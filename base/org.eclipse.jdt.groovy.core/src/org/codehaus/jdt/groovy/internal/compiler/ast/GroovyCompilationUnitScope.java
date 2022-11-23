@@ -39,7 +39,6 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
-import org.eclipse.jdt.internal.core.builder.NameEnvironment;
 
 /**
  * A subtype of CompilationUnitScope that allows us to override some methods and
@@ -66,9 +65,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration, LookupEnvironment lookupEnvironment) {
         super(compilationUnitDeclaration, lookupEnvironment);
-        if (lookupEnvironment.nameEnvironment instanceof NameEnvironment) {
-            ((NameEnvironment) lookupEnvironment.nameEnvironment).avoidAdditionalGroovyAnswers = true;
-        }
     }
 
     private boolean isScript;

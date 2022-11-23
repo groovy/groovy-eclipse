@@ -2214,10 +2214,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addClass(paths[1], "testpkg", "AllTests",
             "package testpkg;\n" +
             "public final class AllTests {\n" +
-            "    TestCaseChannelPersistentStore tccps;\n" +
-            "\n" +
-            "public static void setupDbConnPool() throws Exception {\n" +
-            "}\n" +
+            "  TestCaseChannelPersistentStore tccps;\n" +
+            "  public static void setupDbConnPool() throws Exception {\n" +
+            "  }\n" +
             "}\n");
         //@formatter:on
 
@@ -2225,16 +2224,22 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "testpkg", "TestCaseChannelPersistentStore",
             "package testpkg\n" +
             "class TestCaseChannelPersistentStore {\n" +
-            // This will be added in a subsequent incremental build
-            //"public static void foo() {\n" +
-            //"  def clazz=TestCaseChannelPersistentStore.class;\n" +
-            //"}\n" +
-            "\n" +
-            "void testRefreshedChannelMap() {\n" +
-            "    def x= new Runnable() {public void run() { print('running');}};\n" +
-            "     x.run();\n" +
-            "}\n" +
-            "public static void main(String[]argv) { new TestCaseChannelPersistentStore().testRefreshedChannelMap();}\n" +
+            /* Added in subsequent incremental build:
+            "  public static void foo() {\n" +
+            "    def c = TestCaseChannelPersistentStore.class\n" +
+            "  }\n" +
+            */
+            "  void testRefreshedChannelMap() {\n" +
+            "    def x = new Runnable() {\n" + // $1
+            "      void run() {\n" +
+            "        print('running')\n" +
+            "      }\n" +
+            "    }\n" +
+            "    x.run()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    this.newInstance().testRefreshedChannelMap()\n" +
+            "  }\n" +
             "}\n");
         //@formatter:on
 
@@ -2247,13 +2252,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "testpkg", "TestCaseChannelPersistentStore",
             "package testpkg\n" +
             "class TestCaseChannelPersistentStore {\n" +
-            "public static void foo() {\n" +
-            "  def clazz=TestCaseChannelPersistentStore.class;\n" +
-            "}\n" +
-            "\n" +
-            "void testRefreshedChannelMap() {\n" +
-            "    def x= new Runnable() {public void run() {}};\n" +
-            "}\n" +
+            "  public static void foo() {\n" +
+            "    def c = TestCaseChannelPersistentStore.class\n" +
+            "  }\n" +
+            "  void testRefreshedChannelMap() {\n" +
+            "    def x = new Runnable() {void run() {}}\n" +
+            "  }\n" +
             "}\n");
         //@formatter:on
 
