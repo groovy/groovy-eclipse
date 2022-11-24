@@ -19,7 +19,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
 
-import java.beans.Introspector;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -61,7 +60,6 @@ import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -97,10 +95,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode VOID_CLASS_NODE = ClassHelper.VOID_TYPE; // void.class
     public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE; // Void.class
 
+    public static final ClassNode CLASS_CLASS_NODE = ClassHelper.CLASS_Type;
     public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
     public static final ClassNode GROOVY_OBJECT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_TYPE;
     public static final ClassNode GROOVY_SUPPORT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_SUPPORT_TYPE;
-    public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
     public static final ClassNode ENUMERATION_CLASS_NODE = ClassHelper.make(Enumeration.class);
     public static final ClassNode COLLECTION_CLASS_NODE = ClassHelper.make(Collection.class);
     public static final ClassNode ITERABLE_CLASS_NODE = ClassHelper.make(Iterable.class);
@@ -110,11 +108,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode ENTRY_CLASS_NODE = ClassHelper.make(Map.Entry.class);
     public static final ClassNode RANGE_CLASS_NODE = ClassHelper.RANGE_TYPE;
     public static final ClassNode TUPLE_CLASS_NODE = ClassHelper.make(Tuple.class);
-    public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
-    public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
-    public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.Number_TYPE;
     public static final ClassNode BIG_DECIMAL_CLASS = ClassHelper.BigDecimal_TYPE;
     public static final ClassNode BIG_INTEGER_CLASS = ClassHelper.BigInteger_TYPE;
+    public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.Number_TYPE;
+    public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
+    public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
+    public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
     public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.PATTERN_TYPE;
     public static final ClassNode MATCHER_CLASS_NODE = ClassHelper.make(Matcher.class);
 
@@ -143,18 +142,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode LONG_CLASS_NODE = ClassHelper.Long_TYPE;
     public static final ClassNode FLOAT_CLASS_NODE = ClassHelper.Float_TYPE;
     public static final ClassNode DOUBLE_CLASS_NODE = ClassHelper.Double_TYPE;
-
-    // don't cache because we have to add properties
-    public static final ClassNode CLASS_CLASS_NODE = initializeProperties(ClassHelper.makeWithoutCaching(Class.class));
-
-    // NOTE: JDTClassNode contains very similar method
-    private static ClassNode initializeProperties(ClassNode node) {
-        node.getMethods().stream().filter(AccessorSupport::isGetter).forEach(methodNode -> {
-            String propertyName = Introspector.decapitalize(methodNode.getName().substring(methodNode.getName().startsWith("is") ? 2 : 3));
-            node.addProperty(new PropertyNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), null, null, null, null));
-        });
-        return node;
-    }
 
     //--------------------------------------------------------------------------
 

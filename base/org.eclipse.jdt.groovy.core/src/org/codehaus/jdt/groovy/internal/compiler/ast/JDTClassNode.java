@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static org.eclipse.jdt.groovy.search.AccessorSupport.isGetter;
+
+import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -581,13 +584,13 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     @Override
     public void addProperty(final PropertyNode node) {
-        throw new UnsupportedOperationException("JDTClassNode is immutable, should not be called to add property: " + node.getName());
+        throw new UnsupportedOperationException("JDTClassNode cannot accept property: " + node.getName());
     }
 
     @Override
     public PropertyNode addProperty(final String name, final int modifiers, final ClassNode type,
             final Expression initialValueExpression, final Statement getterBlock, final Statement setterBlock) {
-        throw new UnsupportedOperationException("JDTClassNode is immutable, should not be called to add property: " + name);
+        throw new UnsupportedOperationException("JDTClassNode cannot accept property: " + name);
     }
 
     @Override
@@ -616,6 +619,22 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
                             nodes.add(clone);
                         }
+                    } else {
+                        // hydrate properties from getters
+                        for (MethodNode mn : getMethods()) {
+                            if (mn.isPublic() && isGetter(mn) && isGenerated(mn) && !"getMetaClass".equals(mn.getName())) {
+                                String propertyName = Introspector.decapitalize(mn.getName().substring(mn.getName().startsWith("is") ? 2 : 3));
+                                // check for field with same name/type
+                                FieldNode fn = getField(propertyName);
+                                if (fn != null && fn.isPrivate() && fn.getType().equals(mn.getReturnType())) {
+                                    PropertyNode pn = new PropertyNode(fn, fn.getModifiers() & (Flags.AccFinal | Flags.AccStatic), null, null);
+                                    pn.addAnnotations(fn.getAnnotations());
+                                    pn.setDeclaringClass(this);
+
+                                    super.getProperties().add(pn);
+                                }
+                            }
+                        }
                     }
                     bits |= PROPERTIES_INITIALIZED;
                 }
@@ -623,6 +642,15 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
 
         return Collections.unmodifiableList(super.getProperties());
+    }
+
+    private static boolean isGenerated(MethodNode mn) {
+        for (AnnotationNode an : mn.getAnnotations()) {
+            if (an.getClassNode().getName().equals("groovy.transform.Generated")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
