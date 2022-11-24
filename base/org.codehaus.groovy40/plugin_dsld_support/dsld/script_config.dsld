@@ -33,7 +33,7 @@ contribute(enclosingCall(name('withConfig') & hasArgument('configuration')) & in
 
     method name:'inline', type:void, params:[code:'@ClosureParams(value=SimpleType, options=["org.codehaus.groovy.control.SourceUnit","org.codehaus.groovy.classgen.GeneratorContext","org.codehaus.groovy.ast.ClassNode"]) Closure'], namedParams:[phase:String], optionalParams:[superClass:Class, interfaces:Class[]]
 
-    method name:'secureAst', type:void, params:[block: '@DelegatesTo(value=org.codehaus.groovy.control.customizers.SecureASTCustomizer, strategy=Closure.DELEGATE_FIRST) Closure']
+    method name:'secureAst', type:void, params:[block: '@DelegatesTo(value=org.codehaus.groovy.control.customizers.SecureASTCustomizer, strategy=1) Closure']
 
     method name:'source', type:void, params:[block: Closure], optionalParams:[
                 basename: String,
