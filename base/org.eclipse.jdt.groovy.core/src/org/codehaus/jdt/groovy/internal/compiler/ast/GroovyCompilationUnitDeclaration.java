@@ -16,6 +16,7 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
+import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -263,7 +264,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getBugText());
             }
-
             if (e.getCause() instanceof OperationCanceledException) {
                 throw (OperationCanceledException) e.getCause();
             } else if (e.getCause() instanceof AbortCompilation) {
@@ -279,8 +279,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", e));
                 // GRECLIPSE-1420: Need to record these problems as compiler errors since some users will not think to check the log.
                 // This is mostly a fix for problems where a GroovyBugError is thrown when it is really just a malformed syntax problem.
-                ErrorCollector collector = groovySourceUnit.getErrorCollector();
-                collector.addError(new SyntaxErrorMessage(new SyntaxException(" compiler error: " + e.getBugText(), e, 1, 1), groovySourceUnit));
+                SourceUnit unit = groovySourceUnit;
+                String unitName = find(e.getBugText(), "(?<=source unit ').+(?=')");
+                if (unitName != null) {
+                    for (Iterator<SourceUnit> it = compilationUnit.iterator(); it.hasNext();) { SourceUnit next = it.next();
+                        if (next.getName().equals(unitName)) {
+                            unit = next;
+                            break;
+                        }
+                    }
+                }
+                unit.addErrorAndContinue(new SyntaxException(
+                    " compiler error: " + e.getBugText(), e, 1, 1));
+                ErrorCollector collector = unit.getErrorCollector();
                 recordProblems(collector.getErrors(), collector.getWarnings());
             }
         } catch (AssertionError | LinkageError e) {
