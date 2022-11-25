@@ -15,6 +15,8 @@
  */
 package org.codehaus.jdt.groovy.model;
 
+import static org.codehaus.groovy.tools.GrapeUtil.getIvyParts;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,15 @@ class GroovyCompilationUnitStructureRequestor extends CompilationUnitStructureRe
             String group = null, module = null, version = null;
             for (MemberValuePair mvp : annotation.memberValuePairs()) {
                 switch (String.valueOf(mvp.name)) {
+                case "value":
+                    String value = mvp.value.toString();
+                    if (value.contains(":") && !value.contains("#")) {
+                        Map<String, Object> parts = getIvyParts(value.substring(1, value.length() - 1));
+                        group = (String) parts.get("group");
+                        module = (String) parts.get("module");
+                        version = (String) parts.get("version");
+                    }
+                    break;
                 case "group":
                     group = mvp.value.toString();
                     group = group.substring(1, group.length() - 1);
@@ -66,8 +77,8 @@ class GroovyCompilationUnitStructureRequestor extends CompilationUnitStructureRe
                 if (grapesContainer == null) {
                     grapesContainer = new GrapesContainer(unit);
                     grapesContainerInfo = new GrapesContainerInfo();
-                    addToChildren(grapesContainerInfo, grapesContainer);
                     newElements.put(grapesContainer, grapesContainerInfo);
+                    addToChildren(unitInfo, grapesContainer); // link into unit
                 }
                 addToChildren(grapesContainerInfo, new GrabDeclaration(grapesContainer, annotation.sourceStart, annotation.sourceEnd, group, module, version));
             }
