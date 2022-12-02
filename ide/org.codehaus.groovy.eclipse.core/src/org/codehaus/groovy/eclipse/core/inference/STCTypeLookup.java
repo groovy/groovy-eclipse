@@ -34,6 +34,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.MopWriter;
@@ -118,6 +119,13 @@ public class STCTypeLookup implements ITypeLookup {
                     methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                     if (methodTarget == null) methodTarget = getMopMethodTarget((MethodCallExpression) enclosingNode);
                     if (methodTarget == null) methodTarget = ((MethodCallExpression) enclosingNode).getMethodTarget();
+                    //
+                } else if (enclosingNode instanceof MethodPointerExpression && ((MethodPointerExpression) enclosingNode).getMethodName() == expr) {
+                    List<MethodNode> methods = enclosingNode.getNodeMetaData(MethodNode.class);
+                    if (methods != null) {
+                        methodTarget = methods.get(0);
+                        if (methods.size() > 1) confidence = TypeConfidence.LOOSELY_INFERRED;
+                    }
                 }
 
                 if (methodTarget instanceof ExtensionMethodNode) {
@@ -127,8 +135,9 @@ public class STCTypeLookup implements ITypeLookup {
 
                 if (methodTarget instanceof MethodNode) {
                     declaration = ((MethodNode) methodTarget).getOriginal();
-                    declaringType = ((MethodNode) methodTarget).getOriginal().getDeclaringClass();
-                    inferredType = enclosingNode.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                    declaringType = ((MethodNode) declaration).getDeclaringClass();
+                    if (!(enclosingNode instanceof MethodPointerExpression)) // ignore Closure<Type>
+                        inferredType = enclosingNode.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
                     if (inferredType == null) inferredType = ((MethodNode) methodTarget).getReturnType();
                 }
             }

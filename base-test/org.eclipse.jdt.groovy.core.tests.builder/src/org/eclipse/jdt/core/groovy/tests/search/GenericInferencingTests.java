@@ -866,11 +866,17 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testClosure2() {
         String contents = "def fn = 'abc'.&length";
         assertType(contents, "fn", "groovy.lang.Closure<java.lang.Integer>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Integer>");
     }
 
     @Test
     public void testClosure3() {
         String contents = "def fn = Collections.&emptyList";
+        assertType(contents, "fn", "groovy.lang.Closure<java.util.List<java.lang.Object>>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
         assertType(contents, "fn", "groovy.lang.Closure<java.util.List<java.lang.Object>>");
     }
 
@@ -878,18 +884,27 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testClosure4() {
         String contents = "def fn = (String.&trim) >> (Class.&forName)";
         assertType(contents, "fn", "groovy.lang.Closure<java.lang.Class<?>>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Class<?>>");
     }
 
     @Test
     public void testClosure5() {
         String contents = "def fn = String[].&new";
         assertType(contents, "fn", isAtLeastGroovy(30) ? "groovy.lang.Closure<java.lang.String[]>" : "groovy.lang.Closure");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
     }
 
     @Test
     public void testClosure6() {
         assumeTrue(isParrotParser());
         String contents = "def fn = String[]::new";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
         assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
     }
 

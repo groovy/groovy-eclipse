@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 
 import org.codehaus.groovy.ast.MethodNode;
@@ -47,6 +48,20 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     public void testCategoryMethod1() {
         String contents = "new Object().with {\n}";
         assertKnown(contents, "with", "org.codehaus.groovy.runtime.DefaultGroovyMethods", "with", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testCategoryMethod2() {
+        String contents = "@groovy.transform.TypeChecked m() {\nObject.&toString\n}";
+        assertKnown(contents, "toString", "java.lang.Object", "toString", DeclarationKind.METHOD);
+
+        contents = contents.replaceFirst("\n", "java.util.function.Function<Object,String> f = ");
+        assertKnown(contents, "toString", "java.lang.Object", "toString", DeclarationKind.METHOD);
+
+        if (isParrotParser()) {
+            contents = "@groovy.transform.TypeChecked m() {\njava.util.function.Function<Object,String> f = Object::toString\n}";
+            assertKnown(contents, "toString", "org.codehaus.groovy.runtime.DefaultGroovyMethods", "toString", DeclarationKind.METHOD);
+        }
     }
 
     @Test
@@ -131,6 +146,9 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
         String contents = "new Other().&getXxx";
         assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
     }
 
     @Test
@@ -182,6 +200,9 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         String contents = "new Other().&getXxx";
+        assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
         assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
     }
 

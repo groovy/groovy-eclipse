@@ -2758,6 +2758,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if ("new".equals(nameText)) {
                 ClassNode receiverType = getType(expression.getExpression());
                 if (isClassClassNodeWrappingConcreteType(receiverType)) {
+                    // GRECLIPSE add
+                    receiverType = receiverType.getGenericsTypes()[0].getType();
+                    // GRECLIPSE end
                     storeType(expression, wrapClosureType(receiverType));
                 }
                 return;
