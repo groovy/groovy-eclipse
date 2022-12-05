@@ -31,9 +31,9 @@ import java.util.List;
  * Represents a method declaration.
  */
 public class MethodNode extends AnnotatedNode implements Opcodes {
-
+    /* GRECLIPSE edit
     public static final String SCRIPT_BODY_METHOD_KEY = "org.codehaus.groovy.ast.MethodNode.isScriptBody";
-
+    */
     private String name;
     private int modifiers;
     private boolean syntheticPublic;
@@ -190,11 +190,11 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         /* GRECLIPSE edit
         return getNodeMetaData(SCRIPT_BODY_METHOD_KEY) != null;
         */
-        return getDeclaringClass() != null &&
-            getDeclaringClass().isScript() &&
-            getName().equals("run") &&
-            (parameters == null || parameters.length == 0) &&
-            (returnType != null && returnType.getName().equals("java.lang.Object"));
+        return getName().equals("run")
+            && getDeclaringClass() != null
+            && getDeclaringClass().isScript()
+            && (parameters == null || parameters.length == 0)
+            && (returnType != null && returnType.getName().equals(ClassHelper.OBJECT));
         // GRECLIPSE end
     }
 
@@ -203,7 +203,9 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
      * @see ModuleNode#createStatementsClass()
      */
     public void setIsScriptBody() {
+        /* GRECLIPSE edit
         setNodeMetaData(SCRIPT_BODY_METHOD_KEY, Boolean.TRUE);
+        */
     }
 
     public String toString() {

@@ -165,7 +165,9 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
         String methodName = abstractMethod.getName();
         String methodDesc = BytecodeHelper.getMethodDescriptor(functionalInterfaceType.redirect(),
                 isClassExpression ? Parameter.EMPTY_ARRAY : new Parameter[]{new Parameter(typeOrTargetRefType, "__METHODREF_EXPR_INSTANCE")});
-
+        // GRECLIPSE add
+        synchronized (methodRefMethod) {
+        // GRECLIPSE end
         methodRefMethod.putNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE, parametersWithExactType);
         try {
             Handle bootstrapMethod = createBootstrapMethod(classNode.isInterface(), false);
@@ -180,7 +182,9 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
         } finally {
             methodRefMethod.removeNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE);
         }
-
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
         if (isClassExpression) {
             controller.getOperandStack().push(functionalInterfaceType);
         } else {

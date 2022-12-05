@@ -118,9 +118,9 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
             classExpression.setSourcePosition(typeOrTargetRef);
             typeOrTargetRef = classExpression;
         }
-
+        /* GRECLIPSE edit -- GROOVY-10861
         methodRefMethod.putNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE, parametersWithExactType);
-
+        */
         if (!isClassExpression) {
             if (isConstructorReference) {
                 // TODO: move the checking code to the parser
@@ -143,7 +143,10 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
         } else {
             referenceKind = Opcodes.H_INVOKEVIRTUAL;
         }
-
+        // GRECLIPSE add
+        synchronized (methodRefMethod) { try {
+            methodRefMethod.putNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE, parametersWithExactType);
+        // GRECLIPSE end
         controller.getMethodVisitor().visitInvokeDynamicInsn(
                 abstractMethod.getName(),
                 createAbstractMethodDesc(functionalInterfaceType, typeOrTargetRef),
@@ -156,7 +159,11 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
                         false
                 )
         );
-
+        // GRECLIPSE add
+        } finally {
+            methodRefMethod.removeNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE);
+        }}
+        // GRECLIPSE end
         if (isClassExpression) {
             controller.getOperandStack().push(functionalInterfaceType);
         } else {

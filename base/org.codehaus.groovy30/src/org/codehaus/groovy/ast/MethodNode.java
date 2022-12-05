@@ -241,12 +241,12 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         /* GRECLIPSE edit
         return Boolean.TRUE.equals(getNodeMetaData("org.codehaus.groovy.ast.MethodNode.isScriptBody"));
         */
-        return getDeclaringClass() != null &&
-            getDeclaringClass().isScript() &&
-            getName().equals("run") &&
-            (parameters == null || parameters.length == 0) &&
-            (returnType != null && returnType.getName().equals("java.lang.Object"));
-        // GRECLIPSE: end
+        return getName().equals("run")
+            && getDeclaringClass() != null
+            && getDeclaringClass().isScript()
+            && (parameters == null || parameters.length == 0)
+            && (returnType != null && returnType.getName().equals(ClassHelper.OBJECT));
+        // GRECLIPSE end
     }
 
     /**
@@ -255,7 +255,9 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
      * @see ModuleNode#createStatementsClass()
      */
     public void setIsScriptBody() {
+        /* GRECLIPSE edit
         setNodeMetaData("org.codehaus.groovy.ast.MethodNode.isScriptBody", Boolean.TRUE);
+        */
     }
 
     public boolean isStaticConstructor() {

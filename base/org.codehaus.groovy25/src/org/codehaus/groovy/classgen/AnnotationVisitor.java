@@ -142,7 +142,8 @@ public class AnnotationVisitor {
             /* GRECLIPSE edit
             if (mn.getCode() == null && !attributes.containsKey(methodName)) {
             */
-            if (!mn.hasAnnotationDefault() && !attributes.containsKey(methodName)) {
+            if (!mn.hasAnnotationDefault() && !attributes.containsKey(methodName) && !"dataVariableNames".equals(methodName)) {
+            // TODO: https://github.com/spockframework/spock/issues/1549          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             // GRECLIPSE end
                 addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);
                 ok = false;
