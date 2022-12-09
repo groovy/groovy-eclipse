@@ -75,7 +75,7 @@
   <setupTask
       xsi:type="setup:VariableTask"
       name="eclipse.target.platform"
-      defaultValue="2022-09"
+      defaultValue="2022-12"
       storageURI="scope://Workspace"
       label="Target Platform">
     <choice
@@ -132,7 +132,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2022-12) (scope.product.version.name=latest))">
+      filter="(| (scope.product.version.name=2022-12) (scope.product.version.name=latest) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -140,7 +140,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2022-09) (scope.product.version.name=latest.released))">
+      filter="(scope.product.version.name=2022-09)">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -300,8 +300,6 @@
             url="https://download.eclipse.org/eclipse/updates/4.26"/>
         <repository
             url="https://download.eclipse.org/technology/m2e/releases/1.20.1"/>
-        <repository
-            url="https://download.eclipse.org/eclipse/updates/4.26-I-builds/I20221123-1800"/>
       </repositoryList>
       <repositoryList
           name="2022-09">
