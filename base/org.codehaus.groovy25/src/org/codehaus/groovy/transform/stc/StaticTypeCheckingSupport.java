@@ -1878,7 +1878,7 @@ public abstract class StaticTypeCheckingSupport {
         return corrected;
     }
 
-    private static void extractGenericsConnections(Map<GenericsTypeName, GenericsType> connections, GenericsType[] usage, GenericsType[] declaration) {
+    private static void extractGenericsConnections(final Map<GenericsTypeName, GenericsType> connections, final GenericsType[] usage, final GenericsType[] declaration) {
         // if declaration does not provide generics, there is no connection to make
         if (usage == null || declaration == null || declaration.length == 0) return;
         final int n; if ((n = usage.length) != declaration.length) return;
@@ -1887,14 +1887,14 @@ public abstract class StaticTypeCheckingSupport {
         for (int i = 0; i < n; i += 1) {
             GenericsType ui = usage[i];
             GenericsType di = declaration[i];
-            if (di.isPlaceholder()) {
+            if (di.isPlaceholder()) { // di like "T"
                 connections.put(new GenericsTypeName(di.getName()), ui);
-            } else if (di.isWildcard()) {
+            } else if (di.isWildcard()) { // di like "?", "? super T", "? extends T", ...
                 ClassNode lowerBound = di.getLowerBound(), upperBounds[] = di.getUpperBounds();
-                if (ui.isWildcard()) {
+                if (ui.isWildcard()) {    // ui like "?", "? super Type" or "? extends Type"
                     extractGenericsConnections(connections, ui.getLowerBound(), lowerBound);
                     extractGenericsConnections(connections, ui.getUpperBounds(), upperBounds);
-                /* GRECLIPSE edit -- GROOVY-9998
+                /* GRECLIPSE edit -- GROOVY-9998, GROOVY-10328, GROOVY-10499, et al.
                 } else {
                     ClassNode ui_type = ui.getType();
                     extractGenericsConnections(connections, ui_type, lowerBound);
@@ -1907,11 +1907,14 @@ public abstract class StaticTypeCheckingSupport {
                 */
                 } else if (!isUnboundedWildcard(di)) {
                     ClassNode boundType = lowerBound != null ? lowerBound : upperBounds[0];
-                    if (boundType.isGenericsPlaceHolder() /* GROOVY-10765: */&& boundType != ui.getType()) {
-                        ui = new GenericsType(ui.getType()); ui.setPlaceHolder(false); ui.setWildcard(true);
-                        connections.put(new GenericsTypeName(boundType.getUnresolvedName()), ui);
-                    } else { // di like "? super Iterable<T>" and ui like "Collection<Type>"
+                    if (!boundType.isGenericsPlaceHolder()) {
+                        // di like "? extends Iterable<T>" and ui like "Collection<Type>"
                         extractGenericsConnections(connections, ui.getType(), boundType);
+                    } else if (lowerBound == null) { // di like "? extends T"
+                        extractGenericsConnections(connections, ui.getType(), boundType);
+                    } else { // 6731,8983,10047,10749 : di like "? super T"
+                        ui = new GenericsType(ui.getType()); ui.setWildcard(true); // weak sauce
+                        connections.put(new GenericsTypeName(boundType.getUnresolvedName()), ui);
                     }
                 }
                 // GRECLIPSE end
@@ -2077,10 +2080,9 @@ public abstract class StaticTypeCheckingSupport {
         return genericsType.getType();
     }
 
-    // GRECLIPSE add -- GROOVY-9998, GROOVY-10339, GROOVY-10499
-    static GenericsType getCombinedGenericsType(GenericsType gt1, GenericsType gt2) {
-        if (isUnboundedWildcard(gt1)) gt1 = gt1.getType().asGenericsType();
-        if (isUnboundedWildcard(gt2)) gt2 = gt2.getType().asGenericsType();
+    // GRECLIPSE add -- GROOVY-7992, GROOVY-9998, GROOVY-10339, GROOVY-10499, GROOVY-10765
+    static GenericsType getCombinedGenericsType(final GenericsType gt1, final GenericsType gt2) {
+        if (isUnboundedWildcard(gt1) != isUnboundedWildcard(gt2)) return isUnboundedWildcard(gt2) ? gt1 : gt2;
         ClassNode cn1 = GenericsUtils.makeClassSafe0(CLASS_Type, gt1);
         ClassNode cn2 = GenericsUtils.makeClassSafe0(CLASS_Type, gt2);
         ClassNode lub = WideningCategories.lowestUpperBound(cn1, cn2);

@@ -5903,7 +5903,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
             */
-            for (GenericsType gt : methodGenericTypes) resolvedPlaceholders.put(new GenericsTypeName(gt.getName()), gt);
             applyGenericsConnections(extractGenericsConnectionsFromArguments(methodGenericTypes, Arrays.stream(method.getParameters()).map(param ->
                 new Parameter(applyGenericsContext(context, param.getType()), param.getName())
             ).toArray(Parameter[]::new), arguments, explicitTypeHints), resolvedPlaceholders);

@@ -1756,6 +1756,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked7992() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Comparator<Object> cmp = { o1, o2 -> o1.toString() <=> o2.toString() }\n" +
+            "  List<String> strings = ['foo','bar','baz']\n" +
+            "  @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def type = node.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+            "    assert type.toString(false) == 'java.util.List<java.lang.String>'\n" +
+            "  })\n" +
+            "  def result = strings.sort(false, cmp)\n" +
+            "  print(result)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[bar, baz, foo]");
+    }
+
+    @Test
     public void testTypeChecked8001() {
         //@formatter:off
         String[] sources = {

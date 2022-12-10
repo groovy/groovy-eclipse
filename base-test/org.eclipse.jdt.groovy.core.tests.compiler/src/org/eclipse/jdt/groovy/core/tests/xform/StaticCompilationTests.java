@@ -7196,7 +7196,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic10047() {
         assumeTrue(isParrotParser());
 
-        for (String value : new String[] {"String::length", "String.&length", "s -> s.length()", "{s -> s.length()}"}) {
+        for (String value : new String[] {"String::length", "String.&length", "(String s) -> s.length()", "{String s -> s.length()}"}) {
             //@formatter:off
             String[] sources = {
                 "Main.groovy",
@@ -7215,7 +7215,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic10047x() {
+    public void testCompileStatic10047a() {
+        assumeTrue(isParrotParser());
+
+        for (String value : new String[] {"s -> s.length()", "{s -> s.length()}"}) { // no type for "s" -- should this work?
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "import static java.util.stream.Collectors.toMap\n" +
+                "import java.util.function.Function\n" +
+                "@groovy.transform.CompileStatic\n" +
+                "void test() {\n" +
+                "  print(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), " + value + ")))\n" +
+                "}\n" + // <T,K,U> Collector<T,?,Map<K,U>> toMap(Function<? super T,? extends K>,Function<? super T,? extends U>)
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "[a:1, bc:2, def:3]");
+        }
+    }
+
+    @Test
+    public void testCompileStatic10047b() {
         assumeTrue(isParrotParser());
 
         //@formatter:off
