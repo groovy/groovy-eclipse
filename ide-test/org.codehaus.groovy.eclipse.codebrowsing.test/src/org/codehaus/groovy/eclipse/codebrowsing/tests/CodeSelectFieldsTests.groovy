@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,19 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectStaticFieldInOtherClass() {
         assertCodeSelect(['class Foo { static def x = 9\n }', 'class Bar { def y() { Foo.x++\n }\n }'], 'x')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1422
+    void testCodeSelectFieldInParameterizedClass() {
+        def elem = assertCodeSelect(['''\
+            |class Foo<Item extends Number> {
+            |  private List<Item> items
+            |  void test() {
+            |    items
+            |  }
+            |}'''.stripMargin()
+        ], 'items')
+        assert elem.key == 'LFoo<LFoo;:TItem;>;.items)Ljava/util/List<LFoo;:TItem;>;'
     }
 
     @Test

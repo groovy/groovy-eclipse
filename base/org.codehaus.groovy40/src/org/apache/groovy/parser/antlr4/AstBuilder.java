@@ -1556,6 +1556,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         classNode.setSyntheticPublic(syntheticPublic);
         classNode.setGenericsTypes(this.visitTypeParameters(ctx.typeParameters()));
         boolean isInterfaceWithDefaultMethods = (isInterface && this.containsDefaultMethods(ctx));
+        // GRECLIPSE add
+        if (classNode.getGenericsTypes() != null)
+            for (GenericsType tp : classNode.getGenericsTypes()) tp.getType().setDeclaringClass(classNode);
+        // GRECLIPSE end
 
         if (isSealed) {
             AnnotationNode sealedAnnotationNode = makeAnnotationNode(Sealed.class);

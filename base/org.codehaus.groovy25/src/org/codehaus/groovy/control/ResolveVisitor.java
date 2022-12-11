@@ -512,8 +512,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         GenericsType genericsType = genericParameterNames.get(new GenericsTypeName(typeName));
         if (genericsType != null) {
-            type.setRedirect(genericsType.getType());
+            type.setDeclaringClass(genericsType.getType().getDeclaringClass());
             type.setGenericsTypes(new GenericsType[]{ genericsType });
+            type.setRedirect(genericsType.getType());
             type.setGenericsPlaceHolder(true);
             return true;
         }
@@ -1841,7 +1842,7 @@ if (phase == 1) break; // resolve other class headers before members, et al.
             GenericsTypeName gtn = new GenericsTypeName(name);
             ClassNode[] bounds = type.getUpperBounds();
             boolean isWild = QUESTION_MARK.equals(name);
-            boolean toDealWithGenerics = 0 == level || (level > 0 && null != genericParameterNames.get(gtn));
+            boolean toDealWithGenerics = 0 == level || (level > 0 && genericParameterNames.containsKey(gtn));
 
             if (bounds != null) {
                 boolean nameAdded = false;
@@ -1912,6 +1913,9 @@ if (phase == 1) break; // resolve other class headers before members, et al.
         } else {
             GenericsType gt = genericParameterNames.get(name);
             type.setRedirect(gt.getType());
+            // GRECLIPSE add -- indicate provenance
+            type.setDeclaringClass(gt.getType().getDeclaringClass());
+            // GRECLIPSE end
             genericsType.setPlaceholder(true);
         }
 

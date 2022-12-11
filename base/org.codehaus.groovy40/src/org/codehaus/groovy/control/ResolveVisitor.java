@@ -450,8 +450,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         GenericsType typeParameter = genericParameterNames.get(new GenericsTypeName(typeName));
         if (typeParameter != null) {
-            type.setRedirect(typeParameter.getType());
+            type.setDeclaringClass(typeParameter.getType().getDeclaringClass());
             type.setGenericsTypes(new GenericsType[]{typeParameter});
+            type.setRedirect(typeParameter.getType());
             type.setGenericsPlaceHolder(true);
             return true;
         }
@@ -1593,7 +1594,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             ClassNode typeType = type.getType();
             GenericsTypeName gtn = new GenericsTypeName(name);
             boolean isWildcardGT = QUESTION_MARK.equals(name);
-            boolean dealWithGenerics = (level == 0 || (level > 0 && genericParameterNames.get(gtn) != null));
+            boolean dealWithGenerics = (level == 0 || (level > 0 && genericParameterNames.containsKey(gtn)));
 
             if (type.getUpperBounds() != null) {
                 boolean nameAdded = false;
@@ -1646,6 +1647,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         visitTypeAnnotations(type); // JSR-308 support
         GenericsType tp = genericParameterNames.get(new GenericsTypeName(type.getName()));
         if (tp != null) {
+            // GRECLIPSE add -- indicate provenance
+            type.setDeclaringClass(tp.getType().getDeclaringClass());
+            // GRECLIPSE end
             ClassNode[] bounds = tp.getUpperBounds();
             if (bounds != null && (bounds.length > 1 || (bounds[0].isRedirectNode()
                                    && bounds[0].redirect().getGenericsTypes() != null))) {

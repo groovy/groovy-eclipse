@@ -855,6 +855,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.setGenericsTypes(genericsType);
         configureAST(classNode, classDef);
         // GRECLIPSE add
+        if (genericsType != null)
+            for (GenericsType tp: genericsType)
+                tp.getType().setDeclaringClass(classNode);
         classNode.setNameStart(nameStart);
         classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
@@ -975,6 +978,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.setSyntheticPublic(syntheticPublic);
         configureAST(classNode, classDef);
         // GRECLIPSE add
+        if (genericsType != null)
+            for (GenericsType tp: genericsType)
+                tp.getType().setDeclaringClass(classNode);
         classNode.setNameStart(nameStart);
         classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end

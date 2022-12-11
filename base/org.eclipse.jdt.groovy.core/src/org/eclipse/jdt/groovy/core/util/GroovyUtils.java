@@ -293,9 +293,12 @@ public class GroovyUtils {
 
         final int pos = builder.length();
         builder.append(Signature.createTypeSignature(name, resolved));
-        if (resolved && node.isGenericsPlaceHolder())
-            builder.setCharAt(pos, Signature.C_TYPE_VARIABLE);
-
+        if (resolved && node.isGenericsPlaceHolder()) {
+            if (node.getDeclaringClass() != null) // type parameter provenance
+                return getTypeSignatureWithoutGenerics(node.getDeclaringClass(),qualified,true) +
+                            Signature.C_COLON + Signature.C_TYPE_VARIABLE + builder.substring(1);
+            builder.setCharAt(pos, Signature.C_TYPE_VARIABLE); // replace the "L" or "Q" with "T"
+        }
         return builder.toString();
     }
 
