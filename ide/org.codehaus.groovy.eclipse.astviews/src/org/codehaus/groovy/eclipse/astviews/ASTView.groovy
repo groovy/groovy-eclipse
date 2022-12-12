@@ -222,7 +222,12 @@ class ASTView extends ViewPart {
                         name = decapitalize(name.substring(3))
                     }
                     try {
-                        def value = method.invoke(nodeValue)
+                        def value
+                        if (nodeValue instanceof ClassNode && (name == 'unresolvedInterfaces' || name == 'unresolvedSuperClass'))
+                            value = ClassNode.getMethod(method.name, boolean).invoke(nodeValue, false) // do not follow redirect!
+                        else
+                            value = method.invoke(nodeValue)
+
                         if ((name != 'text' && !nodeValue.is(value)) ||
                                 (name == 'text' && !(value =~ /^<not implemented /))) {
                             return new TreeNode(label: name, value: value, parent: treeNode)
@@ -291,13 +296,12 @@ class ASTView extends ViewPart {
                 def valueClass = value.class
                 if (valueClass.isAnonymousClass()) valueClass = valueClass.superclass
                 return "$label : ${valueClass.simpleName - ~/(Expression|Statement)$/}"
-            case ClassNode:
-                def clazz = (ClassNode) value
-                return "$label : ${clazz.toString(false).replace(' ', '')}"
             case MethodNode:
                 def descriptor = ((MethodNode) value).typeDescriptor.replace(
                     '<init>', ((MethodNode) value).declaringClass.nameWithoutPackage)
                 return "$label : ${descriptor.substring(descriptor.indexOf(' ') + 1)}"
+            case ClassNode:
+                return "$label : ${value['unresolvedName']}"
             case Variable:
                 return "$label : ${value['name']}"
             case ImportNode:
@@ -323,8 +327,16 @@ class ASTView extends ViewPart {
 
             // filter redundant properties
             if (outer instanceof ClassNode) {
-                if (label ==~ /abstractMethods|allDeclaredMethods|allInterfaces|declaredMethodsMap|fieldIndex|(hasP|p)ackageName|/ +
-                        /isDerivedFromGroovyObject|isRedirectNode|module|name(WithoutPackage)?|outer(Most)?Class|plainNodeReference|text/) {
+                if (label ==~ /abstractMethods|allDeclaredMethods|allInterfaces|declaredMethodsMap|fieldIndex|hasMultiRedirect|(hasP|p)ackageName|/ +
+                        /is(Array|DerivedFromGroovyObject|RedirectNode)|length|module|name(WithoutPackage)?|outer(Most)?Class|plainNodeReference|text/) {
+                    return false
+                }
+                if (outer.redirectNode && label ==~ /annotations|compileUnit|declaredConstructors|enclosingMethod|fields|hasInconsistentHierarchy|/ +
+                        /innerClasses|interfaces|is(?!GenericsPlaceHolder|Synthetic(Public)?|UsingGenerics)\w+|methods|mixins|modifiers|/ +
+                        /outerClasses|package|permittedSubclasses|properties|superClass|typeAnnotations/) {
+                    return false
+                }
+                if (!outer.redirectNode && label ==~ /unresolved(Name|Interfaces|SuperClass)/) {
                     return false
                 }
             } else if (outer instanceof Variable) { // FieldNode, PropertyNode, etc.
