@@ -83,6 +83,7 @@ import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
@@ -679,6 +680,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             for (int j = 0, k = parameterizedTypeUpperBounds.length; j < k; j += 1) {
                 ClassNode resolved = resolveTypeParameterization(mapper, parameterizedTypeUpperBounds[j]);
                 parameterizedTypeUpperBounds[j] = resolved;
+                // simplify "? extends FinalClass" to just "FinalClass"
+                if (k == 1 && Flags.isFinal(resolved.getModifiers())) {
+                    generic.setUpperBounds(null);
+                    generic.setWildcard(false);
+                    generic.setType(resolved);
+                }
             }
             generic.setResolved(true);
         }

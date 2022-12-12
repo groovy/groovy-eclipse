@@ -1520,7 +1520,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
         MethodNode m = assertDeclaration(contents, start, end, "java.util.List<java.lang.String>", toFind, DeclarationKind.METHOD);
-        assertEquals("Parameter type should be resolved", "java.util.Collection<? extends java.lang.String>", printTypeName(m.getParameters()[0].getType()));
+        assertEquals("Parameter type should be resolved", "java.util.Collection<java.lang.String>", printTypeName(m.getParameters()[0].getType()));
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1249

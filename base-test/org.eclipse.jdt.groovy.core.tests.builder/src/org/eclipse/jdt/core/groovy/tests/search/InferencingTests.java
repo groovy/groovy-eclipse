@@ -1761,8 +1761,8 @@ public final class InferencingTests extends InferencingTestSuite {
         if (!isAtLeastGroovy(40)) {
             assertUnknown(contents, "getProperty");
         } else {
-            assertDeclaringType(contents, "getProperty", "groovy.lang.GroovyObject");
             assertType(contents, "getProperty", "java.lang.Object");
+            assertDeclaringType(contents, "getProperty", "groovy.lang.GroovyObject");
         }
     }
 
@@ -1777,8 +1777,8 @@ public final class InferencingTests extends InferencingTestSuite {
         if (!isAtLeastGroovy(40)) {
             assertUnknown(contents, "reversed");
         } else {
-            assertDeclaringType(contents, "reversed", "java.util.Comparator<java.lang.String>");
             assertType(contents, "reversed", "java.util.Comparator<java.lang.String>");
+            assertDeclaringType(contents, "reversed", "java.util.Comparator<java.lang.String>");
         }
     }
 
@@ -1794,7 +1794,7 @@ public final class InferencingTests extends InferencingTestSuite {
             if (!qual.startsWith("C")) {
                 assertUnknown(contents, "naturalOrder");
             } else {
-                assertType(contents, "naturalOrder", "java.util.Comparator<java.lang." + (qual.endsWith(">") ? "String" : "Object") + ">");
+                assertType(contents, "naturalOrder", "java.util.Comparator<java.lang." + (qual.endsWith(">") ? "String" : "Comparable") + ">");
             }
         }
     }

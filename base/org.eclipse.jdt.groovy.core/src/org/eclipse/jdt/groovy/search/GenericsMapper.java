@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -33,9 +32,11 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -68,15 +69,16 @@ public class GenericsMapper {
         if (resolvedType.isArray() && declaringType.isArray()) {
             return gatherGenerics(resolvedType.getComponentType(), declaringType.getComponentType());
         }
+
+        GenericsMapper mapper = new GenericsMapper();
+
         if (declaringType.isGenericsPlaceHolder()) {
-            Map<String, ClassNode> resolved = new java.util.IdentityHashMap<>();
+            Map<String, ClassNode> resolved = new TreeMap<>();
             resolved.put(declaringType.getUnresolvedName(), resolvedType);
-            GenericsMapper mapper = new GenericsMapper();
+
             mapper.allGenerics.add(resolved);
             return mapper;
         }
-
-        GenericsMapper mapper = new GenericsMapper();
 
         ClassNode rCandidate = resolvedType;
         ClassNode uCandidate = resolvedType.redirect();
@@ -98,8 +100,8 @@ public class GenericsMapper {
             GenericsType[] ugts = GroovyUtils.getGenericsTypes(uCandidate);
 
             int n = ugts.length;
-            if (n > 0 && rgts.length == 0) {
-                rgts = new GenericsType[n]; // assume rCandidate is a raw type
+            if (n > 0 && rgts.length == 0) { // diamond or raw type
+                rgts = new GenericsType[n];
                 for (int i = 0; i < n; i += 1) {
                     rgts[i] = new GenericsType(Optional.ofNullable(ugts[i].getUpperBounds()).map(bounds -> bounds[0])
                         .orElse(ugts[i].getType().redirect()).getPlainNodeReference()); // GROOVY-10055, GROOVY-10166
@@ -128,87 +130,38 @@ public class GenericsMapper {
     public static GenericsMapper gatherGenerics(final List<ClassNode> argumentTypes, final ClassNode delegateOrThisType, final MethodNode methodDeclaration, final GenericsType... methodGenerics) {
         // GOAL: resolve return type of something like "<T> Iterator<T> iterator(T[] array)"
 
-        // inspect owner type for generics
-        GenericsMapper mapper = gatherGenerics(delegateOrThisType, methodDeclaration.getDeclaringClass());
+        GenericsMapper mapper;
+        if (methodDeclaration.isStatic()) {
+            mapper = new GenericsMapper();
+        } else { // inspect receiver type for generics
+            mapper = gatherGenerics(delegateOrThisType, methodDeclaration.getDeclaringClass());
+        }
 
         GenericsType[] ugts = GroovyUtils.getGenericsTypes(methodDeclaration);
         if (ugts.length > 0) {
             Map<String, ClassNode> resolved;
-            // add method generics to the end of the chain
-            if (mapper.allGenerics.isEmpty() || (resolved = mapper.allGenerics.removeLast()).isEmpty()) {
+            // add method generics to the end
+            if (mapper.allGenerics.isEmpty() ||
+                    (resolved = mapper.allGenerics.removeLast()).isEmpty()) {
                 resolved = new TreeMap<>();
             }
             mapper.allGenerics.add(resolved);
 
+            // deal with name shadowing
+            for (GenericsType ugt : ugts) {
+                resolved.remove(ugt.getName());
+            }
+
+            // check for explicit type argument(s)
             if (methodGenerics != null && methodGenerics.length > 0) {
-                // method generics are explicitly defined
                 for (int i = 0, n = Math.min(ugts.length, methodGenerics.length); i < n; i += 1) {
                     resolved.put(ugts[i].getName(), methodGenerics[i].getType());
                 }
-            } else if (argumentTypes != null) {
-                // try to resolve each generics type by matching arguments to parameters
+            } else if (argumentTypes != null && !argumentTypes.isEmpty()) {
+                // try to resolve each by matching arguments to parameters
+                Parameter[] parameters = methodDeclaration.getParameters();
                 for (GenericsType ugt : ugts) {
-                    Parameter[] methodParameters = methodDeclaration.getParameters();
-                    for (int i = 0, n = isVargs(methodParameters) ? argumentTypes.size()
-                            : Math.min(argumentTypes.size(), methodParameters.length); i < n; i += 1) {
-                        ClassNode rbt = argumentTypes.get(i);
-                        ClassNode ubt = methodParameters[Math.min(i, methodParameters.length - 1)].getType();
-                        while (rbt.isArray() && ubt.isArray()) {
-                            rbt = rbt.getComponentType();
-                            ubt = ubt.getComponentType();
-                        }
-
-                        if (ubt.isGenericsPlaceHolder() && ubt.getUnresolvedName().equals(ugt.getName())) {
-                            // ubt could be "T" or "T extends CharSequence" and rbt could be "String" or whatever
-                            if (GroovyUtils.isAssignable(rbt, ubt)) saveParameterType(resolved, ugt.getName(), rbt, true);
-                        } else {
-                            // ubt could be "Foo<K, V>" and rbt could be "Foo<String, Object>" or "Closure<Object>"
-                            GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
-ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
-                                if (StaticTypeCheckingSupport.isUnboundedWildcard(ubt_gts[j])) continue;
-                                ClassNode ubt_gt_t = GroovyUtils.getBaseType(ubt_gts[j].isWildcard() ? Optional.ofNullable(ubt_gts[j].getUpperBounds()).map(arr -> arr[0]).orElse(ubt_gts[j].getLowerBound()) : ubt_gts[j].getType());
-                                if (ubt_gt_t.isGenericsPlaceHolder() && ubt_gt_t.getUnresolvedName().equals(ugt.getName()) && ubt.redirect().isUsingGenerics()) { // ubt_gt_t is "T" from "Foo<T>" or "Foo<T[]>" or "Foo<? super T>"
-                                    if (rbt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.isGenericsPlaceHolder()) {
-                                        if (!rbt.isUsingGenerics()) continue;
-                                        MethodNode sam = ClassHelper.findSAM(ubt);
-                                        if (sam != null) {
-                                            // read "T: A[]"
-                                            GenericsMapper um = gatherGenerics(ubt);
-                                            // read "T: String[]"
-                                            Map<String, ClassNode> rm = new HashMap<>();
-                                            readGenericsLinks(rm, rbt.getGenericsTypes()[0].getType(), sam.getReturnType());
-
-                                            for (Map.Entry<String, ClassNode> entry : rm.entrySet()) {
-                                                ClassNode ut = um.findParameter(entry.getKey(), null);
-                                                if (ut != null) {
-                                                    // find "A: String" from "A[]" and "String[]"
-                                                    Map<String, ClassNode> map = new HashMap<>();
-                                                    readGenericsLinks(map, entry.getValue(), ut);
-
-                                                    ClassNode rt = map.get(ugt.getName());
-                                                    if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
-                                                        saveParameterType(resolved, ugt.getName(), rt, false);
-                                                        break ubt_gts;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
-                                        String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
-                                        GenericsMapper map = gatherGenerics(rbt, ubt);
-                                        ClassNode rt = map.findParameter(key, null);
-
-                                        if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
-                                            saveParameterType(resolved, ugt.getName(), rt, false);
-                                        }
-                                        break ubt_gts; // ugt resolved; no need to look at more
-                                    }
-                                }
-                            }
-                            // TODO: What about "Foo<Bar<T>>"?
-                        }
-                    }
+                    tryResolveMethodT(ugt, resolved, parameters, argumentTypes);
                 }
             }
         }
@@ -258,8 +211,8 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
                 genericsType.setLowerBound(null);
             }
 
-            ClassNode oc = theType.getOuterClass(); // non-static inner class may use outer class type param
-            if (oc != null && oc.getGenericsTypes() != null && !Modifier.isStatic(theType.getModifiers())) {
+            ClassNode oc = theType.getOuterClass(); // non-static inner class may use outer class type var
+            if (oc != null && oc.getGenericsTypes() != null && !Flags.isStatic(theType.getModifiers())) {
                 oc = resolveParameter(new GenericsType(oc), depth + 1);
                 theType.putNodeMetaData("outer.class", oc);
             }
@@ -280,10 +233,13 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
         for (Map.Entry<String, ClassNode> name2Type : allGenerics.getLast().entrySet()) {
             ClassNode type = name2Type.getValue(); if (type.isGenericsPlaceHolder()) {
                 for (GenericsType tp : typeParameters) {
-                    if (type.getUnresolvedName().equals(tp.getName())) {
-                        // replace placeholder "T" with type "Number" or "Object" or whatever
+                    if (type.getUnresolvedName().equals(tp.getName())) { // unresolved
+                        // replace type parameter "T" with type "Number" or "Object" or whatever its erasure type is
                         type = type.hasMultiRedirect() ? type.asGenericsType().getUpperBounds()[0] : type.redirect();
                         if (type.isGenericsPlaceHolder()) type = type.getSuperClass();
+                        // remove nested references to this or other type parameters
+                        if (GenericsUtils.hasUnresolvedGenerics(type))
+                            type = type.getPlainNodeReference();
                         name2Type.setValue(type);
                         break;
                     }
@@ -399,5 +355,68 @@ ubt_gts:                    for (int j = 0; j < ubt_gts.length; j += 1) {
             val = /*WideningCategories.lowestUpperBound(*/old/*, val)*/;
         }
         map.put(key, val);
+    }
+
+    protected static void tryResolveMethodT(final GenericsType unresolved, final Map<String, ClassNode> resolved, final Parameter[] parameters, final List<ClassNode> argumentTypes) {
+        for (int i = 0, n = isVargs(parameters) ? argumentTypes.size() : Math.min(argumentTypes.size(), parameters.length); i < n; i += 1) {
+            ClassNode rbt = argumentTypes.get(i);
+            ClassNode ubt = parameters[Math.min(i, parameters.length - 1)].getType();
+            while (rbt.isArray() && ubt.isArray()) {
+                rbt = rbt.getComponentType();
+                ubt = ubt.getComponentType();
+            }
+
+            if (ubt.isGenericsPlaceHolder() && ubt.getUnresolvedName().equals(unresolved.getName())) {
+                // ubt could be "T" or "T extends CharSequence" and rbt could be "String" or whatever
+                if (GroovyUtils.isAssignable(rbt, ubt))
+                    saveParameterType(resolved, unresolved.getName(), rbt, true);
+            } else {
+                // ubt could be "Foo<K, V>" and rbt could be "Foo<String, Object>" or "Closure<Object>"
+                GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
+ubt_gts:        for (int j = 0; j < ubt_gts.length; j += 1) {
+                    if (StaticTypeCheckingSupport.isUnboundedWildcard(ubt_gts[j])) continue;
+                    ClassNode ubt_gt_t = GroovyUtils.getBaseType(ubt_gts[j].isWildcard() ? Optional.ofNullable(ubt_gts[j].getUpperBounds()).map(arr -> arr[0]).orElse(ubt_gts[j].getLowerBound()) : ubt_gts[j].getType());
+                    if (ubt_gt_t.isGenericsPlaceHolder() && ubt_gt_t.getUnresolvedName().equals(unresolved.getName()) && ubt.redirect().isUsingGenerics()) { // ubt_gt_t is "T" from "Foo<T>" or "Foo<T[]>" or "Foo<? super T>"
+                        if (rbt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.isGenericsPlaceHolder()) {
+                            if (!rbt.isUsingGenerics()) continue;
+                            MethodNode sam = ClassHelper.findSAM(ubt);
+                            if (sam != null) {
+                                // read "T: A[]"
+                                GenericsMapper um = gatherGenerics(ubt);
+                                // read "T: String[]"
+                                Map<String, ClassNode> rm = new HashMap<>();
+                                readGenericsLinks(rm, rbt.getGenericsTypes()[0].getType(), sam.getReturnType());
+
+                                for (Map.Entry<String, ClassNode> entry : rm.entrySet()) {
+                                    ClassNode ut = um.findParameter(entry.getKey(), null);
+                                    if (ut != null) {
+                                        // find "A: String" from "A[]" and "String[]"
+                                        Map<String, ClassNode> map = new HashMap<>();
+                                        readGenericsLinks(map, entry.getValue(), ut);
+
+                                        ClassNode rt = map.get(unresolved.getName());
+                                        if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
+                                            saveParameterType(resolved, unresolved.getName(), rt, false);
+                                            break ubt_gts;
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
+                            String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
+                            GenericsMapper map = gatherGenerics(rbt, ubt);
+                            ClassNode rt = map.findParameter(key, null);
+
+                            if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
+                                saveParameterType(resolved, unresolved.getName(), rt, false);
+                            }
+                            break ubt_gts; // ugt resolved; no need to look at more
+                        }
+                    }
+                }
+                // TODO: What about "Foo<Bar<T>>"?
+            }
+        }
     }
 }
