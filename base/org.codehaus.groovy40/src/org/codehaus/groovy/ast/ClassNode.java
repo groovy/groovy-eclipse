@@ -189,7 +189,7 @@ public class ClassNode extends AnnotatedNode {
     // only false when this classNode is constructed from a class
     // GRECLIPSE private->protected
     protected volatile boolean lazyInitDone = true;
-    // not null if if the ClassNode is an array
+    // not null if the ClassNode is an array
     private ClassNode componentType;
     // if not null this instance is handled as proxy
     // for the redirect
@@ -659,8 +659,8 @@ public class ClassNode extends AnnotatedNode {
     }
 
     public void addConstructor(ConstructorNode node) {
-        node.setDeclaringClass(this);
         ClassNode r = redirect();
+        node.setDeclaringClass(r);
         if (r.constructors == null)
             r.constructors = new ArrayList<>();
         r.constructors.add(node);
@@ -673,8 +673,8 @@ public class ClassNode extends AnnotatedNode {
     }
 
     public void addMethod(MethodNode node) {
-        node.setDeclaringClass(this);
         ClassNode r = redirect();
+        node.setDeclaringClass(r);
         if (r.methodsList.isEmpty()) {
             r.methodsList = new ArrayList<>();
         }
@@ -884,7 +884,7 @@ public class ClassNode extends AnnotatedNode {
         BlockStatement block = getCodeAsBlock(method);
 
         // while anything inside a static initializer block is appended
-        // we don't want to append in the case we have a initialization
+        // we don't want to append in the case we have an initialization
         // expression of a static field. In that case we want to add
         // before the other statements
         if (!fieldInit) {
@@ -925,7 +925,7 @@ public class ClassNode extends AnnotatedNode {
     }
 
     /**
-     * This methods returns a list of all methods of the given name
+     * This method returns a list of all methods of the given name
      * defined in the current class
      * @return the method list
      * @see #getMethods(String)
@@ -938,7 +938,7 @@ public class ClassNode extends AnnotatedNode {
     }
 
     /**
-     * This methods creates a list of all methods with this name of the
+     * This method creates a list of all methods with this name of the
      * current class and of all super classes
      * @return the methods list
      * @see #getDeclaredMethods(String)

@@ -2171,8 +2171,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testEnumInner1() {
         String contents = '''\
-            |import groovy.transform.*
-            |@CompileStatic
+            |@groovy.transform.CompileStatic
             |enum X {
             |  ONE(1) {
             |    @Override
@@ -2189,9 +2188,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
-            // ensure static $INIT call from line 4 does not result in any highlighting
+            // ensure static $INIT call from line 3 does not produce highlighting
             new HighlightedTypedPosition(contents.indexOf('ONE'), 3, STATIC_VALUE),
-            new HighlightedTypedPosition(contents.indexOf('ONE'), 3, ENUMERATION), // okay?
             new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
             new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),

@@ -172,7 +172,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.32");
+        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.36");
         runConformTest(sources, "", "[Thread-0] INFO C - yay!");
     }
 
@@ -195,7 +195,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.32");
+        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.36");
         runConformTest(sources, "", "[Thread-0] INFO C - yay!");
     }
 
@@ -220,7 +220,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.32");
+        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.36");
         runConformTest(sources, "", "[Thread-0] INFO T$Trait$Helper - yay!");
     }
 

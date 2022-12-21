@@ -1,4 +1,4 @@
-// Generated from GroovyLexer.g4 by ANTLR 4.9.0
+// Generated from GroovyLexer.g4 by ANTLR 4.11.1.4
 package org.apache.groovy.parser.antlr4;
 
     import java.util.*;
@@ -420,63 +420,48 @@ public class GroovyLexer extends AbstractLexer {
 		case 17:
 			GStringLBrace_action(_localctx, actionIndex);
 			break;
-
 		case 20:
 			RollBackOne_action(_localctx, actionIndex);
 			break;
-
 		case 89:
 			IntegerLiteral_action(_localctx, actionIndex);
 			break;
-
 		case 115:
 			FloatingPointLiteral_action(_localctx, actionIndex);
 			break;
-
 		case 155:
 			SAFE_INDEX_action(_localctx, actionIndex);
 			break;
-
 		case 170:
 			LPAREN_action(_localctx, actionIndex);
 			break;
-
 		case 171:
 			RPAREN_action(_localctx, actionIndex);
 			break;
-
 		case 172:
 			LBRACE_action(_localctx, actionIndex);
 			break;
-
 		case 173:
 			RBRACE_action(_localctx, actionIndex);
 			break;
-
 		case 174:
 			LBRACK_action(_localctx, actionIndex);
 			break;
-
 		case 175:
 			RBRACK_action(_localctx, actionIndex);
 			break;
-
 		case 225:
 			NL_action(_localctx, actionIndex);
 			break;
-
 		case 226:
 			ML_COMMENT_action(_localctx, actionIndex);
 			break;
-
 		case 227:
 			SL_COMMENT_action(_localctx, actionIndex);
 			break;
-
 		case 228:
 			SH_COMMENT_action(_localctx, actionIndex);
 			break;
-
 		case 229:
 			UNEXPECTED_CHAR_action(_localctx, actionIndex);
 			break;
@@ -509,11 +494,9 @@ public class GroovyLexer extends AbstractLexer {
 		case 2:
 			 require(errorIgnored, "Number ending with underscores is invalid", -1, true); 
 			break;
-
 		case 3:
 			 invalidDigitCount++; 
 			break;
-
 		case 4:
 			 require(errorIgnored, "Invalid octal number", -(invalidDigitCount + 1), true); 
 			break;
@@ -615,49 +598,34 @@ public class GroovyLexer extends AbstractLexer {
 		switch (ruleIndex) {
 		case 0:
 			return StringLiteral_sempred(_localctx, predIndex);
-
 		case 3:
 			return SlashyGStringBegin_sempred(_localctx, predIndex);
-
 		case 4:
 			return DollarSlashyGStringBegin_sempred(_localctx, predIndex);
-
 		case 12:
 			return SlashyGStringPart_sempred(_localctx, predIndex);
-
 		case 15:
 			return DollarSlashyGStringPart_sempred(_localctx, predIndex);
-
 		case 23:
 			return TdqStringCharacter_sempred(_localctx, predIndex);
-
 		case 24:
 			return TsqStringCharacter_sempred(_localctx, predIndex);
-
 		case 25:
 			return SlashyStringCharacter_sempred(_localctx, predIndex);
-
 		case 26:
 			return DollarSlashyStringCharacter_sempred(_localctx, predIndex);
-
 		case 168:
 			return NOT_INSTANCEOF_sempred(_localctx, predIndex);
-
 		case 169:
 			return NOT_IN_sempred(_localctx, predIndex);
-
 		case 214:
 			return CapitalizedIdentifier_sempred(_localctx, predIndex);
-
 		case 217:
 			return JavaLetter_sempred(_localctx, predIndex);
-
 		case 218:
 			return JavaLetterInGString_sempred(_localctx, predIndex);
-
 		case 219:
 			return JavaLetterOrDigit_sempred(_localctx, predIndex);
-
 		case 220:
 			return JavaLetterOrDigitInGString_sempred(_localctx, predIndex);
 		}
@@ -674,7 +642,6 @@ public class GroovyLexer extends AbstractLexer {
 		switch (predIndex) {
 		case 1:
 			return  this.isRegexAllowed() && _input.LA(1) != '*' ;
-
 		case 2:
 			return  isFollowedByJavaLetterInGString(_input) ;
 		}
@@ -726,13 +693,10 @@ public class GroovyLexer extends AbstractLexer {
 		switch (predIndex) {
 		case 9:
 			return  _input.LA(-4) != '$' ;
-
 		case 10:
 			return  _input.LA(1) != '$' ;
-
 		case 11:
 			return  _input.LA(1) != '$' ;
-
 		case 12:
 			return  !isFollowedByJavaLetterInGString(_input) ;
 		}
@@ -763,7 +727,6 @@ public class GroovyLexer extends AbstractLexer {
 		switch (predIndex) {
 		case 16:
 			return  isJavaIdentifierStartAndNotIdentifierIgnorable(_input.LA(-1)) ;
-
 		case 17:
 			return  Character.isJavaIdentifierStart(Character.toCodePoint((char) _input.LA(-2), (char) _input.LA(-1))) ;
 		}
@@ -780,7 +743,6 @@ public class GroovyLexer extends AbstractLexer {
 		switch (predIndex) {
 		case 19:
 			return  isJavaIdentifierPartAndNotIdentifierIgnorable(_input.LA(-1)) ;
-
 		case 20:
 			return  Character.isJavaIdentifierPart(Character.toCodePoint((char) _input.LA(-2), (char) _input.LA(-1))) ;
 		}

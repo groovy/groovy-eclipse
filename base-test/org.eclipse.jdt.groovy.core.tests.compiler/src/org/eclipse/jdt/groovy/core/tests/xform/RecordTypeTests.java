@@ -21,7 +21,6 @@ import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -102,7 +101,7 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "1xSimple[n=1, s=x]");
     }
 
-    @Test @Ignore("TODO")
+    @Test
     public void testRecordType4() {
         assumeTrue(isParrotParser());
 

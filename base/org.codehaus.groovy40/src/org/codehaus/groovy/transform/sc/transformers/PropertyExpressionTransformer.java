@@ -24,8 +24,9 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 
-import static org.apache.groovy.ast.tools.ExpressionUtils.isThisOrSuper;
+import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 
 class PropertyExpressionTransformer {
 
@@ -38,7 +39,7 @@ class PropertyExpressionTransformer {
     Expression transformPropertyExpression(final PropertyExpression pe) {
         MethodNode dmct = pe.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
         // NOTE: BinaryExpressionTransformer handles the setter
-        if (dmct != null && dmct.getParameters().length == 0) {
+        if (dmct != null && dmct.getParameters().length == 0 && !isOrImplements(scTransformer.getTypeChooser().resolveType(pe.getObjectExpression(), scTransformer.getClassNode()), MAP_TYPE)) {
             MethodCallExpression mce = callX(scTransformer.transform(pe.getObjectExpression()), pe.getPropertyAsString());
             mce.setImplicitThis(pe.isImplicitThis());
             mce.setMethodTarget(dmct);

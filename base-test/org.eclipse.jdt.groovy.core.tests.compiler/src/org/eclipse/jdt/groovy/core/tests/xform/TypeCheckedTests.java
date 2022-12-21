@@ -1924,7 +1924,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tMVM m = [:]\n" +
             "\t        ^^^\n" +
-            "Groovy:[Static type checking] - No matching constructor found: MVM(java.util.LinkedHashMap)\n" +
+            "Groovy:[Static type checking] - Cannot find matching constructor MVM(java.util.LinkedHashMap)\n" +
             "----------\n");
     }
 

@@ -18,8 +18,6 @@
  */
 package org.codehaus.groovy.classgen.asm.sc;
 
-import groovy.lang.Tuple;
-import groovy.lang.Tuple2;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -44,8 +42,9 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.joining;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
@@ -145,7 +144,7 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
             if (isConstructorReference) { // TODO: move this check to the parser
                 addFatalError("Constructor reference must be TypeName::new", methodReferenceExpression);
             } else if (methodRefMethod.isStatic() && !targetIsArgument) {
-                // "string"::valueOf refers to static method, so instance is superflous
+                // "string"::valueOf refers to static method, so instance is superfluous
                 typeOrTargetRef = makeClassTarget(typeOrTargetRefType, typeOrTargetRef);
                 isClassExpression = true;
             } else {
@@ -165,26 +164,18 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
         String methodName = abstractMethod.getName();
         String methodDesc = BytecodeHelper.getMethodDescriptor(functionalInterfaceType.redirect(),
                 isClassExpression ? Parameter.EMPTY_ARRAY : new Parameter[]{new Parameter(typeOrTargetRefType, "__METHODREF_EXPR_INSTANCE")});
-        // GRECLIPSE add
-        synchronized (methodRefMethod) {
-        // GRECLIPSE end
-        methodRefMethod.putNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE, parametersWithExactType);
-        try {
-            Handle bootstrapMethod = createBootstrapMethod(classNode.isInterface(), false);
-            Object[] bootstrapArgs = createBootstrapMethodArguments(
-                    createMethodDescriptor(abstractMethod),
-                    referenceKind,
-                    methodRefMethod.getDeclaringClass(),
-                    methodRefMethod,
-                    false
-            );
-            controller.getMethodVisitor().visitInvokeDynamicInsn(methodName, methodDesc, bootstrapMethod, bootstrapArgs);
-        } finally {
-            methodRefMethod.removeNodeMetaData(ORIGINAL_PARAMETERS_WITH_EXACT_TYPE);
-        }
-        // GRECLIPSE add
-        }
-        // GRECLIPSE end
+
+        Handle bootstrapMethod = createBootstrapMethod(classNode.isInterface(), false);
+        Object[] bootstrapArgs = createBootstrapMethodArguments(
+                createMethodDescriptor(abstractMethod),
+                referenceKind,
+                methodRefMethod.getDeclaringClass(),
+                methodRefMethod,
+                parametersWithExactType,
+                false
+        );
+        controller.getMethodVisitor().visitInvokeDynamicInsn(methodName, methodDesc, bootstrapMethod, bootstrapArgs);
+
         if (isClassExpression) {
             controller.getOperandStack().push(functionalInterfaceType);
         } else {
@@ -194,8 +185,15 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
 
     private void validate(final MethodReferenceExpression methodReference, final ClassNode targetType, final String methodName, final MethodNode methodNode, final Parameter[] samParameters, final ClassNode samReturnType) {
         if (methodNode == null) {
-            String error = String.format("Failed to find the expected method[%s(%s)] in the type[%s]",
-                    methodName, Arrays.stream(samParameters).map(e -> e.getType().getText()).collect(Collectors.joining(",")), targetType.getText());
+            String error;
+            if (!(methodReference.getExpression() instanceof ClassExpression)) {
+                error = "Failed to find method '%s(%s)'";
+            } else {
+                error = "Failed to find class method '%s(%s)'";
+                if (samParameters.length > 0)
+                    error += " or instance method '%1$s(" + Arrays.stream(samParameters).skip(1).map(e -> e.getType().toString(false)).collect(joining(",")) + ")'";
+            }
+            error = String.format(error + " for the type: %s", methodName, Arrays.stream(samParameters).map(e -> e.getType().toString(false)).collect(joining(",")), targetType.toString(false));
             addFatalError(error, methodReference);
         } else if (methodNode.isVoidMethod() && !ClassHelper.isPrimitiveVoid(samReturnType)) {
             addFatalError("Invalid return type: void is not convertible to " + samReturnType.getText(), methodReference);
@@ -354,7 +352,26 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
             return true; // no match; remove method
         });
 
-        return chooseMethodRefMethodCandidate(typeOrTargetRef, methods);
+        return chooseMethodRefMethod(methods, typeOrTargetRef, typeOrTargetRefType);
+    }
+
+    private MethodNode chooseMethodRefMethod(final List<MethodNode> methods, final Expression typeOrTargetRef, final ClassNode typeOrTargetRefType) {
+        if (methods.isEmpty()) return null;
+        if (methods.size() == 1) return methods.get(0);
+        return methods.stream().max(comparingInt((MethodNode mn) -> {
+            int score = 9;
+            for (ClassNode cn = typeOrTargetRefType; cn != null && !cn.equals(mn.getDeclaringClass()); cn = cn.getSuperClass()) {
+                score -= 1;
+            }
+            if (score < 0) {
+                score = 0;
+            }
+            score *= 10;
+            if ((typeOrTargetRef instanceof ClassExpression) == isStaticMethod(mn)) {
+                score += 9;
+            }
+            return score;
+        }).thenComparing(StaticTypesMethodReferenceExpressionWriter::isExtensionMethod)).get();
     }
 
     private List<MethodNode> findVisibleMethods(final String name, final ClassNode type) {
@@ -378,18 +395,21 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
 
     //--------------------------------------------------------------------------
 
-    private static boolean isConstructorReference(final String methodRefName) {
-        return "new".equals(methodRefName);
+    private static boolean isConstructorReference(final String name) {
+        return "new".equals(name);
     }
 
-    private static boolean isExtensionMethod(final MethodNode methodRefMethod) {
-        return (methodRefMethod instanceof ExtensionMethodNode);
+    private static boolean isExtensionMethod(final MethodNode mn) {
+        return (mn instanceof ExtensionMethodNode);
+    }
+
+    private static boolean isStaticMethod(final MethodNode mn) {
+        return isExtensionMethod(mn) ? ((ExtensionMethodNode) mn).isStaticExtension() : mn.isStatic();
     }
 
     private static boolean isTypeReferringInstanceMethod(final Expression typeOrTargetRef, final MethodNode mn) {
         // class::instanceMethod
-        return (typeOrTargetRef instanceof ClassExpression) && ((mn != null && !mn.isStatic())
-                || (isExtensionMethod(mn) && !((ExtensionMethodNode) mn).isStaticExtension()));
+        return (typeOrTargetRef instanceof ClassExpression) && (mn != null && !isStaticMethod(mn));
     }
 
     private static Expression makeClassTarget(final ClassNode target, final Expression source) {
@@ -400,41 +420,5 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
 
     private static Parameter[] removeFirstParameter(final Parameter[] parameters) {
         return Arrays.copyOfRange(parameters, 1, parameters.length);
-    }
-
-    /**
-     * Chooses the best method node for method reference.
-     */
-    private static MethodNode chooseMethodRefMethodCandidate(final Expression methodRef, final List<MethodNode> candidates) {
-        if (candidates.size() == 1) return candidates.get(0);
-
-        return candidates.stream()
-                .map(e -> Tuple.tuple(e, matchingScore(e, methodRef)))
-                .min((t1, t2) -> Integer.compare(t2.getV2(), t1.getV2()))
-                .map(Tuple2::getV1)
-                .orElse(null);
-    }
-
-    private static Integer matchingScore(final MethodNode mn, final Expression typeOrTargetRef) {
-        ClassNode typeOrTargetRefType = typeOrTargetRef.getType(); // TODO: pass this type in
-
-        int score = 9;
-        for (ClassNode cn = mn.getDeclaringClass(); null != cn && !cn.equals(typeOrTargetRefType); cn = cn.getSuperClass()) {
-            score -= 1;
-        }
-        if (score < 0) {
-            score = 0;
-        }
-        score *= 10;
-
-        if ((typeOrTargetRef instanceof ClassExpression) == mn.isStatic()) {
-            score += 9;
-        }
-
-        if (isExtensionMethod(mn)) {
-            score += 100;
-        }
-
-        return score;
     }
 }

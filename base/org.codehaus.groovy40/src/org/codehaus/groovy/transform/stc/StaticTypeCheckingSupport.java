@@ -228,7 +228,7 @@ public abstract class StaticTypeCheckingSupport {
 
     /**
      * This comparator is used when we return the list of methods from DGM which name correspond to a given
-     * name. As we also lookup for DGM methods of superclasses or interfaces, it may be possible to find
+     * name. As we also look up for DGM methods of superclasses or interfaces, it may be possible to find
      * two methods which have the same name and the same arguments. In that case, we should not add the method
      * from superclass or interface otherwise the system won't be able to select the correct method, resulting
      * in an ambiguous method selection for similar methods.
@@ -724,7 +724,7 @@ public abstract class StaticTypeCheckingSupport {
                     : implementsInterfaceOrSubclassOf(leftRedirect, rightRedirect); // GROOVY-10067, GROOVY-10342
 
         } else if (isBigDecimalType(leftRedirect) || Number_TYPE.equals(leftRedirect)) {
-            // BigDecimal or Number can be assigned any derivitave of java.lang.Number
+            // BigDecimal or Number can be assigned any derivative of java.lang.Number
             if (isNumberType(rightRedirect) || rightRedirect.isDerivedFrom(Number_TYPE)) {
                 return true;
             }
@@ -921,8 +921,11 @@ public abstract class StaticTypeCheckingSupport {
         return false;
     }
 
-    static int getPrimitiveDistance(ClassNode primA, ClassNode primB) {
-        return Math.abs(NUMBER_TYPES.get(primA) - NUMBER_TYPES.get(primB));
+    private static final Integer NON_NUMBER_DEFAULT = 9; // GROOVY-10869: boolean, char, ...
+
+    static int getPrimitiveDistance(final ClassNode primA, final ClassNode primB) {
+        return Math.abs(NUMBER_TYPES.getOrDefault(primA, NON_NUMBER_DEFAULT)
+                      - NUMBER_TYPES.getOrDefault(primB, NON_NUMBER_DEFAULT));
     }
 
     static int getDistance(final ClassNode receiver, final ClassNode compare) {
@@ -1526,7 +1529,7 @@ public abstract class StaticTypeCheckingSupport {
         // the context we compare with in the end is the one of the callsite
         // so far we specified the context of the method declaration only
         // thus for each argument, we try to find the connected generics first
-        Map<GenericsTypeName, GenericsType> connections = new LinkedHashMap<>();
+        Map<GenericsTypeName, GenericsType> connections = new HashMap<>();
         extractGenericsConnections(connections, wrappedArgument, type);
 
         // each new connection must comply with previous connections
@@ -2273,8 +2276,8 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     /**
-     * Returns true if the class node represents a the class node for the Class class
-     * and if the parametrized type is a neither a placeholder or a wildcard. For example,
+     * Returns true if the class node represents a class node for the Class class
+     * and if the parametrized type is a neither a placeholder nor a wildcard. For example,
      * the class node Class&lt;Foo&gt; where Foo is a class would return true, but the class
      * node for Class&lt;?&gt; would return false.
      *

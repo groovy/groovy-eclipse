@@ -1579,10 +1579,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (isInterfaceWithDefaultMethods || asBoolean(ctx.TRAIT())) {
             classNode.addAnnotation(makeAnnotationNode(Trait.class));
         }
-        if (isRecord) {
+        classNode.addAnnotations(modifierManager.getAnnotations());
+        if (isRecord && classNode.getAnnotations().stream().noneMatch(a ->
+                    a.getClassNode().getName().equals(RECORD_TYPE_NAME))){
             classNode.addAnnotation(makeAnnotationNode(RecordType.class));
         }
-        classNode.addAnnotations(modifierManager.getAnnotations());
 
         if (isInterfaceWithDefaultMethods) {
             classNode.putNodeMetaData(IS_INTERFACE_WITH_DEFAULT_METHODS, Boolean.TRUE);
@@ -1971,7 +1972,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         node.setNameEnd(name.getEnd() - 1);
         // GRECLIPSE end
 
-        if (classNode.getAnnotations().stream().noneMatch(a -> a.getClassNode().getName().equals("groovy.transform.RecordType"))) {
+        if (classNode.getAnnotations().stream().noneMatch(a -> a.getClassNode().getName().equals(RECORD_TYPE_NAME))) {
             createParsingFailedException("Only record can have compact constructor", ctx);
         }
 
@@ -1986,14 +1987,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         Parameter[] header = classNode.getNodeMetaData(RECORD_HEADER);
-        Objects.requireNonNull(header, "record header should not be null");
-
         Statement code = this.visitMethodBody(ctx.methodBody());
         code.visit(new CodeVisitorSupport() {
             @Override
             public void visitPropertyExpression(final PropertyExpression expression) {
+                String receiverText = expression.getObjectExpression().getText();
                 String propertyName = expression.getPropertyAsString();
-                if (THIS_STR.equals(expression.getObjectExpression().getText()) && Arrays.stream(header).anyMatch(p -> p.getName().equals(propertyName))) {
+                if (THIS_STR.equals(receiverText) && Arrays.stream(header).anyMatch(p -> p.getName().equals(propertyName))) {
                     createParsingFailedException("Cannot assign a value to final variable '" + propertyName + "'", expression.getProperty());
                 }
                 super.visitPropertyExpression(expression);
@@ -3850,7 +3850,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         InnerClassNode anonymousInnerClass;
         if (ctx.t == 1) {
             anonymousInnerClass = new EnumConstantClassNode(outerClass, innerClassName, superClass.getPlainNodeReference());
-            // and remove the final modifier from superClass to allow the sub class
+            // and remove the final modifier from superClass to allow the subclass
             superClass.setModifiers(superClass.getModifiers() & ~Opcodes.ACC_FINAL);
         } else {
             anonymousInnerClass = new InnerClassNode(outerClass, innerClassName, Opcodes.ACC_PUBLIC, superClass);
@@ -4925,7 +4925,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             methodCallExpression.setSafe(false);
         }
 
-        // if the generics types meta data is not empty, it is a generic method call, e.g. obj.<Integer>a(1, 2)
+        // if the generics types metadata is not empty, it is a generic method call, e.g. obj.<Integer>a(1, 2)
         methodCallExpression.setGenericsTypes(
                 propertyExpression.getNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES));
 
@@ -5201,17 +5201,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private boolean isTrue(final NodeMetaDataHandler nodeMetaDataHandler, final String key) {
-        Object nmd = nodeMetaDataHandler.getNodeMetaData(key);
-
-        if (null == nmd) {
-            return false;
-        }
-
-        if (!(nmd instanceof Boolean)) {
-            throw new GroovyBugError(nodeMetaDataHandler + " node meta data[" + key + "] is not an instance of Boolean");
-        }
-
-        return (Boolean) nmd;
+        return Boolean.TRUE.equals(nodeMetaDataHandler.getNodeMetaData(key));
     }
 
     private CompilationFailedException createParsingFailedException(final String msg, final GroovyParserRuleContext ctx) {
@@ -5430,4 +5420,5 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private static final String PARAMETER_CONTEXT = "_PARAMETER_CONTEXT";
     private static final String IS_RECORD_GENERATED = "_IS_RECORD_GENERATED";
     private static final String RECORD_HEADER = "_RECORD_HEADER";
+    private static final String RECORD_TYPE_NAME = "groovy.transform.RecordType";
 }

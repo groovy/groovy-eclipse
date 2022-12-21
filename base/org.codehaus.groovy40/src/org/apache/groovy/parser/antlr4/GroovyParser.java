@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.9.0
+// Generated from GroovyParser.g4 by ANTLR 4.11.1.4
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -494,7 +494,6 @@ public class GroovyParser extends AbstractParser {
 				importDeclaration();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -502,7 +501,6 @@ public class GroovyParser extends AbstractParser {
 				typeDeclaration();
 				}
 				break;
-
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
@@ -512,7 +510,6 @@ public class GroovyParser extends AbstractParser {
 				methodDeclaration(3, 9);
 				}
 				break;
-
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
@@ -1889,7 +1886,6 @@ public class GroovyParser extends AbstractParser {
 				}
 				}
 				break;
-
 			case 2:
 				{
 				}
@@ -2142,7 +2138,6 @@ public class GroovyParser extends AbstractParser {
 				block();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -2208,7 +2203,6 @@ public class GroovyParser extends AbstractParser {
 				methodDeclaration(0, _localctx.t);
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -2216,7 +2210,6 @@ public class GroovyParser extends AbstractParser {
 				fieldDeclaration();
 				}
 				break;
-
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
@@ -2231,7 +2224,6 @@ public class GroovyParser extends AbstractParser {
 					classDeclaration();
 					}
 					break;
-
 				case 2:
 					{
 					setState(593);
@@ -2352,7 +2344,6 @@ public class GroovyParser extends AbstractParser {
 				elementValue();
 				}
 				break;
-
 			case 2:
 				{
 				setState(618);
@@ -2544,7 +2535,6 @@ public class GroovyParser extends AbstractParser {
 				standardType();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -3196,7 +3186,6 @@ public class GroovyParser extends AbstractParser {
 				qualifiedClassName();
 				}
 				break;
-
 			case 2:
 				{
 				setState(707);
@@ -3449,7 +3438,6 @@ public class GroovyParser extends AbstractParser {
 				type();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -3711,7 +3699,6 @@ public class GroovyParser extends AbstractParser {
 				formalParameter();
 				}
 				break;
-
 			case 2:
 				{
 				setState(769);
@@ -4019,7 +4006,6 @@ public class GroovyParser extends AbstractParser {
 				identifier();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -4027,7 +4013,6 @@ public class GroovyParser extends AbstractParser {
 				match(DEF);
 				}
 				break;
-
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
@@ -4035,7 +4020,6 @@ public class GroovyParser extends AbstractParser {
 				match(IN);
 				}
 				break;
-
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
@@ -4043,7 +4027,6 @@ public class GroovyParser extends AbstractParser {
 				match(AS);
 				}
 				break;
-
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
@@ -4750,7 +4733,6 @@ public class GroovyParser extends AbstractParser {
 				block();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -5220,7 +5202,6 @@ public class GroovyParser extends AbstractParser {
 				elementValuePairs();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -5427,7 +5408,6 @@ public class GroovyParser extends AbstractParser {
 				identifier();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -5484,7 +5464,6 @@ public class GroovyParser extends AbstractParser {
 				elementValueArrayInitializer();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -5492,7 +5471,6 @@ public class GroovyParser extends AbstractParser {
 				annotation();
 				}
 				break;
-
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
@@ -5690,7 +5668,6 @@ public class GroovyParser extends AbstractParser {
 				localVariableDeclaration();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -5857,7 +5834,6 @@ public class GroovyParser extends AbstractParser {
 				}
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -6186,7 +6162,6 @@ public class GroovyParser extends AbstractParser {
 					nls();
 					}
 					break;
-
 				case 2:
 					{
 					setState(1060);
@@ -6981,7 +6956,6 @@ public class GroovyParser extends AbstractParser {
 				block();
 				}
 				break;
-
 			case 2:
 				_localctx = new ConditionalStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 2);
@@ -6990,7 +6964,6 @@ public class GroovyParser extends AbstractParser {
 				conditionalStatement();
 				}
 				break;
-
 			case 3:
 				_localctx = new LoopStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 3);
@@ -6999,7 +6972,6 @@ public class GroovyParser extends AbstractParser {
 				loopStatement();
 				}
 				break;
-
 			case 4:
 				_localctx = new TryCatchStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 4);
@@ -7008,7 +6980,6 @@ public class GroovyParser extends AbstractParser {
 				tryCatchStatement();
 				}
 				break;
-
 			case 5:
 				_localctx = new SynchronizedStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 5);
@@ -7023,7 +6994,6 @@ public class GroovyParser extends AbstractParser {
 				block();
 				}
 				break;
-
 			case 6:
 				_localctx = new ReturnStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 6);
@@ -7042,7 +7012,6 @@ public class GroovyParser extends AbstractParser {
 				}
 				}
 				break;
-
 			case 7:
 				_localctx = new ThrowStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 7);
@@ -7053,7 +7022,6 @@ public class GroovyParser extends AbstractParser {
 				expression(0);
 				}
 				break;
-
 			case 8:
 				_localctx = new BreakStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 8);
@@ -7062,7 +7030,6 @@ public class GroovyParser extends AbstractParser {
 				breakStatement();
 				}
 				break;
-
 			case 9:
 				_localctx = new ContinueStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 9);
@@ -7071,7 +7038,6 @@ public class GroovyParser extends AbstractParser {
 				continueStatement();
 				}
 				break;
-
 			case 10:
 				_localctx = new YieldStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 10);
@@ -7082,7 +7048,6 @@ public class GroovyParser extends AbstractParser {
 				yieldStatement();
 				}
 				break;
-
 			case 11:
 				_localctx = new LabeledStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 11);
@@ -7097,7 +7062,6 @@ public class GroovyParser extends AbstractParser {
 				statement();
 				}
 				break;
-
 			case 12:
 				_localctx = new AssertStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 12);
@@ -7106,7 +7070,6 @@ public class GroovyParser extends AbstractParser {
 				assertStatement();
 				}
 				break;
-
 			case 13:
 				_localctx = new LocalVariableDeclarationStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 13);
@@ -7115,7 +7078,6 @@ public class GroovyParser extends AbstractParser {
 				localVariableDeclaration();
 				}
 				break;
-
 			case 14:
 				_localctx = new ExpressionStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 14);
@@ -7124,7 +7086,6 @@ public class GroovyParser extends AbstractParser {
 				statementExpression();
 				}
 				break;
-
 			case 15:
 				_localctx = new EmptyStmtAltContext(_localctx);
 				enterOuterAlt(_localctx, 15);
@@ -7490,7 +7451,6 @@ public class GroovyParser extends AbstractParser {
 				localVariableDeclaration();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -7677,7 +7637,6 @@ public class GroovyParser extends AbstractParser {
 				enhancedForControl();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -7885,7 +7844,6 @@ public class GroovyParser extends AbstractParser {
 				localVariableDeclaration();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -8228,7 +8186,6 @@ public class GroovyParser extends AbstractParser {
 				statementExpression();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -9105,7 +9062,6 @@ public class GroovyParser extends AbstractParser {
 				castOperandExpression();
 				}
 				break;
-
 			case 2:
 				{
 				_localctx = new PostfixExprAltContext(_localctx);
@@ -9115,7 +9071,6 @@ public class GroovyParser extends AbstractParser {
 				postfixExpression();
 				}
 				break;
-
 			case 3:
 				{
 				_localctx = new SwitchExprAltContext(_localctx);
@@ -9125,7 +9080,6 @@ public class GroovyParser extends AbstractParser {
 				switchExpression();
 				}
 				break;
-
 			case 4:
 				{
 				_localctx = new UnaryNotExprAltContext(_localctx);
@@ -9149,7 +9103,6 @@ public class GroovyParser extends AbstractParser {
 				expression(18);
 				}
 				break;
-
 			case 5:
 				{
 				_localctx = new UnaryAddExprAltContext(_localctx);
@@ -9172,7 +9125,6 @@ public class GroovyParser extends AbstractParser {
 				expression(16);
 				}
 				break;
-
 			case 6:
 				{
 				_localctx = new MultipleAssignmentExprAltContext(_localctx);
@@ -9218,7 +9170,6 @@ public class GroovyParser extends AbstractParser {
 						((PowerExprAltContext)_localctx).right = expression(18);
 						}
 						break;
-
 					case 2:
 						{
 						_localctx = new MultiplicativeExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9247,7 +9198,6 @@ public class GroovyParser extends AbstractParser {
 						((MultiplicativeExprAltContext)_localctx).right = expression(16);
 						}
 						break;
-
 					case 3:
 						{
 						_localctx = new AdditiveExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9274,7 +9224,6 @@ public class GroovyParser extends AbstractParser {
 						((AdditiveExprAltContext)_localctx).right = expression(15);
 						}
 						break;
-
 					case 4:
 						{
 						_localctx = new ShiftExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9301,7 +9250,6 @@ public class GroovyParser extends AbstractParser {
 								match(LT);
 								}
 								break;
-
 							case 2:
 								{
 								setState(1373);
@@ -9312,7 +9260,6 @@ public class GroovyParser extends AbstractParser {
 								match(GT);
 								}
 								break;
-
 							case 3:
 								{
 								setState(1376);
@@ -9353,7 +9300,6 @@ public class GroovyParser extends AbstractParser {
 						((ShiftExprAltContext)_localctx).right = expression(14);
 						}
 						break;
-
 					case 5:
 						{
 						_localctx = new RelationalExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9382,7 +9328,6 @@ public class GroovyParser extends AbstractParser {
 						((RelationalExprAltContext)_localctx).right = expression(12);
 						}
 						break;
-
 					case 6:
 						{
 						_localctx = new EqualityExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9411,7 +9356,6 @@ public class GroovyParser extends AbstractParser {
 						((EqualityExprAltContext)_localctx).right = expression(11);
 						}
 						break;
-
 					case 7:
 						{
 						_localctx = new RegexExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9440,7 +9384,6 @@ public class GroovyParser extends AbstractParser {
 						((RegexExprAltContext)_localctx).right = expression(10);
 						}
 						break;
-
 					case 8:
 						{
 						_localctx = new AndExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9458,7 +9401,6 @@ public class GroovyParser extends AbstractParser {
 						((AndExprAltContext)_localctx).right = expression(9);
 						}
 						break;
-
 					case 9:
 						{
 						_localctx = new ExclusiveOrExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9476,7 +9418,6 @@ public class GroovyParser extends AbstractParser {
 						((ExclusiveOrExprAltContext)_localctx).right = expression(8);
 						}
 						break;
-
 					case 10:
 						{
 						_localctx = new InclusiveOrExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9494,7 +9435,6 @@ public class GroovyParser extends AbstractParser {
 						((InclusiveOrExprAltContext)_localctx).right = expression(7);
 						}
 						break;
-
 					case 11:
 						{
 						_localctx = new LogicalAndExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9512,7 +9452,6 @@ public class GroovyParser extends AbstractParser {
 						((LogicalAndExprAltContext)_localctx).right = expression(6);
 						}
 						break;
-
 					case 12:
 						{
 						_localctx = new LogicalOrExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9530,7 +9469,6 @@ public class GroovyParser extends AbstractParser {
 						((LogicalOrExprAltContext)_localctx).right = expression(5);
 						}
 						break;
-
 					case 13:
 						{
 						_localctx = new ConditionalExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9574,7 +9512,6 @@ public class GroovyParser extends AbstractParser {
 						((ConditionalExprAltContext)_localctx).fb = expression(3);
 						}
 						break;
-
 					case 14:
 						{
 						_localctx = new RelationalExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9603,7 +9540,6 @@ public class GroovyParser extends AbstractParser {
 						type();
 						}
 						break;
-
 					case 15:
 						{
 						_localctx = new AssignmentExprAltContext(new ExpressionContext(_parentctx, _parentState));
@@ -9672,7 +9608,6 @@ public class GroovyParser extends AbstractParser {
 				castOperandExpression();
 				}
 				break;
-
 			case 2:
 				_localctx = new PostfixExprAltContext(_localctx);
 				enterOuterAlt(_localctx, 2);
@@ -9681,7 +9616,6 @@ public class GroovyParser extends AbstractParser {
 				postfixExpression();
 				}
 				break;
-
 			case 3:
 				_localctx = new UnaryNotExprAltContext(_localctx);
 				enterOuterAlt(_localctx, 3);
@@ -9704,7 +9638,6 @@ public class GroovyParser extends AbstractParser {
 				castOperandExpression();
 				}
 				break;
-
 			case 4:
 				_localctx = new UnaryAddExprAltContext(_localctx);
 				enterOuterAlt(_localctx, 4);
@@ -9785,7 +9718,6 @@ public class GroovyParser extends AbstractParser {
 				argumentList();
 				}
 				break;
-
 			case 2:
 				{
 				}
@@ -9881,7 +9813,6 @@ public class GroovyParser extends AbstractParser {
 				} while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 				}
 				break;
-
 			case 2:
 				{
 				setState(1496);
@@ -9943,7 +9874,6 @@ public class GroovyParser extends AbstractParser {
 				primary();
 				}
 				break;
-
 			case 2:
 				{
 				setState(1500);
@@ -10061,7 +9991,6 @@ public class GroovyParser extends AbstractParser {
 					 _localctx.t =  6; 
 					}
 					break;
-
 				case 2:
 					{
 					setState(1529);
@@ -10192,7 +10121,6 @@ public class GroovyParser extends AbstractParser {
 					 _localctx.t =  1; 
 					}
 					break;
-
 				case 3:
 					{
 					setState(1534);
@@ -10203,7 +10131,6 @@ public class GroovyParser extends AbstractParser {
 				}
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -10212,7 +10139,6 @@ public class GroovyParser extends AbstractParser {
 				 _localctx.t =  2; 
 				}
 				break;
-
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
@@ -10221,7 +10147,6 @@ public class GroovyParser extends AbstractParser {
 				 _localctx.t =  4; 
 				}
 				break;
-
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
@@ -10283,21 +10208,18 @@ public class GroovyParser extends AbstractParser {
 				identifier();
 				}
 				break;
-
 			case 2:
 				{
 				setState(1551);
 				stringLiteral();
 				}
 				break;
-
 			case 3:
 				{
 				setState(1552);
 				dynamicMemberName();
 				}
 				break;
-
 			case 4:
 				{
 				setState(1553);
@@ -10734,7 +10656,6 @@ public class GroovyParser extends AbstractParser {
 				}
 				}
 				break;
-
 			case 2:
 				_localctx = new LiteralPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 2);
@@ -10743,7 +10664,6 @@ public class GroovyParser extends AbstractParser {
 				literal();
 				}
 				break;
-
 			case 3:
 				_localctx = new GstringPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 3);
@@ -10752,7 +10672,6 @@ public class GroovyParser extends AbstractParser {
 				gstring();
 				}
 				break;
-
 			case 4:
 				_localctx = new NewPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 4);
@@ -10765,7 +10684,6 @@ public class GroovyParser extends AbstractParser {
 				creator(0);
 				}
 				break;
-
 			case 5:
 				_localctx = new ThisPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 5);
@@ -10774,7 +10692,6 @@ public class GroovyParser extends AbstractParser {
 				match(THIS);
 				}
 				break;
-
 			case 6:
 				_localctx = new SuperPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 6);
@@ -10783,7 +10700,6 @@ public class GroovyParser extends AbstractParser {
 				match(SUPER);
 				}
 				break;
-
 			case 7:
 				_localctx = new ParenPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 7);
@@ -10792,7 +10708,6 @@ public class GroovyParser extends AbstractParser {
 				parExpression();
 				}
 				break;
-
 			case 8:
 				_localctx = new ClosureOrLambdaExpressionPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 8);
@@ -10801,7 +10716,6 @@ public class GroovyParser extends AbstractParser {
 				closureOrLambdaExpression();
 				}
 				break;
-
 			case 9:
 				_localctx = new ListPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 9);
@@ -10810,7 +10724,6 @@ public class GroovyParser extends AbstractParser {
 				list();
 				}
 				break;
-
 			case 10:
 				_localctx = new MapPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 10);
@@ -10819,7 +10732,6 @@ public class GroovyParser extends AbstractParser {
 				map();
 				}
 				break;
-
 			case 11:
 				_localctx = new BuiltInTypePrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 11);
@@ -10858,7 +10770,6 @@ public class GroovyParser extends AbstractParser {
 				identifier();
 				}
 				break;
-
 			case 2:
 				_localctx = new LiteralPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 2);
@@ -10867,7 +10778,6 @@ public class GroovyParser extends AbstractParser {
 				literal();
 				}
 				break;
-
 			case 3:
 				_localctx = new GstringPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 3);
@@ -10876,7 +10786,6 @@ public class GroovyParser extends AbstractParser {
 				gstring();
 				}
 				break;
-
 			case 4:
 				_localctx = new ParenPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 4);
@@ -10885,7 +10794,6 @@ public class GroovyParser extends AbstractParser {
 				parExpression();
 				}
 				break;
-
 			case 5:
 				_localctx = new ListPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 5);
@@ -10894,7 +10802,6 @@ public class GroovyParser extends AbstractParser {
 				list();
 				}
 				break;
-
 			case 6:
 				_localctx = new MapPrmrAltContext(_localctx);
 				enterOuterAlt(_localctx, 6);
@@ -11734,7 +11641,6 @@ public class GroovyParser extends AbstractParser {
 				keywords();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -11771,7 +11677,6 @@ public class GroovyParser extends AbstractParser {
 				keywords();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -11808,7 +11713,6 @@ public class GroovyParser extends AbstractParser {
 				keywords();
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -11896,7 +11800,6 @@ public class GroovyParser extends AbstractParser {
 				}
 				}
 				break;
-
 			case 2:
 				{
 				setState(1700); 
@@ -12275,7 +12178,6 @@ public class GroovyParser extends AbstractParser {
 				match(GT);
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -12492,7 +12394,6 @@ public class GroovyParser extends AbstractParser {
 				expressionListElement(true);
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -12529,7 +12430,6 @@ public class GroovyParser extends AbstractParser {
 				expressionListElement(true);
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -12586,7 +12486,6 @@ public class GroovyParser extends AbstractParser {
 				expressionListElement(true);
 				}
 				break;
-
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
@@ -12594,7 +12493,6 @@ public class GroovyParser extends AbstractParser {
 				standardLambdaExpression();
 				}
 				break;
-
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
@@ -13052,22 +12950,16 @@ public class GroovyParser extends AbstractParser {
 		switch (ruleIndex) {
 		case 2:
 			return scriptStatement_sempred((ScriptStatementContext)_localctx, predIndex);
-
 		case 20:
 			return classBody_sempred((ClassBodyContext)_localctx, predIndex);
-
 		case 81:
 			return localVariableDeclaration_sempred((LocalVariableDeclarationContext)_localctx, predIndex);
-
 		case 95:
 			return statement_sempred((StatementContext)_localctx, predIndex);
-
 		case 120:
 			return expression_sempred((ExpressionContext)_localctx, predIndex);
-
 		case 122:
 			return commandExpression_sempred((CommandExpressionContext)_localctx, predIndex);
-
 		case 124:
 			return pathExpression_sempred((PathExpressionContext)_localctx, predIndex);
 		}
@@ -13105,46 +12997,32 @@ public class GroovyParser extends AbstractParser {
 		switch (predIndex) {
 		case 4:
 			return precpred(_ctx, 17);
-
 		case 5:
 			return precpred(_ctx, 15);
-
 		case 6:
 			return precpred(_ctx, 14);
-
 		case 7:
 			return precpred(_ctx, 13);
-
 		case 8:
 			return precpred(_ctx, 11);
-
 		case 9:
 			return precpred(_ctx, 10);
-
 		case 10:
 			return precpred(_ctx, 9);
-
 		case 11:
 			return precpred(_ctx, 8);
-
 		case 12:
 			return precpred(_ctx, 7);
-
 		case 13:
 			return precpred(_ctx, 6);
-
 		case 14:
 			return precpred(_ctx, 5);
-
 		case 15:
 			return precpred(_ctx, 4);
-
 		case 16:
 			return precpred(_ctx, 3);
-
 		case 17:
 			return precpred(_ctx, 12);
-
 		case 18:
 			return precpred(_ctx, 1);
 		}

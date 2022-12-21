@@ -6180,17 +6180,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "p/G.groovy",
-            "package p;\n" +
-            "public class G {\n" +
-            "  def msg\n" +
-            "  public G(Integer i) {}\n" +
-            "  public G(Integer i, String m=\"abc\") {this.msg = m;}\n" +
-            "  public void print(int i=3) { print msg }\n" +
+            "package p\n" +
+            "class G {\n" +
+            "  def foo\n" +
+            "  G(Integer i) { foo = 'bar' }\n" +
+            "  G(Integer i, String s='baz') { foo = s }\n" +
+            "  void print(int i=3) { print(foo) }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "", "java.lang.ClassFormatError: Duplicate method name");
+        runConformTest(sources, isAtLeastGroovy(40) ? "abcbar" : "", isAtLeastGroovy(40) ? "" : "java.lang.ClassFormatError: Duplicate method name");
     }
 
     @Test
@@ -6202,7 +6202,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\n" +
             "class Code {\n" +
             "  public void m(String s) {}\n" +
-            "  public void m(String s, Integer i =3) {}\n" +
+            "  public void m(String s, Integer i=3) {}\n" +
             "}\n",
         };
         //@formatter:on
@@ -6210,8 +6210,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\Code.groovy (at line 5)\n" +
-            "\tpublic void m(String s, Integer i =3) {}\n" +
-            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "\tpublic void m(String s, Integer i=3) {}\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\"" +
             " defines a method \"void m(java.lang.String)\" that is already defined.\n" +
             "----------\n");

@@ -659,7 +659,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tm(Object::sleep)\n" +
             "\t  ^^^^^^^^^^^^^\n" +
-            "Groovy:Failed to find the expected method[sleep(java.lang.String)] in the type[java.lang.Object]\n" +
+            "Groovy:Failed to find class method 'sleep(java.lang.String)' or instance method 'sleep()' for the type: java.lang.Object\n" +
             "----------\n");
     }
 
@@ -1194,7 +1194,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\tClass<?> c = []\n" +
             "\t^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - No matching constructor found: java.lang.Class()\n" +
+            "Groovy:[Static type checking] - Cannot find matching constructor java.lang.Class()\n" +
             "----------\n");
     }
 
@@ -1336,6 +1336,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic7204() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Repository<T, S extends Serializable> {\n" +
+            "  void delete(T arg) { assert true }\n" +
+            "  void delete(S arg) { assert false: 'wrong method invoked' }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Repository<String, Long> r = new Repository<String, Long>()\n" +
+            "  r.delete('foo')\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
@@ -7258,7 +7279,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tprint(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), List::size)))\n" +
             "\t                                                                           ^^^^^^^^^^\n" +
-            "Groovy:Failed to find the expected method[size(java.lang.String)] in the type[java.util.List]\n" +
+            "Groovy:Failed to find class method 'size(java.lang.String)' or instance method 'size()' for the type: java.util.List\n" +
             "----------\n");
     }
 
@@ -7998,5 +8019,59 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "[class, name]");
+    }
+
+    @Test
+    public void testCompileStatic10819() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def cmc = Class.getMetaClass()\n" +
+            "  def smc = String.getMetaClass()\n" +
+            "  assert cmc != smc\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", isAtLeastGroovy(40) ? "" : "Assertion failed");
+    }
+
+    @Test
+    public void testCompileStatic10820() {
+        assumeTrue(isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Pogo.with {\n" +
+            "    print name\n" +
+            "    print getName()\n" +
+            "    print it.name\n" +
+            "    print it.getName()\n" +
+            "    print delegate.name\n" +
+            "    print delegate.getName()\n" +
+            "    print number\n" +
+            "    print getNumber()\n" +
+            "    print it.number\n" +
+            "    print it.getNumber()\n" +
+            "    print delegate.number\n" +
+            "    print delegate.getNumber()\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  static getNumber() { 1 }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "PogoPogoPogoPogoPogoPogo111111");
     }
 }

@@ -1031,6 +1031,30 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7025
+    public void testStaticFieldReference() {
+        //@formatter:off
+        String[] sources = {
+            "Bad.groovy",
+            "enum Bad {\n" +
+            "  FOO('bar');\n" +
+            "  static names = []\n" +
+            "  Bad(String name) {\n" +
+            "    names.add(name)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Bad.groovy (at line 5)\n" +
+            "\tnames.add(name)\n" +
+            "\t^^^^^\n" +
+            "Groovy:Cannot refer to the static enum field 'names' within an initializer\n" +
+            "----------\n");
+    }
+
     @Test
     public void testStaticVariableInScript() {
         //@formatter:off
