@@ -105,7 +105,7 @@ public class VariableExpressionTransformer {
             return null;
         }
 
-        MethodCallExpression mce = callThisX(ve.getName());
+        MethodCallExpression mce = callThisX(ve.getName()); // GRECLIPSE edit
         mce.getMethod().setSourcePosition(ve);
         mce.setMethodTarget(dmct);
         // GROOVY-10637: return type might be parameterized

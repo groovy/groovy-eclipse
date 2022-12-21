@@ -389,24 +389,11 @@ public class StaticInvocationWriter extends InvocationWriter {
                     }
                 }
             }
-            /* GRECLIPSE edit
-            if (receiver != null) {
-                boolean callToSuper = receiver instanceof VariableExpression && ((VariableExpression) receiver).isSuperExpression();
-                if (!callToSuper) {
-                    fixedReceiver = fixedReceiver == null ? receiver : fixedReceiver;
-                    // in order to avoid calls to castToType, which is the dynamic behaviour, we make sure that we call CHECKCAST instead
-                    // then replace the top operand type
-                    Expression checkCastReceiver = new CheckcastReceiverExpression(fixedReceiver, target);
-                    return super.writeDirectMethodCall(target, fixedImplicitThis, checkCastReceiver, args);
-                }
-            }
-            */
             if (receiver != null && !isSuperExpression(receiver)) {
-                if (currentCall.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER)==null)
-                    fixedReceiver = new CheckcastReceiverExpression(fixedReceiver, target);
+                // in order to avoid calls to castToType, which is the dynamic behaviour, make sure that we call CHECKCAST instead then replace the top operand type
+                if (currentCall.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER) == null) fixedReceiver = new CheckcastReceiverExpression(fixedReceiver, target);
                 return super.writeDirectMethodCall(target, fixedImplicitThis, fixedReceiver, args);
             }
-            // GRECLIPSE end
             return super.writeDirectMethodCall(target, implicitThis, receiver, args);
         }
     }

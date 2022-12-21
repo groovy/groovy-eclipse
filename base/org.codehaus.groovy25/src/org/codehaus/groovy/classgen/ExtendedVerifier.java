@@ -214,7 +214,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                     collector.setClassRetention(repeatee.hasClassRetention());
                     collector.setRuntimeRetention(repeatee.hasRuntimeRetention());
                     // GRECLIPSE end
-                    List<Expression> annos = new ArrayList<>();
+                    List<Expression> annos = new ArrayList<Expression>();
                     for (AnnotationNode an : next.getValue()) {
                         annos.add(new AnnotationConstantExpression(an));
                     }

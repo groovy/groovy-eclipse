@@ -1,7 +1,7 @@
 <project default="build">
 
     <target name="build" depends="clean">
-        <java classname="groovyjarjarantlr.Tool" classpath="../../../../../lib/groovy-2.5.19-indy.jar" dir="${basedir}" fork="true">
+        <java classname="groovyjarjarantlr.Tool" classpath="../../../../../lib/groovy-2.5.20-indy.jar" dir="${basedir}" fork="true">
             <arg line="-o parser groovy.g" />
         </java>
         <replaceregexp byline="true" flags="g" match="\bimport antlr." replace="import groovyjarjarantlr.">
