@@ -8,7 +8,7 @@
   </parent>
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.codehaus.groovy</artifactId>
-  <version>3.0.13-SNAPSHOT</version>
+  <version>3.0.14-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 
   <build>

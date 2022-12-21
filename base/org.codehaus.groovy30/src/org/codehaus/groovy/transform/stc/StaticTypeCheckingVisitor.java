@@ -134,7 +134,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -1535,7 +1534,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ConstructorNode cn = new ConstructorNode(Opcodes.ACC_PUBLIC, new Parameter[]{new Parameter(LINKEDHASHMAP_CLASSNODE, "args")}, ClassNode.EMPTY_ARRAY, EmptyStatement.INSTANCE);
                 return cn;
             } else {
-                addStaticTypeError("No matching constructor found: " + prettyPrintTypeName(node) + toMethodParametersString("", arguments), source);
+                addStaticTypeError("Cannot find matching constructor " + prettyPrintTypeName(node) + toMethodParametersString("", arguments), source);
                 return null;
             }
         } else if (constructors.size() > 1) {
@@ -1954,48 +1953,41 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     /**
-     * This method is used to filter search results in which null means "no match",
-     * to filter out illegal access to instance members from a static context.
+     * Filters search result to prevent access to instance members from a static
+     * context.
      * <p>
-     * Return null if the given member is not static, but we want to access in
-     * a static way (staticOnly=true). If we want to access in a non-static way
-     * we always return the member, since then access to static members and
+     * Return null if the given member is not static, but we want to access in a
+     * static way (staticOnly=true). If we want to access in a non-static way we
+     * always return the member, since then access to static members and
      * non-static members is allowed.
+     *
+     * @return {@code member} or null
      */
     private <T> T allowStaticAccessToMember(final T member, final boolean staticOnly) {
-        if (member == null) return null;
-        if (!staticOnly) return member;
-        /* GRECLIPSE edit
-        boolean isStatic;
-        if (member instanceof Variable) {
-            Variable v = (Variable) member;
-            isStatic = Modifier.isStatic(v.getModifiers());
-        } else if (member instanceof List) {
-            List<MethodNode> list = (List<MethodNode>) member;
-            if (list.size() == 1) {
-                return (T) Collections.singletonList(allowStaticAccessToMember(list.get(0), staticOnly));
-            }
-            return (T) Collections.emptyList();
-        } else {
-            MethodNode mn = (MethodNode) member;
-            isStatic = mn.isStatic();
-        }
-        if (staticOnly && !isStatic) return null;
-        return member;
-        */
+        if (member == null || !staticOnly) return member;
+
         if (member instanceof List) {
             return (T) ((List<MethodNode>) member).stream()
-                .map(m -> allowStaticAccessToMember(m,true))
-                .filter(Objects::nonNull).collect(toList());
+                    .map(m -> allowStaticAccessToMember(m,true))
+                    .filter(Objects::nonNull).collect(toList());
         }
+
         boolean isStatic;
-        if (member instanceof Variable) {
-            isStatic = Modifier.isStatic(((Variable) member).getModifiers());
+        if (member instanceof FieldNode) {
+            isStatic = ((FieldNode) member).isStatic();
+        } else if (member instanceof PropertyNode) {
+            isStatic = ((PropertyNode) member).isStatic();
         } else { // assume member instanceof MethodNode
-            isStatic = member instanceof ExtensionMethodNode ? ((ExtensionMethodNode) member).isStaticExtension() : ((MethodNode) member).isStatic();
+            isStatic = isStaticInContext((MethodNode) member);
         }
         return (isStatic ? member : null);
-        // GRECLIPSE end
+    }
+
+    /**
+     * Is the method called in a static or non-static manner?
+     */
+    private boolean isStaticInContext(final MethodNode method) {
+        return method instanceof ExtensionMethodNode ? ((ExtensionMethodNode) method).isStaticExtension() : method.isStatic();
     }
 
     private void storeWithResolve(ClassNode type, final ClassNode receiver, final ClassNode declaringClass, final boolean isStatic, final Expression expressionToStoreOn) {
@@ -2354,7 +2346,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ClassNode resultType;
         if (isDoubleCategory(getUnwrapper(typeRe))) {
             resultType = type;
-        } else if (typeRe == ArrayList_TYPE) {
+        } else if (typeRe.equals(ArrayList_TYPE)) {
             resultType = ArrayList_TYPE;
         } else {
             MethodNode mn = findMethodOrFail(expression, type, name);
@@ -2756,12 +2748,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             String nameText = nameExpr.getText();
 
             if ("new".equals(nameText)) {
-                ClassNode receiverType = getType(expression.getExpression());
-                if (isClassClassNodeWrappingConcreteType(receiverType)) {
-                    // GRECLIPSE add
-                    receiverType = receiverType.getGenericsTypes()[0].getType();
-                    // GRECLIPSE end
-                    storeType(expression, wrapClosureType(receiverType));
+                ClassNode type = getType(expression.getExpression());
+                if (isClassClassNodeWrappingConcreteType(type)){
+                    type = type.getGenericsTypes()[0].getType();
+                    storeType(expression,wrapClosureType(type));
                 }
                 return;
             }
@@ -2780,14 +2770,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (isBeingCompiled(receiverType) && !receiverType.isInterface()) {
                     // GROOVY-10741: check for reference to a property node's method
                     MethodNode generated = findPropertyMethod(receiverType, nameText);
-                    if (generated != null && candidates.stream().noneMatch(mn -> mn.getName().equals(generated.getName()))) {
+                    if (generated != null && candidates.stream().noneMatch(m -> m.getName().equals(generated.getName()))) {
                         candidates.add(generated);
                     }
                     candidates.addAll(GROOVY_OBJECT_TYPE.getMethods(nameText));
                 }
                 candidates.addAll(findDGMMethodsForClassNode(getSourceUnit().getClassLoader(), receiverType, nameText));
-                candidates = filterMethodsByVisibility(candidates, typeCheckingContext.getEnclosingClassNode());
 
+                if (candidates.size() > 1) {
+                    candidates = filterMethodCandidates(candidates, expression.getExpression(), expression.getNodeMetaData(CLOSURE_ARGUMENTS));
+                }
                 if (!candidates.isEmpty()) {
                     break;
                 }
@@ -2847,6 +2839,28 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return null;
     }
 
+    private List<MethodNode> filterMethodCandidates(final List<MethodNode> candidates, final Expression objectOrType, /*@Nullable*/ ClassNode[] signature) {
+        List<MethodNode> result = filterMethodsByVisibility(candidates, typeCheckingContext.getEnclosingClassNode());
+        // assignment or parameter target type may help reduce the list
+        if (result.size() > 1 && signature != null) {
+            ClassNode type = getType(objectOrType);
+            if (!isClassClassNodeWrappingConcreteType(type)) {
+                result = chooseBestMethod(type, result, signature);
+            } else {
+                type = type.getGenericsTypes()[0].getType(); // Class<Type> --> Type
+                Map<Boolean, List<MethodNode>> staticAndNonStatic = result.stream().collect(partitioningBy(this::isStaticInContext));
+
+                result = new ArrayList<>(result.size());
+                result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.TRUE), signature));
+                if (!staticAndNonStatic.get(Boolean.FALSE).isEmpty()) {
+                    if (signature.length > 0) signature= Arrays.copyOfRange(signature, 1, signature.length);
+                    result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.FALSE), signature));
+                }
+            }
+        }
+        return result;
+    }
+
     protected DelegationMetadata getDelegationMetadata(final ClosureExpression expression) {
         return expression.getNodeMetaData(DELEGATION_METADATA);
     }
@@ -2855,7 +2869,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (typesBeforeVisit != null) {
             for (Map.Entry<VariableExpression, Map<StaticTypesMarker, Object>> entry : typesBeforeVisit.entrySet()) {
                 for (StaticTypesMarker marker : StaticTypesMarker.values()) {
-                    // GROOVY-9344, GROOVY-9516
+                    // GROOVY-9344, GROOVY-9516: keep type
                     if (marker == INFERRED_TYPE) continue;
 
                     Object value = entry.getValue().get(marker);
@@ -3463,6 +3477,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             genericTypes[i] = new GenericsType(signature[i]);
         }
         dummyResultNode.setGenericsTypes(genericTypes);
+
         MethodNode dummyMN = selectedMethod instanceof ExtensionMethodNode ? ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode() : selectedMethod;
         dummyMN = new MethodNode(
                 dummyMN.getName(),
@@ -3489,12 +3504,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             dummyMN.setDeclaringClass(orig.getDeclaringClass());
             dummyMN.setGenericsTypes(orig.getGenericsTypes());
         }
+
         GenericsType[] typeArguments = null; // GROOVY-7789
         Expression emc = typeCheckingContext.getEnclosingMethodCall();
         if (emc instanceof MethodCallExpression) {
             MethodCallExpression call = (MethodCallExpression) emc;
             if (arguments == call.getArguments()) typeArguments = call.getGenericsTypes();
         }
+
         ClassNode returnType = inferReturnTypeGenerics(receiver, dummyMN, arguments, typeArguments);
         GenericsType[] returnTypeGenerics = returnType.getGenericsTypes();
         ClassNode[] inferred = new ClassNode[returnTypeGenerics.length];
@@ -5266,17 +5283,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
 
         List<MethodNode> methods = receiver.getMethods(name);
-        /* GRECLIPSE edit -- GROOVY-10700, GROOVY-10767
-        if (receiver.isAbstract()) {
-            collectAllInterfaceMethodsByName(receiver, name, methods);
-        } else { // GROOVY-9890: always search for default methods
-            List<MethodNode> interfaceMethods = new ArrayList<>();
-            collectAllInterfaceMethodsByName(receiver, name, interfaceMethods);
-            interfaceMethods.stream().filter(MethodNode::isDefault).forEach(methods::add);
-        }
-        */
+
+        // GROOVY-5166, GROOVY-9890, GROOVY-10700: non-static interface/trait methods
         Set<ClassNode> done = new HashSet<>();
-        if (!(receiver instanceof WideningCategories.LowestUpperBoundClassNode))
         for (ClassNode next = receiver; next != null; next = next.getSuperClass()) {
             done.add(next);
             for (ClassNode face : next.getAllInterfaces()) {
@@ -5287,7 +5296,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
         }
-        // GRECLIPSE end
+
         if (receiver.isInterface()) {
             methods.addAll(OBJECT_TYPE.getMethods(name));
         }

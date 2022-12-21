@@ -136,20 +136,7 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
         }
         // GRECLIPSE end
         if (expr instanceof VariableExpression) {
-            // GRECLIPSE edit -- GROOVY-6097, GROOVY-7300, et al.
-            Expression exp2 = variableExpressionTransformer.transformVariableExpression((VariableExpression) expr);
-            if (exp2 == expr) {
-                MethodNode dmct = expr.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                // NOTE: BinaryExpressionTransformer handles the setter
-                if (dmct != null && dmct.getParameters().length == 0) {
-                    MethodCallExpression mce = new MethodCallExpression(new VariableExpression("this"), expr.getText(), MethodCallExpression.NO_ARGUMENTS);
-                    mce.getMethod().setSourcePosition(expr);
-                    mce.setMethodTarget(dmct);
-                    exp2 = mce;
-                }
-            }
-            return exp2;
-            // GRECLIPSE end
+            return variableExpressionTransformer.transformVariableExpression((VariableExpression) expr);
         }
         if (expr instanceof ClosureExpression) {
             return closureExpressionTransformer.transformClosureExpression((ClosureExpression) expr);
