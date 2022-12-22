@@ -85,12 +85,6 @@
             </goals>
             <configuration>
               <compilerId>groovy-eclipse-compiler</compilerId>
-              <systemProperties>
-                <systemProperty>
-                  <name>spock.iKnowWhatImDoing.disableGroovyVersionCheck</name>
-                  <value>true</value>
-                </systemProperty>
-             </systemProperties>
             </configuration>
           </execution>
         </executions>
