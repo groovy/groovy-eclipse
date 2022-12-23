@@ -1149,19 +1149,6 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         }
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1192
-    public void testDGSMDeclaring9() {
-        String contents = "Thread.&sleep"; // Thread#sleep(long) supersedes sleep(Object,long) but not sleep(Object,long,Closure)
-        assertDeclType(contents, "sleep", !isAtLeastGroovy(30) ? "java.lang.Thread" : "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
-    }
-
-    @Test
-    public void testDGSMDeclaring10() {
-        String contents = "Thread.&mixin"; // throws MissingMethodException
-        int offset = contents.indexOf("mixin");
-        assertUnknownConfidence(contents, offset, offset + "mixin".length());
-    }
-
     @Test
     public void testStaticMixinDGM() {
         //@formatter:off

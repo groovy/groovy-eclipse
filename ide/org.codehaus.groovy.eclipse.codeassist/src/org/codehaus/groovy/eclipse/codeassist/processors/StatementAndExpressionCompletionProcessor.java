@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import static org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isClassClassNodeWrappingConcreteType;
 import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 
 import java.util.ArrayList;
@@ -271,17 +272,22 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             closureStrategy = requestor.currentScope.getEnclosingClosureResolveStrategy();
         }
 
+        boolean isClass = isClassClassNodeWrappingConcreteType(completionType);
         // if completionType is delegate, use instance (non-static) semantics
         boolean isStatic1 = (isStatic && closureStrategy < Closure.OWNER_FIRST);
-        proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic1, isPrimary);
+        // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static
+        boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
 
-        if (completionType.equals(VariableScope.CLASS_CLASS_NODE) && completionType.isUsingGenerics() &&
-                !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
-                !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE) &&
-                (!(context.completionNode instanceof ClassExpression) || !isTrait(completionType.getGenericsTypes()[0].getType()))) {
-            // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static
-            boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
-            proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, completionType.getGenericsTypes()[0].getType(), isStatic2, isPrimary);
+        if (isClass) {
+            ClassNode ofType = VariableScope.getFirstGenerics(completionType);
+            if (!(context.completionNode instanceof ClassExpression) || !isTrait(ofType))
+                proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, ofType, isStatic2, isPrimary);
+        }
+        if (!isClass || isStatic2 || (
+                !VariableScope.getFirstGenerics(completionType).equals(VariableScope.CLASS_CLASS_NODE) &&
+                !VariableScope.getFirstGenerics(completionType).equals(VariableScope.OBJECT_CLASS_NODE) &&
+                GroovyUtils.getGroovyVersion().getMajor() >= 4)) { // GROOVY-8633, GROOVY-10057: "Foo.&bar" supports Class methods
+            proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic1, isPrimary);
         }
 
         // within a closure, include content assist for the enclosing type (aka "owner")

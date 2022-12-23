@@ -355,8 +355,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             declaration = null; // property expression "foo.bar" does not resolve to "bar(...)" or "setBar(x)" w/o call args
         }
 
-        if (declaration == null && declaring != declaringType) {
-            // "Type.getPackage()" or "def type = Type.class; type.getPackage()"
+        if (declaration == null && declaring != declaringType && (
+                !VariableScope.CLASS_CLASS_NODE.equals(declaringType) ||
+                !(scope.getEnclosingNode() instanceof MethodPointerExpression) ||
+                GroovyUtils.getGroovyVersion().getMajor() >= 4)) { // GROOVY-8633, GROOVY-10057
+            // "Type.getPackage()" or "def type = Type.class; type.getPackage()" or "Type.&getPackage"
             return findTypeForNameWithKnownObjectExpression(name, type, declaringType, scope, isLhsExpression, false);
         }
 
@@ -952,17 +955,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     /**
-     * Given {@code Class<T>} and {@code T} is not {@code ?}, {@code Class}, or
-     * {@code Object} returns {@code T}; otherwise returns {@code declaringType}.
+     * Given {@code Class<T>} and {@code T} is not {@code ?}, returns {@code T};
+     * otherwise returns {@code declaringType}.
      */
     protected static ClassNode getBaseDeclaringType(final ClassNode declaringType) {
         if (VariableScope.CLASS_CLASS_NODE.equals(declaringType) && declaringType.isUsingGenerics()) {
-            ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
-            if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) &&
-                !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
-
-                return typeParam;
-            }
+            GenericsType genericsType = declaringType.getGenericsTypes()[0];
+            if (!genericsType.isWildcard()) return genericsType.getType();
         }
         return declaringType;
     }

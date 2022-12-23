@@ -887,6 +887,27 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'empty', 0)
     }
 
+    @Test // GROOVY-8633, GROOVY-10057
+    void testMethodPointer6() {
+        String contents = 'String.&get'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'get'))
+        proposalExists(proposals, 'getCanonicalName()', isAtLeastGroovy(40) ? 1 : 0)
+        proposalExists(proposals, 'getClass()', 1)
+        proposalExists(proposals, 'getBytes()', 1)
+    }
+
+    @Test // GROOVY-8633, GROOVY-10057
+    void testMethodReference6() {
+        assumeTrue(isParrotParser())
+        String contents = 'String::get'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'get'))
+        proposalExists(proposals, 'getCanonicalName()', isAtLeastGroovy(40) ? 1 : 0)
+        proposalExists(proposals, 'getClass()', 1)
+        proposalExists(proposals, 'getBytes()', 1)
+    }
+
     @Test
     void testAnnotatedMethod1() {
         String contents = '''\
