@@ -387,7 +387,7 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
 
     private static DefaultsMode maybeDefaultsMode(final AnnotationNode node, final String name) {
         if (node != null) {
-            final Expression member = node.getMember(name);
+            Expression member = node.getMember(name);
             if (member instanceof ConstantExpression) {
                 ConstantExpression ce = (ConstantExpression) member;
                 if (ce.getValue() instanceof DefaultsMode) {
@@ -396,12 +396,22 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
             } else if (member instanceof PropertyExpression) {
                 PropertyExpression prop = (PropertyExpression) member;
                 Expression oe = prop.getObjectExpression();
+                /* GRECLIPSE edit
                 if (oe instanceof ClassExpression) {
                     ClassExpression ce = (ClassExpression) oe;
                     if (ce.getType().getName().equals("groovy.transform.DefaultsMode")) {
                         return DefaultsMode.valueOf(prop.getPropertyAsString());
                     }
                 }
+                */
+                if ("groovy.transform.DefaultsMode".equals(oe.getType().getName())
+                        || "groovy.transform.DefaultsMode".equals(oe.getText())
+                        || "DefaultsMode".equals(oe.getText())) {
+                    return DefaultsMode.valueOf(prop.getPropertyAsString());
+                }
+            } else if (member instanceof VariableExpression) {
+                return DefaultsMode.valueOf(member.getText());
+            // GRECLIPSE end
             }
         }
         return null;

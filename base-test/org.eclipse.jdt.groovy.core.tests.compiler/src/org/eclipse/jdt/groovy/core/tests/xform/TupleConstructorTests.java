@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.junit.Assume.assumeTrue;
+
 import java.util.Map;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
@@ -335,5 +338,38 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTupleConstructor13() {
+        assumeTrue(isAtLeastGroovy(40)); // "defaultsMode" added for Groovy 4
+        for (String value : new String[] {"groovy.transform.DefaultsMode.OFF", "DefaultsMode.OFF", "OFF"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "def p = new Person('Jane','Eyre')\n" +
+                "assert p.firstName == 'Jane'\n" +
+                "assert p.lastName == 'Eyre'\n",
+
+                "Person.groovy",
+                "import groovy.transform.DefaultsMode\n" +
+                "import static groovy.transform.DefaultsMode.*\n" +
+                "@groovy.transform.TupleConstructor(defaultsMode="+value+")\n" +
+                "class Person {\n" +
+                "  String firstName, lastName\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources);
+
+            checkGCUDeclaration("Person.groovy", // expect single constructor
+                "class Person {\n" +
+                "  private String firstName;\n" +
+                "  private String lastName;\n" +
+                "  public @groovy.transform.Generated Person(String firstName, String lastName) {\n" +
+                "  }\n" +
+                "}\n");
+        }
     }
 }
