@@ -122,13 +122,14 @@ public class GroovyClassScope extends ClassScope {
 
         // create property accessors without resolving the types
         if (referenceContext instanceof GroovyTypeDeclaration) {
+            boolean isRecord = (referenceContext.modifiers & 0x1000000) != 0; // 3.26+: isRecord()
             for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).getClassNode().getProperties()) {
                 int modifiers = getModifiers(property);
                 if (Flags.isPackageDefault(modifiers)) continue;
 
                 String capitalizedName = org.codehaus.groovy.runtime.MetaClassHelper.capitalize(property.getName());
 
-                if (property.getType().equals(ClassHelper.boolean_TYPE)) {
+                if (!isRecord && ClassHelper.boolean_TYPE.equals(property.getType())) {
                     if (!createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings).isPresent()) {
                         continue; // only generate accessor method(s) if one or both are not explicitly declared
                     }
@@ -139,7 +140,8 @@ public class GroovyClassScope extends ClassScope {
                                 .ifPresent(groovyMethods::add);
                         });
                 } else {
-                    createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings) // TODO: PropertyNode#getGetterNameOrDefault
+                    String propertyAccessorName = isRecord ? property.getName() : "get" + capitalizedName;
+                    createGetterMethod(property, propertyAccessorName, modifiers, methodBindings) // TODO: PropertyNode#getGetterNameOrDefault
                         .ifPresent(groovyMethods::add);
                 }
 

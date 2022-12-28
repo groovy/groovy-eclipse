@@ -1653,7 +1653,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         return classNode;
     }
 
-    private void transformRecordHeaderToProperties(ClassDeclarationContext ctx, ClassNode classNode) {
+    private void transformRecordHeaderToProperties(final ClassDeclarationContext ctx, final ClassNode classNode) {
         Parameter[] parameters = this.visitFormalParameters(ctx.formalParameters());
         classNode.putNodeMetaData(RECORD_HEADER, parameters);
 
@@ -1662,9 +1662,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             Parameter parameter = parameters[i];
             FormalParameterContext parameterCtx = parameter.getNodeMetaData(PARAMETER_CONTEXT);
             ModifierManager parameterModifierManager = parameter.getNodeMetaData(PARAMETER_MODIFIER_MANAGER);
-            ClassNode originType = parameter.getOriginType();
-            PropertyNode propertyNode = declareProperty(parameterCtx, parameterModifierManager, originType,
-                    classNode, i, parameter, parameter.getName(), parameter.getModifiers(), parameter.getInitialExpression());
+            PropertyNode propertyNode = declareProperty(parameterCtx, parameterModifierManager, parameter.getType(), classNode, i,
+                    parameter, parameter.getName(), parameter.getModifiers() | Opcodes.ACC_FINAL, parameter.getInitialExpression());
             propertyNode.getField().putNodeMetaData(IS_RECORD_GENERATED, Boolean.TRUE);
         }
     }

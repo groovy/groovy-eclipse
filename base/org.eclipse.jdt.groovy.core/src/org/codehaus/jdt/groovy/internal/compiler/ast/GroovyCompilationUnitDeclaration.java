@@ -1486,6 +1486,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 fixupSourceLocationsForConstructorDeclaration(constructorDecl, constructorNode);
                 constructorDecl.annotations = createAnnotations(constructorNode.getAnnotations());
                 constructorDecl.arguments = createArguments(constructorNode.getParameters());
+                if (constructorDecl.arguments != null && constructorDecl.arguments.length > 0
+                     && constructorNode.getParameters()[0].getName().equals("__namedArgs")) {
+                    constructorDecl.arguments[0].type.bits |= ASTNode.IgnoreRawTypeCheck;
+                }
                 constructorDecl.modifiers = isEnum ? Flags.AccPrivate : getModifiers(constructorNode);
                 constructorDecl.selector = ctorName;
                 constructorDecl.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());

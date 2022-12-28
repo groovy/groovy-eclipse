@@ -157,4 +157,97 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "", "Assertion failed");
     }
+
+    @Test
+    public void testRecordType7() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "import java.util.*;\n" +
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    Map<String,Object> map = new HashMap<>();\n" +
+            "    map.put(\"n\", 12345);\n" +
+            "    map.put(\"s\", \"x\");\n" +
+            "    System.out.print(new Simple(map));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Simple.groovy",
+            "record Simple(Number n, String s) {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Simple[n=12345, s=x]");
+    }
+
+    @Test
+    public void testRecordType8() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    Simple s = new Simple(true, 1);\n" +
+            "    TODO;\n" +
+            "  }\n" +
+            "}\n",
+
+            "Simple.groovy",
+            "record Simple(boolean b, Number n) {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        String mainDotJava = sources[1];
+
+        sources[1] = mainDotJava.replace("TODO", "s.b()");
+        runConformTest(sources);
+
+        sources[1] = mainDotJava.replace("TODO", "s.n()");
+        runConformTest(sources);
+
+        sources[1] = mainDotJava.replace("TODO", "s.isB()");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.java (at line 4)\n" +
+            "\ts.isB();\n" +
+            "\t  ^^^\n" +
+            "The method isB() is undefined for the type Simple\n" +
+            "----------\n");
+
+        sources[1] = mainDotJava.replace("TODO", "s.getB()");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.java (at line 4)\n" +
+            "\ts.getB();\n" +
+            "\t  ^^^^\n" +
+            "The method getB() is undefined for the type Simple\n" +
+            "----------\n");
+
+        sources[1] = mainDotJava.replace("TODO", "s.getN()");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.java (at line 4)\n" +
+            "\ts.getN();\n" +
+            "\t  ^^^^\n" +
+            "The method getN() is undefined for the type Simple\n" +
+            "----------\n");
+
+        sources[1] = mainDotJava.replace("TODO", "s.setN(42)");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.java (at line 4)\n" +
+            "\ts.setN(42);\n" +
+            "\t  ^^^^\n" +
+            "The method setN(int) is undefined for the type Simple\n" +
+            "----------\n");
+
+        // TODO: getAt(int), toList(), toMap(), size()
+    }
 }
