@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.dsl.tests
-
-import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
@@ -124,7 +122,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         }
     }
 
-    @Test @NotYetImplemented // GROOVY-5204
+    @Test // GROOVY-5204
     void testDelegate4() {
         String contents = '''\
             |class Bar {

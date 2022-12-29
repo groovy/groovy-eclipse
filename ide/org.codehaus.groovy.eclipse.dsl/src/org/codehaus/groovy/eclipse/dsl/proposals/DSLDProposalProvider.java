@@ -82,7 +82,7 @@ public class DSLDProposalProvider implements IProposalProvider {
 
             boolean isMethodContext = (context instanceof MethodInfoContentAssistContext);
             for (IContributionElement element : contributions) {
-                if (element.contributionName().startsWith(context.getPerceivedCompletionExpression())) {
+                if (element.getContributionName().startsWith(context.getPerceivedCompletionExpression())) {
                     IGroovyProposal proposal = element.toProposal(completionType, pattern.getResolverCache());
                     if (proposal != null) {
                         proposals.add(proposal);

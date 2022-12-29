@@ -76,9 +76,9 @@ contribute(dsldFile & (~insideContribution()) & currentType(subType(Script)) & (
     // Yes, you can use many Eclipse classes here.  The editor won't like them, so they must be fully qualified
     // and you cannot import them or use them as types for variables
 
-    Map<String, String> pointcutNames = PointcutFactory.docRegistry
+    Map<String, String> pointcutNames = PointcutFactory.@docRegistry
     pointcutNames.each { pointcutName, pointcutDoc ->
-        method name: pointcutName, type: IPointcut, params: [pointcutArg: Object], doc: pointcutDoc, isDeprecated: PointcutFactory.deprecatedRegistry.contains(pointcutName)
+        method name: pointcutName, type: IPointcut, params: [pointcutArg: Object[]], doc: pointcutDoc, isDeprecated: PointcutFactory.deprecatedRegistry.contains(pointcutName)
     }
 
     method  name: 'contribute',

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
+import org.eclipse.jdt.groovy.search.VariableScope;
 
 public class PropertyContributionElement implements IContributionElement {
 
@@ -59,7 +60,7 @@ public class PropertyContributionElement implements IContributionElement {
     }
 
     @Override
-    public TypeAndDeclaration lookupType(final String name, final ClassNode declaringType, final ResolverCache resolver) {
+    public TypeAndDeclaration resolve(final String name, final ClassNode declaringType, final ResolverCache resolver, final VariableScope scope) {
         if (name.equals(propName)) {
             return new TypeAndDeclaration(returnType(resolver), toProperty(declaringType, resolver), declaringType(declaringType, resolver), doc);
         }
@@ -104,7 +105,7 @@ public class PropertyContributionElement implements IContributionElement {
     }
 
     @Override
-    public String contributionName() {
+    public String getContributionName() {
         return propName;
     }
 

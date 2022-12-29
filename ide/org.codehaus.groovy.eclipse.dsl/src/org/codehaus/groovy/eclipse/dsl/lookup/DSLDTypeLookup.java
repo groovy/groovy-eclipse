@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,19 +78,20 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
 
     @Override
     protected TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, final String name, final VariableScope scope) {
-        if (!isMapKey(scope) || inPointcutExpression(scope)) {
+        boolean notMapKey = !isMapKey(scope);
+        if (notMapKey || inPointcutExpression(scope)) {
             context.setStatic(isStatic());
             context.setCurrentScope(scope);
             context.setTargetType(declaringType);
-            // this call satisfies pointcut expression bindings; map keys don't require any further processing
+            // this call satisfies pointcut expression bindings
             List<IContributionElement> contributions = store.findContributions(context, disabledScripts);
-
-            if (!isMapKey(scope)) {
+            // map keys don't require any further processing
+            if (notMapKey) {
                 // may have changed via a setDelegateType
                 declaringType = context.getCurrentType();
                 ResolverCache resolverCache = context.getResolverCache();
                 for (IContributionElement contribution : contributions) {
-                    TypeAndDeclaration td = contribution.lookupType(name, declaringType, resolverCache);
+                    TypeAndDeclaration td = contribution.resolve(name, declaringType, resolverCache, scope);
                     if (td != null) {
                         return td;
                     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
 import static org.codehaus.groovy.eclipse.dsl.contributions.ContributionElems.removeJavadocMarkup;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.plus;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -42,70 +42,71 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOption
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.codehaus.jdt.groovy.ast.MethodNodeWithNamedParams;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
+import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
+import org.eclipse.jdt.groovy.search.VariableScope;
 
 public class MethodContributionElement implements IContributionElement {
 
     private static final ParameterContribution[] NO_PARAMETER_CONTRIBUTIONS = {};
 
     private final String methodName;
+    private final String returnType;
+    private final String declaringType;
+    private final String provider, doc;
     private final ParameterContribution[] namedParams;
     private final ParameterContribution[] optionalParams;
     private final ParameterContribution[] positionalParams;
-    private final String returnType;
-    private final String declaringType;
-    private final boolean isStatic;
-    private final boolean useNamedArgs;
+    private final boolean isDeprecated, isStatic, noParens;
 
-    private final String provider;
-    private final String doc;
+    private final int relevanceMultiplier;
 
-    private ClassNode cachedDeclaringType;
     private ClassNode cachedReturnType;
+    private ClassNode cachedDeclaringType;
     private Parameter[] cachedNamedParameters;
     private Parameter[] cachedOptionalParameters;
     private Parameter[] cachedPositionalParameters;
-    private final int relevanceMultiplier;
-    private final boolean isDeprecated;
-    private final boolean noParens;
 
     public MethodContributionElement(
-            String methodName,
-            ParameterContribution[] params,
-            String returnType,
-            String declaringType,
-            boolean isStatic,
-            String provider,
-            String doc,
-            boolean useNamedArgs,
-            boolean isDeprecated,
-            int relevanceMultiplier) {
-        this(methodName, params, NO_PARAMETER_CONTRIBUTIONS, NO_PARAMETER_CONTRIBUTIONS, returnType, declaringType, isStatic, provider, doc, useNamedArgs, false, isDeprecated, relevanceMultiplier);
+            final String methodName,
+            final ParameterContribution[] params,
+            final String returnType,
+            final String declaringType,
+            final boolean isStatic,
+            final String provider,
+            final String doc,
+            final boolean useNamedArgs,
+            final boolean isDeprecated,
+            final int relevanceMultiplier) {
+        this(methodName, params, NO_PARAMETER_CONTRIBUTIONS, NO_PARAMETER_CONTRIBUTIONS, returnType,
+            declaringType, isStatic, provider, doc, useNamedArgs, false, isDeprecated, relevanceMultiplier);
     }
 
     public MethodContributionElement(
-            String methodName,
-            ParameterContribution[] params,
-            ParameterContribution[] namedParams,
-            ParameterContribution[] optionalParams,
-            String returnType,
-            String declaringType,
-            boolean isStatic,
-            String provider,
-            String doc,
-            boolean useNamedArgs,
-            boolean noParens,
-            boolean isDeprecated,
-            int relevanceMultiplier) {
+            final String methodName,
+            final ParameterContribution[] params,
+            final ParameterContribution[] namedParams,
+            final ParameterContribution[] optionalParams,
+            final String returnType,
+            final String declaringType,
+            final boolean isStatic,
+            final String provider,
+            final String doc,
+            final boolean useNamedArgs,
+            final boolean noParens,
+            final boolean isDeprecated,
+            final int relevanceMultiplier) {
         this.methodName = methodName;
-        this.positionalParams = params;
-        this.namedParams = namedParams;
-        this.optionalParams = optionalParams;
         this.returnType = returnType;
-        this.isStatic = isStatic;
         this.declaringType = declaringType;
-        this.useNamedArgs = useNamedArgs;
+
+        this.namedParams = !useNamedArgs ? namedParams : (namedParams == null ? params : plus(params, namedParams));
+        this.optionalParams = optionalParams;
+        this.positionalParams = !useNamedArgs ? params : NO_PARAMETER_CONTRIBUTIONS;
+
         this.noParens = noParens;
+        this.isStatic = isStatic;
         this.isDeprecated = isDeprecated;
         this.relevanceMultiplier = relevanceMultiplier;
         this.provider = (provider != null ? removeJavadocMarkup(provider) : GROOVY_DSL_PROVIDER);
@@ -113,43 +114,92 @@ public class MethodContributionElement implements IContributionElement {
     }
 
     @Override
-    public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
+    public TypeAndDeclaration resolve(final String name, final ClassNode declaringType, final ResolverCache resolver, final VariableScope scope) {
         if (name.equals(methodName)) {
-            MethodNode node = toMethod(declaringType, resolver);
-            ClassNode type = (node instanceof ConstructorNode
-                ? node.getDeclaringClass() : node.getReturnType());
-            return new TypeAndDeclaration(type, node, node.getDeclaringClass(), doc);
+            MethodNode decl = toMethod(declaringType, resolver);
+            ClassNode  type = (decl instanceof ConstructorNode ? decl.getDeclaringClass() : decl.getReturnType());
+            if (!scope.isMethodCall()) {
+                return new TypeAndDeclaration(type, decl, decl.getDeclaringClass(), doc, TypeConfidence.LOOSELY_INFERRED);
+            }
+
+            // @see org.eclipse.jdt.groovy.search.SimpleTypeLookup#isTypeCompatible(ClassNode,ClassNode)
+            java.util.function.BiFunction<ClassNode, ClassNode, Boolean> checker = (source, target) -> {
+                Boolean result = Boolean.TRUE;
+                if (!target.equals(source) && !(VariableScope.NULL_TYPE == source && !ClassHelper.isPrimitiveType(target))) {
+                    // NOTE: Exact match of Closure to SAM Type creates tie for m(Closure) and m(Comparator)
+                    result = !GroovyUtils.isAssignable(source, target) && !(VariableScope.CLOSURE_CLASS_NODE.equals(source) && ClassHelper.isSAMType(target))
+                            ? Boolean.FALSE : null; // not an exact match
+                }
+                return result;
+            };
+
+            List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
+            Parameter[] parameters = ((MethodNodeWithNamedParams) decl).getPositionalParams();
+            if (!argumentTypes.isEmpty() && argumentTypes.get(0).equals(VariableScope.MAP_CLASS_NODE) &&
+                (parameters.length == 0 || !parameters[0].getType().equals(VariableScope.MAP_CLASS_NODE)))
+                argumentTypes = argumentTypes.subList(1, argumentTypes.size()); // TODO: has named params?
+
+            int nArguments = argumentTypes.size(), nthParameter = parameters.length - 1;
+            boolean variadic = (nthParameter != -1 && parameters[nthParameter].getType().isArray());
+            Boolean compat = (variadic ? nArguments >= nthParameter : nArguments == parameters.length);
+            for (int i = 0; i < nArguments && !Boolean.FALSE.equals(compat); i += 1) {
+                ClassNode at = GroovyUtils.getWrapperTypeIfPrimitive(argumentTypes.get(i));
+                ClassNode pt = GroovyUtils.getWrapperTypeIfPrimitive(parameters[Math.min(i, nthParameter)].getType());
+                if (variadic && (i > nthParameter || (i == nthParameter && !at.isArray()))) pt = pt.getComponentType();
+
+                Boolean partialResult = checker.apply(at, pt);
+                if (partialResult == null) {
+                    compat = null; // loose
+                } else if (!partialResult) {
+                    compat = Boolean.FALSE;
+                }
+            }
+            if (!Boolean.FALSE.equals(compat)) {
+                return new TypeAndDeclaration(type, decl, decl.getDeclaringClass(), doc);
+            }
         }
         return null;
     }
 
     @Override
-    public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
+    public IGroovyProposal toProposal(final ClassNode declaringType, final ResolverCache resolver) {
         GroovyMethodProposal proposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider);
-        proposal.setProposalFormattingOptions(ProposalFormattingOptions.newFromOptions().newFromExisting(useNamedArgs, noParens, proposal.getMethod()));
+        proposal.setProposalFormattingOptions(ProposalFormattingOptions.newFromOptions().newFromExisting(false, noParens, proposal.getMethod()));
         proposal.setRelevanceMultiplier(relevanceMultiplier);
         return proposal;
     }
 
     @Override
-    public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression expression) {
+    public List<IGroovyProposal> extraProposals(final ClassNode declaringType, final ResolverCache resolver, final Expression expression) {
         // first find the arguments that are possible
-        Map<String, ClassNode> availableParams = findAvailableParameters(resolver);
-
-        if (availableParams.isEmpty()) {
+        Map<String, ClassNode> availableNamedParams = collectAvailableParameters(resolver);
+        removeUsedParameters(availableNamedParams, expression);
+        if (availableNamedParams.isEmpty()) {
             return ProposalUtils.NO_PROPOSALS;
         }
 
-        removeUsedParameters(expression, availableParams);
-
-        List<IGroovyProposal> extraProposals = new ArrayList<>(availableParams.size());
-        for (Entry<String, ClassNode> available : availableParams.entrySet()) {
-            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), contributionName()));
+        List<IGroovyProposal> extraProposals = new ArrayList<>(availableNamedParams.size());
+        for (Map.Entry<String, ClassNode> available : availableNamedParams.entrySet()) {
+            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), getContributionName()));
         }
         return extraProposals;
     }
 
-    private void removeUsedParameters(Expression expression, Map<String, ClassNode> availableParams) {
+    private Map<String, ClassNode> collectAvailableParameters(final ResolverCache resolver) {
+        Map<String, ClassNode> available = new HashMap<>(namedParams.length + optionalParams.length);
+
+        for (ParameterContribution param : namedParams) {
+            available.put(param.name, param.toParameter(resolver).getType());
+        }
+
+        for (ParameterContribution param : optionalParams) {
+            available.put(param.name, param.toParameter(resolver).getType());
+        }
+
+        return available;
+    }
+
+    private void removeUsedParameters(final Map<String, ClassNode> available, final Expression expression) {
         if (expression instanceof MethodCall) {
             // next find out if there are any existing named args
             MethodCall call = (MethodCall) expression;
@@ -169,29 +219,10 @@ public class MethodContributionElement implements IContributionElement {
                 MapExpression enclosingCallArgs = (MapExpression) arguments;
                 for (MapEntryExpression entry : enclosingCallArgs.getMapEntryExpressions()) {
                     String paramName = entry.getKeyExpression().getText();
-                    availableParams.remove(paramName);
+                    available.remove(paramName);
                 }
             }
         }
-    }
-
-    private Map<String, ClassNode> findAvailableParameters(ResolverCache resolver) {
-        Map<String, ClassNode> available = new HashMap<>(positionalParams.length);
-        if (useNamedArgs) {
-            for (ParameterContribution param : positionalParams) {
-                available.put(param.name, param.toParameter(resolver).getType());
-            }
-        }
-
-        for (ParameterContribution param : namedParams) {
-            available.put(param.name, param.toParameter(resolver).getType());
-        }
-
-        for (ParameterContribution param : optionalParams) {
-            available.put(param.name, param.toParameter(resolver).getType());
-        }
-
-        return available;
     }
 
     private MethodNode toMethod(ClassNode declaringType, ResolverCache resolver) {
@@ -262,7 +293,7 @@ public class MethodContributionElement implements IContributionElement {
     }
 
     @Override
-    public String contributionName() {
+    public String getContributionName() {
         if ("<init>".equals(methodName)) {
             return getDeclaringTypeName();
         }
@@ -281,7 +312,6 @@ public class MethodContributionElement implements IContributionElement {
         sb.append("public ");
         if (isStatic) sb.append("static ");
         if (isDeprecated) sb.append("deprecated ");
-        if (useNamedArgs) sb.append("useNamedArgs ");
         sb.append(returnType).append(' ');
         sb.append(declaringType);
         sb.append('.').append(methodName);
