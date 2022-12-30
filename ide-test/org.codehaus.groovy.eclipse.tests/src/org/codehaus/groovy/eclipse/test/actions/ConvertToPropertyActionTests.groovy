@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,6 +149,20 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
         assertEditorContents 'def getX(){0}\n[x:1].with { this.x }'
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1308
+    void testImplicitGetterToProperty3() {
+        def pogo = 'class C {\n def getX(){0}\n}\n'
+        convertToProperty pogo + "new C().with { get${CARET}X() }"
+        assertEditorContents pogo + 'new C().with { x }' // no qualifier
+
+        convertToProperty pogo + "def x=1\nnew C().with { get${CARET}X() }"
+        assertEditorContents pogo + 'def x=1\nnew C().with { delegate.x }'
+
+        def stc = { '@groovy.transform.TypeChecked void test(){\n' + it + '\n}' }
+        convertToProperty pogo + stc("def x=1\nnew C().with { get${CARET}X() }")
+        assertEditorContents pogo + stc('def x=1\nnew C().with { delegate.x }')
+    }
+
     @Test
     void testImplicitIsserToProperty() {
         addGroovySource 'class Foo { static void isSomething() {} }', 'Foo'
@@ -166,6 +180,20 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     void testImplicitSetterToProperty2() {
         convertToProperty "void setX(x){}\n[x:1].with { set${CARET}X(0) }"
         assertEditorContents 'void setX(x){}\n[x:1].with { this.x = 0 }'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1308
+    void testImplicitSetterToProperty3() {
+        def pogo = 'class C {\n void setX(x){}\n}\n'
+        convertToProperty pogo + "new C().with { set${CARET}X(0) }"
+        assertEditorContents pogo + 'new C().with { x = 0 }' // no qualifier
+
+        convertToProperty pogo + "def x=1\nnew C().with { set${CARET}X(0) }"
+        assertEditorContents pogo + 'def x=1\nnew C().with { delegate.x = 0 }'
+
+        def stc = { '@groovy.transform.TypeChecked void test(){\n' + it + '\n}' }
+        convertToProperty pogo + stc("def x=1\nnew C().with { set${CARET}X(0) }")
+        assertEditorContents pogo + stc('def x=1\nnew C().with { delegate.x = 0 }')
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 import static java.beans.Introspector.decapitalize;
 import static java.util.regex.Pattern.compile;
 
+import static org.codehaus.groovy.transform.stc.StaticTypesMarker.IMPLICIT_RECEIVER;
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR;
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR;
 
@@ -84,12 +85,12 @@ public class ConvertToPropertyAction extends Action {
         }
     }
 
-    public static TextEdit createEdit(final GroovyCompilationUnit gcu, final int pos, final int len) {
+    public static TextEdit createEdit(final GroovyCompilationUnit gcu, final int idx, final int len) {
         ModuleNodeInfo info = gcu.getModuleInfo(true);
         if (!info.isEmpty()) {
             MethodCall call = null;
 
-            ASTNode node = new ASTNodeFinder(new Region(pos, len)).doVisit(info.module);
+            ASTNode node = new ASTNodeFinder(new Region(idx, len)).doVisit(info.module);
             if (node instanceof ConstantExpression) {
                 IASTFragment fragment = new FindSurroundingNode(new Region(node)).doVisitSurroundingNode(info.module);
                 if (fragment.kind() == ASTFragmentKind.METHOD_CALL) {
@@ -114,8 +115,8 @@ public class ConvertToPropertyAction extends Action {
                     TextEdit edit = new ReplaceEdit(offset, length, decapitalize(propertyName));
 
                     // implicit-this call may require qualifier to retain its semantics
-                    if (call.getReceiver().getEnd() < 1 && isTypeChange(gcu, edit, node)) {
-                        edit = new ReplaceEdit(offset, length, call.getReceiver().getText() + "." + decapitalize(propertyName));
+                    if (call.getReceiver().getEnd() < 1 && isTypeChange(edit, node, gcu)) {
+                        edit = new ReplaceEdit(offset, length, getReceiver(call) + "." + decapitalize(propertyName));
                     }
 
                     return edit;
@@ -149,9 +150,10 @@ public class ConvertToPropertyAction extends Action {
                     }
 
                     // implicit-this call may require qualifier to retain its semantics
-                    if (call.getReceiver().getEnd() < 1 && isTypeChange(gcu, edit, node)) {
-                        edit.removeChild(0); // add qualifier to the property name
-                        replacement.insert(0, call.getReceiver().getText() + ".");
+                    if (call.getReceiver().getEnd() < 1 && isTypeChange(edit, node, gcu)) {
+                        edit.removeChild(0);
+                        // add qualifier to the property name
+                        replacement.insert(0, getReceiver(call) + ".");
                         edit.addChild(new ReplaceEdit(offset, length, replacement.toString()));
                     }
 
@@ -164,14 +166,26 @@ public class ConvertToPropertyAction extends Action {
 
     //--------------------------------------------------------------------------
 
-    private static boolean isTypeChange(final GroovyCompilationUnit gcu, final TextEdit edit, final ASTNode node) {
+    private static String getReceiver(final MethodCall call) {
+        String receiver = ((ASTNode) call).getNodeMetaData(IMPLICIT_RECEIVER);
+        if (receiver == null) {
+            receiver = call.getReceiver().getText();
+        }
+        return receiver;
+    }
+
+    private static boolean isTypeChange(final TextEdit edit, final ASTNode node, final GroovyCompilationUnit unit) {
         try {
-            TypeLookupResult before = inferNodeType(node, gcu);
-            TextEdit undo = gcu.applyTextEdit(edit.copy(), null);
-            TypeLookupResult after = inferNodeType(new ASTNodeFinder(new Region(node.getStart(), 0)).doVisit(gcu.getModuleNode()), gcu);
-            gcu.applyTextEdit(undo, null);
+            TypeLookupResult before = lookupNodeType(node, unit);
+            TextEdit undo = unit.applyTextEdit(edit.copy(), null);
+            TypeLookupResult after = lookupNodeType(new ASTNodeFinder(new Region(node.getStart(), 0)).doVisit(unit.getModuleNode()), unit);
+            unit.applyTextEdit(undo, null);
 
             if (!before.declaringType.equals(after.declaringType)) {
+                if (!before.declaringType.equals(before.scope.getThis())) {
+                    ASTNode call = (node instanceof MethodCall ? node : before.scope.getEnclosingNode()); // TODO: refactor side-effect solution!
+                    call.getNodeMetaData(IMPLICIT_RECEIVER, x -> before.declaringType.equals(before.scope.getDelegate()) ? "delegate" : "owner");
+                }
                 return true;
             }
         } catch (Exception e) {
@@ -180,7 +194,7 @@ public class ConvertToPropertyAction extends Action {
         return false;
     }
 
-    private static TypeLookupResult inferNodeType(final ASTNode node, final GroovyCompilationUnit unit) {
+    private static TypeLookupResult lookupNodeType(/*     */ final ASTNode node, final GroovyCompilationUnit unit) {
         TypeLookupResult[] result = new TypeLookupResult[1];
         new TypeInferencingVisitorFactory().createVisitor(unit).visitCompilationUnit((n, r, x) -> {
             if (n == node) {
