@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -282,7 +282,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testParamGuessing1() {
+    void testUseNamedArgs10() {
         createDSL '''\
             |contribute(currentType()) {
             |  method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
@@ -299,7 +299,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testParamGuessing3() {
+    void testUseNamedArgs11() {
         createDSL '''\
             |contribute(currentType()) {
             |  method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
 import static org.codehaus.groovy.eclipse.dsl.contributions.ContributionElems.removeJavadocMarkup;
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.plus;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+import static org.eclipse.jdt.groovy.core.util.ArrayUtils.concat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,7 +102,7 @@ public class MethodContributionElement implements IContributionElement {
         this.returnType = returnType;
         this.declaringType = declaringType;
 
-        this.namedParams = !useNamedArgs ? namedParams : (namedParams == null ? params : plus(params, namedParams));
+        this.namedParams = !useNamedArgs ? namedParams : (!asBoolean(namedParams) ? params : concat(params, namedParams));
         this.optionalParams = optionalParams;
         this.positionalParams = !useNamedArgs ? params : NO_PARAMETER_CONTRIBUTIONS;
 
