@@ -6138,16 +6138,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
 
                         Map<GenericsTypeName, GenericsType> connections = new HashMap<>();
-                        extractGenericsConnections(connections, wrapTypeIfNecessary(argumentType), paramType); // GRECLIPSE edit -- GROOVY-10339
-                        connections.forEach((gtn, gt) -> resolvedPlaceholders.merge(gtn, gt, StaticTypeCheckingSupport::getCombinedGenericsType));
+                        extractGenericsConnections(connections, wrapTypeIfNecessary(argumentType), paramType);
+                        connections.forEach((name, type) -> resolvedPlaceholders.merge(name, type, StaticTypeCheckingSupport::getCombinedGenericsType));
                     }
                 }
             }
 
-            // in case of "<T, U extends Type<T>>" we can learn about "T" from resolved "U"
-            Map<GenericsTypeName, GenericsType> connections = Arrays.stream(methodGenericTypes)
-                    .collect(toMap(gt -> new GenericsTypeName(gt.getName()), gt -> gt, (v,x) -> v));
-            extractGenericsConnectionsForSuperClassAndInterfaces(connections, resolvedPlaceholders);
+            // in case of "<T, U extends Type<T>>", we can learn about "T" from a resolved "U"
+            extractGenericsConnectionsForBoundTypes(methodGenericTypes, resolvedPlaceholders);
         }
 
         for (GenericsType gt : methodGenericTypes) {
@@ -6244,6 +6242,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    /* GRECLIPSE edit -- GROOVY-10890
     private static void extractGenericsConnectionsForSuperClassAndInterfaces(final Map<GenericsTypeName, GenericsType> resolvedPlaceholders, final Map<GenericsTypeName, GenericsType> connections) {
         for (GenericsType value : new HashSet<GenericsType>(connections.values())) {
             if (!value.isPlaceholder() && !value.isWildcard()) {
@@ -6283,6 +6282,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
+    */
+    private static void extractGenericsConnectionsForBoundTypes(final GenericsType[] spec, final Map<GenericsTypeName, GenericsType> target) {
+        if (spec.length < 2) return;
+        for (GenericsType tp : spec) {
+            ClassNode[] bounds = tp.getUpperBounds();
+            if (bounds == null || bounds.length == 0) continue;
+
+            GenericsTypeName key = new GenericsTypeName(tp.getName());
+            GenericsType value = target.get(key); // look for specific resolved type
+            if (value == null || value.isPlaceholder() || value.isWildcard()) continue;
+
+            Map<GenericsTypeName, GenericsType> inner = new HashMap<>();
+            for (ClassNode bound : bounds) {
+                extractGenericsConnections(inner,value.getType(),bound);
+            }
+            inner.forEach(target::putIfAbsent);
+        }
+    }
+    // GRECLIPSE end
 
     private static MethodNode chooseMethod(final MethodPointerExpression source, final Function<Void,ClassNode[]> samSignature) {
         List<MethodNode> options = source.getNodeMetaData(MethodNode.class);

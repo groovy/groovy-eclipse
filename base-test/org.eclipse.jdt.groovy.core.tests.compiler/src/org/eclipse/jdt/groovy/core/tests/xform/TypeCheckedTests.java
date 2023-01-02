@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -6796,6 +6796,25 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  new B().m(null, new A<>())\n" +
             "}\n" +
             "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked10890() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "enum A { X }\n" +
+            "enum B { Y }\n" +
+            "void m(Map<A,B> map) {}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<A,B> map) {\n" +
+            "  m(new EnumMap<>(map))\n" +
+            "}\n" +
+            "test([(A.X): B.Y])\n",
         };
         //@formatter:on
 

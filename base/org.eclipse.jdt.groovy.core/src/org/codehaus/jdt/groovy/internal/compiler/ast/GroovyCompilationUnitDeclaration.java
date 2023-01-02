@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1442,9 +1442,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // add default constructor if no other constructors exist (and not anonymous/interface/trait)
             } else if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                constructorDecl.annotations = new Annotation[] {
-                    new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(groovy.transform.Generated.class)), -1)
-                };
+                constructorDecl.annotations = createAnnotations(ClassHelper.make(groovy.transform.Generated.class));
                 if (!isEnum) {
                     if (classNode.getObjectInitializerStatements().isEmpty()) {
                         constructorDecl.bits |= ASTNode.IsDefaultConstructor;
@@ -1463,9 +1461,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 if (isEnum) { // named arguments constructor
                     constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                    constructorDecl.annotations = new Annotation[] {
-                        new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(groovy.transform.Generated.class)), -1)
-                    };
+                    constructorDecl.annotations = createAnnotations(ClassHelper.make(groovy.transform.Generated.class));
                     constructorDecl.arguments = createArguments(new Parameter[] {
                         new Parameter(ClassHelper.makeWithoutCaching(java.util.LinkedHashMap.class, false), "__namedArgs")
                     });
@@ -1758,35 +1754,38 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
         }
 
-        private Annotation[] createAnnotations(List<AnnotationNode> groovyAnnotations) {
-            if (groovyAnnotations != null && !groovyAnnotations.isEmpty()) {
-                List<Annotation> annotations = new ArrayList<>(groovyAnnotations.size());
+        private Annotation[] createAnnotations(ClassNode annotationType) {
+            Annotation annotation = new MarkerAnnotation(createTypeReferenceForClassNode(annotationType), -1);
+            annotation.declarationSourceEnd = annotation.sourceEnd;
+            return new Annotation[] {annotation};
+        }
 
-                for (AnnotationNode annotationNode : groovyAnnotations) {
-                    TypeReference annotationReference = createTypeReferenceForClassNode(annotationNode.getClassNode());
-                    annotationReference.sourceStart = annotationNode.getStart();
-                    annotationReference.sourceEnd = annotationNode.getEnd() - 1;
+        private Annotation[] createAnnotations(List<AnnotationNode> annotationNodes) {
+            if (annotationNodes == null || annotationNodes.isEmpty()) return null;
+            Annotation[] annotations = new Annotation[annotationNodes.size()];
+            int i = 0;
+            for (AnnotationNode annotationNode : annotationNodes) {
+                TypeReference annotationType = createTypeReferenceForClassNode(annotationNode.getClassNode());
+                annotationType.sourceStart = annotationNode.getStart();
+                annotationType.sourceEnd = annotationNode.getEnd() - 1;
 
-                    Map<String, Expression> memberValuePairs = annotationNode.getMembers();
-                    if (memberValuePairs == null || memberValuePairs.isEmpty()) {
-                        MarkerAnnotation annotation = new MarkerAnnotation(annotationReference, annotationReference.sourceStart);
-                        annotations.add(annotation);
-                    } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
-                        SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationReference.sourceStart);
-                        annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"), null);
-                        annotations.add(annotation);
-                    } else {
-                        NormalAnnotation annotation = new NormalAnnotation(annotationReference, annotationReference.sourceStart);
-                        annotation.memberValuePairs = createAnnotationMemberValuePairs(memberValuePairs);
-                        annotations.add(annotation);
-                    }
-                    // TODO: declarationSourceEnd should be rparen position; antlr2 includes any trailing comment
-                    annotations.get(annotations.size() - 1).declarationSourceEnd = annotationReference.sourceEnd;
+                Map<String, Expression> memberValuePairs = annotationNode.getMembers();
+                if (memberValuePairs == null || memberValuePairs.isEmpty()) {
+                    MarkerAnnotation annotation = new MarkerAnnotation(annotationType, annotationType.sourceStart);
+                    annotations[i] = annotation;
+                } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
+                    SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationType, annotationType.sourceStart);
+                    annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"), null);
+                    annotations[i] = annotation;
+                } else {
+                    NormalAnnotation annotation = new NormalAnnotation(annotationType, annotationType.sourceStart);
+                    annotation.memberValuePairs = createAnnotationMemberValuePairs(memberValuePairs);
+                    annotations[i] = annotation;
                 }
-
-                return annotations.toArray(new Annotation[annotations.size()]);
+                // TODO: declarationSourceEnd should be rparen position; antlr2 includes trailing comment
+                annotations[i++].declarationSourceEnd = annotationType.sourceEnd;
             }
-            return null;
+            return annotations;
         }
 
         private org.eclipse.jdt.internal.compiler.ast.Expression createAnnotationMemberExpression(Expression expr, ClassNode type) {
