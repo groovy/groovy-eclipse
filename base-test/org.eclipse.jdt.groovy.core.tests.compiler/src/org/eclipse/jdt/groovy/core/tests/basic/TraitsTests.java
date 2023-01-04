@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,12 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -3044,5 +3047,57 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "90[x]");
+    }
+
+    @Test
+    public void testTraits10894() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "new C()\n",
+
+            "C.groovy",
+            "class C implements T {\n" +
+            "}\n",
+
+            "T.groovy",
+            "trait T {\n" +
+            "  @Validate String foo\n" +
+            "}\n",
+
+            "Validate.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.TYPE_USE) \n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "public @interface Validate { /**/ }\n" ,
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources);
+
+            ClassNode helper = getCUDeclFor("T.groovy").getCompilationUnit().getClassNode("T$Trait$FieldHelper");
+            for (FieldNode field : helper.getFields()) {
+                if (field.getName().endsWith("__foo")) {
+                    java.util.List<AnnotationNode> typeTags =
+                        field.getOriginType().getTypeAnnotations();
+                    assertEquals(1, typeTags.size()); // no duplication
+                }
+            }
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in C.groovy (at line 1)\n" +
+                "\tclass C implements T {\n" +
+                "\t^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:Annotation @Validate is not allowed on element FIELD\n" +
+                "----------\n" +
+                "----------\n" +
+                "1. ERROR in T.groovy (at line 2)\n" +
+                "\t@Validate String foo\n" +
+                "\t^^^^^^^^^\n" +
+                "Groovy:Annotation @Validate is not allowed on element FIELD\n" +
+                "----------\n");
+        }
     }
 }
