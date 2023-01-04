@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1047,7 +1047,14 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static void createTypeHierarchy(ClassNode type, final Set<ClassNode> accumulator, final boolean useResolved) {
         if (!useResolved) type = type.redirect();
         if (!accumulator.contains(type)) {
+            ClassNode[] bounds = null;
             if (!type.isInterface()) {
+                if (type.isGenericsPlaceHolder() && type.getGenericsTypes() != null) {
+                    bounds = type.getGenericsTypes()[0].getUpperBounds();
+                    if (bounds != null && bounds.length > 0) {
+                        type = bounds[0]; // "T extends X ..."
+                    }
+                }
                 accumulator.add(type);
                 // Groovy compiler has a different notion of 'resolved' than we do here.
                 // It considers a ClassNode resolved if it is primary or has type class.
@@ -1059,6 +1066,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
             if (!type.equals(OBJECT_CLASS_NODE)) {
                 findAllInterfaces(type, accumulator, useResolved);
+            }
+            if (bounds != null && bounds.length > 1) {
+                for (int i = 1; i < bounds.length; i += 1) {
+                    findAllInterfaces(bounds[i], accumulator, useResolved);
+                }
             }
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1199,8 +1199,36 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "val", "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1369
+    @Test
     public void testNestedGenerics9() {
+        String contents =
+            "abstract class Channel {\n" +
+            "}\n" +
+            "class ChannelSpec<S extends ChannelSpec<S,C>, C extends Channel> {\n" +
+            "  S prop(value) {\n" +
+            "    this\n" +
+            "  }\n" +
+            "}\n" +
+            "class Cat {\n" +
+            "  static <X extends ChannelSpec<X,Y>, Y extends Channel> X m(X self) {\n" +
+            "    self.prop(null)\n" + // returns self
+            "  }\n" +
+            "}\n" +
+
+            "class DirectChannel extends Channel {\n" +
+            "}\n" +
+            "class DirectChannelSpec extends ChannelSpec<DirectChannelSpec,DirectChannel> {\n" +
+            "}\n" +
+            "use(Cat){new DirectChannelSpec().m()}\n";
+
+        assertType(contents, "prop", "X");
+        assertDeclaringType(contents, "prop", "ChannelSpec<X,Y>");
+
+        assertType(contents, "m", "DirectChannelSpec"); // GROOVY-10887
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1369
+    public void testNestedGenerics10() {
         String contents =
             "interface Buildable<R> {\n" +
             "  R build()\n" +
