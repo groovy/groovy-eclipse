@@ -1691,20 +1691,14 @@ public class ClassNode extends AnnotatedNode {
     }
 
     public boolean hasInconsistentHierarchy() {
-        return ((redirect().bits) & BIT_INCONSISTENT_HIERARCHY) != 0;
+        return redirect().cycle;
     }
 
-    public void setHasInconsistentHierarchy(boolean b) {
-        if (b) {
-            redirect().bits |= BIT_INCONSISTENT_HIERARCHY;
-        } else {
-            redirect().bits &= ~BIT_INCONSISTENT_HIERARCHY;
-        }
+    public void setHasInconsistentHierarchy(final boolean cycle) {
+        redirect().cycle = cycle;
     }
 
-    private static final int BIT_INCONSISTENT_HIERARCHY = 1;
-
-    private int bits;
+    private boolean cycle;
     private int nameStart;
 
     /**
