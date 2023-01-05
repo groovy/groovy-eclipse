@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,22 +65,26 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 
     @Override
     public void resolve() {
-        if (memberTypes != null && memberTypes.length > 0) {
+        if (memberTypes != null) {
             for (TypeDeclaration type : memberTypes) {
                 type.resolve(scope);
             }
         }
-        for (AbstractMethodDeclaration method : methods) {
-            method.resolve(scope);
-            if (method.isClinit()) {
-                method.resolveStatements();
+        if (methods != null) {
+            for (AbstractMethodDeclaration method : methods) {
+                method.resolve(scope);
+                if (method.isClinit()) {
+                    method.resolveStatements();
+                }
             }
         }
-        for (FieldDeclaration field : fields) {
-            if (field instanceof Initializer) {
-                field.resolve(field.isStatic() ? staticInitializerScope : initializerScope);
-            } else {
-                // fields resolved earlier in GroovyClassScope
+        if (fields != null) {
+            for (FieldDeclaration field : fields) {
+                if (field instanceof Initializer) {
+                    field.resolve(field.isStatic() ? staticInitializerScope : initializerScope);
+                } else {
+                    // fields resolved earlier in GroovyClassScope
+                }
             }
         }
     }
