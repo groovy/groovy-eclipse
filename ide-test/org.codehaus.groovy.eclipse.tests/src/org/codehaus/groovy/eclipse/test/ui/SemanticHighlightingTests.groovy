@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1866,11 +1866,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '"this: $this, super: $super"'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
             new HighlightedTypedPosition(contents.indexOf('this:'), 6, STRING),
             new HighlightedTypedPosition(contents.indexOf('$this') + 1, 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf(', super: '), 9, STRING),
-            new HighlightedTypedPosition(contents.indexOf('$super') + 1, 5, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('"'), '"this: $this, super: $super"'.length(), GSTRING))
+            new HighlightedTypedPosition(contents.indexOf('$super') + 1, 5, KEYWORD))
     }
 
     @Test
@@ -1878,11 +1878,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '"this: ${this}, super: ${super}"'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
             new HighlightedTypedPosition(contents.indexOf('this:'), 6, STRING),
             new HighlightedTypedPosition(contents.indexOf('${this}') + 2, 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf(', super: '), 9, STRING),
-            new HighlightedTypedPosition(contents.indexOf('${super}') + 2, 5, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('"'), '"this: ${this}, super: ${super}"'.length(), GSTRING))
+            new HighlightedTypedPosition(contents.indexOf('${super}') + 2, 5, KEYWORD))
     }
 
     @Test
@@ -1890,12 +1890,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '"${this.hashCode()}, ${super.hashCode()}"'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
             new HighlightedTypedPosition(contents.indexOf('this'), 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf('hashCode'), 'hashCode'.length(), METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf(', '), 2, STRING),
             new HighlightedTypedPosition(contents.indexOf('super'), 5, KEYWORD),
-            new HighlightedTypedPosition(contents.lastIndexOf('hashCode'), 'hashCode'.length(), METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('"'), '"${this.hashCode()}, ${super.hashCode()}"'.length(), GSTRING))
+            new HighlightedTypedPosition(contents.lastIndexOf('hashCode'), 'hashCode'.length(), METHOD_CALL))
     }
 
     @Test
@@ -1913,14 +1913,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('D'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('x'), 1, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"$this ${this.name} ${super.name}"'.length(), GSTRING),
             new HighlightedTypedPosition(contents.indexOf('this'), 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf(' ${t'), 1, STRING),
             new HighlightedTypedPosition(contents.indexOf('this.'), 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf('name}'), 4, UNKNOWN),
             new HighlightedTypedPosition(contents.indexOf(' ${s'), 1, STRING),
             new HighlightedTypedPosition(contents.indexOf('super'), 5, KEYWORD),
-            new HighlightedTypedPosition(contents.lastIndexOf('name'), 4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('"'), '"$this ${this.name} ${super.name}"'.length(), GSTRING))
+            new HighlightedTypedPosition(contents.lastIndexOf('name'), 4, UNKNOWN))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1404
@@ -1929,11 +1929,112 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '"prefix ${true; false} suffix"'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
             new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
             new HighlightedTypedPosition(contents.indexOf('true'), 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf('false'), 5, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING),
-            new HighlightedTypedPosition(contents.indexOf('"'), '"prefix ${true; false} suffix"'.length(), GSTRING))
+            new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1433
+    void testGStringNull() {
+        // the keyword null is identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix ${m(null);x=null;null} null suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('null'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('x='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('null;'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('null}'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(' null suffix'), 12, STRING))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1433
+    void testGStringNew1() {
+        // the keyword new is identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix ${new Object();new Object[0];\'new\'} new suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf(';new')+1, 3, KEYWORD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf(' new suffix'), 11, STRING))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1433
+    void testGStringNew2() {
+        String contents = '"${( new java.lang.Object() );( new  java.lang.Object[0] )}"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER))
+    }
+
+    @Test
+    void testGStringNew3() {
+        String contents = '"${ new int[4][2] }"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('int'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('4'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER))
+    }
+
+    @Test
+    void testGStringNew4() {
+        assumeTrue(isParrotParser())
+
+        String contents = '"${ new int[]{1,2,3} }"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('int'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('3'), 1, NUMBER))
+    }
+
+    @Test
+    void testGStringNew5() {
+        String contents = '"${ new Object() {} }"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS))
+    }
+
+    @Test
+    void testGStringNew6() {
+        String contents = '''\
+            |@Newify(Object)
+            |void test() {
+            |  "${Object()}"
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"${Object()}"'.length(), GSTRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CTOR_CALL))
     }
 
     @Test // see testDeprecated10 for case where this and super calls are highlighted

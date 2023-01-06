@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
@@ -128,7 +129,6 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                     }
                 }
             }
-
         } else if (node instanceof ClassNode) {
             // visit "Map" of "Map.Entry" separately
             if (((ClassNode) node).getNameEnd() < 1) {
@@ -139,10 +139,10 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 Iterable<ASTNode> words = node.getNodeMetaData("special.keyword");
                 words.forEach(word -> typedPositions.add(new HighlightedTypedPosition(word.getStart(), word.getLength(), HighlightKind.KEYWORD)));
             }
-            if (!(enclosingElement.getElementType() == IMPORT_DECLARATION || ClassHelper.isPrimitiveType((ClassNode) node) || ((ClassNode) node).isScriptBody())) {
+            if (!(enclosingElement.getElementType() == IMPORT_DECLARATION || ((ClassNode) node).isScriptBody() ||
+                    (ClassHelper.isPrimitiveType((ClassNode) node) && !lastGString.includes(node.getStart())))) {
                 pos = handleClassReference((ClassNode) node, result.type);
             }
-
         } else if (result.declaration instanceof FieldNode) {
             pos = handleFieldOrProperty((AnnotatedNode) node, result.declaration);
 
@@ -153,16 +153,16 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), ((PropertyNode) result.declaration).isSynthetic()
                     ? HighlightKind.MAP_KEY : ((PropertyNode) result.declaration).isStatic() ? HighlightKind.STATIC_CALL : HighlightKind.METHOD_CALL);
             }
-
         } else if (node instanceof MethodNode) {
             if (result.enclosingAnnotation == null) {
                 pos = handleMethodDeclaration((MethodNode) node);
             } else {
                 pos = handleAnnotationElement(result.enclosingAnnotation, (MethodNode) node);
             }
-
         } else if (node instanceof ConstructorCallExpression) {
             pos = handleMethodReference((ConstructorCallExpression) node);
+            if (lastGString.includes(node.getStart()) && node.getStart()<((Expression) node).getNameStart())
+                typedPositions.add(new HighlightedTypedPosition(newOffset(node), 3, HighlightKind.KEYWORD));
 
         } else if (node instanceof MethodCallExpression) {
             /*pos = handleMethodReference((MethodCallExpression) node);*/
@@ -222,12 +222,15 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             if (var != null) {
                 pos = new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED);
             }
+        } else if (node instanceof ArrayExpression && lastGString.includes(node.getStart())) {
+            pos = new HighlightedTypedPosition(new Position(newOffset(node), 3), HighlightKind.KEYWORD);
+
         } else if (node instanceof ReturnStatement && node.getNodeMetaData("_IS_YIELD_STATEMENT") != null) {
             pos = new HighlightedTypedPosition(new Position(node.getStart(), 5), HighlightKind.KEYWORD);
 
         } else if (DEBUG) {
             String type = node.getClass().getSimpleName();
-            if (!type.matches("(Class|Binary|ArgumentList|Closure(List)?|Property|List|Map)Expression"))
+            if (!type.matches("(Class|Binary|Property|ArgumentList|Closure(List)?|Array|List|Map)Expression"))
                 System.err.println("found: " + type);
         }
 
@@ -282,6 +285,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             kind = HighlightKind.PLACEHOLDER;
         } else if (type.isAnnotationDefinition()) {
             kind = HighlightKind.ANNOTATION;
+        } else if (ClassHelper.isPrimitiveType(type)) {
+            kind = HighlightKind.KEYWORD;
         } else if (type.isInterface()/* <-- must follow isAnnotationDefinition() */) {
             kind = Traits.isTrait(type) ? HighlightKind.TRAIT : HighlightKind.INTERFACE;
         } else {
@@ -458,8 +463,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             kind = HighlightKind.NUMBER;
         } else if (!lastGString.includes(expr.getStart())) {
             if (isSlashy(expr)) kind = HighlightKind.REGEXP;
-        } else if (expr.getType().equals(ClassHelper.boolean_TYPE)) {
-            kind = HighlightKind.KEYWORD; // "true" / "false" literal
+        } else if (expr.isNullExpression() || expr.isTrueExpression() || expr.isFalseExpression()) {
+            kind = HighlightKind.KEYWORD; // "null" or "true" or "false" literal
         }
         return kind == null ? null : new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
     }
@@ -515,8 +520,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     /**
-     * An AST node is "real" if it is an expression and the
-     * text of the expression matches the actual text in the file
+     * An AST node is "real" if its text matches the source code.
      */
     private boolean isRealASTNode(ASTNode node) {
         String text = node.getText();
@@ -552,5 +556,11 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             return source.startsWith("\"\"\"");
         }
         return false;
+    }
+
+    private int newOffset(ASTNode node) {
+        Integer offset = node.getNodeMetaData("new.offset");
+        if (offset != null) return offset.intValue();
+        return node.getStart();
     }
 }

@@ -594,10 +594,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private static ClassNode makeClassNode(final String name) {
         ClassNode node = ClassHelper.make(name);
         // GRECLIPSE add
-        if (node instanceof ImmutableClassNode && !ClassHelper.isPrimitiveType(node)) {
-            ClassNode wrapper = ClassHelper.makeWithoutCaching(name);
-            wrapper.setRedirect(node);
-            node = wrapper;
+        if (node instanceof ImmutableClassNode){
+            ClassNode proxy = ClassHelper.makeWithoutCaching(name);
+            proxy.setRedirect(node);
+            node = proxy;
         }
         // GRECLIPSE end
         return node;
@@ -2817,7 +2817,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else {
             throw createParsingFailedException("Unsupported enhanced statement expression: " + ctx.getText(), ctx);
         }
-
+        // GRECLIPSE add
+        if (expression instanceof ArrayExpression ||
+            expression instanceof ConstructorCallExpression)
+            expression.putNodeMetaData("new.offset", expression.getStart());
+        // GRECLIPSE end
         return configureAST(expression, ctx);
     }
 
@@ -3808,14 +3812,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             /* GRECLIPSE edit
             return configureAST(arrayExpression, ctx);
             */
-            classNode = arrayExpression.getType();
+            arrayExpression.setNameStart(classNode.getStart());
+            arrayExpression.setNameEnd(classNode.getEnd() - 1);
+            classNode = arrayExpression.getType(); // set position for all array types
             for (int i = dimList.size() - 1; i >= 0; i -= 1, classNode = classNode.getComponentType()) {
                 configureAST(classNode, ctx, configureAST(new ConstantExpression(null), ctx.dim(i)));
             }
-            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()),
-                Optional.<GroovyParserRuleContext>ofNullable(ctx.createdName().primitiveType()).orElse(ctx.createdName().qualifiedClassName()));
-            arrayExpression.setNameStart(nameNode.getStart());
-            arrayExpression.setNameEnd(nameNode.getEnd() - 1);
             return arrayExpression;
             // GRECLIPSE end
         }
@@ -4728,7 +4730,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public AnnotationNode visitAnnotation(final AnnotationContext ctx) {
         String annotationName = this.visitAnnotationName(ctx.annotationName());
-        AnnotationNode annotationNode = new AnnotationNode(ClassHelper.make(annotationName));
+        AnnotationNode annotationNode = new AnnotationNode(makeClassNode(annotationName));
         List<Tuple2<String, Expression>> annotationElementValues = this.visitElementValues(ctx.elementValues());
 
         annotationElementValues.forEach(e -> annotationNode.addMember(e.getV1(), e.getV2()));

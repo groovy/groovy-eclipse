@@ -1813,6 +1813,7 @@ public class AsmClassGenerator extends ClassGenerator {
         int storeIns = AASTORE;
         if (!elementType.isArray() || sizeExpression == null) {
             if (ClassHelper.isPrimitiveType(elementType)) {
+                elementType = elementType.redirect();
                 int primType = 0;
                 if (elementType == ClassHelper.boolean_TYPE) {
                     primType = T_BOOLEAN;

@@ -2280,9 +2280,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
           case EXPR:
             Expression expression = expression(node.getFirstChild());
             // GRECLIPSE add -- enclosing parentheses
-            int row = node.getLine(), col = node.getColumn();
-            int offset = locations.findOffset(row, col);
+            int offset = locations.findOffset(node.getLine(), node.getColumn());
             if (offset < expression.getStart()) {
+                if (expression instanceof ArrayExpression ||
+                    expression instanceof ConstructorCallExpression) {
+                    expression.putNodeMetaData("new.offset", expression.getStart());
+                }
                 configureAST(expression, node);
             }
             // GRECLIPSE end
@@ -3155,21 +3158,26 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
-    protected Expression constructorCallExpression(AST node) {
+    protected Expression constructorCallExpression(AST constructorCallNode) {
+        /* GRECLIPSE edit
         AST constructorCallNode = node;
         ClassNode type = makeTypeWithArguments(constructorCallNode);
-
         if (isType(CTOR_CALL, node) || isType(LITERAL_new, node)) {
             node = node.getFirstChild();
         }
-        // GRECLIPSE add
-        // not quite ideal -- a null node is a sign of a new call without the type being specified
-        // (it is a syntax error); setting up with Object here prevents multiple downstream issues
+        */
+        ClassNode type = makeTypeWithArguments(constructorCallNode);
+        AST node = constructorCallNode.getFirstChild();
         if (node == null) {
-            return new ConstructorCallExpression(ClassHelper.OBJECT_TYPE, new ArgumentListExpression());
+            // not quite ideal -- a null node is a sign of "new" call without the type being specified
+            // (it is a syntax error); setting up with Object here prevents multiple downstream issues
+            return new ConstructorCallExpression(type, new ArgumentListExpression());
+        } else if (isPrimitiveTypeLiteral(node)) {
+            ClassNode proxy = ClassHelper.makeWithoutCaching(type.getName());
+            proxy.setRedirect(type); type = proxy;
+            configureAST(type,node);
         }
         // GRECLIPSE end
-
         AST elist = node.getNextSibling();
 
         if (elist == null && isType(ELIST, node)) {
@@ -3188,9 +3196,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ArrayExpression arrayExpression = new ArrayExpression(type, null, size);
             configureAST(arrayExpression, constructorCallNode);
             // GRECLIPSE add
-            Expression name = literalExpression(node, null);
-            arrayExpression.setNameStart(name.getStart());
-            arrayExpression.setNameEnd(name.getEnd() - 1);
+            arrayExpression.setNameStart(type.getStart());
+            arrayExpression.setNameEnd(type.getEnd() - 1);
             // GRECLIPSE end
             return arrayExpression;
         }
@@ -3472,7 +3479,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected ConstantExpression integerExpression(AST node) {
-        Object number = Numbers.parseInteger(node, node.getText());
+        Object number = Numbers.parseInteger(node.getText());
         ConstantExpression constantExpression = new ConstantExpression(number, true);
         configureAST(constantExpression, node);
         return constantExpression;

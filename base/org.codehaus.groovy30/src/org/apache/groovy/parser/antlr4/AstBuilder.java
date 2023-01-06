@@ -2353,7 +2353,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else {
             throw createParsingFailedException("Unsupported enhanced statement expression: " + ctx.getText(), ctx);
         }
-
+        // GRECLIPSE add
+        if (expression instanceof ArrayExpression ||
+            expression instanceof ConstructorCallExpression)
+            expression.putNodeMetaData("new.offset", expression.getStart());
+        // GRECLIPSE end
         return configureAST(expression, ctx);
     }
 
@@ -3273,7 +3277,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         if (asBoolean(ctx.dim())) { // create array
             ArrayExpression arrayExpression;
-
+            // GRECLIPSE add
+            if (ClassHelper.isPrimitiveType(classNode)) {
+                ClassNode proxy = ClassHelper.makeWithoutCaching(classNode.getName());
+                proxy.setRedirect(classNode); classNode = proxy;
+                configureAST(classNode, ctx.createdName());
+            }
+            // GRECLIPSE end
             List<Tuple3<Expression, List<AnnotationNode>, TerminalNode>> dimList =
                     ctx.dim().stream()
                             .map(this::visitDim)
@@ -3351,14 +3361,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             /* GRECLIPSE edit
             return configureAST(arrayExpression, ctx);
             */
-            classNode = arrayExpression.getType();
+            arrayExpression.setNameStart(classNode.getStart());
+            arrayExpression.setNameEnd(classNode.getEnd() - 1);
+            classNode = arrayExpression.getType(); // set position for all array types
             for (int i = dimList.size() - 1; i >= 0; i -= 1, classNode = classNode.getComponentType()) {
                 configureAST(classNode, ctx, configureAST(new ConstantExpression(null), ctx.dim(i)));
             }
-            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()),
-                Optional.<GroovyParserRuleContext>ofNullable(ctx.createdName().primitiveType()).orElse(ctx.createdName().qualifiedClassName()));
-            arrayExpression.setNameStart(nameNode.getStart());
-            arrayExpression.setNameEnd(nameNode.getEnd() - 1);
             return arrayExpression;
             // GRECLIPSE end
         }
