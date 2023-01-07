@@ -152,6 +152,7 @@ This minimal project set should be open in your workspace:
 * org.codehaus.groovy.eclipse.core.test
 * org.codehaus.groovy.eclipse.dsl
 * org.codehaus.groovy.eclipse.dsl.tests
+* org.codehaus.groovy.eclipse.frameworkAdapter
 * org.codehaus.groovy.eclipse.junit.test
 * org.codehaus.groovy.eclipse.quickfix
 * org.codehaus.groovy.eclipse.quickfix.test
@@ -161,13 +162,14 @@ This minimal project set should be open in your workspace:
 * org.codehaus.groovy.eclipse.ui
 * org.codehaus.groovyXX (where XX is the Groovy version you are working with; you should only have one of these open in your workspace at a time)
 * org.eclipse.jdt.core
+* org.eclipse.jdt.core.compiler.batch (4.27+)
 * org.eclipse.jdt.core.tests.builder
 * org.eclipse.jdt.core.tests.compiler
 * org.eclipse.jdt.groovy.core
 * org.eclipse.jdt.groovy.core.tests.builder
 * org.eclipse.jdt.groovy.core.tests.compiler
 
-Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.tests.builder`, `org.eclipse.jdt.core.tests.compiler`) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e426` folder is for Eclipse 4.26 (2022-12).
+Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.tests.builder`, `org.eclipse.jdt.core.tests.compiler`) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e427` folder is for Eclipse 4.27 (2023-03).
 
 
 ## Test with Eclipse
@@ -185,14 +187,15 @@ For manual testing and debugging, right-click on the org.codehaus.groovy.eclipse
 
 [Download and install Maven](https://maven.apache.org/).
 
-From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.26 (2022-12).
+From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.27 (2023-03).
 
 	```
-	mvn -Pe4.26 clean install
+	mvn -Pe4.27 clean install
 	```
 
-Replace e4.26 with a different option to build it for another Eclipse version:
+Replace e4.27 with a different option to build it for another Eclipse version:
 
+* e4.26
 * e4.25
 * e4.24
 * e4.23

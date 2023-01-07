@@ -616,7 +616,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         return groovySourceUnit;
     }
 
-    @Override // TODO: Find a better home for this?
+    // TODO: Find a better home for this?
     public org.eclipse.jdt.core.dom.CompilationUnit getSpecialDomCompilationUnit(org.eclipse.jdt.core.dom.AST ast) {
         return new GroovyCompilationUnit(ast);
     }
