@@ -29,36 +29,31 @@
 
   <build>
     <plugins>
-    <plugin>
-		<artifactId>maven-antrun-plugin</artifactId>
-		<executions>
-			<execution>
-				<phase>prepare-package</phase>
-				<configuration>
-					<target>
-						<replace token="bundle_qualifier," value="${buildQualifier}," dir="${project.build.directory}/classes">
-							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
-						</replace>
-						<replace token="bundle_version" value="${unqualifiedVersion}" dir="${project.build.directory}/classes">
-							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
-						</replace>
-						<copy todir="${project.build.directory}/jdtCompilerAdapter.jar-classes">
-							<fileset dir="${project.build.directory}/../../org.eclipse.jdt.core.compiler.batch/target/classes">
-								<include name="org/eclipse/jdt/core/*.class"/>
-								<include name="org/eclipse/jdt/internal/antadapter/**"/>
-							</fileset>
-						</copy>
-					</target>
-				</configuration>
-				<goals>
-					<goal>run</goal>
-				</goals>
-			</execution>
-		</executions>
-	  </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <phase>prepare-package</phase>
+            <configuration>
+              <target>
+                <copy todir="${project.build.directory}/jdtCompilerAdapter.jar-classes" verbose="true">
+                  <fileset dir="${project.build.directory}/../../org.eclipse.jdt.core.compiler.batch/target/classes">
+                    <include name="org/eclipse/jdt/core/*.class"/>
+                    <include name="org/eclipse/jdt/internal/antadapter/**"/>
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>2.6</version>
+        <version>2.7</version>
         <executions>
           <execution>
             <id>copy-batch-compiler-source</id>
@@ -89,10 +84,10 @@
             <goals>
               <goal>custom-bundle</goal>
             </goals>
-			<configuration>
-				<archive>
-					<addMavenDescriptor>false</addMavenDescriptor>
-				</archive>
+            <configuration>
+              <archive>
+                <addMavenDescriptor>false</addMavenDescriptor>
+              </archive>
               <bundleLocation>${project.basedir}/scripts/antadapter</bundleLocation>
               <classifier>antadapter</classifier>
               <fileSets>

@@ -4,7 +4,5 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.ant;singleton:=true
 Bundle-Name: Groovy Ant support
 Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 4.9.0.qualifier
-Require-Bundle: org.apache.ant,
- org.eclipse.ant.core,
- org.eclipse.jdt.core
+Require-Bundle: org.eclipse.ant.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

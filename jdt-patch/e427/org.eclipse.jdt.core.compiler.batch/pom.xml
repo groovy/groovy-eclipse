@@ -29,8 +29,9 @@
 
   <build>
     <plugins>
-    <plugin>
+      <plugin>
 		<artifactId>maven-antrun-plugin</artifactId>
+		<version>1.8</version>
 		<executions>
 			<execution>
 				<phase>prepare-package</phase>
@@ -49,7 +50,7 @@
 				</goals>
 			</execution>
 		</executions>
-	  </plugin>
+      </plugin>
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-p2-plugin</artifactId>

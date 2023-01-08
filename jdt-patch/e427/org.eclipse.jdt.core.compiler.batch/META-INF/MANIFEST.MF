@@ -10,7 +10,6 @@ Automatic-Module-Name: org.eclipse.jdt.core.compiler.batch
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Export-Package: META-INF.services,
- org.eclipse.jdt.core;x-friends:="org.codehaus.groovy.eclipse.ant",
  org.eclipse.jdt.core.compiler,
  org.eclipse.jdt.core.compiler.batch,
  org.eclipse.jdt.internal.antadapter;x-friends:="org.eclipse.jdt.core",
