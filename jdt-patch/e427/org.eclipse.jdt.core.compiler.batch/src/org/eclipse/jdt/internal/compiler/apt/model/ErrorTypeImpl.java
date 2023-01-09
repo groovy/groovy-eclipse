@@ -46,7 +46,7 @@ public class ErrorTypeImpl extends DeclaredTypeImpl implements ErrorType {
 	 */
 	@Override
 	public Element asElement() {
-		return this._env.getFactory().newElement((ReferenceBinding) this._binding);
+		return this._env.getFactory().newElement(_binding);
 	}
 
 	/* (non-Javadoc)

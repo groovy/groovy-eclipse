@@ -57,7 +57,6 @@ public class BaseMessagerImpl {
 	 * @param e the element against which to report the message.  If the element is not
 	 * in the set of elements being compiled in the current round, the reference context
 	 * and filename will be set to null.
-	 * @return
 	 */
 	public static AptProblem createProblem(Kind kind, CharSequence msg, Element e,
 			AnnotationMirror a, AnnotationValue v) {

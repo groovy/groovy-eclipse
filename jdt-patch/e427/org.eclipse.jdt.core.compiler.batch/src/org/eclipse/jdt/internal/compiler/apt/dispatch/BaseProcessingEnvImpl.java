@@ -182,7 +182,6 @@ public abstract class BaseProcessingEnvImpl implements ProcessingEnvironment {
 
 	/**
 	 * Has an error been raised in any of the rounds of processing in this build?
-	 * @return
 	 */
 	public boolean errorRaised()
 	{

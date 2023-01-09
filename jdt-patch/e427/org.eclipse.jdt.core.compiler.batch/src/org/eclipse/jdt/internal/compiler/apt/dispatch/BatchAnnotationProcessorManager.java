@@ -34,8 +34,7 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 /**
  * Java 6 annotation processor manager used when compiling from the command line
- * or via the javax.tools.JavaCompiler interface.
- * @see org.eclipse.jdt.internal.apt.pluggable.core.dispatch.IdeAnnotationProcessorManager
+ * or via the {@link javax.tools.JavaCompiler} interface.
  */
 public class BatchAnnotationProcessorManager extends BaseAnnotationProcessorManager
 {
@@ -78,7 +77,7 @@ public class BatchAnnotationProcessorManager extends BaseAnnotationProcessorMana
 		}
 		BatchProcessingEnvImpl processingEnv = new BatchProcessingEnvImpl(this, (Main) batchCompiler, commandLineArguments);
 		_processingEnv = processingEnv;
-		@SuppressWarnings("resource") // fileManager is not opened here
+//		@SuppressWarnings("resource") // fileManager is not opened here
 		JavaFileManager fileManager = processingEnv.getFileManager();
 		if (fileManager instanceof StandardJavaFileManager) {
 			Iterable<? extends File> location = null;

@@ -578,7 +578,7 @@ public class TypesImpl implements Types {
             // No boxing conversion was found
             throw new IllegalArgumentException();
         }
-        return (PrimitiveType) _env.getFactory().newTypeMirror((BaseTypeBinding)unboxed);
+        return (PrimitiveType) _env.getFactory().newTypeMirror(unboxed);
     }
 
 }

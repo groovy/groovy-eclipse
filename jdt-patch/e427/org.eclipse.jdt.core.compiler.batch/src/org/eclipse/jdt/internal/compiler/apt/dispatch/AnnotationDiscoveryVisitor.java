@@ -279,9 +279,7 @@ public class AnnotationDiscoveryVisitor extends ASTVisitor {
 		AnnotationBinding [] annotationBindings = element.getPackedAnnotationBindings(); // discovery is never in terms of repeating annotation.
 		for (AnnotationBinding binding : annotationBindings) {
 			ReferenceBinding annotationType = binding.getAnnotationType();
-			if (binding != null
-					&& Annotation.isAnnotationTargetAllowed(scope, annotationType, currentBinding)
-					) { // binding should be resolved, but in case it's not, ignore it: it could have been wrapped into a container.
+			if (Annotation.isAnnotationTargetAllowed(scope, annotationType, currentBinding)) { // binding should be resolved, but in case it's not, ignore it: it could have been wrapped into a container.
 				TypeElement anno = (TypeElement)_factory.newElement(annotationType);
 				_annoToElement.put(anno, element);
 			}

@@ -128,9 +128,7 @@ public class TypeElementImpl extends ElementImpl implements TypeElement {
 	private final ElementKind _kindHint;
 
 	/**
-	 * In general, clients should call {@link Factory#newDeclaredType(ReferenceBinding)} or
-	 * {@link Factory#newElement(org.eclipse.jdt.internal.compiler.lookup.Binding)} to
-	 * create new instances.
+	 * In general, clients should call {@link Factory#newElement(Binding)} to create new instances.
 	 */
 	TypeElementImpl(BaseProcessingEnvImpl env, ReferenceBinding binding, ElementKind kindHint) {
 		super(env, binding);

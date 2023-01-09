@@ -41,7 +41,7 @@ class ExternalAnnotationSuperimposer extends TypeBindingVisitor {
 				String binaryTypeName = String.valueOf(typeBinding.constantPoolName());
 				String relativeFileName = binaryTypeName.replace('.', '/')+ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX;
 
-				InputStream input;
+				InputStream input = null; try {
 				if (annotationBase.isDirectory()) {
 					input = new FileInputStream(externalAnnotationPath+'/'+relativeFileName);
 				} else {
@@ -52,6 +52,9 @@ class ExternalAnnotationSuperimposer extends TypeBindingVisitor {
 					input = zipFile.getInputStream(zipEntry);
 				}
 				annotateType(typeBinding, new ExternalAnnotationProvider(input, binaryTypeName), typeBinding.environment);
+				} finally {
+					if (input != null) input.close();
+				}
 			}
 		} catch (FileNotFoundException e) {
 			// file not found is expected

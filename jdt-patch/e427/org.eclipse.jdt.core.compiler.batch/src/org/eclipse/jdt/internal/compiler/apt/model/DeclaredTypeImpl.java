@@ -66,7 +66,7 @@ public class DeclaredTypeImpl extends TypeMirrorImpl implements DeclaredType {
 			return _env.getFactory().newElement(prototype, _elementKindHint);
 		}
 		// The JDT compiler does not distinguish between type elements and declared types
-		return _env.getFactory().newElement((ReferenceBinding)_binding, _elementKindHint);
+		return _env.getFactory().newElement(_binding, _elementKindHint);
 	}
 
 	@Override

@@ -62,11 +62,11 @@ public class TypeVariableImpl extends TypeMirrorImpl implements TypeVariable {
 			// no explicit bound
 			return _env.getFactory().newTypeMirror(typeVariableBinding.upperBound());
 		}
-		if (firstBound != null && superInterfaces.length == 1 && TypeBinding.equalsEquals(superInterfaces[0], firstBound)) {
+		if (superInterfaces.length == 1 && TypeBinding.equalsEquals(superInterfaces[0], firstBound)) {
 			// only one bound that is an interface
 			return _env.getFactory().newTypeMirror(typeVariableBinding.upperBound());
 		}
-		return this._env.getFactory().newTypeMirror((TypeVariableBinding) this._binding);
+		return this._env.getFactory().newTypeMirror(_binding);
 	}
 
 	/* (non-Javadoc)

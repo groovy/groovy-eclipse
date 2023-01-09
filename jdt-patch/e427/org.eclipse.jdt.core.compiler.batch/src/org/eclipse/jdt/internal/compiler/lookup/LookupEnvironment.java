@@ -1669,7 +1669,7 @@ public PackageBinding getPackage(char[][] packageName, ModuleBinding moduleBindi
 			if ((binding instanceof PackageBinding) && binding.isValidBinding()) {
 				return (PackageBinding) binding;
 			}
-			System.err.println("Invalid package binding for default import: " + CharOperation.toString(packageName));
+			System.err.println("Invalid package binding for default import: "+CharOperation.toString(packageName)); //$NON-NLS-1$
 		}
 	}
 

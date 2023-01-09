@@ -163,7 +163,7 @@ public class EclipseFileManager implements StandardJavaFileManager {
 				}
 			}
 		} else if (isArchive(file)) {
-			@SuppressWarnings("resource") // cached archive is closed in EclipseFileManager.close()
+//			@SuppressWarnings("resource") // cached archive is closed in EclipseFileManager.close()
 			Archive archive = this.getArchive(file);
 			if (archive != Archive.UNKNOWN_ARCHIVE) {
 				String key = normalizedPackageName;
@@ -442,7 +442,7 @@ public class EclipseFileManager implements StandardJavaFileManager {
 		return null;
 	}
 
-	@SuppressWarnings("resource") // cached archive is closed in EclipseFileManager.close()
+//	@SuppressWarnings("resource") // cached archive is closed in EclipseFileManager.close()
 	private ArchiveFileObject getFileObject(File archiveFile, String normalizedFileName) {
 		Archive archive = getArchive(archiveFile);
 		if (archive == Archive.UNKNOWN_ARCHIVE) {
@@ -454,7 +454,7 @@ public class EclipseFileManager implements StandardJavaFileManager {
 		return null;
 	}
 
-	@SuppressWarnings("resource") // cached archive is closed in EclipseFileManager.close()
+//	@SuppressWarnings("resource") // cached archive is closed in EclipseFileManager.close()
 	private Boolean containsFileObject(File archiveFile, String normalizedFileName) {
 		Archive archive = getArchive(archiveFile);
 		if (archive == Archive.UNKNOWN_ARCHIVE) {

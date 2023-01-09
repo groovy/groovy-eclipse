@@ -541,7 +541,7 @@ public class EclipseCompilerImpl extends Main {
 									// TODO: double check, should it be platform or system module?
 									try {
 										EclipseFileManager efm = (EclipseFileManager) standardJavaFileManager;
-										@SuppressWarnings("resource") // XXX EclipseFileManager should close jrtfs but it looks like standardJavaFileManager is never closed
+//										@SuppressWarnings("resource") // XXX EclipseFileManager should close jrtfs but it looks like standardJavaFileManager is never closed
 										// Was leaking new JrtFileSystem(classpathJrt.file):
 										JrtFileSystem jrtfs = efm.getJrtFileSystem(classpathJrt.file);
 										efm.locationHandler.newSystemLocation(StandardLocation.SYSTEM_MODULES, jrtfs);

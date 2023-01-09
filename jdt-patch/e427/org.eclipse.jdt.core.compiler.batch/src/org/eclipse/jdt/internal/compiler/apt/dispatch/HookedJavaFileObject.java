@@ -209,13 +209,13 @@ public class HookedJavaFileObject extends
 		_typeName = typeName;
 	}
 
-	@SuppressWarnings("resource") // ForwardingOutputStream forwards close() too
+//	@SuppressWarnings("resource") // ForwardingOutputStream forwards close() too
 	@Override
 	public OutputStream openOutputStream() throws IOException {
 		return new ForwardingOutputStream(super.openOutputStream());
 	}
 
-	@SuppressWarnings("resource") // ForwardingWriter forwards close() too
+//	@SuppressWarnings("resource") // ForwardingWriter forwards close() too
 	@Override
 	public Writer openWriter() throws IOException {
 		return new ForwardingWriter(super.openWriter());
@@ -253,9 +253,7 @@ public class HookedJavaFileObject extends
 							if (type.isBinaryBinding()) {
 								_filer.addNewClassFile(type);
 							} else {
-								BinaryTypeBinding binaryBinding = new BinaryTypeBinding(type.getPackage(), binaryType, this._filer._env._compiler.lookupEnvironment, true);
-								if (binaryBinding != null)
-									_filer.addNewClassFile(binaryBinding);
+								_filer.addNewClassFile(new BinaryTypeBinding(type.getPackage(), binaryType, this._filer._env._compiler.lookupEnvironment, true));
 							}
 						}
 					}

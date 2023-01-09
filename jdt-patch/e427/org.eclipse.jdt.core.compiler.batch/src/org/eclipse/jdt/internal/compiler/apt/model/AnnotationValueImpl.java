@@ -124,7 +124,6 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 	 * BaseTypeBinding, this is ignored and the value is inspected to determine type.
 	 * @param kind an int array whose first element will be set to the type of the
 	 * converted object, represented with T_* values from TypeIds or from this class.
-	 * @return
 	 */
 	private Object convertToMirrorType(Object value, TypeBinding type, int kind[]) {
 		if (type == null) {

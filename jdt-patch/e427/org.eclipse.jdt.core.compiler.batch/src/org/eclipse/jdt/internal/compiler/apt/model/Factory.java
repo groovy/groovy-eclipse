@@ -347,6 +347,7 @@ public class Factory {
 						ClassFileConstants.ACC_OPEN,
 						ClassFileConstants.ACC_TRANSITIVE
 				});
+				//$FALL-THROUGH$
 			default:
 				break;
 		}
