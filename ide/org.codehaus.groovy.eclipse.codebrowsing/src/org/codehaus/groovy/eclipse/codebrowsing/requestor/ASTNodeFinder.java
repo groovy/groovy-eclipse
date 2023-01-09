@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -198,6 +199,17 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     @Override
+    public void visitConstantExpression(ConstantExpression expression) {
+        if (expression instanceof AnnotationConstantExpression) {
+            // example: @interface X { Y default @Y(...) }; expression is "@Y(...)"
+            // example: @X(@Y(...)); expression is "@Y(...)"
+            check(expression.getType());
+            // values have been visited
+        }
+        super.visitConstantExpression(expression);
+    }
+
+    @Override
     public void visitVariableExpression(VariableExpression expression) {
         // check the annotations, generics, and type of variable declarations (including @Lazy fields)
         if (expression == expression.getAccessedVariable() || expression.getName().charAt(0) == '$') {
@@ -211,14 +223,13 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitConstantExpression(ConstantExpression expression) {
-        if (expression instanceof AnnotationConstantExpression) {
-            // example: @interface X { Y default @Y(...) }; expression is "@Y(...)"
-            // example: @X(@Y(...)); expression is "@Y(...)"
-            check(expression.getType());
-            // values have been visited
+    public void visitDeclarationExpression(DeclarationExpression expression) {
+        if (expression.isMultipleAssignmentDeclaration() && // check before "(...)"
+                expression.getStart() < expression.getTupleExpression().getStart()) {
+            visitAnnotations(expression.getAnnotations()); // possibly interleaved with "def", "final", ...
+            check(expression.getType(), expression.getStart(), expression.getTupleExpression().getStart());
         }
-        super.visitConstantExpression(expression);
+        super.visitDeclarationExpression(expression);
     }
 
     @Override

@@ -1811,12 +1811,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private DeclarationListStatement createMultiAssignmentDeclarationListStatement(final VariableDeclarationContext ctx, final ModifierManager modifierManager) {
-        /*
-        if (!modifierManager.contains(DEF)) {
-            throw createParsingFailedException("keyword def is required to declare tuple, e.g. def (int a, int b) = [1, 2]", ctx);
-        }
-        */
-
         /* GRECLIPSE edit
         return configureAST(
                 new DeclarationListStatement(
@@ -1838,17 +1832,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 ctx
         );
         */
-        DeclarationExpression de = new DeclarationExpression(new ArgumentListExpression(
-                this.visitTypeNamePairs(ctx.typeNamePairs()).stream()
-                    .peek(e -> modifierManager.processVariableExpression((VariableExpression) e))
-                    .collect(Collectors.toList())
-            ),
-            this.createGroovyTokenByType(ctx.ASSIGN().getSymbol(), Types.ASSIGN),
-            this.visitVariableInitializer(ctx.variableInitializer()));
-        Optional<ModifierNode> var = modifierManager.get(VAR);
-        if (var != null && var.isPresent()) {
-            de.setNodeMetaData("reserved.type.name", var.get());
-        }
+        List<Expression> elist = this.visitTypeNamePairs(ctx.typeNamePairs());
+        for (Expression e : elist)
+            modifierManager.processVariableExpression((VariableExpression) e);
+
+        DeclarationExpression de = new DeclarationExpression(
+                configureAST(new TupleExpression(elist), ctx.typeNamePairs()),
+                createGroovyTokenByType(ctx.ASSIGN().getSymbol(), Types.ASSIGN),
+                visitVariableInitializer(ctx.variableInitializer())           );
+
+        modifierManager.get(VAR).ifPresent(var ->
+                de.setNodeMetaData("reserved.type.name", var));
         configureAST(modifierManager.attachAnnotations(de), ctx);
         return configureAST(new DeclarationListStatement(de), ctx);
         // GRECLIPSE end
