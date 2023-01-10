@@ -62,6 +62,7 @@ import static org.codehaus.groovy.ast.AnnotationNode.RECORD_COMPONENT_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.TYPE_PARAMETER_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.TYPE_TARGET;
 import static org.codehaus.groovy.ast.AnnotationNode.TYPE_USE_TARGET;
+import static org.codehaus.groovy.ast.ClassHelper.DEPRECATED_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.makeCached;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getInterfacesAndSuperInterfaces;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.listX;
@@ -147,6 +148,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
 
     @Override
     public void visitDeclarationExpression(DeclarationExpression expression) {
+        /* GRECLIPSE edit
         VariableExpression varx = expression.getVariableExpression();
         if (varx != null) {
             visitAnnotations(expression, LOCAL_VARIABLE_TARGET);
@@ -154,6 +156,15 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             visitTypeAnnotations(type);
             extractTypeUseAnnotations(expression.getAnnotations(), type, LOCAL_VARIABLE_TARGET);
         }
+        */
+        visitAnnotations(expression, LOCAL_VARIABLE_TARGET);
+        if (expression.isMultipleAssignmentDeclaration()) {
+            expression.getTupleExpression().forEach(e -> visitTypeAnnotations(e.getType()));
+        } else {
+            ClassNode t = expression.getLeftExpression().getType(); visitTypeAnnotations(t);
+            extractTypeUseAnnotations(expression.getAnnotations(), t, LOCAL_VARIABLE_TARGET);
+        }
+        // GRECLIPSE end
     }
 
     @Override
@@ -398,7 +409,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     private static void visitDeprecation(AnnotatedNode node, AnnotationNode visited) {
-        if (visited.getClassNode().isResolved() && visited.getClassNode().getName().equals("java.lang.Deprecated")) {
+        if (visited.getClassNode().isResolved() && visited.getClassNode().equals(DEPRECATED_TYPE)) {
             if (node instanceof MethodNode) {
                 MethodNode mn = (MethodNode) node;
                 mn.setModifiers(mn.getModifiers() | Opcodes.ACC_DEPRECATED);
@@ -408,6 +419,19 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             } else if (node instanceof ClassNode) {
                 ClassNode cn = (ClassNode) node;
                 cn.setModifiers(cn.getModifiers() | Opcodes.ACC_DEPRECATED);
+            // GRECLIPSE add
+            } else if (node instanceof DeclarationExpression) {
+                DeclarationExpression decl = (DeclarationExpression) node;
+                if (!decl.isMultipleAssignmentDeclaration()) {
+                    VariableExpression ve = decl.getVariableExpression();
+                    ve.setModifiers(ve.getModifiers() | /*Flags.AccDeprecated*/0x100000);
+                } else {
+                    for (Expression e : decl.getTupleExpression()) {
+                        VariableExpression ve = (VariableExpression) e;
+                        ve.setModifiers(ve.getModifiers() | /*Flags.AccDeprecated*/0x100000);
+                    }
+                }
+            // GRECLIPSE end
             }
         }
     }

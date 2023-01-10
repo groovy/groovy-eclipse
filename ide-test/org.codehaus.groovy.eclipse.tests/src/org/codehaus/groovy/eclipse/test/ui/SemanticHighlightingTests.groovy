@@ -2953,22 +2953,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testDeprecated1() {
-        String contents = '''
-            |class C {
-            |  @Deprecated def x
-            |  def m() { x }
-            |}
-            |'''.stripMargin()
-
-        assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('x'), 1, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD),
-            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, DEPRECATED))
-    }
-
-    @Test
-    void testDeprecated2() {
         String contents = '''\
             |@Deprecated
             |class C {
@@ -2985,7 +2969,93 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testDeprecated2() {
+        String contents = '''\
+            |class C {
+            |  @Deprecated
+            |  C() { }
+            |  C(x) { new C() }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C()'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('C(x)'), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, DEPRECATED))
+    }
+
+    @Test
     void testDeprecated3() {
+        String contents = '''
+            |class C {
+            |  @Deprecated def x
+            |  def m() { x }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, DEPRECATED))
+    }
+
+    @Test
+    void testDeprecated4() {
+        String contents = '''
+            |class C {
+            |  @Deprecated def m() { m() }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('m'), 1, DEPRECATED))
+    }
+
+    @Test
+    void testDeprecated5() {
+        String contents = '''
+            |class C {
+            |  def m(@Deprecated Object param) { ""+param.toString() }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('param'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('param'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('toString'), 8, GROOVY_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1438
+    void testDeprecated6() {
+        String contents = '''
+            |@Deprecated def object = null
+            |@Deprecated def (int x, Number y) = [1,2]
+            |object+x+y;
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('object'), 6, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('y'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('object'), 6, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, DEPRECATED))
+    }
+
+    @Test
+    void testDeprecated7() {
         addGroovySource '''\
             |class Bar {
             |  @Deprecated public static final String CONST = ""
@@ -2999,11 +3069,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.lastIndexOf('Bar'), 3, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('CONST'), 'CONST'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, DEPRECATED))
     }
 
     @Test
-    void testDeprecated4() {
+    void testDeprecated8() {
         addGroovySource '''\
             |@Deprecated
             |class Bar {
@@ -3017,13 +3087,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('CONST'), 'CONST'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('Bar'),   3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.'),  3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, DEPRECATED))
     }
 
     @Test
-    void testDeprecated5() {
+    void testDeprecated9() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -3034,12 +3104,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = 'foo.Bar.CONST'
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('CONST'), 'CONST'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('Bar'),   3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, DEPRECATED))
     }
 
     @Test
-    void testDeprecated6() {
+    void testDeprecated10() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -3055,7 +3125,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testDeprecated7() {
+    void testDeprecated11() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -3072,16 +3142,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar;'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.*'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.F'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('FIELD'), 5, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.m'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar;'),   3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.*'),  3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.F'),  3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('FIELD'),  5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.m'),  3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('method'), 6, DEPRECATED))
     }
 
     @Test
-    void testDeprecated8() {
+    void testDeprecated12() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -3099,7 +3169,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testDeprecated9() {
+    void testDeprecated13() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -3118,16 +3188,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar.Baz;'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.Baz;'),  3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.*'), 3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.F'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('FIELD'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('FIELD'),     5, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.m'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('method'), 6, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('method'),    6, DEPRECATED))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/907
-    void testDeprecated10() {
+    void testDeprecated14() {
         addGroovySource '''\
             |class Foo {
             |  @Deprecated Foo() {}
@@ -3152,7 +3222,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/962
-    void testDeprecated11() {
+    void testDeprecated15() {
         addGroovySource '''\
             |class Foo {
             |  @Deprecated static def getSomeThing(one, two) {}
@@ -3178,6 +3248,25 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, DEPRECATED),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, PARAMETER))
+    }
+
+    @Test
+    void testDeprecated16() {
+        addGroovySource '''\
+            |class Baz {
+            |}
+            |'''.stripMargin(), 'Baz', 'foo.bar'
+
+        String contents = '''
+            |@Deprecated
+            |package foo.bar;
+            |foo.bar.Baz;
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('foo.bar'), 7, DEPRECATED),
+            //new HighlightedTypedPosition(contents.lastIndexOf('foo.bar'), 7, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Baz'), 3, CLASS))
     }
 
     @Test

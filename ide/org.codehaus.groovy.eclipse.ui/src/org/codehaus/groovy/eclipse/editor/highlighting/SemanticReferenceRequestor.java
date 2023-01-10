@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,14 +43,11 @@ public abstract class SemanticReferenceRequestor implements ITypeRequestor {
         int offset, length;
         if ((node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) ||
                 node instanceof FieldNode || node instanceof MethodNode || node instanceof PropertyNode ||
-                node instanceof ConstructorCallExpression || node instanceof StaticMethodCallExpression) {
+                node instanceof ConstructorCallExpression || node instanceof StaticMethodCallExpression ||
+                node instanceof Parameter) {
             AnnotatedNode an = (AnnotatedNode) node;
             offset = an.getNameStart();
             length = an.getNameEnd() - offset + 1;
-        } else if (node instanceof Parameter) {
-            Parameter p = (Parameter) node;
-            offset = p.getNameStart();
-            length = p.getNameEnd() - offset;
         } else if (node instanceof MethodCallExpression) {
             Expression e = ((MethodCallExpression) node).getMethod();
             offset = e.getStart();

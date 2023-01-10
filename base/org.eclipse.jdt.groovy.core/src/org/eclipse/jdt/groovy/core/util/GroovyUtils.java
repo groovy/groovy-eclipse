@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
@@ -515,23 +516,25 @@ public class GroovyUtils {
             return ((JDTNode) node).isDeprecated();
         }
 
+        // Object is only common parent of ASTNode and Variable; DynamicVariable is one example of non-node type
+        Object o = node instanceof VariableExpression ? ((VariableExpression) node).getAccessedVariable() : node;
+
         int flags = 0;
-        if (node instanceof ClassNode) {
-            flags = ((ClassNode) node).getModifiers();
-        } else if (node instanceof FieldNode) {
-            flags = ((FieldNode) node).getModifiers();
-        } else if (node instanceof MethodNode) {
-            flags = ((MethodNode) node).getModifiers();
+        if (o instanceof Variable) {
+            flags = ((Variable) o).getModifiers();
+        } else if (o instanceof ClassNode) {
+            flags = ((ClassNode) o).getModifiers();
+        } else if (o instanceof MethodNode) {
+            flags = ((MethodNode) o).getModifiers();
         }
+
         if (Flags.isDeprecated(flags)) {
             return true;
         }
-
-        if (flags > 0 || node instanceof AnnotatedNode) {
-            return getAnnotations((AnnotatedNode) node, "java.lang.Deprecated").anyMatch(x -> true);
+        if (!(o instanceof AnnotatedNode)) {
+            return false;
         }
-
-        return false;
+        return getAnnotations((AnnotatedNode) node, "java.lang.Deprecated").anyMatch(x -> true);
     }
 
     public static boolean isSynthetic(FieldNode node) {

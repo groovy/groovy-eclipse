@@ -32,7 +32,7 @@ import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -42,16 +42,21 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.annotation.Retention;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.stream.Collectors.toList;
+import static org.codehaus.groovy.ast.ClassHelper.makeCached;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getInterfacesAndSuperInterfaces;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.listX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpec;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
 import static org.codehaus.groovy.ast.tools.ParameterUtils.parametersEqual;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
 
 /**
  * A specialized Groovy AST visitor meant to perform additional verifications upon the
@@ -68,6 +73,11 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
 
     public ExtendedVerifier(SourceUnit sourceUnit) {
         this.source = sourceUnit;
+    }
+
+    @Override
+    protected SourceUnit getSourceUnit() {
+        return this.source;
     }
 
     @Override
@@ -150,25 +160,31 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             addError("Annotations are not supported in the current runtime. " + JVM_ERROR_MESSAGE, node);
             return;
         }
-        Map<String, List<AnnotationNode>> nonSourceAnnotations = new LinkedHashMap<String, List<AnnotationNode>>();
+        Map<String, List<AnnotationNode>> nonSourceAnnotations = new LinkedHashMap<>();
         for (AnnotationNode unvisited : node.getAnnotations()) {
-            AnnotationNode visited = visitAnnotation0(unvisited);
+            AnnotationNode visited;
+            {
+                ErrorCollector errorCollector = new ErrorCollector(source.getConfiguration());
+                AnnotationVisitor visitor = new AnnotationVisitor(source, errorCollector);
+                visited = visitor.visit(unvisited);
+                source.getErrorCollector().addCollectorContents(errorCollector);
+            }
+
             String name = visited.getClassNode().getName();
             if (!visited.hasSourceRetention()) {
                 List<AnnotationNode> seen = nonSourceAnnotations.get(name);
                 if (seen == null) {
-                    seen = new ArrayList<AnnotationNode>();
+                    seen = new ArrayList<>();
                 }
                 seen.add(visited);
                 nonSourceAnnotations.put(name, seen);
             }
-            boolean isTargetAnnotation = name.equals("java.lang.annotation.Target");
 
             // Check if the annotation target is correct, unless it's the target annotating an annotation definition
             // defining on which target elements the annotation applies
+            boolean isTargetAnnotation = name.equals("java.lang.annotation.Target");
             if (!isTargetAnnotation && !visited.isTargetAllowed(target)) {
-                addError("Annotation @" + name + " is not allowed on element "
-                        + AnnotationNode.targetToName(target), visited);
+                addError("Annotation @" + name + " is not allowed on element " + AnnotationNode.targetToName(target), visited);
             }
             visitDeprecation(node, visited);
             visitOverride(node, visited);
@@ -177,51 +193,48 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     private void checkForDuplicateAnnotations(AnnotatedNode node, Map<String, List<AnnotationNode>> nonSourceAnnotations) {
-        for (Map.Entry<String, List<AnnotationNode>> next : nonSourceAnnotations.entrySet()) {
-            if (next.getValue().size() > 1) {
+        for (Map.Entry<String, List<AnnotationNode>> entry : nonSourceAnnotations.entrySet()) {
+            if (entry.getValue().size() > 1) {
                 ClassNode repeatable = null;
-                AnnotationNode repeatee = next.getValue().get(0);
-                List<AnnotationNode> repeateeAnnotations = repeatee.getClassNode().getAnnotations();
-                for (AnnotationNode anno : repeateeAnnotations) {
-                    ClassNode annoClassNode = anno.getClassNode();
-                    if (annoClassNode.getName().equals("java.lang.annotation.Repeatable")) {
+                AnnotationNode repeatee = entry.getValue().get(0);
+                for (AnnotationNode anno : repeatee.getClassNode().getAnnotations()) {
+                    if (anno.getClassNode().getName().equals("java.lang.annotation.Repeatable")) {
                         Expression value = anno.getMember("value");
-                        if (value instanceof ClassExpression) {
-                            ClassExpression ce = (ClassExpression) value;
-                            if (ce.getType() != null && ce.getType().isAnnotationDefinition()) {
-                                repeatable = ce.getType();
-                                break;
-                            }
+                        if (value instanceof ClassExpression && value.getType().isAnnotationDefinition()) {
+                            repeatable = value.getType();
+                            break;
                         }
                     }
                 }
                 if (repeatable != null) {
+                    if (nonSourceAnnotations.containsKey(repeatable.getName())) {
+                        addError("Cannot specify duplicate annotation on the same member. Explicit " + repeatable.getName() + " found when creating implicit container for " + entry.getKey(), node);
+                    }
                     AnnotationNode collector = new AnnotationNode(repeatable);
-                    /* GRECLIPSE edit -- GROOVY-4156, GROOVY-9541, et al.
-                    if (repeatable.isResolved()) {
-                        Class repeatableType = repeatable.getTypeClass();
-                        Retention retAnn = (Retention) repeatableType.getAnnotation(Retention.class);
-                        collector.setRuntimeRetention(retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME));
-                    } else if (repeatable.redirect() != null) {
-                        for (AnnotationNode annotationNode : repeatable.redirect().getAnnotations()) {
-                            if (!annotationNode.getClassNode().getName().equals("java.lang.annotation.Retention"))
-                                continue;
-                            String value = annotationNode.getMember("value").getText();
-                            collector.setRuntimeRetention(value.equals(RetentionPolicy.RUNTIME.name()) ||
-                                    value.equals(RetentionPolicy.class.getName() + "." + RetentionPolicy.RUNTIME.name()));
+                    if (repeatee.hasClassRetention()) {
+                        collector.setClassRetention(true);
+                    } else if (repeatee.hasRuntimeRetention()) {
+                        collector.setRuntimeRetention(true);
+                    } else { // load retention policy from annotation definition
+                        List<AnnotationNode> retention = repeatable.getAnnotations(makeCached(Retention.class));
+                        if (!retention.isEmpty()) {
+                            Object policy;
+                            Expression value = retention.get(0).getMember("value");
+                            if (value instanceof PropertyExpression) {
+                                policy = ((PropertyExpression) value).getPropertyAsString();
+                            } else { // NOTE: it is risky to evaluate the expression from repeatable's source this way:
+                                policy = evaluateExpression(value, source.getConfiguration(), source.getClassLoader());
+                            }
+                            if ("CLASS".equals(policy)) {
+                                collector.setClassRetention(true);
+                            } else if ("RUNTIME".equals(policy)) {
+                                collector.setRuntimeRetention(true);
+                            }
                         }
                     }
-                    */
-                    collector.setClassRetention(repeatee.hasClassRetention());
-                    collector.setRuntimeRetention(repeatee.hasRuntimeRetention());
-                    // GRECLIPSE end
-                    List<Expression> annos = new ArrayList<Expression>();
-                    for (AnnotationNode an : next.getValue()) {
-                        annos.add(new AnnotationConstantExpression(an));
-                    }
-                    collector.addMember("value", new ListExpression(annos));
+                    collector.addMember("value", listX(entry.getValue().stream().map(AnnotationConstantExpression::new).collect(toList())));
+                    node.getAnnotations().removeAll(entry.getValue());
                     node.addAnnotation(collector);
-                    node.getAnnotations().removeAll(next.getValue());
                 }
             }
         }
@@ -257,8 +270,8 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
 
     // TODO GROOVY-5011 handle case of @Override on a property
     private void visitOverride(AnnotatedNode node, AnnotationNode visited) {
-        ClassNode annotationClassNode = visited.getClassNode();
-        if (annotationClassNode.isResolved() && annotationClassNode.getName().equals("java.lang.Override")) {
+        ClassNode annotationType = visited.getClassNode();
+        if (annotationType.isResolved() && annotationType.getName().equals("java.lang.Override")) {
             if (node instanceof MethodNode && !Boolean.TRUE.equals(node.getNodeMetaData(Verifier.DEFAULT_PARAMETER_GENERATED))) {
                 boolean override = false;
                 MethodNode origMethod = (MethodNode) node;
@@ -320,20 +333,6 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     /**
-     * Resolve metadata and details of the annotation.
-     *
-     * @param unvisited the node to visit
-     * @return the visited node
-     */
-    private AnnotationNode visitAnnotation0(AnnotationNode unvisited) {
-        ErrorCollector errorCollector = new ErrorCollector(this.source.getConfiguration());
-        AnnotationVisitor visitor = new AnnotationVisitor(this.source, errorCollector);
-        AnnotationNode visited = visitor.visit(unvisited);
-        this.source.getErrorCollector().addCollectorContents(errorCollector);
-        return visited;
-    }
-
-    /**
      * Check if the current runtime allows Annotation usage.
      *
      * @return true if running on a 1.5+ runtime
@@ -341,20 +340,4 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     protected boolean isAnnotationCompatible() {
         return CompilerConfiguration.isPostJDK5(this.source.getConfiguration().getTargetBytecode());
     }
-
-    /* GRECLIPSE edit
-    public void addError(String msg, ASTNode node) {
-        getSourceUnit().addErrorAndContinue(new SyntaxException(msg + '\n', node));
-    }
-    */
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return this.source;
-    }
-
-    /* GRECLIPSE edit
-    public void visitGenericType(GenericsType genericsType) {
-    }
-    */
 }

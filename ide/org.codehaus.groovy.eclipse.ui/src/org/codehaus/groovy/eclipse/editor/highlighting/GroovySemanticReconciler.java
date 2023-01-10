@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -294,7 +294,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
                 HighlightedTypedPosition last = null; Position x = null;
                 for (HighlightedTypedPosition ref : semanticReferences) {
-                    if (ref.compareTo(last) != 0) {
+                    if (last == null ||
+                            last.getOffset() != ref.getOffset() ||
+                            last.getLength() != ref.getLength()) {
                         Position pos = newHighlightedPosition(ref);
                         x = tryAddPosition(newPositions, oldPositions, pos);
 
