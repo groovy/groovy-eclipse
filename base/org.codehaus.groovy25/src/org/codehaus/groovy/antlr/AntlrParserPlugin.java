@@ -1950,6 +1950,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             leftExpression = alist;
             right = node.getNextSibling();
             if (right != null) rightExpression = expression(right);
+            // GRECLIPSE add
+            configureAST(leftExpression, node); // <<< left paren; right paren vvv
+            leftExpression.setLastLineNumber(((GroovySourceAST) left).getLineLast());
+            leftExpression.setLastColumnNumber(((GroovySourceAST) left).getColumnLast());
+            leftExpression.setEnd(locations.findOffset(leftExpression.getLastLineNumber(), leftExpression.getLastColumnNumber()));
+            // GRECLIPSE end
         } else {
             String name = identifier(node);
             VariableExpression ve = new VariableExpression(name, type);
@@ -1961,9 +1967,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 assertNodeType(ASSIGN, right);
                 rightExpression = expression(right.getFirstChild());
             }
-        }
 
-        configureAST(leftExpression, node);
+            configureAST(leftExpression, node);
+        }
 
         Token token = makeToken(Types.ASSIGN, variableDef);
         DeclarationExpression expression = new DeclarationExpression(leftExpression, token, rightExpression);

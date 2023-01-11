@@ -33,27 +33,21 @@ public class CodeSnippetCompiler extends Compiler {
 	 * Creates a new code snippet compiler initialized with a code snippet parser.
 	 */
 	public CodeSnippetCompiler(
-    		INameEnvironment environment,
-    		IErrorHandlingPolicy policy,
-    		CompilerOptions compilerOptions,
-    		ICompilerRequestor requestor,
-    		IProblemFactory problemFactory,
-    		EvaluationContext evaluationContext,
-    		int codeSnippetStart,
-    		int codeSnippetEnd) {
+			INameEnvironment environment,
+			IErrorHandlingPolicy policy,
+			CompilerOptions compilerOptions,
+			ICompilerRequestor requestor,
+			IProblemFactory problemFactory,
+			EvaluationContext evaluationContext,
+			int codeSnippetStart,
+			int codeSnippetEnd) {
 		super(environment, policy, compilerOptions, requestor, problemFactory);
 		this.codeSnippetStart = codeSnippetStart;
 		this.codeSnippetEnd = codeSnippetEnd;
 		this.evaluationContext = evaluationContext;
-		this.parser =
-			new CodeSnippetParser(
-				this.problemReporter,
-				evaluationContext,
-				this.options.parseLiteralExpressionsAsConstants,
-				codeSnippetStart,
-				codeSnippetEnd);
+		// fully parse only the code snippet compilation unit:
 		this.parseThreshold = 1;
-		// fully parse only the code snippet compilation unit
+		this.initializeParser();
 	}
 
 	@Override
@@ -65,5 +59,5 @@ public class CodeSnippetCompiler extends Compiler {
 				this.options.parseLiteralExpressionsAsConstants,
 				this.codeSnippetStart,
 				this.codeSnippetEnd);
-		}
+	}
 }

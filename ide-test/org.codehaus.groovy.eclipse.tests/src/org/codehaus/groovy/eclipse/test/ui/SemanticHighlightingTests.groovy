@@ -3054,6 +3054,20 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, DEPRECATED))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1438
+    void testDeprecated6a() {
+        String contents = '''
+            |@Deprecated def one, two = null
+            |""+one+two;
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, DEPRECATED))
+    }
+
     @Test
     void testDeprecated7() {
         addGroovySource '''\
