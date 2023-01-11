@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -37,10 +38,9 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
 import org.eclipse.m2e.jdt.IClasspathDescriptor;
-import org.eclipse.m2e.jdt.IJavaProjectConfigurator;
 import org.eclipse.m2e.jdt.internal.AbstractJavaProjectConfigurator;
 
-public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator implements IJavaProjectConfigurator {
+public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator {
 
     // copy from org.codehaus.jdt.groovy.model.GroovyNature
     private static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature";
@@ -52,21 +52,23 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
     public void configure(ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
         super.configure(request, monitor); // drives calls to configureClasspath and configureRawClasspath
 
-        ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
+        IMavenProjectFacade mavenProject = getMavenProjectFacade(request);
+
+        ProjectSourceType sourceType = ProjectSourceType.getSourceType(mavenProject);
         if (sourceType != null) {
-            addNature(request.getProject(), GROOVY_NATURE, monitor);
+            addNature(mavenProject.getProject(), GROOVY_NATURE, monitor);
         } else {
-            IProjectDescription description = request.getProject().getDescription();
+            IProjectDescription description = mavenProject.getProject().getDescription();
             if (description.hasNature(GROOVY_NATURE)) {
                 description.setNatureIds(Arrays.stream(description.getNatureIds())
                     .filter(n -> !n.equals(GROOVY_NATURE)).toArray(String[]::new));
-                request.getProject().setDescription(description, IResource.KEEP_HISTORY, null);
+                mavenProject.getProject().setDescription(description, IResource.KEEP_HISTORY, null);
             }
         }
 
-        IEclipsePreferences preferences = new ProjectScope(request.getProject()).getNode("org.eclipse.jdt.groovy.core");
+        IEclipsePreferences preferences = new ProjectScope(mavenProject.getProject()).getNode("org.eclipse.jdt.groovy.core");
         if (sourceType != null) {
-            String filters = getScriptFilters(preferences, request.getMavenProjectFacade());
+            String filters = getScriptFilters(preferences, mavenProject);
             if (!filters.isEmpty()) {
                 preferences.put("groovy.script.filters", filters);
                 preferences.putBoolean("org.codehaus.groovy.eclipse.preferences.compiler.project", true);
@@ -92,7 +94,9 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
 
     @Override
     public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath, IProgressMonitor monitor) {
-        ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
+        IMavenProjectFacade mavenProject = getMavenProjectFacade(request);
+
+        ProjectSourceType sourceType = ProjectSourceType.getSourceType(mavenProject);
         if (sourceType != null) {
             if (isAbsent(classpath, DSLD_CONTAINER_ID) && isAddDslSupport()) {
                 classpath.addEntry(JavaCore.newContainerEntry(
@@ -103,9 +107,9 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
                 ));
             }
 
-            IProject project = request.getProject();
-            IPath mainOutput = getFolder(project, request.getMavenProject().getBuild().getOutputDirectory()).getFullPath();
-            IPath testOutput = getFolder(project, request.getMavenProject().getBuild().getTestOutputDirectory()).getFullPath();
+            IProject project = mavenProject.getProject();
+            IPath mainOutput = getFolder(project, mavenProject.getMavenProject().getBuild().getOutputDirectory()).getFullPath();
+            IPath testOutput = getFolder(project, mavenProject.getMavenProject().getBuild().getTestOutputDirectory()).getFullPath();
 
             IFolder srcMainGroovy = project.getFolder("src/main/groovy");
             if (srcMainGroovy.exists() && (sourceType == ProjectSourceType.MAIN || sourceType == ProjectSourceType.BOTH)) {
@@ -129,12 +133,14 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
     protected void addJavaProjectOptions(Map<String, String> options, ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
         String configScript = null;
 
+        MavenProject mavenProject = getMavenProjectFacade(request).getMavenProject(monitor);
+
         for (MojoExecution me : getCompilerMojoExecutions(request, monitor)) {
-            Map<String, String> m = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArguments", Map.class, monitor);
+            Map<String, String> m = maven.getMojoParameterValue(mavenProject, me, "compilerArguments", Map.class, monitor);
             if (m != null && m.get("configScript") != null) {
                 configScript = m.get("configScript").trim();
             } else {
-                String s = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArgument", String.class, monitor);
+                String s = maven.getMojoParameterValue(mavenProject, me, "compilerArgument", String.class, monitor);
                 if (s != null && s.contains("configScript")) {
                     String[] tokens = s.split("=");
                     if (tokens.length == 2 && tokens[0].trim().matches("-?configScript")) {
@@ -151,6 +157,21 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
     }
 
     //--------------------------------------------------------------------------
+
+    private static IMavenProjectFacade getMavenProjectFacade(ProjectConfigurationRequest configRequest) {
+        try {
+            java.lang.reflect.Method m;
+            try {
+                m = ProjectConfigurationRequest.class.getMethod("getMavenProjectFacade");
+            } catch (NoSuchMethodException ignore) { // try the m2e 2.x accessor method
+                m = ProjectConfigurationRequest.class.getMethod("mavenProjectFacade");
+            }
+            return (IMavenProjectFacade) m.invoke(configRequest);
+            //
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     private static String getScriptFilters(IEclipsePreferences preferences, IMavenProjectFacade facade) {
         Set<String> scriptFilters = new java.util.TreeSet<>();

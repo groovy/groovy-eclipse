@@ -299,8 +299,6 @@
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.27"/>
         <repository
-            url="https://download.eclipse.org/technology/m2e/releases/1.20.1"/>
-        <repository
             url="https://download.eclipse.org/eclipse/updates/4.27-I-builds/I20230104-1800"/>
       </repositoryList>
       <repositoryList
@@ -309,8 +307,6 @@
             url="https://download.eclipse.org/releases/2022-12"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.26"/>
-        <repository
-            url="https://download.eclipse.org/technology/m2e/releases/1.20.1"/>
       </repositoryList>
       <repositoryList
           name="2022-09">
@@ -318,8 +314,6 @@
             url="https://download.eclipse.org/releases/2022-09"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.25"/>
-        <repository
-            url="https://download.eclipse.org/technology/m2e/releases/1.20.1"/>
       </repositoryList>
       <repositoryList
           name="2022-06">
