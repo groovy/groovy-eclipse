@@ -1936,6 +1936,54 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1439
+    void testGStringDefAndFinal() {
+        // the keywords def and final are identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix def ${ def x; final y;} final suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix def '), 11, STRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('def'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('x;'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('final'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('y;'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf(' final suffix'), 13, STRING))
+
+        contents = '"prefix ${ def (int x, Number y) = list; var z;} suffix"'
+
+        if (!isParrotParser()) {
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+                new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+                new HighlightedTypedPosition(contents.indexOf('def'), 3, KEYWORD),
+                new HighlightedTypedPosition(contents.indexOf('x,'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+                new HighlightedTypedPosition(contents.indexOf('y)'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf('var'), 3, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf('z;'), 1, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING))
+        } else {
+            def htp = [
+                new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+                new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+                new HighlightedTypedPosition(contents.indexOf('def'), 3, KEYWORD),
+                new HighlightedTypedPosition(contents.indexOf('x,'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+                new HighlightedTypedPosition(contents.indexOf('y)'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
+                new HighlightedTypedPosition(contents.indexOf('z;'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING)
+            ]
+            if (isAtLeastGroovy(40))
+                htp.add(3, new HighlightedTypedPosition(contents.indexOf('int'), 3, KEYWORD))
+
+            assertHighlighting(contents, htp as HighlightedTypedPosition[])
+        }
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/1433
     void testGStringNull() {
         // the keyword null is identified by GroovyTagScanner within non-comment, non-GString content

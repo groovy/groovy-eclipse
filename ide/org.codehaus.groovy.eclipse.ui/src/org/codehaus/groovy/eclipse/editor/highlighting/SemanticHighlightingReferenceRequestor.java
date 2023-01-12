@@ -221,6 +221,10 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             ASTNode var = node.getNodeMetaData("reserved.type.name");
             if (var != null) {
                 pos = new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED);
+            } else if (lastGString.includes(node.getStart())) {
+                Expression varOrTuple = ((DeclarationExpression) node).getLeftExpression();
+                if (node.getStart() < varOrTuple.getStart()) // "def", "final" or annotation?
+                    pos = new HighlightedTypedPosition(node.getStart(), varOrTuple.getStart() - node.getStart() - 1, HighlightKind.KEYWORD);
             }
         } else if (node instanceof ArrayExpression && lastGString.includes(node.getStart())) {
             pos = new HighlightedTypedPosition(new Position(newOffset(node), 3), HighlightKind.KEYWORD);
