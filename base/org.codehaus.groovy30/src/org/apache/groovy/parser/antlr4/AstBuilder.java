@@ -3742,7 +3742,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         }
                     }
                 } else if (0 == size) { // e.g. "${}"
+                    /* GRECLIPSE edit
                     return configureAST(new ConstantExpression(null), ctx);
+                    */
+                    return new ConstantExpression(null);
+                    // GRECLIPSE end
                 }
 
                 return configureAST(this.createCallMethodCallExpression(closureExpression, new ArgumentListExpression(), true), ctx);

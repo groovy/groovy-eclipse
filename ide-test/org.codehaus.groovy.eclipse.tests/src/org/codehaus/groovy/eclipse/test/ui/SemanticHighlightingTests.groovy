@@ -1950,6 +1950,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('null;'), 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf('null}'), 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf(' null suffix'), 12, STRING))
+
+        contents = 'def s = "prefix ${} suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('s'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('"'), 19, GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1433
