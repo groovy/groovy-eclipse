@@ -593,7 +593,7 @@ public class CompilationUnit extends ProcessingUnit {
      * Adds a ClassNode directly to the unit (i.e. without source).
      * WARNING: the source is needed for error reporting, using
      * this method without setting a SourceUnit will cause
-     * NullPinterExceptions
+     * NullPointerExceptions
      */
     public void addClassNode(final ClassNode node) {
         ModuleNode module = new ModuleNode(getAST());
@@ -1064,7 +1064,7 @@ public class CompilationUnit extends ProcessingUnit {
     private List<ClassNode> getPrimaryClassNodes(final boolean sort) {
         // GRECLIPSE add
         if (sort) {
-            List<ClassNode> sorted = this.ast.getSortedClasses();
+            List<ClassNode> sorted = getAST().getSortedClasses();
             if (sorted != null) return sorted;
         }
         // GRECLIPSE end
@@ -1116,7 +1116,7 @@ public class CompilationUnit extends ProcessingUnit {
                 } else {
                     count = getSuperClassCount(node) + 5000;
                 }
-                countIndexPairs[index] = ((count << 16) + index);
+                countIndexPairs[index] = (Math.min(count, 0x7FFF) << 16) + index;
                 index += 1;
             }
             Arrays.sort(countIndexPairs);
@@ -1126,7 +1126,7 @@ public class CompilationUnit extends ProcessingUnit {
                 sorted.add(unsorted.get(i & 0xFFFF));
             }
         }
-        this.ast.setSortedClasses(sorted);
+        getAST().setSortedClasses(sorted);
         // GRECLIPSE end
         return sorted;
     }

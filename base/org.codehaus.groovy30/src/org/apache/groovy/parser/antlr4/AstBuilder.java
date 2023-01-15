@@ -363,25 +363,24 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 blockStatement.setLastLineNumber(omega.getLastLineNumber());
                 blockStatement.setLastColumnNumber(omega.getLastColumnNumber());
             }
-            if (!moduleNode.getClasses().isEmpty()) {
-                ClassNode scriptClass = moduleNode.getClasses().get(0);
-                scriptClass.setStart(alpha.getStart());
-                scriptClass.setLineNumber(alpha.getLineNumber());
-                scriptClass.setColumnNumber(alpha.getColumnNumber());
-                scriptClass.setEnd(omega.getEnd());
-                scriptClass.setLastLineNumber(omega.getLastLineNumber());
-                scriptClass.setLastColumnNumber(omega.getLastColumnNumber());
 
-                // fix the run method to contain the start and end locations of the statement block
-                MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
-                runMethod.setStart(alpha.getStart());
-                runMethod.setLineNumber(alpha.getLineNumber());
-                runMethod.setColumnNumber(alpha.getColumnNumber());
-                runMethod.setEnd(omega.getEnd());
-                runMethod.setLastLineNumber(omega.getLastLineNumber());
-                runMethod.setLastColumnNumber(omega.getLastColumnNumber());
-                runMethod.addAnnotation(makeAnnotationNode(Override.class));
-            }
+            ClassNode scriptClass = moduleNode.getClasses().get(0);
+            scriptClass.setStart(alpha.getStart());
+            scriptClass.setLineNumber(alpha.getLineNumber());
+            scriptClass.setColumnNumber(alpha.getColumnNumber());
+            scriptClass.setEnd(omega.getEnd());
+            scriptClass.setLastLineNumber(omega.getLastLineNumber());
+            scriptClass.setLastColumnNumber(omega.getLastColumnNumber());
+
+            // fix the run method to contain the start and end locations of the statement block
+            MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
+            runMethod.setStart(alpha.getStart());
+            runMethod.setLineNumber(alpha.getLineNumber());
+            runMethod.setColumnNumber(alpha.getColumnNumber());
+            runMethod.setEnd(omega.getEnd());
+            runMethod.setLastLineNumber(omega.getLastLineNumber());
+            runMethod.setLastColumnNumber(omega.getLastColumnNumber());
+            runMethod.addAnnotation(makeAnnotationNode(Override.class));
         }
         moduleNode.putNodeMetaData(LocationSupport.class, locationSupport);
         sourceUnit.setComments(lexer.getComments());

@@ -440,25 +440,24 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     blockStatement.setLastLineNumber(last.getLastLineNumber());
                     blockStatement.setLastColumnNumber(last.getLastColumnNumber());
                 }
-                if (!output.getClasses().isEmpty()) {
-                    ClassNode scriptClass = output.getClasses().get(0);
-                    scriptClass.setStart(first.getStart());
-                    scriptClass.setLineNumber(first.getLineNumber());
-                    scriptClass.setColumnNumber(first.getColumnNumber());
-                    scriptClass.setEnd(last.getEnd());
-                    scriptClass.setLastLineNumber(last.getLastLineNumber());
-                    scriptClass.setLastColumnNumber(last.getLastColumnNumber());
 
-                    // fix the run method to contain the start and end locations of the statement block
-                    MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
-                    runMethod.setStart(first.getStart());
-                    runMethod.setLineNumber(first.getLineNumber());
-                    runMethod.setColumnNumber(first.getColumnNumber());
-                    runMethod.setEnd(last.getEnd());
-                    runMethod.setLastLineNumber(last.getLastLineNumber());
-                    runMethod.setLastColumnNumber(last.getLastColumnNumber());
-                    runMethod.addAnnotation(makeAnnotationNode(Override.class));
-                }
+                ClassNode scriptClass = output.getClasses().get(0);
+                scriptClass.setStart(first.getStart());
+                scriptClass.setLineNumber(first.getLineNumber());
+                scriptClass.setColumnNumber(first.getColumnNumber());
+                scriptClass.setEnd(last.getEnd());
+                scriptClass.setLastLineNumber(last.getLastLineNumber());
+                scriptClass.setLastColumnNumber(last.getLastColumnNumber());
+
+                // fix the run method to contain the start and end locations of the statement block
+                MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
+                runMethod.setStart(first.getStart());
+                runMethod.setLineNumber(first.getLineNumber());
+                runMethod.setColumnNumber(first.getColumnNumber());
+                runMethod.setEnd(last.getEnd());
+                runMethod.setLastLineNumber(last.getLastLineNumber());
+                runMethod.setLastColumnNumber(last.getLastColumnNumber());
+                runMethod.addAnnotation(makeAnnotationNode(Override.class));
             }
             output.putNodeMetaData(LocationSupport.class, locations);
             // GRECLIPSE end
