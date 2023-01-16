@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -8073,5 +8073,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "PogoPogoPogoPogoPogoPogo111111");
+    }
+
+    @Test
+    public void testCompileStatic10904() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Function\n" +
+            "import java.util.stream.Collectors\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static class Profile {\n" +
+            "    String foo, bar\n" +
+            "  }\n" +
+            "  Map<String, Profile> profiles = [new Profile()].stream()\n" +
+            "    .collect(Collectors.toMap(Profile::getFoo, Function.identity()))\n" +
+            "  static main(args) {\n" +
+            "    print this.newInstance().getProfiles().size()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
     }
 }

@@ -122,7 +122,6 @@ public class CompilationUnit extends ProcessingUnit {
 
     protected ClassNodeResolver classNodeResolver = new ClassNodeResolver();
     protected ResolveVisitor resolveVisitor = new ResolveVisitor(this);
-    protected final Verifier verifier = new Verifier();
 
     /** The AST transformations state data. */
     protected ASTTransformationsContext astTransformationsContext;
@@ -313,9 +312,10 @@ public class CompilationUnit extends ProcessingUnit {
                 }
             }
         }, Phases.INSTRUCTION_SELECTION);
-
+        // GRECLIPSE add -- GROOVY-10904
+        addPhaseOperation(verification, Phases.CLASS_GENERATION);
+        // GRECLIPSE end
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
-
         /* GRECLIPSE edit -- skip output phase
         addPhaseOperation(groovyClass -> {
             String name = groovyClass.getName().replace('.', File.separatorChar) + ".class";
@@ -335,7 +335,6 @@ public class CompilationUnit extends ProcessingUnit {
             }
         });
         */
-
         ASTTransformationVisitor.addPhaseOperations(this);
 
         // post-transform operations:
@@ -758,18 +757,61 @@ public class CompilationUnit extends ProcessingUnit {
         return false;
     }
 
+    // GRECLIPSE add -- GROOVY-10904
+    private final Verifier verifier = new Verifier();
+
+    private final IPrimaryClassNodeOperation verification = new IPrimaryClassNodeOperation() {
+        @Override
+        public void call(final SourceUnit source, final GeneratorContext context, final ClassNode classNode) throws CompilationFailedException {
+            new OptimizerVisitor(CompilationUnit.this).visitClass(classNode, source);
+
+            GroovyClassVisitor visitor = verifier;
+            try {
+                visitor.visitClass(classNode);
+            } catch (RuntimeParserException rpe) {
+                getErrorCollector().addError(new SyntaxException(rpe.getMessage(), rpe.getNode()), source);
+            }
+
+            visitor = new LabelVerifier(source);
+            visitor.visitClass(classNode);
+
+            visitor = new InstanceOfVerifier() {
+                @Override
+                protected SourceUnit getSourceUnit() {
+                    return source;
+                }
+            };
+            visitor.visitClass(classNode);
+
+            visitor = new ClassCompletionVerifier(source);
+            visitor.visitClass(classNode);
+
+            visitor = new ExtendedVerifier(source);
+            visitor.visitClass(classNode);
+
+            getErrorCollector().failIfErrors();
+        }
+
+        @Override
+        public boolean needSortedInput() {
+            return true;
+        }
+    };
+    // GRECLIPSE end
+
     /**
-     * Runs the class generation phase on a single {@code ClassNode}.
+     * Generates bytecode for a single {@code ClassNode}.
      */
     private final IPrimaryClassNodeOperation classgen = new IPrimaryClassNodeOperation() {
         @Override
         public void call(final SourceUnit source, final GeneratorContext context, final ClassNode classNode) throws CompilationFailedException {
+            /* GRECLIPSE edit
             new OptimizerVisitor(CompilationUnit.this).visitClass(classNode, source); // GROOVY-4272: repositioned from static import visitor
 
             //
             // Run the Verifier on the outer class
             //
-            GroovyClassVisitor visitor = verifier;
+            GroovyClassVisitor visitor = new Verifier();
             try {
                 visitor.visitClass(classNode);
             } catch (RuntimeParserException rpe) {
@@ -796,8 +838,7 @@ public class CompilationUnit extends ProcessingUnit {
             // because the class may be generated even if an error was found
             // and that class may have an invalid format we fail here if needed
             getErrorCollector().failIfErrors();
-            // GRECLIPSE add -- if there are errors, don't generate code
-            // codegen can fail unexpectedly if there was an earlier error
+            */
             if (source != null && source.getErrorCollector().hasErrors()) return;
             // GRECLIPSE end
 
@@ -816,7 +857,7 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Run the generation and create the class (if required)
             //
-            visitor = new AsmClassGenerator(source, context, classVisitor, sourceName);
+            AsmClassGenerator visitor = new AsmClassGenerator(source, context, classVisitor, sourceName);
             visitor.visitClass(classNode);
 
             byte[] bytes = ((ClassWriter) classVisitor).toByteArray();
@@ -835,9 +876,11 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Recurse for inner classes
             //
-            LinkedList<ClassNode> innerClasses = ((AsmClassGenerator) visitor).getInnerClasses();
+            Deque<ClassNode> innerClasses = visitor.getInnerClasses();
             while (!innerClasses.isEmpty()) {
-                classgen.call(source, context, innerClasses.removeFirst());
+                ClassNode innerClass = innerClasses.removeFirst();
+                verification.call(source, context, innerClass);
+                classgen.call(source, context, innerClass);
             }
         }
 
