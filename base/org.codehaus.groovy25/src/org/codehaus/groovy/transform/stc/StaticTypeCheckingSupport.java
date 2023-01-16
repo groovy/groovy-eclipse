@@ -1304,6 +1304,10 @@ public abstract class StaticTypeCheckingSupport {
                         }
                     } else if (!oneDC.equals(twoDC)) {
                         if (ParameterUtils.parametersEqual(one.getParameters(), two.getParameters())) {
+                            // GRECLIPSE add -- GROOVY-10897
+                            if ( twoDC.isInterface() && !one.isAbstract() && !(two instanceof ExtensionMethodNode) ) {
+                                toBeRemoved.add(two);
+                            } else
                             // GROOVY-6882, GROOVY-6970: drop overridden or interface equivalent method
                             if (twoDC.isInterface() ? oneDC.implementsInterface(twoDC) : oneDC.isDerivedFrom(twoDC)) {
                                 toBeRemoved.add(two);

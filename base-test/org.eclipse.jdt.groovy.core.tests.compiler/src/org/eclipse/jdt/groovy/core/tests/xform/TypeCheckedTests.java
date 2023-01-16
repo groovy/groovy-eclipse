@@ -6820,4 +6820,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
     }
+
+    @Test
+    public void testTypeChecked10897() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface A {\n" +
+            "  def m()\n" +
+            "}\n" +
+            "interface B extends A {\n" +
+            "  @Override def m()\n" +
+            "}\n" +
+            "class C implements A {\n" +
+            "  @Override def m() { 'C' }\n" +
+            "}\n" +
+            "class D extends C implements B {\n" +
+            "}\n" +
+            "class E extends D {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  @Override\n" +
+            "  def m() {\n" +
+            "    'E then ' + super.m()\n" +
+            "  }\n" +
+            "}\n" +
+            "print new E().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "E then C");
+    }
 }
