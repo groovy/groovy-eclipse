@@ -11,14 +11,14 @@
             <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy40/lib/ivy-2.5.1-javadoc.jar!/" />
         </attributes>
     </classpathentry>
-    <classpathentry kind="lib" path="lib/groovy-4.0.7.jar" sourcepath="lib/groovy-4.0.7-sources.jar" exported="true">
+    <classpathentry kind="lib" path="lib/groovy-4.0.8.jar" sourcepath="lib/groovy-4.0.8-sources.jar" exported="true">
         <attributes>
-            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy40/lib/groovy-4.0.7-javadoc.jar!/" />
+            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy40/lib/groovy-4.0.8-javadoc.jar!/" />
         </attributes>
     </classpathentry>
-    <classpathentry kind="lib" path="lib/groovy-test-4.0.7.jar" sourcepath="lib/groovy-test-4.0.7-sources.jar" exported="true">
+    <classpathentry kind="lib" path="lib/groovy-test-4.0.8.jar" sourcepath="lib/groovy-test-4.0.8-sources.jar" exported="true">
         <attributes>
-            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy40/lib/groovy-test-4.0.7-javadoc.jar!/" />
+            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy40/lib/groovy-test-4.0.8-javadoc.jar!/" />
         </attributes>
     </classpathentry>
 

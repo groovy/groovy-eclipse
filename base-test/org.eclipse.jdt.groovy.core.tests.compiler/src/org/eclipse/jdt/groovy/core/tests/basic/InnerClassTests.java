@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1829,15 +1829,56 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "def c = new C() { }\n" +
-            "assert c.strings.length == 0\n" +
+            "print c.strings.length\n" +
             "c = new C('xy') { }\n" +
-            "assert c.strings.length == " + (isAtLeastGroovy(40) ? 1 : 2) + "\n" +
+            "print c.strings.length\n" +
             "c = new C('x','y') { }\n" +
-            "assert c.strings.length == 2\n",
+            "print c.strings.length\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
+        runConformTest(sources, isAtLeastGroovy(40) ? "012" : "022");
+    }
+
+    @Test // GROOVY-10722
+    public void testAnonymousInnerClass37() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String[] strings\n" +
+            "  C(String... args) {\n" +
+            "    strings = args\n" +
+            "  }\n" +
+            "}\n" +
+            "def c = new C(null) { }\n" +
+            "print c.strings?.length\n" +
+            "c = new C(new String[0]) { }\n" +
+            "print c.strings.length\n" +
+            "String[] a = ['x','y']\n" +
+            "c = new C(a) { }\n" +
+            "print c.strings.length\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null02");
+    }
+
+    @Test // GROOVY-10840
+    public void testAnonymousInnerClass38() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class BAIS extends ByteArrayInputStream {\n" +
+            "  BAIS(String input) {\n" +
+            "    super(input.bytes)\n" +
+            "  }\n" +
+            "}\n" +
+            "print new BAIS('input').available()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "5");
     }
 
     @Test

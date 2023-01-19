@@ -40,7 +40,7 @@ class PropertyExpressionTransformer {
         MethodNode dmct = pe.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
         // NOTE: BinaryExpressionTransformer handles the setter
         if (dmct != null && dmct.getParameters().length == 0 && !isOrImplements(scTransformer.getTypeChooser().resolveType(pe.getObjectExpression(), scTransformer.getClassNode()), MAP_TYPE)) {
-            MethodCallExpression mce = callX(scTransformer.transform(pe.getObjectExpression()), pe.getPropertyAsString());
+            MethodCallExpression mce = callX(scTransformer.transform(pe.getObjectExpression()), pe.getPropertyAsString()); // GRECLIPSE edit
             mce.setImplicitThis(pe.isImplicitThis());
             mce.setMethodTarget(dmct);
             mce.setSourcePosition(pe);
