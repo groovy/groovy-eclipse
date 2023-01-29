@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -375,16 +375,21 @@ class JDTClassNodeBuilder {
 
     //--------------------------------------------------------------------------
 
-    static ClassNode removeRedirect(ClassNode node) {
+    static ClassNode removeRedirect(final ClassNode node) {
         ClassNode redirect = ReflectionUtils.getPrivateField(ClassNode.class, "redirect", node);
         node.setRedirect(null);
         return redirect;
     }
 
-    static void setRedirect(ClassNode node, ClassNode redirect) {
-        if (node.isPrimaryClassNode()) throw new GroovyEclipseBug(
-            "Tried to set a redirect for a primary ClassNode (" + node.getName() + "->" + redirect.getName() + ")");
-        if (node != redirect)
+    static void setRedirect(final ClassNode node, final ClassNode redirect) {
+        if (node.isPrimaryClassNode()) {
+            throw new GroovyEclipseBug("Tried to set a redirect for a primary ClassNode (" + node.getName() + "->" + redirect.getName() + ")");
+        }
+        if (node != redirect) {
             ReflectionUtils.setPrivateField(ClassNode.class, "redirect", node, redirect);
+            if (node instanceof JDTClassNode) {
+                ReflectionUtils.setPrivateField(JDTClassNode.class, "bits", node, 65535);
+            }
+        }
     }
 }

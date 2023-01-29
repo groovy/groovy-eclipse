@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -47,7 +46,7 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         super(parentShell);
     }
 
-    protected abstract @NonNull DialogueDescriptor getDialogueDescriptor();
+    protected abstract /*@NonNull*/ DialogueDescriptor getDialogueDescriptor();
 
     @Override
     protected boolean isResizable() {

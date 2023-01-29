@@ -2103,8 +2103,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
-            "def test() {\n" +
-            "  [1, 2, 3].stream().reduce(7) { r, e -> r + e }\n" +
+            "int test() {\n" +
+            "  [1, 2, 3].stream().reduce(7) { total, value -> total + value }\n" +
             "}\n" +
             "print test()\n",
         };
