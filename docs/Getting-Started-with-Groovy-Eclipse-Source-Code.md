@@ -8,7 +8,7 @@ Getting Started with Groovy-Eclipse Source Code
 1. [Test with Eclipse](#test-with-eclipse)
 1. [Release Build with Maven](#release-build-with-maven)
 1. [Contribute](#contribute)
-1. [Debugging 'groovyc' Command](#debugging-groovyc-command)
+1. [Debugging `groovyc` Command](#debugging-groovyc-command)
 
 ## Communication
 
@@ -66,7 +66,7 @@ Groovy-Eclipse is a Groovy language tooling (similar to JDT or CDT components) i
 
 ### org.eclipse.jdt.core
 
-This project is a patched version of the Eclipse JDT plug-in that hooks core low-level support for the Groovy language into JDT, since JDT does not provide extension support for this kind of integration.  See the LanguageSupportFactory class references (and other classes from 'groovy' folder under this project) in the project to locate integration points.  Issues noticed in Java tooling may sometimes be caused by Groovy-Eclipse because of this project.
+This project is a patched version of the Eclipse JDT plug-in that hooks core low-level support for the Groovy language into JDT, since JDT does not provide extension support for this kind of integration.  See the LanguageSupportFactory class references (and other classes from `groovy` folder under this project) in the project to locate integration points.  Issues noticed in Java tooling may sometimes be caused by Groovy-Eclipse because of this project.
 
 ### org.eclipse.jdt.groovy.core
 
@@ -190,7 +190,7 @@ For manual testing and debugging, right-click on the org.codehaus.groovy.eclipse
 From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.27 (2023-03).
 
 	```
-	mvn -Pe4.27 clean install
+	mvn -Pe4.27 clean verify
 	```
 
 Replace e4.27 with a different option to build it for another Eclipse version:
@@ -232,23 +232,23 @@ There are currently no coding standards, but ensure your changes match the style
 Fork the Groovy-Eclipse repository, push your changes to it, and submit a pull request.  If you do not know how to do this, see [the Github forking guide](https://guides.github.com/activities/forking/).
 
 
-## Debugging 'groovyc' Command
+## Debugging `groovyc` Command
 
-Often defects are addressing something that doesn't compile in Groovy-Eclipse and yet compiles fine when compiled with a 'groovyc' command executed from command line interface.  Such defects would require one to investigate differences between 'groovyc' command compilation (pure Groovy) and Groovy-Eclipse compilation.  This involves debugging 'groovyc' command execution.  There are 2 ways debugging 'groovyc' command:
+Often defects are addressing something that doesn't compile in Groovy-Eclipse and yet compiles fine when compiled with a `groovyc` command executed from command line interface.  Such defects would require one to investigate differences between `groovyc` command compilation (pure Groovy) and Groovy-Eclipse compilation.  This involves debugging `groovyc` command execution.  There are 2 ways debugging `groovyc` command:
 
-1. Attach Eclipse debugger to 'groovyc' java process
+1. Attach Eclipse debugger to `groovyc` java process
 1. Launch `org.codehaus.groovy.tools.FileSystemCompiler` as a Java Application
 
 It is recommended to have Groovy source from https://github.com/groovy/groovy-core in your workspace as code in Groovy-Eclipse org.codehaus.groovy doesn't exactly match the original groovy code and has a few Groovy-Eclipse-specific fixes.
 
-### Attach Eclipse Debugger to 'groovyc' java process
+### Attach Eclipse Debugger to `groovyc` java process
 
 1. Execute the following in the console:
 	```
 	export JAVA_OPTS="--Xdebug --Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=5000,server=y,suspend=y"
 	```
-1. Start 'groovyc' command from the console, e.g. '<path to groovyc>/groovyc <groovy files to compile>. Process should be suspended until debugger is attached.
-1. Create a new 'Remote Java Application' launch configuration in Eclipse.  Specify project from the workspace corresponding the version of Groovy for the ran 'groovyc' command, leave host as localhost, and specify the port 5000.
+1. Start `groovyc` command from the console, e.g. `<path to groovyc>/groovyc <groovy files to compile>`. Process should be suspended until debugger is attached.
+1. Create a new 'Remote Java Application' launch configuration in Eclipse.  Specify project from the workspace corresponding the version of Groovy for the ran `groovyc` command, leave host as localhost, and specify the port 5000.
 1. Launch the created 'Remote Java Application'.
 
 ### Launch `org.codehaus.groovy.tools.FileSystemCompiler` as Java Application

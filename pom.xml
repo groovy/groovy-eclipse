@@ -7,14 +7,7 @@
 
 	<!-- To run this build, use the following commands (depending on what you are trying to do):
 		mvn clean verify -Pe49
-		mvn clean deploy -Pe49 -Pmilestone -Ddist.qualifier=-M1
 		mvn clean deploy -Pe49 -Prelease
-
-		Running 'deploy' requires s3 accessKey and secretKey to be provided via
-		the environment variables 'bamboo_tools_s3_accesskey_password' and also
-		'bamboo_tools_s3_secretkey_password'.  The existence of these variables
-		enables the deployment profile automatically and will allow 'deploy' to
-		execute.
 	-->
 
 	<properties>
@@ -37,15 +30,6 @@
 
 		<!-- Used by tycho-packaging-plugin to add Eclipse-SourceReferences to plugins. -->
 		<tycho.scmUrl>scm:git:git://github.com/gitroot/groovy/groovy-eclipse</tycho.scmUrl>
-
-		<!-- Properties that define where stuff gets uploaded and how jar is named etc. -->
-		<dist.bucket>dist.springsource.org</dist.bucket>
-		<dist.project>org.codehaus.groovy</dist.project>
-		<dist.name>Groovy Development Tools</dist.name>
-		<dist.key>GRECLIPSE</dist.key>
-		<dist.type>snapshot</dist.type>
-		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
-		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like '-M1', '-RELEASE' etc. -->
 	</properties>
 
 	<pluginRepositories>
@@ -135,8 +119,8 @@
 				<module>jdt-patch/e427/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.27</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2303${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.27</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2303'</greclipse.build.qualifier>
 
 				<tycho-version>2.7.5</tycho-version>
 				<tycho-extras-version>2.7.5</tycho-extras-version>
@@ -164,8 +148,8 @@
 				<module>jdt-patch/e426/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.26</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2212${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.26</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2212'</greclipse.build.qualifier>
 
 				<tycho-version>2.7.5</tycho-version>
 				<tycho-extras-version>2.7.5</tycho-extras-version>
@@ -193,8 +177,8 @@
 				<module>jdt-patch/e425/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.25</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2209${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.25</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2209'</greclipse.build.qualifier>
 
 				<tycho-version>2.7.5</tycho-version>
 				<tycho-extras-version>2.7.5</tycho-extras-version>
@@ -222,8 +206,8 @@
 				<module>jdt-patch/e424/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.24</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2206${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.24</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2206'</greclipse.build.qualifier>
 
 				<tycho-version>2.5.0</tycho-version>
 				<tycho-extras-version>2.5.0</tycho-extras-version>
@@ -251,8 +235,8 @@
 				<module>jdt-patch/e423/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.23</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2203${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.23</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2203'</greclipse.build.qualifier>
 
 				<tycho-version>2.5.0</tycho-version>
 				<tycho-extras-version>2.5.0</tycho-extras-version>
@@ -280,8 +264,8 @@
 				<module>jdt-patch/e422/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.22</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2112${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.22</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2112'</greclipse.build.qualifier>
 
 				<tycho-version>2.5.0</tycho-version>
 				<tycho-extras-version>2.5.0</tycho-extras-version>
@@ -309,8 +293,8 @@
 				<module>jdt-patch/e421/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.21</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2109${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.21</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2109'</greclipse.build.qualifier>
 
 				<tycho-version>2.5.0</tycho-version>
 				<tycho-extras-version>2.5.0</tycho-extras-version>
@@ -338,8 +322,8 @@
 				<module>jdt-patch/e420/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.20</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2106${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.20</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2106'</greclipse.build.qualifier>
 
 				<tycho-version>2.5.0</tycho-version>
 				<tycho-extras-version>2.5.0</tycho-extras-version>
@@ -367,8 +351,8 @@
 				<module>jdt-patch/e419/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.19</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2103${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.19</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2103'</greclipse.build.qualifier>
 
 				<tycho-version>2.5.0</tycho-version>
 				<tycho-extras-version>2.5.0</tycho-extras-version>
@@ -396,8 +380,8 @@
 				<module>jdt-patch/e418/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.18</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2012${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.18</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2012'</greclipse.build.qualifier>
 
 				<tycho-version>2.5.0</tycho-version>
 				<tycho-extras-version>2.5.0</tycho-extras-version>
@@ -425,8 +409,8 @@
 				<module>jdt-patch/e417/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.17</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2009${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.17</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2009'</greclipse.build.qualifier>
 
 				<tycho-version>2.5.0</tycho-version>
 				<tycho-extras-version>2.5.0</tycho-extras-version>
@@ -454,8 +438,8 @@
 				<module>jdt-patch/e416/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.16</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2006${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.16</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2006'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -480,8 +464,8 @@
 				<module>jdt-patch/e415/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.15</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2003${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.15</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2003'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -506,8 +490,8 @@
 				<module>jdt-patch/e414/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.14</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1912${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.14</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1912'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -532,8 +516,8 @@
 				<module>jdt-patch/e413/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.13</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1909${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.13</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1909'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -558,8 +542,8 @@
 				<module>jdt-patch/e412/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.12</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1906${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.12</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1906'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -584,8 +568,8 @@
 				<module>jdt-patch/e411/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.11</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1903${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.11</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1903'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -610,8 +594,8 @@
 				<module>jdt-patch/e410/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.10</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1812${dist.qualifier}'</greclipse.build.qualifier>
+				<deploy.target>e4.10</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1812'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -636,16 +620,8 @@
 				<module>jdt-patch/e49/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.9</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1809${dist.qualifier}'</greclipse.build.qualifier>
-			</properties>
-		</profile>
-
-		<profile>
-			<id>milestone</id>
-			<properties>
-				<dist.type>milestone</dist.type>
-				<!-- expecting '-Ddist.qualifier=-Mn' command-line argument -->
+				<deploy.target>e4.9</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1809'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -653,10 +629,6 @@
 			<id>release</id>
 			<properties>
 				<skipTests>true</skipTests>
-				<dist.type>release</dist.type>
-				<dist.version>4.9.0</dist.version>
-				<dist.qualifier>-RELEASE</dist.qualifier>
-				<dist.path>${dist.type}/${dist.key}/${dist.version}/${dist.target}</dist.path>
 			</properties>
 		</profile>
 	</profiles>

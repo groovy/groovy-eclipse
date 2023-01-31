@@ -142,7 +142,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.27"/>
+        url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.27"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -150,7 +150,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.26"/>
+        url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.26"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -158,7 +158,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.25"/>
+        url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.25"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -166,7 +166,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.24"/>
+        url="https://groovy.jfrog.io/artifactory/plugins-release/e4.24"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -174,7 +174,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.23"/>
+        url="https://groovy.jfrog.io/artifactory/plugins-release/e4.23"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -182,7 +182,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.22"/>
+        url="https://groovy.jfrog.io/artifactory/plugins-release/e4.22"/>
   </setupTask>
   <setupTask
       xsi:type="git:GitCloneTask"

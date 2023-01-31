@@ -22,7 +22,7 @@
 
    <category-def name="org.codehaus.groovy.m2eclipse" label="Maven Support (optional)">
       <description>
-         Provides Groovy support to m2eclipse. This is compatible with m2eclipse v1.0 and greater.
+         Provides Groovy support to m2eclipse. This is compatible with m2eclipse 1.x and 2.x.
       </description>
    </category-def>
 

@@ -1,15 +1,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<relativePath>../pom.xml</relativePath>
-		<groupId>org.codehaus.groovy.eclipse</groupId>
 		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
+		<groupId>org.codehaus.groovy.eclipse</groupId>
+		<relativePath>../pom.xml</relativePath>
 		<version>4.9.0-SNAPSHOT</version>
 	</parent>
-	<groupId>org.codehaus.groovy.eclipse</groupId>
 	<artifactId>org.codehaus.groovy.eclipse.site</artifactId>
-	<version>4.9.0-SNAPSHOT</version>
 	<packaging>eclipse-update-site</packaging>
+
+	<properties>
+		<deploy.version>latest</deploy.version>
+	</properties>
 
 	<!--build>
 		<plugins>
@@ -27,6 +29,10 @@
 	<profiles>
 		<profile>
 			<id>release</id>
+
+			<properties>
+				<deploy.version>4.9.0</deploy.version>
+			</properties>
 
 			<pluginRepositories>
 				<pluginRepository>
@@ -48,9 +54,9 @@
 						<executions>
 							<execution>
 								<configuration>
-									<name>{$dist.name} for ${dist.target}</name>
+									<name>Groovy Development Tools for ${deploy.target}</name>
 									<sites>
-										<param>https://${dist.bucket}/${dist.type}/${dist.key}/${dist.version}/${dist.target}</param>
+										<param>https://groovy.jfrog.io/artifactory/plugins-release-local/org/codehaus/groovy/groovy-eclipse-integration/${deploy.version}/${deploy.target}</param>
 									</sites>
 									<target>${project.build.directory}</target><!-- writes compositeArtifacts.xml and compositeContent.xml -->
 								</configuration>
@@ -60,52 +66,20 @@
 							</execution>
 						</executions>
 					</plugin>
-				</plugins>
-			</build>
-		</profile>
 
-		<profile>
-			<id>s3-deploy</id>
-			<activation>
-				<property>
-					<name>env.bamboo_tools_s3_accesskey_password</name>
-				</property>
-			</activation>
-
-			<pluginRepositories>
-				<pluginRepository>
-					<id>jcenter</id>
-					<url>https://jcenter.bintray.com</url>
-				</pluginRepository>
-				<pluginRepository>
-					<id>spring-plugins-release</id>
-					<name>Spring Plugins Repository</name>
-					<url>https://repo.spring.io/plugins-release</url>
-				</pluginRepository>
-			</pluginRepositories>
-
-			<build>
-				<plugins>
 					<plugin>
 						<artifactId>maven-antrun-plugin</artifactId>
 						<version>1.8</version>
 						<executions>
 							<execution>
-								<id>upload-dist</id>
+								<id>archive-update-site</id>
 								<phase>deploy</phase>
 								<configuration>
 									<target>
-										<echo>Uploading main update site to s3...</echo>
+										<echo>Creating update site zip...</echo>
 
-										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
-										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
-
-										<property name="dist.full.version" value="${unqualifiedVersion}.${buildQualifier}" />
-										<echo>dist.full.version=${dist.full.version}</echo><!-- ex: 3.5.0.v201909232147-e1909 -->
-
-										<property name="dist.file.name" value="${dist.project}-${dist.full.version}-updatesite.zip" />
-										<echo>dist.file.name=${dist.file.name}</echo><!-- ex: org.codehaus.groovy-3.5.0.v201909232147-e1909-updatesite.zip -->
-
+										<property name="dist.file.name" value="org.codehaus.groovy-${unqualifiedVersion}.${buildQualifier}-updatesite.zip" />
+										<echo>dist.file.name=${dist.file.name}</echo><!-- ie org.codehaus.groovy-3.5.0.v201909232147-e1909-updatesite.zip -->
 										<property name="dist.full.path" value="${project.build.directory}/${dist.file.name}" />
 
 										<delete file="${dist.full.path}" />
@@ -115,65 +89,8 @@
 										<checksum file="${dist.full.path}" algorithm="MD5" fileext=".md5" />
 										<checksum file="${dist.full.path}" algorithm="SHA1" fileext=".sha1" />
 
-										<echo>Preparing for upload...</echo>
-
-										<echo>Will Delete: </echo>
-										<echo> dist.bucket=${dist.bucket}</echo><!-- ex: dist.springsource.org -->
-										<echo> dist.path=${dist.path}</echo><!-- ex: snapshot/GRECLIPSE/e4.13 -->
-
-										<echo>Will Upload: </echo>
-										<echo> dist.bucket=${dist.bucket}</echo>
-										<echo> fromDir=${project.build.directory}/site</echo>
-										<echo> toDir=${dist.path}</echo>
-
-										<echo>Will Upload: </echo>
-										<echo> dist.bucket=${dist.bucket}</echo>
-										<echo> fromFile=${dist.full.path}</echo>
-										<echo> toFile=${dist.path}/${dist.file.name}</echo>
-										<echo> metadata bundle.version=${dist.full.version}</echo>
-										<echo> metadata package.file.name=${dist.file.name}</echo>
-										<echo> metadata project.name=${dist.name}</echo>
-										<echo> metadata release.type=${dist.type}</echo>
-
-										<s3 accessKey="${env.bamboo_tools_s3_accesskey_password}" secretKey="${env.bamboo_tools_s3_secretkey_password}">
-											<delete bucketName="${dist.bucket}">
-												<fileset dir="${dist.path}">
-													<include name="artifacts.jar" />
-													<include name="content.jar" />
-													<include name="features/**" />
-													<include name="plugins/**" />
-													<include name="site.xml" />
-												</fileset>
-											</delete>
-
-											<upload bucketName="${dist.bucket}" toDir="${dist.path}" publicRead="true">
-												<fileset dir="${project.build.directory}/site" />
-											</upload>
-
-											<upload bucketName="${dist.bucket}" file="${dist.full.path}" toDir="${dist.path}" publicRead="true">
-												<metadata name="bundle.version" value="${dist.full.version}" />
-												<metadata name="package.file.name" value="${dist.file.name}" />
-												<metadata name="project.name" value="${dist.name}" />
-												<metadata name="release.type" value="${dist.type}" />
-											</upload>
-											<upload bucketName="${dist.bucket}" file="${dist.full.path}.md5" toDir="${dist.path}" publicRead="true" />
-											<upload bucketName="${dist.bucket}" file="${dist.full.path}.sha1" toDir="${dist.path}" publicRead="true" />
-										</s3>
-
-										<if>
-											<equals arg1="${dist.type}" arg2="release" />
-											<then>
-												<s3 accessKey="${env.bamboo_tools_s3_accesskey_password}" secretKey="${env.bamboo_tools_s3_secretkey_password}">
-													<delete bucketName="${dist.bucket}">
-														<fileset dir="${dist.type}/${dist.key}/${dist.target}" includes="composite*.xml" />
-													</delete>
-
-													<upload bucketName="${dist.bucket}" toDir="${dist.type}/${dist.key}/${dist.target}" publicRead="true">
-														<fileset dir="${project.build.directory}" includes="composite*.xml" />
-													</upload>
-												</s3>
-											</then>
-										</if>
+										<!-- ${project.build.directory} (usually <project>/Site-org.codehaus.groovy.eclipse/target) now contains -->
+										<!-- site/, size.zip, *-updatesize.zip, *-updatesize.zip.[md5|sha1] and composite[Artifacts|Content].xml -->
 									</target>
 								</configuration>
 								<goals>
@@ -181,30 +98,6 @@
 								</goals>
 							</execution>
 						</executions>
-
-						<dependencies>
-							<dependency>
-								<groupId>org.springframework.build</groupId>
-								<artifactId>org.springframework.build.aws.ant</artifactId>
-								<version>3.1.0.RELEASE</version>
-							</dependency>
-							<dependency>
-								<groupId>org.jets3t</groupId>
-								<artifactId>com.springsource.org.jets3t</artifactId>
-								<version>0.8.1</version>
-							</dependency>
-							<dependency>
-								<groupId>ant-contrib</groupId>
-								<artifactId>ant-contrib</artifactId>
-								<version>1.0b3</version>
-								<exclusions>
-									<exclusion>
-										<groupId>ant</groupId>
-										<artifactId>ant</artifactId>
-									</exclusion>
-								</exclusions>
-							</dependency>
-						</dependencies>
 					</plugin>
 				</plugins>
 			</build>
