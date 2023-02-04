@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -844,11 +844,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     }
 
     private boolean isArgument(Expression expr) {
-        if (argumentListStack.isEmpty()) {
-            return false;
-        }
-        TupleExpression tuple = argumentListStack.getLast();
-        return isArgument(expr, tuple.getExpressions());
+        if (argumentListStack.isEmpty()) return false;
+        return isArgument(expr, argumentListStack.getLast().getExpressions());
     }
 
     private boolean isArgument(Expression expr, List<? extends Expression> args) {

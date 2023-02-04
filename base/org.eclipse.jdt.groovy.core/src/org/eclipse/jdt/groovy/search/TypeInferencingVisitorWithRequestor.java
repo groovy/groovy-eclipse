@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,6 +114,7 @@ import org.codehaus.groovy.transform.sc.transformers.CompareToNullExpression;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.groovy.transform.trait.Traits;
+import org.codehaus.jdt.groovy.ast.MethodNodeWithNamedParams;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyEclipseBug;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -2476,8 +2477,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         } else if ((cat = scope.getEnclosingMethodCallExpression()) != null && cat.declaration instanceof MethodNode) {
             MethodNode methodNode = (MethodNode) cat.declaration;
-            Parameter methodParam = findTargetParameter(node, cat.call, methodNode,
-                !methodNode.getDeclaringClass().equals(cat.getPerceivedDeclaringType()));
+            Parameter methodParam = findTargetParameter(node, cat.call, methodNode, !methodNode.getDeclaringClass().equals(cat.getPerceivedDeclaringType()));
             if (methodParam != null) {
                 if (VariableScope.CLOSURE_CLASS_NODE.equals(methodParam.getType())) {
                     GroovyUtils.getAnnotations(methodParam, VariableScope.CLOSURE_PARAMS.getName()).findFirst().ifPresent(cp -> {
@@ -3034,7 +3034,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         if (call.getArguments() instanceof TupleExpression) {
             int idx = -1;
             out: for (Expression exp : (TupleExpression) call.getArguments()) {
-                if (exp instanceof MapExpression) {
+                // for DSLD methods, parameters may be "named"
+                if (idx == -1 && exp instanceof MapExpression && declaration instanceof MethodNodeWithNamedParams) {
                     for (MapEntryExpression ent : ((MapExpression) exp).getMapEntryExpressions()) {
                         if (arg == ent.getValueExpression()) {
                             key = ent.getKeyExpression().getText();
@@ -3043,10 +3044,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 } else {
                     idx += 1;
-                    if (arg == exp) {
-                        pos = idx;
-                        break;
-                    }
+                }
+                if (arg == exp) {
+                    pos = idx;
+                    break;
                 }
             }
         }
@@ -3058,7 +3059,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
         } else if (pos != -1) {
             if (isGroovyMethod) pos += 1; // skip self parameter
-            Parameter[] parameters = getPositionalParameters(declaration);
+            Parameter[] parameters = declaration.getParameters();
+            if (declaration instanceof MethodNodeWithNamedParams)
+                parameters = ((MethodNodeWithNamedParams) declaration).getPositionalParams();
+
             if (pos < parameters.length || GenericsMapper.isVargs(parameters)) {
                 return parameters[Math.min(pos, parameters.length - 1)];
             }
@@ -3087,14 +3091,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             return "putAt";
         }
         return null;
-    }
-
-    private static Parameter[] getPositionalParameters(final MethodNode methodNode) {
-        if (Stream.of(methodNode.getClass().getInterfaces()).anyMatch(face -> face.getSimpleName().equals("MethodNodeWithNamedParams"))) {
-            Parameter[] parameters = ReflectionUtils.executePrivateMethod(methodNode.getClass(), "getPositionalParams", methodNode);
-            return parameters;
-        }
-        return methodNode.getParameters();
     }
 
     /**

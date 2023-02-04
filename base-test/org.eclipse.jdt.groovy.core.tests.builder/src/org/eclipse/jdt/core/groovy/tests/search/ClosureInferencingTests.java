@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -604,6 +604,33 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         //@formatter:on
         int offset = contents.indexOf("optionValue");
         assertUnknownConfidence(contents, offset, offset + "optionValue".length());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1446
+    public void testClosure31() {
+        //@formatter:off
+        String contents =
+            "void test(Map<String,String> args, java.util.function.Consumer<String> proc) { }\n" +
+            "test(foo:'bar', baz:null) { str ->\n" +
+            "  str.toUpperCase()\n" +
+            "}\n";
+        //@formatter:on
+        int offset = contents.lastIndexOf("str");
+        assertType(contents, offset, offset + "str".length(), "java.lang.String");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1446
+    public void testClosure32() {
+        //@formatter:off
+        String contents =
+            "import groovy.transform.stc.*\n" +
+            "void test(Map<String,String> args, @ClosureParams(value=SimpleType, options='java.lang.String') Closure<?> proc) { }\n" +
+            "test(foo:'bar', baz:null) { str ->\n" +
+            "  str.toUpperCase()\n" +
+            "}\n";
+        //@formatter:on
+        int offset = contents.lastIndexOf("str");
+        assertType(contents, offset, offset + "str".length(), "java.lang.String");
     }
 
     @Test // closure within closure

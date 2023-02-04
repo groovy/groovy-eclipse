@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -739,7 +739,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         private int getParameterPosition(final ASTNode argumentCandidate, final MethodCall methodCall) {
             if (methodCall != null && methodCall.getArguments() instanceof TupleExpression) {
                 int paramIndex = -1;
-                for (Expression argument : ((TupleExpression) methodCall.getArguments()).getExpressions()) {
+                for (Expression argument : (TupleExpression) methodCall.getArguments()) {
                     paramIndex += 1;
                     if (argument == argumentCandidate) {
                         return paramIndex;
