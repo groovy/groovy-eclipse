@@ -60,6 +60,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -165,7 +166,8 @@ public abstract class StaticTypeCheckingSupport {
     protected static final ClassNode ArrayList_TYPE = makeWithoutCaching(ArrayList.class);
     protected static final ClassNode Collection_TYPE = makeWithoutCaching(Collection.class);
     protected static final ClassNode Deprecated_TYPE = makeWithoutCaching(Deprecated.class);
-    protected static final ExtensionMethodCache EXTENSION_METHOD_CACHE = ExtensionMethodCache.INSTANCE;
+    protected static final ClassNode LinkedHashMap_TYPE = makeWithoutCaching(LinkedHashMap.class);
+    protected static final ClassNode LinkedHashSet_TYPE = makeWithoutCaching(LinkedHashSet.class);
 
     protected static final Map<ClassNode, Integer> NUMBER_TYPES = Maps.of(
             byte_TYPE,    0,
@@ -239,6 +241,8 @@ public abstract class StaticTypeCheckingSupport {
             return 1;
         }
     };
+
+    protected static final ExtensionMethodCache EXTENSION_METHOD_CACHE = ExtensionMethodCache.INSTANCE;
 
     public static void clearExtensionMethodCache() {
         EXTENSION_METHOD_CACHE.cache.clearAll();
@@ -1808,53 +1812,31 @@ public abstract class StaticTypeCheckingSupport {
         for (int i = 0; i < n; i += 1) {
             GenericsType ui = usage[i];
             GenericsType di = declaration[i];
-            if (di.isPlaceholder()) { // di like "T"
+            if (di.isPlaceholder()) {     // di like "T"
                 connections.put(new GenericsTypeName(di.getName()), ui);
-            } else if (di.isWildcard()) { // di like "?", "? super T", "? extends T", ...
-                ClassNode lowerBound = di.getLowerBound(), upperBounds[] = di.getUpperBounds();
-                if (ui.isWildcard()) {    // ui like "?", "? super Type" or "? extends Type"
-                    extractGenericsConnections(connections, ui.getLowerBound(), lowerBound);
-                    extractGenericsConnections(connections, ui.getUpperBounds(), upperBounds);
-                /* GRECLIPSE edit -- GROOVY-9998, GROOVY-10328, GROOVY-10499, et al.
+            } else if (di.isWildcard()) { // di like "?", "? super T", "? extends T"
+                if (isUnboundedWildcard(di)) continue;
+                boolean lowerBound = (di.getLowerBound() != null);
+                ClassNode boundType = lowerBound ? di.getLowerBound() : di.getUpperBounds()[0];
+                if (ui.isWildcard()) {    // ui like "?", "? super Type", "? extends One & Two"
+                    if (lowerBound)
+                        extractGenericsConnections(connections, ui.getLowerBound(), boundType);
+                    else if (ui.getUpperBounds()!=null) for (ClassNode ub: ui.getUpperBounds())
+                        extractGenericsConnections(connections, ub, boundType); // GROOVY-10911
                 } else {
-                    ClassNode ui_type = ui.getType();
-                    extractGenericsConnections(connections, ui_type, lowerBound);
-                    if (upperBounds != null) {
-                        for (ClassNode ub : upperBounds) {
-                            extractGenericsConnections(connections, ui_type, ub);
-                        }
-                    }
+                    // GRECLIPSE add -- GROOVY-9998, GROOVY-10328, GROOVY-10499, et al.
+                    if (boundType.isGenericsPlaceHolder()) { // di like "? extends/super T"
+                        // 6731,7992,8983,9998,10047,10499,10749,10765,...
+                        ui = new GenericsType(ui.getType()); // erase type
+                        if (lowerBound) ui.setWildcard(true); // binds weak
+                        String placeholderName = boundType.getUnresolvedName();
+                        connections.put(new GenericsTypeName(placeholderName), ui);
+                    } else // di like "? extends Iterable<T>" and ui like "List<Type>"
+                    // GRECLIPSE end
+                    extractGenericsConnections(connections, ui.getType(), boundType);
                 }
-                */
-                } else if (!isUnboundedWildcard(di)) {
-                    ClassNode boundType = lowerBound != null ? lowerBound : upperBounds[0];
-                    if (!boundType.isGenericsPlaceHolder()) {
-                        // di like "? extends Iterable<T>" and ui like "Collection<Type>"
-                        extractGenericsConnections(connections, ui.getType(), boundType);
-                    } else if (lowerBound == null) { // di like "? extends T"
-                        extractGenericsConnections(connections, ui.getType(), boundType);
-                    } else { // 6731,8983,10047,10749 : di like "? super T"
-                        ui = new GenericsType(ui.getType()); ui.setWildcard(true); // weak sauce
-                        connections.put(new GenericsTypeName(boundType.getUnresolvedName()), ui);
-                    }
-                }
-                // GRECLIPSE end
             } else {
                 extractGenericsConnections(connections, ui.getType(), di.getType());
-            }
-        }
-    }
-
-    private static void extractGenericsConnections(final Map<GenericsTypeName, GenericsType> connections, final ClassNode[] usage, final ClassNode[] declaration) {
-        if (usage == null || declaration == null || declaration.length == 0) return;
-        // both have generics
-        for (int i = 0, n = usage.length; i < n; i += 1) {
-            ClassNode ui = usage[i];
-            ClassNode di = declaration[i];
-            if (di.isGenericsPlaceHolder()) {
-                connections.put(new GenericsTypeName(di.getUnresolvedName()), new GenericsType(ui));
-            } else if (di.isUsingGenerics()) {
-                extractGenericsConnections(connections, ui.getGenericsTypes(), di.getGenericsTypes());
             }
         }
     }
