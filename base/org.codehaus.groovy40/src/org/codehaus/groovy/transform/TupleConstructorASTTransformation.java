@@ -37,7 +37,6 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -146,8 +145,8 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
                 return;
             GroovyClassLoader classLoader = compilationUnit != null ? compilationUnit.getTransformLoader() : source.getClassLoader();
             PropertyHandler handler = PropertyHandler.createPropertyHandler(this, classLoader, cNode);
-            if (handler == null) return;
-            if (!handler.validateAttributes(this, anno)) return;
+            if (handler == null || !handler.validateAttributes(this, anno))
+                return;
 
             Expression pre = anno.getMember("pre");
             if (pre != null && !(pre instanceof ClosureExpression)) {
@@ -191,14 +190,15 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
         // no processing if explicit constructor(s) found, unless forced or ImmutableBase is in play
         if (!force && !makeImmutable && hasExplicitConstructor(null, cNode)) return;
 
+        boolean includePseudoGetters = false, includePseudoSetters = allProperties, skipReadOnly = true;
         Set<String> names = new HashSet<>();
         List<PropertyNode> superList;
         if (includeSuperProperties || includeSuperFields) {
-            superList = getAllProperties(names, cNode.getSuperClass(), includeSuperProperties, includeSuperFields, false, allProperties, true, true);
+            superList = getAllProperties(names, cNode.getSuperClass(), includeSuperProperties, includeSuperFields, includePseudoGetters, includePseudoSetters, /*super*/true, skipReadOnly);
         } else {
             superList = new ArrayList<>();
         }
-        List<PropertyNode> list = getAllProperties(names, cNode, includeProperties, includeFields, false, allProperties, false, true);
+        List<PropertyNode> list = getAllProperties(names, cNode, includeProperties, includeFields, includePseudoGetters, includePseudoSetters, /*super*/false, skipReadOnly);
 
         List<Parameter> params = new ArrayList<>();
         List<Expression> superParams = new ArrayList<>();
@@ -338,9 +338,6 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
           case AUTO:
               if (init != null) {
                   param.setInitialExpression(init);
-                  /* GRECLIPSE edit -- save default for other transforms
-                  fNode.setInitialValueExpression(null); // GROOVY-10238
-                  */
               }
             break;
           default:
