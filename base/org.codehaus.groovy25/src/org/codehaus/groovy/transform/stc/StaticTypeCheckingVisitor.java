@@ -1579,7 +1579,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         constructors = findMethod(node, "<init>", arguments);
         if (constructors.isEmpty()) {
-            if (isBeingCompiled(node) && !node.isInterface() && arguments.length == 1 && arguments[0].equals(LINKEDHASHMAP_CLASSNODE)) {
+            if (isBeingCompiled(node) && !node.isAbstract() && arguments.length == 1 && arguments[0].equals(LINKEDHASHMAP_CLASSNODE)) {
                 // there will be a default hash map constructor added later
                 ConstructorNode cn = new ConstructorNode(Opcodes.ACC_PUBLIC, new Parameter[]{
                         new Parameter(LINKEDHASHMAP_CLASSNODE, "args")

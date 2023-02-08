@@ -1929,6 +1929,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8136a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class MVM<K,V> implements Map<K,List<V>> {}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "void test() {\n" +
+            "  MVM m = [:]\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tMVM m = [:]\n" +
+            "\t        ^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching constructor MVM(java.util.LinkedHashMap)\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked8202() {
         //@formatter:off
         String[] sources = {
