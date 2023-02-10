@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,10 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
@@ -29,7 +30,7 @@ import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 
 /**
- * Tests that the declaring type of the enclosing call matches the name or type passed in as an argument.
+ * Tests that the declaring type of an enclosing call matches the name or type passed in as an argument.
  */
 public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
 
@@ -37,66 +38,35 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
-    /**
-     * Outer pointcut bindings not allowed here.
-     * return on match is always a singleton
-     * Just like {@link CurrentTypePointcut}
-     */
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         List<CallAndType> enclosing = pattern.getCurrentScope().getAllEnclosingMethodCallExpressions();
         if (enclosing == null) {
             return null;
         }
+
+        Function<CallAndType, ClassNode> toResult = CallAndType::getPerceivedDeclaringType;
+
         Object firstArgument = getFirstArgument();
         if (firstArgument == null) {
-            List<CallAndType> allEnclosingMethodCallExpressions = pattern.getCurrentScope().getAllEnclosingMethodCallExpressions();
-            if (allEnclosingMethodCallExpressions != null && allEnclosingMethodCallExpressions.size() > 0) {
-                List<ClassNode> enclosingCallTypes = new ArrayList<>(allEnclosingMethodCallExpressions.size());
-                for (CallAndType callAndType : allEnclosingMethodCallExpressions) {
-                    enclosingCallTypes.add(callAndType.getPerceivedDeclaringType());
-                }
-                return enclosingCallTypes;
-            }
-            return null;
+            return enclosing.stream().map(toResult).collect(Collectors.toList());
         }
         if (firstArgument instanceof Class) {
             firstArgument = ((Class<?>) firstArgument).getName();
         }
         if (firstArgument instanceof String) {
-            ClassNode matchingType = matchesInCalls(enclosing, (String) firstArgument, pattern);
-            if (matchingType != null) {
-                return Collections.singleton(matchingType);
-            } else {
-                return null;
+            for (CallAndType callAndType : enclosing) {
+                ClassNode declaringType = toResult.apply(callAndType);
+                if (firstArgument.equals(declaringType.getName())) {
+                    return Collections.singletonList(declaringType);
+                }
             }
+            return null;
         } else {
-            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, asTypeList(enclosing));
+            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, enclosing.stream().map(toResult).collect(Collectors.toList()));
         }
     }
 
-    private List<ClassNode> asTypeList(List<CallAndType> enclosing) {
-        List<ClassNode> types = new ArrayList<>(enclosing.size());
-        for (CallAndType callAndType : enclosing) {
-            types.add(callAndType.getPerceivedDeclaringType());
-        }
-        return types;
-    }
-
-    private ClassNode matchesInCalls(List<CallAndType> enclosing, String typeName, GroovyDSLDContext pattern) {
-        for (CallAndType callAndType : enclosing) {
-            ClassNode declaringType =
-                callAndType.getPerceivedDeclaringType();
-            if (declaringType.getName().equals(typeName)) {
-                return declaringType;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * expecting one arg that is either a string or a pointcut or one class
-     */
     @Override
     public void verify() throws PointcutVerificationException {
         String result = hasNoArgs();

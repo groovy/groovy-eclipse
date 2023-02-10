@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -764,8 +764,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
             |}
             |'''.stripMargin(),
             'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
-            // since we are matching on names and there are 2 names that are the same, they get collapsed
-            new BindingResult('x', 'foo'),
+            new BindingResult('x', 'foo, foo'),
             new BindingResult('y', 'Var: XXX'))
     }
 }

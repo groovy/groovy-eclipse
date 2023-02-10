@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -970,6 +970,89 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
+    void testEnclosingCall8() {
+        createDsls '''\
+            |contribute(bind(calls: enclosingCall())) {
+            |  calls.each {
+            |    String propertyName = it.methodAsString + 'XXX'
+            |    property name:propertyName, type:java.lang.Long
+            |  }
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |bar {
+            |  foo {
+            |    fooXXX
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'fooXXX').typeName == 'java.lang.Long'
+    }
+
+    @Test
+    void testEnclosingCallName1() {
+        createDsls('''\
+            |contribute(bind(calls: enclosingCallName())) {
+            |  if (calls == ['foo', 'bar', 'foo']) {
+            |    property name:'baz', type:int
+            |  }
+            |}
+            |'''.stripMargin())
+
+        String contents = '''\
+            |foo {
+            |  bar {
+            |    foo {
+            |      baz
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'baz').typeName == 'java.lang.Integer'
+    }
+
+    @Test // GRECLIPSE-1301
+    void testEnclosingCallName2() {
+        createDsls('''\
+            |contribute(~enclosingCallName('foo')) {
+            |  property name:'baz'
+            |}
+            |'''.stripMargin())
+
+        String contents = '''\
+            |foo {
+            |  bar {
+            |    baz
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'baz').result.confidence.name() == 'UNKNOWN'
+    }
+
+    @Test // GRECLIPSE-1301
+    void testEnclosingCallName3() {
+        createDsls('''\
+            |contribute(enclosingCall(~name('foo'))) {
+            |  property name:'baz', type:int
+            |}
+            |'''.stripMargin())
+
+        String contents = '''\
+            |foo {
+            |  bar {
+            |    baz
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'baz').typeName == 'java.lang.Integer'
+    }
+
+    @Test
     void testAnnotatedBy1() {
         createDsls('''\
             |contribute(enclosingMethod(annotatedBy(name("MyAnno") & hasAttribute(name("name") & bind(vals:value()))))) {
@@ -1457,44 +1540,6 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assert inferType(contents, 'hi').result.confidence.name() == 'UNKNOWN'
     }
 
-    @Test // GRECLIPSE-1301
-    void testEnclosingCallName1() {
-        createDsls('''\
-            |contribute(~ enclosingCallName('foo')) {
-            |  property name:'hi'
-            |}
-            |'''.stripMargin())
-
-        String contents = '''\
-            |foo {
-            |  bar {
-            |    hi
-            |  }
-            |}
-            |'''.stripMargin()
-
-        assert inferType(contents, 'hi').result.confidence.name() == 'UNKNOWN'
-    }
-
-    @Test // GRECLIPSE-1301
-    void testEnclosingCallName2() {
-        createDsls('''\
-            |contribute(enclosingCall(~name('foo'))) {
-            |  property name:'hi', type:int
-            |}
-            |'''.stripMargin())
-
-        String contents = '''\
-            |foo {
-            |  bar {
-            |    hi
-            |  }
-            |}
-            |'''.stripMargin()
-
-        assert inferType(contents, 'hi').typeName == 'java.lang.Integer'
-    }
-
     @Test // GRECLIPSE-1459
     void testNullType() {
         createDsls '''\
@@ -1767,28 +1812,6 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
             assert typeName == 'java.util.regex.Matcher'
             assert declaringTypeName == 'java.util.regex.Pattern'
         }
-    }
-
-    @Test
-    void testNestedCalls() {
-        createDsls '''\
-            |contribute(bind(x:enclosingCall())) {
-            |  x.each {
-            |    String propertyName = it.methodAsString + 'XXX'
-            |    property name:propertyName, type:java.lang.Long
-            |  }
-            |}
-            |'''.stripMargin()
-
-        String contents = '''\
-            |bar {
-            |  foo {
-            |    fooXXX
-            |  }
-            |}
-            |'''.stripMargin()
-
-        assert inferType(contents, 'fooXXX').typeName == 'java.lang.Long'
     }
 
     @Test // GRECLIPSE-1458

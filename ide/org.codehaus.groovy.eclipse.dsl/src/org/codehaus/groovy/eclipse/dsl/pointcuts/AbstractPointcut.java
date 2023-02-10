@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,10 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 
 import groovy.lang.Closure;
@@ -108,62 +107,64 @@ public abstract class AbstractPointcut implements IPointcut {
     public abstract Collection<?> matches(GroovyDSLDContext pattern, Object toMatch);
 
     /**
-     * matches on the pointct passed in and also
-     * binds the argument to the argument name if
-     * a name exists.
-     *
-     * Must call if the argument to this pointcut is another pointcut
+     * Matches on the given pointct and also binds the argument to the argument
+     * name if a name exists.
+     * <p>
+     * Must call if the argument to this pointcut is another pointcut.
      */
-    protected Collection<?> matchOnPointcutArgument(
-            IPointcut argument, GroovyDSLDContext pattern, Collection<?> allElementsToMatch) {
-        if (allElementsToMatch == null) {
-            return null;
-        }
-        Collection<Object> outerResults = new LinkedHashSet<>();
-        for (Object toMatch : allElementsToMatch) {
-            Collection<?> innerResults = argument.matches(pattern, toMatch);
-            if (innerResults != null) {
-                String bindingName = getArgumentName(argument);
-                if (bindingName != null) {
-                    pattern.addToBinding(bindingName, innerResults);
+    protected Collection<?> matchOnPointcutArgument(IPointcut argument, GroovyDSLDContext pattern, Collection<?> elementsToMatch) {
+        if (elementsToMatch != null) {
+            Collection<Object> outer = new ArrayList<>();
+            for (Object toMatch : elementsToMatch) {
+                Collection<?> inner = argument.matches(pattern, toMatch);
+                if (inner != null && !inner.isEmpty()) {
+                    addToBinding(argument, pattern, inner);
+                    outer.add(toMatch);
                 }
-                outerResults.add(toMatch);
+            }
+            if (!outer.isEmpty()) {
+                return outer;
             }
         }
-        // return null if no matches found
-        return (!outerResults.isEmpty() ? outerResults : null);
+        return null;
     }
 
     /**
-     * Variant of matchOnPointcutArgument here.  pass through the
-     * bound results to the containing pointcut
+     * pass through the bound results to the containing pointcut
      */
-    protected Collection<?> matchOnPointcutArgumentReturnInner(
-            IPointcut argument, GroovyDSLDContext pattern, Collection<?> allElementsToMatch) {
-        String bindingName = getArgumentName(argument);
-        Collection<Object> innerResults = new HashSet<>();
-        for (Object toMatch : allElementsToMatch) {
-            Collection<?> tempInnerResults = argument.matches(pattern, toMatch);
-            if (tempInnerResults != null) {
-                innerResults.addAll(tempInnerResults);
+    protected Collection<?> matchOnPointcutArgumentReturnInner(IPointcut argument, GroovyDSLDContext pattern, Collection<?> elementsToMatch) {
+        if (elementsToMatch != null) {
+            Collection<Object> outer = new ArrayList<>();
+            for (Object toMatch : elementsToMatch) {
+                Collection<?> inner = argument.matches(pattern, toMatch);
+                if (inner != null && !inner.isEmpty()) {
+                    outer.addAll(inner);
+                }
+            }
+            if (!outer.isEmpty()) {
+                addToBinding(argument, pattern, outer);
+                return outer;
             }
         }
-        if (bindingName != null && !innerResults.isEmpty()) {
-            pattern.addToBinding(bindingName, innerResults);
+        return null;
+    }
+
+    private void addToBinding(IPointcut argument, GroovyDSLDContext pattern, Collection<?> values) {
+        String bindingName = getArgumentName(argument);
+        if (bindingName != null) {
+            pattern.addToBinding(bindingName, values);
         }
-        // return null if no matches found
-        return (!innerResults.isEmpty() ? innerResults : null);
     }
 
     /**
      * Flattens a map of collections into a single collection.
      */
     protected Collection<?> flatten(Map<Object, Collection<?>> pointcutResult) {
-        Collection<Object> newCollection = new HashSet<>(pointcutResult.size());
-        for (Collection<?> collection : pointcutResult.values()) {
-            newCollection.addAll(collection);
+        Collection<Object> outer = new ArrayList<>(pointcutResult.size());
+        for (Collection<?> inner : pointcutResult.values()) {
+            outer.addAll(inner);
         }
-        return newCollection;
+        return outer;
     }
 
     @Override
