@@ -145,7 +145,7 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     }
 
     @Test
-    void testImplicitGetterToProperty() {
+    void testImplicitGetterToProperty1() {
         convertToProperty "new Date().with { get${CARET}Hours() }"
         assertEditorContents 'new Date().with { hours }'
     }
@@ -171,7 +171,14 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     }
 
     @Test
-    void testImplicitSetterToProperty() {
+    void testImplicitGetterToProperty4() {
+        addGroovySource 'class Bar { static getBaz() {} }', 'Bar', 'foo'
+        convertToProperty "import static foo.Bar.getBaz\nget${CARET}Baz().hashCode()"
+        assertEditorContents 'import static foo.Bar.getBaz\nbaz.hashCode()'
+    }
+
+    @Test
+    void testImplicitSetterToProperty1() {
         convertToProperty "new Date().with { set${CARET}Time(1234L) }"
         assertEditorContents 'new Date().with { time = 1234L }'
     }
@@ -200,6 +207,13 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     void testImplicitSetterToProperty4() {
         addGroovySource 'abstract class A { protected void setX(x){} }', 'A'
         def pogo = { "class C extends A { C(x) { $it } }" }
+        convertToProperty pogo("set${CARET}X(x)")
+        assertEditorContents pogo( 'this.x = x' )
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1455
+    void testImplicitSetterToProperty5() {
+        def pogo = { "class C {\n C(x) { $it }\n private void setX(x){}\n}" }
         convertToProperty pogo("set${CARET}X(x)")
         assertEditorContents pogo( 'this.x = x' )
     }

@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -181,7 +184,8 @@ public class ConvertToPropertyAction extends Action {
             TypeLookupResult after = lookupNodeType(new ASTNodeFinder(new Region(node.getStart(), 0)).doVisit(unit.getModuleNode()), unit);
             unit.applyTextEdit(undo, null);
 
-            if (!before.declaringType.equals(after.declaringType)) {
+            if (!before.declaringType.equals(after.declaringType) || (after.declaration instanceof Variable &&
+                    !(after.declaration instanceof FieldNode || after.declaration instanceof PropertyNode))) {
                 if (!before.scope.getThis().isDerivedFrom(before.declaringType)) { // "this" or "super"
                     ASTNode call = (node instanceof MethodCall ? node : before.scope.getEnclosingNode()); // TODO: refactor side-effect solution!
                     call.getNodeMetaData(IMPLICIT_RECEIVER, x -> before.declaringType.equals(before.scope.getDelegate()) ? "delegate" : "owner");
