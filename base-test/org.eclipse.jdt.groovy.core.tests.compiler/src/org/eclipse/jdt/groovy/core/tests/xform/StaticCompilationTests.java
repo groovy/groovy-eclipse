@@ -8100,4 +8100,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "1");
     }
+
+    @Test
+    public void testCompileStatic10933() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  List<String> strings = []\n" +
+            "  void run() {\n" +
+            "    Optional.of('works').ifPresent(strings::add)\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def obj = this.newInstance()\n" +
+            "    obj.run(); print obj.strings\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[works]");
+    }
 }
