@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,13 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     void testIsserToProperty1() {
         convertToProperty "[].is${CARET}Empty();"
         assertEditorContents '[].empty;'
+    }
+
+    @Test
+    void testIsserToProperty2() {
+        addGroovySource 'class Foo { static void isSomething() {} }', 'Foo'
+        convertToProperty "Foo.isSome${CARET}thing()"
+        assertEditorContents 'Foo.something'
     }
 
     @Test
@@ -164,13 +171,6 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     }
 
     @Test
-    void testImplicitIsserToProperty() {
-        addGroovySource 'class Foo { static void isSomething() {} }', 'Foo'
-        convertToProperty "Foo.isSome${CARET}thing()"
-        assertEditorContents 'Foo.something'
-    }
-
-    @Test
     void testImplicitSetterToProperty() {
         convertToProperty "new Date().with { set${CARET}Time(1234L) }"
         assertEditorContents 'new Date().with { time = 1234L }'
@@ -194,6 +194,14 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
         def stc = { '@groovy.transform.TypeChecked void test(){\n' + it + '\n}' }
         convertToProperty pogo + stc("def x=1\nnew C().with { set${CARET}X(0) }")
         assertEditorContents pogo + stc('def x=1\nnew C().with { delegate.x = 0 }')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1454
+    void testImplicitSetterToProperty4() {
+        addGroovySource 'abstract class A { protected void setX(x){} }', 'A'
+        def pogo = { "class C extends A { C(x) { $it } }" }
+        convertToProperty pogo("set${CARET}X(x)")
+        assertEditorContents pogo( 'this.x = x' )
     }
 
     @Test

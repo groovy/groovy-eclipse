@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -182,7 +182,7 @@ public class ConvertToPropertyAction extends Action {
             unit.applyTextEdit(undo, null);
 
             if (!before.declaringType.equals(after.declaringType)) {
-                if (!before.declaringType.equals(before.scope.getThis())) {
+                if (!before.scope.getThis().isDerivedFrom(before.declaringType)) { // "this" or "super"
                     ASTNode call = (node instanceof MethodCall ? node : before.scope.getEnclosingNode()); // TODO: refactor side-effect solution!
                     call.getNodeMetaData(IMPLICIT_RECEIVER, x -> before.declaringType.equals(before.scope.getDelegate()) ? "delegate" : "owner");
                 }
