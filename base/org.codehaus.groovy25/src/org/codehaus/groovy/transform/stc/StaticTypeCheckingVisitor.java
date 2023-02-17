@@ -4111,9 +4111,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         mn = accessibleMethods;
                         if (accessibleMethods.isEmpty()) {
                             // choose an arbitrary method to display an error message
-                            MethodNode node = inaccessibleMethods.get(0);
-                            ClassNode owner = node.getDeclaringClass();
-                            addStaticTypeError("Non-static method " + owner.getName() + "#" + node.getName() + " cannot be called from static context", call);
+                            MethodNode inaccessibleMethod = inaccessibleMethods.get(0);
+                            addStaticTypeError("Non-static method " + prettyPrintTypeName(inaccessibleMethod.getDeclaringClass()) + "#" + inaccessibleMethod.getName() + " cannot be called from static context", call);
                         }
                     }
 
@@ -4141,19 +4140,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     mn = disambiguateMethods(mn, chosenReceiver != null ? chosenReceiver.getType() : null, args, call);
                     if (mn.size() == 1) {
                         MethodNode directMethodCallCandidate = mn.get(0);
+                        ClassNode declaringClass = directMethodCallCandidate.getDeclaringClass();
+                        if (chosenReceiver == null) chosenReceiver = Receiver.make(declaringClass);
+                        /* GRECLIPSE edit -- GROOVY-10939
                         if (call.getNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION) == null &&
                                 !directMethodCallCandidate.isStatic() && objectExpression instanceof ClassExpression &&
                                 !"java.lang.Class".equals(directMethodCallCandidate.getDeclaringClass().getName())) {
                             ClassNode owner = directMethodCallCandidate.getDeclaringClass();
                             addStaticTypeError("Non-static method " + owner.getName() + "#" + directMethodCallCandidate.getName() + " cannot be called from static context", call);
                         }
+                        */
+                        if (!directMethodCallCandidate.isStatic() && !(declaringClass.equals(CLASS_Type) || declaringClass.equals(OBJECT_TYPE))
+                                && receiver.equals(CLASS_Type) && chosenReceiver.getData() == null && !Boolean.TRUE.equals(call.getNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION))) {
+                            addStaticTypeError("Non-static method " + prettyPrintTypeName(declaringClass) + "#" + directMethodCallCandidate.getName() + " cannot be called from static context", call);
+                        }
                         // GRECLIPSE add -- GROOVY-10341
                         else if (directMethodCallCandidate.isAbstract() && isSuperExpression(objectExpression))
                             addStaticTypeError("Abstract method " + toMethodParametersString(directMethodCallCandidate.getName(), extractTypesFromParameters(directMethodCallCandidate.getParameters())) + " cannot be called directly", call);
                         // GRECLIPSE end
-                        if (chosenReceiver == null) {
-                            chosenReceiver = Receiver.make(directMethodCallCandidate.getDeclaringClass());
-                        }
 
                         ClassNode returnType = getType(directMethodCallCandidate);
 
@@ -4190,7 +4194,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                             storeType(call, returnType);
                             storeTargetMethod(call, directMethodCallCandidate);
-                            ClassNode declaringClass = directMethodCallCandidate.getDeclaringClass();
                             if (declaringClass.isInterface() && directMethodCallCandidate.isStatic() && !(directMethodCallCandidate instanceof ExtensionMethodNode)) {
                                 typeCheckingContext.getEnclosingClassNode().putNodeMetaData(MINIMUM_BYTECODE_VERSION, Opcodes.V1_8);
                             }
