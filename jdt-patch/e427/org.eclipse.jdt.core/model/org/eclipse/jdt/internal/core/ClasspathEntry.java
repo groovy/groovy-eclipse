@@ -1503,12 +1503,7 @@ public class ClasspathEntry implements IClasspathEntry {
 		return false;
 	}
 	public boolean isModular() {
-		for (int i = 0, length = this.extraAttributes.length; i < length; i++) {
-			IClasspathAttribute attribute = this.extraAttributes[i];
-			if (IClasspathAttribute.MODULE.equals(attribute.getName()) && "true".equals(attribute.getValue())) //$NON-NLS-1$
-				return true;
-		}
-		return false;
+		return isModular(this);
 	}
 
 	public String getSourceAttachmentEncoding() {
@@ -2586,5 +2581,20 @@ public class ClasspathEntry implements IClasspathEntry {
 		} else {
 			throw new IllegalArgumentException("Cannot set index location for specified test class"); //$NON-NLS-1$
 		}
+	}
+
+	/**
+	 * Checks if the specified classpath entry is on the module path for compilation.
+	 * @param classpathEntry The entry for which to check.
+	 * @return {@code true} if this classpath entry is on the compile module path, {@code false} otherwise.
+	 */
+	public static boolean isModular(IClasspathEntry classpathEntry) {
+		IClasspathAttribute[] extraAttributes = classpathEntry.getExtraAttributes();
+		for (int i = 0, length = extraAttributes.length; i < length; i++) {
+			IClasspathAttribute attribute = extraAttributes[i];
+			if (IClasspathAttribute.MODULE.equals(attribute.getName()) && "true".equals(attribute.getValue())) //$NON-NLS-1$
+				return true;
+		}
+		return false;
 	}
 }

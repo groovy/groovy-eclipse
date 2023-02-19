@@ -5424,6 +5424,12 @@ public abstract class Scope {
 		return this.parent.hasDefaultNullnessFor(location, sourceStart);
 	}
 
+	public boolean hasDefaultNullnessForType(TypeBinding type, int location, int sourceStart) {
+		if (environment().usesNullTypeAnnotations() && type != null && !type.acceptsNonNullDefault())
+			return false;
+		return hasDefaultNullnessFor(location, sourceStart);
+	}
+
 	/*
 	 * helper for hasDefaultNullnessFor(..) which inspects only ranges recorded within this scope.
 	 */

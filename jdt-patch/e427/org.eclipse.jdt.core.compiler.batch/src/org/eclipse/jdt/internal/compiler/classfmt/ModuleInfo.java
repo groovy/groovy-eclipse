@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.classfmt;
 
+import java.net.URI;
 import java.util.Arrays;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -37,6 +38,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 
 	protected AnnotationInfo[] annotations;
 	private long tagBits;
+	public URI path;
 
 
 	@Override
@@ -280,7 +282,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 		}
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) 
+			if (this == o)
 				return true;
 			if (!(o instanceof IModule.IModuleReference))
 				return false;
@@ -391,5 +393,9 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 			}
 		}
 		buffer.append('\n').append('}').toString();
+	}
+	@Override
+	public URI getURI() {
+		return this.path;
 	}
 }

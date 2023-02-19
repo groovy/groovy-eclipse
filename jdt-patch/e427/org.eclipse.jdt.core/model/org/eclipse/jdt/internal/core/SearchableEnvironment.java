@@ -88,6 +88,8 @@ public class SearchableEnvironment
 	private long timeSpentInGetModulesDeclaringPackage;
 	private long timeSpentInFindTypes;
 
+	private List<IPackageFragmentRoot> unnamedModulePackageFragmentRoots;
+
 	@Deprecated
 	public SearchableEnvironment(JavaProject project, org.eclipse.jdt.core.ICompilationUnit[] workingCopies) throws JavaModelException {
 		this(project, workingCopies, false);
@@ -103,10 +105,10 @@ public class SearchableEnvironment
 			|| !JavaCore.IGNORE.equals(project.getOption(JavaCore.COMPILER_PB_DISCOURAGED_REFERENCE, true));
 		this.workingCopies = workingCopies;
 		this.nameLookup = project.newNameLookup(workingCopies, excludeTestCode);
-		if (CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9) {
+		boolean java9plus = CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9;
+		if (java9plus) {
 			this.knownModuleLocations = new HashMap<>();
-		}
-		if (CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9) {
+
 			this.moduleUpdater = new ModuleUpdater(project);
 			if (!excludeTestCode) {
 				IClasspathEntry[] expandedClasspath = project.getExpandedClasspath();
@@ -115,8 +117,18 @@ public class SearchableEnvironment
 				}
 			}
 			for (IClasspathEntry entry : project.getRawClasspath())
-				if(!excludeTestCode || !entry.isTest())
+				if(!excludeTestCode || !entry.isTest()) {
 					this.moduleUpdater.computeModuleUpdates(entry);
+				}
+
+			this.unnamedModulePackageFragmentRoots = new ArrayList<>();
+			IPackageFragmentRoot[] packageFragmentRoots = project.getAllPackageFragmentRoots();
+			for (IPackageFragmentRoot packageFragmentRoot : packageFragmentRoots) {
+				IModuleDescription moduleDescription = packageFragmentRoot.getModuleDescription();
+				if (moduleDescription == null) {
+					this.unnamedModulePackageFragmentRoots.add(packageFragmentRoot);
+				}
+			}
 		}
 	}
 
@@ -1039,6 +1051,16 @@ private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, I
 								}
 							}
 						}
+						/*
+						 * Check if we have a sub-package in the unnamed module,
+						 * since classpath filters can result in top level packages
+						 * not listed by nameLookup.findPackageFragementRoots().
+						 * See: https://github.com/eclipse-jdt/eclipse.jdt.core/issues/485
+						 * and https://github.com/eclipse-jdt/eclipse.jdt.core/issues/646
+						 */
+						if (!containsUnnamed && hasSubPackageInUnnamedModule(pkgName)) {
+							names = CharOperation.arrayConcat(names, ModuleBinding.UNNAMED);
+						}
 					}
 					return names == CharOperation.NO_CHAR_CHAR ? null : names;
 				default:
@@ -1281,5 +1303,26 @@ private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, I
 		Util.verbose(" -> findTypes...................." +  this.timeSpentInFindTypes + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
 
 		this.nameLookup.printTimeSpent();
+	}
+
+	private boolean hasSubPackageInUnnamedModule(String[] pkgName) {
+		List<IPackageFragmentRoot> packageFragmentRoots = this.unnamedModulePackageFragmentRoots;
+		if (packageFragmentRoots != null) {
+			String name = String.join(".", pkgName); //$NON-NLS-1$
+			for (IPackageFragmentRoot packageFragmentRoot : packageFragmentRoots) {
+				try {
+					IJavaElement[] children = packageFragmentRoot.getChildren();
+					for (IJavaElement child : children) {
+						String childName = child.getElementName();
+						if (childName.startsWith(name)) {
+							return true;
+						}
+					}
+				} catch (JavaModelException e) {
+					Util.log(e, "Failed to retrieve children for " + packageFragmentRoot); //$NON-NLS-1$
+				}
+			}
+		}
+		return false;
 	}
 }

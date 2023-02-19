@@ -11393,11 +11393,9 @@ protected void consumeRecordComponent(boolean isVarArgs) {
 	}
 	int modifierPositions = this.intStack[this.intPtr--];
 	RecordComponent recordComponent;
-	recordComponent = new RecordComponent(
-			identifierName,
-			namePositions,
-			type,
-			this.intStack[this.intPtr--] & ~ClassFileConstants.AccDeprecated); // modifiers
+	recordComponent = createComponent(identifierName, namePositions, type,
+			this.intStack[this.intPtr--] & ~ClassFileConstants.AccDeprecated // modifiers
+	);
 	recordComponent.declarationSourceStart = modifierPositions;
 	recordComponent.bits |= (type.bits & ASTNode.HasTypeAnnotations);
 	// consume annotations
@@ -11717,6 +11715,10 @@ protected TypeReference augmentTypeWithAdditionalDimensions(TypeReference typeRe
 
 protected FieldDeclaration createFieldDeclaration(char[] fieldDeclarationName, int sourceStart, int sourceEnd) {
 	return new FieldDeclaration(fieldDeclarationName, sourceStart, sourceEnd);
+}
+
+protected RecordComponent createComponent(char[] identifierName, long namePositions, TypeReference type, int modifier) {
+	return new RecordComponent(identifierName, namePositions, type, modifier);
 }
 protected JavadocParser createJavadocParser() {
 	return new JavadocParser(this);

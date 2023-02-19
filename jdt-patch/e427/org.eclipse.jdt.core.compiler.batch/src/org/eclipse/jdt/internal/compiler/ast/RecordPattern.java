@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022 IBM Corporation and others.
+ * Copyright (c) 2022, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -57,7 +57,7 @@ public class RecordPattern extends TypePattern {
 		this.addPatternVariablesWhenTrue(variables);
 		super.collectPatternVariablesToScope(variables, scope);
 		for (Pattern p : this.patterns) {
-			p.collectPatternVariablesToScope(variables, scope);
+			p.collectPatternVariablesToScope(this.patternVarsWhenTrue, scope);
 			this.addPatternVariablesWhenTrue(p.patternVarsWhenTrue);
 		}
 	}

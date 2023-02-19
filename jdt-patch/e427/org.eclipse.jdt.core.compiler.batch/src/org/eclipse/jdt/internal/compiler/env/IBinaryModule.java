@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2018 GK Software AG, and others.
+ * Copyright (c) 2017, 2023 GK Software AG, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -13,8 +13,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.env;
 
+import java.net.URI;
+
 public interface IBinaryModule extends IModule {
 	public IBinaryAnnotation[] getAnnotations();
 
 	public long getTagBits();
+	public URI getURI();
 }

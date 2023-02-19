@@ -10727,6 +10727,11 @@ public void nullAnnotationIsRedundant(AbstractMethodDeclaration sourceMethod, in
 	if (i == -1) {
 		MethodDeclaration methodDecl = (MethodDeclaration) sourceMethod;
 		Annotation annotation = findAnnotation(methodDecl.annotations, TypeIds.BitNonNullAnnotation);
+		if (annotation == null) {
+			Annotation[] annotationsOnType = methodDecl.returnType.getTopAnnotations();
+			if (annotationsOnType != null)
+				annotation = findAnnotation(annotationsOnType, TypeIds.BitNonNullAnnotation);
+		}
 		sourceStart = annotation != null ? annotation.sourceStart : methodDecl.returnType.sourceStart;
 		sourceEnd = methodDecl.returnType.sourceEnd;
 	} else {
@@ -10741,6 +10746,20 @@ public void nullAnnotationIsRedundant(FieldDeclaration sourceField) {
 	Annotation annotation = findAnnotation(sourceField.annotations, TypeIds.BitNonNullAnnotation);
 	int sourceStart = annotation != null ? annotation.sourceStart : sourceField.type.sourceStart;
 	int sourceEnd = sourceField.type.sourceEnd;
+	this.handle(IProblem.RedundantNullAnnotation, ProblemHandler.NoArgument, ProblemHandler.NoArgument, sourceStart, sourceEnd);
+}
+
+public void nullAnnotationIsRedundant(TypeParameter typeParameter) {
+	Annotation annotation = findAnnotation(typeParameter.annotations, TypeIds.BitNonNullAnnotation);
+	int sourceStart = annotation != null ? annotation.sourceStart : typeParameter.sourceStart;
+	int sourceEnd = typeParameter.sourceEnd;
+	this.handle(IProblem.RedundantNullAnnotation, ProblemHandler.NoArgument, ProblemHandler.NoArgument, sourceStart, sourceEnd);
+}
+
+public void nullAnnotationIsRedundant(TypeReference typeReference, Annotation[] annotations) {
+	Annotation annotation = findAnnotation(annotations, TypeIds.BitNonNullAnnotation);
+	int sourceStart = annotation != null ? annotation.sourceStart : typeReference.sourceStart;
+	int sourceEnd = typeReference.sourceEnd;
 	this.handle(IProblem.RedundantNullAnnotation, ProblemHandler.NoArgument, ProblemHandler.NoArgument, sourceStart, sourceEnd);
 }
 

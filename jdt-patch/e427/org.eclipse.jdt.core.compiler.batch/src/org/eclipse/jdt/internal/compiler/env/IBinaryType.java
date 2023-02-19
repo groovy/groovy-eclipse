@@ -17,6 +17,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.env;
 
+import java.net.URI;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
@@ -199,5 +201,7 @@ ITypeAnnotationWalker enrichWithExternalAnnotationsFor(ITypeAnnotationWalker wal
  * Answer whether a provider for external annotations is associated with this binary type.
  */
 ExternalAnnotationStatus getExternalAnnotationStatus();
-
+default URI getURI() {
+	return null;
+}
 }

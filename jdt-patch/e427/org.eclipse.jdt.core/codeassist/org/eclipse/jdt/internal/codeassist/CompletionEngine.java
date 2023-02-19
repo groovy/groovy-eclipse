@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -112,6 +112,7 @@ import org.eclipse.jdt.internal.codeassist.complete.CompletionOnProvidesInterfac
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnQualifiedAllocationExpression;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnQualifiedNameReference;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnQualifiedTypeReference;
+import org.eclipse.jdt.internal.codeassist.complete.CompletionOnRecordComponentName;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnReferenceExpressionName;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnSingleNameReference;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnSingleTypeReference;
@@ -1952,7 +1953,7 @@ public final class CompletionEngine
 				if (expression.body().sourceStart <= astNode.sourceStart &&
 						astNode.sourceEnd <= expression.body().sourceEnd) {
 					// completion is inside a method body
-					if ((astNodeParent == null || astNodeParent == expression) &&
+					if ((astNodeParent == null || astNodeParent == expression || (astNodeParent instanceof Block)) &&
 							astNode instanceof CompletionOnSingleNameReference &&
 							!((CompletionOnSingleNameReference)astNode).isPrecededByModifiers) {
 						context.setTokenLocation(CompletionContext.TL_STATEMENT_START);
@@ -2047,6 +2048,8 @@ public final class CompletionEngine
 			completionOnMethodName(astNode, scope);
 		} else if (astNode instanceof CompletionOnFieldName) {
 			completionOnFieldName(astNode, scope);
+		} else if (astNode instanceof CompletionOnRecordComponentName) {
+			completionOnRecordComponentName(astNode, scope);
 		} else if (astNode instanceof CompletionOnLocalName) {
 			completionOnLocalOrArgumentName(astNode, scope);
 		} else if (astNode instanceof CompletionOnArgumentName) {
@@ -2720,6 +2723,21 @@ public final class CompletionEngine
 										InternalNamingConventions.VK_STATIC_FINAL_FIELD;
 
 			findVariableNames(field.realName, field.type, excludeNames, null, kind);
+		}
+	}
+
+	private void completionOnRecordComponentName(ASTNode astNode, Scope scope) {
+		if (!this.requestor.isIgnored(CompletionProposal.VARIABLE_DECLARATION)) {
+			CompletionOnRecordComponentName component = (CompletionOnRecordComponentName) astNode;
+
+			FieldBinding[] fields = scope.enclosingSourceType().fields();
+			char[][] excludeNames = new char[fields.length][];
+			for (int i = 0; i < fields.length; i++) {
+				excludeNames[i] = fields[i].name;
+			}
+			this.completionToken = component.realName;
+			findVariableNames(component.realName, component.type, excludeNames, null,
+					InternalNamingConventions.VK_INSTANCE_FIELD);
 		}
 	}
 

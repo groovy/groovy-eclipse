@@ -2746,7 +2746,7 @@ public FieldBinding resolveTypeFor(FieldBinding field) {
 					// enum constants neither have a type declaration nor can they be null
 					field.tagBits |= TagBits.AnnotationNonNull;
 				} else {
-					if (hasNonNullDefaultFor(DefaultLocationField, fieldDecl.sourceStart)) {
+					if (hasNonNullDefaultForType(fieldType, DefaultLocationField, fieldDecl.sourceStart)) {
 						field.fillInDefaultNonNullness(fieldDecl, initializationScope);
 					}
 					// validate null annotation:
@@ -2888,6 +2888,7 @@ private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBin
 			}
 			try {
 				ASTNode.handleNonNullByDefault(methodDecl.scope, arg.annotations, arg);
+				// don't pass optional 'location' arg, to avoid applying @NNBD before ImplicitNullAnnotationVerifier has run:
 				parameterType = arg.type.resolveType(methodDecl.scope, true /* check bounds*/);
 			} finally {
 				if (deferRawTypeCheck) {
@@ -3140,12 +3141,15 @@ public void evaluateNullAnnotations() {
 
 private void maybeMarkTypeParametersNonNull() {
 	if (this.typeVariables != null && this.typeVariables.length > 0) {
-	// when creating type variables we didn't yet have the defaultNullness, fill it in now:
+		// when creating type variables we didn't yet have the defaultNullness, fill it in now:
 		if (this.scope == null || !this.scope.hasDefaultNullnessFor(DefaultLocationTypeParameter, this.sourceStart()))
-		return;
+			return;
 		AnnotationBinding[] annots = new AnnotationBinding[]{ this.environment.getNonNullAnnotation() };
 		for (int i = 0; i < this.typeVariables.length; i++) {
 			TypeVariableBinding tvb = this.typeVariables[i];
+			TypeParameter typeParameter = this.scope.referenceContext.typeParameters[i];
+			if (typeParameter.annotations != null && (tvb.tagBits & TagBits.AnnotationResolved) == 0)
+				continue; // not yet ready
 			if ((tvb.tagBits & TagBits.AnnotationNullMASK) == 0)
 				this.typeVariables[i] = (TypeVariableBinding) this.environment.createAnnotatedType(tvb, annots);
 		}
@@ -3153,12 +3157,15 @@ private void maybeMarkTypeParametersNonNull() {
 }
 
 @Override
-boolean hasNonNullDefaultFor(int location, int sourceStart) {
+boolean hasNonNullDefaultForType(TypeBinding type, int location, int sourceStart) {
+
 	if (!isPrototype()) throw new IllegalStateException();
 
 	if (this.scope == null) {
 		return (this.defaultNullness & location) != 0;
 	}
+	if (this.scope.environment().usesNullTypeAnnotations() && type != null && !type.acceptsNonNullDefault())
+		return false;
 	Scope skope = this.scope.referenceContext.initializerScope; // for @NNBD on a field
 	if (skope == null)
 		skope = this.scope;
@@ -3658,23 +3665,16 @@ public RecordComponentBinding getRecordComponent(char[] name) {
 	return null;
 }
 
-/**
- * Gets the accessor method given the record component name.
- *
- * @param name name of the record component
- * @return the method binding of the accessor if found, else null
- */
+@Override
 public MethodBinding getRecordComponentAccessor(char[] name) {
-	MethodBinding accessor = null;
 	if (this.recordComponentAccessors != null) {
 		for (MethodBinding m : this.recordComponentAccessors) {
 			if (CharOperation.equals(m.selector, name)) {
-				accessor = m;
-				break;
+				return m;
 			}
 		}
 	}
-	return accessor;
+	return null;
 }
 
 public void computeRecordComponents() {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2022 IBM Corporation and others.
+ * Copyright (c) 2021, 2023 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -5337,5 +5337,33 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					"}"
 				},
 				"1");
+	}
+	public void testIssue658() {
+		runConformTest(
+				new String[] {
+					"X.java",
+					"@SuppressWarnings(\"preview\")\n"
+					+ "public class X {\n"
+					+ "	public static void main(String argv[]) {\n"
+					+ "		(new X()).foo(\"abc\");\n"
+					+ "	}\n"
+					+ "	public void foo(String s) {\n"
+					+ "		int v = 0;\n"
+					+ "		Boolean b1 = Boolean.valueOf(true);\n"
+					+ "		switch (s) {\n"
+					+ "			case String obj when b1 -> v = 1;\n"
+					+ "			default -> v = 0;\n"
+					+ "		}\n"
+					+ "		System.out.println(v);\n"
+					+ "		Boolean b2 = Boolean.valueOf(false);\n"
+					+ "		switch (s) {\n"
+					+ "			case String obj when b2 -> v = 1;\n"
+					+ "			default -> v = 0;\n"
+					+ "		}\n"
+					+ "		System.out.println(v);\n"
+					+ "	}\n"
+					+ "}"
+				},
+				"1\n0");
 	}
 }

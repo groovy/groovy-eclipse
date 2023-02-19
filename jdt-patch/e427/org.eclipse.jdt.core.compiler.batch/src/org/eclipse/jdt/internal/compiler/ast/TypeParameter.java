@@ -35,6 +35,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 
@@ -144,22 +145,26 @@ public class TypeParameter extends AbstractVariableDeclaration {
 			}
 			if (isAnnotationBasedNullAnalysisEnabled) {
 				if (this.binding != null && this.binding.isValidBinding()) {
-					if (!this.binding.hasNullTypeAnnotations()
-							&& scope.hasDefaultNullnessFor(Binding.DefaultLocationTypeParameter, this.sourceStart())) {
-						AnnotationBinding[] annots = new AnnotationBinding[] { environment.getNonNullAnnotation() };
-						TypeVariableBinding previousBinding = this.binding;
-						this.binding = (TypeVariableBinding) environment.createAnnotatedType(this.binding, annots);
+					if (scope.hasDefaultNullnessFor(Binding.DefaultLocationTypeParameter, this.sourceStart())) {
+						if (this.binding.hasNullTypeAnnotations()) {
+							if ((this.binding.tagBits & TagBits.AnnotationNonNull) != 0)
+								scope.problemReporter().nullAnnotationIsRedundant(this);
+						} else { // no explicit type annos, add the default:
+							AnnotationBinding[] annots = new AnnotationBinding[] { environment.getNonNullAnnotation() };
+							TypeVariableBinding previousBinding = this.binding;
+							this.binding = (TypeVariableBinding) environment.createAnnotatedType(this.binding, annots);
 
-						if (scope instanceof MethodScope) {
-							/*
-							 * for method type parameters, references to the bindings have already been copied into
-							 * MethodBinding.typeVariables - update them.
-							 */
-							MethodScope methodScope = (MethodScope) scope;
-							if (methodScope.referenceContext instanceof AbstractMethodDeclaration) {
-								MethodBinding methodBinding = ((AbstractMethodDeclaration) methodScope.referenceContext).binding;
-								if (methodBinding != null) {
-									methodBinding.updateTypeVariableBinding(previousBinding, this.binding);
+							if (scope instanceof MethodScope) {
+								/*
+								 * for method type parameters, references to the bindings have already been copied into
+								 * MethodBinding.typeVariables - update them.
+								 */
+								MethodScope methodScope = (MethodScope) scope;
+								if (methodScope.referenceContext instanceof AbstractMethodDeclaration) {
+									MethodBinding methodBinding = ((AbstractMethodDeclaration) methodScope.referenceContext).binding;
+									if (methodBinding != null) {
+										methodBinding.updateTypeVariableBinding(previousBinding, this.binding);
+									}
 								}
 							}
 						}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2022 BEA Systems, Inc. and others
+ * Copyright (c) 2006, 2023 BEA Systems, Inc. and others
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -81,7 +81,7 @@ public class ElementsImpl implements Elements {
 	 * not create their own; they should ask the env for it.
 	 */
 	protected ElementsImpl(BaseProcessingEnvImpl env) {
-		_env = env;
+		this._env = env;
 	}
 
 	public static ElementsImpl create(BaseProcessingEnvImpl env) {
@@ -122,7 +122,7 @@ public class ElementsImpl implements Elements {
 			}
 			List<AnnotationMirror> list = new ArrayList<>(annotations.size());
 			for (AnnotationBinding annotation : annotations) {
-				list.add(_env.getFactory().newAnnotationMirror(annotation));
+				list.add(this._env.getFactory().newAnnotationMirror(annotation));
 			}
 			return Collections.unmodifiableList(list);
 		}
@@ -176,14 +176,14 @@ public class ElementsImpl implements Elements {
 		}
 		List<Element> allMembers = new ArrayList<>();
 		for (ReferenceBinding nestedType : types.values()) {
-			allMembers.add(_env.getFactory().newElement(nestedType));
+			allMembers.add(this._env.getFactory().newElement(nestedType));
 		}
 		for (FieldBinding field : fields) {
-			allMembers.add(_env.getFactory().newElement(field));
+			allMembers.add(this._env.getFactory().newElement(field));
 		}
 		for (Set<MethodBinding> sameNamedMethods : methods.values()) {
 			for (MethodBinding method : sameNamedMethods) {
-				allMembers.add(_env.getFactory().newElement(method));
+				allMembers.add(this._env.getFactory().newElement(method));
 			}
 		}
 		return allMembers;
@@ -250,7 +250,7 @@ public class ElementsImpl implements Elements {
 					boolean unique = true;
 					if (!ignoreVisibility) {
 						for (MethodBinding existing : sameNamedMethods) {
-							MethodVerifier verifier = _env.getLookupEnvironment().methodVerifier();
+							MethodVerifier verifier = this._env.getLookupEnvironment().methodVerifier();
 							if (verifier.doesMethodOverride(existing, method)) {
 								unique = false;
 								break;
@@ -567,16 +567,16 @@ public class ElementsImpl implements Elements {
 
 	@Override
 	public PackageElement getPackageElement(CharSequence name) {
-		LookupEnvironment le = _env.getLookupEnvironment(); // FIXME(SHMOD): does this lookup need to be module-aware?
+		LookupEnvironment le = this._env.getLookupEnvironment(); // FIXME(SHMOD): does this lookup need to be module-aware?
 		if (name.length() == 0) {
-			return (PackageElement) _env.getFactory().newElement(le.defaultPackage);
+			return (PackageElement) this._env.getFactory().newElement(le.defaultPackage);
 		}
 		char[] packageName = name.toString().toCharArray();
 		PackageBinding packageBinding = le.createPackage(CharOperation.splitOn('.', packageName));
 		if (packageBinding == null) {
 			return null;
 		}
-		return (PackageElement) _env.getFactory().newElement(packageBinding);
+		return (PackageElement) this._env.getFactory().newElement(packageBinding);
 	}
 
 	@Override
@@ -589,24 +589,24 @@ public class ElementsImpl implements Elements {
 			case RECORD :
 				TypeElementImpl typeElementImpl = (TypeElementImpl) type;
 				ReferenceBinding referenceBinding = (ReferenceBinding)typeElementImpl._binding;
-				return (PackageElement) _env.getFactory().newElement(referenceBinding.fPackage);
+				return (PackageElement) this._env.getFactory().newElement(referenceBinding.fPackage);
 			case PACKAGE :
 				return (PackageElement) type;
 			case CONSTRUCTOR :
 			case METHOD :
 				ExecutableElementImpl executableElementImpl = (ExecutableElementImpl) type;
 				MethodBinding methodBinding = (MethodBinding) executableElementImpl._binding;
-				return (PackageElement) _env.getFactory().newElement(methodBinding.declaringClass.fPackage);
+				return (PackageElement) this._env.getFactory().newElement(methodBinding.declaringClass.fPackage);
 			case ENUM_CONSTANT :
 			case FIELD :
 			case RECORD_COMPONENT :
 				VariableElementImpl variableElementImpl = (VariableElementImpl) type;
 				FieldBinding fieldBinding = (FieldBinding) variableElementImpl._binding;
-				return (PackageElement) _env.getFactory().newElement(fieldBinding.declaringClass.fPackage);
+				return (PackageElement) this._env.getFactory().newElement(fieldBinding.declaringClass.fPackage);
 			case PARAMETER :
 				variableElementImpl = (VariableElementImpl) type;
 				LocalVariableBinding localVariableBinding = (LocalVariableBinding) variableElementImpl._binding;
-				return (PackageElement) _env.getFactory().newElement(localVariableBinding.declaringScope.classScope().referenceContext.binding.fPackage);
+				return (PackageElement) this._env.getFactory().newElement(localVariableBinding.declaringScope.classScope().referenceContext.binding.fPackage);
 			case EXCEPTION_PARAMETER :
 			case INSTANCE_INIT :
 			case OTHER :
@@ -626,7 +626,7 @@ public class ElementsImpl implements Elements {
 	 */
 	@Override
 	public TypeElement getTypeElement(CharSequence name) {
-		LookupEnvironment le = _env.getLookupEnvironment();
+		LookupEnvironment le = this._env.getLookupEnvironment();
 		final char[][] compoundName = CharOperation.splitOn('.', name.toString().toCharArray());
 		ReferenceBinding binding = le.getType(compoundName);
 		// If we didn't find the binding, maybe it's a nested type;
@@ -658,7 +658,7 @@ public class ElementsImpl implements Elements {
 		if((binding.tagBits & TagBits.HasMissingType) != 0) {
 			return null;
 		}
-		return new TypeElementImpl(_env, binding, null);
+		return new TypeElementImpl(this._env, binding, null);
 	}
 
 	/* (non-Javadoc)

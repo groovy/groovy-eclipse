@@ -144,7 +144,7 @@ public class JrtFileSystem extends Archive {
 			try {
 				byte[] content = JRTUtil.getClassfileContent(this.file, this.entryName, this.module);
 				if (content == null) return null;
-				return new ClassFileReader(content, this.entryName.toCharArray());
+				return new ClassFileReader(this.path.toUri(), content, this.entryName.toCharArray());
 			} catch (ClassFormatException e) {
 				e.printStackTrace();
 			} catch (IOException e) {

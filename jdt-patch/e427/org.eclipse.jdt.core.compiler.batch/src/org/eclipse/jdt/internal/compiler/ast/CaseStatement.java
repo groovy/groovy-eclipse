@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -460,28 +460,25 @@ private Constant resolveConstantExpression(BlockScope scope,
 			TypeBinding pb = e.resolveAtType(scope, switchStatement.expression.resolvedType);
 			if (pb != null) switchStatement.caseLabelElementTypes.add(pb);
 			TypeBinding expressionType = switchStatement.expression.resolvedType;
-			LocalDeclaration patternVar = e.getPatternVariable();
-			if (patternVar != null && !patternVar.type.isTypeNameVar(scope)) {
-				// The following code is copied from InstanceOfExpression#resolve()
-				// But there are enough differences to warrant a copy
-				if (!pb.isReifiable()) {
-					if (expressionType != TypeBinding.NULL) {
-						boolean isLegal = e.checkCastTypesCompatibility(scope, pb, expressionType, e, false);
-						if (!isLegal || (e.bits & ASTNode.UnsafeCast) != 0) {
-							scope.problemReporter().unsafeCastInInstanceof(e, pb, expressionType);
-						}
+			// The following code is copied from InstanceOfExpression#resolve()
+			// But there are enough differences to warrant a copy
+			if (!pb.isReifiable()) {
+				if (expressionType != TypeBinding.NULL) {
+					boolean isLegal = e.checkCastTypesCompatibility(scope, pb, expressionType, e, false);
+					if (!isLegal || (e.bits & ASTNode.UnsafeCast) != 0) {
+						scope.problemReporter().unsafeCastInInstanceof(e, pb, expressionType);
 					}
-				} else if (pb.isValidBinding()) {
-					// if not a valid binding, an error has already been reported for unresolved type
-					if (pb.isPrimitiveType()) {
-						scope.problemReporter().unexpectedTypeinSwitchPattern(pb, e);
-						return Constant.NotAConstant;
-					}
-					if (pb.isBaseType()
-							|| !e.checkCastTypesCompatibility(scope, pb, expressionType, null, false)) {
-						scope.problemReporter().typeMismatchError(expressionType, pb, e, null);
-						return Constant.NotAConstant;
-					}
+				}
+			} else if (pb.isValidBinding()) {
+				// if not a valid binding, an error has already been reported for unresolved type
+				if (pb.isPrimitiveType()) {
+					scope.problemReporter().unexpectedTypeinSwitchPattern(pb, e);
+					return Constant.NotAConstant;
+				}
+				if (pb.isBaseType()
+						|| !e.checkCastTypesCompatibility(scope, pb, expressionType, null, false)) {
+					scope.problemReporter().typeMismatchError(expressionType, pb, e, null);
+					return Constant.NotAConstant;
 				}
 			}
 			if (e.isTotalForType(expressionType)) {

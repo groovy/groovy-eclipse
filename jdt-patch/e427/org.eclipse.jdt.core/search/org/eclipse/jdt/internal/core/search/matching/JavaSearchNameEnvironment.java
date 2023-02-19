@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IModuleDescription;
@@ -281,7 +282,10 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 	}
 	JavaProject javaProject = root.getJavaProject();
 	if (isComplianceJava9OrHigher(javaProject)) {
-		addModuleClassPathInfo(root, defaultModule, cp);
+		boolean isOnModulePath = isOnModulePath(javaProject, root);
+		if (isOnModulePath) {
+			addModuleClassPathInfo(root, defaultModule, cp);
+		}
 	}
 	return cp;
 }
@@ -562,5 +566,45 @@ private static boolean isComplianceJava9OrHigher(IJavaProject javaProject) {
 		return false;
 	}
 	return CompilerOptions.versionToJdkLevel(javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9;
+}
+
+private static boolean isOnModulePath(JavaProject javaProject, PackageFragmentRoot root) {
+	boolean isOnModulePath;
+	try {
+		IClasspathEntry classpathEntry = root.getRawClasspathEntry();
+		if (classpathEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+			/*
+			 * Source classpath entries of a project never have the module attribute set,
+			 * so we cannot rely on the attribute.
+			 */
+			isOnModulePath = isModularProject(javaProject);
+		} else if (hasSystemModule(root)) {
+			/*
+			 * The JRE 9+ container is on the module path without the 'module' classpath attribute being set.
+			 * We detected the JRE container by checking the container for system modules.
+			 */
+			isOnModulePath = true;
+		} else {
+			isOnModulePath = ClasspathEntry.isModular(classpathEntry);
+		}
+	} catch (JavaModelException e) {
+		isOnModulePath = true; // if an exception occurs, assume yes
+		Util.log(e, "Error checking whether PackageFragmentRoot is on module path!"); //$NON-NLS-1$
+	}
+	return isOnModulePath;
+}
+
+private static boolean isModularProject(IJavaProject project) throws JavaModelException {
+	IModuleDescription module = project.getModuleDescription();
+	String modName = module == null ? null : module.getElementName();
+	return modName != null && modName.length() > 0;
+}
+
+private static boolean hasSystemModule(PackageFragmentRoot fragmentRoot) {
+	IModuleDescription module = fragmentRoot.getModuleDescription();
+	if (module != null && module.isSystemModule()) {
+		return true;
+	}
+	return false;
 }
 }

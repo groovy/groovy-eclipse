@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -22,6 +22,7 @@ package org.eclipse.jdt.internal.compiler.classfmt;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.function.Predicate;
 
@@ -88,7 +89,7 @@ public class ClassFileReader extends ClassFileStruct implements IBinaryType {
 	private boolean isRecord;
 	private int recordComponentsCount;
 	private RecordComponentInfo[] recordComponents;
-
+	URI path;
 private static String printTypeModifiers(int modifiers) {
 	java.io.StringWriter out = new java.io.StringWriter();
 	java.io.PrintWriter print = new java.io.PrintWriter(out);
@@ -110,7 +111,8 @@ public static ClassFileReader read(File file) throws ClassFormatException, IOExc
 
 public static ClassFileReader read(File file, boolean fullyInitialize) throws ClassFormatException, IOException {
 	byte classFileBytes[] = Util.getFileByteContent(file);
-	ClassFileReader classFileReader = new ClassFileReader(classFileBytes, file.getAbsolutePath().toCharArray());
+	URI uri = file.toURI();
+	ClassFileReader classFileReader = new ClassFileReader(uri, classFileBytes, file.getAbsolutePath().toCharArray());
 	if (fullyInitialize) {
 		classFileReader.initialize();
 	}
@@ -143,7 +145,7 @@ public static ClassFileReader readFromJrt(
 		String filename)
 
 		throws ClassFormatException, java.io.IOException {
-		return JRTUtil.getClassfile(jrt, filename, module);
+		return JRTUtil.getClassfile(jrt, filename, module == null ? null : new String(module.name()));
 	}
 public static ClassFileReader readFromModule(
 		File jrt,
@@ -162,8 +164,7 @@ public static ClassFileReader read(
 	java.util.zip.ZipEntry ze = zip.getEntry(filename);
 	if (ze == null)
 		return null;
-	byte classFileBytes[] = Util.getZipEntryByteContent(ze, zip);
-	ClassFileReader classFileReader = new ClassFileReader(classFileBytes, filename.toCharArray());
+	ClassFileReader classFileReader = Util.getZipEntryClassFile(zip.getName(), filename);
 	if (fullyInitialize) {
 		classFileReader.initialize();
 	}
@@ -183,9 +184,23 @@ public static ClassFileReader read(String fileName, boolean fullyInitialize) thr
  * @param fileName	Actual name of the file that contains the bytes, can be null
  *
  * @exception ClassFormatException
+ * @Deprecated Use {@link #ClassFileReader(URI, byte[], char[])} where an annotation processor might be in the picture
  */
 public ClassFileReader(byte classFileBytes[], char[] fileName) throws ClassFormatException {
 	this(classFileBytes, fileName, false);
+}
+/**
+ * @param path URI pointing to the resource of the .class file
+ * @param classFileBytes Actual bytes of a .class file
+ * @param fileName	Actual name of the file that contains the bytes, can be null
+ *
+ * @exception ClassFormatException
+ */
+public ClassFileReader(URI path, byte classFileBytes[], char[] fileName) throws ClassFormatException {
+	this(classFileBytes, fileName, false);
+	this.path = path;
+	if (this.moduleDeclaration != null)
+		this.moduleDeclaration.path = this.path;
 }
 
 /**
@@ -198,6 +213,7 @@ public ClassFileReader(byte classFileBytes[], char[] fileName) throws ClassForma
  * @param fullyInitialize boolean
  * 		Flag to fully initialize the new object
  * @exception ClassFormatException
+ * @Deprecated Use {@link #ClassFileReader(URI, byte[], char[])} where an annotation processor might be in the picture
  */
 public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInitialize) throws ClassFormatException {
 	// This method looks ugly but is actually quite simple, the constantPool is constructed
@@ -1460,5 +1476,9 @@ public boolean isRecord() {
 @Override
 public IRecordComponent[] getRecordComponents() {
 	return this.recordComponents;
+}
+@Override
+public URI getURI() {
+	return this.path;
 }
 }

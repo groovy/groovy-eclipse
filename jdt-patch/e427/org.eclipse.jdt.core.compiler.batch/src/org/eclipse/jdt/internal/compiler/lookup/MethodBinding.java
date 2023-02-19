@@ -563,9 +563,6 @@ protected void fillInDefaultNonNullness18(AbstractMethodDeclaration sourceMethod
 					if (sourceMethod != null)
 						sourceMethod.arguments[i].binding.type = this.parameters[i];
 				}
-			} else if (sourceMethod != null && (parameter.tagBits & TagBits.AnnotationNonNull) != 0
-							&& sourceMethod.arguments[i].hasNullTypeAnnotation(AnnotationPosition.MAIN_TYPE)) {
-				sourceMethod.scope.problemReporter().nullAnnotationIsRedundant(sourceMethod, i);
 			}
 		}
 		if (added)
@@ -1354,7 +1351,7 @@ public TypeVariableBinding[] typeVariables() {
 }
 //pre: null annotation analysis is enabled
 public boolean hasNonNullDefaultForReturnType(AbstractMethodDeclaration srcMethod) {
-	return hasNonNullDefaultFor(Binding.DefaultLocationReturnType, srcMethod, srcMethod == null ? -1 : srcMethod.declarationSourceStart);
+	return hasNonNullDefaultForType(this.returnType, Binding.DefaultLocationReturnType, srcMethod, srcMethod == null ? -1 : srcMethod.declarationSourceStart);
 }
 
 static int getNonNullByDefaultValue(AnnotationBinding annotation) {
@@ -1412,7 +1409,7 @@ public ParameterNonNullDefaultProvider hasNonNullDefaultForParameter(AbstractMet
 			// parameter specific NNBD found
 			b = (nonNullByDefaultValue & Binding.DefaultLocationParameter) != 0;
 		} else {
-			b = hasNonNullDefaultFor(Binding.DefaultLocationParameter, srcMethod, start);
+			b = hasNonNullDefaultForType(this.parameters[i], Binding.DefaultLocationParameter, srcMethod, start);
 		}
 		if (b) {
 			trueFound = true;
@@ -1427,12 +1424,14 @@ public ParameterNonNullDefaultProvider hasNonNullDefaultForParameter(AbstractMet
 		return trueFound ? ParameterNonNullDefaultProvider.TRUE_PROVIDER : ParameterNonNullDefaultProvider.FALSE_PROVIDER;
 	}
 //pre: null annotation analysis is enabled
-private boolean hasNonNullDefaultFor(int location, AbstractMethodDeclaration srcMethod, int start) {
+private boolean hasNonNullDefaultForType(TypeBinding type, int location, AbstractMethodDeclaration srcMethod, int start) {
+	if (type != null && !type.acceptsNonNullDefault() && srcMethod != null && srcMethod.scope.environment().usesNullTypeAnnotations())
+		return false;
 	if ((this.modifiers & ExtraCompilerModifiers.AccIsDefaultConstructor) != 0)
 		return false;
 	if (this.defaultNullness != 0)
 		return (this.defaultNullness & location) != 0;
-	return this.declaringClass.hasNonNullDefaultFor(location, start);
+	return this.declaringClass.hasNonNullDefaultForType(null /*type was already checked*/, location, start);
 }
 
 public boolean redeclaresPublicObjectMethod(Scope scope) {

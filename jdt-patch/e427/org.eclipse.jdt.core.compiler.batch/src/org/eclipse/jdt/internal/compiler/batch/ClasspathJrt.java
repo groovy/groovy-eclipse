@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2018 IBM Corporation.
+ * Copyright (c) 2016, 2023 IBM Corporation.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -42,7 +42,6 @@ import org.eclipse.jdt.internal.compiler.env.IMultiModuleEntry;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.util.JRTUtil;
-import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry {
@@ -88,26 +87,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			IBinaryType reader = ClassFileReader.readFromModule(this.file, moduleName, qualifiedBinaryFileName, this.moduleNamesCache::contains);
 
 			if (reader != null) {
-				searchPaths:
-				if (this.annotationPaths != null) {
-					String qualifiedClassName = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length()-SuffixConstants.EXTENSION_CLASS.length()-1);
-					for (String annotationPath : this.annotationPaths) {
-						try {
-							if (this.annotationZipFile == null) {
-								this.annotationZipFile = ExternalAnnotationDecorator.getAnnotationZipFile(annotationPath, null);
-							}
-							reader = ExternalAnnotationDecorator.create(reader, annotationPath, qualifiedClassName, this.annotationZipFile);
-
-							if (reader.getExternalAnnotationStatus() == ExternalAnnotationStatus.TYPE_IS_ANNOTATED) {
-								break searchPaths;
-							}
-						} catch (IOException e) {
-							// don't let error on annotations fail class reading
-						}
-					}
-					// location is configured for external annotations, but no .eea found, decorate in order to answer NO_EEA_FILE:
-					reader = new ExternalAnnotationDecorator(reader, null);
-				}
+				reader = maybeDecorateForExternalAnnotations(qualifiedBinaryFileName, reader);
 				char[] answerModuleName = reader.getModule();
 				if (answerModuleName == null && moduleName != null)
 					answerModuleName = moduleName.toCharArray();
@@ -117,6 +97,31 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			// treat as if class file is missing
 		}
 		return null;
+	}
+
+	protected IBinaryType maybeDecorateForExternalAnnotations(String qualifiedBinaryFileName, IBinaryType reader) {
+		searchPaths:
+		if (this.annotationPaths != null) {
+			int extensionPos = qualifiedBinaryFileName.lastIndexOf('.'); // extension could be .class or .sig
+			String qualifiedClassName = qualifiedBinaryFileName.substring(0, extensionPos);
+			for (String annotationPath : this.annotationPaths) {
+				try {
+					if (this.annotationZipFile == null) {
+						this.annotationZipFile = ExternalAnnotationDecorator.getAnnotationZipFile(annotationPath, null);
+					}
+					reader = ExternalAnnotationDecorator.create(reader, annotationPath, qualifiedClassName, this.annotationZipFile);
+
+					if (reader.getExternalAnnotationStatus() == ExternalAnnotationStatus.TYPE_IS_ANNOTATED) {
+						break searchPaths;
+					}
+				} catch (IOException e) {
+					// don't let error on annotations fail class reading
+				}
+			}
+			// location is configured for external annotations, but no .eea found, decorate in order to answer NO_EEA_FILE:
+			reader = new ExternalAnnotationDecorator(reader, null);
+		}
+		return reader;
 	}
 	@Override
 	public boolean hasAnnotationFileFor(String qualifiedTypeName) {
@@ -221,7 +226,11 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 
 					@Override
 					public FileVisitResult visitModule(Path p, String name) throws IOException {
-						ClasspathJrt.this.acceptModule(JRTUtil.getClassfileContent(ClasspathJrt.this.file, IModule.MODULE_INFO_CLASS, name), newCache);
+						try {
+							ClasspathJrt.this.acceptModule(JRTUtil.getClassfile(ClasspathJrt.this.file, IModule.MODULE_INFO_CLASS, name), newCache);
+						} catch (ClassFormatException e) {
+							throw new IOException(e);
+						}
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 				}, JRTUtil.NOTIFY_MODULES);
@@ -247,20 +256,6 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			if (moduleDecl != null) {
 				cache.put(String.valueOf(moduleDecl.name()), moduleDecl);
 			}
-		}
-	}
-
-	void acceptModule(byte[] content, Map<String, IModule> cache) {
-		if (content == null)
-			return;
-		ClassFileReader reader = null;
-		try {
-			reader = new ClassFileReader(content, IModule.MODULE_INFO_CLASS.toCharArray());
-		} catch (ClassFormatException e) {
-			e.printStackTrace();
-		}
-		if (reader != null) {
-			acceptModule(reader, cache);
 		}
 	}
 

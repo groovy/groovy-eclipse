@@ -24,6 +24,8 @@ import org.eclipse.core.resources.IBuildConfiguration;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -2715,11 +2717,22 @@ public class DeltaProcessor {
 					if (element == null) return false;
 					updateIndex(element, delta);
 					contentChanged(element);
+				} else if (hasRemovedJdtErrorMarker(delta)) {
+					/*
+					 * In case of compile errors that were fixed, we only receive a marker change delta here.
+					 * We want to trigger an indexing of the file, in case there are method references or lambda expressions
+					 * that couldn't be indexed correctly due to compile errors.
+					 * See: https://github.com/eclipse-jdt/eclipse.jdt.core/issues/438
+					 */
+					element = createElement(delta.getResource(), elementType, rootInfo);
+					if (element == null) return false;
+					updateIndex(element, delta);
 				}
 				return true;
 		}
 		return true;
 	}
+
 	private void updateIndex(Openable element, IResourceDelta delta) {
 
 		IndexManager indexManager = this.manager.indexManager;
@@ -2846,10 +2859,15 @@ public class DeltaProcessor {
 				file = (IFile) delta.getResource();
 				switch (delta.getKind()) {
 					case IResourceDelta.CHANGED :
-						// no need to index if the content has not changed
+						// no need to index if the content has not changed or if no compile errors were fixed
 						int flags = delta.getFlags();
-						if ((flags & IResourceDelta.CONTENT) == 0 && (flags & IResourceDelta.ENCODING) == 0)
+						if ((flags & IResourceDelta.CONTENT) == 0 && (flags & IResourceDelta.ENCODING) == 0) {
+							if (hasRemovedJdtErrorMarker(delta)) {
+								// schedule re-indexing of the file when JDT error markers get removed
+								indexManager.addSource(file, file.getProject().getFullPath(), getSourceElementParser(element));
+							}
 							break;
+						}
 						// $FALL-THROUGH$
 					case IResourceDelta.ADDED :
 						indexManager.addSource(file, file.getProject().getFullPath(), getSourceElementParser(element));
@@ -2894,5 +2912,21 @@ public class DeltaProcessor {
 				updateRootIndex(root, subpkgName, child);
 			}
 		}
+	}
+
+	private static boolean hasRemovedJdtErrorMarker(IResourceDelta delta) {
+		if ((delta.getFlags() & IResourceDelta.MARKERS) != 0) {
+			IMarkerDelta[] markerDeltas = delta.getMarkerDeltas();
+			for (IMarkerDelta markerDelta : markerDeltas) {
+				if (markerDelta.getKind() == IResourceDelta.REMOVED) {
+					int severity = markerDelta.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
+					String sourceId = markerDelta.getAttribute(IMarker.SOURCE_ID, ""); //$NON-NLS-1$
+					if (severity == IMarker.SEVERITY_ERROR && JavaBuilder.SOURCE_ID.equals(sourceId)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 }

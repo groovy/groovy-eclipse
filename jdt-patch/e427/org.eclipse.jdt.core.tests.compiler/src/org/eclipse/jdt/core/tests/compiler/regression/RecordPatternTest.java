@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022 IBM Corporation and others.
+ * Copyright (c) 2022, 2023 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1662,6 +1662,106 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 				"	if (b instanceof Box(var t)) {\n" +
 				"	                 ^^^\n" +
 				"Raw types are not allowed in record patterns\n" +
+				"----------\n");
+	}
+	public void testIssue690_1() {
+		runNegativeTest(new String[] {
+				"X.java",
+					"@SuppressWarnings(\"preview\")\n"
+					+ "public class X {\n"
+					+ "	public void foo(Object s) {\n"
+					+ "		switch (s) {\n"
+					+ "			case R(Integer i1, Double i1) -> {}\n"
+					+ "			case OuterR(R(Integer i1, Double i2), R(Integer i2, Double i2)) -> {}\n"
+					+ "			default -> {}\n"
+					+ "		}\n"
+					+ "	}\n"
+					+ "} \n"
+					+ "record R(Integer i1, Double i2) {}\n"
+					+ "record OuterR(R r1, R r2) {}"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 5)\n" +
+				"	case R(Integer i1, Double i1) -> {}\n" +
+				"	                          ^^\n" +
+				"Duplicate local variable i1\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 6)\n" +
+				"	case OuterR(R(Integer i1, Double i2), R(Integer i2, Double i2)) -> {}\n" +
+				"	                                                ^^\n" +
+				"Duplicate local variable i2\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 6)\n" +
+				"	case OuterR(R(Integer i1, Double i2), R(Integer i2, Double i2)) -> {}\n" +
+				"	                                                           ^^\n" +
+				"Duplicate local variable i2\n" +
+				"----------\n" +
+				"4. ERROR in X.java (at line 6)\n" +
+				"	case OuterR(R(Integer i1, Double i2), R(Integer i2, Double i2)) -> {}\n" +
+				"	                                                           ^^\n" +
+				"Duplicate local variable i2\n" +
+				"----------\n");
+	}
+	public void testIssue690_2() {
+		runNegativeTest(new String[] {
+				"X.java",
+					"@SuppressWarnings(\"preview\")\n"
+					+ "public class X {\n"
+					+ "	public void foo(Object s) {\n"
+					+ "		if (s instanceof OuterR(R(Integer i1, Double i2), R(Integer i3, Double i4)) i1) { \n"
+					+ "				System.out.println(\"IF\");\n"
+					+ "		}\n"
+					+ "		if (s instanceof OuterR(R(Integer i1, Double i2), R(Integer i1, Double i4)) outer) { \n"
+					+ "				System.out.println(\"SECOND IF\");\n"
+					+ "		}\n"
+					+ "	}\n"
+					+ "} \n"
+					+ "record R(Integer i1, Double i2) {}\n"
+					+ "record OuterR(R r1, R r2) {}"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	if (s instanceof OuterR(R(Integer i1, Double i2), R(Integer i3, Double i4)) i1) { \n" +
+				"	                                  ^^\n" +
+				"Duplicate local variable i1\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 7)\n" +
+				"	if (s instanceof OuterR(R(Integer i1, Double i2), R(Integer i1, Double i4)) outer) { \n" +
+				"	                                                            ^^\n" +
+				"Duplicate local variable i1\n" +
+				"----------\n");
+	}
+	public void testIssue691_1() {
+		runNegativeTest(new String[] {
+				"X.java",
+					"@SuppressWarnings(\"preview\")\n"
+					+ "public class X {\n"
+					+ "	public void foo(Number s) {\n"
+					+ "		switch (s) {\n"
+					+ "			case R(Integer i1, Integer i2) -> {}\n"
+					+ "			default -> {}\n"
+					+ "		}\n"
+					+ "	}\n"
+					+ "	public void foo(Object o) {\n"
+					+ "		switch (o) {\n"
+					+ "			case R(Number i1, Integer i2) -> {}\n"
+					+ "			default -> {}\n"
+					+ "		}\n"
+					+ "	}\n"
+					+ "	public void bar(Object o) {\n"
+					+ "		switch (o) {\n"
+					+ "		case R(Integer i1, Integer i2) r1 -> {}\n"
+					+ "			default -> {}\n"
+					+ "		}\n"
+					+ "	}\n"
+					+ "} \n"
+					+ "record R(Integer i1, Integer i2) {}"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 5)\n" +
+				"	case R(Integer i1, Integer i2) -> {}\n" +
+				"	     ^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Type mismatch: cannot convert from Number to R\n" +
 				"----------\n");
 	}
 }

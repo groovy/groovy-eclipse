@@ -735,6 +735,7 @@ public class IncrementalTests18 extends BuilderTests {
 
 	public void testBug483744_remove() throws JavaModelException {
 		IPath projectPath = env.addProject("Project", "1.8");
+		env.getJavaProject(projectPath).setOption(JavaCore.COMPILER_PB_REDUNDANT_NULL_ANNOTATION, JavaCore.IGNORE);
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		env.removePackageFragmentRoot(projectPath, "");

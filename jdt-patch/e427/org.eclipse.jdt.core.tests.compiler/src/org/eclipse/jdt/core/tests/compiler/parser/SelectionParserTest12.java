@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -50,21 +50,21 @@ public void test001() throws JavaModelException {
 
 	String selectionIdentifier = "ONE";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-					"  static final String ONE;\n" + 
-					"  static final String TWO;\n" + 
-					"  static final String THREE;\n" + 
-					"  <clinit>() {\n" + 
-					"  }\n" + 
-					"  public X() {\n" + 
-					"  }\n" + 
-					"  public static void foo(String num) {\n" + 
-					"    {\n" + 
-					"      switch (num) {\n" + 
-					"      case <SelectOnName:ONE> :\n" + 
-					"      }\n" + 
-					"    }\n" + 
-					"  }\n" + 
+			"public class X {\n" +
+					"  static final String ONE;\n" +
+					"  static final String TWO;\n" +
+					"  static final String THREE;\n" +
+					"  <clinit>() {\n" +
+					"  }\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public static void foo(String num) {\n" +
+					"    {\n" +
+					"      switch (num) {\n" +
+					"      case <SelectOnName:ONE> :\n" +
+					"      }\n" +
+					"    }\n" +
+					"  }\n" +
 					"}\n";
 	String expectedReplacedSource = "ONE";
 	String testName = "X.java";
@@ -96,25 +96,25 @@ public void test002() throws JavaModelException {
 
 	String selectionIdentifier = "ONE";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-					"  enum Num {\n" + 
-					"    ONE(),\n" + 
-					"    TWO(),\n" + 
-					"    THREE(),\n" + 
-					"    <clinit>() {\n" + 
-					"    }\n" + 
-					"    Num() {\n" + 
-					"    }\n" + 
-					"  }\n" + 
-					"  public X() {\n" + 
-					"  }\n" + 
-					"  public static void foo(Num num) {\n" + 
-					"    {\n" + 
-					"      switch (num) {\n" + 
-					"      case <SelectOnName:ONE> :\n" + 
-					"      }\n" + 
-					"    }\n" + 
-					"  }\n" + 
+			"public class X {\n" +
+					"  enum Num {\n" +
+					"    ONE(),\n" +
+					"    TWO(),\n" +
+					"    THREE(),\n" +
+					"    <clinit>() {\n" +
+					"    }\n" +
+					"    Num() {\n" +
+					"    }\n" +
+					"  }\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public static void foo(Num num) {\n" +
+					"    {\n" +
+					"      switch (num) {\n" +
+					"      case <SelectOnName:ONE> :\n" +
+					"      }\n" +
+					"    }\n" +
+					"  }\n" +
 					"}\n";
 	String expectedReplacedSource = "ONE";
 	String testName = "X.java";
@@ -146,21 +146,21 @@ public void test003() throws JavaModelException {
 
 	String selectionIdentifier = "TWO";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-					"  static final String ONE;\n" + 
-					"  static final String TWO;\n" + 
-					"  static final String THREE;\n" + 
-					"  <clinit>() {\n" + 
-					"  }\n" + 
-					"  public X() {\n" + 
-					"  }\n" + 
-					"  public static void foo(String num) {\n" + 
-					"    {\n" + 
-					"      switch (num) {\n" + 
-					"      case <SelectOnName:TWO> :\n" + 
-					"      }\n" + 
-					"    }\n" + 
-					"  }\n" + 
+			"public class X {\n" +
+					"  static final String ONE;\n" +
+					"  static final String TWO;\n" +
+					"  static final String THREE;\n" +
+					"  <clinit>() {\n" +
+					"  }\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public static void foo(String num) {\n" +
+					"    {\n" +
+					"      switch (num) {\n" +
+					"      case <SelectOnName:TWO> :\n" +
+					"      }\n" +
+					"    }\n" +
+					"  }\n" +
 					"}\n";
 	String expectedReplacedSource = "TWO";
 	String testName = "X.java";
@@ -192,25 +192,25 @@ public void test004() throws JavaModelException {
 
 	String selectionIdentifier = "TWO";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-					"  enum Num {\n" + 
-					"    ONE(),\n" + 
-					"    TWO(),\n" + 
-					"    THREE(),\n" + 
-					"    <clinit>() {\n" + 
-					"    }\n" + 
-					"    Num() {\n" + 
-					"    }\n" + 
-					"  }\n" + 
-					"  public X() {\n" + 
-					"  }\n" + 
-					"  public static void foo(Num num) {\n" + 
-					"    {\n" + 
-					"      switch (num) {\n" + 
-					"      case <SelectOnName:TWO> :\n" + 
-					"      }\n" + 
-					"    }\n" + 
-					"  }\n" + 
+			"public class X {\n" +
+					"  enum Num {\n" +
+					"    ONE(),\n" +
+					"    TWO(),\n" +
+					"    THREE(),\n" +
+					"    <clinit>() {\n" +
+					"    }\n" +
+					"    Num() {\n" +
+					"    }\n" +
+					"  }\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public static void foo(Num num) {\n" +
+					"    {\n" +
+					"      switch (num) {\n" +
+					"      case <SelectOnName:TWO> :\n" +
+					"      }\n" +
+					"    }\n" +
+					"  }\n" +
 					"}\n";
 	String expectedReplacedSource = "TWO";
 	String testName = "X.java";
@@ -243,21 +243,21 @@ public void test005() throws JavaModelException {
 	String expectedSelection = selectKey + selection + ">";
 	String selectionIdentifier = "ONE";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-					"  static final String ONE;\n" + 
-					"  static final String TWO;\n" + 
-					"  static final String THREE;\n" + 
-					"  <clinit>() {\n" + 
-					"  }\n" + 
-					"  public X() {\n" + 
-					"  }\n" + 
-					"  public static void foo(String num) {\n" + 
-					"    {\n" + 
-					"      switch (num) {\n" + 
-					"      case <SelectOnName:ONE> :\n" + 
-					"      }\n" + 
-					"    }\n" + 
-					"  }\n" + 
+			"public class X {\n" +
+					"  static final String ONE;\n" +
+					"  static final String TWO;\n" +
+					"  static final String THREE;\n" +
+					"  <clinit>() {\n" +
+					"  }\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public static void foo(String num) {\n" +
+					"    {\n" +
+					"      switch (num) {\n" +
+					"      case <SelectOnName:ONE> :\n" +
+					"      }\n" +
+					"    }\n" +
+					"  }\n" +
 					"}\n";
 	String expectedReplacedSource = "ONE";
 	String testName = "X.java";
@@ -289,25 +289,25 @@ public void test006() throws JavaModelException {
 
 	String selectionIdentifier = "ONE";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-					"  enum Num {\n" + 
-					"    ONE(),\n" + 
-					"    TWO(),\n" + 
-					"    THREE(),\n" + 
-					"    <clinit>() {\n" + 
-					"    }\n" + 
-					"    Num() {\n" + 
-					"    }\n" + 
-					"  }\n" + 
-					"  public X() {\n" + 
-					"  }\n" + 
-					"  public static void foo(Num num) {\n" + 
-					"    {\n" + 
-					"      switch (num) {\n" + 
-					"      case <SelectOnName:ONE> :\n" + 
-					"      }\n" + 
-					"    }\n" + 
-					"  }\n" + 
+			"public class X {\n" +
+					"  enum Num {\n" +
+					"    ONE(),\n" +
+					"    TWO(),\n" +
+					"    THREE(),\n" +
+					"    <clinit>() {\n" +
+					"    }\n" +
+					"    Num() {\n" +
+					"    }\n" +
+					"  }\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public static void foo(Num num) {\n" +
+					"    {\n" +
+					"      switch (num) {\n" +
+					"      case <SelectOnName:ONE> :\n" +
+					"      }\n" +
+					"    }\n" +
+					"  }\n" +
 					"}\n";
 	String expectedReplacedSource = "ONE";
 	String testName = "X.java";
@@ -339,21 +339,21 @@ public void test007() throws JavaModelException {
 
 	String selectionIdentifier = "TWO";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-					"  static final String ONE;\n" + 
-					"  static final String TWO;\n" + 
-					"  static final String THREE;\n" + 
-					"  <clinit>() {\n" + 
-					"  }\n" + 
-					"  public X() {\n" + 
-					"  }\n" + 
-					"  public static void foo(String num) {\n" + 
-					"    {\n" + 
-					"      switch (num) {\n" + 
-					"      case <SelectOnName:TWO> :\n" + 
-					"      }\n" + 
-					"    }\n" + 
-					"  }\n" + 
+			"public class X {\n" +
+					"  static final String ONE;\n" +
+					"  static final String TWO;\n" +
+					"  static final String THREE;\n" +
+					"  <clinit>() {\n" +
+					"  }\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public static void foo(String num) {\n" +
+					"    {\n" +
+					"      switch (num) {\n" +
+					"      case <SelectOnName:TWO> :\n" +
+					"      }\n" +
+					"    }\n" +
+					"  }\n" +
 					"}\n";
 	String expectedReplacedSource = "TWO";
 	String testName = "X.java";
@@ -385,25 +385,25 @@ public void test008() throws JavaModelException {
 
 	String selectionIdentifier = "TWO";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-					"  enum Num {\n" + 
-					"    ONE(),\n" + 
-					"    TWO(),\n" + 
-					"    THREE(),\n" + 
-					"    <clinit>() {\n" + 
-					"    }\n" + 
-					"    Num() {\n" + 
-					"    }\n" + 
-					"  }\n" + 
-					"  public X() {\n" + 
-					"  }\n" + 
-					"  public static void foo(Num num) {\n" + 
-					"    {\n" + 
-					"      switch (num) {\n" + 
-					"      case <SelectOnName:TWO> :\n" + 
-					"      }\n" + 
-					"    }\n" + 
-					"  }\n" + 
+			"public class X {\n" +
+					"  enum Num {\n" +
+					"    ONE(),\n" +
+					"    TWO(),\n" +
+					"    THREE(),\n" +
+					"    <clinit>() {\n" +
+					"    }\n" +
+					"    Num() {\n" +
+					"    }\n" +
+					"  }\n" +
+					"  public X() {\n" +
+					"  }\n" +
+					"  public static void foo(Num num) {\n" +
+					"    {\n" +
+					"      switch (num) {\n" +
+					"      case <SelectOnName:TWO> :\n" +
+					"      }\n" +
+					"    }\n" +
+					"  }\n" +
 					"}\n";
 	String expectedReplacedSource = "TWO";
 	String testName = "X.java";
@@ -436,23 +436,23 @@ public void test009() throws JavaModelException {
 
 	String selectionIdentifier = "num_";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  enum Num {\n" + 
-			"    ONE(),\n" + 
-			"    TWO(),\n" + 
-			"    THREE(),\n" + 
-			"    <clinit>() {\n" + 
-			"    }\n" + 
-			"    Num() {\n" + 
-			"    }\n" + 
-			"  }\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public static void foo(Num num_) {\n" + 
-			"    {\n" + 
-			"      <SelectOnName:num_>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  enum Num {\n" +
+			"    ONE(),\n" +
+			"    TWO(),\n" +
+			"    THREE(),\n" +
+			"    <clinit>() {\n" +
+			"    }\n" +
+			"    Num() {\n" +
+			"    }\n" +
+			"  }\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public static void foo(Num num_) {\n" +
+			"    {\n" +
+			"      <SelectOnName:num_>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "num_";
 	String testName = "X.java";
@@ -487,28 +487,26 @@ public void test010() throws JavaModelException {
 
 	String selectionIdentifier = "i_j";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  enum Num {\n" + 
-			"    ONE(),\n" + 
-			"    TWO(),\n" + 
-			"    THREE(),\n" + 
-			"    <clinit>() {\n" + 
-			"    }\n" + 
-			"    Num() {\n" + 
-			"    }\n" + 
-			"  }\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public static void foo(Num num_) {\n" + 
-			"    switch (num_) {\n" + 
-			"    case THREE ->\n" + 
-			"        {\n" + 
-			"          int i_j;\n" + 
-			"          System.out.println(<SelectOnName:i_j>);\n" + 
-			"          break;\n" + 
-			"        }\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  enum Num {\n" +
+			"    ONE(),\n" +
+			"    TWO(),\n" +
+			"    THREE(),\n" +
+			"    <clinit>() {\n" +
+			"    }\n" +
+			"    Num() {\n" +
+			"    }\n" +
+			"  }\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public static void foo(Num num_) {\n" +
+			"    {\n" +
+			"      {\n" +
+			"        int i_j;\n" +
+			"        <SelectOnName:i_j>;\n" +
+			"      }\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "i_j";
 	String testName = "X.java";
@@ -540,21 +538,21 @@ public void test011() throws JavaModelException {
 
 	String selectionIdentifier = "num_";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  enum Num {\n" + 
-			"    ONE(),\n" + 
-			"    TWO(),\n" + 
-			"    THREE(),\n" + 
-			"    <clinit>() {\n" + 
-			"    }\n" + 
-			"    Num() {\n" + 
-			"    }\n" + 
-			"  }\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public static void foo(Num num_) {\n" + 
-			"    <SelectOnName:num_>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  enum Num {\n" +
+			"    ONE(),\n" +
+			"    TWO(),\n" +
+			"    THREE(),\n" +
+			"    <clinit>() {\n" +
+			"    }\n" +
+			"    Num() {\n" +
+			"    }\n" +
+			"  }\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public static void foo(Num num_) {\n" +
+			"    <SelectOnName:num_>;\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "num_";
 	String testName = "X.java";
@@ -585,12 +583,12 @@ public void test012() throws JavaModelException {
 
 	String selectionIdentifier = "num_";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public static void foo(int num_) {\n" + 
-			"    <SelectOnName:num_>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public static void foo(int num_) {\n" +
+			"    <SelectOnName:num_>;\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "num_";
 	String testName = "X.java";
@@ -609,7 +607,7 @@ public void test013() throws JavaModelException {
 	"  public static void foo(int num_) {\n" +
 	" 	 int i = switch (num_) {\n" +
 	"	   case 1, 2, 3 -> (num_ + 1);\n" +
-	"      default -> 0;\n" + 
+	"      default -> 0;\n" +
 	"    }" +
 	"  }\n" +
 	"}";
@@ -620,15 +618,15 @@ public void test013() throws JavaModelException {
 
 	String selectionIdentifier = "num_";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public static void foo(int num_) {\n" + 
-			"    int i;\n" + 
-			"    {\n" + 
-			"      <SelectOnName:num_>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public static void foo(int num_) {\n" +
+			"    int i;\n" +
+			"    {\n" +
+			"      <SelectOnName:num_>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "num_";
 	String testName = "X.java";
@@ -647,7 +645,7 @@ public void test014() throws JavaModelException {
 	"  public static void foo(int num_) {\n" +
 	" 	 int i = switch (num_) {\n" +
 	"	   case 1, 2, 3 -> 0;\n" +
-	"      default -> (num_ + 1);\n" + 
+	"      default -> (num_ + 1);\n" +
 	"    }" +
 	"  }\n" +
 	"}";
@@ -658,15 +656,15 @@ public void test014() throws JavaModelException {
 
 	String selectionIdentifier = "num_";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public static void foo(int num_) {\n" + 
-			"    int i;\n" + 
-			"    {\n" + 
-			"      <SelectOnName:num_>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public static void foo(int num_) {\n" +
+			"    int i;\n" +
+			"    {\n" +
+			"      <SelectOnName:num_>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "num_";
 	String testName = "X.java";
@@ -685,7 +683,7 @@ public void test015() throws JavaModelException {
 	"  public static void foo(int num_) {\n" +
 	" 	 int i = switch (num_) {\n" +
 	"	   case 1, 2, 3 -> 0;\n" +
-	"      default -> (num_ + 1);\n" + 
+	"      default -> (num_ + 1);\n" +
 	"    }" +
 	"  }\n" +
 	"}";
@@ -696,15 +694,15 @@ public void test015() throws JavaModelException {
 
 	String selectionIdentifier = "num_";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public static void foo(int num_) {\n" + 
-			"    int i;\n" + 
-			"    {\n" + 
-			"      <SelectOnName:num_>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public static void foo(int num_) {\n" +
+			"    int i;\n" +
+			"    {\n" +
+			"      <SelectOnName:num_>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "num_";
 	String testName = "X.java";
@@ -719,13 +717,13 @@ public void test015() throws JavaModelException {
  * Multi constant case statement with '->', selection is a referenced name of type int in switch expression
  */
 public void test016() throws JavaModelException {
-	String string =  "public class X {\n" + 
-			"	public void bar(int s) {\n" + 
-			"		int i_j = switch (s) {\n" + 
+	String string =  "public class X {\n" +
+			"	public void bar(int s) {\n" +
+			"		int i_j = switch (s) {\n" +
 			"			case 1, 2, 3 -> (s+1);\n" +
-			"			default -> i_j;\n" + 
-			"		};\n" + 
-			"	}\n" + 
+			"			default -> i_j;\n" +
+			"		};\n" +
+			"	}\n" +
 			"}\n";
 
 	String selection = "i_j";
@@ -734,15 +732,15 @@ public void test016() throws JavaModelException {
 
 	String selectionIdentifier = "i_j";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public void bar(int s) {\n" + 
-			"    int i_j;\n" + 
-			"    {\n" + 
-			"      <SelectOnName:i_j>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public void bar(int s) {\n" +
+			"    int i_j;\n" +
+			"    {\n" +
+			"      <SelectOnName:i_j>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "i_j";
 	String testName = "X.java";
@@ -754,13 +752,13 @@ public void test016() throws JavaModelException {
 			selectionIdentifier, expectedReplacedSource, testName);
 }
 public void test017() throws JavaModelException {
-	String string =  "public class X {\n" + 
-			"	public void bar(int s) {\n" + 
-			"		int i_j = switch (s) {\n" + 
+	String string =  "public class X {\n" +
+			"	public void bar(int s) {\n" +
+			"		int i_j = switch (s) {\n" +
 			"			case 1, 2, 3 -> (s+1);\n" +
-			"			default -> (1+i_j);\n" + 
-			"		};\n" + 
-			"	}\n" + 
+			"			default -> (1+i_j);\n" +
+			"		};\n" +
+			"	}\n" +
 			"}\n";
 
 	String selection = "i_j";
@@ -769,15 +767,15 @@ public void test017() throws JavaModelException {
 
 	String selectionIdentifier = "i_j";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public void bar(int s) {\n" + 
-			"    int i_j;\n" + 
-			"    {\n" + 
-			"      <SelectOnName:i_j>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public void bar(int s) {\n" +
+			"    int i_j;\n" +
+			"    {\n" +
+			"      <SelectOnName:i_j>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 	String expectedReplacedSource = "i_j";
 	String testName = "X.java";

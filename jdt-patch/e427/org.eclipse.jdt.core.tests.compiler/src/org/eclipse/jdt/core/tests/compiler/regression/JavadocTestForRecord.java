@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 IBM Corporation and others.
+ * Copyright (c) 2020, 2023 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -268,6 +268,25 @@ public class JavadocTestForRecord extends JavadocTest {
 				"Javadoc: Invalid param tag name\n" +
 				"----------\n",
 				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+	}
+	public void test_bug572367() {
+		if(this.complianceLevel < ClassFileConstants.JDK14) {
+			return;
+		}
+
+		this.reportMissingJavadocCommentsVisibility = CompilerOptions.PRIVATE;
+		runConformTest(new String[] { "X.java",
+				"		/**  \n" +
+				"		 * @param a\n" +
+				"		 */  \n" +
+				"		public record X(int a) {\n" +
+				"			/**  \n" +
+				"			 *   @param args \n" + "		 */  \n" +
+				"			public static void main(String[] args){\n" +
+				"				System.out.println(0);\n" +
+				"			}\n" +
+				"		}" },
+				"0");
 	}
 
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -852,7 +852,11 @@ protected void consumeCaseLabelElement(CaseLabelKind kind) {
 
 	}
 }
-
+@Override
+protected void consumeSwitchLabeledExpression() {
+	super.consumeSwitchLabeledExpression();
+	popElement(K_SWITCH_EXPRESSION_DELIMITTER);
+}
 private void pushLocalVariableFromRecordPatternOnAstStack(RecordPattern rp) {
 	Pattern[] patterns = rp.patterns;
 	for (Pattern pattern : patterns) {
@@ -1372,6 +1376,9 @@ protected void consumeToken(int token) {
 				if(topKnownElementKind(SELECTION_OR_ASSIST_PARSER) == K_BETWEEN_CASE_AND_COLONORARROW) {
 					popElement(K_BETWEEN_CASE_AND_COLONORARROW);
 				}
+				break;
+			case TokenNameBeginCaseExpr:
+				pushOnElementStack(K_SWITCH_EXPRESSION_DELIMITTER);
 				break;
 			case TokenNamereturn:
 				pushOnElementStack(K_INSIDE_RETURN_STATEMENT, this.bracketDepth);

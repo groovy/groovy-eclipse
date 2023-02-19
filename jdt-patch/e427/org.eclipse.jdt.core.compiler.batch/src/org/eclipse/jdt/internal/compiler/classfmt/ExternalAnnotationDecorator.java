@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2020 Google, Inc. and others.
+ * Copyright (c) 2016, 2023 Google, Inc. and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -18,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -309,4 +310,8 @@ public class ExternalAnnotationDecorator implements IBinaryType {
 		return ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
 	}
 
+	@Override
+	public URI getURI() {
+		return this.inputType.getURI();
+	}
 }

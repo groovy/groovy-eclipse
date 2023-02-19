@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -24,9 +24,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,6 +48,8 @@ import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
@@ -627,6 +632,30 @@ public class Util implements SuffixConstants {
 			}
 		}
 	}
+	/**
+	 * Creates and returns a ClassFileReader.
+	 * @throws IOException if a problem occurred reading the zip entry.
+	 */
+	public static ClassFileReader getZipEntryClassFile(String zipName, String fileName) throws IOException, ClassFormatException {
+		try(ZipFile zip = new ZipFile(zipName)) {
+			ZipEntry entry = zip.getEntry(fileName);
+			if (entry == null) {
+				throw new IOException("Invalid zip entry name : " + fileName + " in " + zipName); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			try(BufferedInputStream stream = new BufferedInputStream(zip.getInputStream(entry))){
+				URI uri = toJarUri(zipName, fileName);
+				ClassFileReader reader = new ClassFileReader(uri, getInputStreamAsByteArray(stream), fileName.toCharArray());
+				return reader;
+			}
+		}
+	}
+
+	private static URI toJarUri(String zipName, String fileName) {
+		Path zipfile = Paths.get(zipName);
+		URI uri = URI.create("jar:file://" + zipfile.toUri().getRawPath() + "!/" + fileName); //$NON-NLS-1$ //$NON-NLS-2$
+		return uri;
+	}
+
 	public static int hashCode(Object[] array) {
 		int prime = 31;
 		if (array == null) {

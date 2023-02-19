@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.stream.Stream;
 
@@ -85,6 +86,7 @@ public class BinaryModuleBinding extends ModuleBinding {
 	private IPackageExport[] unresolvedOpens;
 	private char[][] unresolvedUses;
 	private IService[] unresolvedProvides;
+	public URI path;
 
 	/**
 	 * Construct a named module from binary, could be an auto module - or from an info from Java Model.
@@ -105,6 +107,7 @@ public class BinaryModuleBinding extends ModuleBinding {
 		super(module.name(), existingEnvironment);
 		existingEnvironment.root.knownModules.put(this.moduleName, this);
 		cachePartsFrom(module);
+		this.path = module.getURI();
 	}
 
 	void cachePartsFrom(IBinaryModule module) {

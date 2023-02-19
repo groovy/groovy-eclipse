@@ -687,9 +687,13 @@ protected void resolveAnnotations(Scope scope, int location) {
 					long[] nullTagBitsPerDimension = ((ArrayBinding)this.resolvedType).nullTagBitsPerDimension;
 					if (nullTagBitsPerDimension != null) {
 						for (int i = 0; i < dimensions; i++) { // skip last annotations at [dimensions] (concerns the leaf type)
-							if ((nullTagBitsPerDimension[i] & TagBits.AnnotationNullMASK) == TagBits.AnnotationNullMASK) {
+							long nullTagBits = nullTagBitsPerDimension[i] & TagBits.AnnotationNullMASK;
+							if (nullTagBits == TagBits.AnnotationNullMASK) {
 								scope.problemReporter().contradictoryNullAnnotations(annotationsOnDimensions[i]);
 								nullTagBitsPerDimension[i] = 0;
+							} else if (nullTagBits == TagBits.AnnotationNonNull) {
+								if (scope.hasDefaultNullnessFor(Binding.DefaultLocationArrayContents, this.sourceStart))
+									scope.problemReporter().nullAnnotationIsRedundant(this, annotationsOnDimensions[i]);
 							}
 						}
 					}
@@ -699,21 +703,33 @@ protected void resolveAnnotations(Scope scope, int location) {
 	}
 	if (scope.compilerOptions().isAnnotationBasedNullAnalysisEnabled
 			&& this.resolvedType != null
-			&& (this.resolvedType.tagBits & TagBits.AnnotationNullMASK) == 0
 			&& !this.resolvedType.isTypeVariable()
 			&& !this.resolvedType.isWildcard()
 			&& location != 0
-			&& scope.hasDefaultNullnessFor(location, this.sourceStart))
+			&& scope.hasDefaultNullnessForType(this.resolvedType, location, this.sourceStart))
 	{
-		if (location == Binding.DefaultLocationTypeBound && this.resolvedType.id == TypeIds.T_JavaLangObject) {
-			scope.problemReporter().implicitObjectBoundNoNullDefault(this);
-		} else {
-			LookupEnvironment environment = scope.environment();
-			AnnotationBinding[] annots = new AnnotationBinding[]{environment.getNonNullAnnotation()};
-			this.resolvedType = environment.createAnnotatedType(this.resolvedType, annots);
+		long nullTagBits = this.resolvedType.tagBits & TagBits.AnnotationNullMASK;
+		if (nullTagBits == 0) {
+			if (location == Binding.DefaultLocationTypeBound && this.resolvedType.id == TypeIds.T_JavaLangObject) {
+				scope.problemReporter().implicitObjectBoundNoNullDefault(this);
+			} else {
+				LookupEnvironment environment = scope.environment();
+				AnnotationBinding[] annots = new AnnotationBinding[]{environment.getNonNullAnnotation()};
+				this.resolvedType = environment.createAnnotatedType(this.resolvedType, annots);
+			}
+		} else if (nullTagBits == TagBits.AnnotationNonNull) {
+			if (location != Binding.DefaultLocationParameter) { // parameters are handled in MethodBinding.fillInDefaultNonNullness18()
+				scope.problemReporter().nullAnnotationIsRedundant(this, getTopAnnotations());
+			}
 		}
 	}
 }
+public Annotation[] getTopAnnotations() {
+	if (this.annotations != null)
+		return this.annotations[getAnnotatableLevels()-1];
+	return new Annotation[0];
+}
+
 public int getAnnotatableLevels() {
 	return 1;
 }

@@ -46,7 +46,6 @@ import java.util.function.Predicate;
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
-import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class JRTUtil {
@@ -254,7 +253,7 @@ public class JRTUtil {
 		return getJrtSystem(jrt).getClassfileContent(fileName, module);
 	}
 
-	public static ClassFileReader getClassfile(File jrt, String fileName, IModule module) throws IOException, ClassFormatException {
+	public static ClassFileReader getClassfile(File jrt, String fileName, String module) throws IOException, ClassFormatException {
 		return getJrtSystem(jrt).getClassfile(fileName, module);
 	}
 
@@ -596,22 +595,14 @@ class JrtFileSystem {
 
 	private ClassFileReader getClassfile(String fileName, Predicate<String> moduleNameFilter) throws IOException, ClassFormatException {
 		String[] modules = getModules(fileName);
-		byte[] content = null;
-		String module = null;
 		for (String mod : modules) {
 			if (moduleNameFilter != null && !moduleNameFilter.test(mod)) {
 				continue;
 			}
-			content = getFileBytes(fileName, mod);
-			if (content != null) {
-				module = mod;
-				break;
+			ClassFileReader reader = getClassfileFromModule(fileName, mod);
+			if (reader != null) {
+				return reader;
 			}
-		}
-		if (content != null) {
-			ClassFileReader reader = new ClassFileReader(content, fileName.toCharArray());
-			reader.moduleName = module.toCharArray();
-			return reader;
 		}
 		return null;
 	}
@@ -652,31 +643,49 @@ class JrtFileSystem {
 		}
 	}
 
+	ClassFileReader getClassfileFromModule(String fileName, String module) throws IOException, ClassFormatException {
+		Path path = this.fs.getPath(JRTUtil.MODULES_SUBDIR, module, fileName);
+		byte[] content = null;
+		if(JRTUtil.DISABLE_CACHE) {
+			content = JRTUtil.safeReadBytes(path);
+		} else {
+			try {
+				Optional<byte[]> bytes = this.classCache.computeIfAbsent(path, key -> {
+					try {
+						return Optional.ofNullable(JRTUtil.safeReadBytes(key));
+					} catch (IOException e) {
+						throw new RuntimeIOException(e);
+					}
+				});
+				content = bytes.orElse(null);
+			} catch (RuntimeIOException rio) {
+				throw rio.getCause();
+			}
+		}
+		if (content != null) {
+			ClassFileReader reader = new ClassFileReader(path.toUri(), content, fileName.toCharArray());
+			reader.moduleName = module.toCharArray();
+			return reader;
+		} else {
+			return null;
+		}
+	}
 	public ClassFileReader getClassfile(String fileName, String module, Predicate<String> moduleNameFilter) throws IOException, ClassFormatException {
 		ClassFileReader reader = null;
 		if (module == null) {
 			reader = getClassfile(fileName, moduleNameFilter);
 		} else {
-			byte[] content = getFileBytes(fileName, module);
-			if (content != null) {
-				reader = new ClassFileReader(content, fileName.toCharArray());
-				reader.moduleName = module.toCharArray();
-			}
+			reader = getClassfileFromModule(fileName, module);
 		}
 		return reader;
 	}
 
-	public ClassFileReader getClassfile(String fileName, IModule module) throws IOException, ClassFormatException {
-		ClassFileReader reader = null;
+	public ClassFileReader getClassfile(String fileName, String module) throws IOException, ClassFormatException {
 		if (module == null) {
-			reader = getClassfile(fileName, (Predicate<String>)null);
+			return getClassfile(fileName, (Predicate<String>)null);
 		} else {
-			byte[] content = getFileBytes(fileName, new String(module.name()));
-			if (content != null) {
-				reader = new ClassFileReader(content, fileName.toCharArray());
-			}
+			return getClassfileFromModule(fileName, module);
 		}
-		return reader;
 	}
 
 	void walkJrtForModules() throws IOException {

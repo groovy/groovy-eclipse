@@ -23,7 +23,6 @@ import org.eclipse.jdt.internal.compiler.apt.dispatch.BaseProcessingEnvImpl;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 
 public class RecordComponentElementImpl extends VariableElementImpl implements RecordComponentElement {
 
@@ -40,9 +39,9 @@ public class RecordComponentElementImpl extends VariableElementImpl implements R
 	public ExecutableElement getAccessor() {
 		RecordComponentBinding comp = (RecordComponentBinding) this._binding;
 		ReferenceBinding binding = comp.declaringRecord;
-		if (binding instanceof SourceTypeBinding) {
-			MethodBinding accessor = ((SourceTypeBinding) binding).getRecordComponentAccessor(comp.name);
-			return new ExecutableElementImpl(_env, accessor);
+		MethodBinding accessor = binding.getRecordComponentAccessor(comp.name);
+		if (accessor != null) {
+			return new ExecutableElementImpl(this._env, accessor);
 		}
 		return null;
 	}

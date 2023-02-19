@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2022 IBM Corporation.
+ * Copyright (c) 2018, 2023 IBM Corporation.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -33,6 +33,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -74,12 +75,13 @@ public class ClasspathJep247 extends ClasspathJrt {
 
 		try {
 			//TODO: Check if any conversion needed for path separator
-			ClassFileReader reader = null;
+			IBinaryType reader = null;
 			byte[] content = null;
 			qualifiedBinaryFileName = qualifiedBinaryFileName.replace(".class", ".sig"); //$NON-NLS-1$ //$NON-NLS-2$
+			Path p = null;
 			if (this.subReleases != null && this.subReleases.length > 0) {
 				for (String rel : this.subReleases) {
-					Path p = this.fs.getPath(rel, qualifiedBinaryFileName);
+					this.fs.getPath(rel, qualifiedBinaryFileName);
 					if (Files.exists(p)) {
 						content = JRTUtil.safeReadBytes(p);
 						if (content != null)
@@ -87,10 +89,12 @@ public class ClasspathJep247 extends ClasspathJrt {
 					}
 				}
 			} else {
-				content = JRTUtil.safeReadBytes(this.fs.getPath(this.releaseInHex, qualifiedBinaryFileName));
+				p = this.fs.getPath(this.releaseInHex, qualifiedBinaryFileName);
+				content = JRTUtil.safeReadBytes(p);
 			}
 			if (content != null) {
-				reader = new ClassFileReader(content, qualifiedBinaryFileName.toCharArray());
+				reader = new ClassFileReader(p.toUri(), content, qualifiedBinaryFileName.toCharArray());
+				reader = maybeDecorateForExternalAnnotations(qualifiedBinaryFileName, reader);
 				char[] modName = moduleName != null ? moduleName.toCharArray() : null;
 				return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName), modName);
 			}
@@ -149,7 +153,11 @@ public class ClasspathJep247 extends ClasspathJrt {
 								if (content == null) {
 									return FileVisitResult.CONTINUE;
 								}
-								ClasspathJep247.this.acceptModule(content, newCache);
+								try {
+									ClasspathJep247.this.acceptModule(new ClassFileReader(f.toUri(), content, f.getFileName().toString().toCharArray()), newCache);
+								} catch (ClassFormatException e) {
+									e.printStackTrace();
+								}
 							}
 							return FileVisitResult.CONTINUE;
 						}

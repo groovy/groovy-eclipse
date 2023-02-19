@@ -191,7 +191,7 @@ public class TypeElementImpl extends ElementImpl implements TypeElement {
 		}
 		// TODO: Add code for BinaryTypeBinding, which, as of now doesn't seem to contain components
 		return Collections.emptyList();
-    }
+	}
 
 	@Override
 	public List<? extends TypeMirror> getPermittedSubclasses() {
@@ -284,7 +284,7 @@ public class TypeElementImpl extends ElementImpl implements TypeElement {
 		if (refBinding.isInterface() && refBinding.isNestedType()) {
 			modifiers |= ClassFileConstants.AccStatic;
 		}
-		
+
 		return Factory.getModifiers(modifiers, getKind(), refBinding.isBinaryBinding());
 	}
 

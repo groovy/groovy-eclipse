@@ -45,6 +45,7 @@ import org.eclipse.jdt.internal.core.search.JavaSearchScope;
 import org.eclipse.jdt.internal.core.search.StringOperation;
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 import org.eclipse.jdt.internal.core.search.indexing.QualifierQuery;
+import org.eclipse.jdt.internal.core.search.indexing.QualifierQuery.QueryCategory;
 import org.eclipse.jdt.internal.core.search.matching.AndPattern;
 import org.eclipse.jdt.internal.core.search.matching.ConstructorPattern;
 import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
@@ -2233,14 +2234,23 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 			break;
 		case IJavaElement.TYPE :
 			IType type = (IType)element;
+			char[] simpleName = type.getElementName().toCharArray();
 			searchPattern = 	createTypePattern(
-						type.getElementName().toCharArray(),
+					simpleName,
 						type.getPackageFragment().getElementName().toCharArray(),
 						ignoreDeclaringType ? null : enclosingTypeNames(type),
 						null,
 						type,
 						maskedLimitTo,
 						matchRule);
+			if ((maskedLimitTo == IJavaSearchConstants.DECLARATIONS) ||
+					(maskedLimitTo == IJavaSearchConstants.REFERENCES)) {
+				char[] qualifiedName = type.getFullyQualifiedName().toCharArray();
+				qualifiedName = CharOperation.equals(simpleName, qualifiedName) ? CharOperation.NO_CHAR : qualifiedName;
+				MatchLocator.setIndexQualifierQuery(searchPattern, QualifierQuery.encodeQuery(new QueryCategory[] {
+						QueryCategory.REF
+				}, simpleName, qualifiedName));
+			}
 			break;
 		case IJavaElement.PACKAGE_DECLARATION :
 		case IJavaElement.PACKAGE_FRAGMENT :

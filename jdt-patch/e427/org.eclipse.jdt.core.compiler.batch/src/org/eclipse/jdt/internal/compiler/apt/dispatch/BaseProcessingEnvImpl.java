@@ -25,6 +25,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.JavaFileManager;
 
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.apt.model.ElementsImpl;
@@ -214,5 +215,9 @@ public abstract class BaseProcessingEnvImpl implements ProcessingEnvironment {
     public boolean isPreviewEnabled() {
         return this._compiler.options.enablePreviewFeatures;
     }
+
+	public JavaFileManager getFileManager() {
+		return null;
+	}
 
 }

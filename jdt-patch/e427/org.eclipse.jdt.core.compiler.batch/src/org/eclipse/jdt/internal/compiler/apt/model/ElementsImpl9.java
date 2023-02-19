@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2021 BEA Systems, Inc. and others
+ * Copyright (c) 2006, 2023 BEA Systems, Inc. and others
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -13,8 +13,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.apt.model;
 
+import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.lang.model.AnnotatedConstruct;
@@ -24,15 +28,27 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.ModuleElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
+import javax.tools.JavaFileObject.Kind;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.apt.dispatch.BaseProcessingEnvImpl;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryModuleBinding;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.SourceModuleBinding;
+import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
+import org.eclipse.jdt.internal.compiler.tool.EclipseFileManager;
+import org.eclipse.jdt.internal.compiler.tool.PathFileObject;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfModule;
 
 /**
@@ -66,7 +82,7 @@ public class ElementsImpl9 extends ElementsImpl {
 	}
 
 	private TypeElement getTypeElement(final char[][] compoundName, ModuleBinding mBinding) {
-		LookupEnvironment le = mBinding == null ? _env.getLookupEnvironment() : mBinding.environment;
+		LookupEnvironment le = mBinding == null ? this._env.getLookupEnvironment() : mBinding.environment;
 		ReferenceBinding binding = mBinding == null ? le.getType(compoundName) : le.getType(compoundName, mBinding);
 		// If we didn't find the binding, maybe it's a nested type;
 		// try finding the top-level type and then working downwards.
@@ -97,7 +113,7 @@ public class ElementsImpl9 extends ElementsImpl {
 		if ((binding.tagBits & TagBits.HasMissingType) != 0) {
 			return null;
 		}
-		return new TypeElementImpl(_env, binding, null);
+		return new TypeElementImpl(this._env, binding, null);
 	}
 
 
@@ -139,18 +155,18 @@ public class ElementsImpl9 extends ElementsImpl {
 
 	@Override
 	public ModuleElement getModuleElement(CharSequence name) {
-		LookupEnvironment lookup = _env.getLookupEnvironment();
+		LookupEnvironment lookup = this._env.getLookupEnvironment();
 		ModuleBinding binding = lookup.getModule(name.length() == 0 ? ModuleBinding.UNNAMED : name.toString().toCharArray());
 		//TODO: Surely there has to be a better way than calling toString().toCharArray()?
 		if (binding == null) {
 			return null;
 		}
-		return new ModuleElementImpl(_env, binding);
+		return new ModuleElementImpl(this._env, binding);
 	}
 
 	@Override
 	public Set<? extends ModuleElement> getAllModuleElements() {
-		LookupEnvironment lookup = _env.getLookupEnvironment();
+		LookupEnvironment lookup = this._env.getLookupEnvironment();
 		HashtableOfModule knownModules = lookup.knownModules;
 		ModuleBinding[] modules = knownModules.valueTable;
 		if (modules == null || modules.length == 0) {
@@ -160,10 +176,10 @@ public class ElementsImpl9 extends ElementsImpl {
 		for (ModuleBinding moduleBinding : modules) {
 			if (moduleBinding == null)
 				continue;
-			ModuleElement element = (ModuleElement) _env.getFactory().newElement(moduleBinding);
+			ModuleElement element = (ModuleElement) this._env.getFactory().newElement(moduleBinding);
 			mods.add(element);
 		}
-		mods.add((ModuleElement) _env.getFactory().newElement(lookup.UnNamedModule));
+		mods.add((ModuleElement) this._env.getFactory().newElement(lookup.UnNamedModule));
 		return mods;
 	}
 
@@ -176,15 +192,82 @@ public class ElementsImpl9 extends ElementsImpl {
 		if (mBinding != null) {
 			p = mBinding.getVisiblePackage(compoundName);
 		} else {
-			p = _env.getLookupEnvironment().createPackage(compoundName);
+			p = this._env.getLookupEnvironment().createPackage(compoundName);
 		}
 		if (p == null || !p.isValidBinding())
 			return null;
-		return (PackageElement) _env.getFactory().newElement(p);
+		return (PackageElement) this._env.getFactory().newElement(p);
 	}
 	@Override
 	public boolean isAutomaticModule(ModuleElement module) {
 		ModuleBinding mBinding = ((ModuleElementImpl) module).binding;
         return mBinding.isAutomatic();
     }
+	@Override
+	public javax.tools.JavaFileObject getFileObjectOf(Element element) {
+		switch(element.getKind()) {
+			case CLASS:
+			case ENUM:
+			case RECORD:
+			case ANNOTATION_TYPE:
+				TypeElement outer = getOutermostTypeElement(element);
+				TypeElementImpl typeElementImpl = (TypeElementImpl) outer;
+				Binding typeBinding = typeElementImpl._binding;
+				if (typeBinding instanceof SourceTypeBinding) {
+					SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) typeBinding;
+					ReferenceContext referenceContext = sourceTypeBinding.scope.referenceContext();
+					return getSourceJavaFileObject(referenceContext);
+				} else if(typeBinding instanceof BinaryTypeBinding) {
+					BinaryTypeBinding binaryBinding = (BinaryTypeBinding) typeBinding;
+					if (binaryBinding.path != null) {
+						return new PathFileObject(Path.of(binaryBinding.path), Kind.CLASS, Charset.defaultCharset());
+					}
+				}
+				break;
+			case MODULE:
+				ModuleElementImpl moduleEl = (ModuleElementImpl) element;
+				ModuleBinding binding = (ModuleBinding) moduleEl._binding;
+				if (binding instanceof SourceModuleBinding) {
+					SourceModuleBinding sourceModule = (SourceModuleBinding) binding;
+					return getSourceJavaFileObject(sourceModule.scope.referenceContext());
+				} else if (binding instanceof BinaryModuleBinding) {
+					BinaryModuleBinding binaryBinding = (BinaryModuleBinding) binding;
+					if (binaryBinding.path != null) {
+						return new PathFileObject(Path.of(binaryBinding.path), Kind.CLASS, Charset.defaultCharset());
+					}
+				}
+				break;
+			case LOCAL_VARIABLE:
+			case FIELD:
+			case RECORD_COMPONENT:
+			case ENUM_CONSTANT:
+			case METHOD:
+			case CONSTRUCTOR:
+				if (element.getEnclosingElement() != null) {
+					return getFileObjectOf(element.getEnclosingElement());
+				}
+				break;
+			default:
+				break;
+		}
+		return null;
+	}
+	private JavaFileObject getSourceJavaFileObject(ReferenceContext referenceContext) {
+		JavaFileManager fileManager = this._env.getFileManager();
+		if (fileManager instanceof EclipseFileManager) {
+			EclipseFileManager eFileManager = (EclipseFileManager) fileManager;
+			CompilationResult compilationResult = referenceContext.compilationResult();
+			String fileName = new String(compilationResult.fileName);
+			File f = new File(fileName);
+			if (f.exists()) {
+				Iterator<? extends JavaFileObject> objects = eFileManager.getJavaFileObjects(f).iterator();
+				if (objects.hasNext()) {
+					return objects.next();
+				}
+			}
+		} else {
+			throw new UnsupportedOperationException();
+		}
+		return null;
+	}
 }

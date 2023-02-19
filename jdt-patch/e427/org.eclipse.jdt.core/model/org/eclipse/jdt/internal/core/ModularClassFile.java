@@ -298,14 +298,18 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 
 	@Override
 	public IModuleDescription getModule() throws JavaModelException {
-		BinaryModule module = (BinaryModule) ((ClassFileInfo) getElementInfo()).getModule();
+		Object info = getElementInfo();
+		if(info == notExists) {
+			throw newNotPresentException();
+		}
+		BinaryModule module = (BinaryModule) ((ClassFileInfo) info).getModule();
 		if (module == null) {
 			throw newNotPresentException();
 		}
 		return module;
 	}
 
-	private static final JavaElementInfo notExists = new JavaElementInfo();
+	private static final ClassFileInfo notExists = new ClassFileInfo();
 
 	@Override
 	public boolean exists() {

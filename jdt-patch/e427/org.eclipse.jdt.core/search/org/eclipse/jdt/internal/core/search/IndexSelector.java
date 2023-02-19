@@ -23,7 +23,16 @@ import java.util.stream.Stream;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaModel;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
+import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -312,6 +321,15 @@ public IndexLocation[] getIndexLocations() {
 			Set<String> indexNames = indexNamesResult.get();
 			filtered = Stream.of(this.indexLocations).filter(l -> indexNames.contains(l.fileName()))
 					.toArray(IndexLocation[]::new);
+			if (filtered.length == 0) {
+				if (JobManager.VERBOSE) {
+					Util.verbose(String.format(
+							"-> current index selection and qualifying indexes has no intersection, " + //$NON-NLS-1$
+									"to keep search backward compatible using selected index locations - %s", //$NON-NLS-1$
+							this.toString()));
+				}
+				filtered = this.indexLocations;
+			}
 		}
 	}
 	if (JobManager.VERBOSE) {

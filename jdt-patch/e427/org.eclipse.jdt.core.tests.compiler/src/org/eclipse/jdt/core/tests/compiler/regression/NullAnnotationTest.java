@@ -2806,7 +2806,10 @@ public void test_default_nullness_010() {
 		"----------\n" +
 		"2. WARNING in p2\\Y.java (at line 5)\n" +
 		"	protected @NonNull Object getObject(@NonNull Object o) {\n" +
-		"	                                    ^^^^^^^^^^^^^^^^^\n" +
+		(this.complianceLevel < ClassFileConstants.JDK1_8
+	  ? "	                                    ^^^^^^^^^^^^^^^^^\n"
+	  : "	                                    ^^^^^^^^^^^^^^^\n"
+		) +
 		"The nullness annotation is redundant with a default that applies to this location\n" +
 		"----------\n");
 }
@@ -3489,7 +3492,10 @@ public void test_nonnull_var_in_constrol_structure_1() {
 		"----------\n" +
 		"1. WARNING in X.java (at line 4)\n" +
 		"	void print4(@NonNull String s) {\n" +
-		"	            ^^^^^^^^^^^^^^^^^\n" +
+		(this.complianceLevel < ClassFileConstants.JDK1_8
+	  ? "	            ^^^^^^^^^^^^^^^^^\n"
+	  : "	            ^^^^^^^^^^^^^^^\n"
+		) +
 		"The nullness annotation is redundant with a default that applies to this location\n" +
 		"----------\n" +
 		"2. ERROR in X.java (at line 10)\n" +
@@ -3504,7 +3510,10 @@ public void test_nonnull_var_in_constrol_structure_1() {
 		"----------\n" +
 		"4. WARNING in X.java (at line 17)\n" +
 		"	void print(@NonNull String s) {\n" +
-		"	           ^^^^^^^^^^^^^^^^^\n" +
+		(this.complianceLevel < ClassFileConstants.JDK1_8
+	  ? "	           ^^^^^^^^^^^^^^^^^\n"
+	  : "	           ^^^^^^^^^^^^^^^\n"
+		) +
 		"The nullness annotation is redundant with a default that applies to this location\n" +
 		"----------\n");
 }

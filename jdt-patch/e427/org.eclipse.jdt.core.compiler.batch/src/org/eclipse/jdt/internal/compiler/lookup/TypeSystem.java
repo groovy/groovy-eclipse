@@ -99,6 +99,10 @@ public class TypeSystem {
 					ReferenceBinding enclosing = resolvedType.enclosingType();
 					if (enclosing != null) {
 						this.enclosingType = resolvedType.isStatic() ? enclosing : (ReferenceBinding) env.convertUnresolvedBinaryToRawType(enclosing); // needed when binding unresolved member type
+						if (this.enclosingType.getClass() == ParameterizedTypeBinding.class) {
+							throw new IllegalStateException("unexpected: resolved enclosing type of " //$NON-NLS-1$
+									+ new String(this.type.readableName(false)) + " is a ParameterizedTypeBinding"); //$NON-NLS-1$
+						}
 					}
 				}
 				if (this.arguments != null) {
@@ -124,10 +128,11 @@ public class TypeSystem {
 			public int hashCode() {
 				final int prime=31;
 				int hashCode = 1 + hash(this.type);
-				// GROOVY add -- https://github.com/eclipse-jdt/eclipse.jdt.core/issues/549
-				if (this.enclosingType != null && this.enclosingType.isParameterizedType())
+				if (this.enclosingType != null && this.enclosingType.getClass() == ParameterizedTypeBinding.class) {
+					// Note: this works as in swapUnresolved, a null enclosingType is never replaced by a
+					// ParameterizedTypeBinding (just by a non-generic or RawTypeBinding)
 					hashCode = hashCode * prime + System.identityHashCode(this.enclosingType);
-				// GROOVY end
+				}
 				for (int i = 0, length = this.arguments == null ? 0 : this.arguments.length; i < length; i++) {
 					hashCode = hashCode * prime + hash(this.arguments[i]);
 				}

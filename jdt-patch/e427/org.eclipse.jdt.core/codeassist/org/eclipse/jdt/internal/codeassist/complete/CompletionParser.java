@@ -88,6 +88,7 @@ import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.PrefixExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
@@ -371,7 +372,8 @@ protected void attachOrphanCompletionNode(){
 		} else if (this.currentElement instanceof RecoveredType){	/* if in context of a type, then persists the identifier into a fake field return type */
 			RecoveredType recoveredType = (RecoveredType)this.currentElement;
 			/* filter out cases where scanner is still inside type header */
-			if (recoveredType.foundOpeningBrace) {
+			final boolean isAtRecordType = recoveredType.typeDeclaration.isRecord();
+			if (recoveredType.foundOpeningBrace || isAtRecordType) {
 				/* generate a pseudo field with a completion on type reference */
 				if (orphan instanceof TypeReference){
 					if (isInsideModuleInfo()) return; //taken care elsewhere
@@ -392,7 +394,9 @@ protected void attachOrphanCompletionNode(){
 						fieldType = (TypeReference)orphan;
 					}
 
-					CompletionOnFieldType fieldDeclaration = new CompletionOnFieldType(fieldType, false);
+					CompletionOnFieldType fieldDeclaration = new CompletionOnFieldType(fieldType,
+							isAtRecordType // mark as a local variable
+					);
 
 					// retrieve annotations if any
 					int length;
@@ -406,8 +410,9 @@ protected void attachOrphanCompletionNode(){
 							length);
 					}
 
-					// retrieve available modifiers if any
-					if (this.intPtr >= 2 && this.intStack[this.intPtr-1] == this.lastModifiersStart && this.intStack[this.intPtr-2] == this.lastModifiers){
+					// retrieve available modifiers if any and if its not a record
+					if (!isAtRecordType && this.intPtr >= 2 && this.intStack[this.intPtr - 1] == this.lastModifiersStart
+							&& this.intStack[this.intPtr - 2] == this.lastModifiers) {
 						fieldDeclaration.modifiersSourceStart = this.intStack[this.intPtr-1];
 						fieldDeclaration.modifiers = this.intStack[this.intPtr-2];
 					}
@@ -2226,7 +2231,8 @@ private boolean checkRecoveredType() {
 		}
 		RecoveredType recoveredType = (RecoveredType)this.currentElement;
 		/* filter out cases where scanner is still inside type header */
-		if (recoveredType.foundOpeningBrace) {
+		if (recoveredType.foundOpeningBrace
+				|| (this.lastIgnoredToken == -1 && recoveredType.typeDeclaration.isRecord())) {
 			// complete generics stack if necessary
 			if((this.genericsIdentifiersLengthPtr < 0 && this.identifierPtr > -1)
 					|| (this.genericsIdentifiersLengthStack[this.genericsIdentifiersLengthPtr] <= this.identifierPtr)) {
@@ -6318,6 +6324,15 @@ protected FieldDeclaration createFieldDeclaration(char[] assistName, int sourceS
 		this.lastCheckPoint = sourceEnd + 1;
 		return field;
 	}
+}
+
+@Override
+protected RecordComponent createComponent(char[] identifierName, long namePositions, TypeReference type, int modifier) {
+	int endPos = (int) namePositions;
+	if (this.cursorLocation <= endPos) {
+		return new CompletionOnRecordComponentName(identifierName, namePositions, type, modifier);
+	}
+	return super.createComponent(identifierName, namePositions, type, modifier);
 }
 
 /*

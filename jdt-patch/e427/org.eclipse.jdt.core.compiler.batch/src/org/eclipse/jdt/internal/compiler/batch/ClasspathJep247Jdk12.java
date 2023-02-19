@@ -34,6 +34,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.util.CtSym;
@@ -62,19 +63,20 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 			return null; // most common case
 
 		try {
-			ClassFileReader reader = null;
+			IBinaryType reader = null;
+			Path p = null;
 			byte[] content = null;
 			char[] foundModName = null;
 			qualifiedBinaryFileName = qualifiedBinaryFileName.replace(".class", ".sig"); //$NON-NLS-1$ //$NON-NLS-2$
 			if (this.subReleases != null && this.subReleases.length > 0) {
 				done: for (String rel : this.subReleases) {
 					if (moduleName == null) {
-						Path p = this.fs.getPath(rel);
+						p = this.fs.getPath(rel);
 						try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(p)) {
 							for (final java.nio.file.Path subdir: stream) {
-								Path f = this.fs.getPath(rel, JRTUtil.sanitizedFileName(subdir), qualifiedBinaryFileName);
-								if (Files.exists(f)) {
-									content = JRTUtil.safeReadBytes(f);
+								p = this.fs.getPath(rel, JRTUtil.sanitizedFileName(subdir), qualifiedBinaryFileName);
+								if (Files.exists(p)) {
+									content = JRTUtil.safeReadBytes(p);
 									foundModName = JRTUtil.sanitizedFileName(subdir).toCharArray();
 									if (content != null)
 										break done;
@@ -82,7 +84,7 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 							}
 						}
 					} else {
-						Path p = this.fs.getPath(rel, moduleName, qualifiedBinaryFileName);
+						p = this.fs.getPath(rel, moduleName, qualifiedBinaryFileName);
 						if (Files.exists(p)) {
 							content = JRTUtil.safeReadBytes(p);
 							if (content != null)
@@ -91,10 +93,12 @@ public class ClasspathJep247Jdk12 extends ClasspathJep247 {
 					}
 				}
 			} else {
-				content = JRTUtil.safeReadBytes(this.fs.getPath(this.releaseInHex, qualifiedBinaryFileName));
+				p = this.fs.getPath(this.releaseInHex, qualifiedBinaryFileName);
+				content = JRTUtil.safeReadBytes(p);
 			}
 			if (content != null) {
-				reader = new ClassFileReader(content, qualifiedBinaryFileName.toCharArray());
+				reader = new ClassFileReader(p.toUri(), content, qualifiedBinaryFileName.toCharArray());
+				reader = maybeDecorateForExternalAnnotations(qualifiedBinaryFileName, reader);
 				char[] modName = moduleName != null ? moduleName.toCharArray() : foundModName;
 				return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName), modName);
 			}

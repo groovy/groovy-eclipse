@@ -108,7 +108,7 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 				byte[] content = Files.readAllBytes(p);
 				IBinaryType reader = null;
 				if (content != null) {
-					reader = new ClassFileReader(content, qualifiedBinaryFileName.toCharArray());
+					reader = new ClassFileReader(p.toUri(), content, qualifiedBinaryFileName.toCharArray());
 				}
 				if (reader != null) {
 					char[] modName = this.module == null ? null : this.module.name();

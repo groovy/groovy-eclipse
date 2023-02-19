@@ -658,7 +658,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			// contents can potentially be null if a IOException occurs while retrieving the contents
 			if (contents == null) return;
 			final String path = this.document.getPath();
-			ClassFileReader reader = new ClassFileReader(contents, path == null ? null : path.toCharArray());
+			ClassFileReader reader = new ClassFileReader((new java.io.File(path)).toURI(), contents, path == null ? null : path.toCharArray());
 
 			IModule module = reader.getModuleDeclaration();
 			if (module != null) {

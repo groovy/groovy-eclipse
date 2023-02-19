@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1389,7 +1389,7 @@ protected void consumeToken(int token) {
 			case TokenNameLBRACE:
 				if (this.previousToken == TokenNameARROW) {
 					popElement(K_LAMBDA_EXPRESSION_DELIMITER);
-					if (topKnownElementKind(ASSIST_PARSER, 1) != K_SWITCH_EXPRESSION_DELIMITTER)
+					if (topKnownElementKind(ASSIST_PARSER) != K_SWITCH_EXPRESSION_DELIMITTER)
 						pushOnElementStack(K_LAMBDA_EXPRESSION_DELIMITER, BLOCK_BODY, this.previousObjectInfo);
 				}
 				break;
