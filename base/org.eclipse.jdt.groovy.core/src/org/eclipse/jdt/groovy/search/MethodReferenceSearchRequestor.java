@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -315,7 +315,11 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private boolean parameterTypesMatch(MethodNode methodNode) {
-        Parameter[] parameters = methodNode.getParameters();
+        // in case of resolved type parameter(s), redirect to unresolved
+        Parameter[] parameters = (methodNode == methodNode.getOriginal() ||
+                parameterCountOf(methodNode) != parameterCountOf(methodNode.getOriginal())
+                    ? methodNode.getParameters() : methodNode.getOriginal().getParameters());
+
         List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(parameters);
         int n; if ((n = parameterTypes.size()) != parameterTypeSignatures.length) {
             return false;
@@ -424,6 +428,10 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             return SearchMatch.A_ACCURATE;
         }
         return SearchMatch.A_INACCURATE;
+    }
+
+    private static int parameterCountOf(MethodNode method) {
+        return method.getParameters().length;
     }
 
     private static boolean supportsOverride(IMethod method) throws JavaModelException {

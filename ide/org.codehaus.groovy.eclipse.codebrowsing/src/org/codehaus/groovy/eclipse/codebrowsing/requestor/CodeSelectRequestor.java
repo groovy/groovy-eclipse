@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -676,19 +676,39 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (declaration instanceof ClassNode) {
             appendUniqueKeyForResolvedType(sb, result.type);
         } else {
-            appendUniqueKeyForResolvedType(sb, resolvedDeclaringType);
+            String declType = GroovyUtils.getTypeSignatureWithoutGenerics(resolvedDeclaringType, true, true).replace('.', '/');
+            sb.append(declType);
+
+            if (resolvedDeclaringType.isPrimaryClassNode()) {
+                GenericsType[] typeParams = resolvedDeclaringType.getGenericsTypes();
+                if (typeParams != null) { // include type parameter specifiction
+                    sb.setCharAt(sb.length() - 1, Signature.C_GENERIC_START);
+                    for (GenericsType tp : typeParams) {
+                        //sb.append(declType).append(Signature.C_COLON); -- IMO a qualifier here is redundant
+                        sb.append(Signature.C_TYPE_VARIABLE).append(tp.getName()).append(Signature.C_NAME_END);
+                    }
+                    sb.append(Signature.C_GENERIC_END).append(Signature.C_NAME_END);
+                }
+            }
+
             if (declaration instanceof FieldNode) {
                 sb.append(Signature.C_DOT).append(maybeRequested.getElementName()).append(Signature.C_PARAM_END);
                 appendUniqueKeyForResolvedType(sb, result.type);
             } else if (declaration instanceof MethodNode) {
                 MethodNode node = (MethodNode) declaration;
                 if (maybeRequested.getElementType() == IJavaElement.FIELD) {
-                    // this is likely a generated getter or setter
+                    // this is likely a generated getter or setter method
                     sb.append(Signature.C_DOT).append(maybeRequested.getElementName()).append(Signature.C_PARAM_END);
-                    boolean setter = node.getName().startsWith("set") && node.getParameters() != null && node.getParameters().length > 0;
-                    appendUniqueKeyForResolvedType(sb, setter ? node.getParameters()[0].getType() : result.type);
+                    appendUniqueKeyForResolvedType(sb, AccessorSupport.isSetter(node) ? node.getParameters()[0].getType() : result.type);
                 } else {
                     appendUniqueKeyForMethod(sb, node, result.type, resolvedDeclaringType);
+                    // scrub signature of type parameter qualifier
+                    final String q = declType + Signature.C_COLON;
+                    int p;
+                    do {
+                        p = sb.indexOf(q); if (p > 0)
+                            sb.replace(p, p + q.length(), "");
+                    } while (p > 0);
                 }
             }
         }

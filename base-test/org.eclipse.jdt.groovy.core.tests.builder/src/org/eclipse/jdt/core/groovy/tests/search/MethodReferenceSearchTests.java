@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    this.xxx()\n" + // yes
             "    this.xxx\n" + // no
             "  }\n" +
-            "  def xxx() {}\n" + // no; an overload is a declaration, not a reference
+            "  def xxx() {}\n" + // no; overload is a declaration, not a reference
             "  def method2() {\n" +
             "    super.xxx\n" + // no
             "    super.xxx()\n" + // yes
@@ -115,7 +115,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    def closure = this.&xxx\n" + // yes
             "    this.xxx = 'nothing'\n" + // no
             "  }\n" +
-            "  def xxx() {}\n" +  // no; an overload is a declaration, not a reference
+            "  def xxx() {}\n" +  // no; overload is a declaration, not a reference
             "  def method2() {\n" +
             "    def nothing = this.xxx()\n" +  // yes
             "  }\n" +
@@ -546,7 +546,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "package foo\n" +
             "class Bar {\n" +
             "  static String string\n" +
-            "  static String getString() {}\n" +
+            "  static String getString() {string}\n" +
             "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
@@ -591,7 +591,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "package foo\n" +
             "class Bar {\n" +
             "  String string\n" +
-            "  String getString() {}\n" +
+            "  String getString() {string}\n" +
             "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
@@ -618,8 +618,56 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("getString"), matches.get(3).getOffset());
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/988
+    @Test
     public void testExplicitPropertyGetterSearch3() throws Exception {
+        GroovyCompilationUnit bar = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar<T> {\n" +
+            "  T value\n" +
+            "  T getValue() {value}\n" +
+            "}\n");
+        GroovyCompilationUnit baz = createUnit("foo", "Baz",
+            "package foo\n" +
+            "def bar = new Bar<Object>(value: null)\n" +
+            "def val = bar.@value\n" +
+            "val = bar.value\n" + // exact
+            "val = bar.getValue()\n" + // exact
+            "val = bar.'getValue'()\n" + // exact
+            "def fun = bar.&getValue\n" + // potential
+            "bar.with {\n" +
+            "  val = value\n" + // exact
+            "  val = getValue()\n" + // exact
+            "  val = 'getValue'()\n" + // exact
+            "  fun = delegate.&getValue\n" + // potential
+            "}\n");
+
+        IMethod method = bar.getType("Bar").getMethods()[0];
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
+
+        assertEquals(8, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("bar.value") + 4, matches.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("getValue"), matches.get(1).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("'getValue'"), matches.get(2).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(3).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(".&getValue") + 2, matches.get(3).getOffset());
+
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(4).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("value"), matches.get(4).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(5).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("getValue()"), matches.get(5).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(6).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("'getValue'"), matches.get(6).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(7).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("getValue"), matches.get(7).getOffset());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/988
+    public void testExplicitPropertyGetterSearch4() throws Exception {
         GroovyCompilationUnit bar = createUnit("foo", "Bar",
             "package foo\n" +
             "@groovy.transform.CompileStatic\n" +
@@ -671,7 +719,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testExplicitPropertyGetterSearch4() throws Exception {
+    public void testExplicitPropertyGetterSearch5() throws Exception {
         GroovyCompilationUnit bar = createUnit("foo", "Bar",
             "package foo\n" +
             "class Bar {\n" +
@@ -720,7 +768,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  void setString(String string) {\n" +
             "    this.string = (string ?: '')\n" +
             "  }\n" +
-            "}");
+            "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
             "def bar = new Bar(string: null)\n" + // exact
@@ -729,8 +777,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "bar.string = null\n" + // exact
             "def str = bar.string\n" +
             "bar.@string = null\n" +
-            "bar.&setString\n" + // potential
-            "");
+            "bar.&setString\n"); // potential
 
         IMethod method = bar.getType("Bar").getMethods()[0];
         List<SearchMatch> matches = search(
@@ -759,7 +806,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  void setString(String string) {\n" +
             "    this.string = (string ?: '')\n" +
             "  }\n" +
-            "}");
+            "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
             "new Bar().with {\n" +
@@ -770,8 +817,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  def str = string\n" +
             "  delegate.@string = null\n" +
             "  delegate.&setString\n" + // potential
-            "}\n" +
-            "");
+            "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
         List<SearchMatch> matches = search(
@@ -808,8 +854,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    string += 'y'\n" + // potential
             "    string = 'z'\n" + // exact
             "  }\n" +
-            "}\n" +
-            "");
+            "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
         List<SearchMatch> matches = search(
@@ -826,6 +871,65 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
+    public void testExplicitPropertySetterSearch4() throws Exception {
+        GroovyCompilationUnit bar = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar<T> {\n" +
+            "  T value\n" +
+            "  void setValue(T value) {}\n" +
+            "}\n");
+        GroovyCompilationUnit baz = createUnit("foo", "Baz",
+            "package foo\n" +
+            "def bar = new Bar<Object>(value: null)\n" + // exact
+            "bar.value = null\n" + // exact
+            "bar.value += null\n" + // potential
+            "bar.setValue(null)\n" + // exact
+            "bar.'setValue'(null)\n" + // exact
+            "def val = bar.value\n" +
+            "bar.@value = null\n" +
+            "bar.&setValue\n" + // potential
+            "bar.with {\n" +
+            "  value = null\n" + // exact
+            "  value += null\n" + // potential
+            "  setValue(null)\n" + // exact
+            "  'setValue'(null)\n" + // exact
+            "  val = value\n" +
+            "  delegate.@value = null\n" +
+            "  delegate.&setValue\n" + // potential
+            "}\n");
+
+        IMethod method = bar.getType("Bar").getMethods()[0];
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
+
+        assertEquals(11, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("value:"), matches.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("bar.value =") + 4, matches.get(1).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(2).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("bar.value +=") + 4, matches.get(2).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("setValue"), matches.get(3).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(4).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("'setValue'"), matches.get(4).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(5).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(".&setValue") + 2, matches.get(5).getOffset());
+
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(6).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(" value =") + 1, matches.get(6).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(7).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(" value +=") + 1, matches.get(7).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(8).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(" setValue(") + 1, matches.get(8).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(9).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(" 'setValue'") + 1, matches.get(9).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(10).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf(".&setValue") + 2, matches.get(10).getOffset());
+    }
+
+    @Test
     public void testGenericsMethodReferenceSearch() throws Exception {
         GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
             "package foo\n" +
@@ -833,7 +937,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  String xxx(Number number, Date date) {\n" +
             "    'Hello'\n" +
             "  }\n" +
-            "}");
+            "}\n");
         @SuppressWarnings("unused")
         ICompilationUnit javaUnit = createJavaUnit("foo", "Baz",
             "package foo;\n" +
@@ -843,7 +947,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  void testCase() {\n" +
             "    test.xxx(1, new Date());\n" +
             "  }\n" +
-            "}");
+            "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[0];
         List<SearchMatch> matches = search(
@@ -863,7 +967,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  def baz(obj) {\n" +
             "    obj.notifyAll()\n" +
             "  }\n" +
-            "}");
+            "}\n");
 
         IMethod method = groovyUnit.getJavaProject().findType("java.lang.Object").getMethod("notifyAll", new String[0]);
         List<SearchMatch> matches = search(
@@ -883,7 +987,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  def baz(String[] strings) {\n" +
             "    println strings.toString()\n" +
             "  }\n" +
-            "}");
+            "}\n");
 
         IMethod method = groovyUnit.getJavaProject().findType("java.lang.Object").getMethod("toString", new String[0]);
         List<SearchMatch> matches = search(
