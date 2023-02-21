@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
@@ -100,12 +101,17 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
                 end = node.getEnd();
             }
         } else if (node instanceof ConstantExpression) {
-            if (fieldName.equals(((ConstantExpression) node).getText())) { ASTNode outer = result.scope.getEnclosingNode();
+            if (fieldName.equals(((ConstantExpression) node).getText())) {
+                ASTNode outer = result.scope.getCurrentNode() != node ? result.scope.getCurrentNode() : result.scope.getEnclosingNode();
                 if (outer != null && outer instanceof PropertyExpression && ((PropertyExpression) outer).getProperty() == node && outer.getNodeMetaData("static.import.alias") != null) {
                     // found "Type.bar" where "bar" is declared by "import static pack.Type.foo as bar"; StaticImportVisitor transforms to the property expression
                 } else if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode || result.confidence == TypeConfidence.UNKNOWN) {
                     doCheck = true;
-                    isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                    if (outer instanceof MapExpression) {
+                        isAssignment = ((MapExpression) outer).getMapEntryExpressions().stream().anyMatch(entry -> entry.getKeyExpression() == node);
+                    } else {
+                        isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                    }
                 } else if (result.declaration instanceof MethodNode) {
                     MethodNode methodNode = (MethodNode) result.declaration;
                     // check for "foo.bar" where "bar" refers to generated/synthetic "getBar()", "isBar()" or "setBar(...)"

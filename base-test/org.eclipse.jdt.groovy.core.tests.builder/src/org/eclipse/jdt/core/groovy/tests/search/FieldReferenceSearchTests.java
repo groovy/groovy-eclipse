@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -368,6 +368,142 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
         assertEquals("Should have found 2 matches, but found:\n" + toString(matches), 2, matches.size());
         assertLocation(matches.get(0), contents.indexOf("owner.something", offset) + 6, "something".length());
         assertLocation(matches.get(1), contents.indexOf("$owner.something", offset) + 7, "something".length());
+    }
+
+    @Test
+    public void testFindReadAccesses1() {
+        String contents =
+            "class Pogo {\n" +
+            "  String string\n" +
+            "}\n" +
+            "def obj = new Pogo(string: null)\n" +
+            "def str = obj.string\n" + // yes
+            "obj.string = str\n" +
+            "str = obj.@string\n" + // yes
+            "obj.@string = str\n" +
+            "str += obj.string\n" + // yes
+            "obj.string += str\n" + // ???
+            "str = obj.getString()\n" +
+            "obj.setString( null )\n" +
+            "str = obj.'getString'()\n" +
+            "obj.'setString'( null )\n" +
+            "def fun = obj.&getString\n" +
+            "fun = obj.&setString\n";
+
+        GroovyCompilationUnit unit = createUnit("foo", contents);
+        IField field = findType("Pogo", unit).getField("string");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.READ_ACCESSES), unit);
+
+        assertEquals(3, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf(".string") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertLocation(matches.get(1), contents.indexOf("@string") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertLocation(matches.get(2), contents.indexOf("+= obj.string") + 7, 6);
+    }
+
+    @Test
+    public void testFindReadAccesses2() {
+        String contents =
+            "class Pogo {\n" +
+            "  String string\n" +
+            "}\n" +
+            "new Pogo().with {\n" +
+            "  def str = string\n" + // yes
+            "  string = str\n" +
+            "  str = delegate.@string\n" + // yes
+            "  delegate.@string = str\n" +
+            "  str += string\n" + // yes
+            "  string += str\n" + // ???
+            "  str = getString()\n" +
+            "  setString( null )\n" +
+            "  str = 'getString'()\n" +
+            "  'setString'( null )\n" +
+            "  def fun = delegate.&getString\n" +
+            "  fun = delegate.&setString\n" +
+            "}\n";
+
+        GroovyCompilationUnit unit = createUnit("foo", contents);
+        IField field = findType("Pogo", unit).getField("string");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.READ_ACCESSES), unit);
+
+        assertEquals(3, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("= string") + 2, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertLocation(matches.get(1), contents.indexOf("@string") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertLocation(matches.get(2), contents.indexOf("+= string") + 3, 6);
+    }
+
+    @Test
+    public void testFindWriteAccesses1() {
+        String contents =
+            "class Pogo {\n" +
+            "  String string\n" +
+            "}\n" +
+            "def obj = new Pogo(string: null)\n" +
+            "def str = obj.string\n" +
+            "obj.string = str\n" + // yes
+            "str = obj.@string\n" +
+            "obj.@string = str\n" + // yes
+            "str += obj.string\n" +
+            "obj.string += str\n" + // yes
+            "str = obj.getString()\n" +
+            "obj.setString( null )\n" +
+            "str = obj.'getString'()\n" +
+            "obj.'setString'( null )\n" +
+            "def fun = obj.&getString\n" +
+            "fun = obj.&setString\n";
+
+        GroovyCompilationUnit unit = createUnit("foo", contents);
+        IField field = findType("Pogo", unit).getField("string");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.WRITE_ACCESSES), unit);
+
+        assertEquals(4, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("string: "), 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertLocation(matches.get(1), contents.indexOf(".string =") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertLocation(matches.get(2), contents.indexOf("@string =") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
+        assertLocation(matches.get(3), contents.indexOf(".string +") + 1, 6);
+    }
+
+    @Test
+    public void testFindWriteAccesses2() {
+        String contents =
+            "class Pogo {\n" +
+            "  String string\n" +
+            "}\n" +
+            "new Pogo().with {\n" +
+            "  def str = string\n" +
+            "  string = str\n" + // yes
+            "  str = delegate.@string\n" +
+            "  delegate.@string = str\n" + // yes
+            "  str += string\n" +
+            "  string += str\n" + // yes
+            "  str = getString()\n" +
+            "  setString( null )\n" +
+            "  str = 'getString'()\n" +
+            "  'setString'( null )\n" +
+            "  def fun = delegate.&getString\n" +
+            "  fun = delegate.&setString\n" +
+            "}\n";
+
+        GroovyCompilationUnit unit = createUnit("foo", contents);
+        IField field = findType("Pogo", unit).getField("string");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.WRITE_ACCESSES), unit);
+
+        assertEquals(3, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("string ="), 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertLocation(matches.get(1), contents.indexOf("@string =") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertLocation(matches.get(2), contents.indexOf("string +="), 6);
     }
 
     //--------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,6 +120,70 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         assertNoMatch('run', 'isZzzz', contents, matches)
         assertNoMatch('run', 'getZzzz', contents, matches)
         assertNoMatch('run', 'setZzzz', contents, matches)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1458
+    void testSearchInGroovy5() {
+        String contents = '''\
+            |class C {
+            |  String string
+            |}
+            |def obj = new C(string: null)
+            |def str = obj.string
+            |obj.string = str
+            |str = obj.@string
+            |obj.@string = str
+            |str += obj.string
+            |obj.string += str
+            |str = obj.getString() // yes
+            |obj.setString( null )
+            |str = obj.'getString'() // yes
+            |obj.'setString'( null )
+            |'''.stripMargin()
+        def unit = addGroovySource(contents, nextUnitName())
+
+        List<SearchMatch> matches = []
+        new SyntheticAccessorSearchRequestor().findSyntheticMatches(unit.getType('C').getField('string'),
+            IJavaSearchConstants.READ_ACCESSES | IJavaSearchConstants.IGNORE_RETURN_TYPE,
+            [SearchEngine.getDefaultSearchParticipant()] as SearchParticipant[],
+            SearchEngine.createWorkspaceScope(),
+            matches.&add, null)
+
+        assertCount(2, matches)
+        assertMatch('run', 'getString', contents, matches)
+        assertMatch('run', "'getString'", contents, matches)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1458
+    void testSearchInGroovy6() {
+        String contents = '''\
+            |class C {
+            |  String string
+            |}
+            |def obj = new C(string: null)
+            |def str = obj.string
+            |obj.string = str
+            |str = obj.@string
+            |obj.@string = str
+            |str += obj.string
+            |obj.string += str
+            |str = obj.getString()
+            |obj.setString( null ) // yes
+            |str = obj.'getString'()
+            |obj.'setString'( null ) // yes
+            |'''.stripMargin()
+        def unit = addGroovySource(contents, nextUnitName())
+
+        List<SearchMatch> matches = []
+        new SyntheticAccessorSearchRequestor().findSyntheticMatches(unit.getType('C').getField('string'),
+            IJavaSearchConstants.WRITE_ACCESSES | IJavaSearchConstants.IGNORE_RETURN_TYPE,
+            [SearchEngine.getDefaultSearchParticipant()] as SearchParticipant[],
+            SearchEngine.createWorkspaceScope(),
+            matches.&add, null)
+
+        assertCount(2, matches)
+        assertMatch('run', 'setString', contents, matches)
+        assertMatch('run', "'setString'", contents, matches)
     }
 
     @Test // GRECLIPSE-1369
@@ -254,8 +318,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             IJavaSearchConstants.DECLARATIONS | IJavaSearchConstants.IGNORE_DECLARING_TYPE | IJavaSearchConstants.IGNORE_RETURN_TYPE,
             [SearchEngine.getDefaultSearchParticipant()] as SearchParticipant[],
             SearchEngine.createWorkspaceScope(),
-            matches.&add,
-            null)
+            matches.&add, null)
 
         assertCount(0, matches)
     }

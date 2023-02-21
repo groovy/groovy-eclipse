@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,12 +61,13 @@ public class SyntheticAccessorSearchRequestor {
             return;
         }
 
-        // if looking for setter matches, make sure the synthetic member is non-final
+        // if looking for setter matches, make sure the synthetic member (aka the field/property) is non-final
         final boolean checkFlags = (element.getElementType() == IJavaElement.METHOD && element.getElementName().startsWith("set"));
 
         new SearchEngine().search(pattern, participants, scope, new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
+                if (match.getAccuracy() != SearchMatch.A_ACCURATE && ((IMember) match.getElement()).isBinary()) return;
                 if (!checkFlags || !Flags.isFinal(((IMember) match.getElement()).getFlags())) {
                     requestor.acceptMatch(match);
                 }
@@ -75,17 +76,32 @@ public class SyntheticAccessorSearchRequestor {
     }
 
     private SearchPattern createPattern(IJavaElement element, int limitTo) throws JavaModelException {
-        IJavaElement[] toSearch = {
+        IMember[] toSearch = {
             findSyntheticProperty(element),
-            findSyntheticMember(element, "is"),
-            findSyntheticMember(element, "get"),
-            findSyntheticMember(element, "set"),
+            findSyntheticMethod(element, "is"),
+            findSyntheticMethod(element, "get"),
+            findSyntheticMethod(element, "set"),
+            // TODO: handle PropertyNode with a non-canonical getter/setter name
         };
 
+        switch (limitTo & 0xF) {
+        case IJavaSearchConstants.DECLARATIONS:
+        case IJavaSearchConstants.IMPLEMENTORS:
+        case IJavaSearchConstants.MODULE_GRAPH:
+        case IJavaSearchConstants.REFERENCES  :
+            break;
+        case IJavaSearchConstants.READ_ACCESSES:
+            toSearch[3] = null;
+            break;
+        case IJavaSearchConstants.WRITE_ACCESSES:
+            toSearch[2] = null;
+            toSearch[1] = null;
+        }
+
         SearchPattern pattern = null;
-        for (IJavaElement searchElt : toSearch) {
-            if (searchElt != null) {
-                SearchPattern newPattern = SearchPattern.createPattern(searchElt, limitTo);
+        for (IMember member : toSearch) {
+            if (member != null) {
+                SearchPattern newPattern = SearchPattern.createPattern(member, limitTo);
                 if (pattern == null) {
                     pattern = newPattern;
                 } else {
@@ -96,7 +112,7 @@ public class SyntheticAccessorSearchRequestor {
         return pattern;
     }
 
-    private IMethod findSyntheticMember(IJavaElement element, String prefix) throws JavaModelException {
+    private IMethod findSyntheticMethod(IJavaElement element, String prefix) throws JavaModelException {
         if (element.getElementType() != IJavaElement.FIELD) {
             return null;
         }
