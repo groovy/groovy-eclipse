@@ -15,7 +15,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.hierarchy;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IFile;
@@ -766,6 +768,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 					// will not parse the method statements if ASTNode.HasAllMethodBodies is set.
 					if (containsLocalType && parsedUnit != null) parsedUnit.bits |= ASTNode.HasAllMethodBodies;
 				} else {
+					// GROOVY add -- https://bugs.eclipse.org/bugs/show_bug.cgi?id=540712
+					try { cu.getSourceRange(); } catch (JavaModelException ignore) {/**/}
+					// GROOVY end
 					// create parsed unit from file
 					ICompilationUnit sourceUnit = this.builder.createCompilationUnitFromPath(openable, (IFile)cu.getResource(), findAssociatedModuleName(openable));
 					CompilationResult unitResult = new CompilationResult(sourceUnit, i, openablesLength, this.options.maxProblemsPerUnit);

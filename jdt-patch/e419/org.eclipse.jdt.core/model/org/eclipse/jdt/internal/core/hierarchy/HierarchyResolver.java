@@ -15,20 +15,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.hierarchy;
 
-/**
- * This is the public entry point to resolve type hierarchies.
- *
- * When requesting additional types from the name environment, the resolver
- * accepts all forms (binary, source & compilation unit) for additional types.
- *
- * Side notes: Binary types already know their resolved supertypes so this
- * only makes sense for source types. Even though the compiler finds all binary
- * types to complete the hierarchy of a given source type, is there any reason
- * why the requestor should be informed that binary type X subclasses Y &
- * implements I & J?
- */
-
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IFile;
@@ -69,6 +58,18 @@ import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.util.ASTNodeFinder;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
 
+/**
+ * This is the public entry point to resolve type hierarchies.
+ *
+ * When requesting additional types from the name environment, the resolver
+ * accepts all forms (binary, source & compilation unit) for additional types.
+ *
+ * Side notes: Binary types already know their resolved supertypes so this
+ * only makes sense for source types. Even though the compiler finds all binary
+ * types to complete the hierarchy of a given source type, is there any reason
+ * why the requestor should be informed that binary type X subclasses Y &
+ * implements I & J?
+ */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class HierarchyResolver implements ITypeRequestor {
 
@@ -664,9 +665,10 @@ public void resolve(IGenericType suppliedType) {
 			this.superTypesOnly = true;
 			reportHierarchy(this.builder.getType(), null, binaryTypeBinding);
 		} else {
-			// GROOVY edit
-			//org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
-			IType it = ((SourceTypeElementInfo) suppliedType).getHandle();
+			/* GROOVY edit
+			org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
+			*/
+			IType it = ((SourceTypeElementInfo)suppliedType).getHandle();
 			org.eclipse.jdt.core.ICompilationUnit cu = it == null ? null : it.getCompilationUnit();
 			// GROOVY end
 			if (cu != null) {
@@ -718,8 +720,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 
 		subMonitor.split(1);
 		// build type bindings
-		// GROOVY edit
-		//Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
+		/* GROOVY edit
+		Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
+		*/
 		Parser parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment.globalOptions, this.lookupEnvironment.problemReporter, true, 1);
 		// GROOVY end
 		final boolean isJava8 = this.options.sourceLevel >= ClassFileConstants.JDK1_8;
@@ -770,6 +773,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 					// will not parse the method statements if ASTNode.HasAllMethodBodies is set.
 					if (containsLocalType && parsedUnit != null) parsedUnit.bits |= ASTNode.HasAllMethodBodies;
 				} else {
+					// GROOVY add -- https://bugs.eclipse.org/bugs/show_bug.cgi?id=540712
+					try { cu.getSourceRange(); } catch (JavaModelException ignore) {/**/}
+					// GROOVY end
 					// create parsed unit from file
 					IFile file = (IFile) cu.getResource();
 					ICompilationUnit sourceUnit = this.builder.createCompilationUnitFromPath(openable, file, findAssociatedModuleName(openable));
@@ -889,7 +895,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		}
 		// GROOVY add
 		finally {
-			Arrays.stream(parsedUnits).filter(Objects::nonNull).forEach(CompilationUnitDeclaration::cleanUp);
+			for (CompilationUnitDeclaration parsedUnit : parsedUnits) {
+				if (parsedUnit != null) parsedUnit.cleanUp();
+			}
 		}
 		// GROOVY end
 

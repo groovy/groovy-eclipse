@@ -770,6 +770,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 					// will not parse the method statements if ASTNode.HasAllMethodBodies is set. 
 					if (containsLocalType && parsedUnit != null) parsedUnit.bits |= ASTNode.HasAllMethodBodies;
 				} else {
+					// GROOVY add -- https://bugs.eclipse.org/bugs/show_bug.cgi?id=540712
+					try { cu.getSourceRange(); } catch (JavaModelException ignore) {/**/}
+					// GROOVY end
 					// create parsed unit from file
 					IFile file = (IFile) cu.getResource();
 					ICompilationUnit sourceUnit = this.builder.createCompilationUnitFromPath(openable, file, findAssociatedModuleName(openable));
@@ -889,7 +892,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		}
 		// GROOVY add
 		finally {
-			Arrays.stream(parsedUnits).filter(Objects::nonNull).forEach(CompilationUnitDeclaration::cleanUp);
+			for (CompilationUnitDeclaration parsedUnit : parsedUnits) {
+				if (parsedUnit != null) parsedUnit.cleanUp();
+			}
 		}
 		// GROOVY end
 
