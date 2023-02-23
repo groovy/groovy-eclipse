@@ -2093,6 +2093,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CTOR_CALL))
     }
 
+    @Test
+    void testGStringType() {
+        // the keyword class is identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix ${java.lang.Object.class;\'class\'} class suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('class'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(' class suffix'), 13, STRING))
+    }
+
     @Test // see testDeprecated10 for case where this and super calls are highlighted
     void testCtorCalls() {
         // the keywords super and this are identified/highlighted by GroovyTagScanner

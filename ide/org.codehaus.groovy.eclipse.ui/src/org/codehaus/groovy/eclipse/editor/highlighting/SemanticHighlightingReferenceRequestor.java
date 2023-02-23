@@ -226,6 +226,11 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 if (node.getStart() < varOrTuple.getStart()) // "def", "final" or annotation?
                     pos = new HighlightedTypedPosition(node.getStart(), varOrTuple.getStart() - node.getStart() - 1, HighlightKind.KEYWORD);
             }
+        } else if (node instanceof ClassExpression && lastGString.includes(node.getStart())) {
+            ClassNode type = ((Expression) node).getType(); // check for dot class
+            if (type.getEnd() > 0 && type.getEnd() < node.getEnd() - "class".length())
+                pos = new HighlightedTypedPosition(node.getEnd() - 5, 5, HighlightKind.KEYWORD);
+
         } else if (node instanceof ArrayExpression && lastGString.includes(node.getStart())) {
             pos = new HighlightedTypedPosition(new Position(newOffset(node), 3), HighlightKind.KEYWORD);
 
@@ -234,7 +239,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
         } else if (DEBUG) {
             String type = node.getClass().getSimpleName();
-            if (!type.matches("(Class|Binary|Property|ArgumentList|Closure(List)?|Array|List|Map)Expression"))
+            if (!type.matches("(Binary|Property|ArgumentList|Closure(List)?|Array|List|Map)Expression"))
                 System.err.println("found: " + type);
         }
 
