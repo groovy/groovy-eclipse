@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -249,5 +249,41 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         // TODO: getAt(int), toList(), toMap(), size()
+    }
+
+    @Test
+    public void testRecordType9() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print(new Simple('foo'))\n",
+
+            "Named.java",
+            "interface Named { String name(); }",
+
+            "Simple.groovy",
+            "record Simple(@Override String name) implements Named {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Simple[name=foo]");
+
+        sources[3] = "interface Named {String nameX();}";
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Simple.groovy (at line 1)\n" +
+            "\trecord Simple(@Override String name) implements Named {\n" +
+            "\t       ^^^^^^\n" +
+            "Groovy:Can't have an abstract method in a non-abstract class. The class 'Simple' must be declared abstract or the method 'java.lang.String nameX()' must be implemented.\n" +
+            "----------\n" +
+            "2. ERROR in Simple.groovy (at line 1)\n" +
+            "\trecord Simple(@Override String name) implements Named {\n" +
+            "\t              ^^^^^^^^^\n" +
+            "Groovy:Method 'name' from class 'Simple' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
+            "----------\n");
     }
 }
