@@ -2989,13 +2989,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         case '-':
             return "minus";
         case '*':
-            if (text.length() == 1 || text.charAt(1) == '=') {
-                return "multiply";
-            }
-            if (text.length() > 1 && text.charAt(1) == '*') {
-                return "power";
-            }
-            break;
+            return text.length() == 1 ? "multiply" : "power";
         case '/':
             return "div";
         case '%':
@@ -3007,12 +3001,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         case '^':
             return "xor";
         case '>':
-            if (text.length() > 1 && text.charAt(1) == '>') {
+            if (text.length() != 1 && text.charAt(1) == '>') {
                 return "rightShift"; // or "rightShiftUnsigned"
             }
             break;
         case '<':
-            if (text.length() > 1 && text.charAt(1) == '<') {
+            if (text.length() == 2 && text.charAt(1) == '<') {
                 return "leftShift";
             }
             break;
@@ -3021,6 +3015,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         case 'i':
             if (text.length() == 2 && text.charAt(1) == 'n') {
                 return "isCase";
+            }
+            break;
+        case '!':
+            if (text.length() == 3 && text.charAt(1) == 'i' && text.charAt(2) == 'n') {
+                return "isNotCase";
             }
         }
         return null;

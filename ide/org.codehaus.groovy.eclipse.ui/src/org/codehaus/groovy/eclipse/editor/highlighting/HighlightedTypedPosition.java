@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,10 @@ import org.eclipse.jface.text.Position;
 public class HighlightedTypedPosition extends Position implements Comparable<Position> {
 
     public enum HighlightKind {
-        KEYWORD, RESERVED, NUMBER, STRING, REGEXP, MAP_KEY, TAG_KEY, FIELD, STATIC_FIELD, STATIC_VALUE, PARAMETER, VARIABLE,
-        CTOR, METHOD, STATIC_METHOD, CTOR_CALL, GROOVY_CALL, METHOD_CALL, STATIC_CALL, COMMENT, DEPRECATED, UNKNOWN,
-        CLASS, ABSTRACT_CLASS, INTERFACE, TRAIT, ANNOTATION, ENUMERATION, PLACEHOLDER
+        COMMENT, DEFAULT, KEYWORD, RESERVED, NUMBER, STRING, REGEXP, MAP_KEY, TAG_KEY,
+        CTOR, METHOD, STATIC_METHOD, CTOR_CALL, GROOVY_CALL, METHOD_CALL, STATIC_CALL,
+        CLASS, ABSTRACT_CLASS, INTERFACE, TRAIT, ANNOTATION, ENUMERATION, PLACEHOLDER,
+        FIELD, STATIC_FIELD, STATIC_VALUE, PARAMETER, VARIABLE, DEPRECATED, UNKNOWN
     }
 
     public final HighlightKind kind;
