@@ -6327,12 +6327,13 @@ protected FieldDeclaration createFieldDeclaration(char[] assistName, int sourceS
 }
 
 @Override
-protected RecordComponent createComponent(char[] identifierName, long namePositions, TypeReference type, int modifier) {
+protected RecordComponent createComponent(char[] identifierName, long namePositions, TypeReference type, int modifier,
+		int declStart) {
 	int endPos = (int) namePositions;
-	if (this.cursorLocation <= endPos) {
+	if (this.cursorLocation > declStart && this.cursorLocation <= endPos) {
 		return new CompletionOnRecordComponentName(identifierName, namePositions, type, modifier);
 	}
-	return super.createComponent(identifierName, namePositions, type, modifier);
+	return super.createComponent(identifierName, namePositions, type, modifier, declStart);
 }
 
 /*

@@ -11395,7 +11395,7 @@ protected void consumeRecordComponent(boolean isVarArgs) {
 	RecordComponent recordComponent;
 	recordComponent = createComponent(identifierName, namePositions, type,
 			this.intStack[this.intPtr--] & ~ClassFileConstants.AccDeprecated // modifiers
-	);
+			, modifierPositions);
 	recordComponent.declarationSourceStart = modifierPositions;
 	recordComponent.bits |= (type.bits & ASTNode.HasTypeAnnotations);
 	// consume annotations
@@ -11717,7 +11717,8 @@ protected FieldDeclaration createFieldDeclaration(char[] fieldDeclarationName, i
 	return new FieldDeclaration(fieldDeclarationName, sourceStart, sourceEnd);
 }
 
-protected RecordComponent createComponent(char[] identifierName, long namePositions, TypeReference type, int modifier) {
+protected RecordComponent createComponent(char[] identifierName, long namePositions, TypeReference type, int modifier,
+		int declStart) {
 	return new RecordComponent(identifierName, namePositions, type, modifier);
 }
 protected JavadocParser createJavadocParser() {
