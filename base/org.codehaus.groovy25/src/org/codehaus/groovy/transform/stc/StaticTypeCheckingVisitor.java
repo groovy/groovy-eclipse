@@ -3432,7 +3432,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     doInferClosureParameterTypes(receiver, arguments, expression, selectedMethod, hintClass, resolverClass, options);
                 }
             }
-        /* GRECLIPSE edit -- GROOVY-8917, GROOVY-9347, GROOVY-10047, GROOVY-10049
+        /* GRECLIPSE edit -- GROOVY-8499, GROOVY-8917, GROOVY-9347, GROOVY-10047, GROOVY-10049
         } else if (isSAMType(param.getOriginType())) {
             // SAM coercion
             inferSAMType(param, receiver, selectedMethod, InvocationWriter.makeArgumentList(arguments), expression);
@@ -3506,6 +3506,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
                 expression.putNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS, paramTypes);
+                if (paramTypes.length != samParamTypes.length) {
+                    addError("Incorrect number of parameters. Expected " + samParamTypes.length + " but found " + paramTypes.length, expression);
+                }
             }
         }
         // GRECLIPSE end

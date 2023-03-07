@@ -3332,6 +3332,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     paramTypes = Arrays.copyOf(samParamTypes, n);
                 }
                 expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
+                // GRECLIPSE add -- GROOVY-8499
+                if (paramTypes.length != samParamTypes.length) {
+                    addError("Incorrect number of parameters. Expected " + samParamTypes.length + " but found " + paramTypes.length, expression);
+                }
+                // GRECLIPSE end
             }
         }
     }

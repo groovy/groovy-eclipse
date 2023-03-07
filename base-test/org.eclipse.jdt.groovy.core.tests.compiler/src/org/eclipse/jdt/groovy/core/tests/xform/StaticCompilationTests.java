@@ -2822,6 +2822,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8499() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  [].stream().map{item,xxxx ->}\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\t[].stream().map{item,xxxx ->}\n" +
+            "\t               ^^^^^^^^^^^^^^\n" +
+            "Groovy:Incorrect number of parameters. Expected 1 but found 2\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testCompileStatic8509() {
         //@formatter:off
         String[] sources = {
