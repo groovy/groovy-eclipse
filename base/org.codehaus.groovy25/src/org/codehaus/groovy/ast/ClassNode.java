@@ -201,6 +201,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return (redirect == null ? this : redirect.redirect());
     }
 
+    public boolean isRedirectNode() {
+        return (redirect != null);
+    }
+
     /**
      * Sets this instance as proxy for the given {@code ClassNode}.
      *
@@ -208,7 +212,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public void setRedirect(ClassNode cn) {
         if (isPrimaryNode) throw new GroovyBugError("tried to set a redirect for a primary ClassNode ("+getName()+"->"+cn.getName()+").");
-        if (cn != null) cn = cn.redirect();
+        if (cn != null && !isGenericsPlaceHolder()) cn = cn.redirect();
         if (cn == this) return;
         redirect = cn;
     }
@@ -1548,10 +1552,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
         }
         return transformInstances;
-    }
-
-    public boolean isRedirectNode() {
-        return redirect != null;
     }
 
     @Override

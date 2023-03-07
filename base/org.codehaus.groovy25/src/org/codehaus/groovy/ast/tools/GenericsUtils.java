@@ -407,14 +407,6 @@ public class GenericsUtils {
             exclusions = plus(exclusions, name); // GROOVY-7722
             type = genericsSpec.get(name);
             if (type != null && type.isGenericsPlaceHolder()) {
-                // GRECLIPSE add -- GROOVY-9059
-                if (type.hasMultiRedirect()) {
-                    // convert "S -> T -> U" to "T -> U"
-                    type = type.asGenericsType().getUpperBounds()[0];
-                    // continue to resolve "T -> U" if "T" is a placeholder
-                    return correctToGenericsSpecRecurse(genericsSpec, type, exclusions);
-                }
-                // GRECLIPSE end
                 if (type.getGenericsTypes() == null) {
                     // correct "T -> U" (no generics)
                     ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
@@ -486,12 +478,7 @@ public class GenericsUtils {
             String name = type.getGenericsTypes()[0].getName();
             type = genericsSpec.get(name);
             if (type != null && type.isGenericsPlaceHolder()
-                /* GRECLIPSE edit -- GROOVY-9059
                     && !name.equals(type.getUnresolvedName())) {
-                */
-                    && type.hasMultiRedirect()) {
-                type = type.asGenericsType().getUpperBounds()[0];
-                // GRECLIPSE end
                 return correctToGenericsSpec(genericsSpec, type);
             }
         }
@@ -538,7 +525,6 @@ public class GenericsUtils {
             for (GenericsType gt : gts) {
                 String name = gt.getName();
                 ClassNode type = gt.getType();
-                /* GRECLIPSE edit
                 if (gt.isPlaceholder()) {
                     ClassNode redirect;
                     if (gt.getUpperBounds() != null) {
@@ -558,7 +544,6 @@ public class GenericsUtils {
                         type.setRedirect(redirect);
                     }
                 }
-                */
                 newSpec.put(name, type);
             }
         }
@@ -738,16 +723,7 @@ public class GenericsUtils {
                 throw new GroovyBugError("Given generics type " + old + " must be a placeholder!");
             ClassNode fromSpec = genericsSpec.get(old.getName());
             if (fromSpec != null) {
-                /* GRECLIPSE edit
-                if (fromSpec.isGenericsPlaceHolder()) {
-                    ClassNode[] upper = new ClassNode[]{fromSpec.redirect()};
-                    newTypes[i] = new GenericsType(fromSpec, upper, null);
-                } else {
-                    newTypes[i] = new GenericsType(fromSpec);
-                }
-                */
                 newTypes[i] = fromSpec.asGenericsType();
-                // GRECLIPSE end
             } else {
                 ClassNode[] upper = old.getUpperBounds();
                 ClassNode[] newUpper = upper;

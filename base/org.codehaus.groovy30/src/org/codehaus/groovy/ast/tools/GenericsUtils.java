@@ -382,14 +382,6 @@ public class GenericsUtils {
             exclusions = plus(exclusions, name); // GROOVY-7722
             type = genericsSpec.get(name);
             if (type != null && type.isGenericsPlaceHolder()) {
-                // GRECLIPSE add -- GROOVY-9059
-                if (type.hasMultiRedirect()) {
-                    // convert "S -> T -> U" to "T -> U"
-                    type = type.asGenericsType().getUpperBounds()[0];
-                    // continue to resolve "T -> U" if "T" is a placeholder
-                    return correctToGenericsSpecRecurse(genericsSpec, type, exclusions);
-                }
-                // GRECLIPSE end
                 if (type.getGenericsTypes() == null) {
                     // correct "T -> U" (no generics)
                     ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
@@ -463,12 +455,7 @@ public class GenericsUtils {
             String name = type.getGenericsTypes()[0].getName();
             type = genericsSpec.get(name);
             if (type != null && type.isGenericsPlaceHolder()
-                    /* GRECLIPSE edit -- GROOVY-9059
                     && !name.equals(type.getUnresolvedName())) {
-                    */
-                    && type.hasMultiRedirect()) {
-                type = type.asGenericsType().getUpperBounds()[0];
-                // GRECLIPSE end
                 return correctToGenericsSpec(genericsSpec, type);
             }
         }
@@ -515,7 +502,6 @@ public class GenericsUtils {
             for (GenericsType gt : gts) {
                 String name = gt.getName();
                 ClassNode type = gt.getType();
-                /* GRECLIPSE edit
                 if (gt.isPlaceholder()) {
                     ClassNode redirect;
                     if (gt.getUpperBounds() != null) {
@@ -527,15 +513,14 @@ public class GenericsUtils {
                     }
                     if (redirect.isGenericsPlaceHolder()) {
                         // "T extends U" or "T super U"
-                        type = redirect;
+                        type = redirect; // GROOVY-9059
                     } else {
-                        // "T" or "T extends Thing" or "T super Thing"
+                        // "T" or "T extends Type" or "T super Type"
                         type = ClassHelper.makeWithoutCaching(name);
                         type.setGenericsPlaceHolder(true);
                         type.setRedirect(redirect);
                     }
                 }
-                */
                 newSpec.put(name, type);
             }
         }
