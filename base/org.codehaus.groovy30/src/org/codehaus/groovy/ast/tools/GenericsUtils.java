@@ -383,7 +383,6 @@ public class GenericsUtils {
             type = genericsSpec.get(name);
             if (type != null && type.isGenericsPlaceHolder()) {
                 if (type.getGenericsTypes() == null) {
-                    // correct "T -> U" (no generics)
                     ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
                     placeholder.setGenericsPlaceHolder(true);
                     return makeClassSafeWithGenerics(type, new GenericsType(placeholder));
