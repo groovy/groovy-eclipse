@@ -725,7 +725,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                         type = ClassHelper.getWrapper(type);
                     }
                     ClassNode declaringClass = target.getDeclaringClass();
-                    Class typeClass= type.getClass();
+                    Class<?> typeClass = type.getClass();
                     if (typeClass != ClassNode.class
                             && typeClass != InnerClassNode.class
                             && typeClass != ImmutableClassNode.class

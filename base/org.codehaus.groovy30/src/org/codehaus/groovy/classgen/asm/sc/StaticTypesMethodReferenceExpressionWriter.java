@@ -147,10 +147,6 @@ public class StaticTypesMethodReferenceExpressionWriter extends MethodReferenceE
                 parametersWithExactType,
                 false
         );
-        // GRECLIPSE add -- GROOVY-10933
-        if (abstractMethod.isVoidMethod()) bootstrapArgs[2] = groovyjarjarasm.asm.Type.getType(
-                BytecodeHelper.getMethodDescriptor(ClassHelper.VOID_TYPE, parametersWithExactType));
-        // GRECLIPSE end
         controller.getMethodVisitor().visitInvokeDynamicInsn(methodName, methodDesc, bootstrapMethod, bootstrapArgs);
 
         if (isClassExpression) {

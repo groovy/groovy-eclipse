@@ -359,9 +359,9 @@ public class GroovyLexer extends AbstractLexer {
 	        return Integer.MIN_VALUE;
 	    }
 
-	    // GRECLIPSE add
 	    private void addComment(int type) {
 	        String text = _input.getText(Interval.of(_tokenStartCharIndex, getCharIndex() - 1));
+	        // GRECLIPSE add
 	        Comment comment;
 	        if (type == 0) {
 	            comment = Comment.makeMultiLineComment( _tokenStartLine, _tokenStartCharPositionInLine + 1, getLine(), getCharPositionInLine() + 1, text);
@@ -369,10 +369,11 @@ public class GroovyLexer extends AbstractLexer {
 	            comment = Comment.makeSingleLineComment(_tokenStartLine, _tokenStartCharPositionInLine + 1, getLine(), getCharPositionInLine() + 1, text);
 	        }
 	        comments.add(comment);
+	        // GRECLIPSE end
 	    }
+
 	    public List<Comment> getComments() { return comments; }
 	    private final List<Comment> comments = new ArrayList<>();
-	    // GRECLIPSE end
 
 	    private static boolean isJavaIdentifierStartAndNotIdentifierIgnorable(int codePoint) {
 	        return Character.isJavaIdentifierStart(codePoint) && !Character.isIdentifierIgnorable(codePoint);
@@ -561,7 +562,7 @@ public class GroovyLexer extends AbstractLexer {
 	private void NL_action(RuleContext _localctx, int actionIndex) {
 		switch (actionIndex) {
 		case 13:
-			 this.ignoreTokenInsideParens(); 
+			 ignoreTokenInsideParens(); 
 			break;
 		}
 	}

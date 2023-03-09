@@ -681,7 +681,7 @@ public class Java8 implements VMPlugin {
 
     private Object getInvokeSpecialHandleFallback(final Method method, final Object receiver) {
         if (!method.isAccessible()) {
-            doPrivilegedInternal((java.security.PrivilegedAction<Object>) () -> {
+            doPrivilegedInternal(() -> {
                 ReflectionUtils.trySetAccessible(method);
                 return null;
             });
@@ -730,7 +730,7 @@ public class Java8 implements VMPlugin {
             try {
                 if (!lookup.isAccessible()) {
                     final Constructor<MethodHandles.Lookup> finalReference = lookup;
-                    doPrivilegedInternal((java.security.PrivilegedAction<Object>) () -> {
+                    doPrivilegedInternal(() -> {
                         ReflectionUtils.trySetAccessible(finalReference);
                         return null;
                     });

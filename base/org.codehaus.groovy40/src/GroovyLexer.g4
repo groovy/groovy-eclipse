@@ -220,9 +220,9 @@ options {
         return Integer.MIN_VALUE;
     }
 
-    // GRECLIPSE add
     private void addComment(int type) {
         String text = _input.getText(Interval.of(_tokenStartCharIndex, getCharIndex() - 1));
+        // GRECLIPSE add
         Comment comment;
         if (type == 0) {
             comment = Comment.makeMultiLineComment( _tokenStartLine, _tokenStartCharPositionInLine + 1, getLine(), getCharPositionInLine() + 1, text);
@@ -230,10 +230,11 @@ options {
             comment = Comment.makeSingleLineComment(_tokenStartLine, _tokenStartCharPositionInLine + 1, getLine(), getCharPositionInLine() + 1, text);
         }
         comments.add(comment);
+        // GRECLIPSE end
     }
+
     public List<Comment> getComments() { return comments; }
     private final List<Comment> comments = new ArrayList<>();
-    // GRECLIPSE end
 
     private static boolean isJavaIdentifierStartAndNotIdentifierIgnorable(int codePoint) {
         return Character.isJavaIdentifierStart(codePoint) && !Character.isIdentifierIgnorable(codePoint);
@@ -986,23 +987,17 @@ WS  : ([ \t]+ | LineEscape+) -> skip
     ;
 
 // Inside (...) and [...] but not {...}, ignore newlines.
-NL  : LineTerminator   { this.ignoreTokenInsideParens(); }
+NL  : LineTerminator   { ignoreTokenInsideParens(); }
     ;
 
 // Multiple-line comments (including groovydoc comments)
 ML_COMMENT
-// GRECLIPSE edit
-//  :   '/*' .*? '*/'       { this.ignoreMultiLineCommentConditionally(); } -> type(NL)
     :   '/*' .*? '*/'       { addComment(0); ignoreMultiLineCommentConditionally(); } -> type(NL)
-// GRECLIPSE end
     ;
 
 // Single-line comments
 SL_COMMENT
-// GRECLIPSE edit
-//  :   '//' ~[\r\n\uFFFF]* { this.ignoreTokenInsideParens(); }             -> type(NL)
-    :   '//' ~[\r\n\uFFFF]* { addComment(1); ignoreTokenInsideParens(); }   -> type(NL)
-// GRECLIPSE end
+    :   '//' ~[\r\n\uFFFF]* { addComment(1); ignoreTokenInsideParens(); }             -> type(NL)
     ;
 
 // Script-header comments.
