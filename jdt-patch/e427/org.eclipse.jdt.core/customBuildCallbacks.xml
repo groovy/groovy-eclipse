@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2006, 2011 IBM Corporation and others.
+    Copyright (c) 2006, 2023 IBM Corporation and others.
 
     This program and the accompanying materials
     are made available under the terms of the Eclipse Public License 2.0
@@ -8,7 +8,7 @@
     https://www.eclipse.org/legal/epl-2.0/
 
     SPDX-License-Identifier: EPL-2.0
-    
+
     Contributors:
         IBM Corporation - initial API and implementation
  -->
@@ -25,7 +25,7 @@
 	<target name="noDefault">
 		<echo message="This file must be called with explicit targets" />
 	</target>
-	
+
 	<!-- ===================================================================== -->
 	<!-- Steps to do before the target build.jars                              -->
 	<!-- Available parameters :                                                -->
@@ -44,9 +44,8 @@
 		<property name="build.result.folder" value="${basedir}" />
 		<property name="postingDirectory" value="${build.result.folder}/ecj" />
 		<property name="dest" value="${postingDirectory}/${buildLabel}" />
-		<ant antfile="${basedir}/scripts/export-ecj.xml" target="export"/>
 	</target>
-	
+
 	<!-- ===================================================================== -->
 	<!-- Steps to do before the target build.sources                           -->
 	<!-- Available parameters :                                                -->
@@ -92,9 +91,8 @@
 	</target>
 
 	<target name="post.compile.@dot">
-		<ant antfile="${basedir}/scripts/export-ecj.xml" target="extract-batch-compiler"/>
 	</target>
-	
+
 	<!-- ===================================================================== -->
 	<!-- Steps to do after the compilation target <name>                       -->
 	<!-- Substitute "name" with the name of the compilation target, eg @dot    -->
@@ -108,7 +106,7 @@
 
 	<target name="post.@dot">
 	</target>
-	
+
 	<!-- ===================================================================== -->
 	<!-- Steps to do before the target gather.bin.parts                         -->
 	<!-- Available parameters :                                                -->
@@ -117,7 +115,7 @@
 	<!-- ===================================================================== -->
 	<target name="pre.gather.bin.parts">
 	</target>
-		
+
 	<!-- ===================================================================== -->
 	<!-- Steps to do after the target gather.bin.parts                         -->
 	<!-- Available parameters :                                                -->
@@ -176,7 +174,7 @@
 	<!-- ===================================================================== -->
 	<target name="post.clean">
 	</target>
-	
+
 	<!-- ===================================================================== -->
 	<!-- Steps to do before the target jdtCompilerAdapter.jar                  -->
 	<!-- ===================================================================== -->
@@ -196,13 +194,13 @@
 	<!--                      reference to the classpath structure.            -->
 	<!-- ===================================================================== -->
 	<target name="post.compile.jdtCompilerAdapter.jar">
-		<ant antfile="${basedir}/scripts/export-ecj.xml" target="extract-ant-adapter-compiler"/>
+		<!--ant antfile="${basedir}/scripts/export-ecj.xml" target="extract-ant-adapter-compiler"/-->
 		<copy todir="${target.folder}">
 			<fileset dir="${basedir}/scripts/antadapter">
 				<include name="plugin.properties"/>
 				<include name="plugin.xml"/>
 			</fileset>
-		</copy>	
+		</copy>
 	</target>
 
 	<!-- ===================================================================== -->
@@ -226,4 +224,5 @@
 		</zip>
 		<delete dir="${unjarDestBin}" failonerror="false"/>
 	</target>
+
 </project>
