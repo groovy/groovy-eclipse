@@ -627,18 +627,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 addStaticTypeError("The variable [" + name + "] is undeclared.", vexp);
             }
         } else if (accessedVariable instanceof FieldNode) {
+            FieldNode accessedField = (FieldNode) accessedVariable;
+            ClassNode temporaryType = getInferredTypeFromTempInfo(vexp, null); // GROOVY-9454
             if (enclosingClosure != null) {
                 tryVariableExpressionAsProperty(vexp, name);
-            } else {
-                checkOrMarkPrivateAccess(vexp, (FieldNode) accessedVariable, typeCheckingContext.isTargetOfEnclosingAssignment(vexp));
-
-                // GROOVY-9454
-                ClassNode inferredType = getInferredTypeFromTempInfo(vexp, null);
-                if (inferredType != null && !isObjectType(inferredType)) {
-                    vexp.putNodeMetaData(INFERRED_TYPE, inferredType);
-                } else {
-                    storeType(vexp, getType(vexp));
-                }
+            } else if (getOutermost(accessedField.getDeclaringClass()) == getOutermost(typeCheckingContext.getEnclosingClassNode())
+                    || !tryVariableExpressionAsProperty(vexp, name)) { // GROOVY-10981: check for property before super class field
+                checkOrMarkPrivateAccess(vexp, accessedField, typeCheckingContext.isTargetOfEnclosingAssignment(vexp));
+                if (temporaryType == null) storeType(vexp, getType(vexp));
+            }
+            if (temporaryType != null && !isObjectType(temporaryType)) {
+                vexp.putNodeMetaData(INFERRED_TYPE, temporaryType);
             }
         } else if (accessedVariable instanceof PropertyNode) {
             // we must be careful, because the property node may be of a wrong type:
@@ -696,9 +695,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (val != null) vexp.putNodeMetaData(key, val);
             }
             vexp.removeNodeMetaData(INFERRED_TYPE);
-            ClassNode type = pexp.getNodeMetaData(INFERRED_TYPE);
-            storeType(vexp, Optional.ofNullable(type).orElseGet(pexp::getType));
-
+            if (!asBoolean(getTemporaryTypesForExpression(vexp))) {
+                ClassNode type = pexp.getNodeMetaData(INFERRED_TYPE);
+                storeType(vexp, Optional.ofNullable(type).orElseGet(pexp::getType));
+            }
             String receiver = vexp.getNodeMetaData(IMPLICIT_RECEIVER);
             Boolean dynamic = pexp.getNodeMetaData(DYNAMIC_RESOLUTION);
             // GROOVY-7701, GROOVY-7996: correct false assumption made by VariableScopeVisitor
@@ -2055,17 +2055,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     public void visitPostfixExpression(final PostfixExpression expression) {
         Expression operand = expression.getExpression();
         int operator = expression.getOperation().getType();
-        visitPrefixOrPostifExpression(expression, operand, operator);
+        visitPrefixOrPostixExpression(expression, operand, operator);
     }
 
     @Override
     public void visitPrefixExpression(final PrefixExpression expression) {
         Expression operand = expression.getExpression();
         int operator = expression.getOperation().getType();
-        visitPrefixOrPostifExpression(expression, operand, operator);
+        visitPrefixOrPostixExpression(expression, operand, operator);
     }
 
-    private void visitPrefixOrPostifExpression(final Expression origin, final Expression operand, final int operator) {
+    private void visitPrefixOrPostixExpression(final Expression origin, final Expression operand, final int operator) {
         Optional<Token> token = TokenUtil.asAssignment(operator);
         // push "operand += 1" or "operand -= 1" onto stack for LHS checks
         token.ifPresent(value -> typeCheckingContext.pushEnclosingBinaryExpression(binX(operand, value, constX(1))));
@@ -5994,10 +5994,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         int depth = typeCheckingContext.temporaryIfBranchTypeInformation.size();
         while (types == null && depth > 0) {
             Map<Object, List<ClassNode>> tempo = typeCheckingContext.temporaryIfBranchTypeInformation.get(--depth);
-            Object key = expression instanceof ParameterVariableExpression
-                    ? ((ParameterVariableExpression) expression).parameter
-                    : extractTemporaryTypeInfoKey(expression);
-            types = tempo.get(key);
+            if (!tempo.isEmpty()) {
+                Object key = expression instanceof ParameterVariableExpression
+                        ? ((ParameterVariableExpression) expression).parameter
+                        : extractTemporaryTypeInfoKey(expression);
+                types = tempo.get(key);
+            }
         }
         return types;
     }
