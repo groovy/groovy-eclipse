@@ -163,7 +163,7 @@ class ASTView extends ViewPart {
             addPartListener(partListener)
             if (activeEditor instanceof GroovyEditor) {
                 display.asyncExec { ->
-                    partListener.partBroughtToTop(activeEditor)
+                    partListener.partBroughtToTop(getActiveEditor())
                 }
             }
         }

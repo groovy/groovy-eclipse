@@ -6892,4 +6892,55 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "E then C");
     }
+
+    @Test
+    public void testTypeChecked10981() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A {\n" +
+            "  protected Object thing = 'field'\n" +
+            "  CharSequence getThing() { 'property' }\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  def m() {\n" +
+            "    final int len = thing.length()\n" +
+            "    if (thing instanceof String) {\n" +
+            "      thing.toLowerCase()\n" +
+            "      thing.toUpperCase()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "PROPERTY");
+    }
+
+    @Test
+    public void testTypeChecked10981a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class Outer {\n" +
+            "  static private int VALUE = 1\n" +
+            "  static class Inner {\n" +
+            "    @Delegate private Map<String,Object> m = [VALUE:(Object)2]\n" +
+            "    void test(int i) {\n" +
+            "      if (i > VALUE) {\n" +
+            "        // ...\n" +
+            "      }\n" +
+            "      print VALUE\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new Outer.Inner().test(0)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
 }

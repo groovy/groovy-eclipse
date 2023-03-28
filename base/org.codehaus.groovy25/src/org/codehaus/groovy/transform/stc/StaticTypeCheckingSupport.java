@@ -63,6 +63,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -91,6 +92,7 @@ import static org.codehaus.groovy.ast.ClassHelper.GSTRING_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Long_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Number_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.OBJECT;
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Short_TYPE;
@@ -167,7 +169,6 @@ public abstract class StaticTypeCheckingSupport {
     protected static final ClassNode Collection_TYPE = makeWithoutCaching(Collection.class);
     protected static final ClassNode Deprecated_TYPE = makeWithoutCaching(Deprecated.class);
 
-    protected static final ExtensionMethodCache EXTENSION_METHOD_CACHE = new ExtensionMethodCache();
     protected static final Map<ClassNode, Integer> NUMBER_TYPES = Collections.unmodifiableMap(
             new HashMap<ClassNode, Integer>() {
                 private static final long serialVersionUID = 8841951852732042766L;
@@ -227,6 +228,7 @@ public abstract class StaticTypeCheckingSupport {
      * in an ambiguous method selection for similar methods.
      */
     protected static final Comparator<MethodNode> DGM_METHOD_NODE_COMPARATOR = new Comparator<MethodNode>() {
+        @Override
         public int compare(final MethodNode o1, final MethodNode o2) {
             if (o1.getName().equals(o2.getName())) {
                 Parameter[] o1ps = o1.getParameters();
@@ -250,7 +252,9 @@ public abstract class StaticTypeCheckingSupport {
         }
     };
 
-    public static void clearExtensionMethodCache(ClassLoader loader) {
+    protected static final ExtensionMethodCache EXTENSION_METHOD_CACHE = new ExtensionMethodCache();
+
+    public static void clearExtensionMethodCache(final ClassLoader loader) {
         EXTENSION_METHOD_CACHE.cache.remove(loader);
     }
 
@@ -260,7 +264,7 @@ public abstract class StaticTypeCheckingSupport {
      * @param expression an expression
      * @return true for array access expressions
      */
-    protected static boolean isArrayAccessExpression(Expression expression) {
+    protected static boolean isArrayAccessExpression(final Expression expression) {
         return expression instanceof BinaryExpression && isArrayOp(((BinaryExpression) expression).getOperation().getType());
     }
 
@@ -268,18 +272,18 @@ public abstract class StaticTypeCheckingSupport {
      * Called on method call checks in order to determine if a method call corresponds to the
      * idiomatic o.with { ... } structure
      *
-     * @param name          name of the method called
-     * @param callArguments arguments of the method
+     * @param name      name of the method called
+     * @param arguments method call arguments
      * @return true if the name is "with" and arguments consist of a single closure
      */
-    public static boolean isWithCall(final String name, final Expression callArguments) {
-        boolean isWithCall = "with".equals(name) && callArguments instanceof ArgumentListExpression;
-        if (isWithCall) {
-            ArgumentListExpression argList = (ArgumentListExpression) callArguments;
-            List<Expression> expressions = argList.getExpressions();
-            isWithCall = expressions.size() == 1 && expressions.get(0) instanceof ClosureExpression;
+    public static boolean isWithCall(final String name, final Expression arguments) {
+        if ("with".equals(name) && arguments instanceof ArgumentListExpression) {
+            List<Expression> args = ((ArgumentListExpression) arguments).getExpressions();
+            if (args.size() == 1 && args.get(0) instanceof ClosureExpression) {
+                return true;
+            }
         }
-        return isWithCall;
+        return false;
     }
 
     /**
@@ -288,40 +292,40 @@ public abstract class StaticTypeCheckingSupport {
      * @param ve a variable expression
      * @return the target variable
      */
-    protected static Variable findTargetVariable(VariableExpression ve) {
-        final Variable accessedVariable = ve.getAccessedVariable() != null ? ve.getAccessedVariable() : ve;
-        if (accessedVariable != ve) {
-            if (accessedVariable instanceof VariableExpression)
+    protected static Variable findTargetVariable(final VariableExpression ve) {
+        Variable accessedVariable = ve.getAccessedVariable();
+        if (accessedVariable != null && accessedVariable != ve) {
+            if (accessedVariable instanceof VariableExpression) {
                 return findTargetVariable((VariableExpression) accessedVariable);
+            }
+            return accessedVariable;
         }
-        return accessedVariable;
+        return ve;
     }
-
 
     /**
      * @deprecated Use {@link #findDGMMethodsForClassNode(ClassLoader, ClassNode, String)} instead
      */
     @Deprecated
-    protected static Set<MethodNode> findDGMMethodsForClassNode(ClassNode clazz, String name) {
+    protected static Set<MethodNode> findDGMMethodsForClassNode(final ClassNode clazz, final String name) {
         return findDGMMethodsForClassNode(MetaClassRegistryImpl.class.getClassLoader(), clazz, name);
     }
 
-    protected static Set<MethodNode> findDGMMethodsForClassNode(final ClassLoader loader, ClassNode clazz, String name) {
+    protected static Set<MethodNode> findDGMMethodsForClassNode(final ClassLoader loader, final ClassNode clazz, final String name) {
         TreeSet<MethodNode> accumulator = new TreeSet<MethodNode>(DGM_METHOD_NODE_COMPARATOR);
         findDGMMethodsForClassNode(loader, clazz, name, accumulator);
         return accumulator;
     }
 
-
     /**
      * @deprecated Use {@link #findDGMMethodsForClassNode(ClassLoader, ClassNode, String, TreeSet)} instead
      */
     @Deprecated
-    protected static void findDGMMethodsForClassNode(ClassNode clazz, String name, TreeSet<MethodNode> accumulator) {
+    protected static void findDGMMethodsForClassNode(final ClassNode clazz, final String name, final TreeSet<MethodNode> accumulator) {
         findDGMMethodsForClassNode(MetaClassRegistryImpl.class.getClassLoader(), clazz, name, accumulator);
     }
 
-    protected static void findDGMMethodsForClassNode(final ClassLoader loader, ClassNode clazz, String name, TreeSet<MethodNode> accumulator) {
+    protected static void findDGMMethodsForClassNode(final ClassLoader loader, final ClassNode clazz, final String name, final TreeSet<MethodNode> accumulator) {
         List<MethodNode> fromDGM = EXTENSION_METHOD_CACHE.getExtensionMethods(loader).get(clazz.getName());
         if (fromDGM != null) {
             for (MethodNode node : fromDGM) {
@@ -351,24 +355,25 @@ public abstract class StaticTypeCheckingSupport {
     /**
      * Checks that arguments and parameter types match.
      *
-     * @param params method parameters
-     * @param args   type arguments
      * @return -1 if arguments do not match, 0 if arguments are of the exact type and &gt; 0 when one or more argument is
      * not of the exact type but still match
      */
-    public static int allParametersAndArgumentsMatch(Parameter[] params, ClassNode[] args) {
-        if (params == null) {
-            params = Parameter.EMPTY_ARRAY;
+    public static int allParametersAndArgumentsMatch(Parameter[] parameters, final ClassNode[] argumentTypes) {
+        if (parameters == null) {
+            parameters = Parameter.EMPTY_ARRAY;
         }
         int dist = 0;
-        if (args.length < params.length) return -1;
+        if (argumentTypes.length < parameters.length) {
+            return -1;
+        }
         // we already know there are at least params.length elements in both arrays
-        for (int i = 0; i < params.length; i++) {
-            ClassNode paramType = params[i].getType();
-            ClassNode argType = args[i];
-            if (!isAssignableTo(argType, paramType)) return -1;
-            else {
-                if (!paramType.equals(argType)) dist += getDistance(argType, paramType);
+        for (int i = 0, n = parameters.length; i < n; i += 1) {
+            ClassNode paramType = parameters[i].getType();
+            ClassNode argType = argumentTypes[i];
+            if (!isAssignableTo(argType, paramType)) {
+                return -1;
+            } else if (!paramType.equals(argType)) {
+                dist += getDistance(argType, paramType);
             }
         }
         return dist;
@@ -378,19 +383,16 @@ public abstract class StaticTypeCheckingSupport {
      * Checks that arguments and parameter types match, expecting that the number of parameters is strictly greater
      * than the number of arguments, allowing possible inclusion of default parameters.
      *
-     * @param params method parameters
-     * @param args   type arguments
      * @return -1 if arguments do not match, 0 if arguments are of the exact type and >0 when one or more argument is
      * not of the exact type but still match
      */
-    static int allParametersAndArgumentsMatchWithDefaultParams(Parameter[] params, ClassNode[] args) {
+    static int allParametersAndArgumentsMatchWithDefaultParams(final Parameter[] parameters, final ClassNode[] argumentTypes) {
         int dist = 0;
         ClassNode ptype = null;
-        // we already know the lengths are equal
-        for (int i = 0, j = 0; i < params.length; i++) {
-            Parameter param = params[i];
+        for (int i = 0, j = 0, n = parameters.length; i < n; i += 1) {
+            Parameter param = parameters[i];
             ClassNode paramType = param.getType();
-            ClassNode arg = j >= args.length ? null : args[j];
+            ClassNode arg = (j >= argumentTypes.length ? null : argumentTypes[j]);
             if (arg == null || !isAssignableTo(arg, paramType)) {
                 if (!param.hasInitialExpression() && (ptype == null || !ptype.equals(paramType))) {
                     return -1; // no default value
@@ -398,8 +400,10 @@ public abstract class StaticTypeCheckingSupport {
                 // a default value exists, we can skip this param
                 ptype = null;
             } else {
-                j++;
-                if (!paramType.equals(arg)) dist += getDistance(arg, paramType);
+                j += 1;
+                if (!paramType.equals(arg)) {
+                    dist += getDistance(arg, paramType);
+                }
                 if (param.hasInitialExpression()) {
                     ptype = arg;
                 } else {
@@ -413,20 +417,18 @@ public abstract class StaticTypeCheckingSupport {
     /**
      * Checks that excess arguments match the vararg signature parameter.
      *
-     * @param params
-     * @param args
      * @return -1 if no match, 0 if all arguments matches the vararg type and >0 if one or more vararg argument is
      * assignable to the vararg type, but still not an exact match
      */
-    static int excessArgumentsMatchesVargsParameter(Parameter[] params, ClassNode[] args) {
+    static int excessArgumentsMatchesVargsParameter(final Parameter[] parameters, final ClassNode[] argumentTypes) {
         // we already know parameter length is bigger zero and last is a vargs
         // the excess arguments are all put in an array for the vargs call
         // so check against the component type
         int dist = 0;
-        ClassNode vargsBase = params[params.length - 1].getType().getComponentType();
-        for (int i = params.length; i < args.length; i++) {
-            if (!isAssignableTo(args[i], vargsBase)) return -1;
-            else dist += getClassDistance(vargsBase, args[i]);
+        ClassNode vargsBase = parameters[parameters.length - 1].getType().getComponentType();
+        for (int i = parameters.length; i < argumentTypes.length; i += 1) {
+            if (!isAssignableTo(argumentTypes[i], vargsBase)) return -1;
+            else dist += getClassDistance(vargsBase, argumentTypes[i]);
         }
         return dist;
     }
@@ -434,8 +436,6 @@ public abstract class StaticTypeCheckingSupport {
     /**
      * Checks if the last argument matches the vararg type.
      *
-     * @param params
-     * @param args
      * @return -1 if no match, 0 if the last argument is exactly the vararg type and 1 if of an assignable type
      */
     static int lastArgMatchesVarg(final Parameter[] parameters, final ClassNode... argumentTypes) {
@@ -457,15 +457,12 @@ public abstract class StaticTypeCheckingSupport {
      * Checks if a class node is assignable to another. This is used for example in
      * assignment checks where you want to verify that the assignment is valid.
      *
-     * @param type
-     * @param toBeAssignedTo
      * @return true if the class node is assignable to the other class node, false otherwise
      */
     static boolean isAssignableTo(ClassNode type, ClassNode toBeAssignedTo) {
-        if (UNKNOWN_PARAMETER_TYPE == type) return true;
-        if (type == toBeAssignedTo) return true;
-        if (isPrimitiveType(toBeAssignedTo)) toBeAssignedTo = getWrapper(toBeAssignedTo);
+        if (type == toBeAssignedTo || type == UNKNOWN_PARAMETER_TYPE) return true;
         if (isPrimitiveType(type)) type = getWrapper(type);
+        if (isPrimitiveType(toBeAssignedTo)) toBeAssignedTo = getWrapper(toBeAssignedTo);
         if (NUMBER_TYPES.containsKey(type.redirect()) && NUMBER_TYPES.containsKey(toBeAssignedTo.redirect())) {
             return NUMBER_TYPES.get(type.redirect()) <= NUMBER_TYPES.get(toBeAssignedTo.redirect());
         }
@@ -482,9 +479,7 @@ public abstract class StaticTypeCheckingSupport {
         if (implementsInterfaceOrIsSubclassOf(type, toBeAssignedTo)) {
             if (toBeAssignedTo.equals(OBJECT_TYPE)) return true;
             /* GRECLIPSE edit -- GROOVY-10067
-            if (toBeAssignedTo.isUsingGenerics()) {
-                // perform additional check on generics
-                // ? extends toBeAssignedTo
+            if (toBeAssignedTo.isUsingGenerics()) { // perform additional checks on generics
                 GenericsType gt = GenericsUtils.buildWildcardType(toBeAssignedTo);
                 return gt.isCompatibleWith(type);
             }
@@ -507,33 +502,30 @@ public abstract class StaticTypeCheckingSupport {
         return false;
     }
 
-    static boolean isVargs(Parameter[] params) {
-        if (params.length == 0) return false;
-        if (params[params.length - 1].getType().isArray()) return true;
-        return false;
+    static boolean isVargs(final Parameter[] parameters) {
+        if (parameters == null || parameters.length == 0) return false;
+        return (parameters[parameters.length - 1].getType().isArray());
     }
 
-    public static boolean isCompareToBoolean(int op) {
-        return op == COMPARE_GREATER_THAN ||
-                op == COMPARE_GREATER_THAN_EQUAL ||
-                op == COMPARE_LESS_THAN ||
-                op == COMPARE_LESS_THAN_EQUAL;
+    public static boolean isCompareToBoolean(final int op) {
+        return op == COMPARE_LESS_THAN || op == COMPARE_LESS_THAN_EQUAL
+                || op == COMPARE_GREATER_THAN || op == COMPARE_GREATER_THAN_EQUAL;
     }
 
-    static boolean isArrayOp(int op) {
+    static boolean isArrayOp(final int op) {
         return op == LEFT_SQUARE_BRACKET;
     }
 
-    static boolean isBoolIntrinsicOp(int op) {
+    static boolean isBoolIntrinsicOp(final int op) {
         return op == LOGICAL_AND || op == LOGICAL_OR || op == COMPARE_NOT_IDENTICAL || op == COMPARE_IDENTICAL ||
                 op == MATCH_REGEX || op == KEYWORD_INSTANCEOF;
     }
 
-    static boolean isPowerOperator(int op) {
+    static boolean isPowerOperator(final int op) {
         return op == POWER || op == POWER_EQUAL;
     }
 
-    static String getOperationName(int op) {
+    static String getOperationName(final int op) {
         switch (op) {
             case COMPARE_EQUAL:
             case COMPARE_NOT_EQUAL:
@@ -609,7 +601,7 @@ public abstract class StaticTypeCheckingSupport {
         }
     }
 
-    static boolean isShiftOperation(String name) {
+    static boolean isShiftOperation(final String name) {
         return "leftShift".equals(name) || "rightShift".equals(name) || "rightShiftUnsigned".equals(name);
     }
 
@@ -618,7 +610,7 @@ public abstract class StaticTypeCheckingSupport {
      * operation "left op right" will have a result in the same type class In Groovy on numbers that is +,-,* as well as
      * their variants with equals.
      */
-    static boolean isOperationInGroup(int op) {
+    static boolean isOperationInGroup(final int op) {
         switch (op) {
             case PLUS:
             case PLUS_EQUAL:
@@ -632,7 +624,7 @@ public abstract class StaticTypeCheckingSupport {
         }
     }
 
-    static boolean isBitOperator(int op) {
+    static boolean isBitOperator(final int op) {
         switch (op) {
             case BITWISE_OR_EQUAL:
             case BITWISE_OR:
@@ -646,7 +638,7 @@ public abstract class StaticTypeCheckingSupport {
         }
     }
 
-    public static boolean isAssignment(int op) {
+    public static boolean isAssignment(final int op) {
         switch (op) {
             case ASSIGN:
             case LOGICAL_OR_EQUAL:
@@ -752,10 +744,9 @@ public abstract class StaticTypeCheckingSupport {
             return true;
         }
 
-        // if right is array, map or collection we try invoking the
-        // constructor
+        // if right is array, map or collection we try invoking the constructor
         if (allowConstructorCoercion && isGroovyConstructorCompatible(rightExpression)) {
-            //TODO: in case of the array we could maybe make a partial check
+            // TODO: in case of the array we could maybe make a partial check
             if (leftRedirect.isArray() && rightRedirect.isArray()) {
                 return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType());
             } else if (rightRedirect.isArray() && !leftRedirect.isArray()) {
@@ -812,18 +803,15 @@ public abstract class StaticTypeCheckingSupport {
      * @return true if it's an Object, String, boolean, Boolean or Class.
      */
     public static boolean isWildcardLeftHandSide(final ClassNode node) {
-        if (OBJECT_TYPE.equals(node) ||
-                STRING_TYPE.equals(node) ||
-                boolean_TYPE.equals(node) ||
-                Boolean_TYPE.equals(node) ||
-                CLASS_Type.equals(node)) {
-            return true;
-        }
-        return false;
+        return (OBJECT_TYPE.equals(node)
+                || STRING_TYPE.equals(node)
+                || boolean_TYPE.equals(node)
+                || Boolean_TYPE.equals(node)
+                || CLASS_Type.equals(node));
     }
 
-    public static boolean isBeingCompiled(ClassNode node) {
-        return node.getCompileUnit() != null;
+    public static boolean isBeingCompiled(final ClassNode node) {
+        return (node.getCompileUnit() != null);
     }
 
     @Deprecated
@@ -1034,8 +1022,7 @@ public abstract class StaticTypeCheckingSupport {
         if (c.equals(interfaceClass)) return 0;
         ClassNode[] interfaces = c.getInterfaces();
         int max = -1;
-        for (int i = 0; i < interfaces.length; i++) {
-            final ClassNode anInterface = interfaces[i];
+        for (ClassNode anInterface : interfaces) {
             int sub = getMaximumInterfaceDistance(anInterface, interfaceClass);
             // we need to keep the -1 to track the mismatch, a +1
             // by any means could let it look like a direct match
@@ -1085,25 +1072,8 @@ public abstract class StaticTypeCheckingSupport {
      * @param node the node to test
      * @return true if it is using any placeholder in generics types
      */
-    public static boolean isUsingUncheckedGenerics(ClassNode node) {
-        if (node.isArray()) return isUsingUncheckedGenerics(node.getComponentType());
-        if (node.isUsingGenerics()) {
-            GenericsType[] genericsTypes = node.getGenericsTypes();
-            if (genericsTypes != null) {
-                for (GenericsType genericsType : genericsTypes) {
-                    if (genericsType.isPlaceholder()) {
-                        return true;
-                    } else {
-                        if (isUsingUncheckedGenerics(genericsType.getType())) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } else {
-            return false;
-        }
-        return false;
+    public static boolean isUsingUncheckedGenerics(final ClassNode node) {
+        return GenericsUtils.hasUnresolvedGenerics(node);
     }
 
     /**
@@ -1146,14 +1116,28 @@ public abstract class StaticTypeCheckingSupport {
                 Person p = foo(b)
             */
 
-            ClassNode declaringClassForDistance = candidate.getDeclaringClass();
-            ClassNode actualReceiverForDistance = receiver != null ? receiver : declaringClassForDistance;
-            Map<GenericsType, GenericsType> declaringAndActualGenericsTypeMap = GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType(declaringClassForDistance, actualReceiverForDistance);
+            ClassNode declaringClass = candidate.getDeclaringClass();
+            ClassNode actualReceiver = receiver != null ? receiver : declaringClass;
 
-            Parameter[] params = makeRawTypes(safeNode.getParameters(), declaringAndActualGenericsTypeMap);
+            Map<GenericsType, GenericsType> spec;
+            if (candidate.isStatic()) {
+                spec = Collections.emptyMap(); // none visible
+            } else {
+                spec = GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType(declaringClass, actualReceiver);
+                GenericsType[] methodGenerics = candidate.getGenericsTypes();
+                if (methodGenerics != null) { // GROOVY-10322: remove hidden type parameters
+                    for (int i = 0, n = methodGenerics.length; i < n && !spec.isEmpty(); i += 1) {
+                        for (Iterator<GenericsType> it = spec.keySet().iterator(); it.hasNext(); ) {
+                            if (it.next().getName().equals(methodGenerics[i].getName())) it.remove();
+                        }
+                    }
+                }
+            }
+
+            Parameter[] params = makeRawTypes(safeNode.getParameters(), spec);
             int dist = measureParametersAndArgumentsDistance(params, safeArgs);
             if (dist >= 0) {
-                dist += getClassDistance(declaringClassForDistance, actualReceiverForDistance);
+                dist += getClassDistance(declaringClass, actualReceiver);
                 dist += getExtensionDistance(isExtensionMethod);
                 if (dist < bestDist) {
                     bestDist = dist;
@@ -1351,7 +1335,7 @@ public abstract class StaticTypeCheckingSupport {
         Map<GenericsTypeName, GenericsType> contextPlaceholders = extractGenericsParameterMapOfThis(m);
         Parameter[] methodParameters = m.getParameters();
         Parameter[] params = new Parameter[methodParameters.length];
-        for (int i = 0; i < methodParameters.length; i++) {
+        for (int i = 0, n = methodParameters.length; i < n; i += 1) {
             Parameter methodParameter = methodParameters[i];
             ClassNode paramType = methodParameter.getType();
             params[i] = buildParameter(genericFromReceiver, contextPlaceholders, methodParameter, paramType);
@@ -1363,7 +1347,7 @@ public abstract class StaticTypeCheckingSupport {
      * Given a parameter, builds a new parameter for which the known generics placeholders are resolved.
      *
      * @param genericFromReceiver      resolved generics from the receiver of the message
-     * @param placeholdersFromContext, resolved generics from the method context
+     * @param placeholdersFromContext  resolved generics from the method context
      * @param methodParameter          the method parameter for which we want to resolve generic types
      * @param paramType                the (unresolved) type of the method parameter
      * @return a new parameter with the same name and type as the original one, but with resolved generic types
@@ -1390,7 +1374,7 @@ public abstract class StaticTypeCheckingSupport {
      * @param cn a class node for which to check if it is using generics
      * @return true if the type (or component type) is using generics
      */
-    public static boolean isUsingGenericsOrIsArrayUsingGenerics(ClassNode cn) {
+    public static boolean isUsingGenericsOrIsArrayUsingGenerics(final ClassNode cn) {
         if (cn.isArray()) {
             return isUsingGenericsOrIsArrayUsingGenerics(cn.getComponentType());
         }
@@ -1428,36 +1412,39 @@ public abstract class StaticTypeCheckingSupport {
         if (type.isArray()) {
             return fullyResolveType(type.getComponentType(), placeholders).makeArray();
         }
-        if (type.isUsingGenerics()) {
-            if (type.isGenericsPlaceHolder()) {
-                GenericsType gt = placeholders.get(new GenericsTypeName(type.getUnresolvedName()));
-                if (gt != null) {
-                    return gt.getType();
+        if (!type.isUsingGenerics()) {
+            return type;
+        }
+        if (type.isGenericsPlaceHolder()) {
+            GenericsType gt = placeholders.get(new GenericsTypeName(type.getUnresolvedName()));
+            if (gt != null) {
+                return gt.getType();
+            }
+            ClassNode cn = extractType(type.asGenericsType()); // GROOVY-10756
+            return cn != type ? cn : OBJECT_TYPE; // do not return placeholder
+        }
+
+        GenericsType[] gts = type.getGenericsTypes();
+        if (gts != null && gts.length > 0) {
+            gts = gts.clone();
+            for (int i = 0, n = gts.length; i < n; i += 1) {
+                GenericsType gt = gts[i];
+                if (gt.isPlaceholder()) { String name = gt.getName();
+                    gt = placeholders.get(new GenericsTypeName(name));
+                    if (gt == null) gt = extractType(gts[i]).asGenericsType();
+                    // GROOVY-10364: skip placeholder from the enclosing context
+                    if (gt.isPlaceholder() && gt.getName().equals(name)) continue;
+
+                    gts[i] = gt;
+                } else {
+                    gts[i] = fullyResolve(gt, placeholders);
                 }
-                ClassNode cn = extractType(type.asGenericsType()); // GROOVY-10756
-                return cn != type ? cn : OBJECT_TYPE; // do not return placeholder
-            } else {
-                GenericsType[] gts = type.getGenericsTypes();
-                if (gts != null) {  final int n = gts.length;
-                    GenericsType[] copy = new GenericsType[n];
-                    for (int i = 0; i < n; i += 1) {
-                        GenericsType gt = gts[i];
-                        if (gt.isPlaceholder()) {
-                            GenericsTypeName gtn = new GenericsTypeName(gt.getName());
-                            copy[i] = placeholders.containsKey(gtn)
-                                ? placeholders.get(gtn) : extractType(gt).asGenericsType();
-                        } else {
-                            copy[i] = fullyResolve(gt, placeholders);
-                        }
-                    }
-                    gts = copy;
-                }
-                ClassNode cn = type.getPlainNodeReference();
-                cn.setGenericsTypes(gts);
-                return cn;
             }
         }
-        return type;
+
+        ClassNode cn = type.getPlainNodeReference();
+        cn.setGenericsTypes(gts);
+        return cn;
     }
 
     /**
@@ -1500,15 +1487,6 @@ public abstract class StaticTypeCheckingSupport {
         return true;
     }
 
-    static void addMethodLevelDeclaredGenerics(MethodNode method, Map<GenericsTypeName, GenericsType> resolvedPlaceholders) {
-        GenericsType[] generics = method.getGenericsTypes();
-        if (!method.isStatic() && !resolvedPlaceholders.isEmpty()) {
-            // GROOVY-8034: non-static method may use class generics
-            generics = applyGenericsContext(resolvedPlaceholders, generics);
-        }
-        GenericsUtils.extractPlaceholders(GenericsUtils.makeClassSafe0(OBJECT_TYPE, generics), resolvedPlaceholders);
-    }
-
     protected static boolean typeCheckMethodsWithGenerics(ClassNode receiver, ClassNode[] arguments, MethodNode candidateMethod) {
         if (candidateMethod instanceof ExtensionMethodNode) {
             ClassNode[] realTypes = new ClassNode[arguments.length + 1];
@@ -1527,9 +1505,9 @@ public abstract class StaticTypeCheckingSupport {
         return typeCheckMethodsWithGenerics(receiver, arguments, candidateMethod, false);
     }
 
-    private static boolean typeCheckMethodsWithGenerics(final ClassNode receiver, final ClassNode[] arguments, final MethodNode candidateMethod, final boolean isExtensionMethod) {
+    private static boolean typeCheckMethodsWithGenerics(final ClassNode receiver, final ClassNode[] argumentTypes, final MethodNode candidateMethod, final boolean isExtensionMethod) {
         final Parameter[] parameters = candidateMethod.getParameters();
-        if (parameters.length == 0 || parameters.length > arguments.length) {
+        if (parameters.length == 0 || parameters.length > argumentTypes.length){
             // this is a limitation that must be removed in a future version; we
             // cannot check generic type arguments if there is default argument!
             return true;
@@ -1565,8 +1543,8 @@ public abstract class StaticTypeCheckingSupport {
             }
         }
 
-        for (int i = 0, n = arguments.length, nthParameter = parameters.length - 1; i < n; i += 1) {
-            ClassNode argumentType = arguments[i], parameterType = parameters[Math.min(i, nthParameter)].getOriginType();
+        for (int i = 0, n = argumentTypes.length, nthParameter = parameters.length - 1; i < n; i += 1) {
+            ClassNode argumentType = argumentTypes[i], parameterType = parameters[Math.min(i,nthParameter)].getOriginType();
             failure |= inferenceCheck(fixedPlaceHolders, candidateGenerics, parameterType, argumentType, i >= nthParameter);
 
             if (i == 0 && isExtensionMethod) // re-load fixed names for extension
@@ -1594,9 +1572,8 @@ public abstract class StaticTypeCheckingSupport {
         if (lastArg &&
                 type.isArray() && type.getComponentType().isGenericsPlaceHolder() &&
                 !wrappedArgument.isArray() && wrappedArgument.isGenericsPlaceHolder()) {
-            // GROOVY-8090 handle generics varargs, e.g. `U x = ...; Arrays.asList(x)`
+            // GROOVY-8090: handle generics varargs, e.g. `U x = ...; Arrays.asList(x)`
             // we should connect the type of vararg(e.g. T is the type of T...) to the argument type
-
             type = type.getComponentType();
         }
         // the context we compare with in the end is the one of the callsite
@@ -1662,29 +1639,36 @@ public abstract class StaticTypeCheckingSupport {
         return true;
     }
 
-    private static boolean compatibleConnection(GenericsType resolved, GenericsType connection) {
-        GenericsType gt = connection;
-        if (!connection.isWildcard()) gt = buildWildcardType(connection);
-        if (resolved.isPlaceholder() && resolved.getUpperBounds() != null &&
-                resolved.getUpperBounds().length == 1 && !resolved.getUpperBounds()[0].isGenericsPlaceHolder() &&
-                resolved.getUpperBounds()[0].getName().equals("java.lang.Object")) {
+    private static boolean compatibleConnection(final GenericsType resolved, final GenericsType connection) {
+        if (resolved.isPlaceholder()
+                &&  resolved.getUpperBounds() != null
+                &&  resolved.getUpperBounds().length == 1
+                && !resolved.getUpperBounds()[0].isGenericsPlaceHolder()
+                &&  resolved.getUpperBounds()[0].getName().equals(OBJECT)) {
             return true;
         }
         ClassNode compareNode;
         if (hasNonTrivialBounds(resolved)) {
             compareNode = getCombinedBoundType(resolved);
-            compareNode = compareNode.redirect().getPlainNodeReference();
+            compareNode = compareNode.getPlainNodeReference();
+        } else if (!resolved.isPlaceholder()) {
+            compareNode = resolved.getType().getPlainNodeReference();
         } else {
-            if (!resolved.isPlaceholder()) {
-                compareNode = resolved.getType().getPlainNodeReference();
-            } else {
-                return true;
-            }
+            return true;
+        }
+
+        GenericsType gt;
+        if (connection.isWildcard()) {
+            gt = connection;
+        } else if (!connection.isPlaceholder() && connection.getType().equals(CLOSURE_TYPE) && isSAMType(compareNode)) {
+            return true; // GROOVY-10270: SAM-type (placeholder) accepts closure
+        } else {
+            gt = buildWildcardType(connection);
         }
         return gt.isCompatibleWith(compareNode);
     }
 
-    private static void addMissingEntries(Map<GenericsTypeName, GenericsType> connections, Map<GenericsTypeName, GenericsType> resolved) {
+    private static void addMissingEntries(final Map<GenericsTypeName, GenericsType> connections, final Map<GenericsTypeName, GenericsType> resolved) {
         for (Map.Entry<GenericsTypeName, GenericsType> entry : connections.entrySet()) {
             if (resolved.containsKey(entry.getKey())) continue;
             GenericsType gt = entry.getValue();
@@ -1754,24 +1738,26 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     private static ClassNode extractType(GenericsType gt) {
+        ClassNode cn;
         if (!gt.isPlaceholder()) {
-            return gt.getType();
-        }
-        // For a placeholder, a type based on the generics type is used for the compatibility check, to match on
-        // the actual bounds and not the name of the placeholder.
-        ClassNode replacementType = gt.getType().redirect();
-        if (gt.getType().getGenericsTypes() != null) {
-            GenericsType realGt = gt.getType().getGenericsTypes()[0];
-            if (realGt.getLowerBound() != null) {
-                replacementType = realGt.getLowerBound();
-            } else if (realGt.getUpperBounds() != null && realGt.getUpperBounds().length > 0) {
-                replacementType = realGt.getUpperBounds()[0];
+            cn = gt.getType();
+        } else {
+            // discard the placeholder
+            cn = gt.getType().redirect();
+
+            if (gt.getType().getGenericsTypes() != null)
+                gt = gt.getType().getGenericsTypes()[0];
+
+            if (gt.getLowerBound() != null) {
+                cn = gt.getLowerBound();
+            } else if (gt.getUpperBounds() != null) {
+                cn = gt.getUpperBounds()[0];
             }
         }
-        return replacementType;
+        return cn;
     }
 
-    private static boolean equalIncludingGenerics(GenericsType orig, GenericsType copy) {
+    private static boolean equalIncludingGenerics(final GenericsType orig, final GenericsType copy) {
         if (orig == copy) return true;
         if (orig.isPlaceholder() != copy.isPlaceholder()) return false;
         if (orig.isWildcard() != copy.isWildcard()) return false;
@@ -1787,14 +1773,14 @@ public abstract class StaticTypeCheckingSupport {
         if ((upper1 == null) ^ (upper2 == null)) return false;
         if (upper1 != upper2) {
             if (upper1.length != upper2.length) return false;
-            for (int i = 0; i < upper1.length; i++) {
+            for (int i = 0, n = upper1.length; i < n; i += 1) {
                 if (!equalIncludingGenerics(upper1[i], upper2[i])) return false;
             }
         }
         return true;
     }
 
-    private static boolean equalIncludingGenerics(ClassNode orig, ClassNode copy) {
+    private static boolean equalIncludingGenerics(final ClassNode orig, final ClassNode copy) {
         if (orig == copy) return true;
         if (orig.isGenericsPlaceHolder() != copy.isGenericsPlaceHolder()) return false;
         if (!orig.equals(copy)) return false;
@@ -1803,7 +1789,7 @@ public abstract class StaticTypeCheckingSupport {
         if ((gt1 == null) ^ (gt2 == null)) return false;
         if (gt1 != gt2) {
             if (gt1.length != gt2.length) return false;
-            for (int i = 0; i < gt1.length; i++) {
+            for (int i = 0, n = gt1.length; i < n; i += 1) {
                 if (!equalIncludingGenerics(gt1[i], gt2[i])) return false;
             }
         }
@@ -1891,58 +1877,39 @@ public abstract class StaticTypeCheckingSupport {
         for (int i = 0; i < n; i += 1) {
             GenericsType ui = usage[i];
             GenericsType di = declaration[i];
-            if (di.isPlaceholder()) { // di like "T"
+            if (di.isPlaceholder()) {     // di like "T"
                 connections.put(new GenericsTypeName(di.getName()), ui);
-            } else if (di.isWildcard()) { // di like "?", "? super T", "? extends T", ...
-                ClassNode lowerBound = di.getLowerBound(), upperBounds[] = di.getUpperBounds();
-                if (ui.isWildcard()) {    // ui like "?", "? super Type" or "? extends Type"
-                    extractGenericsConnections(connections, ui.getLowerBound(), lowerBound);
-                    extractGenericsConnections(connections, ui.getUpperBounds(), upperBounds);
-                /* GRECLIPSE edit -- GROOVY-9998, GROOVY-10328, GROOVY-10499, et al.
+            } else if (di.isWildcard()) { // di like "?", "? super T", "? extends T"
+                if (isUnboundedWildcard(di)) continue;
+                boolean lowerBound = (di.getLowerBound() != null);
+                ClassNode boundType = lowerBound ? di.getLowerBound() : di.getUpperBounds()[0];
+                if (ui.isWildcard()) {    // ui like "?", "? super Type", "? extends One & Two"
+                    if (lowerBound)
+                        extractGenericsConnections(connections, ui.getLowerBound(), boundType);
+                    else if (ui.getUpperBounds()!=null) for (ClassNode ub: ui.getUpperBounds())
+                        extractGenericsConnections(connections, ub, boundType); // GROOVY-10911
                 } else {
-                    ClassNode ui_type = ui.getType();
-                    extractGenericsConnections(connections, ui_type, lowerBound);
-                    if (upperBounds != null) {
-                        for (ClassNode ub : upperBounds) {
-                            extractGenericsConnections(connections, ui_type, ub);
-                        }
-                    }
-                }
-                */
-                } else if (!isUnboundedWildcard(di)) {
-                    ClassNode boundType = lowerBound != null ? lowerBound : upperBounds[0];
+                    /* GRECLIPSE edit -- GROOVY-9998, GROOVY-10328, GROOVY-10499, et al.
+                    extractGenericsConnections(connections, ui.getType(), boundType);
+                    */
                     if (!boundType.isGenericsPlaceHolder()) {
                         // di like "? extends Iterable<T>" and ui like "Collection<Type>"
                         extractGenericsConnections(connections, ui.getType(), boundType);
-                    } else if (lowerBound == null) { // di like "? extends T"
+                    } else if (!lowerBound) { // di like "? extends T"
                         extractGenericsConnections(connections, ui.getType(), boundType);
                     } else { // 6731,8983,10047,10749 : di like "? super T"
                         ui = new GenericsType(ui.getType()); ui.setWildcard(true); // weak sauce
                         connections.put(new GenericsTypeName(boundType.getUnresolvedName()), ui);
                     }
+                    // GRECLIPSE end
                 }
-                // GRECLIPSE end
             } else {
                 extractGenericsConnections(connections, ui.getType(), di.getType());
             }
         }
     }
 
-    private static void extractGenericsConnections(Map<GenericsTypeName, GenericsType> connections, ClassNode[] usage, ClassNode[] declaration) {
-        if (usage == null || declaration == null || declaration.length == 0) return;
-        // both have generics
-        for (int i = 0; i < usage.length; i++) {
-            ClassNode ui = usage[i];
-            ClassNode di = declaration[i];
-            if (di.isGenericsPlaceHolder()) {
-                connections.put(new GenericsTypeName(di.getUnresolvedName()), new GenericsType(ui));
-            } else if (di.isUsingGenerics()) {
-                extractGenericsConnections(connections, ui.getGenericsTypes(), di.getGenericsTypes());
-            }
-        }
-    }
-
-    static GenericsType[] getGenericsWithoutArray(ClassNode type) {
+    static GenericsType[] getGenericsWithoutArray(final ClassNode type) {
         if (type.isArray()) return getGenericsWithoutArray(type.getComponentType());
         return type.getGenericsTypes();
     }
@@ -1997,7 +1964,9 @@ public abstract class StaticTypeCheckingSupport {
         if (type.isArray()) {
             newType = applyGenericsContext(spec, type.getComponentType()).makeArray();
         } else {
-            if (type.getGenericsTypes()==null) return gt;
+            if (type.getGenericsTypes() == null) {
+                return gt;
+            }
             newType = type.getPlainNodeReference();
             newType.setGenericsPlaceHolder(type.isGenericsPlaceHolder());
             newType.setGenericsTypes(applyGenericsContext(spec, type.getGenericsTypes()));
@@ -2005,13 +1974,18 @@ public abstract class StaticTypeCheckingSupport {
         return new GenericsType(newType);
     }
 
-    private static boolean hasNonTrivialBounds(GenericsType gt) {
+    private static boolean hasNonTrivialBounds(final GenericsType gt) {
+        if (gt.isWildcard()) {
+            return true;
+        }
+        if (gt.getLowerBound() != null) {
+            return true;
+        }
         ClassNode[] upperBounds = gt.getUpperBounds();
-        return gt.getLowerBound() != null || gt.isWildcard() ||
-                (upperBounds != null && (
-                        upperBounds.length != 1
-                                || upperBounds[0].isGenericsPlaceHolder()
-                                || !OBJECT_TYPE.equals(upperBounds[0])));
+        if (upperBounds != null) {
+            return (upperBounds.length != 1 || upperBounds[0].isGenericsPlaceHolder() || !OBJECT_TYPE.equals(upperBounds[0]));
+        }
+        return false;
     }
 
     static ClassNode[] applyGenericsContext(final Map<GenericsTypeName, GenericsType> spec, final ClassNode[] types) {
@@ -2031,28 +2005,30 @@ public abstract class StaticTypeCheckingSupport {
         if (type.isArray()) {
             return applyGenericsContext(spec, type.getComponentType()).makeArray();
         }
-      //ClassNode newType = type.getPlainNodeReference();
-        GenericsType[] gt = type.getGenericsTypes();
-        if (spec != null) {
-            gt = applyGenericsContext(spec, gt);
-        }
+
+        GenericsType[] gt = applyGenericsContext(spec, type.getGenericsTypes());
         /* GRECLIPSE edit -- GROOVY-10067
-        newType.setGenericsTypes(gt);
-        if (type.isGenericsPlaceHolder()) {
-            boolean nonTrivial = hasNonTrivialBounds(gt[0]);
-            if (nonTrivial || !gt[0].isPlaceholder()) {
+        boolean typeVariable = type.isGenericsPlaceHolder();
+        if (typeVariable) {
+            if (!gt[0].isPlaceholder() || hasNonTrivialBounds(gt[0])) {
                 return getCombinedBoundType(gt[0]);
             }
-            String placeholderName = gt[0].getName();
-            if (!placeholderName.equals(newType.getUnresolvedName())) {
-                ClassNode clean = make(placeholderName);
-                clean.setGenericsTypes(gt);
-                clean.setRedirect(newType);
-                newType = clean;
+            String gt_name = gt[0].getName();
+            ClassNode gt_type = gt[0].getType();
+            if (!type.getUnresolvedName().equals(gt_name) || !type.equals(gt_type)) {
+                ClassNode cn = !gt_name.equals(gt_type.getName()) ? gt_type : type;
+                ClassNode tp = make(gt_name);
+                tp.setRedirect(cn);
+                tp.setGenericsTypes(gt);
+                tp.setGenericsPlaceHolder(true);
+                return tp;
             }
-            newType.setGenericsPlaceHolder(true);
         }
-        return newType;
+
+        ClassNode cn = type.getPlainNodeReference();
+        cn.setGenericsPlaceHolder(typeVariable);
+        cn.setGenericsTypes(gt);
+        return cn;
         */
         if (!type.isGenericsPlaceHolder()) { // convert Type<T> to Type<...>
             ClassNode cn = type.getPlainNodeReference();
@@ -2073,8 +2049,8 @@ public abstract class StaticTypeCheckingSupport {
         // GRECLIPSE end
     }
 
-    static ClassNode getCombinedBoundType(GenericsType genericsType) {
-        //TODO: this method should really return some kind of meta ClassNode
+    static ClassNode getCombinedBoundType(final GenericsType genericsType) {
+        // TODO: this method should really return some kind of meta ClassNode
         // representing the combination of all bounds. The code here, just picks
         // something out to be able to proceed and is not actually correct
         if (hasNonTrivialBounds(genericsType)) {
@@ -2112,7 +2088,7 @@ public abstract class StaticTypeCheckingSupport {
      * @param type A parameterized type
      * @return A parameterized type with more precise wildcards
      */
-    static ClassNode boundUnboundedWildcards(ClassNode type) {
+    static ClassNode boundUnboundedWildcards(final ClassNode type) {
         if (type.isArray()) {
             return boundUnboundedWildcards(type.getComponentType()).makeArray();
         }
@@ -2124,19 +2100,18 @@ public abstract class StaticTypeCheckingSupport {
         return newType;
     }
 
-    private static GenericsType[] boundUnboundedWildcards(GenericsType[] usage, GenericsType[] declaration) {
+    private static GenericsType[] boundUnboundedWildcards(final GenericsType[] usage, final GenericsType[] declaration) {
         GenericsType[] newGts = new GenericsType[usage.length];
-        for (int i = 0; i < usage.length; i++) {
+        for (int i = 0, n = usage.length; i < n; i += 1) {
             newGts[i] = boundUnboundedWildcard(usage[i], declaration[i]);
         }
         return newGts;
     }
 
-    private static GenericsType boundUnboundedWildcard(GenericsType gt, GenericsType spec) {
+    private static GenericsType boundUnboundedWildcard(final GenericsType gt, final GenericsType spec) {
         if (isUnboundedWildcard(gt)) {
             ClassNode base = makeWithoutCaching("?");
-            // The bounds on the declared type are at least as good as the ones on an unbounded wildcard, since it has
-            // none!
+            // The bounds on the declared type are at least as good as the ones on an unbounded wildcard, since it has none!
             GenericsType newGt = new GenericsType(base, spec.getUpperBounds(), spec.getLowerBound());
             newGt.setWildcard(true);
             return newGt;
@@ -2153,7 +2128,7 @@ public abstract class StaticTypeCheckingSupport {
         return false;
     }
 
-    static Map<GenericsTypeName, GenericsType> extractGenericsParameterMapOfThis(TypeCheckingContext context) {
+    static Map<GenericsTypeName, GenericsType> extractGenericsParameterMapOfThis(final TypeCheckingContext context) {
         ClassNode cn = context.getEnclosingClassNode();
         MethodNode mn = context.getEnclosingMethod();
         // GROOVY-9570: find the innermost class or method
@@ -2163,7 +2138,7 @@ public abstract class StaticTypeCheckingSupport {
         return extractGenericsParameterMapOfThis(mn);
     }
 
-    static Map<GenericsTypeName, GenericsType> extractGenericsParameterMapOfThis(MethodNode mn) {
+    static Map<GenericsTypeName, GenericsType> extractGenericsParameterMapOfThis(final MethodNode mn) {
         if (mn == null) return null;
 
         Map<GenericsTypeName, GenericsType> map;
@@ -2176,7 +2151,7 @@ public abstract class StaticTypeCheckingSupport {
         return mergeGenerics(map, mn.getGenericsTypes());
     }
 
-    private static Map<GenericsTypeName, GenericsType> mergeGenerics(Map<GenericsTypeName, GenericsType> current, GenericsType[] newGenerics) {
+    private static Map<GenericsTypeName, GenericsType> mergeGenerics(Map<GenericsTypeName, GenericsType> current, final GenericsType[] newGenerics) {
         if (newGenerics == null || newGenerics.length == 0) return current;
         if (current == null) current = new HashMap<GenericsTypeName, GenericsType>();
         for (GenericsType gt : newGenerics) {
@@ -2349,6 +2324,9 @@ public abstract class StaticTypeCheckingSupport {
         return node.getSuperClass() != null && isParameterizedWithString(node.getUnresolvedSuperClass());
     }
 
+    /**
+     * Determines if node is a raw type or references any generics placeholders.
+     */
     public static boolean missesGenericsTypes(ClassNode cn) {
         while (cn.isArray()) cn = cn.getComponentType();
         GenericsType[] cnGenerics = cn.getGenericsTypes();
@@ -2357,15 +2335,16 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     /**
-     * A helper method that can be used to evaluate expressions as found in annotation
-     * parameters. For example, it will evaluate a constant, be it referenced directly as
-     * an integer or as a reference to a field.
+     * Evaluates expressions as found in annotation parameters.  For example, it
+     * will evaluate a constant, be it referenced directly as an integer or as a
+     * reference to a field.
      * <p>
-     * If this method throws an exception, then the expression cannot be evaluated on its own.
+     * If the expression cannot be evaluated on its own, an exception is thrown.
      *
      * @param expr   the expression to be evaluated
      * @param config the compiler configuration
      * @return the result of the expression
+     * @throws GroovyBugError
      */
     public static Object evaluateExpression(final Expression expr, final CompilerConfiguration config) {
         // GRECLIPSE add

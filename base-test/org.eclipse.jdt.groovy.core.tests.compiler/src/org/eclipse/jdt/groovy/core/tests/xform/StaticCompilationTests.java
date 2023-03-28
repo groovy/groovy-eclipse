@@ -5943,11 +5943,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  @Override\n" +
             "  String call() {\n" +
             "    if (request instanceof Impl) {\n" +
-            "      def thing = request.something // No such property: something for class: R\n" +
-            "      def lower = thing.toLowerCase()\n" +
+            "      request.something.toLowerCase()\n" +
             "    } else {\n" +
-            "      // ...\n" +
-            "      return null\n" +
+            "      null\n" +
             "    }\n" +
             "  }\n" +
             "}\n" +

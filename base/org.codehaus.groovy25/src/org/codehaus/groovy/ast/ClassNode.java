@@ -211,7 +211,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @param node the class to redirect to; if {@code null} the redirect is removed
      */
     public void setRedirect(ClassNode cn) {
-        if (isPrimaryNode) throw new GroovyBugError("tried to set a redirect for a primary ClassNode ("+getName()+"->"+cn.getName()+").");
+        if (isPrimaryNode) throw new GroovyBugError("tried to set a redirect for a primary ClassNode (" + getName() + "->" + cn.getName() + ").");
         if (cn != null && !isGenericsPlaceHolder()) cn = cn.redirect();
         if (cn == this) return;
         redirect = cn;

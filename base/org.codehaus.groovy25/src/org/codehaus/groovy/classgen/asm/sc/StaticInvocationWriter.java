@@ -731,9 +731,9 @@ public class StaticInvocationWriter extends InvocationWriter {
                     controller.getOperandStack().doGroovyCast(type);
                 }
                 if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(topOperand, type)) return;
-                controller.getMethodVisitor().visitTypeInsn(CHECKCAST, type.isArray() ?
-                        BytecodeHelper.getTypeDescription(type) :
-                        BytecodeHelper.getClassInternalName(type.getName()));
+                controller.getMethodVisitor().visitTypeInsn(CHECKCAST, type.isArray()
+                        ? BytecodeHelper.getTypeDescription(type)
+                        : BytecodeHelper.getClassInternalName(type.getName()));
                 controller.getOperandStack().replace(type);
             }
         }
@@ -750,7 +750,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                         type = ClassHelper.getWrapper(type);
                     }
                     ClassNode declaringClass = target.getDeclaringClass();
-                    Class typeClass= type.getClass();
+                    Class<?>  typeClass = type.getClass();
                     if (typeClass != ClassNode.class
                             && typeClass != InnerClassNode.class
                             && typeClass != ImmutableClassNode.class
@@ -776,7 +776,7 @@ public class StaticInvocationWriter extends InvocationWriter {
     }
 
     @Override
-    protected boolean makeCachedCall(Expression origin, ClassExpression sender, Expression receiver, Expression message, Expression arguments, MethodCallerMultiAdapter adapter, boolean safe, boolean spreadSafe, boolean implicitThis, boolean containsSpreadExpression) {
+    protected boolean makeCachedCall(final Expression origin, final ClassExpression sender, final Expression receiver, final Expression message, final Expression arguments, final MethodCallerMultiAdapter adapter, final boolean safe, final boolean spreadSafe, final boolean implicitThis, final boolean containsSpreadExpression) {
         return false;
     }
 }

@@ -408,7 +408,6 @@ public class GenericsUtils {
             type = genericsSpec.get(name);
             if (type != null && type.isGenericsPlaceHolder()) {
                 if (type.getGenericsTypes() == null) {
-                    // correct "T -> U" (no generics)
                     ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
                     placeholder.setGenericsPlaceHolder(true);
                     return makeClassSafeWithGenerics(type, new GenericsType(placeholder));
@@ -424,28 +423,30 @@ public class GenericsUtils {
             newgTypes = new GenericsType[oldgTypes.length];
             for (int i = 0; i < newgTypes.length; i++) {
                 GenericsType oldgType = oldgTypes[i];
-                if (oldgType.isPlaceholder()) {
-                    if (genericsSpec.get(oldgType.getName()) != null) {
-                        newgTypes[i] = new GenericsType(genericsSpec.get(oldgType.getName()));
-                    } else {
-                        newgTypes[i] = new GenericsType(ClassHelper.OBJECT_TYPE);
-                    }
-                } else if (oldgType.isWildcard()) {
-                    ClassNode oldLower = oldgType.getLowerBound();
-                    ClassNode lower = oldLower != null ? correctToGenericsSpecRecurse(genericsSpec, oldLower, exclusions) : null;
+                if (oldgType.isWildcard()) {
                     ClassNode[] oldUpper = oldgType.getUpperBounds();
                     ClassNode[] upper = null;
                     if (oldUpper != null) {
+                        // correct "? extends T" or "? extends T & I"
                         upper = new ClassNode[oldUpper.length];
                         for (int j = 0; j < oldUpper.length; j++) {
                             upper[j] = correctToGenericsSpecRecurse(genericsSpec, oldUpper[j], exclusions);
                         }
                     }
+                    ClassNode oldLower = oldgType.getLowerBound();
+                    ClassNode lower = null;
+                    if (oldLower != null) {
+                        // correct "? super T"
+                        lower = correctToGenericsSpecRecurse(genericsSpec, oldLower, exclusions);
+                    }
                     GenericsType fixed = new GenericsType(oldgType.getType(), upper, lower);
-                    fixed.setName(oldgType.getName());
                     fixed.setWildcard(true);
                     newgTypes[i] = fixed;
+                } else if (oldgType.isPlaceholder()) {
+                    // correct "T"
+                    newgTypes[i] = new GenericsType(genericsSpec.getOrDefault(oldgType.getName(), ClassHelper.OBJECT_TYPE));
                 } else {
+                    // correct "List<T>", etc.
                     newgTypes[i] = new GenericsType(correctToGenericsSpecRecurse(genericsSpec, correctToGenericsSpec(genericsSpec, oldgType), exclusions));
                 }
             }
@@ -907,6 +908,8 @@ public class GenericsUtils {
 
     /**
      * Checks if the type has any placeholder (aka unresolved) generics.
+     * <p>
+     * Backported from 3.0.0
      *
      * @since 2.5.10
      */
