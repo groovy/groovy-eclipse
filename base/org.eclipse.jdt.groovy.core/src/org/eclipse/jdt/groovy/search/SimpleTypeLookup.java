@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -530,7 +530,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 } else if (candidate instanceof PropertyNode) {
                     if (((PropertyNode) candidate).isSynthetic()) {
-                        confidence = isAssignTarget || !scope.isMethodCall() ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
+                        if (var.getAccessedVariable() instanceof FieldNode && // TODO: GROOVY-10985: fix dynamic property's precedence
+                                declaringType.getOuterClasses().contains(((FieldNode) var.getAccessedVariable()).getDeclaringClass())) {
+                            candidate = (FieldNode) var.getAccessedVariable(); // legacy resolution picks the field from enclosing scope
+                        } else {
+                            confidence = isAssignTarget || !scope.isMethodCall() ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
+                        }
                     }
                 }
                 // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write

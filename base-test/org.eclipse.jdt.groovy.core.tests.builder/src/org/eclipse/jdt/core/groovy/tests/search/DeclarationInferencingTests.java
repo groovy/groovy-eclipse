@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField1a() {
+    public void testGetterAndField2() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -100,70 +100,12 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField2() {
-        //@formatter:off
-        createUnit("Other",
-            "class Other {\n" +
-            "  String xxx\n" +
-            "  String getXxx() { xxx }\n" +
-            "}");
-        //@formatter:on
-
-        String contents = "new Other().getXxx()";
-        assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
-    }
-
-    @Test
-    public void testGetterAndField2a() {
-        //@formatter:off
-        createUnit("Other",
-            "class Other {\n" +
-            "  String xxx\n" +
-            "  String getXxx() { xxx }\n" +
-            "}");
-        //@formatter:on
-
-        String contents = "new Other().getXxx";
-        assertUnknown(contents, "getXxx");
-    }
-
-    @Test
-    public void testGetterAndField2b() {
-        //@formatter:off
-        createUnit("Other",
-            "class Other {\n" +
-            "  String xxx\n" +
-            "  String getXxx() { xxx }\n" +
-            "}");
-        //@formatter:on
-
-        String contents = "new Other().@getXxx";
-        assertUnknown(contents, "getXxx");
-    }
-
-    @Test
-    public void testGetterAndField2c() {
-        //@formatter:off
-        createUnit("Other",
-            "class Other {\n" +
-            "  String xxx\n" +
-            "  String getXxx() { xxx }\n" +
-            "}");
-        //@formatter:on
-
-        String contents = "new Other().&getXxx";
-        assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
-
-        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
-        assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
-    }
-
-    @Test
     public void testGetterAndField3() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
             "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
             "}");
         //@formatter:on
 
@@ -172,7 +114,65 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField3a() {
+    public void testGetterAndField4() {
+        //@formatter:off
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "}");
+        //@formatter:on
+
+        String contents = "new Other().getXxx";
+        assertUnknown(contents, "getXxx");
+    }
+
+    @Test
+    public void testGetterAndField5() {
+        //@formatter:off
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "}");
+        //@formatter:on
+
+        String contents = "new Other().@getXxx";
+        assertUnknown(contents, "getXxx");
+    }
+
+    @Test
+    public void testGetterAndField6() {
+        //@formatter:off
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "}");
+        //@formatter:on
+
+        String contents = "new Other().&getXxx";
+        assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField7() {
+        //@formatter:off
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "}");
+        //@formatter:on
+
+        String contents = "new Other().getXxx()";
+        assertKnown(contents, "getXxx", "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField8() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -185,7 +185,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField3b() {
+    public void testGetterAndField9() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -198,7 +198,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField3c() {
+    public void testGetterAndField10() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -214,7 +214,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField4() {
+    public void testGetterAndField11() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -227,7 +227,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField4a() {
+    public void testGetterAndField12() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -240,7 +240,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField5() {
+    public void testGetterAndField13() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -254,7 +254,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField5a() {
+    public void testGetterAndField14() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -268,7 +268,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField6() {
+    public void testGetterAndField15() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -283,7 +283,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField6a() {
+    public void testGetterAndField16() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -298,7 +298,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField7() {
+    public void testGetterAndField17() {
         //@formatter:off
         String contents =
             "class Other {\n" +
@@ -327,7 +327,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField7a() {
+    public void testGetterAndField18() {
         //@formatter:off
         String contents =
             "class Other {\n" +
@@ -350,7 +350,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField8() {
+    public void testGetterAndField19() {
         //@formatter:off
         String contents =
             "class Other {\n" +
@@ -368,7 +368,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField8a() {
+    public void testGetterAndField20() {
         //@formatter:off
         String contents =
             "class Other {\n" +
@@ -382,7 +382,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField9() {
+    public void testGetterAndField21() {
         //@formatter:off
         String contents =
             "class Other {\n" +
@@ -400,7 +400,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField9a() {
+    public void testGetterAndField22() {
         //@formatter:off
         String contents =
             "class Other {\n" +
@@ -418,7 +418,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField10() {
+    public void testGetterAndField23() {
         //@formatter:off
         createUnit("Foo",
             "class Foo {\n" +
@@ -450,7 +450,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField10a() {
+    public void testGetterAndField24() {
         //@formatter:off
         createUnit("Foo",
             "class Foo {\n" +
@@ -473,7 +473,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField10b() {
+    public void testGetterAndField25() {
         //@formatter:off
         createUnit("Foo",
             "class Foo {\n" +
@@ -496,7 +496,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField11() {
+    public void testGetterAndField26() {
         //@formatter:off
         String contents =
             "class Foo {\n" +
@@ -512,7 +512,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField11a() {
+    public void testGetterAndField27() {
         //@formatter:off
         String contents =
             "class Foo {\n" +
@@ -528,7 +528,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField12() {
+    public void testGetterAndField28() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -543,7 +543,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField12a() {
+    public void testGetterAndField29() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -558,7 +558,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField13() {
+    public void testGetterAndField30() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -573,7 +573,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField13a() {
+    public void testGetterAndField31() {
         //@formatter:off
         createUnit("Other",
             "class Other {\n" +
@@ -588,7 +588,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1130
-    public void testGetterAndField14() {
+    public void testGetterAndField32() {
         //@formatter:off
         createUnit("Foo",
             "class Foo {\n" +
@@ -614,7 +614,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField14a() {
+    public void testGetterAndField33() {
         //@formatter:off
         createJavaUnit("Foo",
             "interface Foo {\n" +
@@ -641,7 +641,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1130
-    public void testGetterAndField15() {
+    public void testGetterAndField34() {
         //@formatter:off
         createUnit("Foo",
             "class Foo {\n" +
@@ -667,7 +667,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField15a() {
+    public void testGetterAndField35() {
         //@formatter:off
         createJavaUnit("Foo",
             "interface Foo {\n" +
@@ -694,7 +694,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1131
-    public void testGetterAndField16() {
+    public void testGetterAndField36() {
         //@formatter:off
         String contents =
             "import groovy.transform.PackageScope\n" +
@@ -738,7 +738,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField16a() {
+    public void testGetterAndField37() {
         //@formatter:off
         String contents =
             "import groovy.transform.PackageScope\n" +
@@ -784,7 +784,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1132
-    public void testGetterAndField17() {
+    public void testGetterAndField38() {
         //@formatter:off
         String contents =
             "import groovy.transform.PackageScope\n" +
@@ -848,7 +848,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1133
-    public void testGetterAndField17b() {
+    public void testGetterAndField39() {
         //@formatter:off
         String contents =
             "import groovy.transform.PackageScope\n" +
@@ -914,7 +914,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterAndField17c() {
+    public void testGetterAndField40() {
         //@formatter:off
         String contents =
             "import groovy.transform.PackageScope\n" +
@@ -957,6 +957,74 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
             offset = contents.lastIndexOf("e");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1468
+    public void testGetterAndField41() {
+        //@formatter:off
+        String contents =
+            "import groovy.transform.PackageScope\n" +
+            "class Foo {\n" +
+            "  def a\n" +
+            "  private b\n" +
+            "  public  c\n" +
+            "  protected d\n" +
+            "  @PackageScope e\n" +
+            "  class Bar {\n" +
+            "    def getProperty(String name) {\n" + // GROOVY-10985
+            "      switch (name) {\n" +
+            "        case 'a': return 'A'\n" +
+            "        case 'b': return 'B'\n" +
+            "        case 'c': return 'C'\n" +
+            "        case 'd': return 'D'\n" +
+            "        case 'e': return 'E'\n" +
+            "      }\n" +
+            "    }\n" +
+            "    void meth() {\n" +
+            "      a\n" +
+            "      b\n" +
+            "      c\n" +
+            "      d\n" +
+            "      e\n" +
+            "      this.a\n" +
+            "      this.b\n" +
+            "      this.c\n" +
+            "      this.d\n" +
+            "      this.e\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("a", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 1, "Foo", "a", DeclarationKind.FIELD);
+
+            offset = contents.indexOf("b", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "b", DeclarationKind.FIELD);
+
+            offset = contents.indexOf("c", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "c", DeclarationKind.FIELD);
+
+            offset = contents.indexOf("d", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "d", DeclarationKind.FIELD);
+
+            offset = contents.indexOf("e", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "e", DeclarationKind.FIELD);
+
+            offset = contents.lastIndexOf("a");
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "a", DeclarationKind.PROPERTY);
+
+            offset = contents.lastIndexOf("b");
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "b", DeclarationKind.PROPERTY);
+
+            offset = contents.lastIndexOf("c");
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "c", DeclarationKind.PROPERTY);
+
+            offset = contents.lastIndexOf("d");
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "d", DeclarationKind.PROPERTY);
+
+            offset = contents.lastIndexOf("e");
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "e", DeclarationKind.PROPERTY);
     }
 
     @Test
@@ -1036,7 +1104,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSetterAndField3a() {
+    public void testSetterAndField4() {
         //@formatter:off
         createJavaUnit("Foo",
             "interface Foo {\n" +
