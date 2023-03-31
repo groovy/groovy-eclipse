@@ -1322,18 +1322,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                 }
                             }
                         }
-                        // TODO: Remove when minimum supported Groovy runtime is 2.5
-                        if (delegatesTo == null) {
-                            if (arguments.get(0) instanceof ClosureExpression &&
-                                    methodNode.getName().matches("build|do(Later|Outside)|edt(Builder)?") &&
-                                    methodNode.getDeclaringClass().getName().equals("groovy.swing.SwingBuilder")) {
-                                addDelegatesToClosure((ClosureExpression) arguments.get(0), methodNode.getDeclaringClass(), Closure.OWNER_FIRST);
-                            } else if (arguments.size() > 1 && arguments.get(1) instanceof ClosureExpression &&
-                                    methodNode.getName().matches("identity|with") && DGM_CLASS_NODE.equals(methodNode.getDeclaringClass())) {
-                                // prior to Groovy 2.3, "with" lacked @DelegatesTo metadata; same goes for "identity" (see GROOVY-8376)
-                                addDelegatesToClosure((ClosureExpression) arguments.get(1), declaringType, Closure.DELEGATE_FIRST);
-                            }
-                        }
                     }
                 }
             }

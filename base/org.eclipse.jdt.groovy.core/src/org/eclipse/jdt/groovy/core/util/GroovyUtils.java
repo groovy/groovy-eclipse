@@ -73,7 +73,7 @@ public class GroovyUtils {
 
     public static Version getGroovyVersion() {
         String version = GroovySystem.getVersion();
-        // convert "2.5.0-beta-2" -> "2.5.0.beta-2"
+        // convert "3.0.0-beta-2" -> "3.0.0.beta-2"
         version = version.replaceFirst("-", ".");
         return Version.valueOf(version);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,8 @@ public final class SpockInferencingTests extends InferencingTestSuite {
         String spockCorePath;
         if (isAtLeastGroovy(40)) {
             spockCorePath = "lib/spock-core-2.3-groovy-4.0.jar";
-        } else if (isAtLeastGroovy(30)) {
-            spockCorePath = "lib/spock-core-2.3-groovy-3.0.jar";
         } else {
-            spockCorePath = "lib/spock-core-2.3-groovy-2.5.jar";
-            env.addJar(project.getFullPath(), "lib/spock-groovy2-compat-2.3.jar");
+            spockCorePath = "lib/spock-core-2.3-groovy-3.0.jar";
         }
         env.addJar(project.getFullPath(), spockCorePath);
         env.addEntry(project.getFullPath(), JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));

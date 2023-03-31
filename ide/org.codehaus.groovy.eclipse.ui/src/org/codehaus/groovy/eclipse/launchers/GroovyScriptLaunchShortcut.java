@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,14 +54,14 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         if (compilerOptions.defaultEncoding != null && !compilerOptions.defaultEncoding.isEmpty()) {
             mainArgs.append(" --encoding ").append(compilerOptions.defaultEncoding);
         }
-        if (compilerOptions.produceMethodParameters && isAtLeastGroovy(2, 5, 0)) {
-            mainArgs.append(" --parameters");
-        }
-        if (compilerOptions.enablePreviewFeatures && isAtLeastGroovy(2, 5, 7)) {
-            mainArgs.append(" --enable-preview");
-        }
         if ((compilerOptions.groovyFlags & CompilerOptions.InvokeDynamic) != 0) {
             mainArgs.append(" --indy");
+        }
+        if (compilerOptions.produceMethodParameters) {
+            mainArgs.append(" --parameters");
+        }
+        if (compilerOptions.enablePreviewFeatures) {
+            mainArgs.append(" --enable-preview");
         }
 
         if (runType != null) {

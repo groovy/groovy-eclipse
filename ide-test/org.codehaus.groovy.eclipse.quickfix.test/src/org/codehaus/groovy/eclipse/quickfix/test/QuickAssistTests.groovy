@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
 import static org.junit.Assume.assumeTrue
 
-import groovy.transform.NotYetImplemented
+import groovy.test.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistContext
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal

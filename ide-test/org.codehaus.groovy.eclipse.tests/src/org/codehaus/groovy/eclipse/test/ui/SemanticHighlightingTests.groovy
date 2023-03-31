@@ -4043,7 +4043,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('length'), 6, isAtLeastGroovy(30) ? METHOD_CALL : UNKNOWN))
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, METHOD_CALL))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1192
@@ -4055,23 +4055,17 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('size'  ), 4, isAtLeastGroovy(30) ? GROOVY_CALL : UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('size'  ), 4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('sleep' ), 5, isAtLeastGroovy(30) ? GROOVY_CALL : UNKNOWN))
+            new HighlightedTypedPosition(contents.indexOf('sleep' ), 5, GROOVY_CALL))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1048
     void testMethodPointer5() {
         String contents = 'String[].&new'
 
-        if (isAtLeastGroovy(30)) {
-            assertHighlighting(contents,
-                new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
-        } else {
-            assertHighlighting(contents,
-                new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-                new HighlightedTypedPosition(contents.indexOf('new'   ), 3, UNKNOWN))
-        }
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1048
@@ -4111,9 +4105,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('size'  ), 4, isAtLeastGroovy(30) ? GROOVY_CALL : UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('size'  ), 4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('sleep' ), 5, isAtLeastGroovy(30) ? GROOVY_CALL : UNKNOWN))
+            new HighlightedTypedPosition(contents.indexOf('sleep' ), 5, GROOVY_CALL))
     }
 
     @Test

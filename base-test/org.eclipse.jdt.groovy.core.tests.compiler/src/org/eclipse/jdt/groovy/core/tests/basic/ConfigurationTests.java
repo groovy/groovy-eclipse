@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ public final class ConfigurationTests {
 
     @Test
     public void testDefaults() {
-        CompilerConfiguration config = CompilerConfiguration.DEFAULT;
+        var config = CompilerConfiguration.DEFAULT;
 
         assertNull(config.getJointCompilationOptions());
         assertNull(config.getDisabledGlobalASTTransformations());
@@ -42,16 +42,15 @@ public final class ConfigurationTests {
 
     @Test
     public void testTargetVersion() {
-        CompilerConfiguration config = new CompilerConfiguration();
+        var config = new CompilerConfiguration();
 
-        String x16x = isAtLeastGroovy(30) ? "16" : "15";
-        String x17x = isAtLeastGroovy(30) ? "17" : "15";
-        String x18x = isAtLeastGroovy(40) ? "18" : isAtLeastGroovy(30) ? "17" : "15";
-        String x19x = isAtLeastGroovy(40) ? "19" : isAtLeastGroovy(30) ? "17" : "15";
-        String x20x = isAtLeastGroovy(40) ? "20" : isAtLeastGroovy(30) ? "17" : "15";
+        var x18x = isAtLeastGroovy(40) ? "18" : "17";
+        var x19x = isAtLeastGroovy(40) ? "19" : "17";
+        var x20x = isAtLeastGroovy(40) ? "20" : "17";
+        var x21x = isAtLeastGroovy(40) ? "21" : "17";
 
-        String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"};
-        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", x16x, x17x, x18x, x19x, x20x, x20x};
+        String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
+        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", "16", "17", x18x, x19x, x20x, x21x, x21x};
         assertArrayEquals(expect, Arrays.stream(inputs).map(v -> { config.setTargetBytecode(v); return config.getTargetBytecode(); }).toArray(String[]::new));
     }
 }

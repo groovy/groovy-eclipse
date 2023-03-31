@@ -106,7 +106,7 @@ Feature of Groovy source editor (.groovy files editor).  Integration of code ref
 
 ### org.codehaus.groovy.eclipse.codeassist
 
-Feature of Groovy source editor (.groovy files editor). Integration of code completions for Groovy code.  (*Ctrl+Space* behavior for uncompleted Groovy statements.)
+Feature of Groovy source editor (.groovy files editor).  Integration of code completions for Groovy code.  (*Ctrl+Space* behavior for uncompleted Groovy statements.)
 
 ### org.codehaus.groovy.eclipse.quickfix
 
@@ -203,16 +203,6 @@ Replace e4.27 with a different option to build it for another Eclipse version:
 * e4.21
 * e4.20
 * e4.19
-* e4.18
-* e4.17
-* e4.16
-* e4.15
-* e4.14
-* e4.13
-* e4.12
-* e4.11
-* e4.10
-* e49
 
 Tests will be executed as part of the build.  To skip them, append this option to the command: `-Dmaven.test.skip=true`.
 

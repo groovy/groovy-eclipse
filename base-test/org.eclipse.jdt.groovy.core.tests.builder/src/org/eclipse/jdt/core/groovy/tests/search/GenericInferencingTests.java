@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -892,7 +891,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test
     public void testClosure5() {
         String contents = "def fn = String[].&new";
-        assertType(contents, "fn", isAtLeastGroovy(30) ? "groovy.lang.Closure<java.lang.String[]>" : "groovy.lang.Closure");
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
 
         contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
         assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
@@ -932,7 +931,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure9() {
-        assumeTrue(isAtLeastGroovy(30));
         String contents =
             "void test(List<String> list) {\n" +
             "  def array = list.stream().toArray(String[].&new)\n" +

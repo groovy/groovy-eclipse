@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -4582,11 +4582,8 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1111
     public void testMethodOverloadsArgumentMatching12() {
         String contents = "def array = ['x'].stream().toArray(String)\n";
-        if (isAtLeastGroovy(30)) {
-            assertType(contents, "array", "java.lang.String[]");
-        } else {
-            assertUnknown(contents, "toArray");
-        }
+
+        assertType(contents, "array", "java.lang.String[]");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1121

@@ -26,7 +26,7 @@
       <setupTask
           xsi:type="setup:PreferenceTask"
           key="/instance/org.codehaus.groovy.eclipse.compilerResolver/groovy.compiler.level"
-          value="25"/>
+          value="30"/>
     </setupTask>
     <setupTask
         xsi:type="setup:CompoundTask"
@@ -81,7 +81,7 @@
   <setupTask
       xsi:type="setup:VariableTask"
       name="eclipse.target.platform"
-      defaultValue="2022-12"
+      defaultValue="2023-03"
       storageURI="scope://Workspace"
       label="Target Platform">
     <choice

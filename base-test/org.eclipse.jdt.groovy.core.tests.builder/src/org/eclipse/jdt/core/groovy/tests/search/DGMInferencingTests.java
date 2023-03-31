@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1066,20 +1066,13 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
     public void testDGMDeclaring5() {
         String contents = "new StringBuilder().size()";
-        assertDeclType(contents, "size", isAtLeastGroovy(30)
-            ? "org.codehaus.groovy.runtime.StringGroovyMethods"
-            : "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
+        assertDeclType(contents, "size", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1192
     public void testDGMDeclaring6() {
         String contents = "String.&size";
-        if (!isAtLeastGroovy(30)) {
-            int offset = contents.indexOf("size");
-            assertUnknownConfidence(contents, offset, offset + "size".length());
-        } else {
-            assertDeclType(contents, "size", "org.codehaus.groovy.runtime.StringGroovyMethods");
-        }
+        assertDeclType(contents, "size", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
@@ -1091,8 +1084,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
     public void testDGMDeclaring8() {
         String contents = "Thread.State.NEW.next().name()";
-        String vmplugin = isAtLeastGroovy(30) ? "8" : "5";
-        assertDeclType(contents, "next", "org.codehaus.groovy.vmplugin.v" + vmplugin + ".PluginDefaultGroovyMethods");
+        assertDeclType(contents, "next", "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
     }
 
     @Test
@@ -1141,12 +1133,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1192
     public void testDGSMDeclaring8() {
         String contents = "String.&sleep"; // odd but works
-        if (!isAtLeastGroovy(30)) {
-            int offset = contents.indexOf("sleep");
-            assertUnknownConfidence(contents, offset, offset + "sleep".length());
-        } else {
-            assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
-        }
+        assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test

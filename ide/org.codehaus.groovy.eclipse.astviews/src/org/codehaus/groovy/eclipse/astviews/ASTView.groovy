@@ -377,7 +377,7 @@ class ASTView extends ViewPart {
                 }
             }
 
-            if (value instanceof ClassNode && value['outerClass'] != null &&
+            if (value instanceof ClassNode && value.outerClass != null &&
                     parent['label'] == 'classes' && parent['parent']['value'] instanceof ModuleNode) {
                 return false
             }
@@ -398,6 +398,14 @@ class ASTView extends ViewPart {
 
         void setValue(value) {
             this.value = value instanceof Iterator ? value.collect() : value
+        }
+
+        @Override
+        getProperty(String name) {
+            if (name == 'label') return label
+            if (name == 'value') return value
+            if (name == 'parent') return parent
+            throw new MissingPropertyException(name, TreeNode)
         }
     }
 }

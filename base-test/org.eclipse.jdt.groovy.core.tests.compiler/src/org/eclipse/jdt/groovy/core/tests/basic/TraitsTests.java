@@ -1822,22 +1822,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(30)) {
-            runConformTest(sources, "works");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Script.groovy (at line 9)\n" +
-                "\tclass C {\n" +
-                "\t      ^\n" +
-                "Groovy:Can't have an abstract method in a non-abstract class. The class 'C' must be declared abstract or the method 'java.lang.Object T__foo$set(java.lang.Object)' must be implemented.\n" +
-                "----------\n" +
-                "2. ERROR in Script.groovy (at line 9)\n" +
-                "\tclass C {\n" +
-                "\t      ^\n" +
-                "Groovy:Can't have an abstract method in a non-abstract class. The class 'C' must be declared abstract or the method 'java.lang.Object T__foo$get()' must be implemented.\n" +
-                "----------\n");
-        }
+        runConformTest(sources, "works");
     }
 
     @Test

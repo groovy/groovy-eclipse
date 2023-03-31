@@ -4669,17 +4669,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(30)) {
-            runConformTest(sources);
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Main.groovy (at line 7)\n" +
-                "\tFoo<? super C> foo = new Foo<B>()\n" +
-                "\t    ^^^^^^^^^\n" +
-                "Groovy:The type ? is not a valid substitute for the bounded parameter <T extends A>\n" +
-                "----------\n");
-        }
+        runConformTest(sources);
     }
 
     @Test

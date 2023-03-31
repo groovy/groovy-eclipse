@@ -2331,8 +2331,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        String strategyOne = isAtLeastGroovy(30) ? "OWNER_FIRST" : "0";
-        String strategyTwo = isAtLeastGroovy(30) ? "DELEGATE_FIRST" : "1";
+        String strategyOne = "OWNER_FIRST";
+        String strategyTwo = "DELEGATE_FIRST";
 
         runNegativeTest(sources,
             "----------\n" +
@@ -5856,8 +5856,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9389b() {
-        assumeTrue(isAtLeastGroovy(30));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",

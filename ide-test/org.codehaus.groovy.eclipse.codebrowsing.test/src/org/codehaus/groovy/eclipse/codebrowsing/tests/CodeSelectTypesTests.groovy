@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assume.assumeTrue
 
-import groovy.transform.NotYetImplemented
+import groovy.test.NotYetImplemented
 
 import org.eclipse.jdt.core.SourceRange
 import org.junit.Test

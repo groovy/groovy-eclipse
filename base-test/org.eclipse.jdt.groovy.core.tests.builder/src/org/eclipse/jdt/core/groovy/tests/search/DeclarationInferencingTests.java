@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 
@@ -54,7 +53,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     @Test
     public void testCategoryMethod2() { // TODO: SAM target disambiguation
         String contents = "Object.&toString"; // candidates available from Class, Object and DefaultGroovyMethods
-        assertKnown(contents, "toString", !isAtLeastGroovy(30) ? "java.lang.Object" : "org.codehaus.groovy.runtime.DefaultGroovyMethods", "toString", DeclarationKind.METHOD);
+        assertKnown(contents, "toString", "org.codehaus.groovy.runtime.DefaultGroovyMethods", "toString", DeclarationKind.METHOD);
     }
 
     @Test

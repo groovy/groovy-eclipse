@@ -414,15 +414,15 @@ public class ClassHelper {
         return TypeUtil.isPrimitiveType(cn);
         */
         cn = cn.redirect();
-        return (cn == VOID_TYPE   ||
-                cn == byte_TYPE   ||
-                cn == char_TYPE   ||
-                cn == int_TYPE    ||
-                cn == long_TYPE   ||
-                cn == short_TYPE  ||
-                cn == float_TYPE  ||
-                cn == double_TYPE ||
-                cn == boolean_TYPE);
+        return cn == VOID_TYPE
+            || cn == byte_TYPE
+            || cn == char_TYPE
+            || cn == int_TYPE
+            || cn == long_TYPE
+            || cn == short_TYPE
+            || cn == float_TYPE
+            || cn == double_TYPE
+            || cn == boolean_TYPE;
         // GRECLIPSE end
     }
 

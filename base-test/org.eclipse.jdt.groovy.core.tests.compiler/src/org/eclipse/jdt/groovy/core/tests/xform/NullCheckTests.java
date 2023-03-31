@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,13 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Test cases for {@link groovy.transform.NullCheck}.
  */
 public final class NullCheckTests extends GroovyCompilerTestSuite {
-
-    @Before
-    public void setUp() {
-        assumeTrue(isAtLeastGroovy(30));
-    }
 
     @Test
     public void testNullCheck0() {

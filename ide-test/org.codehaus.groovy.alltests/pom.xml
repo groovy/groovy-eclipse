@@ -4,11 +4,11 @@
     <relativePath>../pom.xml</relativePath>
     <groupId>org.codehaus.groovy.eclipse</groupId>
     <artifactId>org.codehaus.groovy.eclipse.ide-test.parent</artifactId>
-    <version>4.9.0-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
   </parent>
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.codehaus.groovy.alltests</artifactId>
-  <version>4.9.0-SNAPSHOT</version>
+  <version>5.0.0-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 
   <build>

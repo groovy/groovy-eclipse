@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,12 @@
 package org.eclipse.jdt.core.groovy.tests.locations;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
 
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -47,7 +44,6 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
-import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -721,20 +717,6 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "  }/*m0e*/    \t    \n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
-    }
-
-    @Test // STS-3878
-    public void testErrorPositionForUnsupportedOperation() throws Exception {
-        assumeTrue(!isAtLeastGroovy(30));
-        String source =
-            "def a = 'a'\n" +
-            "def b = 'b'\n" +
-            "println a === b\n";
-        IPath root = createGenericProject();
-        IPath path = env.addGroovyClass(root, "Hello", source);
-        incrementalBuild();
-        expectingSpecificProblemFor(root, new Problem("p/Hello",
-            "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
     }
 
     @Test
