@@ -190,11 +190,12 @@ For manual testing and debugging, right-click on the org.codehaus.groovy.eclipse
 From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.27 (2023-03).
 
 	```
-	mvn -Pe4.27 clean verify
+	mvn -Pe4.28 clean verify
 	```
 
-Replace e4.27 with a different option to build it for another Eclipse version:
+Replace e4.28 with a different option to build it for another Eclipse version:
 
+* e4.27
 * e4.26
 * e4.25
 * e4.24
