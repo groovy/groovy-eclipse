@@ -1529,6 +1529,27 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "y", "java.lang.Character");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1472
+    public void testClosureParamsAnnotation7() {
+        //@formatter:off
+        String contents =
+            "import groovy.transform.stc.*\n" +
+            "class C {\n" +
+            "  Comparable call(@ClosureParams(value=SimpleType, options=['int','char']) Closure c) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class D {\n" +
+            "  C c = new C()\n" +
+            "  void test() {\n" +
+            "    def z = c { x, y -> }\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+        assertType(contents, "x", "java.lang.Integer");
+        assertType(contents, "y", "java.lang.Character");
+        assertType(contents, "z", "java.lang.Comparable");
+    }
+
     @Test
     public void testClosureReferencesSuperClass() {
         //@formatter:off

@@ -45,6 +45,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
@@ -1519,6 +1520,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         ClassNode returnType = dependentTypeStack.removeLast();
         Tuple inferred = dependentDeclarationStack.removeLast();
+
+        if ((inferred.declaration instanceof FieldNode || inferred.declaration instanceof PropertyNode) &&
+                    node.getObjectExpression().getNodeMetaData(StaticTypesMarker.INFERRED_TYPE) == null) {
+            // callable property invocation -- see InvocationWriter and MetaClassImpl#invokePropertyOrMissing
+            MethodCallExpression call = new MethodCallExpression(node.getMethod(), "call", node.getArguments());
+            call.setImplicitThis(false);
+
+            objExprType = returnType;
+            primaryTypeStack.add(objExprType);
+            completeExpressionStack.add(call);
+            try {
+                call.getMethod().visit(this);
+            } finally {
+                completeExpressionStack.removeLast();
+            }
+            returnType = dependentTypeStack.removeLast();
+            inferred = dependentDeclarationStack.removeLast();
+        }
         VariableScope.CallAndType cat = new VariableScope.CallAndType(node, inferred.declaration, inferred.declaringType, enclosingModule);
 
         handleCategoryDeclaration(node, scope);
