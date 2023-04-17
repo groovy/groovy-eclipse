@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -832,6 +833,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (parameters.length == 0) {
                 if (argumentCount == 0) {
                     return candidate;
+                } else if (argumentCount == 1 && candidate instanceof ConstructorNode &&
+                            argumentTypes.get(0).equals(VariableScope.MAP_CLASS_NODE)) {
+                    closestMatch = candidate; // new Foo(bar: ..., baz: ...) expression?
                 }
                 continue;
             }
@@ -931,7 +935,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 prms[i] = parameters[i].getType().getTypeClass();
             }
 
-            // TODO: This can fail in a lot of cases; is there a better way to call it?
+            // calculateParameterDistance returns 0; distance must exceed varargs case:
+            if (n == 0 && args.length == 1 && args[0] == Map.class) return 0x800000000000L;
+            // TODO: This can fail in a lot of cases; is there a better way to leverage it?
             return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));
         } catch (Throwable t) {
             ClassNode pt = last(parameters).getType();

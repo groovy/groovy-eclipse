@@ -2325,20 +2325,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
             List<Expression> expressions = arguments instanceof TupleExpression ? ((TupleExpression) arguments).getExpressions() : Collections.singletonList(arguments);
             if (isNotEmpty(expressions)) {
-                if (expressions.get(0) instanceof NamedArgumentListExpression) {
-                    if (node instanceof ConstructorCallExpression) {
-                        return Collections.emptyList(); // default constructor
-                    } else {
-                        return Collections.singletonList(createParameterizedMap(
-                            VariableScope.STRING_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE));
-                    }
-                }
-
                 List<ClassNode> types = new ArrayList<>(expressions.size());
                 for (Expression expression : expressions) {
                     expression = findLeafNode(expression);
                     ClassNode exprType = expression.getType();
-
                     /*if (expression instanceof MapExpression) {
                         types.add(createParameterizedMap(_));
                     } else if (expression instanceof ListExpression) {
@@ -2379,6 +2369,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         types.add(VariableScope.BOOLEAN_CLASS_NODE);
                     } else if (expression instanceof MethodPointerExpression && ((MethodPointerExpression) expression).getExpression() instanceof ClassExpression && "new".equals(((MethodPointerExpression) expression).getMethodName().getText())/* && isGroovy3+()*/) {
                         types.add(createParameterizedClosure(((MethodPointerExpression) expression).getExpression().getType()));
+                    } else if (expression instanceof NamedArgumentListExpression) {
+                        types.add(createParameterizedMap(VariableScope.STRING_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE));
                     } else {
                         VariableScope scope = scopes.getLast();
                         scope.setMethodCallArgumentTypes(null);

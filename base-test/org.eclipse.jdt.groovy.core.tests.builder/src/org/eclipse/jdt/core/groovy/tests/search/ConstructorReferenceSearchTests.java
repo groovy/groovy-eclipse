@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,8 +46,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo(a) {\n" +
             "    new Foo(a)\n" + // no
             "  }\n" +
-            "}");
-        createUnit("", "Other", "import p.Foo\n" +
+            "}\n");
+        createUnit("Other", "import p.Foo\n" +
             "new Foo()\n" + // yes
             "new Foo(a)\n" + // no
             "new p.Foo()\n" + // yes
@@ -85,8 +85,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "      }\n" +
             "    }\n" +
             "  }\n" +
-            "}");
-        createUnit("", "Other", "import p.Foo.Bar.Baz\n" +
+            "}\n");
+        createUnit("Other", "import p.Foo.Bar.Baz\n" +
             "new Baz()\n" + // yes
             "new Baz(a)\n"); // no
 
@@ -113,8 +113,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(... args) {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // yes
             "new Foo(a)\n" + // yes
             "new Foo(a,b)\n"); // yes
@@ -131,8 +131,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // no
             "new Foo(0)\n" + // yes
             "new Foo('')\n"); // no
@@ -149,8 +149,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i) {}\n" +
             "  Foo(String s) {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // no -- associated with first declaration
             "new Foo(0)\n" + // no
             "new Foo('')\n"); // yes
@@ -167,8 +167,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo() {}\n" + // search for this
             "  Foo(a) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // yes
             "new Foo(a)\n" + // no
             "new Foo(a,b)\n"); // no
@@ -185,8 +185,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo() {}\n" +
             "  Foo(a) {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // no
             "new Foo(a)\n" + // yes
             "new Foo(a,b)\n"); // no -- associated with first declaration
@@ -203,8 +203,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "class Bar extends Foo {\n" +
             "  Bar() {\n" +
             "    super(0)\n" + // yes
@@ -223,8 +223,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i) {}\n" +
             "  Foo(String s) {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "class Bar extends Foo {\n" +
             "  Bar() {\n" +
             "    super(0)\n" + // no
@@ -245,8 +245,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "    FooFoo(int i) {}\n" + // search for this
             "    FooFoo(String s) {}\n" +
             "  }\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "def foo = new Foo()\n" +
             "new Foo.FooFoo(foo, 0)\n" + // yes
             "new Foo.FooFoo(foo, '')\n"); // no
@@ -263,8 +263,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i=42) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // no
             "new Foo(0)\n" + // yes
             "new Foo('')\n"); // no
@@ -277,13 +277,13 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test // default value generates a synthetic constructor
-    public void testConstructorReferences11a() throws Exception {
+    public void testConstructorReferences12() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i=42) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // yes
             "new Foo(0)\n" + // no
             "new Foo('')\n"); // no
@@ -296,7 +296,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test // same-unit references exercise patch in Verifier.addDefaultParameterConstructors
-    public void testConstructorReferences11b() throws Exception {
+    public void testConstructorReferences13() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i=42) {}\n" + // search for this
@@ -306,7 +306,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "    new Foo(0)\n" + // yes
             "    new Foo('')\n" + // no
             "  }\n" +
-            "}");
+            "}\n");
 
         List<SearchMatch> ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]);
 
@@ -318,13 +318,13 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test // default value generates a synthetic constructor
-    public void testConstructorReferences12() throws Exception {
+    public void testConstructorReferences14() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i) {}\n" +
             "  Foo(String s = '') {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // no
             "new Foo(0)\n" + // no
             "new Foo('')\n"); // yes
@@ -337,13 +337,13 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test // default value generates a synthetic constructor
-    public void testConstructorReferences12a() throws Exception {
+    public void testConstructorReferences15() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i) {}\n" +
             "  Foo(String s = '') {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "new Foo()\n" + // yes
             "new Foo(0)\n" + // no
             "new Foo('')\n"); // no
@@ -356,7 +356,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test // same-unit references exercise patch in Verifier.addDefaultParameterConstructors
-    public void testConstructorReferences12b() throws Exception {
+    public void testConstructorReferences16() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i) {this('xxx')}\n" + // yes
@@ -366,7 +366,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "    new Foo(0)\n" + // no
             "    new Foo('')\n" + // yes
             "  }\n" +
-            "}");
+            "}\n");
 
         List<SearchMatch> ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]);
 
@@ -378,13 +378,13 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testConstructorReferences13() throws Exception {
+    public void testConstructorReferences17() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Other", "import p.Foo\n" +
             "def foo = new Foo(0) {\n" + // yes
             "}\n");
 
@@ -392,13 +392,13 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testConstructorReferences13a() throws Exception {
+    public void testConstructorReferences18() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i) {}\n" +
             "  Foo(String s) {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Other", "import p.Foo\n" +
             "def foo = new Foo(0) {\n" + // no
             "}\n");
 
@@ -406,27 +406,118 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testConstructorReferences14() throws Exception {
+    public void testConstructorReferences19() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(String s, Map m) {}\n" +
             "  Foo(String s, ... v) {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "def foo = new p.Foo('')");
+            "}\n");
+        createUnit("Other", "def foo = new p.Foo('')\n");
 
         assertEquals(1, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
     }
 
     @Test
-    public void testConstructorReferences14a() throws Exception {
+    public void testConstructorReferences20() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(String s, Map m) {}\n" +
             "  Foo(String s, ... v) {}\n" + // search for this
-            "}");
-        createUnit("", "Bar", "def one = new p.Foo('a', 'b'), two = new p.Foo('a', 'b', 'c')");
+            "}\n");
+        createUnit("Other", "def one = new p.Foo('a', 'b'), two = new p.Foo('a', 'b', 'c')\n");
 
         assertEquals(2, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1473
+    public void testConstructorReferences21() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo() {} \n" + // search for this
+            "  Foo(String s) {}\n" +
+            "  String bar, baz;\n" +
+            "}\n");
+        createUnit("Other", "def one = new p.Foo(), two = new p.Foo(bar:'')\n");
+
+        assertEquals(2, searchForReferences(foo.getType("Foo").getMethods()[0]).stream().count());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1473
+    public void testConstructorReferences22() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo() {} \n" +
+            "  Foo(String s) {}\n" + // search for this
+            "  String bar, baz;\n" +
+            "}\n");
+        createUnit("Other", "def one = new p.Foo(), two = new p.Foo(bar:'')\n");
+
+        assertEquals(0, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1473
+    public void testConstructorReferences23() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo() {} \n" + // search for this
+            "  Foo(Map m) {}\n" +
+            "  String bar, baz\n" +
+            "}\n");
+        createUnit("Other", "def one = new p.Foo(), two = new p.Foo(baz:'')\n");
+
+        assertEquals(1, searchForReferences(foo.getType("Foo").getMethods()[0]).stream().count());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1473
+    public void testConstructorReferences24() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo() {} \n" +
+            "  Foo(Map m) {}\n" + // search for this
+            "  String bar, baz\n" +
+            "}\n");
+        createUnit("Other", "def one = new p.Foo(), two = new p.Foo(baz:'')\n");
+
+        assertEquals(1, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
+    }
+
+    @Test
+    public void testConstructorReferences25() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo() {} \n" + // search for this
+            "  Foo(String s) {}\n" +
+            "  String bar, baz;\n" +
+            "}\n");
+        createUnit("Other", "def map = [bar:'x',baz:'y']; def obj = new p.Foo(map)\n");
+
+        assertEquals(1, searchForReferences(foo.getType("Foo").getMethods()[0]).stream().count());
+    }
+
+    @Test
+    public void testConstructorReferences26() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo() {} \n" +
+            "  Foo(object) {}\n" + // search for this
+            "  String bar,baz\n" +
+            "}\n");
+        createUnit("Other", "def map = [bar:'x',baz:'y']; def obj = new p.Foo(map)\n");
+
+        assertEquals(1, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
+    }
+
+    @Test
+    public void testConstructorReferences27() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo() {} \n" +
+            "  Foo(... array) {}\n" + // search for this
+            "  String bar,baz\n" +
+            "}\n");
+        createUnit("Other", "def map = [bar:'x',baz:'y']; def obj = new p.Foo(map)\n");
+
+        assertEquals(1, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
     }
 
     @Test
@@ -435,8 +526,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo( ) {}\n" + // search for this
             "  Foo(a) {}\n" +
-            "}");
-        createUnit("", "Other", "import p.Foo as Bar\n" +
+            "}\n");
+        createUnit("Other", "import p.Foo as Bar\n" +
             "new Bar()\n" + // yes
             "new Bar(a)\n" + // no
             "new p.Foo()\n" + // yes
@@ -466,8 +557,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo( ) {}\n" + // search for this
             "  Foo(a) {}\n" +
-            "}");
-        createUnit("", "Other", "import p.Foo as Bar\n" +
+            "}\n");
+        createUnit("Other", "import p.Foo as Bar\n" +
             "new Bar()\n" + // yes
             "new Bar(a)\n"); // no
 
@@ -482,8 +573,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo( ) {}\n" + // search for this
             "  Foo(a) {}\n" +
-            "}");
-        createUnit("", "Other", // import p.Foo as Bar
+            "}\n");
+        createUnit("Other", // import p.Foo as Bar
             "new Bar()\n" + // yes
             "new Bar(a)\n"); // no
 
@@ -492,7 +583,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  imports {\n" +
             "    alias 'Bar', 'p.Foo'\n" +
             "  }\n" +
-            "}");
+            "}\n");
 
         IMethod constructor = foo.getType("Foo").getMethods()[0];
         List<SearchMatch> matches = searchForReferences(constructor);
@@ -505,8 +596,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "@Newify\n" +
             "def m() {\n" +
             "  Foo.new()\n" + // no
@@ -526,8 +617,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "@Newify\n" +
             "def m() {\n" +
             "  Foo.new()\n" + // no
@@ -547,8 +638,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "@Newify(Foo)\n" +
             "def m() {\n" +
             "  Foo()\n" + // no
@@ -568,8 +659,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  Foo(int i) {}\n" + // search for this
             "  Foo(String s) {}\n" +
-            "}");
-        createUnit("", "Bar", "import p.Foo\n" +
+            "}\n");
+        createUnit("Bar", "import p.Foo\n" +
             "@Newify(Foo)\n" +
             "def m() {\n" +
             "  Foo()\n" + // no
