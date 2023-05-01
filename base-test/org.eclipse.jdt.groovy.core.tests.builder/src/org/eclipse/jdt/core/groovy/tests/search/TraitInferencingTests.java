@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -447,6 +447,138 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "numbers", "java.lang.Number[]");
     }
 
+    @Test
+    public void testPublicField1() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  public String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPublicField2() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  public String field\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void m() {\n" +
+            "    T__field\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+
+        assertDeclType(source, "T__field", "T");
+        assertExprType(source, "T__field", "java.lang.String");
+    }
+
+    @Test
+    public void testPublicStaticField() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  public static String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPublicStaticFinalField() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  public static final String field = 'value'\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateField1() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateField2() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private String field\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void m() {\n" +
+            "    T__field\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+
+        assertDeclType(source, "T__field", "T");
+        assertExprType(source, "T__field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateStaticField() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private static String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateStaticFinalField() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private static final String field = 'value'\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
     //
 
     @Test
@@ -556,6 +688,25 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
         assertDeclType(contents, "m", "T");
         assertExprType(contents, "m", "java.lang.Void");
+    }
+
+    @Test
+    public void testPublicMethod6() {
+        //@formatter:off
+        String source =
+            "trait A<B> {\n" +
+            "  B m() {\n" +
+            "  }\n" +
+            "}\n" +
+            "class C<T> implements A<T> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked p() {\n" +
+            "  def x = new C<Number>().m()\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "m", "A<java.lang.Number>");
+        assertExprType(source, "x", "java.lang.Number");
     }
 
     @Test
@@ -708,74 +859,6 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPublicField1() {
-        //@formatter:off
-        String source =
-            "trait T {\n" +
-            "  public String field\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-        //@formatter:on
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    @Test
-    public void testPublicField2() {
-        //@formatter:off
-        String source =
-            "trait T {\n" +
-            "  public String field\n" +
-            "}\n" +
-            "class C implements T {\n" +
-            "  void m() {\n" +
-            "    T__field\n" +
-            "  }\n" +
-            "}";
-        //@formatter:on
-
-        assertDeclType(source, "T__field", "T");
-        assertExprType(source, "T__field", "java.lang.String");
-    }
-
-    @Test
-    public void testPublicStaticField() {
-        //@formatter:off
-        String source =
-            "trait T {\n" +
-            "  public static String field\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-        //@formatter:on
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    @Test
-    public void testPublicStaticFinalField() {
-        //@formatter:off
-        String source =
-            "trait T {\n" +
-            "  public static final String field = 'value'\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-        //@formatter:on
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    //
-
-    @Test
     public void testPrivateMethod1() {
         //@formatter:off
         String source =
@@ -876,71 +959,5 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
         assertDeclType(source, "check", "Auditable");
         assertExprType(source, "check", "java.lang.Boolean");
-    }
-
-    @Test
-    public void testPrivateField1() {
-        //@formatter:off
-        String source =
-            "trait T {\n" +
-            "  private String field\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-        //@formatter:on
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    @Test
-    public void testPrivateField2() {
-        //@formatter:off
-        String source =
-            "trait T {\n" +
-            "  private String field\n" +
-            "}\n" +
-            "class C implements T {\n" +
-            "  void m() {\n" +
-            "    T__field\n" +
-            "  }\n" +
-            "}";
-        //@formatter:on
-
-        assertDeclType(source, "T__field", "T");
-        assertExprType(source, "T__field", "java.lang.String");
-    }
-
-    @Test
-    public void testPrivateStaticField() {
-        //@formatter:off
-        String source =
-            "trait T {\n" +
-            "  private static String field\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-        //@formatter:on
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    @Test
-    public void testPrivateStaticFinalField() {
-        //@formatter:off
-        String source =
-            "trait T {\n" +
-            "  private static final String field = 'value'\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-        //@formatter:on
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
     }
 }
