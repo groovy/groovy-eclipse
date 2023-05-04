@@ -158,8 +158,29 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "", "Assertion failed");
     }
 
-    @Test
+    @Test // GROOVY-11041
     public void testRecordType7() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "print new Simple(1,'x').n()\n",
+
+            "Simple.groovy",
+            "record Simple(Number n, String s) {\n" +
+            "  Number n() {\n" +
+            "    n + 41\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testRecordType8() {
         assumeTrue(isParrotParser());
 
         //@formatter:off
@@ -185,7 +206,7 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testRecordType8() {
+    public void testRecordType9() {
         assumeTrue(isParrotParser());
 
         //@formatter:off
@@ -252,7 +273,7 @@ public final class RecordTypeTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testRecordType9() {
+    public void testRecordType10() {
         assumeTrue(isParrotParser());
 
         //@formatter:off

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "Test.groovy",
-            "@Grab('joda-time:joda-time:2.11.2;transitive=false')\n" +
+            "@Grab('joda-time:joda-time:2.12.5;transitive=false')\n" +
             "import org.joda.time.DateTime\n" +
             "void printDate() {\n" +
             "  def now = new DateTime()\n" +
@@ -67,7 +67,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
             "Test.groovy",
             "@Grapes([\n" +
-            "  @Grab('joda-time:joda-time:2.11.2;transitive=false'),\n" +
+            "  @Grab('joda-time:joda-time:2.12.5;transitive=false'),\n" +
             "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.x')\n" +
             "])\n" +
             "class Test {\n" +

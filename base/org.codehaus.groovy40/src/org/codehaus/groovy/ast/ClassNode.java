@@ -497,17 +497,15 @@ public class ClassNode extends AnnotatedNode {
 
     public Set<ClassNode> getAllInterfaces() {
         Set<ClassNode> result = new LinkedHashSet<>();
+        if (isInterface()) result.add(this);
         getAllInterfaces(result);
         return result;
     }
 
     private void getAllInterfaces(Set<ClassNode> set) {
-        if (isInterface()) {
-            set.add(this);
-        }
         for (ClassNode face : getInterfaces()) {
-            set.add(face);
-            face.getAllInterfaces(set);
+            if (set.add(face)) // GROOVY-11036
+                face.getAllInterfaces(set);
         }
     }
 
@@ -1533,6 +1531,9 @@ public class ClassNode extends AnnotatedNode {
     public GenericsType asGenericsType() {
         if (!isGenericsPlaceHolder()) {
             return new GenericsType(this);
+        } else if (genericsTypes != null
+                && genericsTypes[0].getUpperBounds() != null) {
+            return genericsTypes[0];
         } else {
             ClassNode upper = (redirect != null ? redirect : this);
             return new GenericsType(this, new ClassNode[]{upper}, null);

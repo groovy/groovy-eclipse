@@ -33,6 +33,10 @@ package dsld
     loggerType: 'org.apache.logging.log4j.core.Logger'
   ],
   [
+    annotation: 'groovy.util.logging.PlatformLog',
+    loggerType: 'java.lang.System.Logger'
+  ],
+  [
     annotation: 'groovy.util.logging.Slf4j',
     loggerType: 'org.slf4j.Logger'
   ]

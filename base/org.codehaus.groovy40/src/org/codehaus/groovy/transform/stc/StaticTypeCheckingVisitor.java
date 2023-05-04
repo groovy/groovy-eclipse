@@ -694,11 +694,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 Object val = pexp.getNodeMetaData(key);
                 if (val != null) vexp.putNodeMetaData(key, val);
             }
-            vexp.removeNodeMetaData(INFERRED_TYPE);
-            if (!asBoolean(getTemporaryTypesForExpression(vexp))) {
-                ClassNode type = pexp.getNodeMetaData(INFERRED_TYPE);
-                storeType(vexp, Optional.ofNullable(type).orElseGet(pexp::getType));
+            ClassNode type = pexp.getNodeMetaData(INFERRED_TYPE);
+            if (vexp.isClosureSharedVariable()) {
+                type = wrapTypeIfNecessary(type);
             }
+            if (type == null) type = OBJECT_TYPE;
+            vexp.putNodeMetaData(INFERRED_TYPE, type); // GROOVY-11007
             String receiver = vexp.getNodeMetaData(IMPLICIT_RECEIVER);
             Boolean dynamic = pexp.getNodeMetaData(DYNAMIC_RESOLUTION);
             // GROOVY-7701, GROOVY-7996: correct false assumption made by VariableScopeVisitor
@@ -1809,8 +1810,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     private boolean storeProperty(final PropertyNode property, final PropertyExpression expression, final ClassNode receiver, final ClassCodeVisitorSupport visitor, final String delegationData, final boolean lhsOfAssignment) {
         if (visitor != null) visitor.visitProperty(property);
-        ClassNode propertyType = property.getOriginType();
 
+        ClassNode propertyType = property.getOriginType();
         storeWithResolve(propertyType, receiver, property.getDeclaringClass(), property.isStatic(), expression);
 
         if (delegationData != null) {
@@ -1818,19 +1819,28 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         if (Modifier.isFinal(property.getModifiers())) {
             expression.putNodeMetaData(READONLY_PROPERTY, Boolean.TRUE);
-            if (!lhsOfAssignment) {
-                MethodNode implicitGetter = new MethodNode(property.getGetterNameOrDefault(), Opcodes.ACC_PUBLIC, propertyType, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
-                implicitGetter.setDeclaringClass(property.getDeclaringClass());
-                extension.onMethodSelection(expression, implicitGetter);
-            }
         } else {
             expression.removeNodeMetaData(READONLY_PROPERTY);
-            if (lhsOfAssignment) {
-                MethodNode implicitSetter = new MethodNode(property.getSetterNameOrDefault(), Opcodes.ACC_PUBLIC, VOID_TYPE, new Parameter[] {new Parameter(propertyType, "value")}, ClassNode.EMPTY_ARRAY, null);
-                implicitSetter.setDeclaringClass(property.getDeclaringClass());
-                extension.onMethodSelection(expression, implicitSetter);
-            }
         }
+
+        String methodName;
+        ClassNode returnType;
+        Parameter[] parameters;
+        if (!lhsOfAssignment) {
+            methodName = property.getGetterNameOrDefault();
+            returnType = propertyType;
+            parameters = Parameter.EMPTY_ARRAY;
+        } else {
+            methodName = property.getSetterNameOrDefault();
+            returnType = VOID_TYPE;
+            parameters = new Parameter[] {new Parameter(propertyType, "value")};
+        }
+        MethodNode accessMethod = new MethodNode(methodName, Opcodes.ACC_PUBLIC | (property.isStatic() ? Opcodes.ACC_STATIC : 0), returnType, parameters, ClassNode.EMPTY_ARRAY, null);
+        accessMethod.setDeclaringClass(property.getDeclaringClass());
+        accessMethod.setSynthetic(true);
+
+        expression.putNodeMetaData(DIRECT_METHOD_CALL_TARGET, accessMethod); // GROOVY-11029
+        extension.onMethodSelection(expression, accessMethod);
         return true;
     }
 
@@ -2484,7 +2494,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                 result = new ArrayList<>(result.size());
                 result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.TRUE), signature));
-                if (!staticAndNonStatic.get(Boolean.FALSE).isEmpty()) {
+                if (result.isEmpty() && !staticAndNonStatic.get(Boolean.FALSE).isEmpty()) { // GROOVY-11009
                     if (signature.length > 0) signature= Arrays.copyOfRange(signature, 1, signature.length);
                     result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.FALSE), signature));
                 }
@@ -2985,15 +2995,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
 
                     for (GenericsType tp : typeParameters) {
-                        context.computeIfAbsent(new GenericsTypeName(tp.getName()), x -> fullyResolve(tp, context));
+                        GenericsTypeName name = new GenericsTypeName(tp.getName());
+                        context.computeIfAbsent(name, x -> fullyResolve(tp, context));
                     }
                 }
             }
 
-            ClassNode[] samParamTypes = GenericsUtils.parameterizeSAM(applyGenericsContext(context, target.getType())).getV1();
-
             ClassNode[] paramTypes = expression.getNodeMetaData(CLOSURE_ARGUMENTS);
             if (paramTypes == null) {
+                ClassNode targetType = target.getType();
+                if (targetType != null && targetType.isGenericsPlaceHolder())
+                    targetType = getCombinedBoundType(targetType.asGenericsType());
+                targetType = applyGenericsContext(context, targetType); // fill place-holders
+                ClassNode[] samParamTypes = GenericsUtils.parameterizeSAM(targetType).getV1();
+
                 int n; Parameter[] p = expression.getParameters();
                 if (p == null) {
                     // zero parameters
@@ -5225,36 +5240,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return exp.getNodeMetaData(INFERRED_RETURN_TYPE);
     }
 
-    protected ClassNode inferListExpressionType(final ListExpression list) {
-        List<Expression> expressions = list.getExpressions();
-        int nExpressions = expressions.size();
-        if (nExpressions == 0) {
-            return list.getType();
-        }
-        ClassNode listType = list.getType();
-        GenericsType[] genericsTypes = listType.getGenericsTypes();
-        if ((genericsTypes == null
-                || genericsTypes.length == 0
-                || (genericsTypes.length == 1 && isObjectType(genericsTypes[0].getType())))) {
-            // maybe we can infer the component type
-            List<ClassNode> nodes = new ArrayList<>(nExpressions);
-            for (Expression expression : expressions) {
-                if (isNullConstant(expression)) {
-                    // a null element is found in the list, skip it because we'll use the other elements from the list
-                } else {
-                    nodes.add(getType(expression));
-                }
-            }
-            if (!nodes.isEmpty()) {
-                ClassNode itemType = lowestUpperBound(nodes);
-
-                listType = listType.getPlainNodeReference();
-                listType.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(itemType))});
-            }
-        }
-        return listType;
-    }
-
     protected static boolean isNullConstant(final Expression expression) {
         return expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression();
     }
@@ -5267,38 +5252,70 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return expression instanceof VariableExpression && ((VariableExpression) expression).isSuperExpression();
     }
 
+    protected ClassNode inferListExpressionType(final ListExpression list) {
+        ClassNode listType = list.getType();
+
+        GenericsType[] genericsTypes = listType.getGenericsTypes();
+        if (!asBoolean(genericsTypes)
+                || (genericsTypes.length == 1 && genericsTypes[0].isPlaceholder())) {
+            // maybe infer the element type
+            List<ClassNode> expressionTypes = list.getExpressions().stream()
+                .filter(e -> !isNullConstant(e)).map(this::getType).collect(Collectors.toList());
+            if (!expressionTypes.isEmpty()) {
+                ClassNode subType = lowestUpperBound(expressionTypes);
+                genericsTypes = new GenericsType[]{new GenericsType(wrapTypeIfNecessary(subType))};
+            } else { // GROOVY-11028
+                GenericsType[] typeVars = listType.redirect().getGenericsTypes();
+                Map<GenericsTypeName, GenericsType> spec = extractGenericsConnectionsFromArguments(
+                    typeVars, Parameter.EMPTY_ARRAY, ArgumentListExpression.EMPTY_ARGUMENTS, null);
+                genericsTypes = applyGenericsContext(spec, typeVars);
+            }
+            listType = listType.getPlainNodeReference();
+            listType.setGenericsTypes(genericsTypes);
+        }
+
+        return listType;
+    }
+
     protected ClassNode inferMapExpressionType(final MapExpression map) {
-        ClassNode mapType = LinkedHashMap_TYPE.getPlainNodeReference();
-        List<MapEntryExpression> entryExpressions = map.getMapEntryExpressions();
-        int nExpressions = entryExpressions.size();
-        if (nExpressions == 0) return mapType;
+        ClassNode mapType = map.getType();
 
         GenericsType[] genericsTypes = mapType.getGenericsTypes();
-        if (genericsTypes == null
-                || genericsTypes.length < 2
-                || (genericsTypes.length == 2 && isObjectType(genericsTypes[0].getType()) && isObjectType(genericsTypes[1].getType()))) {
-            ClassNode keyType;
-            ClassNode valueType;
-            List<ClassNode> keyTypes = new ArrayList<>(nExpressions);
-            List<ClassNode> valueTypes = new ArrayList<>(nExpressions);
-            for (MapEntryExpression entryExpression : entryExpressions) {
-                valueType = getType(entryExpression.getValueExpression());
-                if (!(entryExpression.getKeyExpression() instanceof SpreadMapExpression)) {
-                    keyType = getType(entryExpression.getKeyExpression());
-                } else { // GROOVY-7247
-                    valueType = GenericsUtils.parameterizeType(valueType, MAP_TYPE);
-                    keyType = getCombinedBoundType(valueType.getGenericsTypes()[0]);
-                    valueType = getCombinedBoundType(valueType.getGenericsTypes()[1]);
+        if (!asBoolean(genericsTypes)
+                || (genericsTypes.length == 2 && genericsTypes[0].isPlaceholder() && genericsTypes[1].isPlaceholder())) {
+            // maybe infer the entry type
+            List<MapEntryExpression> entryExpressions = map.getMapEntryExpressions();
+            int nExpressions = entryExpressions.size();
+            if (nExpressions != 0) {
+                ClassNode keyType;
+                ClassNode valueType;
+                List<ClassNode> keyTypes = new ArrayList<>(nExpressions);
+                List<ClassNode> valueTypes = new ArrayList<>(nExpressions);
+                for (MapEntryExpression entryExpression : entryExpressions) {
+                    valueType = getType(entryExpression.getValueExpression());
+                    if (!(entryExpression.getKeyExpression() instanceof SpreadMapExpression)) {
+                        keyType = getType(entryExpression.getKeyExpression());
+                    } else { // GROOVY-7247
+                        valueType = GenericsUtils.parameterizeType(valueType, MAP_TYPE);
+                        keyType = getCombinedBoundType(valueType.getGenericsTypes()[0]);
+                        valueType = getCombinedBoundType(valueType.getGenericsTypes()[1]);
+                    }
+                    keyTypes.add(keyType);
+                    valueTypes.add(valueType); // TODO: skip null value
                 }
-                keyTypes.add(keyType);
-                valueTypes.add(valueType);
+                keyType = lowestUpperBound(keyTypes);
+                valueType = lowestUpperBound(valueTypes);
+                genericsTypes = new GenericsType[]{new GenericsType(wrapTypeIfNecessary(keyType)), new GenericsType(wrapTypeIfNecessary(valueType))};
+            } else { // GROOVY-11028
+                GenericsType[] typeVars = LinkedHashMap_TYPE.getGenericsTypes();
+                Map<GenericsTypeName, GenericsType> spec = extractGenericsConnectionsFromArguments(
+                    typeVars, Parameter.EMPTY_ARRAY, ArgumentListExpression.EMPTY_ARGUMENTS, null);
+                genericsTypes = applyGenericsContext(spec, typeVars);
             }
-            keyType = lowestUpperBound(keyTypes);
-            valueType = lowestUpperBound(valueTypes);
-            if (!isObjectType(keyType) || !isObjectType(valueType)) {
-                mapType.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(keyType)), new GenericsType(wrapTypeIfNecessary(valueType))});
-            }
+            mapType = LinkedHashMap_TYPE.getPlainNodeReference();
+            mapType.setGenericsTypes(genericsTypes);
         }
+
         return mapType;
     }
 
@@ -5435,7 +5452,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 GenericsType xxx = new GenericsType(ClassHelper.makeWithoutCaching("#"),
                         applyGenericsContext(resolvedPlaceholders, gt.getUpperBounds()),
                         applyGenericsContext(resolvedPlaceholders, gt.getLowerBound()));
-                xxx.getType().setRedirect(gt.getType().redirect());
+                xxx.getType().setRedirect(getCombinedBoundType(gt));
                 xxx.putNodeMetaData(GenericsType.class, gt);
                 xxx.setName("#" + gt.getName());
                 xxx.setPlaceholder(true);

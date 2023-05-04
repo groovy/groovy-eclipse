@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.eclipse.jdt.core.groovy.tests.search;
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
 import org.junit.Test;
 
@@ -98,7 +100,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  Map map = [:]\n" +
             "}\n";
 
-        assertType(contents, "map", "java.util.LinkedHashMap");
+        assertType(contents, "map", "java.util.LinkedHashMap" + (!isAtLeastGroovy(40) ? "" : "<java.lang.Object,java.lang.Object>"));
     }
 
     @Test

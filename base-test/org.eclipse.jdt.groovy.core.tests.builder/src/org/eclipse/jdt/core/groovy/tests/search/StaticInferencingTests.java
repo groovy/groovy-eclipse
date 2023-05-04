@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -746,7 +746,9 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO";
+        assertKnown(contents, "p.Other", "p.Other", "p.Other");
         assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
+        assertKnown(contents + "\nFOO", "FOO", "p.Other", "java.lang.Integer");
     }
 
     @Test
@@ -754,27 +756,14 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO as BAR";
+        assertKnown(contents, "p.Other", "p.Other", "p.Other");
         assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
+        assertKnown(contents + "\nBAR", "BAR", "p.Other", "java.lang.Integer");
+        assertUnknown(contents + "\nFOO", "FOO");
     }
 
     @Test
     public void testStaticImport3() {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
-
-        String contents = "import static p.Other.FOO\nFOO";
-        assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
-    }
-
-    @Test
-    public void testStaticImport4() {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
-
-        String contents = "import static p.Other.FOO as BAR\nFOO";
-        assertUnknown(contents, "FOO");
-    }
-
-    @Test
-    public void testStaticImport5() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FO";
@@ -782,38 +771,115 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport6() {
+    public void testStaticImport4() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
-        String contents = "import static p.Other.BAR\nBAR";
-        int offset = contents.indexOf("BAR");
-        assertType(contents, offset, offset + "BAR".length(), "java.lang.Boolean");
-        offset = contents.lastIndexOf("BAR");
-        assertType(contents, offset, offset + "BAR".length(), "java.lang.Boolean");
+        String contents = "import static p.Other.BAR";
+        assertKnown(contents, "BAR", "p.Other", "java.lang.Boolean");
+        assertKnown(contents + "\nBAR", "BAR", "p.Other", "java.lang.Boolean");
     }
 
     @Test
-    public void testStaticImport7() {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
-
-        String contents = "import static p.Other.FOO\nFOO";
-        assertKnown(contents, "p.Other", "p.Other", "p.Other");
-    }
-
-    @Test
-    public void testStaticImport8() {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
-
-        String contents = "import static p.Other.FOO as BAR\nFOO";
-        assertKnown(contents, "p.Other", "p.Other", "p.Other");
-    }
-
-    @Test
-    public void testStaticImport9() {
+    public void testStaticImport5() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.*\nFOO";
         assertKnown(contents, "p.Other", "p.Other", "p.Other");
+        assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
+    }
+
+    @Test
+    public void testStaticImport6() {
+        createUnit("p", "Other", "package p\nclass Other { public static int FOO}");
+
+        String contents =
+            "import static p.Other.FOO as bar\n" +
+            "class C {\n" +
+            "  def FOO\n" +
+            "  void m() {\n" +
+            "    def x = bar;\n" +
+            "    bar = x\n" +
+            "  }\n" +
+            "\n}";
+
+        int offset = contents.indexOf("bar;");
+        assertType(contents, offset, offset + 3, "java.lang.Integer");
+        assertDeclaration(contents, offset, offset + 3, "p.Other", "FOO", DeclarationKind.FIELD);
+
+        /**/offset = contents.lastIndexOf("bar");
+        assertType(contents, offset, offset + 3, "java.lang.Integer");
+        assertDeclaration(contents, offset, offset + 3, "p.Other", "FOO", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testStaticImport7() {
+        createUnit("p", "Other", "package p\nclass Other { public static int FOO}");
+
+        String contents =
+            "import static p.Other.FOO as bar\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  def FOO\n" +
+            "  void m() {\n" +
+            "    def x = bar;\n" +
+            "    bar = x\n" +
+            "  }\n" +
+            "\n}";
+
+        int offset = contents.indexOf("bar;");
+        assertType(contents, offset, offset + 3, "java.lang.Integer");
+        assertDeclaration(contents, offset, offset + 3, "p.Other", "FOO", DeclarationKind.FIELD);
+
+        /**/offset = contents.lastIndexOf("bar");
+        assertType(contents, offset, offset + 3, "java.lang.Integer");
+        assertDeclaration(contents, offset, offset + 3, "p.Other", "FOO", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testStaticImport8() {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO}");
+
+        String contents =
+            "import static p.Other.FOO as bar\n" +
+            "class C {\n" +
+            "  def FOO\n" +
+            "  void m() {\n" +
+            "    def x = bar;\n" +
+            "    bar = x\n" +
+            "  }\n" +
+            "\n}";
+
+        int offset = contents.indexOf("bar;");
+        assertType(contents, offset, offset + 3, "java.lang.Integer");
+        assertDeclaration(contents, offset, offset + 3, "p.Other", "getFOO", DeclarationKind.METHOD);
+
+        /**/offset = contents.lastIndexOf("bar");
+        assertType(contents, offset, offset + 3, "java.lang.Void");
+        assertDeclaration(contents, offset, offset + 3, "p.Other", "setFOO", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testStaticImport9() {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO}");
+
+        String contents =
+            "import static p.Other.FOO as bar\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  def FOO\n" +
+            "  void m() {\n" +
+            "    def x = bar;\n" +
+            "    bar = x\n" +
+            "  }\n" +
+            "\n}";
+
+        int offset = contents.indexOf("bar;");
+        assertType(contents, offset, offset + 3, "java.lang.Integer");
+        assertDeclaration(contents, offset, offset + 3, "p.Other", "getFOO", DeclarationKind.METHOD);
+
+        /**/offset = contents.lastIndexOf("bar");
+        assertType(contents, offset, offset + 3, "java.lang.Void");
+        assertDeclaration(contents, offset, offset + 3, "p.Other", "setFOO", DeclarationKind.METHOD);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/539
@@ -861,9 +927,9 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "\n";
         int offset = contents.indexOf("isSomething(s)");
         assertDeclaringType(contents, offset, offset + "isSomething".length(), "p.A");
-            offset = contents.indexOf("isSomething(i)");
+        /**/offset = contents.indexOf("isSomething(i)");
         assertDeclaringType(contents, offset, offset + "isSomething".length(), "p.B");
-            offset = contents.indexOf("isSomething(a)");
+        /**/offset = contents.indexOf("isSomething(a)");
         assertDeclaringType(contents, offset, offset + "isSomething".length(), "C");
     }
 
@@ -885,9 +951,9 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "\n";
         int offset = contents.indexOf("isSomething(s)");
         assertDeclaringType(contents, offset, offset + "isSomething".length(), "p.A");
-            offset = contents.indexOf("isSomething(i)");
+        /**/offset = contents.indexOf("isSomething(i)");
         assertDeclaringType(contents, offset, offset + "isSomething".length(), "p.B");
-            offset = contents.indexOf("isSomething(a)");
+        /**/offset = contents.indexOf("isSomething(a)");
         assertDeclaringType(contents, offset, offset + "isSomething".length(), "C");
     }
 
@@ -906,9 +972,9 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "wasSomething(a)\n";
         int offset = contents.indexOf("wasSomething(s)");
         assertDeclaringType(contents, offset, offset + "wasSomething".length(), "p.A");
-            offset = contents.indexOf("wasSomething(i)");
+        /**/offset = contents.indexOf("wasSomething(i)");
         assertDeclaringType(contents, offset, offset + "wasSomething".length(), "p.B");
-            offset = contents.indexOf("wasSomething(a)");
+        /**/offset = contents.indexOf("wasSomething(a)");
         assertDeclaringType(contents, offset, offset + "wasSomething".length(), DEFAULT_UNIT_NAME);
     }
 

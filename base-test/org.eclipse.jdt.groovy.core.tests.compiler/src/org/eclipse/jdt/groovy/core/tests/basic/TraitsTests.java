@@ -3085,4 +3085,25 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
                 "----------\n");
         }
     }
+
+    @Test
+    public void testTraits11012() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait Bar<T> {\n" +
+            "  T get(x,y) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class Foo<V> implements Bar<V> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked test(Foo<Number> foo) {\n" +
+            "  Number x = foo.get(null, null)\n" + // Cannot assign value of type Object to variable of type Number
+            "}\n" +
+            "test(new Foo<Number>())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }

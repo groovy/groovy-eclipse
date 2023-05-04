@@ -8142,4 +8142,33 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "[works]");
     }
+
+    @Test
+    public void testCompileStatic11029() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Foo {\n" +
+            "  Object myThing\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar extends Foo {\n" +
+            "  @Override\n" +
+            "  Object getMyThing() {\n" +
+            "    super.myThing\n" +
+            "  }\n" +
+            "  @Override\n" +
+            "  void setMyThing(Object object) {\n" +
+            "    super.myThing = object\n" +
+            "  }\n" +
+            "}\n" +
+            "def bar = new Bar()\n" +
+            "def value = 'works'\n" +
+            "bar.myThing = value\n" +
+            "print(bar.myThing);\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
