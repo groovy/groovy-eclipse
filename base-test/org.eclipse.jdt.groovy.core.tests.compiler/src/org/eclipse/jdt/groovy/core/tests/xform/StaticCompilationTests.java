@@ -69,7 +69,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tls.add('abc')\n" +
             "\t^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n"
+                : "find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n");
     }
 
@@ -897,7 +900,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
+    @Test // see GROOVY-5001, GROOVY-5491, GROOVY-6144, GROOVY-8788
     public void testCompileStatic5517() {
         //@formatter:off
         String[] sources = {
@@ -916,7 +919,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  value = map['foo']\n" +
             "  assert value == 4.5\n" +
             "  value = map.version\n" +
-            "  assert value == null\n" +
+            "  assert value == " + (isAtLeastGroovy(50) ? "666" : "null") + "\n" +
             "  assert M.version == 666\n" +
             "}\n" +
             "test()\n",
@@ -1356,7 +1359,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources);
+        if (!isAtLeastGroovy(50)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 8)\n" +
+                "\tr.delete('foo')\n" +
+                "\t^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot call Repository#delete(java.lang.Long) with arguments [java.lang.String]\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -2614,7 +2627,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42");
+        runConformTest(sources, isAtLeastGroovy(50) ? "1" : "42");
     }
 
     @Test
@@ -2994,7 +3007,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList<java.util.TreeMap<java.lang.String, java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.TreeMap<java.lang.String, java.lang.Integer>>]\n"
+                : "find matching method A#getFirstRecord(java.util.ArrayList<java.util.TreeMap<java.lang.String, java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n");
     }
 
@@ -3024,7 +3040,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Long>>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Long>>]\n"
+                : "find matching method A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Long>>). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n");
     }
 
@@ -3054,7 +3073,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.StringBuffer, java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.HashMap<java.lang.StringBuffer, java.lang.Integer>>]\n"
+                : "find matching method A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.StringBuffer, java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n");
     }
 
@@ -3226,7 +3248,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@CompileStatic void test(Set one, Set two) {\n" +
             "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
             "    def target = node.rightExpression.getNodeMetaData(DIRECT_METHOD_CALL_TARGET)\n" +
-            "    assert target.declaringClass.name == 'java.util.Set'\n" +
+            "    assert target.declaringClass.name == 'java.util." + (isAtLeastGroovy(50) ? "Collection" : "Set") + "'\n" +
             "  })\n" +
             "  def three = one.intersect(two)\n" + // Set#intersect(Iterable) vs Collection#intersect(Collection)
             "  print three\n" +
@@ -3251,8 +3273,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Main$_test_closure1.doCall()" +
-            " is applicable for argument types: (Integer) values: [0]");
+        if (isAtLeastGroovy(50)) {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 3)\n" +
+                "\t[0].each { -> }\n" +
+                "\t         ^^^^^^\n" +
+                "Groovy:Incorrect number of parameters. Expected 1 but found 0\n" +
+                "----------\n");
+        } else {
+            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Main$_test_closure1.doCall() is applicable for argument types: (Integer) values: [0]");
+        }
     }
 
     @Test
@@ -3533,7 +3564,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    return copy\n" +
             "  }\n" +
             "}\n" +
-            "new TaskConfig().clone()\n",
+            "def tc = new TaskConfig().clone()\n" +
+            "assert (tc instanceof TaskConfig)\n",
         };
         //@formatter:on
 
@@ -7295,9 +7327,12 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 5)\n" +
-            "\tprint(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), List::size)))\n" +
-            "\t                                                                           ^^^^^^^^^^\n" +
-            "Groovy:Failed to find class method 'size(java.lang.String)' or instance method 'size()' for the type: java.util.List\n" +
+              "\tprint(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), List::size)))\n" + (isAtLeastGroovy(50)
+            ? "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+              "Groovy:[Static type checking] - Cannot call <R,A> java.util.stream.Stream#collect(java.util.stream.Collector<? super java.lang.String, A, R>) with arguments [java.util.stream.Collector<java.util.List, ?, java.util.Map<java.lang.String, java.lang.Integer>>]\n"
+            : "\t                                                                           ^^^^^^^^^^\n" +
+              "Groovy:Failed to find class method 'size(java.lang.String)' or instance method 'size()' for the type: java.util.List\n"
+            ) +
             "----------\n");
     }
 
@@ -7438,7 +7473,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "null");
 
         checkDisassemblyFor("C$_b_closure1.class",
-            "  // Signature: ()Ljava/util/List<Ljava/util/Map<Ljava/lang/String;+Ljava/lang/Object;>;>;\n"); // not L?;
+            "  // Signature: ()Ljava/util/" + (isAtLeastGroovy(50) ? "Array" : "") + "List<Ljava/util/Map<Ljava/lang/String;+Ljava/lang/Object;>;>;\n"); // not L?;
     }
 
     @Test // BiFunction and BinaryOperator with same type parameter

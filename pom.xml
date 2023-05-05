@@ -42,6 +42,7 @@
 	<modules>
 		<module>base/org.codehaus.groovy30</module>
 		<module>base/org.codehaus.groovy40</module>
+		<module>base/org.codehaus.groovy50</module>
 
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
 		<module>base/org.codehaus.groovy.eclipse.frameworkAdapter</module>
@@ -60,6 +61,7 @@
 
 		<module>ide/Feature-org.codehaus.groovy30.feature</module>
 		<module>ide/Feature-org.codehaus.groovy40.feature</module>
+		<module>ide/Feature-org.codehaus.groovy50.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.compilerless.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>

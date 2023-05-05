@@ -79,8 +79,10 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tints.add(\'abc\')\n" +
             "\t^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)." +
-            " Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n"
+                : "find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 6)\n" +
             "\tints << 'def'\n" +
@@ -1004,7 +1006,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tc(['x'])\n" +
             "\t  ^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call closure that accepts [java.util.List<java.lang.Number>] with [java.util.List<java.lang.String>]\n" +
+            "Groovy:[Static type checking] - Cannot call closure that accepts [java.util.List<java.lang.Number>] with [java.util." + (isAtLeastGroovy(50) ? "Array" : "") + "List<java.lang.String>]\n" +
             "----------\n");
     }
 
@@ -2135,7 +2137,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tm([1,2,3])\n" +
             "\t^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method Main#m(java.util.List<java.lang.Integer>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Main#m(java.util." + (isAtLeastGroovy(50) ? "Array" : "") + "List<java.lang.Integer>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -2414,7 +2416,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\treturn list\n" +
             "\t       ^^^^\n" +
-            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.List<java.lang.Object> to: java.util.List<java.lang.String>\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util." + (isAtLeastGroovy(50) ? "Array" : "") + "List<java.lang.Object> to: java.util.List<java.lang.String>\n" +
             "----------\n");
     }
 
@@ -3147,12 +3149,18 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "2. ERROR in Main.groovy (at line 21)\n" +
             "\tstringProperty.eq(1234)\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method TypedProperty#eq(int). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call TypedProperty#eq(java.lang.String) with arguments [int]\n"
+                : "find matching method TypedProperty#eq(int). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n" +
             "3. ERROR in Main.groovy (at line 22)\n" +
             "\tnumberProperty.eq('xx')\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method TypedProperty#eq(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call TypedProperty#eq(java.lang.Number) with arguments [java.lang.String]\n"
+                : "find matching method TypedProperty#eq(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n");
     }
 
@@ -3968,7 +3976,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "2. ERROR in Main.groovy (at line 4)\n" +
             "\tDeque<String> deque = ['x','y']\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot assign value of type java.util.List<java.lang.String> to variable of type java.util.Deque<java.lang.String>\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util." + (isAtLeastGroovy(50) ? "Array" : "") + "List<java.lang.String> to variable of type java.util.Deque<java.lang.String>\n" +
             "----------\n");
     }
 
@@ -4124,7 +4132,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
-            "def <T extends Number> void printNumbers(Class<T> numberType) {\n" +
+            "def <N extends Number> void printNumbers(Class<N> numberType) {\n" +
             "  Collections.singleton(numberType.newInstance(42)).stream()\n" +
             "    .filter { n -> n.intValue() > 0 }\n" +
             "    .forEach { n -> print n }\n" +
@@ -6149,7 +6157,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "works", "groovy.lang.MissingPropertyException: No such property: value for class: Face");
+        runConformTest(sources, isAtLeastGroovy(50) ? "worksworks" : "works",
+            isAtLeastGroovy(50) ? "" : "groovy.lang.MissingPropertyException: No such property: value for class: Face");
     }
 
     @Test

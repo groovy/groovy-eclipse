@@ -51,6 +51,8 @@ public final class ConfigurationTests {
 
         String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
         String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", "16", "17", x18x, x19x, x20x, x21x, x21x};
+
+        if (isAtLeastGroovy(50)) Arrays.fill(expect, 0, 14, "11");
         assertArrayEquals(expect, Arrays.stream(inputs).map(v -> { config.setTargetBytecode(v); return config.getTargetBytecode(); }).toArray(String[]::new));
     }
 }

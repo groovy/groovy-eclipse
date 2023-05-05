@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,8 @@ abstract class RefactoringTestSuite {
         fWasAutobuild = CoreUtility.setAutoBuilding(false)
         fWasOptions = JavaCore.getOptions()
         JavaCore.getDefaultOptions().with {
-            JavaCore.setComplianceOptions('1.8', it)
+            JavaCore.setComplianceOptions('11', it)
+
             put(JavaCore.COMPILER_PB_DEAD_CODE,             JavaCore.IGNORE)
             put(JavaCore.COMPILER_PB_FIELD_HIDING,          JavaCore.IGNORE)
             put(JavaCore.COMPILER_PB_LOCAL_VARIABLE_HIDING, JavaCore.IGNORE)

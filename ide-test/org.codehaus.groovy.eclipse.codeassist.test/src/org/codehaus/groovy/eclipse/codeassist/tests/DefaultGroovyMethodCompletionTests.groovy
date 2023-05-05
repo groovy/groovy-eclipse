@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -297,7 +297,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testNoDups1() {
         ICompletionProposal[] proposals = createProposalsAtOffset('[].collectEnt', 13)
-        proposalExists(proposals, 'collectEntries', 4) // (), (Map), (Closure), (Map,Closure)
+        proposalExists(proposals, 'collectEntries', isAtLeastGroovy(50) ? 6 : 4) // (), (Map), (Closure), (Map,Closure), (Function,Function), (Map,Function,Function)
     }
 
     @Test // GRECLIPSE-1422

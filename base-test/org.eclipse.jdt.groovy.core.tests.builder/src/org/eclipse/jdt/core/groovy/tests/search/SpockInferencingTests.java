@@ -34,6 +34,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             spockCorePath = "lib/spock-core-2.3-groovy-3.0.jar";
         }
         env.addJar(project.getFullPath(), spockCorePath);
+        if (isAtLeastGroovy(50)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
         env.addEntry(project.getFullPath(), JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
     }
 

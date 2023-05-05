@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,9 +77,9 @@ public class TestProject {
 
         addNature(JavaCore.NATURE_ID);
         javaProject = JavaCore.create(project);
-        javaProject.setOption(CompilerOptions.OPTION_Source, "1.8");
-        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.8");
-        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.8");
+        javaProject.setOption(CompilerOptions.OPTION_Source, "11");
+        javaProject.setOption(CompilerOptions.OPTION_Compliance, "11");
+        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "11");
 
         javaProject.setRawClasspath(new IClasspathEntry[] {
             JavaCore.newSourceEntry(srcFolder.getFullPath()),

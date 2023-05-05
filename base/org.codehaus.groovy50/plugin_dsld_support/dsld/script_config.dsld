@@ -1,0 +1,49 @@
+/*
+ * Copyright 2009-2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package dsld
+
+assertVersion(groovyEclipse: '3.2.0')
+
+contribute(enclosingScript(isConfigScript()) & isThisType()) {
+    property name: 'configuration', type: org.codehaus.groovy.control.CompilerConfiguration
+    delegatesTo type: org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder
+}
+
+contribute(enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+    provider = '{@link org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder CompilerCustomizationBuilder}'
+
+    method name:'ast', type:void, params:[xform:'Class<? extends java.lang.annotation.Annotation>'], optionalParams:[named_args:Map]
+
+    method name:'customizers', type:void, params:[customizers:'Collection<? extends org.codehaus.groovy.control.customizers.CompilationCustomizer>']
+
+    method name:'imports', type:void, params:[block:'@DelegatesTo(org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper) Closure']
+
+    method name:'inline', type:void, params:[code:'@ClosureParams(value=SimpleType, options=["org.codehaus.groovy.control.SourceUnit","org.codehaus.groovy.classgen.GeneratorContext","org.codehaus.groovy.ast.ClassNode"]) Closure'], namedParams:[phase:String], optionalParams:[superClass:Class, interfaces:Class[]]
+
+    method name:'secureAst', type:void, params:[block: '@DelegatesTo(value=org.codehaus.groovy.control.customizers.SecureASTCustomizer, strategy=1) Closure']
+
+    method name:'source', type:void, params:[block: Closure], optionalParams:[
+                basename: String,
+                basenames: String[],
+                basenameValidator: '@ClosureParams(value=SimpleType, options=["java.lang.String"]) Closure<Boolean>',
+                extension: String,
+                extensions: String[],
+                extensionValidator: '@ClosureParams(value=SimpleType, options=["java.lang.String"]) Closure<Boolean>',
+                unitValidator: '@ClosureParams(value=SimpleType, options=["org.codehaus.groovy.control.SourceUnit"]) Closure<Boolean>',
+                classValidator: '@ClosureParams(value=SimpleType, options=["org.codehaus.groovy.ast.ClassNode"]) Closure<Boolean>'
+            ],
+            provider:'{@link org.codehaus.groovy.control.customizers.builder.SourceAwareCustomizerFactory SourceAwareCustomizerFactory}'
+}

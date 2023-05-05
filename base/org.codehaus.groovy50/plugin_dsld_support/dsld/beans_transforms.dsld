@@ -1,0 +1,237 @@
+/*
+ * Copyright 2009-2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package dsld
+
+import java.beans.PropertyChangeListener
+import java.beans.VetoableChangeListener
+
+import org.codehaus.groovy.ast.*
+
+import static org.apache.groovy.util.BeanUtils.capitalize
+
+/**
+ * Hackergarten contribution
+ *
+ * @author Andres Almiray
+ * @author Tom Bujok (reficio.org)
+ */
+contribute(currentType(annotatedBy(groovy.beans.Bindable) | fields(annotatedBy(groovy.beans.Bindable)))) {
+    provider = '{@link groovy.beans.Bindable Bindable} AST transform'
+
+    method name: 'addPropertyChangeListener',
+        type: void,
+        params: [propertyName: String, listener: PropertyChangeListener],
+        doc: '''\
+            Add a PropertyChangeListener to the listener list. The listener is registered for all properties.
+            The same listener object may be added more than once, and will be called as many times as it is added.
+            If listener is null, no exception is thrown and no action is taken.
+            @param listener The PropertyChangeListener to be added
+            '''.stripIndent()
+
+    method name: 'addPropertyChangeListener',
+        type: void,
+        params: [listener: PropertyChangeListener],
+        doc: '''\
+            Add a PropertyChangeListener for a specific property. The listener will be invoked only when a call on
+            firePropertyChange names that specific property. The same listener object may be added more than once.
+            For each property, the listener will be invoked the number of times it was added for that property.
+            If propertyName or listener is null, no exception is thrown and no action is taken.
+            @param propertyName The name of the property to listen on.
+            @param listener The PropertyChangeListener to be added
+            '''.stripIndent()
+
+    method name: 'removePropertyChangeListener',
+        type: void,
+        params: [propertyName: String, listener: PropertyChangeListener],
+        doc: '''\
+            Remove a PropertyChangeListener for a specific property. If listener was added more than once to the same
+            event source for the specified property, it will be notified one less time after being removed. If
+            propertyName is null, no exception is thrown and no action is taken. If listener is null, or was never
+            added for the specified property, no exception is thrown and no action is taken.
+            @param propertyName The name of the property that was listened on.
+            @param listener The PropertyChangeListener to be removed
+            '''.stripIndent()
+
+    method name: 'removePropertyChangeListener',
+        type: void,
+        params: [listener: PropertyChangeListener],
+        doc: '''\
+            Remove a PropertyChangeListener from the listener list. This removes a PropertyChangeListener that was
+            registered for all properties. If listener was added more than once to the same event source, it will
+            be notified one less time after being removed. If listener is null, or was never added, no exception is
+            thrown and no action is taken.
+            @param listener The PropertyChangeListener to be removed
+            '''.stripIndent()
+
+    method name: 'firePropertyChange',
+        type: void,
+        params: [propertyName: String, oldValue: Object, newValue: Object],
+        doc: '''\
+            Report a bound property update to any registered listeners.
+            This is merely a convenience wrapper around the more general firePropertyChange method that takes PropertyChangeEvent value.
+            @param propertyName The programmatic name of the property that was changed.
+            @param oldValue The old value of the property.
+            @param newValue The new value of the property.
+            '''.stripIndent()
+
+    method name: 'getPropertyChangeListeners',
+        type: PropertyChangeListener[],
+        doc: '''\
+            Returns an array of all the listeners that were added to the PropertyChangeSupport object with addPropertyChangeListener().
+            @return all of the PropertyChangeListeners added or an empty array if no listeners have been added
+            '''.stripIndent()
+
+    method name: 'getPropertyChangeListeners',
+        type: PropertyChangeListener[],
+        params: [propertyName: String],
+        doc: '''\
+            Returns an array of all the listeners which have been associated with the named property.
+            @param propertyName The name of the property being listened to
+            @return all of the PropertyChangeListeners associated with the named property. If no such
+            listeners have been added, or if propertyName is null, an empty array is returned.
+            '''.stripIndent()
+}
+
+/**
+ * Hackergarten contribution
+ *
+ * @author Andres Almiray
+ * @author Tom Bujok (reficio.org)
+ */
+contribute(currentType(annotatedBy(groovy.beans.Vetoable) | fields(annotatedBy(groovy.beans.Vetoable)))) {
+    provider = '{@link groovy.beans.Vetoable Vetoable} AST transform'
+
+    method name: 'addVetoableChangeListener',
+           type: void,
+           params: [propertyName: String, listener: VetoableChangeListener],
+           doc: '''\
+               Add a VetoableChangeListener for a specific property. The listener will be invoked only when a call on
+               fireVetoableChange names that specific property. The same listener object may be added more than once.
+               For each property, the listener will be invoked the number of times it was added for that property. If
+               propertyName or listener is null, no exception is thrown and no action is taken.
+               @param propertyName The name of the property to listen on.
+               @param listener The VetoableChangeListener to be added
+               '''.stripIndent()
+
+    method name: 'addVetoableChangeListener',
+           type: void,
+           params: [listener: VetoableChangeListener],
+           doc: '''\
+               Add a VetoableListener to the listener list. The listener is registered for all properties. The same listener
+               object may beadded more than once, and will be called as many times as it is added. If listener is null, no
+               exception is thrown and no action is taken.
+               @param listener The VetoableChangeListener to be added
+               '''.stripIndent()
+
+    method name: 'removeVetoableChangeListener',
+           type: void,
+           params: [propertyName: String, listener: VetoableChangeListener],
+           doc: '''\
+               Remove a VetoableChangeListener for a specific property. If listener was added more than once to the same event
+               source for the specified property, it will be notified one less time after being removed. If propertyName is null,
+               no exception is thrown and no action is taken. If listener is null, or was never added for the specified property,
+               no exception is thrown and no action is taken.
+               @param propertyName The name of the property that was listened on.
+               @param listener The VetoableChangeListener to be removed
+               '''.stripIndent()
+
+    method name: 'removeVetoableChangeListener',
+           type: void,
+           params: [listener: VetoableChangeListener],
+           doc: '''\
+               Remove a VetoableChangeListener from the listener list. This removes a VetoableChangeListener that was registered
+               for all properties. If listener was added more than once to the same event source, it will be notified one less
+               time after being removed. If listener is null, or was never added, no exception is thrown and no action is taken.
+               @param listener The VetoableChangeListener to be removed
+               '''.stripIndent()
+
+    method name: 'fireVetoableChange',
+           type: void,
+           params: [propertyName: String, oldValue: Object, newValue: Object],
+           doc: '''\
+               Report a vetoable property update to any registered listeners. If anyone vetos the change, then fire a new event
+               reverting everyone to the old value and then rethrow the PropertyVetoException.
+               No event is fired if old and new are equal and non-null.
+               @param propertyName The programmatic name of the property that is about to change..
+               @param oldValue The old value of the property.
+               @param newValue The new value of the property.
+               '''.stripIndent()
+
+    method name: 'getVetoableChangeListeners',
+           type: VetoableChangeListener[],
+           doc: '''\
+               Returns the list of VetoableChangeListeners. If named vetoable change listeners were added, then VetoableChangeListenerProxy
+               wrappers will returned.
+               @return List of VetoableChangeListeners and VetoableChangeListenerProxys if named property change listeners were added.
+               '''.stripIndent()
+
+    method name: 'getVetoableChangeListeners',
+           type: VetoableChangeListener[],
+           params: [propertyName: String],
+           doc: '''\
+               Returns an array of all the listeners which have been associated with the named property.
+               @param propertyName The name of the property being listened to
+               @return all the VetoableChangeListeners associated with the named property. If no such listeners have been added, or if
+               propertyName is null, an empty array is returned.
+               '''.stripIndent()
+}
+
+/**
+ * Hackergarten contribution
+ *
+ * @author Andres Almiray
+ * @author Lukasz Pielak
+ * @author Max Rydahl Andersen
+ */
+contribute(currentType(fields : fields(annotatedBy(groovy.beans.ListenerList)))) {
+    provider = '{@link groovy.beans.ListenerList ListenerList} AST transform'
+
+    for (FieldNode field : fields) {
+        def type = findElementType(field)
+        def shortType = getShortName(type.name)
+
+        method name: 'add' + shortType, type: void, params: [listener: type], doc: "Add $shortType listener"
+        method name: 'remove' + shortType, type: void, params: [listener: type], doc: "Remove $shortType listener"
+
+        // TODO: array types does not work, result in completions for plain Object
+        method name: 'get' + shortType + 's', type: type.name + '[]', doc: "Get $shortType listeners"
+
+        type.methods.each { MethodNode m ->
+            method name: 'fire' + capitalize(m.name), type: void, params: params(m), doc: "fire the $m.name event"
+        }
+    }
+}
+
+private String getShortName(String className) {
+    int i = className.lastIndexOf('.')
+    if (i > -1) {
+        className = className.substring(i + 1, className.length())
+    }
+    className
+}
+
+private ClassNode findElementType(FieldNode field) {
+    ClassNode type = field.type
+    if (type.isArray()) {
+        return type.componentType
+    }
+    GenericsType[] gt = type.genericsTypes
+    if (gt && gt.length > 0) {
+        gt[0]?.type
+    } else {
+        ClassHelper.OBJECT_TYPE
+    }
+}

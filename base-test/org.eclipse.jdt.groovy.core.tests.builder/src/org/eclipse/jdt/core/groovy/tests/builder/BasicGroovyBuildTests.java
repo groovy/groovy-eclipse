@@ -108,6 +108,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             spockCorePath = "lib/spock-core-2.3-groovy-3.0.jar";
         }
         env.addJar(projectPath, spockCorePath);
+        if (isAtLeastGroovy(50)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
         env.addEntry(projectPath, JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
     }
 

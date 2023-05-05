@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.eclipse.jdt.core.groovy.tests.search;
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.junit.Assume.assumeTrue;
 
 import org.junit.Test;
 
@@ -112,6 +115,23 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
             "class Foo {}\n" +
             "class Bar {\n" +
             "  Foo mod(that) {}\n" +
+            "}\n" +
+            (isAtLeastGroovy(50) ? "@groovy.transform.OperatorRename(remainder='mod')\n" : "") +
+            "void test() {\n" +
+            "  def xxx = new Bar() % nuthin\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "Foo");
+    }
+
+    @Test
+    public void testRemainder() {
+        assumeTrue(isAtLeastGroovy(50));
+
+        String contents =
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo remainder(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() % nuthin\n" +
             "xxx";
@@ -309,7 +329,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     public void testLongExpr1() throws Exception {
         String contents =
             "class Foo { String str\n}\n" +
-            "def xxx = (new Foo().str.length() + 4 - 9) % 7\n" +
+            "def xxx = (new Foo().str.length() + 4 - 9) / 7\n" +
             "xxx";
 
         assertType(contents, "xxx", "java.lang.Integer");
@@ -319,7 +339,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     public void testLongExpr2() throws Exception {
         String contents =
             "class Foo { String str\n}\n" +
-            "def xxx = ([ new Foo() ])[(new Foo().str.length() + 4 - 9) % 7]\n" +
+            "def xxx = ([ new Foo() ])[(new Foo().str.length() + 4 - 9) / 7]\n" +
             "xxx";
 
         assertType(contents, "xxx", "Foo");

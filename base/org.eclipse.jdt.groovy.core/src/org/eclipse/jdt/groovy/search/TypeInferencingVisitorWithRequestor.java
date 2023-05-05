@@ -2510,6 +2510,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                                         for (int i = 0, n = sig.length; i < n; i += 1) {
                                             // TODO: If result still has generics, use Object or ???
+                                            if (i == 0 && opts.length == 1 && opts[0].startsWith("?")) continue;
                                             inferredTypes[i] = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(sig[i]));
                                         }
 
@@ -3004,7 +3005,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         case '/':
             return "div";
         case '%':
-            return "mod";
+            return GroovyUtils.getGroovyVersion().getMajor() > 4 ? "remainder" : "mod";
         case '&':
             return "and";
         case '|':

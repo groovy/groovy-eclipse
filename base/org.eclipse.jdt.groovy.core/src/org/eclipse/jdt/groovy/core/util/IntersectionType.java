@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -212,6 +212,19 @@ class IntersectionType extends ClassNode {
 
     @Override
     public void setInterfaces(ClassNode[] cn) {
+        if (getUnresolvedInterfaces(false) == null) {
+            super.setInterfaces(cn);
+            return;
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setMixins(MixinNode[] mn) {
+        if (getMixins() == null) {
+            super.setMixins(mn);
+            return;
+        }
         throw new UnsupportedOperationException();
     }
 
@@ -245,6 +258,10 @@ class IntersectionType extends ClassNode {
 
     @Override
     public void setSuperClass(ClassNode cn) {
+        if (getUnresolvedSuperClass(false) == null) {
+            super.setSuperClass(cn);
+            return;
+        }
         throw new UnsupportedOperationException();
     }
 

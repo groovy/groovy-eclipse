@@ -1,0 +1,85 @@
+/*
+ * Copyright 2009-2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package dsld
+
+import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.transform.stc.AbstractTypeCheckingExtension
+import org.codehaus.groovy.transform.stc.GroovyTypeCheckingExtensionSupport
+import org.codehaus.groovy.transform.stc.GroovyTypeCheckingExtensionSupport.TypeCheckingDSL
+
+assertVersion(groovyEclipse: '4.8.0')
+
+contribute(isScript() & currentType(subType(TypeCheckingDSL))) {
+    provider = "{@link ${GroovyTypeCheckingExtensionSupport.name}.TypeCheckingDSL TypeCheckingDSL}"
+
+    delegatesTo type: AbstractTypeCheckingExtension // skip over GroovyTypeCheckingExtensionSupport
+
+    method name: 'setDebug', type: void, params: [debug: boolean], declaringType: GroovyTypeCheckingExtensionSupport
+
+    for (type in ['AnnotationConstant', 'ArgumentList', 'Array', 'Attribute',
+                  'Binary', 'BitwiseNegation', 'Boolean',
+                  'Cast', 'Class', 'Closure', 'Constant', 'ConstructorCall',
+                  'Declaration',
+                  'ElvisOperator', 'Empty',
+                  'Field',
+                  'GString',
+                  'Lambda', 'List',
+                  'Map', 'MapEntry', 'MethodCall', 'MethodPointer', 'MethodReference',
+                  'NamedArgumentList', 'Not',
+                  'Postfix', 'Prefix', 'Property',
+                  'Range',
+                  'Spread', 'SpreadMap', 'StaticMethodCall',
+                  'Ternary', 'Tuple',
+                  'UnaryMinus', 'UnaryPlus',
+                  'Variable'
+    ]) method name: "is${type}Expression", type: boolean, params: [node: Object], declaringType: TypeCheckingDSL
+
+    // event callback registration -----------------------------------------------------------------------------
+
+    method name: 'setup', type: void, params: [handler: Closure], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'finish', type: void, params: [handler: Closure], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'afterMethodCall', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${MethodCall.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'afterVisitClass', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${ClassNode.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'afterVisitMethod', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${MethodNode.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'ambiguousMethods', type: void, params: [handler: "@ClosureParams(value=FromString, options=['java.util.List<${MethodNode.name}>,${Expression.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'beforeMethodCall', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${MethodCall.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'beforeVisitClass', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${ClassNode.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'beforeVisitMethod', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${MethodNode.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'incompatibleAssignment', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${ClassNode.name},${ClassNode.name},${Expression.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'incompatibleReturnType', type: void, params: [handler: "@ClosureParams(value=FromString, options=['org.codehaus.groovy.ast.stmt.ReturnStatement,${ClassNode.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'methodNotFound', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${ClassNode.name},java.lang.String,${ArgumentListExpression.name},${ClassNode.name}[],${MethodCall.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'onMethodSelection', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${Expression.name},${MethodNode.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'unresolvedAttribute', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${AttributeExpression.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'unresolvedProperty', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${PropertyExpression.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+
+    method name: 'unresolvedVariable', type: void, params: [handler: "@ClosureParams(value=FromString, options=['${VariableExpression.name}']) @DelegatesTo(${AbstractTypeCheckingExtension.name}) Closure"], noParens: true, declaringType: TypeCheckingDSL
+}

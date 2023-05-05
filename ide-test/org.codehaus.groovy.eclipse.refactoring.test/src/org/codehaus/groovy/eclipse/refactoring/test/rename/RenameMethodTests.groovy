@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -264,9 +264,9 @@ final class RenameMethodTests extends RefactoringTestSuite {
     @Test
     void testOverload4() {
         project.options = project.getOptions(true).tap {
-            put(COMPILER_CODEGEN_TARGET_PLATFORM, '1.8')
-            put(COMPILER_COMPLIANCE, '1.8')
-            put(COMPILER_SOURCE, '1.8')
+            put(COMPILER_CODEGEN_TARGET_PLATFORM, '11')
+            put(COMPILER_COMPLIANCE, '11')
+            put(COMPILER_SOURCE, '11')
         }
 
         def java = getInputTestFileName('B').replace('.groovy', '.java')

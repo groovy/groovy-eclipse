@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -285,6 +285,14 @@ public class GroovyLanguageSupport implements LanguageSupport {
         if (Boolean.TRUE.equals(config.getOptimizationOptions().get(CompilerConfiguration.INVOKEDYNAMIC))) {
             if (config.getTargetBytecode().compareTo(CompilerConfiguration.JDK7) < 0) {
                 config.setTargetBytecode(CompilerConfiguration.JDK7);
+            }
+        }
+
+        if (CompilerOptions.versionToJdkLevel(config.getTargetBytecode()) > compilerOptions.targetJDK) {
+            Map<String, String> javaOptions = JavaCore.getOptions(); // ensure marker of incompatibility
+            if (JavaCore.IGNORE.equals(javaOptions.get(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL))) {
+                javaOptions.put(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL, JavaCore.ERROR);
+                JavaCore.setOptions((java.util.Hashtable<String,String>) javaOptions);
             }
         }
 

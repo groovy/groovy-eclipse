@@ -81,13 +81,14 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK17 = (61L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK18 = (62L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK19 = (63L << 16) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final long JDK20 = (64L << 16) + ClassFileConstants.MINOR_VERSION_0;
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
         long javaSpec = CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version"));
         List<Object[]> params = new ArrayList<>();
-        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17, JDK18, JDK19}) {
-            if (jdk == javaSpec || (jdk < javaSpec && (jdk == JDK8 || jdk == JDK11 || jdk == JDK17))) { // current and LTS
+        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17, JDK18, JDK19, JDK20}) {
+            if (jdk == javaSpec || (jdk < javaSpec && (/*jdk == JDK8 || */jdk == JDK11 || jdk == JDK17))) { // current and LTS
                 params.add(new Object[] {jdk, CompilerOptions.versionFromJdkLevel(jdk)});
             }
         }
@@ -134,7 +135,7 @@ public abstract class GroovyCompilerTestSuite {
                 String[] cps = super.getDefaultClassPaths();
                 String[] newcps = Arrays.copyOf(cps, cps.length + 2);
 
-                String[] groovyVersions = {"4.0.12", "3.0.17-indy"};
+                String[] groovyVersions = {"5.0.0", "4.0.12", "3.0.17-indy"};
                 String[] ivyVersions = {"2.5.1", "2.5.0"};
                 try {
                     URL groovyJar = null;

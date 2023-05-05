@@ -1,0 +1,17 @@
+<project default="build">
+
+    <target name="build" depends="clean">
+        <java classname="groovyjarjarantlr.Tool" classpath="../../../../../groovy-parser2.jar" dir="${basedir}" fork="true">
+            <arg line="-o parser groovy.g" />
+        </java>
+        <replaceregexp byline="true" flags="g" match="\bimport antlr." replace="import groovyjarjarantlr.">
+            <fileset dir="parser" includes="*.java" />
+        </replaceregexp>
+        <fixcrlf srcdir="parser" eol="lf" tab="remove" tablength="4" />
+    </target>
+
+    <target name="clean">
+        <delete dir="parser" quiet="true" />
+    </target>
+
+</project>
