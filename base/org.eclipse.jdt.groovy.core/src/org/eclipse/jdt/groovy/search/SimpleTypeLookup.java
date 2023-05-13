@@ -818,6 +818,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     private static MethodNode findMethodDeclaration0(final List<? extends MethodNode> candidates, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
         if (argumentTypes == null || argumentTypes == UNKNOWN_TYPES) {
+            // order by non-deprecated then deprecated since usage is unknown
+            candidates.sort(Comparator.comparing(GroovyUtils::isDeprecated));
             for (MethodNode candidate : candidates) {
                 if (isCompatible(candidate, isStaticExpression)) {
                     return candidate;

@@ -588,8 +588,22 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('something'), 'something'.length(), STATIC_CALL))
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1478
     void testStaticMethods6() {
+        String contents = '''\
+            |import static java.net.URLEncoder.encode;
+            |encode('string','utf-8')
+            |encode('string')
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('encode;'), 'encode'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('encode('), 'encode'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), DEPRECATED))
+    }
+
+    @Test
+    void testStaticMethods7() {
         addGroovySource '''\
             |abstract class A {
             |  static foo() {}
@@ -2816,12 +2830,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/511
     void testGString4() {
         String contents = '''\
-            |import static java.net.URLEncoder.encode
+            |import static java.net.URLEncoder.*
             |def url = "/${encode('head','UTF-8')}/tail"
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('url'), 3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('/'), '/'.length(), STRING),
             new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL),
@@ -2832,7 +2845,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/511
     void testGString5() {
         String contents = '''\
-            |import static java.net.URLEncoder.encode
+            |import static java.net.URLEncoder.*
             |@groovy.transform.CompileStatic
             |class X {
             |  def url = "/${encode('head','UTF-8')}/tail"
@@ -2841,7 +2854,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('url'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('/'), '/'.length(), STRING),
             new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL),
