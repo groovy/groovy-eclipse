@@ -81,7 +81,7 @@ public class ClasspathJep247 extends ClasspathJrt {
 			Path p = null;
 			if (this.subReleases != null && this.subReleases.length > 0) {
 				for (String rel : this.subReleases) {
-					this.fs.getPath(rel, qualifiedBinaryFileName);
+					p = this.fs.getPath(rel, qualifiedBinaryFileName);
 					if (Files.exists(p)) {
 						content = JRTUtil.safeReadBytes(p);
 						if (content != null)

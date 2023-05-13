@@ -303,7 +303,7 @@ public static Classpath getClasspath(String classpathName, String encoding,
 		String destinationPath, Map<String, String> options, String release) {
 	Classpath result = null;
 	File file = new File(convertPathSeparators(classpathName));
-	if (file.isDirectory()) {
+	if (file.isDirectory() || classpathName.endsWith("-classes")) {//$NON-NLS-1$
 		if (file.exists()) {
 			result = new ClasspathDirectory(file, encoding,
 					isSourceOnly ? ClasspathLocation.SOURCE :

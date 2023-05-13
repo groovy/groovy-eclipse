@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -264,6 +265,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             } else {
                 args.put("-g", null);
             }
+        } else if (config.isOptimize()) {
+            args.put("-O", null);
         }
 
         if (isNotBlank(config.getSourceEncoding())) {
@@ -273,6 +276,12 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         String release = config.getReleaseVersion();
         if (isNotBlank(release)) {
             args.put("--release", release.trim());
+            if (!config.isFork()) { // check tycho useJDK
+                String javaHome = config.getCustomCompilerArgumentsAsMap().get("use.java.home");
+                if (isNotBlank(javaHome)) {
+                    args.put("--system", javaHome.trim());
+                }
+            }
         } else {
             String source = config.getSourceVersion();
             if (isNotBlank(source)) {
@@ -287,6 +296,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         if (config.isShowDeprecation()) {
             args.put("-deprecation", null);
+            config.setShowWarnings(true);
         }
         if (config.isFailOnWarning()) {
             args.put("-failOnWarning", null);
@@ -305,38 +315,34 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         if (config.getAnnotationProcessors() != null) {
-            StringBuilder processor = new StringBuilder();
+            StringJoiner processor = new StringJoiner(",");
             for (String item : config.getAnnotationProcessors()) {
                 if (isNotBlank(item)) {
-                    processor.append(item.trim()).append(',');
+                    processor.add(item.trim());
                 }
             }
             if (processor.length() > 0) {
-                // remove the trailing comma
-                processor.setLength(processor.length() - 1);
                 args.put("-processor", processor.toString());
             }
         }
 
         if (config.getProcessorPathEntries() != null) {
-            StringBuilder processorpath = new StringBuilder();
+            StringJoiner processorpath = new StringJoiner(";");
             for (String item : config.getProcessorPathEntries()) {
                 if (isNotBlank(item)) {
-                    processorpath.append(item.trim()).append(';');
+                    processorpath.add(item.trim());
                 }
             }
             if (processorpath.length() > 0) {
-                // remove the trailing semicolon
-                processorpath.setLength(processorpath.length() - 1);
                 args.put("-processorpath", processorpath.toString());
             }
         }
 
         String prev = null;
-        for (Map.Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
+        for (Map.Entry<String, String> entry : config.getCustomCompilerArgumentsEntries()) {
             String key = entry.getKey();
             if (key.startsWith("-")) {
-                if ("-javaAgentClass".equals(key)) {
+                if (key.equals("-javaAgentClass")) {
                     setJavaAgentClass(entry.getValue());
                 } else if (!key.startsWith("-J")) {
                     args.put(key, entry.getValue());
@@ -347,7 +353,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             } else {
                 if (prev != null && entry.getValue() == null) {
                     args.put(prev, key);
-                } else if (!"org.osgi.framework.system.packages".equals(key)) { // GRECLIPSE-1418: ignore the system packages option
+                } else if (!key.startsWith("@") && !key.equals("use.java.home") && !key.equals("org.osgi.framework.system.packages")) { // GRECLIPSE-1418: ignore system packages
                     args.put("-" + key, entry.getValue());
                 }
                 prev = null;
@@ -593,14 +599,18 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             return executable;
         }
 
-        Toolchain jdkToolchain = toolchainManager.getToolchainFromBuildContext("jdk", session);
-        if (jdkToolchain != null) executable = jdkToolchain.findTool("java");
-        if (isNotBlank(executable)) {
-            return executable;
+        String javaHome = config.getCustomCompilerArgumentsAsMap().get("use.java.home");
+        if (isBlank(javaHome)) {
+            javaHome = System.getProperty("java.home"); // fallback to current java home
+
+            Toolchain jdkToolchain = toolchainManager.getToolchainFromBuildContext("jdk", session);
+            if (jdkToolchain != null) executable = jdkToolchain.findTool("java");
+            if (isNotBlank(executable)) {
+                return executable;
+            }
         }
 
         String javaCommand = "java" + (Os.isFamily(Os.FAMILY_WINDOWS) ? ".exe" : "");
-        String javaHome = System.getProperty("java.home");
         File javaPath;
         if (Os.isName("AIX")) {
             javaPath = new File(javaHome + File.separator + ".." + File.separator + "sh", javaCommand);
