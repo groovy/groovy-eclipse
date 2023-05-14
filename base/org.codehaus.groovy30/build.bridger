@@ -27,7 +27,7 @@
         </resolve-dependencies>
 
         <java classname="org.jboss.bridger.Bridger" classpathref="classpath.bridger" dir="${basedir}" fork="true">
-            <arg line="org/codehaus/groovy/ast/tools/GeneralUtils.class org/codehaus/groovy/classgen/Verifier.class" />
+            <arg line="org/codehaus/groovy/classgen/Verifier.class" />
         </java>
     </target>
 

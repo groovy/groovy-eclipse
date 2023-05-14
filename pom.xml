@@ -384,8 +384,8 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.8.2</version>
-				<!-- disable default behavior; AWS S3 deployment in Site project -->
+				<version>3.1.1</version>
+				<!-- disable default behavior; see Site project -->
 				<configuration>
 					<skip>true</skip>
 				</configuration>
@@ -394,12 +394,33 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.22.2</version>
+				<version>3.1.0</version>
 				<!-- disable default behavior; tycho-surefire-plugin tests units -->
 				<configuration>
 					<skip>true</skip>
 				</configuration>
 			</plugin>
+
+			<!--plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-toolchains-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<toolchains>
+						<jdk>
+							<version>17</version>
+						</jdk>
+					</toolchains>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>toolchain</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin-->
 
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
@@ -423,17 +444,6 @@
 							<arch>x86_64</arch>
 						</environment>
 					</environments>
-					<dependency-resolution>
-						<extraRequirements>
-							<requirement>
-								<!-- for Error Log view -->
-								<type>eclipse-plugin</type>
-								<id>org.eclipse.ui.views.log</id>
-								<versionRange>[1.2.200,4)</versionRange>
-							</requirement>
-						</extraRequirements>
-					</dependency-resolution>
-					<pomDependencies>consider</pomDependencies>
 				</configuration>
 			</plugin>
 
@@ -449,6 +459,12 @@
 				<artifactId>tycho-packaging-plugin</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultEntries>false</addDefaultEntries>
+						</manifest>
+						<addMavenDescriptor>false</addMavenDescriptor>
+					</archive>
 					<format>${greclipse.build.qualifier}</format>
 					<sourceReferences>
 						<generate>true</generate>
@@ -463,7 +479,7 @@
 				</dependencies>
 			</plugin>
 
-			<plugin>
+			<!--plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-source-plugin</artifactId>
 				<version>${tycho-version}</version>
@@ -474,28 +490,14 @@
 							<goal>plugin-source</goal>
 						</goals>
 					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-source-feature-plugin</artifactId>
-				<version>${tycho-extras-version}</version>
-				<executions>
 					<execution>
-						<id>source-feature</id>
-						<phase>package</phase>
+						<id>feature-source</id>
 						<goals>
-							<goal>source-feature</goal>
+							<goal>feature-source</goal>
 						</goals>
-						<configuration>
-							<excludes>
-								<plugin id="org.codehaus.groovy.eclipse" />
-							</excludes>
-						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin-->
 
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
