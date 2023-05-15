@@ -2701,9 +2701,13 @@ public final class InferencingTests extends InferencingTestSuite {
 
         String contents = "abstract class C extends foo.Baz {}\ndef meth(C c) {\n c.one + c.two\n}\n";
 
-        assertUnknown(contents, "one");
-        int offset = contents.indexOf("two");
-        assertDeclaringType(contents, offset, offset + 3, "foo.Baz");
+        if (isAtLeastGroovy(50)) {
+            assertType(contents, "one", "java.lang.Integer");
+            assertDeclaringType(contents, "one", "foo.Bar");
+        } else {
+            assertUnknown(contents, "one"); // unavailable
+        }
+        assertDeclaringType(contents, "two", "foo.Baz");
     }
 
     @Test

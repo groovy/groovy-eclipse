@@ -345,7 +345,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testStaticReference11() {
         String contents =
             "class C {\n" +
-            "  static def foo\n" +
+            "  static foo\n" +
             "  static {\n" +
             "    foo\n" +
             "  }\n" +
@@ -358,8 +358,8 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testStaticReference12() {
         String contents =
             "class C {\n" +
-            "  static def foo\n" +
-            "  static def method() {\n" +
+            "  static foo\n" +
+            "  static method() {\n" +
             "    foo\n" +
             "  }\n" +
             "}\n";
@@ -371,8 +371,8 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testStaticReference13() {
         String contents =
             "class C {\n" +
-            "  static def foo\n" +
-            "  static def getFoo() {}\n" +
+            "  static foo\n" +
+            "  static getFoo() {}\n" +
             "  static {\n" +
             "    foo\n" +
             "  }\n" +
@@ -385,9 +385,9 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testStaticReference14() {
         String contents =
             "class C {\n" +
-            "  static def foo\n" +
-            "  static def getFoo() {}\n" +
-            "  static def method() {\n" +
+            "  static foo\n" +
+            "  static getFoo() {}\n" +
+            "  static method() {\n" +
             "    foo\n" +
             "  }\n" +
             "}\n";
@@ -395,8 +395,21 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
     }
 
-    @Test
+    @Test // GROOVY-10695
     public void testStaticReference15() {
+        String contents =
+            "class C {\n" +
+            "  static Integer foo\n" +
+            "  static getFoo() {}\n" +
+            "  static method() { \n" +
+            "    C.foo\n" +
+            "  }\n" +
+            "}\n";
+        assertKnown(contents, "foo", "C", isAtLeastGroovy(50) ? "java.lang.Integer" : "java.lang.Object");
+    }
+
+    @Test
+    public void testStaticReference16() {
         String contents =
             "class C {\n" +
             "  static Number x() {\n" +
@@ -408,7 +421,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference16() {
+    public void testStaticReference17() {
         String contents =
             "class C {\n" +
             "  static Number x() {\n" +
@@ -420,7 +433,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference17() {
+    public void testStaticReference18() {
         String contents =
             "class Two {\n" +
             "  static Number x() {\n" +
@@ -433,7 +446,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference18() {
+    public void testStaticReference19() {
         String contents =
             "class Two {\n" +
             "  static Number x() {\n" +
@@ -446,7 +459,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLISPE-1244
-    public void testStaticReference19() {
+    public void testStaticReference20() {
         String contents =
             "class Parent {\n" +
             "  static p() {}\n" +
@@ -460,7 +473,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLISPE-1244
-    public void testStaticReference20() {
+    public void testStaticReference21() {
         createUnit("Parent",
             "class Parent {\n" +
             "  static p() {}\n" +
@@ -475,7 +488,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference21() {
+    public void testStaticReference22() {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -489,7 +502,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference22() {
+    public void testStaticReference23() {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -503,7 +516,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference23() {
+    public void testStaticReference24() {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -520,7 +533,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference24() {
+    public void testStaticReference25() {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "abstract class Bar {\n" +
@@ -537,7 +550,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference25() {
+    public void testStaticReference26() {
         String contents =
             "import static java.util.regex.Pattern.*\n" +
             "import java.util.regex.*\n" +
@@ -553,7 +566,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference26() {
+    public void testStaticReference27() {
         String contents =
             "import static java.util.regex.Pattern.*\n" +
             "import java.util.regex.*\n" +
@@ -571,7 +584,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1257
-    public void testStaticReference27() {
+    public void testStaticReference28() {
         String contents =
             "class C {\n" +
             "  static name\n" +
@@ -581,7 +594,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1257
-    public void testStaticReference28() {
+    public void testStaticReference29() {
         String contents =
             "class C {\n" +
             "  static getName() {}\n" +
@@ -591,7 +604,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference29() {
+    public void testStaticReference30() {
         String contents =
             "class C {\n" +
             "  static String getName() {'foo'}\n" +
@@ -605,7 +618,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference30() {
+    public void testStaticReference31() {
         String contents =
             "class C {\n" +
             "  final static String name = 'foo'\n" +
@@ -619,7 +632,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1382
-    public void testStaticReference31() {
+    public void testStaticReference32() {
         String contents =
             "class C {\n" +
             "  private static String name = 'foo'\n" +
@@ -633,7 +646,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference32() {
+    public void testStaticReference33() {
         String contents =
             "static getStaticProperty() {}\n" +
             "static staticMethod() {\n" +
@@ -645,7 +658,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticReference33() {
+    public void testStaticReference34() {
         String contents =
             "static getStaticProperty() {}\n" +
             "def scriptMethod() {\n" +
@@ -657,7 +670,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-10859
-    public void testStaticReference34() {
+    public void testStaticReference35() {
         createUnit("Other",
             "class Other {\n" +
             "  static getName() {\n" +

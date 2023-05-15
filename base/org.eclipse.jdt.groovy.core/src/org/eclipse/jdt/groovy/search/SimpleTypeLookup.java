@@ -899,7 +899,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     private static Optional<MethodNode> findPropertyAccessorMethod(final String propertyName, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final List<ClassNode> methodCallArgumentTypes) {
         Stream<MethodNode> accessors = AccessorSupport.findAccessorMethodsForPropertyName(propertyName, declaringType, false, !isLhsExpression ? READER : WRITER);
         accessors = accessors.filter(accessor -> isCompatible(accessor, isStaticExpression) && !isTraitBridge(accessor) &&
-            (!accessor.isStatic() || !accessor.getDeclaringClass().isInterface())); // GROOVY-10592
+            (!accessor.isStatic() || !accessor.getDeclaringClass().isInterface() || GroovyUtils.getGroovyVersion().getMajor() >= 5)); // GROOVY-10592
         if (isLhsExpression) {
             // use methodCallArgumentTypes to select closer match
             accessors = accessors.sorted((m1, m2) -> (m1 == closer(m2, m1, methodCallArgumentTypes) ? -1 : +1));
@@ -1117,14 +1117,20 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected static boolean isThisObjectExpression(final VariableScope scope) {
-        // TODO: Test for "Type.this.name" expressions for inner classes?
         Expression expr = getObjectExpression(scope);
-        return (expr instanceof VariableExpression && ((VariableExpression) expr).isThisExpression());
+        if (expr instanceof VariableExpression) {
+            return ((VariableExpression) expr).isThisExpression();
+        } else if (expr instanceof ClassExpression) { // GROOVY-10695
+            return expr.getType().equals(scope.getEnclosingTypeDeclaration()) && GroovyUtils.getGroovyVersion().getMajor() >= 5;
+        }
+        return false;
     }
 
     protected static boolean isSuperObjectExpression(final VariableScope scope) {
-        // TODO: Test for "Type.super.name" expressions for traits?
         Expression expr = getObjectExpression(scope);
+        if (expr instanceof PropertyExpression && ((PropertyExpression) expr).getObjectExpression() instanceof ClassExpression) {
+            expr = ((PropertyExpression) expr).getProperty();
+        }
         return (expr instanceof VariableExpression && ((VariableExpression) expr).isSuperExpression());
     }
 
