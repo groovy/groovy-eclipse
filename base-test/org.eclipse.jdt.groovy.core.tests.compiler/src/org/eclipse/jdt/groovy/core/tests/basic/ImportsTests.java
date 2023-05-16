@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -364,7 +364,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "package a\n" +
             "interface B {\n" +
             "  String C = 'nls'\n" +
-            "}",
+            "}\n",
 
             "x/Y.groovy",
             "package x\n" +
@@ -372,7 +372,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Y {\n" +
             "  @SuppressWarnings(C) def one() {}\n" +
             "  @SuppressWarnings(C) def two() {}\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -392,7 +392,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
                 "package a\n" +
                 "class B {\n" +
                 "  static boolean c = true\n" +
-                "}",
+                "}\n",
             };
             //@formatter:on
 
@@ -410,11 +410,35 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "package a\n" +
             "class B {\n" +
             "  static boolean c\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
         runConformTest(sources, "true");
+    }
+
+    @Test // GROOVY-10329, GROOVY-11056
+    public void testStaticImport6() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.C.callable\n" +
+            "callable('foo')\n" +
+            "def functor = {\n" +
+            "  callable('bar')\n" +
+            "}\n" +
+            "functor.call()\n",
+
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  public static callable = new C()\n" +
+            "  void call(... args) { print args[0] }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
     }
 
     @Test

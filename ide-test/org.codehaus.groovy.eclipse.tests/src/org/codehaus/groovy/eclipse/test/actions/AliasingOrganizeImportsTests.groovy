@@ -518,6 +518,31 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1309
+    void testRetainStaticAlias16() {
+        createGroovyType 'p', 'C', '''\
+            |class C {
+            |  public static callable = new C()
+            |  public static closure = { -> }
+            |  def call(... args) {
+            |  }
+            |}
+            |'''
+
+        for (tag in ['', '@groovy.transform.CompileStatic']) {
+            String contents = """\
+                |import static p.C.callable as bar
+                |import static p.C.closure as baz
+                |$tag
+                |void foo() {
+                |  bar()
+                |  baz()
+                |}
+                |"""
+            doContentsCompareTest(contents)
+        }
+    }
+
     @Test
     void testRemoveStaticAlias1() {
         String originalContents = '''\

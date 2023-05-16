@@ -1251,6 +1251,28 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     void testStaticImport22() {
         createGroovyType 'p', 'C', '''\
             |class C {
+            |  static getClosure_property() {
+            |    return { -> }
+            |  }
+            |}
+            |'''
+
+        for (tag in ['', '@groovy.transform.CompileStatic']) {
+            String contents = """\
+                |import static p.C.closure_property
+                |$tag
+                |void test() {
+                |  closure_property()
+                |}
+                |"""
+            doContentsCompareTest(contents)
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1309
+    void testStaticImport23() {
+        createGroovyType 'p', 'C', '''\
+            |class C {
             |  static final callable_property = new C()
             |  static final closure_property = { -> }
             |  def call(... args) {
@@ -1273,20 +1295,23 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1309
-    void testStaticImport23() {
+    void testStaticImport24() {
         createGroovyType 'p', 'C', '''\
             |class C {
-            |  static getClosure_property() {
-            |    return { -> }
+            |  public static callable_property = new C()
+            |  public static closure_property = { -> }
+            |  def call(... args) {
             |  }
             |}
             |'''
 
         for (tag in ['', '@groovy.transform.CompileStatic']) {
             String contents = """\
+                |import static p.C.callable_property
                 |import static p.C.closure_property
                 |$tag
                 |void test() {
+                |  callable_property()
                 |  closure_property()
                 |}
                 |"""
