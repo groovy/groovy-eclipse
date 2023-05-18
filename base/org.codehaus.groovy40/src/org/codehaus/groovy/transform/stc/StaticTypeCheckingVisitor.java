@@ -5449,6 +5449,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         for (GenericsType gt : methodGenericTypes) {
             // GROOVY-8409, GROOVY-10067, et al.: provide "no type witness" mapping for param
             resolvedPlaceholders.computeIfAbsent(new GenericsTypeName(gt.getName()), gtn -> {
+                /* GRECLIPSE edit -- GROOVY-11067
                 GenericsType xxx = new GenericsType(ClassHelper.makeWithoutCaching("#"),
                         applyGenericsContext(resolvedPlaceholders, gt.getUpperBounds()),
                         applyGenericsContext(resolvedPlaceholders, gt.getLowerBound()));
@@ -5456,6 +5457,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 xxx.putNodeMetaData(GenericsType.class, gt);
                 xxx.setName("#" + gt.getName());
                 xxx.setPlaceholder(true);
+                */
+                ClassNode[] bounds = applyGenericsContext(resolvedPlaceholders, gt.getUpperBounds());
+                ClassNode hash = ClassHelper.makeWithoutCaching("#" + gt.getName());
+                hash.setRedirect(getCombinedBoundType(gt));
+                hash.setGenericsPlaceHolder(true);
+                GenericsType xxx = new GenericsType(hash, bounds, null);
+                xxx.putNodeMetaData(GenericsType.class, gt);
+                xxx.setResolved(true);
+                // GRECLIPSE end
                 return xxx;
             });
         }

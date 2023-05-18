@@ -69,10 +69,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tls.add('abc')\n" +
             "\t^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
-                ? "call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n"
-                : "find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n" +
             "----------\n");
     }
 
@@ -1359,17 +1356,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastGroovy(50)) {
-            runConformTest(sources);
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Main.groovy (at line 8)\n" +
-                "\tr.delete('foo')\n" +
-                "\t^^^^^^^^^^^^^^^\n" +
-                "Groovy:[Static type checking] - Cannot call Repository#delete(java.lang.Long) with arguments [java.lang.String]\n" +
-                "----------\n");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 8)\n" +
+            "\tr.delete('foo')\n" +
+            "\t^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call Repository#delete(java.lang.Long) with arguments [java.lang.String]\n" +
+            "----------\n");
     }
 
     @Test
@@ -3007,10 +3000,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
-                ? "call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.TreeMap<java.lang.String, java.lang.Integer>>]\n"
-                : "find matching method A#getFirstRecord(java.util.ArrayList<java.util.TreeMap<java.lang.String, java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.TreeMap<java.lang.String, java.lang.Integer>>]\n" +
             "----------\n");
     }
 
@@ -3040,10 +3030,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
-                ? "call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Long>>]\n"
-                : "find matching method A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Long>>). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Long>>]\n" +
             "----------\n");
     }
 
@@ -3073,10 +3060,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
-                ? "call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.HashMap<java.lang.StringBuffer, java.lang.Integer>>]\n"
-                : "find matching method A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.StringBuffer, java.lang.Integer>>). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call A#getFirstRecord(java.util.ArrayList<java.util.HashMap<java.lang.String, java.lang.Integer>>) with arguments [java.util.ArrayList<java.util.HashMap<java.lang.StringBuffer, java.lang.Integer>>]\n" +
             "----------\n");
     }
 

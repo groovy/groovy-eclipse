@@ -79,10 +79,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tints.add(\'abc\')\n" +
             "\t^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
-                ? "call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n"
-                : "find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 6)\n" +
             "\tints << 'def'\n" +
@@ -3149,18 +3146,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "2. ERROR in Main.groovy (at line 21)\n" +
             "\tstringProperty.eq(1234)\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
-                ? "call TypedProperty#eq(java.lang.String) with arguments [int]\n"
-                : "find matching method TypedProperty#eq(int). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.String) with arguments [int]\n" +
             "----------\n" +
             "3. ERROR in Main.groovy (at line 22)\n" +
             "\tnumberProperty.eq('xx')\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
-                ? "call TypedProperty#eq(java.lang.Number) with arguments [java.lang.String]\n"
-                : "find matching method TypedProperty#eq(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.Number) with arguments [java.lang.String]\n" +
             "----------\n");
     }
 
