@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2022 Mateusz Matela and others.
+ * Copyright (c) 2014, 2023 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -59,8 +59,9 @@ public class CommentsPreparator extends ASTVisitor {
 	private final static Pattern HTML_ATTRIBUTE_PATTERN;
 	static {
 		String formatCodeTags = "(pre)"; //$NON-NLS-1$
-		String separateLineTags = "(dl|hr|nl|p|ul|ol|table|tr)"; //$NON-NLS-1$
+		String separateLineTags = "(nl|table|tr)"; //$NON-NLS-1$
 		String breakBeforeTags = "(dd|dt|li|td|th|h1|h2|h3|h4|h5|h6|q)"; //$NON-NLS-1$
+		String blockTags = "(p|dl|ul|ol|hr|dir)"; //$NON-NLS-1$
 		String breakAfterTags = "(br)"; //$NON-NLS-1$
 		String noFormatTags = "(code|tt)"; //$NON-NLS-1$
 		String otherTags = "([\\S&&[^<>]]++)"; //$NON-NLS-1$
@@ -68,7 +69,7 @@ public class CommentsPreparator extends ASTVisitor {
 		String attributeValue = "(?>\"[^\"]*\")|(?>\'[^\']*\')|[\\S&&[^/>\"\']]++"; //$NON-NLS-1$
 		String attribute = "(?>" + ws + "+[\\S&&[^=]]+" + ws + "*(=)" + ws + "*(?>" + attributeValue  + "))"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 		HTML_TAG_PATTERN = Pattern.compile("<(/)?+(?:" //$NON-NLS-1$
-				+ formatCodeTags + '|' + separateLineTags + '|' + breakBeforeTags + '|' + breakAfterTags + '|' + noFormatTags + '|' + otherTags + ')'
+				+ formatCodeTags + '|' + separateLineTags + '|' + breakBeforeTags + '|' + breakAfterTags + '|' + noFormatTags + '|' + blockTags + '|' + otherTags + ')'
 				+ "(" + attribute + "*)" + ws + "*/?>", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		HTML_ATTRIBUTE_PATTERN = Pattern.compile(attribute);
 	}
@@ -802,11 +803,11 @@ public class CommentsPreparator extends ASTVisitor {
 				}
 
 				// allow wraps around equals sign in attributes
-				String attributesText = matcher.group(8);
+				String attributesText = matcher.group(9);
 				Matcher attrMatcher = HTML_ATTRIBUTE_PATTERN.matcher(attributesText);
 				final int commentStart = this.ctm.get(0).originalStart;
 				while (attrMatcher.find()) {
-					int equalPos = node.getStartPosition() + matcher.start(8) + attrMatcher.start(1);
+					int equalPos = node.getStartPosition() + matcher.start(9) + attrMatcher.start(1);
 					assert this.tm.charAt(equalPos) == '=';
 					this.allowSubstituteWrapping[equalPos - commentStart] = true;
 				}
@@ -836,6 +837,12 @@ public class CommentsPreparator extends ASTVisitor {
 					handleBreakAfterTag(startPos, endPos);
 				} else if (matcher.start(6) < matcher.end(6)) {
 					handleNoFormatTag(startPos, endPos, isOpeningTag);
+				} else if (matcher.start(7) < matcher.end(7)) {
+					if (this.options.comment_javadoc_do_not_separate_block_tags) {
+						handleBreakBeforeTag(startPos, endPos, isOpeningTag);
+					} else {
+						handleSeparateLineTag(startPos, endPos);
+					}
 				}
 			}
 		}
@@ -965,8 +972,13 @@ public class CommentsPreparator extends ASTVisitor {
 			return;
 		}
 
-		// add empty lines before opening and after closing token
-		handleSeparateLineTag(startPos, endPos);
+		if (this.options.comment_javadoc_do_not_separate_block_tags) {
+			handleBreakBeforeTag(startPos, endPos, isOpeningTag);
+		} else {
+			// add empty lines before opening and after closing token
+			handleSeparateLineTag(startPos, endPos);
+		}
+
 		int startIndex = tokenStartingAt(startPos);
 		int endTagIndex = tokenEndingAt(endPos);
 		if (isOpeningTag) {

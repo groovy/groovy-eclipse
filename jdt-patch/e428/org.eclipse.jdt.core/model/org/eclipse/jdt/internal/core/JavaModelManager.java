@@ -579,9 +579,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					for (int i = 0, length = requiredElements.length; i < length; i++) {
 						IConfigurationElement required = requiredElements[i];
 						if (id.equals(required.getAttribute("id"))) //$NON-NLS-1$
-							return 1;
+							return -1;
 					}
-					return -1;
+					return 1;
 				}
 			});
 			for (int i = 0; i < size; i++)

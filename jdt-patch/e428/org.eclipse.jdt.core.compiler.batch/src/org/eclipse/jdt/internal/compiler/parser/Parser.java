@@ -9174,11 +9174,16 @@ protected void consumeLambdaExpression() {
 	}
 	this.referenceContext.compilationResult().hasFunctionalTypes = true;
 	markEnclosingMemberWithLocalOrFunctionalType(LocalTypeKind.LAMBDA);
-	if (lexp.compilationResult.getCompilationUnit() == null) {
-		// unit built out of model. Stash a textual representation of lambda to enable LE.copy().
-		int length = lexp.sourceEnd - lexp.sourceStart + 1;
-		System.arraycopy(this.scanner.getSource(), lexp.sourceStart, lexp.text = new char [length], 0, length);
-	}
+	stashTextualRepresentation(lexp);
+}
+
+/* Stash away a copy of the textual representation of the functional expression to facilitate
+   virgin copy construction by reparse. This deep copy may be replaced by a shallow
+   copy by LE.copy() or RE.copy where feasible.
+*/
+private void stashTextualRepresentation(FunctionalExpression fnExp) {
+	int length = fnExp.sourceEnd - fnExp.sourceStart + 1;
+	System.arraycopy(this.scanner.getSource(), fnExp.sourceStart, fnExp.text = new char [length], 0, length);
 }
 
 protected Argument typeElidedArgument() {
@@ -9370,11 +9375,7 @@ protected void consumeReferenceExpression(ReferenceExpression referenceExpressio
 	if (!this.parsingJava8Plus) {
 		problemReporter().referenceExpressionsNotBelow18(referenceExpression);
 	}
-	if (referenceExpression.compilationResult.getCompilationUnit() == null) {
-		// unit built out of model. Stash a textual representation to enable RE.copy().
-		int length = referenceExpression.sourceEnd - referenceExpression.sourceStart + 1;
-		System.arraycopy(this.scanner.getSource(), referenceExpression.sourceStart, referenceExpression.text = new char [length], 0, length);
-	}
+	stashTextualRepresentation(referenceExpression);
 	this.referenceContext.compilationResult().hasFunctionalTypes = true;
 	markEnclosingMemberWithLocalOrFunctionalType(LocalTypeKind.METHOD_REFERENCE);
 }
@@ -14694,6 +14695,9 @@ protected void updateSourcePosition(Expression exp) {
 
 	exp.sourceEnd = this.intStack[this.intPtr--];
 	exp.sourceStart = this.intStack[this.intPtr--];
+	if (exp instanceof FunctionalExpression) {
+		stashTextualRepresentation((FunctionalExpression) exp);
+	}
 }
 public void copyState(Parser from) {
 

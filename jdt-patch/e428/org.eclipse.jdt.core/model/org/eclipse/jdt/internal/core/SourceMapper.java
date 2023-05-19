@@ -1073,21 +1073,6 @@ public class SourceMapper
 				this.memberNameRange[this.typeDepth]);
 		}
 	}
-	/**
-	 * @see ISourceElementRequestor
-	 */
-	@Override
-	public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
-		if (this.typeDepth >= 0) {
-			IType currentType = this.types[this.typeDepth];
-			setSourceRange(
-				currentType.getRecordComponent(this.memberName[this.typeDepth]),
-				new SourceRange(
-					this.memberDeclarationStart[this.typeDepth],
-					declarationEnd - this.memberDeclarationStart[this.typeDepth] + 1),
-				this.memberNameRange[this.typeDepth]);
-		}
-	}
 
 	/**
 	 * @see ISourceElementRequestor

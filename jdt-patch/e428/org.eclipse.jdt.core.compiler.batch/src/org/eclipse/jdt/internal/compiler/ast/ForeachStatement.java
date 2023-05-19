@@ -111,6 +111,7 @@ public class ForeachStatement extends Statement {
 	public void transformAction() {
 		if (this.pattern != null && this.action != null) {
 			SwitchStatement switchStatement = new SwitchStatement();
+			switchStatement.switchBits |= SwitchStatement.Synthetic;
 			switchStatement.containsPatterns = true;
 			switchStatement.containsNull = true;
 			switchStatement.expression = new SingleNameReference(this.elementVariable.name, 0);

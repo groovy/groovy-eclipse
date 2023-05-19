@@ -208,8 +208,4 @@ protected SourceElementParser getParser(Map<String, String> settings) {
 	return new SourceElementParser(this, new DefaultProblemFactory(), new CompilerOptions(settings), false/*don't report local declarations*/, true/*optimize string literals*/);
 }
 
-@Override
-public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
-	// TODO Auto-generated method stub
-}
 }

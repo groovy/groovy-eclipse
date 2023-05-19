@@ -206,8 +206,8 @@ public class TypePattern extends Pattern {
 					ReferenceBinding recType = (ReferenceBinding) enclosingPattern.resolvedType;
 					if (recType != null) {
 						RecordComponentBinding[] components = recType.components();
-						RecordComponentBinding rcb = components[this.index];
-						if (rcb != null) {
+						if (components.length > this.index) {
+							RecordComponentBinding rcb = components[this.index];
 							TypeVariableBinding[] mentionedTypeVariables = findSyntheticTypeVariables(rcb.type);
 							if  (mentionedTypeVariables != null && mentionedTypeVariables.length > 0) {
 								this.local.type.resolvedType = recType.upwardsProjection(scope, mentionedTypeVariables);

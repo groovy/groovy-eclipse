@@ -61,7 +61,7 @@ public class PrimitiveTypeImpl extends TypeMirrorImpl implements PrimitiveType {
 
 	@Override
 	public TypeKind getKind() {
-		return getKind((BaseTypeBinding)_binding);
+		return getKind((BaseTypeBinding)this._binding);
 	}
 
 	public static TypeKind getKind(BaseTypeBinding binding) {

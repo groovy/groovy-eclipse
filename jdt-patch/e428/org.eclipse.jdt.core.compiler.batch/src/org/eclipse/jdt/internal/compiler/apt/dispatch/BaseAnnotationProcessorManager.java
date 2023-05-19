@@ -80,27 +80,27 @@ public abstract class BaseAnnotationProcessorManager extends AbstractAnnotationP
 
 	@Override
 	public List<ProcessorInfo> getDiscoveredProcessors() {
-		return _processors;
+		return this._processors;
 	}
 
 	@Override
 	public ICompilationUnit[] getDeletedUnits() {
-		return _processingEnv.getDeletedUnits();
+		return this._processingEnv.getDeletedUnits();
 	}
 
 	@Override
 	public ICompilationUnit[] getNewUnits() {
-		return _processingEnv.getNewUnits();
+		return this._processingEnv.getNewUnits();
 	}
 
 	@Override
 	public ReferenceBinding[] getNewClassFiles() {
-		return _processingEnv.getNewClassFiles();
+		return this._processingEnv.getNewClassFiles();
 	}
 
 	@Override
 	public void reset() {
-		_processingEnv.reset();
+		this._processingEnv.reset();
 	}
 
 	/* (non-Javadoc)
@@ -108,7 +108,7 @@ public abstract class BaseAnnotationProcessorManager extends AbstractAnnotationP
 	 */
 	@Override
 	public void setErr(PrintWriter err) {
-		_err = err;
+		this._err = err;
 	}
 
 	/* (non-Javadoc)
@@ -116,7 +116,7 @@ public abstract class BaseAnnotationProcessorManager extends AbstractAnnotationP
 	 */
 	@Override
 	public void setOut(PrintWriter out) {
-		_out = out;
+		this._out = out;
 	}
 
 	/* (non-Javadoc)
@@ -154,24 +154,24 @@ public abstract class BaseAnnotationProcessorManager extends AbstractAnnotationP
 				if (declaration != null && declaration.scope != null) {
 					ModuleBinding m = declaration.scope.module();
 					if (m != null) {
-						_processingEnv._current_module = m;
+						this._processingEnv._current_module = m;
 						break;
 					}
 				}
 			}
 		}
-		RoundEnvImpl roundEnv = new RoundEnvImpl(units, referenceBindings, isLastRound, _processingEnv);
-		PrintWriter out = _out; // closable resource not manages in this class
-		PrintWriter traceProcessorInfo = _printProcessorInfo ? out : null;
-		PrintWriter traceRounds = _printRounds ? out : null;
+		RoundEnvImpl roundEnv = new RoundEnvImpl(units, referenceBindings, isLastRound, this._processingEnv);
+		PrintWriter out = this._out; // closable resource not manages in this class
+		PrintWriter traceProcessorInfo = this._printProcessorInfo ? out : null;
+		PrintWriter traceRounds = this._printRounds ? out : null;
 		if (traceRounds != null) {
-			traceRounds.println("Round " + ++_round + ':'); //$NON-NLS-1$
+			traceRounds.println("Round " + ++this._round + ':'); //$NON-NLS-1$
 		}
 		RoundDispatcher dispatcher = new RoundDispatcher(
 				this, roundEnv, roundEnv.getRootAnnotations(), traceProcessorInfo, traceRounds);
 		dispatcher.round();
-		if (_isFirstRound) {
-			_isFirstRound = false;
+		if (this._isFirstRound) {
+			this._isFirstRound = false;
 		}
 	}
 }

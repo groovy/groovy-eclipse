@@ -76,6 +76,8 @@
  *								bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *     Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
+ *     Ashley Scopes - Contributions for
+ * 								GH-954 	   - Module binding error renders incorrectly for diagnostics
  ********************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
 
@@ -11561,9 +11563,8 @@ public void invalidTypeArguments(TypeReference[] typeReference) {
 			typeReference[typeReference.length - 1].sourceEnd);
 }
 public void invalidModule(ModuleReference ref) {
-	this.handle(IProblem.UndefinedModule,
-		NoArgument, new String[] { CharOperation.charToString(ref.moduleName) },
-		ref.sourceStart, ref.sourceEnd);
+	String[] args = new String[] { CharOperation.charToString(ref.moduleName) };
+	this.handle(IProblem.UndefinedModule, args, args, ref.sourceStart, ref.sourceEnd);
 }
 public void missingModuleAddReads(char[] requiredModuleName) {
 	String[] args = new String[] { new String(requiredModuleName) };

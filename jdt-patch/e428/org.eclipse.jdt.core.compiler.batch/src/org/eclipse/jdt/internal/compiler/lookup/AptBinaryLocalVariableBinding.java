@@ -37,15 +37,15 @@ public class AptBinaryLocalVariableBinding extends LocalVariableBinding {
 	@Override
 	public int hashCode() {
 		int result = 17;
-		int c = CharOperation.hashCode(name);
+		int c = CharOperation.hashCode(this.name);
 		result = 31 * result + c;
 		c = this.type.hashCode();
 		result = 31 * result + c;
-		c = modifiers;
+		c = this.modifiers;
 		result = 31 * result + c;
 		c = Arrays.hashCode(this.annotationBindings);
 		result = 31 * result + c;
-		c = methodBinding.hashCode();
+		c = this.methodBinding.hashCode();
 		result = 31 * result + c;
 		return result;
 	}
@@ -61,7 +61,7 @@ public class AptBinaryLocalVariableBinding extends LocalVariableBinding {
 		AptBinaryLocalVariableBinding other = (AptBinaryLocalVariableBinding) obj;
 		return CharOperation.equals(this.name, other.name)
 				&& Objects.equals(this.type, other.type)
-				&& modifiers==other.modifiers
+				&& this.modifiers==other.modifiers
 				&& Arrays.equals(this.annotationBindings, other.annotationBindings)
 				&& Objects.equals(this.methodBinding, other.methodBinding);
 	}

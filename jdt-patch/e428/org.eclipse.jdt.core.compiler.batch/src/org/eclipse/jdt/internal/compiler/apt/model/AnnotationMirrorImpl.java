@@ -52,8 +52,8 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 	public final AnnotationBinding _binding;
 
 	/* package */ AnnotationMirrorImpl(BaseProcessingEnvImpl env, AnnotationBinding binding) {
-		_env = env;
-		_binding = binding;
+		this._env = env;
+		this._binding = binding;
 	}
 
 	@Override
@@ -104,7 +104,7 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 
 	@Override
 	public DeclaredType getAnnotationType() {
-		return (DeclaredType) _env.getFactory().newTypeMirror(_binding.getAnnotationType());
+		return (DeclaredType) this._env.getFactory().newTypeMirror(this._binding.getAnnotationType());
 	}
 
 	/**
@@ -116,7 +116,7 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 		if (this._binding == null) {
 			return Collections.emptyMap();
 		}
-		ElementValuePair[] pairs = _binding.getElementValuePairs();
+		ElementValuePair[] pairs = this._binding.getElementValuePairs();
 		Map<ExecutableElement, AnnotationValue> valueMap =
 			new LinkedHashMap<>(pairs.length);
 		for (ElementValuePair pair : pairs) {
@@ -125,8 +125,8 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 				// ideally we should be able to create a fake ExecutableElementImpl
 				continue;
 			}
-			ExecutableElement e = new ExecutableElementImpl(_env, method);
-			AnnotationValue v = new AnnotationMemberValue(_env, pair.getValue(), method);
+			ExecutableElement e = new ExecutableElementImpl(this._env, method);
+			AnnotationValue v = new AnnotationMemberValue(this._env, pair.getValue(), method);
 			valueMap.put(e, v);
 		}
 		return Collections.unmodifiableMap(valueMap);
@@ -141,8 +141,8 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 		if (this._binding == null) {
 			return Collections.emptyMap();
 		}
-		ElementValuePair[] pairs = _binding.getElementValuePairs();
-		ReferenceBinding annoType = _binding.getAnnotationType();
+		ElementValuePair[] pairs = this._binding.getElementValuePairs();
+		ReferenceBinding annoType = this._binding.getAnnotationType();
 		Map<ExecutableElement, AnnotationValue> valueMap =
 			new LinkedHashMap<>();
 		for (MethodBinding method : annoType.methods()) {
@@ -151,8 +151,8 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 			for (int i = 0; i < pairs.length; ++i) {
 				MethodBinding explicitBinding = pairs[i].getMethodBinding();
 				if (method == explicitBinding) {
-					ExecutableElement e = new ExecutableElementImpl(_env, explicitBinding);
-					AnnotationValue v = new AnnotationMemberValue(_env, pairs[i].getValue(), explicitBinding);
+					ExecutableElement e = new ExecutableElementImpl(this._env, explicitBinding);
+					AnnotationValue v = new AnnotationMemberValue(this._env, pairs[i].getValue(), explicitBinding);
 					valueMap.put(e, v);
 					foundExplicitValue = true;
 					break;
@@ -162,8 +162,8 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 			if (!foundExplicitValue) {
 				Object defaultVal = method.getDefaultValue();
 				if (null != defaultVal) {
-					ExecutableElement e = new ExecutableElementImpl(_env, method);
-					AnnotationValue v = new AnnotationMemberValue(_env, defaultVal, method);
+					ExecutableElement e = new ExecutableElementImpl(this._env, method);
+					AnnotationValue v = new AnnotationMemberValue(this._env, defaultVal, method);
 					valueMap.put(e, v);
 				}
 			}
@@ -220,7 +220,7 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 
         Object actualValue = null;
         boolean foundMethod = false;
-        ElementValuePair[] pairs = _binding.getElementValuePairs();
+        ElementValuePair[] pairs = this._binding.getElementValuePairs();
 		for (ElementValuePair pair : pairs) {
 			if (methodName.equals(new String(pair.getName()))) {
 				actualValue = pair.getValue();
@@ -285,7 +285,7 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 	 * @return a compiler method binding, or null if no member was found.
 	 */
 	private MethodBinding getMethodBinding(String name) {
-		ReferenceBinding annoType = _binding.getAnnotationType();
+		ReferenceBinding annoType = this._binding.getAnnotationType();
 		MethodBinding[] methods = annoType.getMethods(name.toCharArray());
 		for (MethodBinding method : methods) {
 			// annotation members have no parameters
@@ -339,7 +339,7 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 						List<TypeMirror> mirrors = new ArrayList<>(bindings.length);
 						for (int i = 0; i < bindings.length; ++i) {
 							if (bindings[i] instanceof TypeBinding) {
-								mirrors.add(_env.getFactory().newTypeMirror((TypeBinding)bindings[i]));
+								mirrors.add(this._env.getFactory().newTypeMirror((TypeBinding)bindings[i]));
 							}
 						}
 						throw new MirroredTypesException(mirrors);
@@ -354,7 +354,7 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 		else if (Class.class.equals(expectedType)) {
 			// package the Class-valued return as a MirroredTypeException
 			if (actualValue instanceof TypeBinding) {
-				TypeMirror mirror = _env.getFactory().newTypeMirror((TypeBinding)actualValue);
+				TypeMirror mirror = this._env.getFactory().newTypeMirror((TypeBinding)actualValue);
 				throw new MirroredTypeException(mirror);
 			}
 			else {
@@ -464,7 +464,7 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
     			Object returnVal = null;
     			if (jdtLeafType.isAnnotationType() && jdtElementValue instanceof AnnotationBinding) {
     				AnnotationMirrorImpl annoMirror =
-    					(AnnotationMirrorImpl)_env.getFactory().newAnnotationMirror((AnnotationBinding)jdtElementValue);
+    					(AnnotationMirrorImpl)this._env.getFactory().newAnnotationMirror((AnnotationBinding)jdtElementValue);
     				returnVal = Proxy.newProxyInstance(expectedLeafType.getClassLoader(),
     						new Class[]{ expectedLeafType }, annoMirror );
     			}
@@ -544,7 +544,7 @@ public class AnnotationMirrorImpl implements AnnotationMirror, InvocationHandler
 			// member value is expected to be an annotation type.  Wrap it in an Annotation proxy.
 			if (actualType.isAnnotationType() && jdtValue instanceof AnnotationBinding) {
 				AnnotationMirrorImpl annoMirror =
-					(AnnotationMirrorImpl)_env.getFactory().newAnnotationMirror((AnnotationBinding)jdtValue);
+					(AnnotationMirrorImpl)this._env.getFactory().newAnnotationMirror((AnnotationBinding)jdtValue);
 				return Proxy.newProxyInstance(expectedType.getClassLoader(),
 						new Class[]{ expectedType }, annoMirror );
 			}

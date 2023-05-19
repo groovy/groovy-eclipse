@@ -2515,4 +2515,54 @@ public void _test56() {
 		expectedReplacedSource,
 		testName);
 }
+/*
+ * Test that an {@code instanceof} expression for an object field
+ * doesn't result in a bad selection when nested in a method invocation.
+ * See: https://github.com/eclipse-jdt/eclipse.jdt.core/issues/848
+ */
+public void testInstanceOfFieldGh848() {
+	String str =
+		"public class X {                     \n" +
+		"    public Object o = new Object();\n" +
+		"    public static void bar() {\n" +
+		"        Test x = new Test();\n" +
+		"        foo(x.o instanceof Object);\n" +
+		"    }\n" +
+		"    private static void foo(boolean b) {\n" +
+		"    }" +
+		"}								     \n";
+
+	String selection = "foo";
+
+	String expectedCompletionNodeToString = "<SelectOnMessageSend:foo((x.o instanceof Object))>";
+
+	String completionIdentifier = "foo";
+	String expectedUnitDisplayString =
+			"public class X {\n" +
+			"  public Object o;\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public static void bar() {\n" +
+			"    Test x;\n" +
+			"    <SelectOnMessageSend:foo((x.o instanceof Object))>;\n" +
+			"  }\n" +
+			"  private static void foo(boolean b) {\n" +
+			"  }\n" +
+			"}\n";
+	String expectedReplacedSource = "foo(x.o instanceof Object)";
+	String testName = "<select inside instanceof statement>";
+
+	int selectionStart = str.indexOf(selection);
+	int selectionEnd = str.indexOf(selection) + selection.length() - 1;
+
+	this.checkMethodParse(
+		str.toCharArray(),
+		selectionStart,
+		selectionEnd,
+		expectedCompletionNodeToString,
+		expectedUnitDisplayString,
+		completionIdentifier,
+		expectedReplacedSource,
+		testName);
+}
 }

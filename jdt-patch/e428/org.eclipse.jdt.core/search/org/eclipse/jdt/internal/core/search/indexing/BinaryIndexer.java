@@ -14,9 +14,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
+import java.io.File;
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -509,6 +512,9 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 		return null;
 	}
 	private int extractArgCount(char[] signature, char[] className) throws ClassFormatException {
+		return extractArgCount(signature, className, false);
+	}
+	private int extractArgCount(char[] signature, char[] className, boolean isStaticTypeConstructor) throws ClassFormatException {
 		int indexOfClosingParen = CharOperation.lastIndexOf(')', signature);
 		if (indexOfClosingParen == 1) {
 			// there is no parameter
@@ -534,7 +540,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 					int indexOfSemiColon = CharOperation.indexOf(';', signature, i+1);
 					if (indexOfSemiColon == -1) throw new ClassFormatException(ClassFormatException.ErrInvalidMethodSignature);
 					// verify if first parameter is synthetic
-					if (className != null && parameterTypesCounter == 0) {
+					if (className != null && parameterTypesCounter == 0 && !isStaticTypeConstructor) {
 						char[] classSignature = Signature.createCharArrayTypeSignature(className, true);
 						int length = indexOfSemiColon-i+1;
 						if (classSignature.length > (length+1)) {
@@ -608,6 +614,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 					if (CharOperation.equals(INIT, name)) {
 						// get class name and see if it's a local type or not
 						char[] className = extractClassName(constantPoolOffsets, reader, i);
+						boolean isStaticType = reader.isStaticInner(className);
 						boolean localType = false;
 						if (className !=  null) {
 							for (int c = 0, max = className.length; c < max; c++) {
@@ -622,7 +629,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 							}
 						}
 						// add a constructor reference, use class name to extract arg count if it's a local type to remove synthetic parameter
-						addConstructorReference(className, extractArgCount(type, localType?className:null));
+						addConstructorReference(className, extractArgCount(type, localType?className:null, isStaticType));
 					} else {
 						// add a method reference
 						addMethodReference(name, extractArgCount(type, null));
@@ -658,7 +665,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			// contents can potentially be null if a IOException occurs while retrieving the contents
 			if (contents == null) return;
 			final String path = this.document.getPath();
-			ClassFileReader reader = new ClassFileReader((new java.io.File(path)).toURI(), contents, path == null ? null : path.toCharArray());
+			ClassFileReader reader = new ClassFileReader((new File(path)).toURI(), contents, path == null ? null : path.toCharArray());
 
 			IModule module = reader.getModuleDeclaration();
 			if (module != null) {
@@ -759,14 +766,15 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 					MethodInfo method = methods[i];
 					boolean isConstructor = method.isConstructor();
 					char[] descriptor = method.getMethodDescriptor();
-					char[][] parameterTypes = decodeParameterTypes(descriptor, isConstructor && isNestedType);
+					boolean isStatic = Flags.isStatic(reader.getModifiers());
+					char[][] parameterTypes = decodeParameterTypes(descriptor, isConstructor && isNestedType && !isStatic);
 					char[] returnType = decodeReturnType(descriptor);
 					char[][] exceptionTypes = replace('/', '.', method.getExceptionTypeNames());
 					if (isConstructor) {
 						noConstructor = false;
 						char[] signature = method.getGenericSignature();
 						if (signature == null) {
-							if (reader.isNestedType() && ((modifiers & ClassFileConstants.AccStatic) == 0)) {
+							if (reader.isNestedType() && !isStatic) {
 								signature = removeFirstSyntheticParameter(descriptor);
 							} else {
 								signature = descriptor;

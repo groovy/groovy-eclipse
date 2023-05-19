@@ -69,7 +69,7 @@ public class PackageElementImpl extends ElementImpl implements PackageElement {
 
 	@Override
 	public List<? extends Element> getEnclosedElements() {
-		PackageBinding binding = (PackageBinding)_binding;
+		PackageBinding binding = (PackageBinding)this._binding;
 		LookupEnvironment environment = binding.environment;
 		char[][][] typeNames = null;
 		INameEnvironment nameEnvironment = binding.environment.nameEnvironment;
@@ -84,7 +84,7 @@ public class PackageElementImpl extends ElementImpl implements PackageElement {
 				ReferenceBinding type = environment.getType(typeName);
 				if (type == null || type.isMemberType()) continue;
 				if (type.isValidBinding()) {
-					Element newElement = _env.getFactory().newElement(type);
+					Element newElement = this._env.getFactory().newElement(type);
 					if (newElement.getKind() != ElementKind.PACKAGE) {
 						set.add(newElement);
 						types.add(type);
@@ -97,7 +97,7 @@ public class PackageElementImpl extends ElementImpl implements PackageElement {
 			for (ReferenceBinding referenceBinding : knownTypes) {
 				if (referenceBinding != null && referenceBinding.isValidBinding() && referenceBinding.enclosingType() == null) {
 					if (!types.contains(referenceBinding)) {
-						Element newElement = _env.getFactory().newElement(referenceBinding);
+						Element newElement = this._env.getFactory().newElement(referenceBinding);
 						if (newElement.getKind() != ElementKind.PACKAGE)
 							set.add(newElement);
 					}
@@ -114,11 +114,11 @@ public class PackageElementImpl extends ElementImpl implements PackageElement {
 		if (super._env.getCompiler().options.sourceLevel < ClassFileConstants.JDK9) {
 			return null;
 		}
-		PackageBinding pBinding = (PackageBinding) _binding;
+		PackageBinding pBinding = (PackageBinding) this._binding;
 		ModuleBinding module = pBinding.enclosingModule;
 		if (module == null)
 			return null;
-		return new ModuleElementImpl(_env, module);
+		return new ModuleElementImpl(this._env, module);
 	}
 
 	@Override
@@ -134,7 +134,7 @@ public class PackageElementImpl extends ElementImpl implements PackageElement {
 
 	@Override
 	public Name getSimpleName() {
-		char[][] compoundName = ((PackageBinding)_binding).compoundName;
+		char[][] compoundName = ((PackageBinding)this._binding).compoundName;
 		int length = compoundName.length;
 		if (length == 0) {
 			return new NameImpl(CharOperation.NO_CHAR);
@@ -144,12 +144,12 @@ public class PackageElementImpl extends ElementImpl implements PackageElement {
 
 	@Override
 	public Name getQualifiedName() {
-		return new NameImpl(CharOperation.concatWith(((PackageBinding)_binding).compoundName, '.'));
+		return new NameImpl(CharOperation.concatWith(((PackageBinding)this._binding).compoundName, '.'));
 	}
 
 	@Override
 	public boolean isUnnamed() {
-		PackageBinding binding = (PackageBinding)_binding;
+		PackageBinding binding = (PackageBinding)this._binding;
 		return binding.compoundName == CharOperation.NO_CHAR_CHAR;
 	}
 

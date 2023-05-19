@@ -43,13 +43,13 @@ public abstract class ElementImpl
 	public final Binding _binding;
 
 	protected ElementImpl(BaseProcessingEnvImpl env, Binding binding) {
-		_env = env;
-		_binding = binding;
+		this._env = env;
+		this._binding = binding;
 	}
 
 	@Override
 	public TypeMirror asType() {
-		return _env.getFactory().newTypeMirror(_binding);
+		return this._env.getFactory().newTypeMirror(this._binding);
 	}
 
 	/**
@@ -68,26 +68,26 @@ public abstract class ElementImpl
 
 	@Override
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-		A annotation = _env.getFactory().getAnnotation(getPackedAnnotationBindings(), annotationClass);
+		A annotation = this._env.getFactory().getAnnotation(getPackedAnnotationBindings(), annotationClass);
 		if (annotation != null || this.getKind() != ElementKind.CLASS || annotationClass.getAnnotation(Inherited.class) == null)
 			return annotation;
 
-		ElementImpl superClass = (ElementImpl) _env.getFactory().newElement(((ReferenceBinding) this._binding).superclass());
+		ElementImpl superClass = (ElementImpl) this._env.getFactory().newElement(((ReferenceBinding) this._binding).superclass());
 		return superClass == null ? null : superClass.getAnnotation(annotationClass);
 	}
 
 	@Override
 	public List<? extends AnnotationMirror> getAnnotationMirrors() {
-		return _env.getFactory().getAnnotationMirrors(getPackedAnnotationBindings());
+		return this._env.getFactory().getAnnotationMirrors(getPackedAnnotationBindings());
 	}
 
 	@Override
 	public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
-		A [] annotations = _env.getFactory().getAnnotationsByType(Factory.getUnpackedAnnotationBindings(getPackedAnnotationBindings()), annotationType);
+		A [] annotations = this._env.getFactory().getAnnotationsByType(Factory.getUnpackedAnnotationBindings(getPackedAnnotationBindings()), annotationType);
 		if (annotations.length != 0 || this.getKind() != ElementKind.CLASS || annotationType.getAnnotation(Inherited.class) == null)
 			return annotations;
 
-		ElementImpl superClass =  (ElementImpl) _env.getFactory().newElement(((ReferenceBinding) this._binding).superclass());
+		ElementImpl superClass =  (ElementImpl) this._env.getFactory().newElement(((ReferenceBinding) this._binding).superclass());
 		return superClass == null ? annotations : superClass.getAnnotationsByType(annotationType);
 	}
 
@@ -100,12 +100,12 @@ public abstract class ElementImpl
 
 	@Override
 	public Name getSimpleName() {
-		return new NameImpl(_binding.shortReadableName());
+		return new NameImpl(this._binding.shortReadableName());
 	}
 
 	@Override
 	public int hashCode() {
-		return _binding.hashCode();
+		return this._binding.hashCode();
 	}
 
 	// TODO: equals() implemented as == of JDT bindings.  Valid within
@@ -119,17 +119,17 @@ public abstract class ElementImpl
 		if (getClass() != obj.getClass())
 			return false;
 		final ElementImpl other = (ElementImpl) obj;
-		if (_binding == null) {
+		if (this._binding == null) {
 			if (other._binding != null)
 				return false;
-		} else if (_binding != other._binding)
+		} else if (this._binding != other._binding)
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return _binding.toString();
+		return this._binding.toString();
 	}
 
 	@Override

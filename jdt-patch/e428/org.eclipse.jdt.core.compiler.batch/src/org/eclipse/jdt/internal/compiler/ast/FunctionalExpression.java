@@ -70,6 +70,7 @@ public abstract class FunctionalExpression extends Expression {
 	public boolean hasDescripterProblem;
 	public boolean isSerializable;
 	public int ordinal;
+	public char[] text;  // source representation of the FE - used in virgin copy construction
 
 	public FunctionalExpression(CompilationResult compilationResult) {
 		this.compilationResult = compilationResult;

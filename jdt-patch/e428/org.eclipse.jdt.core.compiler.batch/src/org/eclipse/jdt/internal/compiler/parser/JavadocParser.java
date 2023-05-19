@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -782,7 +782,7 @@ public class JavadocParser extends AbstractCommentParser {
 			case 'r':
 				if (length == TAG_RETURN_LENGTH && CharOperation.equals(TAG_RETURN, tagName, 0, length)) {
 					this.tagValue = TAG_RETURN_VALUE;
-					if (!this.inlineTagStarted) {
+					if(this.sourceLevel >= ClassFileConstants.JDK16 || !this.inlineTagStarted){
 						valid = parseReturn();
 					}
 				}
@@ -879,13 +879,18 @@ public class JavadocParser extends AbstractCommentParser {
 			}
 			// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=267833
 			// Report a problem if a block tag is being used in the context of an inline tag and vice versa.
-			if ((this.inlineTagStarted ? JAVADOC_TAG_TYPE[this.tagValue] == TAG_TYPE_BLOCK : JAVADOC_TAG_TYPE[this.tagValue] == TAG_TYPE_INLINE)) {
-				valid = false;
-				this.tagValue = TAG_OTHERS_VALUE;
-				this.tagWaitingForDescription = NO_TAG_VALUE;
+			if(this.sourceLevel >= ClassFileConstants.JDK16) {
+				int acceptedTag = this.inlineTagStarted ? TAG_TYPE_INLINE : TAG_TYPE_BLOCK;
+				valid = (JAVADOC_TAG_TYPE_16PLUS[this.tagValue] & acceptedTag) != 0;
+			} else {
+				valid = (this.inlineTagStarted ? JAVADOC_TAG_TYPE[this.tagValue] == TAG_TYPE_INLINE : JAVADOC_TAG_TYPE[this.tagValue] == TAG_TYPE_BLOCK);
+			}
+			if (!valid) {
 				if (this.reportProblems) {
 					this.sourceParser.problemReporter().javadocUnexpectedTag(this.tagSourceStart, this.tagSourceEnd);
 				}
+				this.tagValue = TAG_OTHERS_VALUE;
+				this.tagWaitingForDescription = NO_TAG_VALUE;
 			}
 		}
 		return valid;

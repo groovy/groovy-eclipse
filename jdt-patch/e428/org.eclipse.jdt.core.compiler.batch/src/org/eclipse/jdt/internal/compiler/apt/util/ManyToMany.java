@@ -50,10 +50,10 @@ public class ManyToMany<T1, T2> {
 	 * @return true if the maps contained any entries prior to being cleared
 	 */
 	public synchronized boolean clear() {
-		boolean hadContent = !_forward.isEmpty() || !_reverse.isEmpty();
-		_reverse.clear();
-		_forward.clear();
-		_dirty |= hadContent;
+		boolean hadContent = !this._forward.isEmpty() || !this._reverse.isEmpty();
+		this._reverse.clear();
+		this._forward.clear();
+		this._dirty |= hadContent;
 		return hadContent;
 	}
 
@@ -64,7 +64,7 @@ public class ManyToMany<T1, T2> {
 	 * put() and remove().
 	 */
 	public synchronized void clearDirtyBit() {
-		_dirty = false;
+		this._dirty = false;
 	}
 
 	/**
@@ -72,7 +72,7 @@ public class ManyToMany<T1, T2> {
 	 * @return true if the map contains the specified key.
 	 */
 	public synchronized boolean containsKey(T1 key) {
-		return _forward.containsKey(key);
+		return this._forward.containsKey(key);
 	}
 
 	/**
@@ -81,7 +81,7 @@ public class ManyToMany<T1, T2> {
 	 * @return true if such a key exists
 	 */
 	public synchronized boolean containsKeyValuePair(T1 key, T2 value) {
-		Set<T2> values = _forward.get(key);
+		Set<T2> values = this._forward.get(key);
 		if (null == values) {
 			return false;
 		}
@@ -94,7 +94,7 @@ public class ManyToMany<T1, T2> {
 	 * of what key it might be associated with).
 	 */
 	public synchronized boolean containsValue(T2 value) {
-		return _reverse.containsKey(value);
+		return this._reverse.containsKey(value);
 	}
 
 	/**
@@ -104,7 +104,7 @@ public class ManyToMany<T1, T2> {
 	 * or an empty set if the value does not exist in the map.
 	 */
 	public synchronized Set<T1> getKeys(T2 value) {
-		Set<T1> keys = _reverse.get(value);
+		Set<T1> keys = this._reverse.get(value);
 		if (null == keys) {
 			return Collections.emptySet();
 		}
@@ -118,7 +118,7 @@ public class ManyToMany<T1, T2> {
 	 * specified key, or an empty set if the key does not exist in the map.
 	 */
 	public synchronized Set<T2> getValues(T1 key) {
-		Set<T2> values = _forward.get(key);
+		Set<T2> values = this._forward.get(key);
 		if (null == values) {
 			return Collections.emptySet();
 		}
@@ -132,7 +132,7 @@ public class ManyToMany<T1, T2> {
 	 * @see #getValueSet()
 	 */
 	public synchronized Set<T1> getKeySet() {
-		Set<T1> keys = new HashSet<>(_forward.keySet());
+		Set<T1> keys = new HashSet<>(this._forward.keySet());
 		return keys;
 	}
 
@@ -143,7 +143,7 @@ public class ManyToMany<T1, T2> {
 	 * @see #getKeySet()
 	 */
 	public synchronized Set<T2> getValueSet() {
-		Set<T2> values = new HashSet<>(_reverse.keySet());
+		Set<T2> values = new HashSet<>(this._reverse.keySet());
 		return values;
 	}
 
@@ -156,7 +156,7 @@ public class ManyToMany<T1, T2> {
 	 * @see #clearDirtyBit()
 	 */
 	public synchronized boolean isDirty() {
-		return _dirty;
+		return this._dirty;
 	}
 
 	/**
@@ -170,7 +170,7 @@ public class ManyToMany<T1, T2> {
 	 * @see #valueHasOtherKeys(Object, Object)
 	 */
 	public synchronized boolean keyHasOtherValues(T1 key, T2 value) {
-		Set<T2> values = _forward.get(key);
+		Set<T2> values = this._forward.get(key);
 		if (values == null)
 			return false;
 		int size = values.size();
@@ -194,19 +194,19 @@ public class ManyToMany<T1, T2> {
 	 */
 	public synchronized boolean put(T1 key, T2 value) {
 		// Add to forward map
-		Set<T2> values = _forward.get(key);
+		Set<T2> values = this._forward.get(key);
 		if (null == values) {
 			values = new HashSet<>();
-			_forward.put(key, values);
+			this._forward.put(key, values);
 		}
 		boolean added = values.add(value);
-		_dirty |= added;
+		this._dirty |= added;
 
 		// Add to reverse map
-		Set<T1> keys = _reverse.get(value);
+		Set<T1> keys = this._reverse.get(value);
 		if (null == keys) {
 			keys = new HashSet<>();
-			_reverse.put(value, keys);
+			this._reverse.put(value, keys);
 		}
 		keys.add(key);
 
@@ -222,22 +222,22 @@ public class ManyToMany<T1, T2> {
 	 * @return true if the key/value pair existed in the map prior to removal
 	 */
 	public synchronized boolean remove(T1 key, T2 value) {
-		Set<T2> values = _forward.get(key);
+		Set<T2> values = this._forward.get(key);
 		if (values == null) {
 			assert checkIntegrity();
 			return false;
 		}
 		boolean removed = values.remove(value);
 		if (values.isEmpty()) {
-			_forward.remove(key);
+			this._forward.remove(key);
 		}
 		if (removed) {
-			_dirty = true;
+			this._dirty = true;
 			// it existed, so we need to remove from reverse map as well
-			Set<T1> keys = _reverse.get(value);
+			Set<T1> keys = this._reverse.get(value);
 			keys.remove(key);
 			if (keys.isEmpty()) {
-				_reverse.remove(value);
+				this._reverse.remove(value);
 			}
 		}
 		assert checkIntegrity();
@@ -252,24 +252,24 @@ public class ManyToMany<T1, T2> {
 	 */
 	public synchronized boolean removeKey(T1 key) {
 		// Remove all back-references to key.
-		Set<T2> values = _forward.get(key);
+		Set<T2> values = this._forward.get(key);
 		if (null == values) {
 			// key does not exist in map.
 			assert checkIntegrity();
 			return false;
 		}
 		for (T2 value : values) {
-			Set<T1> keys = _reverse.get(value);
+			Set<T1> keys = this._reverse.get(value);
 			if (null != keys) {
 				keys.remove(key);
 				if (keys.isEmpty()) {
-					_reverse.remove(value);
+					this._reverse.remove(value);
 				}
 			}
 		}
 		// Now remove the forward references from key.
-		_forward.remove(key);
-		_dirty = true;
+		this._forward.remove(key);
+		this._dirty = true;
 		assert checkIntegrity();
 		return true;
 	}
@@ -282,24 +282,24 @@ public class ManyToMany<T1, T2> {
 	 */
 	public synchronized boolean removeValue(T2 value) {
 		// Remove any forward references to value
-		Set<T1> keys = _reverse.get(value);
+		Set<T1> keys = this._reverse.get(value);
 		if (null == keys) {
 			// value does not exist in map.
 			assert checkIntegrity();
 			return false;
 		}
 		for (T1 key : keys) {
-			Set<T2> values = _forward.get(key);
+			Set<T2> values = this._forward.get(key);
 			if (null != values) {
 				values.remove(value);
 				if (values.isEmpty()) {
-					_forward.remove(key);
+					this._forward.remove(key);
 				}
 			}
 		}
 		// Now remove the reverse references from value.
-		_reverse.remove(value);
-		_dirty = true;
+		this._reverse.remove(value);
+		this._dirty = true;
 		assert checkIntegrity();
 		return true;
 	}
@@ -315,7 +315,7 @@ public class ManyToMany<T1, T2> {
 	 * @see #keyHasOtherValues(Object, Object)
 	 */
 	public synchronized boolean valueHasOtherKeys(T2 value, T1 key) {
-		Set<T1> keys = _reverse.get(value);
+		Set<T1> keys = this._reverse.get(value);
 		if (keys == null)
 			return false;
 		int size = keys.size();
@@ -337,26 +337,26 @@ public class ManyToMany<T1, T2> {
 	private boolean checkIntegrity() {
 		// For every T1->T2 mapping in the forward map, there should be a corresponding
 		// T2->T1 mapping in the reverse map.
-		for (Map.Entry<T1, Set<T2>> entry : _forward.entrySet()) {
+		for (Map.Entry<T1, Set<T2>> entry : this._forward.entrySet()) {
 			Set<T2> values = entry.getValue();
 			if (values.isEmpty()) {
 				throw new IllegalStateException("Integrity compromised: forward map contains an empty set"); //$NON-NLS-1$
 			}
 			for (T2 value : values) {
-				Set<T1> keys = _reverse.get(value);
+				Set<T1> keys = this._reverse.get(value);
 				if (null == keys || !keys.contains(entry.getKey())) {
 					throw new IllegalStateException("Integrity compromised: forward map contains an entry missing from reverse map: " + value); //$NON-NLS-1$
 				}
 			}
 		}
 		// And likewise in the other direction.
-		for (Map.Entry<T2, Set<T1>> entry : _reverse.entrySet()) {
+		for (Map.Entry<T2, Set<T1>> entry : this._reverse.entrySet()) {
 			Set<T1> keys = entry.getValue();
 			if (keys.isEmpty()) {
 				throw new IllegalStateException("Integrity compromised: reverse map contains an empty set"); //$NON-NLS-1$
 			}
 			for (T1 key : keys) {
-				Set<T2> values = _forward.get(key);
+				Set<T2> values = this._forward.get(key);
 				if (null == values || !values.contains(entry.getKey())) {
 					throw new IllegalStateException("Integrity compromised: reverse map contains an entry missing from forward map: " + key); //$NON-NLS-1$
 				}

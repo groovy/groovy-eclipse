@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -224,6 +224,8 @@ public interface JavadocTagConstants {
 		{},
 		// since 19
 		{},
+		// since 20
+		{},
 	};
 	public static final char[][][] INLINE_TAGS = {
 		// since 1.0
@@ -259,13 +261,15 @@ public interface JavadocTagConstants {
 		// since 15
 		{},
 		// since 16
-		{},
+		{TAG_RETURN},
 		// since 17
 		{},
-		//since 18
+		// since 18
 		{ TAG_SNIPPET },
-		//since 19
-		{}
+		// since 19
+		{},
+		// since 20
+		{},
 	};
 	public static final char[][][] IN_SNIPPET_TAGS = {
 		// since 18
@@ -281,12 +285,52 @@ public interface JavadocTagConstants {
 	public final static short TAG_TYPE_NONE = 0;
 	public final static short TAG_TYPE_INLINE = 1;
 	public final static short TAG_TYPE_BLOCK = 2;
-	public final static short TAG_TYPE_IN_SNIPPET = 3;
+	public final static short TAG_TYPE_IN_SNIPPET = 4;
+	public final static short TAG_TYPE_INLINE_BLOCK = (short) (TAG_TYPE_INLINE | TAG_TYPE_BLOCK);
 	public static final short[] JAVADOC_TAG_TYPE = {
 		TAG_TYPE_NONE, 		// NO_TAG_VALUE = 0;
 		TAG_TYPE_BLOCK,		// TAG_DEPRECATED_VALUE = 1;
 		TAG_TYPE_BLOCK,		// TAG_PARAM_VALUE = 2;
 		TAG_TYPE_BLOCK,		// TAG_RETURN_VALUE = 3;
+		TAG_TYPE_BLOCK,		// TAG_THROWS_VALUE = 4;
+		TAG_TYPE_BLOCK,		// TAG_EXCEPTION_VALUE = 5;
+		TAG_TYPE_BLOCK,		// TAG_SEE_VALUE = 6;
+		TAG_TYPE_INLINE,	// TAG_LINK_VALUE = 7;
+		TAG_TYPE_INLINE,	// TAG_LINKPLAIN_VALUE = 8;
+		TAG_TYPE_INLINE,	// TAG_INHERITDOC_VALUE = 9;
+		TAG_TYPE_INLINE,	// TAG_VALUE_VALUE = 10;
+		TAG_TYPE_BLOCK,		// TAG_CATEGORY_VALUE = 11;
+		TAG_TYPE_BLOCK,		// TAG_AUTHOR_VALUE = 12;
+		TAG_TYPE_BLOCK,		// TAG_SERIAL_VALUE = 13;
+		TAG_TYPE_BLOCK,		// TAG_SERIAL_DATA_VALUE = 14;
+		TAG_TYPE_BLOCK,		// TAG_SERIAL_FIELD_VALUE = 15;
+		TAG_TYPE_BLOCK,		// TAG_SINCE_VALUE = 16;
+		TAG_TYPE_BLOCK,		// TAG_VERSION_VALUE = 17;
+		TAG_TYPE_INLINE,	// TAG_CODE_VALUE = 18;
+		TAG_TYPE_INLINE,	// TAG_LITERAL_VALUE = 19;
+		TAG_TYPE_INLINE,	// TAG_DOC_ROOT_VALUE = 20;
+		TAG_TYPE_INLINE,    // TAG_DOC_SYSTEM_PROPERTY = 21
+		TAG_TYPE_BLOCK,		// TAG_USES_VALUE = 22;
+		TAG_TYPE_BLOCK,		// TAG_PROVIDES_VALUE = 23;
+		TAG_TYPE_BLOCK,		// TAG_HIDDEN_VALUE = 24;
+		TAG_TYPE_INLINE,	// TAG_INDEX_VALUE = 25;
+		TAG_TYPE_INLINE,	// TAG_SUMMARY_VALUE = 26;
+		TAG_TYPE_BLOCK,		// TAG_API_NOTE = 27;
+		TAG_TYPE_BLOCK,		// TAG_IMPL_SPEC = 28;
+		TAG_TYPE_BLOCK,		// TAG_IMPL_NOTE = 29;
+		TAG_TYPE_INLINE,	// TAG_SNIPPET_VALUE = 30;
+		TAG_TYPE_IN_SNIPPET,// TAG_HIGHLIGHT_VALUE = 31;
+		TAG_TYPE_IN_SNIPPET,// TAG_HIGHLIGHT_VALUE = 32;
+	};
+	// Same as above with a single difference for TAG_RETURN_VALUE
+	// which can now be both TAG_TYPE_BLOCK and TAG_TYPE_INLINE => TAG_TYPE_INLINE_BLOCK
+	// Should this become complex, meaning multiple JLS levels requiring different support,
+	// we will need a better model to capture that. For now, this should be enough.
+	public static final short[] JAVADOC_TAG_TYPE_16PLUS = {
+		TAG_TYPE_NONE, 		// NO_TAG_VALUE = 0;
+		TAG_TYPE_BLOCK,		// TAG_DEPRECATED_VALUE = 1;
+		TAG_TYPE_BLOCK,		// TAG_PARAM_VALUE = 2;
+		TAG_TYPE_INLINE_BLOCK,		// TAG_RETURN_VALUE = 3;
 		TAG_TYPE_BLOCK,		// TAG_THROWS_VALUE = 4;
 		TAG_TYPE_BLOCK,		// TAG_EXCEPTION_VALUE = 5;
 		TAG_TYPE_BLOCK,		// TAG_SEE_VALUE = 6;

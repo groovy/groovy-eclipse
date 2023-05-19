@@ -697,6 +697,7 @@ public void exitField(int initializationStart, int declarationEnd, int declarati
 	info.setFlags(fieldInfo.modifiers);
 	char[] typeName = JavaModelManager.getJavaModelManager().intern(fieldInfo.type);
 	info.setTypeName(typeName);
+	info.isRecordComponent = fieldInfo.isRecordComponent;
 	this.newElements.put(handle, info);
 
 	if (fieldInfo.annotations != null) {
@@ -730,40 +731,7 @@ public void exitField(int initializationStart, int declarationEnd, int declarati
 		this.unitInfo.annotationNumber = CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE;
 	}
 }
-/**
- * @see ISourceElementRequestor
- */
-@Override
-public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
-	JavaElement handle = (JavaElement) this.handleStack.peek();
-	FieldInfo compInfo = (FieldInfo) this.infoStack.peek();
-	IJavaElement[] elements = getChildren(compInfo);
-	SourceFieldElementInfo info = elements.length == 0 ? new SourceFieldElementInfo() : new SourceFieldWithChildrenInfo(elements);
-	info.isRecordComponent = true;
-	info.setNameSourceStart(compInfo.nameSourceStart);
-	info.setNameSourceEnd(compInfo.nameSourceEnd);
-	info.setSourceRangeStart(compInfo.declarationStart);
-	info.setFlags(compInfo.modifiers);
-	char[] typeName = JavaModelManager.getJavaModelManager().intern(compInfo.type);
-	info.setTypeName(typeName);
-	this.newElements.put(handle, info);
 
-	if (compInfo.annotations != null) {
-		int length = compInfo.annotations.length;
-		this.unitInfo.annotationNumber += length;
-		for (int i = 0; i < length; i++) {
-			org.eclipse.jdt.internal.compiler.ast.Annotation annotation = compInfo.annotations[i];
-			acceptAnnotation(annotation, info, handle);
-		}
-	}
-	info.setSourceRangeEnd(declarationSourceEnd);
-	this.handleStack.pop();
-	this.infoStack.pop();
-
-	if (compInfo.typeAnnotated) {
-		this.unitInfo.annotationNumber = CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE;
-	}
-}
 /**
  * @see ISourceElementRequestor
  */

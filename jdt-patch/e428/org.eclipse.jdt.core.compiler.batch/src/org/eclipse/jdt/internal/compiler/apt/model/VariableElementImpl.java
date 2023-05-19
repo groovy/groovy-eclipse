@@ -64,12 +64,12 @@ public class VariableElementImpl extends ElementImpl implements VariableElement 
 	@Override
 	protected AnnotationBinding[] getAnnotationBindings()
 	{
-		return ((VariableBinding)_binding).getAnnotations();
+		return ((VariableBinding)this._binding).getAnnotations();
 	}
 
 	@Override
 	public Object getConstantValue() {
-		VariableBinding variableBinding = (VariableBinding) _binding;
+		VariableBinding variableBinding = (VariableBinding) this._binding;
 		Constant constant = variableBinding.constant();
 		if (constant == null || constant == Constant.NotAConstant) return null;
 		TypeBinding type = variableBinding.type;
@@ -103,23 +103,23 @@ public class VariableElementImpl extends ElementImpl implements VariableElement 
 
 	@Override
 	public Element getEnclosingElement() {
-		if (_binding instanceof FieldBinding) {
-			return _env.getFactory().newElement(((FieldBinding)_binding).declaringClass);
+		if (this._binding instanceof FieldBinding) {
+			return this._env.getFactory().newElement(((FieldBinding)this._binding).declaringClass);
 		}
-		else if (_binding instanceof AptSourceLocalVariableBinding){
-			return _env.getFactory().newElement(((AptSourceLocalVariableBinding) _binding).methodBinding);
-		} else if (_binding instanceof AptBinaryLocalVariableBinding) {
-			return _env.getFactory().newElement(((AptBinaryLocalVariableBinding) _binding).methodBinding);
-		} else if (_binding instanceof RecordComponentBinding) {
-			return _env.getFactory().newElement(((RecordComponentBinding)_binding).declaringRecord);
+		else if (this._binding instanceof AptSourceLocalVariableBinding){
+			return this._env.getFactory().newElement(((AptSourceLocalVariableBinding) this._binding).methodBinding);
+		} else if (this._binding instanceof AptBinaryLocalVariableBinding) {
+			return this._env.getFactory().newElement(((AptBinaryLocalVariableBinding) this._binding).methodBinding);
+		} else if (this._binding instanceof RecordComponentBinding) {
+			return this._env.getFactory().newElement(((RecordComponentBinding)this._binding).declaringRecord);
 		}
 		return null;
 	}
 
 	@Override
 	public ElementKind getKind() {
-		if (_binding instanceof FieldBinding) {
-			if ((((FieldBinding) _binding).modifiers & ClassFileConstants.AccEnum) != 0) {
+		if (this._binding instanceof FieldBinding) {
+			if ((((FieldBinding) this._binding).modifiers & ClassFileConstants.AccEnum) != 0) {
 				return ElementKind.ENUM_CONSTANT;
 			}
 			else {
@@ -134,8 +134,8 @@ public class VariableElementImpl extends ElementImpl implements VariableElement 
 	@Override
 	public Set<Modifier> getModifiers()
 	{
-		if (_binding instanceof VariableBinding) {
-			return Factory.getModifiers(((VariableBinding)_binding).modifiers, getKind());
+		if (this._binding instanceof VariableBinding) {
+			return Factory.getModifiers(((VariableBinding)this._binding).modifiers, getKind());
 		}
 		return Collections.emptySet();
 	}
@@ -143,9 +143,9 @@ public class VariableElementImpl extends ElementImpl implements VariableElement 
 	@Override
 	PackageElement getPackage()
 	{
-		if (_binding instanceof FieldBinding) {
-			PackageBinding pkgBinding = ((FieldBinding)_binding).declaringClass.fPackage;
-			return _env.getFactory().newPackageElement(pkgBinding);
+		if (this._binding instanceof FieldBinding) {
+			PackageBinding pkgBinding = ((FieldBinding)this._binding).declaringClass.fPackage;
+			return this._env.getFactory().newPackageElement(pkgBinding);
 		}
 		else {
 			// TODO: what is the package of a method parameter?
@@ -155,13 +155,13 @@ public class VariableElementImpl extends ElementImpl implements VariableElement 
 
 	@Override
 	public Name getSimpleName() {
-		return new NameImpl(((VariableBinding)_binding).name);
+		return new NameImpl(((VariableBinding)this._binding).name);
 	}
 
 	@Override
 	public boolean hides(Element hiddenElement)
 	{
-		if (_binding instanceof FieldBinding) {
+		if (this._binding instanceof FieldBinding) {
 			if (!(((ElementImpl)hiddenElement)._binding instanceof FieldBinding)) {
 				return false;
 			}
@@ -169,7 +169,7 @@ public class VariableElementImpl extends ElementImpl implements VariableElement 
 			if (hidden.isPrivate()) {
 				return false;
 			}
-			FieldBinding hider = (FieldBinding)_binding;
+			FieldBinding hider = (FieldBinding)this._binding;
 			if (hidden == hider) {
 				return false;
 			}
@@ -184,7 +184,7 @@ public class VariableElementImpl extends ElementImpl implements VariableElement 
 
 	@Override
 	public String toString() {
-		return new String(((VariableBinding) _binding).name);
+		return new String(((VariableBinding) this._binding).name);
 	}
 
 	@Override

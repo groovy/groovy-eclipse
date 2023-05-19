@@ -38,13 +38,13 @@ public class AnnotationMemberValue extends AnnotationValueImpl {
 	 */
 	public AnnotationMemberValue(BaseProcessingEnvImpl env, Object value, MethodBinding methodBinding) {
 		super(env, value, methodBinding.returnType);
-		_methodBinding = methodBinding;
+		this._methodBinding = methodBinding;
 	}
 
 	/**
 	 * @return the method binding that defined this member value pair.
 	 */
 	public MethodBinding getMethodBinding() {
-		return _methodBinding;
+		return this._methodBinding;
 	}
 }

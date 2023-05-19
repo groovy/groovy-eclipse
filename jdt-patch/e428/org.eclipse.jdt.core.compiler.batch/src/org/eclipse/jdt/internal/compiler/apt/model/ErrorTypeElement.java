@@ -63,7 +63,7 @@ public class ErrorTypeElement extends TypeElementImpl {
 	 */
 	@Override
 	public Name getQualifiedName() {
-		ReferenceBinding binding = (ReferenceBinding)_binding;
+		ReferenceBinding binding = (ReferenceBinding)this._binding;
 		char[] qName;
 		if (binding.isMemberType()) {
 			qName = CharOperation.concatWith(binding.enclosingType().compoundName, binding.sourceName, '.');
@@ -158,7 +158,7 @@ public class ErrorTypeElement extends TypeElementImpl {
 	 */
 	@Override
 	public Name getSimpleName() {
-		ReferenceBinding binding = (ReferenceBinding)_binding;
+		ReferenceBinding binding = (ReferenceBinding)this._binding;
 		return new NameImpl(binding.sourceName());
 	}
 }

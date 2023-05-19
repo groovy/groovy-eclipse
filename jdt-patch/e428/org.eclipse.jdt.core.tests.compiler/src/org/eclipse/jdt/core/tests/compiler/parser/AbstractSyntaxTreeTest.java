@@ -481,9 +481,5 @@ public class AbstractSyntaxTreeTest extends AbstractCompilerTest implements IDoc
 
 
 	}
-	@Override
-	public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
-
-	}
 
 }

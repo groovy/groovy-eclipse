@@ -13,9 +13,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import java.io.*;
 import java.util.*;
-
+import java.util.concurrent.atomic.AtomicInteger;
 import junit.framework.*;
 
 import org.eclipse.core.runtime.*;
@@ -23,6 +25,9 @@ import org.eclipse.core.resources.*;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.tests.builder.participants.TestCompilationParticipant1;
+import org.eclipse.jdt.core.tests.builder.participants.TestCompilationParticipant2;
+import org.eclipse.jdt.core.tests.builder.participants.TestCompilationParticipant3;
 import org.eclipse.jdt.core.tests.util.Util;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -33,13 +38,15 @@ public class ParticipantBuildTests extends BuilderTests {
 	 * @deprecated
 	 */
 	/*package*/ static final int JLS3_INTERNAL = AST.JLS3;
-	
+
 	public ParticipantBuildTests(String name) {
 		super(name);
 	}
 
 	public void tearDown() throws Exception {
-		TestBuilderParticipant.PARTICIPANT = null;
+		TestCompilationParticipant1.PARTICIPANT = null;
+		TestCompilationParticipant2.PARTICIPANT = null;
+		TestCompilationParticipant3.PARTICIPANT = null;
 		super.tearDown();
 	}
 
@@ -47,9 +54,10 @@ public class ParticipantBuildTests extends BuilderTests {
 		return buildTestSuite(ParticipantBuildTests.class);
 	}
 
-	static class BuildTestParticipant extends CompilationParticipant {
-		BuildTestParticipant() {
-			TestBuilderParticipant.PARTICIPANT = this;
+	static class PostProcessingParticipant extends CompilationParticipant {
+		@Override
+		public boolean isPostProcessor() {
+			return true;
 		}
 	}
 
@@ -103,7 +111,7 @@ public class ParticipantBuildTests extends BuilderTests {
 		);
 
 		// install compilationParticipant
-		new BuildTestParticipant() {
+		TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 			int buildPass = 0;
 			public void buildStarting(BuildContext[] files, boolean isBatchBuild) {
 				// want to add a gen'ed source file that is referenced from the initial file to see if its recompiled
@@ -169,7 +177,7 @@ public class ParticipantBuildTests extends BuilderTests {
 			);
 
 		// install compilationParticipant
-		new BuildTestParticipant() {
+		TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 			public boolean isAnnotationProcessor() {
 				return true;
 			}
@@ -252,7 +260,7 @@ public class ParticipantBuildTests extends BuilderTests {
 			);
 
 		// install compilationParticipant
-		new BuildTestParticipant() {
+		TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 			public void buildStarting(BuildContext[] files, boolean isBatch) {
 				for (int i = 0, total = files.length; i < total; i++) {
 					BuildContext context = files[i];
@@ -291,7 +299,7 @@ public class ParticipantBuildTests extends BuilderTests {
 			);
 
 		// install compilationParticipant
-		new BuildTestParticipant() {
+		TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 			int count = 2;
 			public boolean isAnnotationProcessor() {
 				return true;
@@ -345,7 +353,7 @@ public class ParticipantBuildTests extends BuilderTests {
 			);
 
 		// install compilationParticipant
-		new BuildTestParticipant() {
+		TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 			public boolean isAnnotationProcessor() {
 				return true;
 			}
@@ -383,7 +391,7 @@ public class ParticipantBuildTests extends BuilderTests {
 			);
 
 		// install compilationParticipant
-		new BuildTestParticipant() {
+		TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 			public boolean isAnnotationProcessor() {
 				return true;
 			}
@@ -405,6 +413,257 @@ public class ParticipantBuildTests extends BuilderTests {
 		expectingNoProblems();
 	}
 
+	public void testPostProcessingReturnValues() throws JavaModelException {
+		final String PROJECT_NAME = "Project";
+		IPath projectPath = env.addProject(PROJECT_NAME);
+		IProject testProject = env.getProject(PROJECT_NAME);
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		// add 3 classes and build incrementally --> 3 classes should be post-processed
+		// TestClass0 will return a modified class content from post-processing
+		// TestClass1 will return an empty Optional, indicating no byte code change
+		// from post-processing
+		// TestClass2 will return the unmodified class content from post-processing
+		String[] classNames = new String[3];
+		for (int i = 0; i < 3; i++) {
+			String className = "TestClass" + i;
+			env.addClass(root, "", className, "public class " + className + " {}\n");
+			classNames[i] = className;
+		}
+
+		TestCompilationParticipant2.PARTICIPANT = new PostProcessingParticipant() {
+			Map<String, byte[]> postProcessedClasses;
+
+			public void buildStarting(BuildContext[] files, boolean isBatchBuild) {
+				this.postProcessedClasses = new HashMap<>();
+			}
+
+			public Optional<byte[]> postProcess(BuildContext file, ByteArrayInputStream bytes) {
+				String fileName = file.getFile().getName();
+				String className = fileName.substring(0, fileName.indexOf("."));
+				byte[] originalBytes = bytes.readAllBytes();
+				Optional<byte[]> newBytes = Optional.empty();
+				switch (className) {
+				case "TestClass0": {
+					newBytes = Optional.of("ClassContent".getBytes());
+					this.postProcessedClasses.put(className, newBytes.get());
+					break;
+				}
+				case "TestClass1": {
+					this.postProcessedClasses.put(className, originalBytes);
+					break;
+				}
+				case "TestClass2": {
+					newBytes = Optional.of(originalBytes);
+					this.postProcessedClasses.put(className, originalBytes);
+					break;
+				}
+				}
+				return newBytes;
+			}
+
+			public void buildFinished(IJavaProject project) {
+				// check that all classes were post-processed and that their content on disk
+				// matches the expectation after post-processing
+				assertEquals(classNames.length, this.postProcessedClasses.size());
+				for (String className : classNames) {
+					byte[] expectedClassContent = this.postProcessedClasses.get(className);
+					assertNotNull(expectedClassContent);
+					assertArrayEquals(expectedClassContent,
+							getClassFileContent(testProject, "bin/" + className + ".class"));
+				}
+			}
+		};
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+	}
+
+	public void testPostProcessOrderingAndPropagation() throws JavaModelException {
+		final String PROJECT_NAME = "Project";
+		IPath projectPath = env.addProject(PROJECT_NAME);
+		IProject testProject = env.getProject(PROJECT_NAME);
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		final String TEST_CLASS_NAME = "TestClass";
+		env.addClass(root, "", TEST_CLASS_NAME, "public class " + TEST_CLASS_NAME + " {}\n");
+
+		// The set "requires" attribute enforces dependency order TestCompilationParticipant1 -->
+		// TestCompilationParticipant3 --> TestCompilationParticipant2
+		// that implies call order 2 -> 3 -> 1
+		//
+		// Compilation participants post-processing methods combine incoming class
+		// content with some new class content to verify that changes are propagated
+		// between participants. The final class content on disk is verified that
+		// it contains the modifications from all participants.
+		AtomicInteger nrOfCalledParticipants = new AtomicInteger();
+		ByteArrayOutputStream combinedOutput = new ByteArrayOutputStream();
+
+		TestCompilationParticipant2.PARTICIPANT = new PostProcessingParticipant() {
+			public Optional<byte[]> postProcess(BuildContext file, ByteArrayInputStream bytes) {
+				assertEquals(0, nrOfCalledParticipants.getAndIncrement());
+
+				byte[] newBytes = "Participant1".getBytes();
+				try {
+					combinedOutput.write(newBytes);
+				} catch (IOException e) {
+					fail("Could not write combined output byte array: " + e.getMessage());
+				}
+				return Optional.of(newBytes);
+			}
+		};
+
+		TestCompilationParticipant1.PARTICIPANT = new PostProcessingParticipant() {
+			public Optional<byte[]> postProcess(BuildContext file, ByteArrayInputStream bytes) {
+				assertEquals(2, nrOfCalledParticipants.get());
+
+				byte[] originalBytes = bytes.readAllBytes();
+				assertTrue(Arrays.equals(combinedOutput.toByteArray(), originalBytes));
+				byte[] toBeAppendedBytes = "Participant2".getBytes();
+				byte[] newBytes = new byte[originalBytes.length + toBeAppendedBytes.length];
+				System.arraycopy(originalBytes, 0, newBytes, 0, originalBytes.length);
+				System.arraycopy(toBeAppendedBytes, 0, newBytes, originalBytes.length, toBeAppendedBytes.length);
+
+				try {
+					combinedOutput.write(toBeAppendedBytes);
+				} catch (IOException e) {
+					fail("Could not write combined output byte array: " + e.getMessage());
+				}
+				return Optional.of(newBytes);
+			}
+
+			@Override
+			public void buildFinished(IJavaProject project) {
+				// Check that the modifications of all 3 post processors are visible in the
+				// modified class on disk
+				assertArrayEquals(combinedOutput.toByteArray(),
+						getClassFileContent(testProject, "bin/" + TEST_CLASS_NAME + ".class"));
+			}
+		};
+
+		TestCompilationParticipant3.PARTICIPANT = new PostProcessingParticipant() {
+			public Optional<byte[]> postProcess(BuildContext file, ByteArrayInputStream bytes) {
+				assertEquals(1, nrOfCalledParticipants.getAndIncrement());
+
+				byte[] originalBytes = bytes.readAllBytes();
+				assertTrue(Arrays.equals(combinedOutput.toByteArray(), originalBytes));
+				byte[] toBeAppendedBytes = "Participant3".getBytes();
+				byte[] newBytes = new byte[originalBytes.length + toBeAppendedBytes.length];
+				System.arraycopy(originalBytes, 0, newBytes, 0, originalBytes.length);
+				System.arraycopy(toBeAppendedBytes, 0, newBytes, originalBytes.length, toBeAppendedBytes.length);
+
+				try {
+					combinedOutput.write(toBeAppendedBytes);
+				} catch (IOException e) {
+					fail("Could not write combined output byte array: " + e.getMessage());
+				}
+				return Optional.of(newBytes);
+			}
+		};
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+	}
+
+	private byte[] getClassFileContent(IProject project, String classPath) {
+		IFile classFile = (IFile) project.findMember(classPath);
+		if(classFile == null) {
+			return null;
+		}
+		byte[] classContent = null;
+		try {
+			classContent = classFile.getContents().readAllBytes();
+		} catch (IOException | CoreException e) {
+			fail("Could not read class file " + classFile.getFullPath());
+		}
+		return classContent;
+	}
+
+	public void testPostProcessDependenciesAndProblems() throws JavaModelException {
+		final String PROJECT_NAME = "Project";
+		IPath projectPath = env.addProject(PROJECT_NAME);
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		// add two classes and compile
+		final String TEST_CLASS_NAME = "TestClass";
+		env.addClass(root, "", TEST_CLASS_NAME, "public class " + TEST_CLASS_NAME + " {}\n");
+		final String TEST_CLASS_2_NAME = "TestClass2";
+		env.addClass(root, "", TEST_CLASS_2_NAME, "public class " + TEST_CLASS_2_NAME + " {}\n");
+
+		TestCompilationParticipant1.PARTICIPANT = new PostProcessingParticipant() {
+			public Optional<byte[]> postProcess(BuildContext file, ByteArrayInputStream bytes) {
+				if (file.getFile().getName().contains(TEST_CLASS_2_NAME)) {
+					// record dependency from TestClass2 to TestClass
+					file.recordDependencies(new String[] { TEST_CLASS_NAME });
+				}
+				return Optional.empty();
+			}
+		};
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+
+		// modify TestClass and recompile --> should compile and post-process TestClass
+		// and dependent TestClass2
+		env.addClass(root, "", TEST_CLASS_NAME, "public class " + TEST_CLASS_NAME + " {public int testInt;}\n");
+
+		ArrayList<String> postProcessedClasses = new ArrayList<>();
+		TestCompilationParticipant1.PARTICIPANT = new PostProcessingParticipant() {
+			public Optional<byte[]> postProcess(BuildContext file, ByteArrayInputStream bytes) {
+				String fileName = file.getFile().getName();
+				String className = fileName.substring(0, fileName.indexOf("."));
+				postProcessedClasses.add(className);
+				return Optional.empty();
+			}
+		};
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		assertArrayEquals(new String[] { TEST_CLASS_NAME, TEST_CLASS_2_NAME }, postProcessedClasses.toArray());
+
+		// modify TestClass2 and recompile --> should only compile and post-process TestClass2
+		IPath testClass2Path = env.addClass(root, "", TEST_CLASS_2_NAME,
+				"public class " + TEST_CLASS_2_NAME + " {public int testInt;}\n");
+
+		final String PROBLEM_MSG = "TestProblem";
+		postProcessedClasses.clear();
+		TestCompilationParticipant1.PARTICIPANT = new PostProcessingParticipant() {
+			public Optional<byte[]> postProcess(BuildContext file, ByteArrayInputStream bytes) {
+				String fileName = file.getFile().getName();
+				String className = fileName.substring(0, fileName.indexOf("."));
+				postProcessedClasses.add(className);
+				// create problem marker on TestClass2
+				file.recordNewProblems(new CategorizedProblem[] {
+						new ParticipantProblem(PROBLEM_MSG, file.getFile().getFullPath().toString()) });
+				return Optional.empty();
+			}
+		};
+
+		incrementalBuild(projectPath);
+		assertArrayEquals(new String[] { TEST_CLASS_2_NAME }, postProcessedClasses.toArray());
+
+		Problem[] reportedProblems = env.getProblemsFor(projectPath, "org.eclipse.jdt.core.tests.compile.problem");
+		assertEquals(1, reportedProblems.length);
+		assertEquals(testClass2Path, reportedProblems[0].getResourcePath());
+		assertEquals(PROBLEM_MSG, reportedProblems[0].getMessage());
+
+		// recompile TestClass2 --> error marker should be deleted
+		env.addClass(root, "", TEST_CLASS_2_NAME, "public class " + TEST_CLASS_2_NAME + " {}\n");
+		TestCompilationParticipant1.PARTICIPANT = null;
+		incrementalBuild(projectPath);
+
+		reportedProblems = env.getProblemsFor(projectPath, "org.eclipse.jdt.core.tests.compile.problem");
+		assertEquals(0, reportedProblems.length);
+	}
+
 	public void testResolvedMethod() throws JavaModelException {
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -418,7 +677,7 @@ public class ParticipantBuildTests extends BuilderTests {
 			);
 
 		// install compilationParticipant
-		new BuildTestParticipant() {
+		TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 			public boolean isAnnotationProcessor() {
 				return true;
 			}
@@ -478,7 +737,7 @@ public void test1001() throws JavaModelException {
 		"package p;\n" +
 		"public class X { /* generate problem*/ }"
 		);
-	new BuildTestParticipant() {
+		TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 		public void buildStarting(BuildContext[] files, boolean isBatch) {
 			for (int i = 0, total = files.length; i < total; i++) {
 				BuildContext context = files[i];
@@ -509,7 +768,7 @@ public void test1002() throws JavaModelException {
 		"public class X { /* generate problem*/ }"
 		);
 	final String specificGeneratedBy = "specific";
-	new BuildTestParticipant() {
+	TestCompilationParticipant1.PARTICIPANT = new CompilationParticipant() {
 		public void buildStarting(BuildContext[] files, boolean isBatch) {
 			for (int i = 0, total = files.length; i < total; i++) {
 				BuildContext context = files[i];

@@ -145,35 +145,6 @@ protected void attachOrphanCompletionNode(){
 			this.currentToken = 0; // given we are not on an eof, we do not want side effects caused by looked-ahead token
 		}
 	}
-	// if casestatement and not orphan, then add switch statement as assist node parent
-	if (this.expressionPtr > 0 && this.assistNodeParent == null) {
-		if (this.astPtr >= 0) {
-			if (this.astStack[this.astPtr] instanceof CaseStatement) {
-				// add switch statement as assistNodeParent
-				Expression expression = this.expressionStack[this.expressionPtr];
-				SwitchStatement switchStatement = new SwitchStatement();
-				switchStatement.expression = this.expressionStack[this.expressionPtr - 1];
-				if (this.astLengthPtr > -1 && this.astPtr > -1) {
-					int length = this.astLengthStack[this.astLengthPtr];
-					int newAstPtr = this.astPtr - length;
-					ASTNode firstNode = this.astStack[newAstPtr + 1];
-					if (length != 0 && firstNode.sourceStart > switchStatement.expression.sourceEnd) {
-						switchStatement.statements = new Statement[length + 1];
-						System.arraycopy(this.astStack, newAstPtr + 1, switchStatement.statements, 0, length);
-					}
-
-				}
-				CaseStatement caseStatement = new CaseStatement(expression, expression.sourceStart,
-						expression.sourceEnd);
-				if (switchStatement.statements == null) {
-					switchStatement.statements = new Statement[] { caseStatement };
-				} else {
-					switchStatement.statements[switchStatement.statements.length - 1] = caseStatement;
-				}
-				this.assistNodeParent = switchStatement;
-			}
-		}
-	}
 }
 private void buildMoreCompletionContext(Expression expression) {
 	ASTNode parentNode = null;
@@ -816,17 +787,6 @@ protected void consumeInsideCastExpressionLL1WithBounds() {
 protected void consumeInsideCastExpressionWithQualifiedGenerics() {
 	super.consumeInsideCastExpressionWithQualifiedGenerics();
 	pushOnElementStack(K_CAST_STATEMENT);
-}
-@Override
-protected void consumeInstanceOfExpression() {
-	if (indexOfAssistIdentifier() < 0) {
-		super.consumeInstanceOfExpression();
-	} else {
-		getTypeReference(this.intStack[this.intPtr--]);
-		this.isOrphanCompletionNode = true;
-		this.restartRecovery = true;
-		this.lastIgnoredToken = -1;
-	}
 }
 @Override
 protected Expression consumePatternInsideInstanceof(Pattern pattern) {

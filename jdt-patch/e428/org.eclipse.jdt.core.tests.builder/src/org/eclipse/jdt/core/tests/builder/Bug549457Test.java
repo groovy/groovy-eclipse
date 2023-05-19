@@ -65,7 +65,6 @@ public class Bug549457Test extends BuilderTests {
 
 	@Override
 	protected void tearDown() throws Exception {
-		TestBuilderParticipant.PARTICIPANT = null;
 		env.removeProject(this.project);
 		env.setAutoBuilding(this.oldAutoBuilding);
 		waitForAutoBuild();

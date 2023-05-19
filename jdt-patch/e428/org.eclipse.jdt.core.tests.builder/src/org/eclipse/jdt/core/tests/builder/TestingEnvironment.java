@@ -829,19 +829,50 @@ public void cleanBuild(String projectName) {
 		return getProject(projectPath).getFullPath();
 	}
 
-	protected void handle(Exception e) {
-		if (e instanceof CoreException) {
-			handleCoreException((CoreException) e);
+	void handle(Throwable e) {
+		if (e instanceof CoreException ce) {
+			handleCoreException(ce);
+		} else if(e instanceof AssertionError ae) {
+			throw ae;
 		} else {
 			e.printStackTrace();
-			Assert.isTrue(false);
+			Assert.isTrue(false, "Unhandled exception: " + e.toString());
 		}
 	}
 
 	/**
-	* Handles a core exception thrown during a testing environment operation
-	*/
+	 * Tries to find and return first exception from a status, if any.
+	 */
+	Throwable getRootCauseFromStatus(CoreException e) {
+		IStatus status = e.getStatus();
+		while(status.getException() instanceof CoreException ce) {
+			status = ce.getStatus();
+		}
+		if(status instanceof MultiStatus ms) {
+			IStatus[] children = ms.getChildren();
+			for (IStatus s : children) {
+				Throwable exception = s.getException();
+				if(exception instanceof CoreException ce) {
+					Throwable t = getRootCauseFromStatus(ce);
+					if(t != null) {
+						return t;
+					}
+				} else if(exception != null){
+					return exception;
+				}
+			}
+		}
+		return status.getException();
+	}
+
+	/**
+	 * Handles a core exception thrown during a testing environment operation
+	 */
 	protected void handleCoreException(CoreException e) {
+		Throwable throwable = getRootCauseFromStatus(e);
+		if(throwable instanceof AssertionError ae) {
+			throw ae;
+		}
 		e.printStackTrace();
 		IStatus status = e.getStatus();
 		String message = e.getMessage();
@@ -886,11 +917,9 @@ public void cleanBuild(String projectName) {
 		checkAssertion("a workspace must be open", this.isOpen); //$NON-NLS-1$
 		try {
 			getProject(projectPath).build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
-		} catch (CoreException e) {
+		} catch (Throwable e) {
 			handle(e);
-		} catch(Throwable e) {
-			e.printStackTrace();
-	}
+		}
 	}
 
 	public boolean isAutoBuilding() {

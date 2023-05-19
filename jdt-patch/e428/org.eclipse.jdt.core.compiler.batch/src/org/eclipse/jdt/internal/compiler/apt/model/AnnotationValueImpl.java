@@ -88,11 +88,11 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 	 *            determined from the type of the value.
 	 */
 	public AnnotationValueImpl(BaseProcessingEnvImpl env, Object value, TypeBinding type) {
-		_env = env;
+		this._env = env;
 		int kind[] = new int[1];
 		if (type == null) {
-			_value = convertToMirrorType(value, type, kind);
-			_kind = kind[0];
+			this._value = convertToMirrorType(value, type, kind);
+			this._kind = kind[0];
 		} else if (type.isArrayType()) {
 			List<AnnotationValue> convertedValues = null;
 			TypeBinding valueType = ((ArrayBinding)type).elementsType();
@@ -100,17 +100,17 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 				Object[] values = (Object[])value;
 				convertedValues = new ArrayList<>(values.length);
 				for (Object oneValue : values) {
-					convertedValues.add(new AnnotationValueImpl(_env, oneValue, valueType));
+					convertedValues.add(new AnnotationValueImpl(this._env, oneValue, valueType));
 				}
 			} else {
 				convertedValues = new ArrayList<>(1);
-				convertedValues.add(new AnnotationValueImpl(_env, value, valueType));
+				convertedValues.add(new AnnotationValueImpl(this._env, value, valueType));
 			}
-			_value = Collections.unmodifiableList(convertedValues);
-			_kind = T_ArrayType;
+			this._value = Collections.unmodifiableList(convertedValues);
+			this._kind = T_ArrayType;
 		} else {
-			_value = convertToMirrorType(value, type, kind);
-			_kind = kind[0];
+			this._value = convertToMirrorType(value, type, kind);
+			this._kind = kind[0];
 		}
 	}
 
@@ -138,7 +138,7 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 					return "<error>"; //$NON-NLS-1$
 				} else if (type.isAnnotationType()) {
 					kind[0] = T_AnnotationMirror;
-					return _env.getFactory().newAnnotationMirror(null);
+					return this._env.getFactory().newAnnotationMirror(null);
 				}
 			} else if (value instanceof Constant) {
 				if (type instanceof BaseTypeBinding) {
@@ -187,7 +187,7 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 		} else if (type.isEnum()) {
 			if (value instanceof FieldBinding) {
 				kind[0] = T_EnumConstant;
-				return _env.getFactory().newElement((FieldBinding) value);
+				return this._env.getFactory().newElement((FieldBinding) value);
 			} else {
 				kind[0] = TypeIds.T_JavaLangString;
 				return "<error>"; //$NON-NLS-1$
@@ -195,11 +195,11 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 		} else if (type.isAnnotationType()) {
 			if (value instanceof AnnotationBinding) {
 				kind[0] = T_AnnotationMirror;
-				return _env.getFactory().newAnnotationMirror((AnnotationBinding) value);
+				return this._env.getFactory().newAnnotationMirror((AnnotationBinding) value);
 			}
 		} else if (value instanceof TypeBinding) {
 			kind[0] = T_ClassObject;
-			return _env.getFactory().newTypeMirror((TypeBinding) value);
+			return this._env.getFactory().newTypeMirror((TypeBinding) value);
 		}
 		// error case
 		kind[0] = TypeIds.T_JavaLangString;
@@ -209,33 +209,33 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 	@SuppressWarnings("unchecked") // Need to cast Object _value to a List<AnnotationValue>
 	@Override
 	public <R, P> R accept(AnnotationValueVisitor<R, P> v, P p) {
-		switch (_kind) {
+		switch (this._kind) {
 		case TypeIds.T_boolean:
-			return v.visitBoolean((Boolean)_value, p);
+			return v.visitBoolean((Boolean)this._value, p);
 		case TypeIds.T_byte:
-			return v.visitByte((Byte)_value, p);
+			return v.visitByte((Byte)this._value, p);
 		case TypeIds.T_char:
-			return v.visitChar((Character)_value, p);
+			return v.visitChar((Character)this._value, p);
 		case TypeIds.T_double:
-			return v.visitDouble((Double)_value, p);
+			return v.visitDouble((Double)this._value, p);
 		case TypeIds.T_float:
-			return v.visitFloat((Float)_value, p);
+			return v.visitFloat((Float)this._value, p);
 		case TypeIds.T_int:
-			return v.visitInt((Integer)_value, p);
+			return v.visitInt((Integer)this._value, p);
 		case TypeIds.T_JavaLangString:
-			return v.visitString((String)_value, p);
+			return v.visitString((String)this._value, p);
 		case TypeIds.T_long:
-			return v.visitLong((Long)_value, p);
+			return v.visitLong((Long)this._value, p);
 		case TypeIds.T_short:
-			return v.visitShort((Short)_value, p);
+			return v.visitShort((Short)this._value, p);
 		case T_EnumConstant:
-			return v.visitEnumConstant((VariableElement)_value, p);
+			return v.visitEnumConstant((VariableElement)this._value, p);
 		case T_ClassObject:
-			return v.visitType((TypeMirror)_value, p);
+			return v.visitType((TypeMirror)this._value, p);
 		case T_AnnotationMirror:
-			return v.visitAnnotation((AnnotationMirror)_value, p);
+			return v.visitAnnotation((AnnotationMirror)this._value, p);
 		case T_ArrayType:
-			return v.visitArray((List<AnnotationValue>)_value, p);
+			return v.visitArray((List<AnnotationValue>)this._value, p);
 		default:
 			return null;
 		}
@@ -243,7 +243,7 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 
 	@Override
 	public Object getValue() {
-		return _value;
+		return this._value;
 	}
 
 	@Override
@@ -261,10 +261,10 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 
 	@Override
 	public String toString() {
-		if (_value == null) {
+		if (this._value == null) {
 			return "null"; //$NON-NLS-1$
-		} else if (_value instanceof String) {
-			String value = (String) _value;
+		} else if (this._value instanceof String) {
+			String value = (String) this._value;
 			StringBuffer sb = new StringBuffer();
 			sb.append('"');
 			for (int i = 0; i < value.length(); i++) {
@@ -272,19 +272,19 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 			}
 			sb.append('"');
 			return sb.toString();
-		} else if (_value instanceof Character) {
+		} else if (this._value instanceof Character) {
 			StringBuffer sb = new StringBuffer();
 			sb.append('\'');
-			Util.appendEscapedChar(sb, ((Character) _value).charValue(), false);
+			Util.appendEscapedChar(sb, ((Character) this._value).charValue(), false);
 			sb.append('\'');
 			return sb.toString();
-		} else if (_value instanceof VariableElement) {
-			VariableElement enumDecl = (VariableElement) _value;
+		} else if (this._value instanceof VariableElement) {
+			VariableElement enumDecl = (VariableElement) this._value;
 			return enumDecl.asType().toString() + "." + enumDecl.getSimpleName(); //$NON-NLS-1$
-		} else if (_value instanceof Collection) {
+		} else if (this._value instanceof Collection) {
 			// It must be Collection<AnnotationValue>
 			@SuppressWarnings("unchecked")
-			Collection<AnnotationValue> values = (Collection<AnnotationValue>) _value;
+			Collection<AnnotationValue> values = (Collection<AnnotationValue>) this._value;
 			StringBuilder sb = new StringBuilder();
 			sb.append('{');
 			boolean first = true;
@@ -297,10 +297,10 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 			}
 			sb.append('}');
 			return sb.toString();
-		} else if (_value instanceof TypeMirror) {
-			return _value.toString() + ".class"; //$NON-NLS-1$
+		} else if (this._value instanceof TypeMirror) {
+			return this._value.toString() + ".class"; //$NON-NLS-1$
 		} else {
-			return _value.toString();
+			return this._value.toString();
 		}
 	}
 }

@@ -33,8 +33,8 @@ public class BatchMessagerImpl extends BaseMessagerImpl implements Messager {
 	private final BaseProcessingEnvImpl _processingEnv;
 
 	public BatchMessagerImpl(BaseProcessingEnvImpl processingEnv, Main compiler) {
-		_compiler = compiler;
-		_processingEnv = processingEnv;
+		this._compiler = compiler;
+		this._processingEnv = processingEnv;
 	}
 
 	/* (non-Javadoc)
@@ -70,7 +70,7 @@ public class BatchMessagerImpl extends BaseMessagerImpl implements Messager {
 	public void printMessage(Kind kind, CharSequence msg, Element e,
 			AnnotationMirror a, AnnotationValue v) {
 		if (kind == Kind.ERROR) {
-			_processingEnv.setErrorRaised(true);
+			this._processingEnv.setErrorRaised(true);
 		}
 		CategorizedProblem problem = createProblem(kind, msg, e, a, v);
 		if (problem != null) {

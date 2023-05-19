@@ -82,7 +82,7 @@ public class Factory {
 	 * This object should only be constructed by the BaseProcessingEnvImpl.
 	 */
 	public Factory(BaseProcessingEnvImpl env) {
-		_env = env;
+		this._env = env;
 	}
 
 	/**
@@ -148,7 +148,7 @@ public class Factory {
 				qName = CharOperation.concatWith(binding.compoundName, '.');
 			}
 			if(annoTypeName.equals(new String(qName)) ){
-				return (AnnotationMirrorImpl)_env.getFactory().newAnnotationMirror(annoInstance);
+				return (AnnotationMirrorImpl)this._env.getFactory().newAnnotationMirror(annoInstance);
 			}
 		}
 		return null;
@@ -250,11 +250,11 @@ public class Factory {
 	public TypeMirror getReceiverType(MethodBinding binding) {
 		if (binding != null) {
 			if (binding.receiver != null) {
-				return _env.getFactory().newTypeMirror(binding.receiver);
+				return this._env.getFactory().newTypeMirror(binding.receiver);
 			}
 			if (binding.declaringClass != null) {
 				if (!binding.isStatic() && (!binding.isConstructor() || binding.declaringClass.isMemberType())) {
-					return _env.getFactory().newTypeMirror(binding.declaringClass);
+					return this._env.getFactory().newTypeMirror(binding.declaringClass);
 				}
 			}
 		}
@@ -356,7 +356,7 @@ public class Factory {
 
 	public AnnotationMirror newAnnotationMirror(AnnotationBinding binding)
 	{
-		return new AnnotationMirrorImpl(_env, binding);
+		return new AnnotationMirrorImpl(this._env, binding);
 	}
 
 	/**
@@ -370,7 +370,7 @@ public class Factory {
 		case Binding.LOCAL:
 		case Binding.RECORD_COMPONENT:
 		case Binding.VARIABLE:
-			return new VariableElementImpl(_env, (VariableBinding) binding);
+			return new VariableElementImpl(this._env, (VariableBinding) binding);
 		case Binding.TYPE:
 		case Binding.GENERIC_TYPE:
 			ReferenceBinding referenceBinding = (ReferenceBinding)binding;
@@ -380,19 +380,19 @@ public class Factory {
 			if (CharOperation.equals(referenceBinding.sourceName, TypeConstants.PACKAGE_INFO_NAME)) {
 				return newPackageElement(referenceBinding.fPackage);
 			}
-			return new TypeElementImpl(_env, referenceBinding, kindHint);
+			return new TypeElementImpl(this._env, referenceBinding, kindHint);
 		case Binding.METHOD:
-			return new ExecutableElementImpl(_env, (MethodBinding)binding);
+			return new ExecutableElementImpl(this._env, (MethodBinding)binding);
 		case Binding.RAW_TYPE:
 		case Binding.PARAMETERIZED_TYPE:
-			return new TypeElementImpl(_env, ((ParameterizedTypeBinding)binding).genericType(), kindHint);
+			return new TypeElementImpl(this._env, ((ParameterizedTypeBinding)binding).genericType(), kindHint);
 		case Binding.PACKAGE:
 			return newPackageElement((PackageBinding)binding);
 		case Binding.TYPE_PARAMETER:
-			return new TypeParameterElementImpl(_env, (TypeVariableBinding)binding);
+			return new TypeParameterElementImpl(this._env, (TypeVariableBinding)binding);
 			// TODO: fill in the rest of these
 		case Binding.MODULE:
-			return new ModuleElementImpl(_env, (ModuleBinding) binding);
+			return new ModuleElementImpl(this._env, (ModuleBinding) binding);
 		case Binding.IMPORT:
 		case Binding.ARRAY_TYPE:
 		case Binding.BASE_TYPE:
@@ -418,7 +418,7 @@ public class Factory {
 		if (binding == null) {
 			return null;
 		}
-		return new PackageElementImpl(_env, binding);
+		return new PackageElementImpl(this._env, binding);
 	}
 
 	public NullType getNullType() {
@@ -474,7 +474,7 @@ public class Factory {
 		if (annotations == null || annotations.length == 0) {
 			return getPrimitiveType(PrimitiveTypeImpl.getKind(binding));
 		}
-		return new PrimitiveTypeImpl(_env, binding);
+		return new PrimitiveTypeImpl(this._env, binding);
 	}
 
 	/**
@@ -496,7 +496,7 @@ public class Factory {
 			throw new UnsupportedOperationException("NYI: import type " + binding.kind()); //$NON-NLS-1$
 
 		case Binding.METHOD:
-			return new ExecutableTypeImpl(_env, (MethodBinding) binding);
+			return new ExecutableTypeImpl(this._env, (MethodBinding) binding);
 
 		case Binding.TYPE:
 		case Binding.RAW_TYPE:
@@ -506,10 +506,10 @@ public class Factory {
 			if ((referenceBinding.tagBits & TagBits.HasMissingType) != 0) {
 				return getErrorType(referenceBinding);
 			}
-			return new DeclaredTypeImpl(_env, (ReferenceBinding)binding);
+			return new DeclaredTypeImpl(this._env, (ReferenceBinding)binding);
 
 		case Binding.ARRAY_TYPE:
-			return new ArrayTypeImpl(_env, (ArrayBinding)binding);
+			return new ArrayTypeImpl(this._env, (ArrayBinding)binding);
 
 		case Binding.BASE_TYPE:
 			BaseTypeBinding btb = (BaseTypeBinding)binding;
@@ -524,10 +524,10 @@ public class Factory {
 
 		case Binding.WILDCARD_TYPE:
 		case Binding.INTERSECTION_TYPE: // TODO compatible, but shouldn't it really be an intersection type?
-			return new WildcardTypeImpl(_env, (WildcardBinding) binding);
+			return new WildcardTypeImpl(this._env, (WildcardBinding) binding);
 
 		case Binding.TYPE_PARAMETER:
-			return new TypeVariableImpl(_env, (TypeVariableBinding) binding);
+			return new TypeVariableImpl(this._env, (TypeVariableBinding) binding);
 		case Binding.MODULE:
 			return getNoType(TypeKind.MODULE);
 		}
@@ -539,7 +539,7 @@ public class Factory {
 	 */
 	public TypeParameterElement newTypeParameterElement(TypeVariableBinding variable, Element declaringElement)
 	{
-		return new TypeParameterElementImpl(_env, variable, declaringElement);
+		return new TypeParameterElementImpl(this._env, variable, declaringElement);
 	}
 
     public ErrorType getErrorType(ReferenceBinding binding) {

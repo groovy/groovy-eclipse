@@ -33,6 +33,7 @@ import org.eclipse.jdt.internal.compiler.apt.model.Factory;
 import org.eclipse.jdt.internal.compiler.apt.model.TypesImpl;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -41,6 +42,12 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
  * Implementation of ProcessingEnvironment that is common to batch and IDE environments.
  */
 public abstract class BaseProcessingEnvImpl implements ProcessingEnvironment {
+
+	/**
+	 * The minimal required Java runtime version (we need to run compiler on)
+	 */
+	public static final SourceVersion MINIMAL_REQUIRED_RUNTIME_VERSION = SourceVersion.RELEASE_17;
+	private static final long VERSION_FOR_MINIMAL_RUNTIME = ClassFileConstants.JDK17;
 
 	// Initialized in subclasses:
 	protected Filer _filer;
@@ -123,52 +130,49 @@ public abstract class BaseProcessingEnvImpl implements ProcessingEnvironment {
 
 	@Override
 	public SourceVersion getSourceVersion() {
-		if (this._compiler.options.sourceLevel <= ClassFileConstants.JDK1_5) {
+		final long sourceLevel = this._compiler.options.sourceLevel;
+		if (sourceLevel <= ClassFileConstants.JDK1_5) {
 			return SourceVersion.RELEASE_5;
 		}
-		if (this._compiler.options.sourceLevel == ClassFileConstants.JDK1_6) {
+		if (sourceLevel == ClassFileConstants.JDK1_6) {
 			return SourceVersion.RELEASE_6;
+		} else if (sourceLevel == ClassFileConstants.JDK1_7) {
+			return SourceVersion.RELEASE_7;
+		} else if (sourceLevel == ClassFileConstants.JDK1_8) {
+			return SourceVersion.RELEASE_8;
+		} else if (sourceLevel == ClassFileConstants.JDK9) {
+			return SourceVersion.RELEASE_9;
+		} else if (sourceLevel == ClassFileConstants.JDK10) {
+			return SourceVersion.RELEASE_10;
+		} else if (sourceLevel == ClassFileConstants.JDK11) {
+			return SourceVersion.RELEASE_11;
+		} else if (sourceLevel == ClassFileConstants.JDK12) {
+			return SourceVersion.RELEASE_12;
+		} else if (sourceLevel == ClassFileConstants.JDK13) {
+			return SourceVersion.RELEASE_13;
+		} else if (sourceLevel == ClassFileConstants.JDK14) {
+			return SourceVersion.RELEASE_14;
+		} else if (sourceLevel == ClassFileConstants.JDK15) {
+			return SourceVersion.RELEASE_15;
+		} else if (sourceLevel == ClassFileConstants.JDK16) {
+			return SourceVersion.RELEASE_16;
+		} else if (sourceLevel == ClassFileConstants.JDK17) {
+			return SourceVersion.RELEASE_17;
 		}
-		try {
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK1_7) {
-				return SourceVersion.valueOf("RELEASE_7"); //$NON-NLS-1$
+		// From here on we can't use constants that may not be yet defined in
+		// minimal required runtime Java version we have to avoid
+		// errors like java.lang.NoSuchFieldError: RELEASE_20
+		if (sourceLevel > VERSION_FOR_MINIMAL_RUNTIME) {
+			try {
+				return SourceVersion.valueOf("RELEASE_" + CompilerOptions.versionFromJdkLevel(sourceLevel)); //$NON-NLS-1$
+			} catch (IllegalArgumentException e) {
+				// handle call on a minimal release we can run on
+				return MINIMAL_REQUIRED_RUNTIME_VERSION;
 			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK1_8) {
-				return SourceVersion.valueOf("RELEASE_8"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK9) {
-				return SourceVersion.valueOf("RELEASE_9"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK10) {
-				return SourceVersion.valueOf("RELEASE_10"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK11) {
-				return SourceVersion.valueOf("RELEASE_11"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK12) {
-				return SourceVersion.valueOf("RELEASE_12"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK13) {
-				return SourceVersion.valueOf("RELEASE_13"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK14) {
-				return SourceVersion.valueOf("RELEASE_14"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK15) {
-				return SourceVersion.valueOf("RELEASE_15"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK16) {
-				return SourceVersion.valueOf("RELEASE_16"); //$NON-NLS-1$
-			}
-			if (this._compiler.options.sourceLevel == ClassFileConstants.JDK17) {
-				return SourceVersion.valueOf("RELEASE_17"); //$NON-NLS-1$
-			}
-		} catch(IllegalArgumentException e) {
-			// handle call on a JDK 6
-			return SourceVersion.RELEASE_6;
+		} else {
+			// to make compiler happy, should never happen
+			throw new IllegalStateException("Invalid JDK source level: " + sourceLevel); //$NON-NLS-1$
 		}
-		// handle call on a JDK 6 by default
-		return SourceVersion.RELEASE_6;
 	}
 
 	/**

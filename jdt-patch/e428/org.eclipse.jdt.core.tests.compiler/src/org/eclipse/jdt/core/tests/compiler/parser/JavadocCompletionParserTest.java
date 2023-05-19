@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -101,6 +101,52 @@ protected Map getCompilerOptions() {
 	options.put(CompilerOptions.OPTION_Source, this.sourceLevel);
 	return options;
 }
+private char[][] getAdditionalTagsPerLevels() {
+	char[][] additionalTags = null;
+	if (this.complianceLevel == ClassFileConstants.JDK1_4) {
+		additionalTags = new char[][] {
+			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE
+		};
+	} else if (this.complianceLevel > ClassFileConstants.JDK1_4
+			&& this.complianceLevel < ClassFileConstants.JDK9) {
+		additionalTags = new char[][] {
+			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
+			TAG_CODE, TAG_LITERAL
+		};
+	} else if (this.complianceLevel == ClassFileConstants.JDK9) {
+		additionalTags = new char[][] {
+			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
+			TAG_CODE, TAG_LITERAL,
+			TAG_INDEX
+		};
+	} else if (this.complianceLevel >= ClassFileConstants.JDK10
+			&& this.complianceLevel < ClassFileConstants.JDK12) {
+		additionalTags = new char[][] {
+			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
+			TAG_CODE, TAG_LITERAL,
+			TAG_INDEX, TAG_SUMMARY
+		};
+	} else if(this.complianceLevel >= ClassFileConstants.JDK12
+			&& this.complianceLevel < ClassFileConstants.JDK16) {
+		additionalTags = new char[][] {
+			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
+			TAG_CODE, TAG_LITERAL, TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY
+		};
+	} else if(this.complianceLevel >= ClassFileConstants.JDK16
+			&& this.complianceLevel < ClassFileConstants.JDK18) {
+		additionalTags = new char[][] {
+			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
+			TAG_CODE, TAG_LITERAL, TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY, TAG_RETURN
+		};
+	} else if(this.complianceLevel >= ClassFileConstants.JDK18) {
+		additionalTags = new char[][] {
+			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
+			TAG_CODE, TAG_LITERAL, TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY, TAG_RETURN, TAG_SNIPPET
+		};
+	}
+	return additionalTags;
+}
+
 protected void verifyCompletionInJavadoc(String source, String after) {
 	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	CompletionParser parser = new CompletionParser(new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(),
@@ -190,40 +236,7 @@ protected void verifyAllTagsCompletion() {
 				TAG_LINK,
 				TAG_DOC_ROOT
 			};
-	char[][] additionalTags = null;
-	if(this.complianceLevel == ClassFileConstants.JDK1_4) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE
-		};
-	} else if(this.complianceLevel > ClassFileConstants.JDK1_4
-			&& this.complianceLevel < ClassFileConstants.JDK9) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL
-		};
-	} else if (this.complianceLevel == ClassFileConstants.JDK9) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL, TAG_INDEX
-		};
-	} else if (this.complianceLevel > ClassFileConstants.JDK9
-			&& this.complianceLevel < ClassFileConstants.JDK12) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL, TAG_INDEX, TAG_SUMMARY
-		};
-	} else if(this.complianceLevel >= ClassFileConstants.JDK12
-			&& this.complianceLevel < ClassFileConstants.JDK18) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL, TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY
-		};
-	} else if(this.complianceLevel >= ClassFileConstants.JDK18) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL, TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY, TAG_SNIPPET
-		};
-	}
+	char[][] additionalTags = getAdditionalTagsPerLevels();
 	allTagsFinal = this.complianceLevel > ClassFileConstants.JDK1_8 ? allTagsJava9Plus  :  this.complianceLevel == ClassFileConstants.JDK1_8 ? allTagsJava8 : allTags  ;
 	if (additionalTags != null) {
 		int length = allTagsFinal.length;
@@ -309,42 +322,7 @@ public void test006() {
 		TAG_LINK,
 		TAG_DOC_ROOT,
 	};
-	char[][] additionalTags = null;
-	if (this.complianceLevel == ClassFileConstants.JDK1_4) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE
-		};
-	} else if (this.complianceLevel > ClassFileConstants.JDK1_4
-			&& this.complianceLevel < ClassFileConstants.JDK9) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL
-		};
-	} else if (this.complianceLevel == ClassFileConstants.JDK9) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX
-		};
-	} else if (this.complianceLevel >= ClassFileConstants.JDK10
-			&& this.complianceLevel < ClassFileConstants.JDK12) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX, TAG_SUMMARY
-		};
-	} else if(this.complianceLevel >= ClassFileConstants.JDK12
-			&& this.complianceLevel < ClassFileConstants.JDK18) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL, TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY
-		};
-	} else if(this.complianceLevel >= ClassFileConstants.JDK18) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL, TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY, TAG_SNIPPET
-		};
-	}
+	char[][] additionalTags = getAdditionalTagsPerLevels();
 	if (additionalTags != null) {
 		int length = allTags.length;
 		int add = additionalTags.length;
@@ -573,44 +551,7 @@ public void test025() {
 		TAG_LINK,
 		TAG_DOC_ROOT,
 	};
-	char[][] additionalTags = null;
-	if (this.complianceLevel == ClassFileConstants.JDK1_4) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE
-		};
-	} else if (this.complianceLevel > ClassFileConstants.JDK1_4
-			&& this.complianceLevel < ClassFileConstants.JDK9) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL
-		};
-	} else if (this.complianceLevel == ClassFileConstants.JDK9) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX
-		};
-	} else if (this.complianceLevel > ClassFileConstants.JDK9
-			&& this.complianceLevel < ClassFileConstants.JDK12) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX, TAG_SUMMARY
-		};
-	} else if(this.complianceLevel >= ClassFileConstants.JDK12
-			&& this.complianceLevel < ClassFileConstants.JDK18) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY
-		};
-	} else if (this.complianceLevel >= ClassFileConstants.JDK18) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY, TAG_SNIPPET
-		};
-	}
+	char[][] additionalTags = getAdditionalTagsPerLevels();
 	if (additionalTags != null) {
 		int length = allTags.length;
 		int add = additionalTags.length;
@@ -673,45 +614,7 @@ public void test028() {
 		TAG_LINK,
 		TAG_DOC_ROOT,
 	};
-	char[][] additionalTags = null;
-	if (this.complianceLevel == ClassFileConstants.JDK1_4) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE
-		};
-	} else if (this.complianceLevel > ClassFileConstants.JDK1_4
-			&& this.complianceLevel < ClassFileConstants.JDK9) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL
-		};
-	} else if (this.complianceLevel == ClassFileConstants.JDK9) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX
-		};
-	} else if (this.complianceLevel > ClassFileConstants.JDK9
-			&& this.complianceLevel < ClassFileConstants.JDK12) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX, TAG_SUMMARY
-		};
-	} else if(this.complianceLevel >= ClassFileConstants.JDK12
-			&& this.complianceLevel < ClassFileConstants.JDK18) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY
-		};
-	} else if(this.complianceLevel >= ClassFileConstants.JDK18) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
-			TAG_CODE, TAG_LITERAL,
-			TAG_INDEX, TAG_SUMMARY, TAG_SYSTEM_PROPERTY,
-			TAG_SNIPPET
-		};
-	}
+	char[][] additionalTags = getAdditionalTagsPerLevels();
 	if (additionalTags != null) {
 		int length = allTags.length;
 		int add = additionalTags.length;

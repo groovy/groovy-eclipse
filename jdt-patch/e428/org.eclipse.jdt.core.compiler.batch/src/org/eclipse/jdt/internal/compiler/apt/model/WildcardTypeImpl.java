@@ -42,7 +42,7 @@ public class WildcardTypeImpl extends TypeMirrorImpl implements WildcardType {
 		if (wildcardBinding.boundKind != Wildcard.EXTENDS) return null;
 		TypeBinding bound = wildcardBinding.bound;
 		if (bound == null) return null;
-		return _env.getFactory().newTypeMirror(bound);
+		return this._env.getFactory().newTypeMirror(bound);
 	}
 
 	/* (non-Javadoc)
@@ -61,7 +61,7 @@ public class WildcardTypeImpl extends TypeMirrorImpl implements WildcardType {
 		if (wildcardBinding.boundKind != Wildcard.SUPER) return null;
 		TypeBinding bound = wildcardBinding.bound;
 		if (bound == null) return null;
-		return _env.getFactory().newTypeMirror(bound);
+		return this._env.getFactory().newTypeMirror(bound);
 	}
 
 	@Override

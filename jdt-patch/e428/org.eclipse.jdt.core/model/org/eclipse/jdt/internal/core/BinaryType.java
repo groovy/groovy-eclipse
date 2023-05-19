@@ -337,7 +337,12 @@ private IField[] getFieldsOrComponents(boolean component) throws JavaModelExcept
 public IField getRecordComponent(String compName) {
 	try {
 		if (isRecord())
-			return new BinaryField(this, compName);
+			return new BinaryField(this, compName) {
+				@Override
+				public boolean isRecordComponent() throws JavaModelException {
+					return true;
+				}
+			};
 	} catch (JavaModelException e) {
 		//
 	}

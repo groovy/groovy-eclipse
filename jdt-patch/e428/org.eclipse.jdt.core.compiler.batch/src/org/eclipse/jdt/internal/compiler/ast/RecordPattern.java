@@ -132,6 +132,11 @@ public class RecordPattern extends TypePattern {
 			this.type.bits |= ASTNode.IgnoreRawTypeCheck;
 			this.resolvedType = this.type.resolveType(scope);
 		}
+		if (this.resolvedType == null) {
+			// Probably called during collectPatternVariablesToScope()
+			// and probably due to an error, this is unresolved.
+			return null;
+		}
 		if (!this.resolvedType.isValidBinding())
 			return this.resolvedType;
 
@@ -144,10 +149,6 @@ public class RecordPattern extends TypePattern {
 			scope.problemReporter().unexpectedTypeinRecordPattern(this.resolvedType, this.type);
 			return this.resolvedType;
 		}
-		if (shouldInitiateRecordTypeInference()) {
-			return this.resolvedType; // do the actual stuff in resolveWithExpression
-		}
-
 		setAccessorsPlusInfuseInferredType(scope);
 		return this.resolvedType;
 	}

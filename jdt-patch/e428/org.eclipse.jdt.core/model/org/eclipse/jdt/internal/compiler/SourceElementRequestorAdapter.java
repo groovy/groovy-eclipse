@@ -232,10 +232,5 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 		// default implementation: do nothing
 	}
 
-	@Override
-	public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
-		// default implementation: do nothing
-	}
-
 }
 

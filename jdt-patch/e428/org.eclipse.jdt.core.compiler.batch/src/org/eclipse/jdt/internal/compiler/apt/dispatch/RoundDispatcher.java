@@ -58,12 +58,12 @@ public class RoundDispatcher {
 			PrintWriter traceProcessorInfo,
 			PrintWriter traceRounds)
 	{
-		_provider = provider;
-		_processors = provider.getDiscoveredProcessors();
-		_roundEnv = env;
-		_unclaimedAnnotations = new HashSet<>(rootAnnotations);
-		_traceProcessorInfo = traceProcessorInfo;
-		_traceRounds = traceRounds;
+		this._provider = provider;
+		this._processors = provider.getDiscoveredProcessors();
+		this._roundEnv = env;
+		this._unclaimedAnnotations = new HashSet<>(rootAnnotations);
+		this._traceProcessorInfo = traceProcessorInfo;
+		this._traceRounds = traceRounds;
 	}
 
 	/**
@@ -71,10 +71,10 @@ public class RoundDispatcher {
 	 */
 	public void round()
 	{
-		if (null != _traceRounds) {
+		if (null != this._traceRounds) {
 			StringBuilder sbElements = new StringBuilder();
 			sbElements.append("\tinput files: {"); //$NON-NLS-1$
-			Iterator<? extends Element> iElements = _roundEnv.getRootElements().iterator();
+			Iterator<? extends Element> iElements = this._roundEnv.getRootElements().iterator();
 			boolean hasNext = iElements.hasNext();
 			while (hasNext) {
 				sbElements.append(iElements.next());
@@ -84,11 +84,11 @@ public class RoundDispatcher {
 				}
 			}
 			sbElements.append('}');
-			_traceRounds.println(sbElements.toString());
+			this._traceRounds.println(sbElements.toString());
 
 			StringBuilder sbAnnots = new StringBuilder();
 			sbAnnots.append("\tannotations: ["); //$NON-NLS-1$
-			Iterator<TypeElement> iAnnots = _unclaimedAnnotations.iterator();
+			Iterator<TypeElement> iAnnots = this._unclaimedAnnotations.iterator();
 			hasNext = iAnnots.hasNext();
 			while (hasNext) {
 				sbAnnots.append(iAnnots.next());
@@ -98,25 +98,25 @@ public class RoundDispatcher {
 				}
 			}
 			sbAnnots.append(']');
-			_traceRounds.println(sbAnnots.toString());
+			this._traceRounds.println(sbAnnots.toString());
 
-			_traceRounds.println("\tlast round: " + _roundEnv.processingOver()); //$NON-NLS-1$
+			this._traceRounds.println("\tlast round: " + this._roundEnv.processingOver()); //$NON-NLS-1$
 		}
 
 		// If there are no root annotations, try to find a processor that claims "*"
-		_searchForStar = _unclaimedAnnotations.isEmpty();
+		this._searchForStar = this._unclaimedAnnotations.isEmpty();
 
 		// Iterate over all the already-found processors, giving each one a chance at the unclaimed
 		// annotations. If a processor is called at all, it is called on every subsequent round
 		// including the final round, but it may be called with an empty set of annotations.
-		for (ProcessorInfo pi : _processors) {
+		for (ProcessorInfo pi : this._processors) {
 			handleProcessor(pi);
 		}
 
 		// If there are any unclaimed annotations, or if there were no root annotations and
 		// we have not yet run into a processor that claimed "*", continue discovery.
-		while (_searchForStar || !_unclaimedAnnotations.isEmpty()) {
-			ProcessorInfo pi = _provider.discoverNextProcessor();
+		while (this._searchForStar || !this._unclaimedAnnotations.isEmpty()) {
+			ProcessorInfo pi = this._provider.discoverNextProcessor();
 			if (null == pi) {
 				// There are no more processors to be discovered.
 				break;
@@ -137,10 +137,10 @@ public class RoundDispatcher {
 		try {
 			Set<TypeElement> annotationsToProcess = new HashSet<>();
 			boolean shouldCall = pi.computeSupportedAnnotations(
-					_unclaimedAnnotations, annotationsToProcess);
+					this._unclaimedAnnotations, annotationsToProcess);
 			if (shouldCall) {
-				boolean claimed = pi._processor.process(annotationsToProcess, _roundEnv);
-				if (null != _traceProcessorInfo && !_roundEnv.processingOver()) {
+				boolean claimed = pi._processor.process(annotationsToProcess, this._roundEnv);
+				if (null != this._traceProcessorInfo && !this._roundEnv.processingOver()) {
 					StringBuilder sb = new StringBuilder();
 					sb.append("Processor "); //$NON-NLS-1$
 					sb.append(pi._processor.getClass().getName());
@@ -156,20 +156,20 @@ public class RoundDispatcher {
 					}
 					sb.append("] and returns "); //$NON-NLS-1$
 					sb.append(claimed);
-					_traceProcessorInfo.println(sb.toString());
+					this._traceProcessorInfo.println(sb.toString());
 				}
 				if (claimed) {
 					// The processor claimed its annotations.
-					_unclaimedAnnotations.removeAll(annotationsToProcess);
+					this._unclaimedAnnotations.removeAll(annotationsToProcess);
 					if (pi.supportsStar()) {
-						_searchForStar = false;
+						this._searchForStar = false;
 					}
 				}
 			}
 		} catch (Throwable e) {
 			// If a processor throws an exception (as opposed to reporting an error),
 			// report it and abort compilation by throwing AbortCompilation.
-			_provider.reportProcessorException(pi._processor, new Exception(e));
+			this._provider.reportProcessorException(pi._processor, new Exception(e));
 		}
 	}
 

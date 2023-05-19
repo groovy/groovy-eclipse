@@ -54,10 +54,10 @@ public class ProcessorInfo {
 	 */
 	public ProcessorInfo(Processor p)
 	{
-		_processor = p;
-		_hasBeenCalled = false;
-		_supportedSourceVersion = p.getSupportedSourceVersion();
-		_supportedOptions = p.getSupportedOptions();
+		this._processor = p;
+		this._hasBeenCalled = false;
+		this._supportedSourceVersion = p.getSupportedSourceVersion();
+		this._supportedOptions = p.getSupportedOptions();
 		Set<String> supportedAnnotationTypes = p.getSupportedAnnotationTypes();
 
 		boolean supportsStar = false;
@@ -75,12 +75,12 @@ public class ProcessorInfo {
 				}
 				regex.append('|');
 			}
-			_supportedAnnotationTypesPattern = Pattern.compile(regex.toString());
+			this._supportedAnnotationTypesPattern = Pattern.compile(regex.toString());
 		}
 		else {
-			_supportedAnnotationTypesPattern = null;
+			this._supportedAnnotationTypesPattern = null;
 		}
-		_supportsStar = supportsStar;
+		this._supportsStar = supportsStar;
 	}
 
 	/**
@@ -96,16 +96,16 @@ public class ProcessorInfo {
 	 */
 	public boolean computeSupportedAnnotations(Set<TypeElement> annotations, Set<TypeElement> result)
 	{
-		if (null != annotations && !annotations.isEmpty() && null != _supportedAnnotationTypesPattern) {
+		if (null != annotations && !annotations.isEmpty() && null != this._supportedAnnotationTypesPattern) {
 			for (TypeElement annotation : annotations) {
-				Matcher matcher = _supportedAnnotationTypesPattern.matcher(annotation.getQualifiedName().toString());
+				Matcher matcher = this._supportedAnnotationTypesPattern.matcher(annotation.getQualifiedName().toString());
 				if (matcher.matches()) {
 					result.add(annotation);
 				}
 			}
 		}
-		boolean call = _hasBeenCalled || _supportsStar || !result.isEmpty();
-		_hasBeenCalled |= call;
+		boolean call = this._hasBeenCalled || this._supportsStar || !result.isEmpty();
+		this._hasBeenCalled |= call;
 		return call;
 	}
 
@@ -114,7 +114,7 @@ public class ProcessorInfo {
 	 */
 	public boolean supportsStar()
 	{
-		return _supportsStar;
+		return this._supportsStar;
 	}
 
 	/**
@@ -125,12 +125,12 @@ public class ProcessorInfo {
 	 */
 	public void reset()
 	{
-		_hasBeenCalled = false;
+		this._hasBeenCalled = false;
 	}
 
 	@Override
 	public int hashCode() {
-		return _processor.getClass().hashCode();
+		return this._processor.getClass().hashCode();
 	}
 
 	@Override
@@ -142,7 +142,7 @@ public class ProcessorInfo {
 		if (getClass() != obj.getClass())
 			return false;
 		final ProcessorInfo other = (ProcessorInfo) obj;
-		if (!_processor.getClass().equals(other._processor.getClass()))
+		if (!this._processor.getClass().equals(other._processor.getClass()))
 			return false;
 		return true;
 	}
@@ -150,7 +150,7 @@ public class ProcessorInfo {
 	@Override
 	public String toString()
 	{
-		return _processor.getClass().getName();
+		return this._processor.getClass().getName();
 	}
 
 	/**
@@ -161,7 +161,7 @@ public class ProcessorInfo {
 	{
 		StringBuilder sb = new StringBuilder();
 		sb.append('[');
-		Iterator<String> iAnnots = _processor.getSupportedAnnotationTypes().iterator();
+		Iterator<String> iAnnots = this._processor.getSupportedAnnotationTypes().iterator();
 		boolean hasNext = iAnnots.hasNext();
 		while (hasNext) {
 			sb.append(iAnnots.next());

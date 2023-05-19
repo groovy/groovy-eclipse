@@ -107,6 +107,7 @@ public final class Messages extends NLS {
 	public static String build_serializationError;
 	public static String build_classFileCollision;
 	public static String build_duplicateClassFile;
+	public static String build_duplicateModuleInfo;
 	public static String build_duplicateResource;
 	public static String build_inconsistentClassFile;
 	public static String build_inconsistentProject;

@@ -548,8 +548,8 @@ public class JavaProject
 			module = root.getModuleDescription();
 			if (module != null) {
 				if (current != null) {
-					throw new JavaModelException(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID,
-							Messages.bind(Messages.classpath_duplicateEntryPath, TypeConstants.MODULE_INFO_FILE_NAME_STRING, getElementName())));
+					// Error will be reported by the compiler
+					return false;
 				}
 				current = module;
 				JavaModelManager.getModulePathManager().addEntry(module, this);

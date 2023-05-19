@@ -43,53 +43,53 @@ public class HookedJavaFileObject extends
 	private class ForwardingWriter extends Writer {
 		private final Writer _w;
 		ForwardingWriter(Writer w) {
-			_w = w;
+			this._w = w;
 		}
 		@Override
 		public Writer append(char c) throws IOException {
-			return _w.append(c);
+			return this._w.append(c);
 		}
 		@Override
 		public Writer append(CharSequence csq, int start, int end)
 				throws IOException {
-			return _w.append(csq, start, end);
+			return this._w.append(csq, start, end);
 		}
 		@Override
 		public Writer append(CharSequence csq) throws IOException {
-			return _w.append(csq);
+			return this._w.append(csq);
 		}
 		// This is the only interesting method - it has to notify the
 		// dispatch manager of the new file.
 		@Override
 		public void close() throws IOException {
-			_w.close();
+			this._w.close();
 			closed();
 		}
 		@Override
 		public void flush() throws IOException {
-			_w.flush();
+			this._w.flush();
 		}
 		@Override
 		public void write(char[] cbuf) throws IOException {
-			_w.write(cbuf);
+			this._w.write(cbuf);
 		}
 		@Override
 		public void write(int c) throws IOException {
-			_w.write(c);
+			this._w.write(c);
 		}
 		@Override
 		public void write(String str, int off, int len)
 				throws IOException {
-			_w.write(str, off, len);
+			this._w.write(str, off, len);
 		}
 		@Override
 		public void write(String str) throws IOException {
-			_w.write(str);
+			this._w.write(str);
 		}
 		@Override
 		public void write(char[] cbuf, int off, int len)
 		throws IOException {
-			_w.write(cbuf, off, len);
+			this._w.write(cbuf, off, len);
 		}
 		@Override
 		protected Object clone() throws CloneNotSupportedException {
@@ -97,7 +97,7 @@ public class HookedJavaFileObject extends
 		}
 		@Override
 		public int hashCode() {
-			return _w.hashCode();
+			return this._w.hashCode();
 		}
 		@Override
 		public boolean equals(Object obj) {
@@ -108,16 +108,16 @@ public class HookedJavaFileObject extends
 			if (getClass() != obj.getClass())
 				return false;
 			final ForwardingWriter other = (ForwardingWriter) obj;
-			if (_w == null) {
+			if (this._w == null) {
 				if (other._w != null)
 					return false;
-			} else if (!_w.equals(other._w))
+			} else if (!this._w.equals(other._w))
 				return false;
 			return true;
 		}
 		@Override
 		public String toString() {
-			return "ForwardingWriter wrapping " + _w.toString(); //$NON-NLS-1$
+			return "ForwardingWriter wrapping " + this._w.toString(); //$NON-NLS-1$
 		}
 	}
 
@@ -127,29 +127,29 @@ public class HookedJavaFileObject extends
 		private final OutputStream _os;
 
 		ForwardingOutputStream(OutputStream os) {
-			_os = os;
+			this._os = os;
 		}
 
 		@Override
 		public void close() throws IOException {
-			_os.close();
+			this._os.close();
 			closed();
 		}
 		@Override
 		public void flush() throws IOException {
-			_os.flush();
+			this._os.flush();
 		}
 		@Override
 		public void write(byte[] b, int off, int len) throws IOException {
-			_os.write(b, off, len);
+			this._os.write(b, off, len);
 		}
 		@Override
 		public void write(byte[] b) throws IOException {
-			_os.write(b);
+			this._os.write(b);
 		}
 		@Override
 		public void write(int b) throws IOException {
-			_os.write(b);
+			this._os.write(b);
 		}
 		@Override
 		protected Object clone() throws CloneNotSupportedException {
@@ -157,7 +157,7 @@ public class HookedJavaFileObject extends
 		}
 		@Override
 		public int hashCode() {
-			return _os.hashCode();
+			return this._os.hashCode();
 		}
 		@Override
 		public boolean equals(Object obj) {
@@ -168,16 +168,16 @@ public class HookedJavaFileObject extends
 			if (getClass() != obj.getClass())
 				return false;
 			final ForwardingOutputStream other = (ForwardingOutputStream) obj;
-			if (_os == null) {
+			if (this._os == null) {
 				if (other._os != null)
 					return false;
-			} else if (!_os.equals(other._os))
+			} else if (!this._os.equals(other._os))
 				return false;
 			return true;
 		}
 		@Override
 		public String toString() {
-			return "ForwardingOutputStream wrapping " + _os.toString(); //$NON-NLS-1$
+			return "ForwardingOutputStream wrapping " + this._os.toString(); //$NON-NLS-1$
 		}
 	}
 
@@ -204,9 +204,9 @@ public class HookedJavaFileObject extends
 
 	public HookedJavaFileObject(JavaFileObject fileObject, String fileName, String typeName, BatchFilerImpl filer) {
 		super(fileObject);
-		_filer = filer;
-		_fileName = fileName;
-		_typeName = typeName;
+		this._filer = filer;
+		this._fileName = fileName;
+		this._typeName = typeName;
 	}
 
 //	@SuppressWarnings("resource") // ForwardingOutputStream forwards close() too
@@ -222,27 +222,27 @@ public class HookedJavaFileObject extends
 	}
 
 	protected void closed() {
-		if (!_closed) {
-			_closed = true;
+		if (!this._closed) {
+			this._closed = true;
 			//TODO: support encoding
 			switch(this.getKind()) {
 				case SOURCE :
-					CompilationUnit unit = new CompilationUnit(null, _fileName, null /* encoding */, null, this._filer._env.shouldIgnoreOptionalProblems(_fileName.toCharArray()), null);
-					_filer.addNewUnit(unit);
+					CompilationUnit unit = new CompilationUnit(null, this._fileName, null /* encoding */, null, this._filer._env.shouldIgnoreOptionalProblems(this._fileName.toCharArray()), null);
+					this._filer.addNewUnit(unit);
 					break;
 				case CLASS :
 					IBinaryType binaryType = null;
 					try {
-						binaryType = ClassFileReader.read(_fileName);
+						binaryType = ClassFileReader.read(this._fileName);
 					} catch (ClassFormatException e) {
 						/* When the annotation processor produces garbage, javac seems to show some resilience, by hooking the source type,
 						   which since is resolved can answer annotations during discovery - Not sure if this sanctioned by the spec, to be taken
 						   up with Oracle. Here we mimic the bug, see that addNewClassFile is simply collecting ReferenceBinding's, so adding
 						   a SourceTypeBinding works just fine.
 						*/
-						ReferenceBinding type = this._filer._env._compiler.lookupEnvironment.getType(CharOperation.splitOn('.', _typeName.toCharArray()));
+						ReferenceBinding type = this._filer._env._compiler.lookupEnvironment.getType(CharOperation.splitOn('.', this._typeName.toCharArray()));
 						if (type != null)
-							_filer.addNewClassFile(type);
+							this._filer.addNewClassFile(type);
 					} catch (IOException e) {
 						// ignore
 					}
@@ -251,9 +251,10 @@ public class HookedJavaFileObject extends
 						ReferenceBinding type = this._filer._env._compiler.lookupEnvironment.getType(CharOperation.splitOn('/', name));
 						if (type != null && type.isValidBinding()) {
 							if (type.isBinaryBinding()) {
-								_filer.addNewClassFile(type);
+								this._filer.addNewClassFile(type);
 							} else {
-								_filer.addNewClassFile(new BinaryTypeBinding(type.getPackage(), binaryType, this._filer._env._compiler.lookupEnvironment, true));
+								BinaryTypeBinding binaryBinding = new BinaryTypeBinding(type.getPackage(), binaryType, this._filer._env._compiler.lookupEnvironment, true);
+								this._filer.addNewClassFile(binaryBinding);
 							}
 						}
 					}

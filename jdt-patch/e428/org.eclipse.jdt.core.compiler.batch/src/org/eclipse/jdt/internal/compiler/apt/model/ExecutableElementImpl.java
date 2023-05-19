@@ -65,14 +65,14 @@ public class ExecutableElementImpl extends ElementImpl implements
 	@Override
 	protected AnnotationBinding[] getAnnotationBindings()
 	{
-		return ((MethodBinding)_binding).getAnnotations();
+		return ((MethodBinding)this._binding).getAnnotations();
 	}
 
 	@Override
 	public AnnotationValue getDefaultValue() {
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		Object defaultValue = binding.getDefaultValue();
-		if (defaultValue != null) return new AnnotationMemberValue(_env, defaultValue, binding);
+		if (defaultValue != null) return new AnnotationMemberValue(this._env, defaultValue, binding);
 		return null;
 	}
 
@@ -83,16 +83,16 @@ public class ExecutableElementImpl extends ElementImpl implements
 
 	@Override
 	public Element getEnclosingElement() {
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		if (null == binding.declaringClass) {
 			return null;
 		}
-		return _env.getFactory().newElement(binding.declaringClass);
+		return this._env.getFactory().newElement(binding.declaringClass);
 	}
 
 	@Override
 	public String getFileName() {
-		ReferenceBinding dc = ((MethodBinding)_binding).declaringClass;
+		ReferenceBinding dc = ((MethodBinding)this._binding).declaringClass;
 		char[] name = dc.getFileName();
 		if (name == null)
 			return null;
@@ -101,7 +101,7 @@ public class ExecutableElementImpl extends ElementImpl implements
 
 	@Override
 	public ElementKind getKind() {
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		if (binding.isConstructor()) {
 			return ElementKind.CONSTRUCTOR;
 		}
@@ -118,30 +118,30 @@ public class ExecutableElementImpl extends ElementImpl implements
 
 	@Override
 	public Set<Modifier> getModifiers() {
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		return Factory.getModifiers(binding.modifiers, getKind());
 	}
 
 	@Override
 	PackageElement getPackage()
 	{
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		if (null == binding.declaringClass) {
 			return null;
 		}
-		return _env.getFactory().newPackageElement(binding.declaringClass.fPackage);
+		return this._env.getFactory().newPackageElement(binding.declaringClass.fPackage);
 	}
 
 	@Override
 	public List<? extends VariableElement> getParameters() {
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		int length = binding.parameters == null ? 0 : binding.parameters.length;
 		if (0 != length) {
 			AbstractMethodDeclaration methodDeclaration = binding.sourceMethod();
 			List<VariableElement> params = new ArrayList<>(length);
 			if (methodDeclaration != null) {
 				for (Argument argument : methodDeclaration.arguments) {
-					VariableElement param = new VariableElementImpl(_env, argument.binding);
+					VariableElement param = new VariableElementImpl(this._env, argument.binding);
 					params.add(param);
 				}
 			} else {
@@ -160,7 +160,7 @@ public class ExecutableElementImpl extends ElementImpl implements
 						builder.append(i);
 						name = String.valueOf(builder).toCharArray();
 					}
-					VariableElement param = new VariableElementImpl(_env,
+					VariableElement param = new VariableElementImpl(this._env,
 							new AptBinaryLocalVariableBinding(
 									name,
 									typeBinding,
@@ -178,45 +178,45 @@ public class ExecutableElementImpl extends ElementImpl implements
 
 	@Override
 	public TypeMirror getReturnType() {
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		if (binding.returnType == null) {
 			return null;
 		}
-		else return _env.getFactory().newTypeMirror(binding.returnType);
+		else return this._env.getFactory().newTypeMirror(binding.returnType);
 	}
 
 	@Override
 	public Name getSimpleName() {
-		MethodBinding binding = (MethodBinding)_binding;
-		if (_name == null) {
-			_name = new NameImpl(binding.selector);
+		MethodBinding binding = (MethodBinding)this._binding;
+		if (this._name == null) {
+			this._name = new NameImpl(binding.selector);
 		}
-		return _name;
+		return this._name;
 	}
 
 	@Override
 	public List<? extends TypeMirror> getThrownTypes() {
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		if (binding.thrownExceptions.length == 0) {
 			return Collections.emptyList();
 		}
 		List<TypeMirror> list = new ArrayList<>(binding.thrownExceptions.length);
 		for (ReferenceBinding exception : binding.thrownExceptions) {
-			list.add(_env.getFactory().newTypeMirror(exception));
+			list.add(this._env.getFactory().newTypeMirror(exception));
 		}
 		return list;
 	}
 
 	@Override
 	public List<? extends TypeParameterElement> getTypeParameters() {
-		MethodBinding binding = (MethodBinding)_binding;
+		MethodBinding binding = (MethodBinding)this._binding;
 		TypeVariableBinding[] variables = binding.typeVariables();
 		if (variables.length == 0) {
 			return Collections.emptyList();
 		}
 		List<TypeParameterElement> params = new ArrayList<>(variables.length);
 		for (TypeVariableBinding variable : variables) {
-			params.add(_env.getFactory().newTypeParameterElement(variable, this));
+			params.add(this._env.getFactory().newTypeParameterElement(variable, this));
 		}
 		return Collections.unmodifiableList(params);
 	}
@@ -227,7 +227,7 @@ public class ExecutableElementImpl extends ElementImpl implements
 		if (!(hidden instanceof ExecutableElementImpl)) {
 			return false;
 		}
-		MethodBinding hiderBinding = (MethodBinding)_binding;
+		MethodBinding hiderBinding = (MethodBinding)this._binding;
 		MethodBinding hiddenBinding = (MethodBinding)((ExecutableElementImpl)hidden)._binding;
 		if (hiderBinding == hiddenBinding) {
 			return false;
@@ -244,7 +244,7 @@ public class ExecutableElementImpl extends ElementImpl implements
 			return false;
 		}
 		// check parameters
-		if (!_env.getLookupEnvironment().methodVerifier().isMethodSubsignature(hiderBinding, hiddenBinding)) {
+		if (!this._env.getLookupEnvironment().methodVerifier().isMethodSubsignature(hiderBinding, hiddenBinding)) {
 			return false;
 		}
 		return null != hiderBinding.declaringClass.findSuperTypeOriginatingFrom(hiddenBinding.declaringClass);
@@ -252,7 +252,7 @@ public class ExecutableElementImpl extends ElementImpl implements
 
 	@Override
 	public boolean isVarArgs() {
-		return ((MethodBinding) _binding).isVarargs();
+		return ((MethodBinding) this._binding).isVarargs();
 	}
 
 	/**
@@ -277,24 +277,24 @@ public class ExecutableElementImpl extends ElementImpl implements
 	{
 		MethodBinding overriddenBinding = (MethodBinding)((ExecutableElementImpl) overridden)._binding;
 		ReferenceBinding overriderContext = (ReferenceBinding)((TypeElementImpl)type)._binding;
-		if ((MethodBinding)_binding == overriddenBinding
+		if ((MethodBinding)this._binding == overriddenBinding
 				|| overriddenBinding.isStatic()
 				|| overriddenBinding.isPrivate()
-				|| ((MethodBinding)_binding).isStatic()) {
+				|| ((MethodBinding)this._binding).isStatic()) {
 			return false;
 		}
-		char[] selector = ((MethodBinding)_binding).selector;
+		char[] selector = ((MethodBinding)this._binding).selector;
 		if (!CharOperation.equals(selector, overriddenBinding.selector))
 			return false;
 
 		// Construct a binding to the equivalent of this (the overrider) as it would be inherited by 'type'.
 		// Can only do this if 'type' is descended from the overrider.
 		// Second clause of the AND is required to match a peculiar javac behavior.
-		if (null == overriderContext.findSuperTypeOriginatingFrom(((MethodBinding)_binding).declaringClass) &&
-				null == ((MethodBinding)_binding).declaringClass.findSuperTypeOriginatingFrom(overriderContext)) {
+		if (null == overriderContext.findSuperTypeOriginatingFrom(((MethodBinding)this._binding).declaringClass) &&
+				null == ((MethodBinding)this._binding).declaringClass.findSuperTypeOriginatingFrom(overriderContext)) {
 			return false;
 		}
-		MethodBinding overriderBinding = new MethodBinding((MethodBinding)_binding, overriderContext);
+		MethodBinding overriderBinding = new MethodBinding((MethodBinding)this._binding, overriderContext);
 		if (overriderBinding.isPrivate()) {
 			// a private method can never override another method.  The other method would either be
 			// private itself, in which case it would not be visible; or this would be a restriction
@@ -306,7 +306,7 @@ public class ExecutableElementImpl extends ElementImpl implements
 		if (!(match instanceof ReferenceBinding)) return false;
 
 		org.eclipse.jdt.internal.compiler.lookup.MethodBinding[] superMethods = ((ReferenceBinding)match).getMethods(selector);
-		LookupEnvironment lookupEnvironment = _env.getLookupEnvironment();
+		LookupEnvironment lookupEnvironment = this._env.getLookupEnvironment();
 		if (lookupEnvironment == null) return false;
 		MethodVerifier methodVerifier = lookupEnvironment.methodVerifier();
 		for (int i = 0, length = superMethods.length; i < length; i++) {
@@ -319,13 +319,13 @@ public class ExecutableElementImpl extends ElementImpl implements
 
 	@Override
 	public TypeMirror getReceiverType() {
-		return _env.getFactory().getReceiverType((MethodBinding) _binding);
+		return this._env.getFactory().getReceiverType((MethodBinding) this._binding);
 	}
 
 	@Override
 	public boolean isDefault() {
-		if (_binding != null) {
-			return ((MethodBinding)_binding).isDefaultMethod();
+		if (this._binding != null) {
+			return ((MethodBinding)this._binding).isDefaultMethod();
 		}
 		return false;
 	}

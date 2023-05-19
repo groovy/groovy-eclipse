@@ -43,7 +43,7 @@ public class DeclaredTypeImpl extends TypeMirrorImpl implements DeclaredType {
 
 	/* package */ DeclaredTypeImpl(BaseProcessingEnvImpl env, ReferenceBinding binding) {
 		super(env, binding);
-		_elementKindHint = null;
+		this._elementKindHint = null;
 	}
 
 	/**
@@ -53,30 +53,30 @@ public class DeclaredTypeImpl extends TypeMirrorImpl implements DeclaredType {
 	 */
 	/* package */ DeclaredTypeImpl(BaseProcessingEnvImpl env, ReferenceBinding binding, ElementKind elementKindHint) {
 		super(env, binding);
-		_elementKindHint = elementKindHint;
+		this._elementKindHint = elementKindHint;
 	}
 
 	@Override
 	public Element asElement() {
 		TypeBinding prototype = null;
-		if (_binding instanceof TypeBinding) {
-			prototype = ((TypeBinding) _binding).prototype();
+		if (this._binding instanceof TypeBinding) {
+			prototype = ((TypeBinding) this._binding).prototype();
 		}
 		if (prototype != null) {
-			return _env.getFactory().newElement(prototype, _elementKindHint);
+			return this._env.getFactory().newElement(prototype, this._elementKindHint);
 		}
 		// The JDT compiler does not distinguish between type elements and declared types
-		return _env.getFactory().newElement(_binding, _elementKindHint);
+		return this._env.getFactory().newElement(this._binding, this._elementKindHint);
 	}
 
 	@Override
 	public TypeMirror getEnclosingType() {
-		ReferenceBinding binding = (ReferenceBinding)_binding;
+		ReferenceBinding binding = (ReferenceBinding)this._binding;
 		ReferenceBinding enclosingType = binding.enclosingType();
 		if (enclosingType != null) {
-			return _env.getFactory().newTypeMirror(enclosingType);
+			return this._env.getFactory().newTypeMirror(enclosingType);
 		}
-		return _env.getFactory().getNoType(TypeKind.NONE);
+		return this._env.getFactory().getNoType(TypeKind.NONE);
 	}
 
 	/*
@@ -86,15 +86,15 @@ public class DeclaredTypeImpl extends TypeMirrorImpl implements DeclaredType {
 	 */
 	@Override
 	public List<? extends TypeMirror> getTypeArguments() {
-		ReferenceBinding binding = (ReferenceBinding)_binding;
+		ReferenceBinding binding = (ReferenceBinding)this._binding;
 		if (binding.isParameterizedType()) {
-			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding)_binding;
+			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding)this._binding;
 			TypeBinding[] arguments = ptb.arguments;
 			int length = arguments == null ? 0 : arguments.length;
 			if (length == 0) return Collections.emptyList();
 			List<TypeMirror> args = new ArrayList<>(length);
 			for (TypeBinding arg : arguments) {
-				args.add(_env.getFactory().newTypeMirror(arg));
+				args.add(this._env.getFactory().newTypeMirror(arg));
 			}
 			return Collections.unmodifiableList(args);
 		}
@@ -102,7 +102,7 @@ public class DeclaredTypeImpl extends TypeMirrorImpl implements DeclaredType {
 			TypeVariableBinding[] typeVariables = binding.typeVariables();
 			List<TypeMirror> args = new ArrayList<>(typeVariables.length);
 			for (TypeBinding arg : typeVariables) {
-				args.add(_env.getFactory().newTypeMirror(arg));
+				args.add(this._env.getFactory().newTypeMirror(arg));
 			}
 			return Collections.unmodifiableList(args);
 		}
@@ -124,7 +124,7 @@ public class DeclaredTypeImpl extends TypeMirrorImpl implements DeclaredType {
 
 	@Override
 	public String toString() {
-		return new String(_binding.readableName());
+		return new String(this._binding.readableName());
 	}
 
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2021 GK Software SE, and others.
+ * Copyright (c) 2013, 2023 GK Software SE, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -2909,6 +2909,11 @@ public void testBug429203() {
 		"	DTest<String> t1 = new DTest<String>(new DTest<Integer>());\n" +
 		"	                       ^^^^^\n" +
 		"Redundant specification of type arguments <String>\n" +
+		"----------\n" +
+		"2. ERROR in DTest.java (at line 11)\n" +
+		"	DTest<String> t1 = new DTest<String>(new DTest<Integer>());\n" +
+		"	                                         ^^^^^\n" +
+		"Redundant specification of type arguments <Integer>\n" +
 		"----------\n",
 		null, true, customOptions);
 }

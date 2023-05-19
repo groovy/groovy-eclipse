@@ -1218,6 +1218,7 @@ public final class AST {
         t.put(JavaCore.VERSION_17, ClassFileConstants.JDK17);
         t.put(JavaCore.VERSION_18, ClassFileConstants.JDK18);
         t.put(JavaCore.VERSION_19, ClassFileConstants.JDK19);
+        t.put(JavaCore.VERSION_20, ClassFileConstants.JDK20);
         return Collections.unmodifiableMap(t);
 	}
 	private static Map<String, Integer> getApiLevelMapTable() {
@@ -1241,6 +1242,7 @@ public final class AST {
         t.put(JavaCore.VERSION_17, JLS17_INTERNAL);
         t.put(JavaCore.VERSION_18, JLS18_INTERNAL);
         t.put(JavaCore.VERSION_19, JLS19_INTERNAL);
+        t.put(JavaCore.VERSION_20, JLS20_INTERNAL);
         return Collections.unmodifiableMap(t);
 	}
 	/**

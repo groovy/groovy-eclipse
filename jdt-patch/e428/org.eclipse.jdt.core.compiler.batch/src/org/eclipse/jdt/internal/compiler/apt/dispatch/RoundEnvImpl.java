@@ -51,23 +51,23 @@ public class RoundEnvImpl implements RoundEnvironment
 	private Set<Element> _rootElements = null;
 
 	public RoundEnvImpl(CompilationUnitDeclaration[] units, ReferenceBinding[] binaryTypeBindings, boolean isLastRound, BaseProcessingEnvImpl env) {
-		_processingEnv = env;
-		_isLastRound = isLastRound;
-		_units = units;
-		_factory = _processingEnv.getFactory();
+		this._processingEnv = env;
+		this._isLastRound = isLastRound;
+		this._units = units;
+		this._factory = this._processingEnv.getFactory();
 
 		// Discover the annotations that will be passed to Processor.process()
-		AnnotationDiscoveryVisitor visitor = new AnnotationDiscoveryVisitor(_processingEnv);
-		if (_units != null) {
-			for (CompilationUnitDeclaration unit : _units) {
+		AnnotationDiscoveryVisitor visitor = new AnnotationDiscoveryVisitor(this._processingEnv);
+		if (this._units != null) {
+			for (CompilationUnitDeclaration unit : this._units) {
 				unit.scope.environment.suppressImportErrors = true;
 				unit.traverse(visitor, unit.scope);
 				unit.scope.environment.suppressImportErrors = false;
 			}
 		}
-		_annoToUnit = visitor._annoToElement;
+		this._annoToUnit = visitor._annoToElement;
 		if (binaryTypeBindings != null) collectAnnotations(binaryTypeBindings);
-		_binaryTypes = binaryTypeBindings;
+		this._binaryTypes = binaryTypeBindings;
 	}
 
 	private void collectAnnotations(ReferenceBinding[] referenceBindings) {
@@ -78,26 +78,26 @@ public class RoundEnvImpl implements RoundEnvironment
 			}
 			AnnotationBinding[] annotationBindings = Factory.getPackedAnnotationBindings(referenceBinding.getAnnotations());
 			for (AnnotationBinding annotationBinding : annotationBindings) {
-				TypeElement anno = (TypeElement)_factory.newElement(annotationBinding.getAnnotationType());
-				Element element = _factory.newElement(referenceBinding);
-				_annoToUnit.put(anno, element);
+				TypeElement anno = (TypeElement)this._factory.newElement(annotationBinding.getAnnotationType());
+				Element element = this._factory.newElement(referenceBinding);
+				this._annoToUnit.put(anno, element);
 			}
 			FieldBinding[] fieldBindings = referenceBinding.fields();
 			for (FieldBinding fieldBinding : fieldBindings) {
 				annotationBindings = Factory.getPackedAnnotationBindings(fieldBinding.getAnnotations());
 				for (AnnotationBinding annotationBinding : annotationBindings) {
-					TypeElement anno = (TypeElement)_factory.newElement(annotationBinding.getAnnotationType());
-					Element element = _factory.newElement(fieldBinding);
-					_annoToUnit.put(anno, element);
+					TypeElement anno = (TypeElement)this._factory.newElement(annotationBinding.getAnnotationType());
+					Element element = this._factory.newElement(fieldBinding);
+					this._annoToUnit.put(anno, element);
 				}
 			}
 			MethodBinding[] methodBindings = referenceBinding.methods();
 			for (MethodBinding methodBinding : methodBindings) {
 				annotationBindings = Factory.getPackedAnnotationBindings(methodBinding.getAnnotations());
 				for (AnnotationBinding annotationBinding : annotationBindings) {
-					TypeElement anno = (TypeElement)_factory.newElement(annotationBinding.getAnnotationType());
-					Element element = _factory.newElement(methodBinding);
-					_annoToUnit.put(anno, element);
+					TypeElement anno = (TypeElement)this._factory.newElement(annotationBinding.getAnnotationType());
+					Element element = this._factory.newElement(methodBinding);
+					this._annoToUnit.put(anno, element);
 				}
 			}
 			ReferenceBinding[] memberTypes = referenceBinding.memberTypes();
@@ -113,13 +113,13 @@ public class RoundEnvImpl implements RoundEnvironment
 	 */
 	public Set<TypeElement> getRootAnnotations()
 	{
-		return Collections.unmodifiableSet(_annoToUnit.getKeySet());
+		return Collections.unmodifiableSet(this._annoToUnit.getKeySet());
 	}
 
 	@Override
 	public boolean errorRaised()
 	{
-		return _processingEnv.errorRaised();
+		return this._processingEnv.errorRaised();
 	}
 
 	/**
@@ -136,7 +136,7 @@ public class RoundEnvImpl implements RoundEnvironment
 		}
 		Binding annoBinding = ((TypeElementImpl)a)._binding;
 		if (0 != (annoBinding.getAnnotationTagBits() & TagBits.AnnotationInherited)) {
-			Set<Element> annotatedElements = new HashSet<>(_annoToUnit.getValues(a));
+			Set<Element> annotatedElements = new HashSet<>(this._annoToUnit.getValues(a));
 			// For all other root elements that are TypeElements, and for their recursively enclosed
 			// types, add each element if it has a superclass are annotated with 'a'
 			ReferenceBinding annoTypeBinding = (ReferenceBinding) annoBinding;
@@ -146,7 +146,7 @@ public class RoundEnvImpl implements RoundEnvironment
 			}
 			return Collections.unmodifiableSet(annotatedElements);
 		}
-		return Collections.unmodifiableSet(_annoToUnit.getValues(a));
+		return Collections.unmodifiableSet(this._annoToUnit.getValues(a));
 	}
 
 	/**
@@ -159,7 +159,7 @@ public class RoundEnvImpl implements RoundEnvironment
 	private void addAnnotatedElements(ReferenceBinding anno, ReferenceBinding type, Set<Element> result) {
 		if (type.isClass()) {
 			if (inheritsAnno(type, anno)) {
-				result.add(_factory.newElement(type));
+				result.add(this._factory.newElement(type));
 			}
 		}
 		for (ReferenceBinding element : type.memberTypes()) {
@@ -198,7 +198,7 @@ public class RoundEnvImpl implements RoundEnvironment
 			// null for anonymous and local classes or an array of those
 			throw new IllegalArgumentException("Argument must represent an annotation type"); //$NON-NLS-1$
 		}
-		TypeElement annoType = _processingEnv.getElementUtils().getTypeElement(canonicalName);
+		TypeElement annoType = this._processingEnv.getElementUtils().getTypeElement(canonicalName);
 		if (annoType == null) {
 			return Collections.emptySet();
 		}
@@ -208,21 +208,21 @@ public class RoundEnvImpl implements RoundEnvironment
 	@Override
 	public Set<? extends Element> getRootElements()
 	{
-		if (_units == null) {
+		if (this._units == null) {
 			return Collections.emptySet();
 		}
-		if (_rootElements == null) {
-			Set<Element> elements = new HashSet<>(_units.length);
-			for (CompilationUnitDeclaration unit : _units) {
+		if (this._rootElements == null) {
+			Set<Element> elements = new HashSet<>(this._units.length);
+			for (CompilationUnitDeclaration unit : this._units) {
 				if (unit.moduleDeclaration != null && unit.moduleDeclaration.binding != null) {
-					Element m = _factory.newElement(unit.moduleDeclaration.binding);
+					Element m = this._factory.newElement(unit.moduleDeclaration.binding);
 					elements.add(m);
 					continue;
 				}
 				if (null == unit.scope || null == unit.scope.topLevelTypes)
 					continue;
 				for (SourceTypeBinding binding : unit.scope.topLevelTypes) {
-					Element element = _factory.newElement(binding);
+					Element element = this._factory.newElement(binding);
 					if (null == element) {
 						throw new IllegalArgumentException("Top-level type binding could not be converted to element: " + binding); //$NON-NLS-1$
 					}
@@ -230,28 +230,28 @@ public class RoundEnvImpl implements RoundEnvironment
 				}
 			}
 			if (this._binaryTypes != null) {
-				for (ReferenceBinding typeBinding : _binaryTypes) {
-					Element element = _factory.newElement(typeBinding);
+				for (ReferenceBinding typeBinding : this._binaryTypes) {
+					Element element = this._factory.newElement(typeBinding);
 					if (null == element) {
 						throw new IllegalArgumentException("Top-level type binding could not be converted to element: " + typeBinding); //$NON-NLS-1$
 					}
 					elements.add(element);
 					ModuleBinding binding = typeBinding.module();
 					if (binding != null) {
-						Element m = _factory.newElement(binding);
+						Element m = this._factory.newElement(binding);
 						elements.add(m);
 					}
 				}
 			}
-			_rootElements = elements;
+			this._rootElements = elements;
 		}
-		return _rootElements;
+		return this._rootElements;
 	}
 
 	@Override
 	public boolean processingOver()
 	{
-		return _isLastRound;
+		return this._isLastRound;
 	}
 
 }

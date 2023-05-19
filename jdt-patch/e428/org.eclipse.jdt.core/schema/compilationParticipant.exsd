@@ -97,14 +97,14 @@
    <element name="requires">
       <annotation>
          <documentation>
-            a participant that is required to run this compilation participant
+            a participant that is required to run before this compilation participant
          </documentation>
       </annotation>
       <complexType>
          <attribute name="id" type="string" use="required">
             <annotation>
                <documentation>
-                  the unique identifier of the participant that is required
+                  the unique identifier of the participant that is required to run before
                </documentation>
             </annotation>
          </attribute>

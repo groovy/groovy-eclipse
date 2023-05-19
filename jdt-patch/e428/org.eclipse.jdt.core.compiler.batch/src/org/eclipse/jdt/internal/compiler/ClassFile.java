@@ -5764,6 +5764,22 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		return this.bytes;
 	}
+
+	/**
+	 * Sets the actual bytes of the class file.
+	 *
+	 * This method is made public only to be accessible from org.eclipse.jdt.internal.core.builder.AbstractImageBuilder
+	 * during compilation post processing to store the modified byte representation of the class. Using this method for
+	 * any other purpose is discouraged and may lead to unpredictable results.
+	 *
+	 * @param newBytes
+	 *            array containing new bytes, will be stored &quot;as is&quot;, all subsequent modification on given
+	 *            array will be reflected and vice versa.
+	 */
+	public void internalSetBytes(byte[] newBytes) {
+		this.bytes = newBytes;
+	}
+
 	/**
 	 * EXTERNAL API
 	 * Answer the compound name of the class file.

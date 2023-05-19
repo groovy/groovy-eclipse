@@ -18,6 +18,7 @@ import java.io.IOException;
 import org.eclipse.jdt.core.BindingKey;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -61,7 +62,7 @@ public final static int FINE_GRAIN_MASK =
 
 /**
  * Constructor entries are encoded as described
- * 
+ *
  * Binary constructor for class
  * TypeName '/' Arity '/' TypeModifers '/' PackageName '/' Signature '/' ParameterNamesopt '/' Modifiers
  * Source constructor for class
@@ -72,7 +73,7 @@ public final static int FINE_GRAIN_MASK =
  * TypeName '/' # '/' TypeModifers '/' PackageName
  * Constructor for member type
  * TypeName '/' Arity '/' TypeModifers
- * 
+ *
  * TypeModifiers contains some encoded extra information
  * 		{@link ExtraFlags#IsMemberType}
  * 		{@link ExtraFlags#HasNonPrivateStaticMemberTypes}
@@ -88,18 +89,18 @@ public static char[] createDeclarationIndexKey(
 		char[] packageName,
 		int typeModifiers,
 		int extraFlags) {
-	
+
 	char[] countChars;
 	char[] parameterTypesChars = null;
 	char[] parameterNamesChars = null;
-	
+
 	if (argCount < 0) {
 		countChars = DEFAULT_CONSTRUCTOR;
 	} else {
 		countChars = argCount < 10
 		? COUNTS[argCount]
 		: ("/" + String.valueOf(argCount)).toCharArray(); //$NON-NLS-1$
-		
+
 		if (argCount > 0) {
 			if (signature == null) {
 				if (parameterTypes != null && parameterTypes.length == argCount) {
@@ -112,58 +113,58 @@ public static char[] createDeclarationIndexKey(
 			} else {
 				extraFlags |= ExtraFlags.ParameterTypesStoredAsSignature;
 			}
-			
+
 			if (parameterNames != null && parameterNames.length == argCount) {
 				parameterNamesChars = CharOperation.concatWith(parameterNames, PARAMETER_SEPARATOR);
 			}
 		}
 	}
-	
+
 	boolean isMemberType = (extraFlags & ExtraFlags.IsMemberType) != 0;
-	
+
 	int typeNameLength = typeName == null ? 0 : typeName.length;
 	int packageNameLength = packageName == null ? 0 : packageName.length;
 	int countCharsLength = countChars.length;
 	int parameterTypesLength = signature == null ? (parameterTypesChars == null ? 0 : parameterTypesChars.length): signature.length;
 	int parameterNamesLength = parameterNamesChars == null ? 0 : parameterNamesChars.length;
-	
+
 	int resultLength = typeNameLength + countCharsLength + 3; // SEPARATOR=1 + TypeModifers=2
 	if (!isMemberType) {
 		resultLength += packageNameLength + 1; // SEPARATOR=1
 		if (argCount >= 0) {
 			resultLength += 3; // SEPARATOR=1 + Modifiers=2
 		}
-		
+
 		if (argCount > 0) {
 			resultLength += parameterTypesLength + parameterNamesLength + 2; //SEPARATOR=1 + SEPARATOR=1
 		}
 	}
-	
+
 	char[] result = new char[resultLength];
-	
+
 	int pos = 0;
 	if (typeNameLength > 0) {
 		System.arraycopy(typeName, 0, result, pos, typeNameLength);
 		pos += typeNameLength;
 	}
-	
+
 	if (countCharsLength > 0) {
 		System.arraycopy(countChars, 0, result, pos, countCharsLength);
 		pos += countCharsLength;
 	}
-	
+
 	int typeModifiersWithExtraFlags = typeModifiers | encodeExtraFlags(extraFlags);
 	result[pos++] = SEPARATOR;
 	result[pos++] = (char) typeModifiersWithExtraFlags;
 	result[pos++] = (char) (typeModifiersWithExtraFlags>>16);
-	
+
 	if (!isMemberType) {
 		result[pos++] = SEPARATOR;
 		if (packageNameLength > 0) {
 			System.arraycopy(packageName, 0, result, pos, packageNameLength);
 			pos += packageNameLength;
 		}
-		
+
 		if (argCount == 0) {
 			result[pos++] = SEPARATOR;
 			result[pos++] = (char) modifiers;
@@ -178,20 +179,20 @@ public static char[] createDeclarationIndexKey(
 				}
 				pos += parameterTypesLength;
 			}
-			
+
 			result[pos++] = SEPARATOR;
 			if (parameterNamesLength > 0) {
 				System.arraycopy(parameterNamesChars, 0, result, pos, parameterNamesLength);
 				pos += parameterNamesLength;
 			}
-			
+
 			result[pos++] = SEPARATOR;
 			result[pos++] = (char) modifiers;
 			result[pos++] = (char) (modifiers>>16);
 		}
-		
+
 	}
-	
+
 	return result;
 }
 public static char[] createDefaultDeclarationIndexKey(
@@ -223,23 +224,23 @@ public static char[] createIndexKey(char[] typeName, int argCount) {
 }
 static int decodeExtraFlags(int modifiersWithExtraFlags) {
 	int extraFlags = 0;
-	
+
 	if ((modifiersWithExtraFlags & ASTNode.Bit28) != 0) {
 		extraFlags |= ExtraFlags.ParameterTypesStoredAsSignature;
 	}
-	
+
 	if ((modifiersWithExtraFlags & ASTNode.Bit29) != 0) {
 		extraFlags |= ExtraFlags.IsLocalType;
 	}
-	
+
 	if ((modifiersWithExtraFlags & ASTNode.Bit30) != 0) {
 		extraFlags |= ExtraFlags.IsMemberType;
 	}
-	
+
 	if ((modifiersWithExtraFlags & ASTNode.Bit31) != 0) {
 		extraFlags |= ExtraFlags.HasNonPrivateStaticMemberTypes;
 	}
-	
+
 	return extraFlags;
 }
 static int decodeModifers(int modifiersWithExtraFlags) {
@@ -247,33 +248,33 @@ static int decodeModifers(int modifiersWithExtraFlags) {
 }
 private static int encodeExtraFlags(int extraFlags) {
 	int encodedExtraFlags = 0;
-	
+
 	if ((extraFlags & ExtraFlags.ParameterTypesStoredAsSignature) != 0) {
 		encodedExtraFlags |= ASTNode.Bit28;
 	}
-	
+
 	if ((extraFlags & ExtraFlags.IsLocalType) != 0) {
 		encodedExtraFlags |= ASTNode.Bit29;
 	}
-	
+
 	if ((extraFlags & ExtraFlags.IsMemberType) != 0) {
 		encodedExtraFlags |= ASTNode.Bit30;
 	}
 	if ((extraFlags & ExtraFlags.HasNonPrivateStaticMemberTypes) != 0) {
 		encodedExtraFlags |= ASTNode.Bit31;
 	}
-	
+
 	return encodedExtraFlags;
 }
 private static char[] getTypeErasure(char[] typeName) {
 	int index;
 	if ((index = CharOperation.indexOf('<', typeName)) == -1) return typeName;
-	
+
 	int length = typeName.length;
 	char[] typeErasurename = new char[length - 2];
-	
+
 	System.arraycopy(typeName, 0, typeErasurename, 0, index);
-	
+
 	int depth = 1;
 	for (int i = index + 1; i < length; i++) {
 		switch (typeName[i]) {
@@ -290,7 +291,7 @@ private static char[] getTypeErasure(char[] typeName) {
 				break;
 		}
 	}
-	
+
 	System.arraycopy(typeErasurename, 0, typeErasurename = new char[index], 0, index);
 	return typeErasurename;
 }
@@ -303,7 +304,8 @@ public ConstructorPattern(
 	char[][] parameterQualifications,
 	char[][] parameterSimpleNames,
 	int limitTo,
-	int matchRule) {
+	int matchRule,
+	boolean isStaticInnerConstructor) {
 
 	this(matchRule);
 
@@ -327,7 +329,7 @@ public ConstructorPattern(
 	this.declaringSimpleName = (this.isCaseSensitive || this.isCamelCase) ? declaringSimpleName : CharOperation.toLowerCase(declaringSimpleName);
 	if (parameterSimpleNames != null) {
 		this.parameterCount = parameterSimpleNames.length;
-		boolean synthetic = this.parameterCount>0 && declaringQualification != null && CharOperation.equals(CharOperation.concat(parameterQualifications[0], parameterSimpleNames[0], '.'), declaringQualification);
+		boolean synthetic = !isStaticInnerConstructor && this.parameterCount>0 && declaringQualification != null && CharOperation.equals(CharOperation.concat(parameterQualifications[0], parameterSimpleNames[0], '.'), declaringQualification);
 		int offset = 0;
 		if (synthetic) {
 			// skip first synthetic parameter
@@ -363,7 +365,8 @@ public ConstructorPattern(
 		parameterQualifications,
 		parameterSimpleNames,
 		limitTo,
-		matchRule);
+		matchRule,
+		isStaticInnerConstructor(method));
 
 	// Set flags
 	try {
@@ -426,7 +429,8 @@ public ConstructorPattern(
 		parameterQualifications,
 		parameterSimpleNames,
 		limitTo,
-		matchRule);
+		matchRule,
+		false);
 
 	// Store type signature and arguments for declaring type
 	if (declaringSignature != null) {
@@ -462,13 +466,13 @@ public void decodeIndexKey(char[] key) {
 	int last = key.length - 1;
 	int slash = CharOperation.indexOf(SEPARATOR, key, 0);
 	this.declaringSimpleName = CharOperation.subarray(key, 0, slash);
-	
+
 	int start = slash + 1;
 	slash = CharOperation.indexOf(SEPARATOR, key, start);
 	if (slash != -1) {
 		last = slash - 1;
 	}
-	
+
 	boolean isDefaultConstructor = key[last] == '#';
 	if (isDefaultConstructor) {
 		this.parameterCount = -1;
@@ -585,5 +589,15 @@ protected StringBuffer print(StringBuffer output) {
 	}
 	output.append(')');
 	return super.print(output);
+}
+private static boolean isStaticInnerConstructor(IMethod method) {
+	try {
+		IType declaringType = method.getDeclaringType();
+		int flags = declaringType.getFlags();
+		return Flags.isStatic(flags);
+	} catch (JavaModelException e) {
+		// assume no
+		return false;
+	}
 }
 }

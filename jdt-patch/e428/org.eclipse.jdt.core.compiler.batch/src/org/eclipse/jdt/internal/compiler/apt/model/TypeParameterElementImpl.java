@@ -50,26 +50,26 @@ public class TypeParameterElementImpl extends ElementImpl implements TypeParamet
 
 	/* package */ TypeParameterElementImpl(BaseProcessingEnvImpl env, TypeVariableBinding binding, Element declaringElement) {
 		super(env, binding);
-		_declaringElement = declaringElement;
+		this._declaringElement = declaringElement;
 	}
 
 	/* package */ TypeParameterElementImpl(BaseProcessingEnvImpl env, TypeVariableBinding binding) {
 		super(env, binding);
-		_declaringElement = _env.getFactory().newElement(binding.declaringElement);
+		this._declaringElement = this._env.getFactory().newElement(binding.declaringElement);
 	}
 
 	@Override
 	public List<? extends TypeMirror> getBounds()
 	{
-		if (null == _bounds) {
-			_bounds = calculateBounds();
+		if (null == this._bounds) {
+			this._bounds = calculateBounds();
 		}
-		return _bounds;
+		return this._bounds;
 	}
 
 	// This code is drawn from org.eclipse.jdt.core.dom.TypeBinding.getTypeBounds()
 	private List<? extends TypeMirror> calculateBounds() {
-		TypeVariableBinding typeVariableBinding = (TypeVariableBinding)_binding;
+		TypeVariableBinding typeVariableBinding = (TypeVariableBinding)this._binding;
 		ReferenceBinding varSuperclass = typeVariableBinding.superclass();
 		TypeBinding firstClassOrArrayBound = typeVariableBinding.firstBound;
 		int boundsLength = 0;
@@ -98,7 +98,7 @@ public class TypeParameterElementImpl extends ElementImpl implements TypeParamet
 		List<TypeMirror> typeBounds = new ArrayList<>(boundsLength);
 		if (boundsLength != 0) {
 			if (firstClassOrArrayBound != null) {
-				TypeMirror typeBinding = _env.getFactory().newTypeMirror(firstClassOrArrayBound);
+				TypeMirror typeBinding = this._env.getFactory().newTypeMirror(firstClassOrArrayBound);
 				if (typeBinding == null) {
 					return Collections.emptyList();
 				}
@@ -107,7 +107,7 @@ public class TypeParameterElementImpl extends ElementImpl implements TypeParamet
 			// we need to filter out remaining bounds if the first bound is a type variable
 			if (superinterfaces != null && !isFirstBoundATypeVariable) {
 				for (int i = 0; i < superinterfacesLength; i++) {
-					TypeMirror typeBinding = _env.getFactory().newTypeMirror(superinterfaces[i]);
+					TypeMirror typeBinding = this._env.getFactory().newTypeMirror(superinterfaces[i]);
 					if (typeBinding == null) {
 						return Collections.emptyList();
 					}
@@ -116,7 +116,7 @@ public class TypeParameterElementImpl extends ElementImpl implements TypeParamet
 			}
 		} else {
 			// at least we must add java.lang.Object
-			typeBounds.add(_env.getFactory().newTypeMirror(_env.getLookupEnvironment().getType(TypeConstants.JAVA_LANG_OBJECT)));
+			typeBounds.add(this._env.getFactory().newTypeMirror(this._env.getLookupEnvironment().getType(TypeConstants.JAVA_LANG_OBJECT)));
 		}
 		return Collections.unmodifiableList(typeBounds);
 	}
@@ -124,7 +124,7 @@ public class TypeParameterElementImpl extends ElementImpl implements TypeParamet
 	@Override
 	public Element getGenericElement()
 	{
-		return _declaringElement;
+		return this._declaringElement;
 	}
 
 	@Override
@@ -141,11 +141,11 @@ public class TypeParameterElementImpl extends ElementImpl implements TypeParamet
 	@Override
 	protected AnnotationBinding[] getAnnotationBindings()
 	{
-		return ((TypeVariableBinding)_binding).getTypeAnnotations();
+		return ((TypeVariableBinding)this._binding).getTypeAnnotations();
 	}
 
 	private boolean shouldEmulateJavacBug() {
-		if (_env.getLookupEnvironment().globalOptions.emulateJavacBug8031744) {
+		if (this._env.getLookupEnvironment().globalOptions.emulateJavacBug8031744) {
 			AnnotationBinding [] annotations = getAnnotationBindings();
 			for (int i = 0, length = annotations.length; i < length; i++) {
 				ReferenceBinding firstAnnotationType = annotations[i].getAnnotationType();
@@ -218,6 +218,6 @@ public class TypeParameterElementImpl extends ElementImpl implements TypeParamet
 
 	@Override
 	public String toString() {
-		return new String(_binding.readableName());
+		return new String(this._binding.readableName());
 	}
 }

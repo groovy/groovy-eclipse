@@ -46,7 +46,7 @@ public class ErrorTypeImpl extends DeclaredTypeImpl implements ErrorType {
 	 */
 	@Override
 	public Element asElement() {
-		return this._env.getFactory().newElement(_binding);
+		return this._env.getFactory().newElement(this._binding);
 	}
 
 	/* (non-Javadoc)
@@ -59,15 +59,15 @@ public class ErrorTypeImpl extends DeclaredTypeImpl implements ErrorType {
 
 	@Override
 	public List<? extends TypeMirror> getTypeArguments() {
-		ReferenceBinding binding = (ReferenceBinding)_binding;
+		ReferenceBinding binding = (ReferenceBinding)this._binding;
 		if (binding.isParameterizedType()) {
-			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding)_binding;
+			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding)this._binding;
 			TypeBinding[] arguments = ptb.arguments;
 			int length = arguments == null ? 0 : arguments.length;
 			if (length == 0) return Collections.emptyList();
 			List<TypeMirror> args = new ArrayList<>(length);
 			for (TypeBinding arg : arguments) {
-				args.add(_env.getFactory().newTypeMirror(arg));
+				args.add(this._env.getFactory().newTypeMirror(arg));
 			}
 			return Collections.unmodifiableList(args);
 		}
@@ -75,7 +75,7 @@ public class ErrorTypeImpl extends DeclaredTypeImpl implements ErrorType {
 			TypeVariableBinding[] typeVariables = binding.typeVariables();
 			List<TypeMirror> args = new ArrayList<>(typeVariables.length);
 			for (TypeBinding arg : typeVariables) {
-				args.add(_env.getFactory().newTypeMirror(arg));
+				args.add(this._env.getFactory().newTypeMirror(arg));
 			}
 			return Collections.unmodifiableList(args);
 		}
@@ -117,6 +117,6 @@ public class ErrorTypeImpl extends DeclaredTypeImpl implements ErrorType {
 
 	@Override
 	public String toString() {
-		return new String(_binding.readableName());
+		return new String(this._binding.readableName());
 	}
 }

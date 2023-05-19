@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -235,6 +235,7 @@ public class DefaultCodeFormatterOptions {
 	public boolean comment_clear_blank_lines_in_block_comment;
 	public boolean comment_new_lines_at_block_boundaries;
 	public boolean comment_new_lines_at_javadoc_boundaries;
+	public boolean comment_javadoc_do_not_separate_block_tags;
 	public boolean comment_format_javadoc_comment;
 	public boolean comment_format_line_comment;
 	public boolean comment_format_line_comment_starting_on_first_column;
@@ -657,6 +658,7 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_CLEAR_BLANK_LINES_IN_JAVADOC_COMMENT, this.comment_clear_blank_lines_in_javadoc_comment ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_NEW_LINES_AT_BLOCK_BOUNDARIES, this.comment_new_lines_at_block_boundaries ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_NEW_LINES_AT_JAVADOC_BOUNDARIES, this.comment_new_lines_at_javadoc_boundaries ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_JAVADOC_DO_NOT_SEPARATE_BLOCK_TAGS, this.comment_javadoc_do_not_separate_block_tags ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_FORMAT_BLOCK_COMMENT, this.comment_format_block_comment ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_FORMAT_HEADER, this.comment_format_header ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_FORMAT_HTML, this.comment_format_html ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
@@ -1634,6 +1636,10 @@ public class DefaultCodeFormatterOptions {
 		final Object commentNewLinesAtJavadocBoundariesOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_COMMENT_NEW_LINES_AT_JAVADOC_BOUNDARIES);
 		if (commentNewLinesAtJavadocBoundariesOption != null) {
 			this.comment_new_lines_at_javadoc_boundaries = DefaultCodeFormatterConstants.TRUE.equals(commentNewLinesAtJavadocBoundariesOption);
+		}
+		final Object commentJavadocDoNotSeparateBlockTags = settings.get(DefaultCodeFormatterConstants.FORMATTER_COMMENT_JAVADOC_DO_NOT_SEPARATE_BLOCK_TAGS);
+		if (commentJavadocDoNotSeparateBlockTags != null) {
+			this.comment_javadoc_do_not_separate_block_tags = DefaultCodeFormatterConstants.TRUE.equals(commentJavadocDoNotSeparateBlockTags);
 		}
 		final Object indentStatementsCompareToBlockOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INDENT_STATEMENTS_COMPARE_TO_BLOCK);
 		if (indentStatementsCompareToBlockOption != null) {

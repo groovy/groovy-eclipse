@@ -56,14 +56,14 @@ public class ExecutableTypeImpl extends TypeMirrorImpl implements ExecutableType
 		if (isEnumConstructor) {
 			ArrayList<TypeMirror> list = new ArrayList<>();
 			for (int i = 0; i < length; i++) {
-				list.add(_env.getFactory().newTypeMirror(parameters[i]));
+				list.add(this._env.getFactory().newTypeMirror(parameters[i]));
 			}
 			return Collections.unmodifiableList(list);
 		}
 		if (length != 0) {
 			ArrayList<TypeMirror> list = new ArrayList<>();
 			for (TypeBinding typeBinding : parameters) {
-				list.add(_env.getFactory().newTypeMirror(typeBinding));
+				list.add(this._env.getFactory().newTypeMirror(typeBinding));
 			}
 			return Collections.unmodifiableList(list);
 		}
@@ -75,7 +75,7 @@ public class ExecutableTypeImpl extends TypeMirrorImpl implements ExecutableType
 	 */
 	@Override
 	public TypeMirror getReturnType() {
-		return _env.getFactory().newTypeMirror(((MethodBinding) this._binding).returnType);
+		return this._env.getFactory().newTypeMirror(((MethodBinding) this._binding).returnType);
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class ExecutableTypeImpl extends TypeMirrorImpl implements ExecutableType
 		ReferenceBinding[] thrownExceptions = ((MethodBinding) this._binding).thrownExceptions;
 		if (thrownExceptions.length != 0) {
 			for (ReferenceBinding referenceBinding : thrownExceptions) {
-				list.add(_env.getFactory().newTypeMirror(referenceBinding));
+				list.add(this._env.getFactory().newTypeMirror(referenceBinding));
 			}
 		}
 		return Collections.unmodifiableList(list);
@@ -107,7 +107,7 @@ public class ExecutableTypeImpl extends TypeMirrorImpl implements ExecutableType
 		TypeVariableBinding[] typeVariables = ((MethodBinding) this._binding).typeVariables();
 		if (typeVariables.length != 0) {
 			for (TypeVariableBinding typeVariableBinding : typeVariables) {
-				list.add((TypeVariable) _env.getFactory().newTypeMirror(typeVariableBinding));
+				list.add((TypeVariable) this._env.getFactory().newTypeMirror(typeVariableBinding));
 			}
 		}
 		return Collections.unmodifiableList(list);
@@ -131,7 +131,7 @@ public class ExecutableTypeImpl extends TypeMirrorImpl implements ExecutableType
 
 	@Override
 	public TypeMirror getReceiverType() {
-		return _env.getFactory().getReceiverType((MethodBinding) _binding);
+		return this._env.getFactory().getReceiverType((MethodBinding) this._binding);
 	}
 	@Override
 	public String toString() {

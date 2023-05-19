@@ -152,6 +152,7 @@ public void acceptResult(CompilationResult result) {
 		int length = classFiles.length;
 		ArrayList duplicateTypeNames = null;
 		ArrayList definedTypeNames = new ArrayList(length);
+		ArrayList<CompilationParticipantResult> postProcessingResults = new ArrayList<>();
 		for (int i = 0; i < length; i++) {
 			ClassFile classFile = classFiles[i];
 
@@ -185,12 +186,30 @@ public void acceptResult(CompilationResult result) {
 						String simpleName = qualifiedTypeName.substring(qualifiedTypeName.lastIndexOf('/')+1);
 						type = mainType == null ? null : mainType.getCompilationUnit().getType(simpleName);
 					}
-					createProblemFor(compilationUnit.resource, type, Messages.bind(Messages.build_duplicateClassFile, new String(typeName)), JavaCore.ERROR);
+					if(TypeConstants.MODULE_INFO_NAME_STRING.equals(qualifiedTypeName)) {
+						createProblemFor(compilationUnit.resource, type, Messages.build_duplicateModuleInfo, JavaCore.ERROR);
+					} else {
+						createProblemFor(compilationUnit.resource, type, Messages.bind(Messages.build_duplicateClassFile, new String(typeName)), JavaCore.ERROR);
+					}
 					continue;
 				}
 				this.newState.recordLocatorForType(qualifiedTypeName, typeLocator);
 				if (result.checkSecondaryTypes && !qualifiedTypeName.equals(compilationUnit.initialTypeName))
 					acceptSecondaryType(classFile);
+			}
+			for (int j = 0, l = this.javaBuilder.participants == null ? 0 : this.javaBuilder.participants.length; j < l; j++) {
+				CompilationParticipant compilationParticipant = this.javaBuilder.participants[j];
+				if (!compilationParticipant.isPostProcessor()) {
+					continue;
+				}
+				CompilationParticipantResult buildContext = new CompilationParticipantResult(compilationUnit,
+						this.compilationGroup == CompilationGroup.TEST);
+				Optional<byte[]> postProcessingResult = compilationParticipant.postProcess(buildContext,
+						new ByteArrayInputStream(classFile.getBytes()));
+				postProcessingResults.add(buildContext);
+				if (postProcessingResult.isPresent()) {
+					classFile.internalSetBytes(postProcessingResult.get());
+				}
 			}
 			try {
 				definedTypeNames.add(writeClassFile(classFile, compilationUnit, !isNestedType));
@@ -207,6 +226,9 @@ public void acceptResult(CompilationResult result) {
 
 		this.compiler.lookupEnvironment.releaseClassFiles(classFiles);
 		finishedWith(typeLocator, result, compilationUnit.getMainTypeName(), definedTypeNames, duplicateTypeNames);
+		for (CompilationParticipantResult postProcessingResult : postProcessingResults) {
+			recordParticipantResult(postProcessingResult); // depends on new compiler state which was just recorded
+		}
 		this.notifier.compiled(compilationUnit);
 	}
 }
@@ -437,7 +459,9 @@ protected void createProblemFor(IResource resource, IMember javaElement, String 
 				if (e.getJavaModelStatus().getCode() != IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST) {
 					throw e;
 				}
-				if (!CharOperation.equals(javaElement.getElementName().toCharArray(), TypeConstants.PACKAGE_INFO_NAME)) {
+				char[] elementName = javaElement.getElementName().toCharArray();
+				if (!CharOperation.equals(elementName, TypeConstants.PACKAGE_INFO_NAME)
+						&& !CharOperation.equals(elementName, TypeConstants.MODULE_INFO_NAME)) {
 					throw e;
 				}
 				// else silently swallow the exception as the synthetic interface type package-info has no

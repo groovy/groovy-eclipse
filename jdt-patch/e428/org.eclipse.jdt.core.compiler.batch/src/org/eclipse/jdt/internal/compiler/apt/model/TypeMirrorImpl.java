@@ -41,12 +41,12 @@ public class TypeMirrorImpl implements TypeMirror {
 	protected final Binding _binding;
 
 	/* package */ TypeMirrorImpl(BaseProcessingEnvImpl env, Binding binding) {
-		_env = env;
-		_binding = binding;
+		this._env = env;
+		this._binding = binding;
 	}
 
 	/* package */ Binding binding() {
-		return _binding;
+		return this._binding;
 	}
 
 	/* (non-Javadoc)
@@ -62,7 +62,7 @@ public class TypeMirrorImpl implements TypeMirror {
 	 */
 	@Override
 	public TypeKind getKind() {
-		switch (_binding.kind()) {
+		switch (this._binding.kind()) {
 		// case Binding.TYPE:
 		// case Binding.RAW_TYPE:
 		// case Binding.GENERIC_TYPE:
@@ -80,7 +80,7 @@ public class TypeMirrorImpl implements TypeMirror {
 		case Binding.RECORD_COMPONENT:
 		case Binding.VARIABLE:
 		case Binding.IMPORT:
-			throw new IllegalArgumentException("Invalid binding kind: " + _binding.kind()); //$NON-NLS-1$
+			throw new IllegalArgumentException("Invalid binding kind: " + this._binding.kind()); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -90,7 +90,7 @@ public class TypeMirrorImpl implements TypeMirror {
 	 */
 	@Override
 	public String toString() {
-		return new String(_binding.readableName());
+		return new String(this._binding.readableName());
 	}
 
 	/* (non-Javadoc)
@@ -100,7 +100,7 @@ public class TypeMirrorImpl implements TypeMirror {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((_binding == null) ? 0 : _binding.hashCode());
+		result = prime * result + ((this._binding == null) ? 0 : this._binding.hashCode());
 		return result;
 	}
 
@@ -114,7 +114,7 @@ public class TypeMirrorImpl implements TypeMirror {
 		if (!(obj instanceof TypeMirrorImpl))
 			return false;
 		final TypeMirrorImpl other = (TypeMirrorImpl) obj;
-		return _binding == other._binding;
+		return this._binding == other._binding;
 	}
 
 	/* Package any repeating annotations into containers, return others as is.
@@ -127,25 +127,25 @@ public class TypeMirrorImpl implements TypeMirror {
 	}
 
 	protected AnnotationBinding[] getAnnotationBindings() {
-		return ((TypeBinding)_binding).getTypeAnnotations();
+		return ((TypeBinding)this._binding).getTypeAnnotations();
 	}
 
 	@Override
 	public List<? extends AnnotationMirror> getAnnotationMirrors() {
-		return _env == null ? Factory.EMPTY_ANNOTATION_MIRRORS :
-								_env.getFactory().getAnnotationMirrors(getPackedAnnotationBindings());
+		return this._env == null ? Factory.EMPTY_ANNOTATION_MIRRORS :
+								this._env.getFactory().getAnnotationMirrors(getPackedAnnotationBindings());
 	}
 
 	@Override
 	public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-		return _env == null ? null : _env.getFactory().getAnnotation(getPackedAnnotationBindings(), annotationType);
+		return this._env == null ? null : this._env.getFactory().getAnnotation(getPackedAnnotationBindings(), annotationType);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
-		if (_env == null)
+		if (this._env == null)
 			return (A[]) Array.newInstance(annotationType, 0);
-		return _env.getFactory().getAnnotationsByType(Factory.getUnpackedAnnotationBindings(getPackedAnnotationBindings()), annotationType);
+		return this._env.getFactory().getAnnotationsByType(Factory.getUnpackedAnnotationBindings(getPackedAnnotationBindings()), annotationType);
 	}
 }

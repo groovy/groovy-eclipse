@@ -63,7 +63,6 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.flow.ExceptionHandlingFlowContext;
 import org.eclipse.jdt.internal.compiler.flow.ExceptionInferenceFlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
@@ -132,7 +131,6 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	private boolean hasIgnoredMandatoryErrors = false;
 	private ReferenceBinding classType;
 	private Set thrownExceptions;
-	public char[] text;  // source representation of the lambda.
 	private static final SyntheticArgumentBinding [] NO_SYNTHETIC_ARGUMENTS = new SyntheticArgumentBinding[0];
 	private static final Block NO_BODY = new Block(0);
 	private HashMap<TypeBinding, LambdaExpression> copiesPerTargetType;
@@ -1125,17 +1123,23 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		return false;
 	}
 
+	/**
+	 * @return a virgin copy of `this' by reparsing the stashed textual form.
+	 */
 	LambdaExpression copy() {
 		final Parser parser = new Parser(this.enclosingScope.problemReporter(), false);
-		final ICompilationUnit compilationUnit = this.compilationResult.getCompilationUnit();
-		char[] source = compilationUnit != null ? compilationUnit.getContents() : this.text;
-		LambdaExpression copy =  (LambdaExpression) parser.parseLambdaExpression(source, compilationUnit != null ? this.sourceStart : 0, this.sourceEnd - this.sourceStart + 1,
+		char [] source = new char [this.sourceEnd+1];
+		System.arraycopy(this.text, 0, source, this.sourceStart, this.sourceEnd - this.sourceStart + 1);
+		LambdaExpression copy =  (LambdaExpression) parser.parseLambdaExpression(source,this.sourceStart, this.sourceEnd - this.sourceStart + 1,
 										this.enclosingScope.referenceCompilationUnit(), false /* record line separators */);
 
 		if (copy != null) { // ==> syntax errors == null
+			if (copy.sourceStart != this.sourceStart || copy.sourceEnd != this.sourceEnd)
+				return null; // something wrong
 			copy.original = this;
 			copy.assistNode = this.assistNode;
 			copy.enclosingScope = this.enclosingScope;
+			copy.text = this.text; // discard redundant textual copy
 		}
 		return copy;
 	}

@@ -212,17 +212,17 @@ public class ElementsImpl implements Elements {
 	 * which are non-private and which are not overridden by an already-discovered member.
 	 * For fields, add them all; javac implementation does not take field hiding into account.
 	 * @param binding the type whose members will be added to the lists
-	 * @param ignoreVisibility if true, all members will be added regardless of whether they
-	 * are private, overridden, etc.
+	 * @param directMembers if true, all members will be added regardless of whether they
+	 * are private, overridden, static etc.
 	 * @param types a map of type simple name to type binding
 	 * @param fields a list of field bindings
 	 * @param methods a map of method simple name to set of method bindings with that name
 	 */
-	private void addMembers(ReferenceBinding binding, boolean ignoreVisibility, Map<String, ReferenceBinding> types,
+	private void addMembers(ReferenceBinding binding, boolean directMembers, Map<String, ReferenceBinding> types,
 			List<FieldBinding> fields, Map<String, Set<MethodBinding>> methods)
 	{
 		for (ReferenceBinding subtype : binding.memberTypes()) {
-			if (ignoreVisibility || !subtype.isPrivate()) {
+			if (directMembers || !subtype.isPrivate()) {
 				String name = new String(subtype.sourceName());
 				if (null == types.get(name)) {
 					types.put(name, subtype);
@@ -230,12 +230,14 @@ public class ElementsImpl implements Elements {
 			}
 		}
 		for (FieldBinding field : binding.fields()) {
-			if (ignoreVisibility || !field.isPrivate()) {
+			if (directMembers || !field.isPrivate()) {
 				fields.add(field);
 			}
 		}
 		for (MethodBinding method : binding.methods()) {
-			if (!method.isSynthetic() && (ignoreVisibility || (!method.isPrivate() && !method.isConstructor()))) {
+			if (!directMembers && method.isStatic())
+				continue;
+			if (!method.isSynthetic() && (directMembers || (!method.isPrivate() && !method.isConstructor()))) {
 				String methodName = new String(method.selector);
 				Set<MethodBinding> sameNamedMethods = methods.get(methodName);
 				if (null == sameNamedMethods) {
@@ -248,7 +250,7 @@ public class ElementsImpl implements Elements {
 				else {
 					// We already have a method with this name.  Is this method overridden?
 					boolean unique = true;
-					if (!ignoreVisibility) {
+					if (!directMembers) {
 						for (MethodBinding existing : sameNamedMethods) {
 							MethodVerifier verifier = this._env.getLookupEnvironment().methodVerifier();
 							if (verifier.doesMethodOverride(existing, method)) {

@@ -231,8 +231,6 @@ public interface ISourceElementRequestor {
 	 */
 	void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd);
 
-	void exitRecordComponent(int declarationEnd, int declarationSourceEnd);
-
 	void exitInitializer(int declarationEnd);
 
 	void exitMethod(int declarationEnd, Expression defaultValue);

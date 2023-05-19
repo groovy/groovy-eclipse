@@ -380,4 +380,9 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 			this.tagBits |= intersectingType.updateTagBits();
 		return super.updateTagBits();
 	}
+
+	@Override
+	public char[] genericTypeSignature(boolean approximateToDenotable) {
+    	return approximateToDenotable ? erasure().genericTypeSignature() : genericTypeSignature();
+	}
 }

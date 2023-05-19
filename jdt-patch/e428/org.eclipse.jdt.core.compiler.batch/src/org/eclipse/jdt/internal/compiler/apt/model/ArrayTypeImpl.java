@@ -40,7 +40,7 @@ public class ArrayTypeImpl extends TypeMirrorImpl implements ArrayType {
 	 */
 	@Override
 	public TypeMirror getComponentType() {
-		return _env.getFactory().newTypeMirror(((ArrayBinding)_binding).elementsType());
+		return this._env.getFactory().newTypeMirror(((ArrayBinding)this._binding).elementsType());
 	}
 
 	/* (non-Javadoc)
@@ -53,7 +53,7 @@ public class ArrayTypeImpl extends TypeMirrorImpl implements ArrayType {
 
 	@Override
 	protected AnnotationBinding[] getAnnotationBindings() {
-		AnnotationBinding[] oldies = ((ArrayBinding)_binding).getTypeAnnotations();
+		AnnotationBinding[] oldies = ((ArrayBinding)this._binding).getTypeAnnotations();
 		AnnotationBinding[] newbies = Binding.NO_ANNOTATIONS;
 		// Strip out the annotations on sub arrays
 		for (int i = 0, length = oldies == null ? 0 : oldies.length; i < length; i++) {

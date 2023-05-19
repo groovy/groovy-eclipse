@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -38,7 +38,7 @@ public TryWithResourcesStatementTest(String name) {
 public static Test suite() {
 	return buildMinimalComplianceTestSuite(testClass(), F_1_7);
 }
-// Test resource type related errors 
+// Test resource type related errors
 public void test001() {
 	this.runNegativeTest(
 		new String[] {
@@ -51,14 +51,14 @@ public void test001() {
 			"	}\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (int i = 0) {\n" + 
-		"	     ^^^\n" + 
-		"The resource type int does not implement java.lang.AutoCloseable\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (int i = 0) {\n" +
+		"	     ^^^\n" +
+		"The resource type int does not implement java.lang.AutoCloseable\n" +
 		"----------\n");
 }
-// Test resource type related errors 
+// Test resource type related errors
 public void test002() {
 	this.runNegativeTest(
 		new String[] {
@@ -71,14 +71,14 @@ public void test002() {
 			"	}\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (int[] tab = {}) {\n" + 
-		"	     ^^^^^\n" + 
-		"The resource type int[] does not implement java.lang.AutoCloseable\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (int[] tab = {}) {\n" +
+		"	     ^^^^^\n" +
+		"The resource type int[] does not implement java.lang.AutoCloseable\n" +
 		"----------\n");
 }
-// Test that resource type could be interface type. 
+// Test that resource type could be interface type.
 public void test003() {
 	this.runNegativeTest(
 		new String[] {
@@ -91,19 +91,19 @@ public void test003() {
 			"	}\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 1)\n" + 
-		"	public class X implements AutoCloseable{\n" + 
-		"	             ^\n" + 
-		"The type X must implement the inherited abstract method AutoCloseable.close()\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 3)\n" + 
-		"	try (AutoCloseable a = new X()) {\n" + 
-		"	                   ^\n" + 
-		"Unhandled exception type Exception thrown by automatic close() invocation on a\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 1)\n" +
+		"	public class X implements AutoCloseable{\n" +
+		"	             ^\n" +
+		"The type X must implement the inherited abstract method AutoCloseable.close()\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 3)\n" +
+		"	try (AutoCloseable a = new X()) {\n" +
+		"	                   ^\n" +
+		"Unhandled exception type Exception thrown by automatic close() invocation on a\n" +
 		"----------\n");
 }
-// Type resource type related errors 
+// Type resource type related errors
 public void test003a() {
 	this.runNegativeTest(
 		new String[] {
@@ -124,11 +124,11 @@ public void test003a() {
 			"}\n" +
 			"interface Managed extends AutoCloseable {}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 7)\n" + 
-		"	Zork z;\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 7)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
 		"----------\n");
 }
 // Scope, visibility related tests.
@@ -136,27 +136,27 @@ public void test004() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
-			"import java.io.*;\n" + 
-			"public class X {\n" + 
-			"	public static void main(String[] args) throws IOException {\n" + 
-			"		int i = 0;\n" + 
-			"		try (LineNumberReader reader = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" + 
-			"			String s;\n" + 
-			"			int i = 0;\n" + 
-			"			while ((s = reader.readLine()) != null) {\n" + 
-			"				System.out.println(s);\n" + 
-			"				i++;\n" + 
-			"			}\n" + 
-			"			System.out.println(\"\" + i + \" lines\");\n" + 
-			"		}\n" + 
-			"	}\n" + 
+			"import java.io.*;\n" +
+			"public class X {\n" +
+			"	public static void main(String[] args) throws IOException {\n" +
+			"		int i = 0;\n" +
+			"		try (LineNumberReader reader = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" +
+			"			String s;\n" +
+			"			int i = 0;\n" +
+			"			while ((s = reader.readLine()) != null) {\n" +
+			"				System.out.println(s);\n" +
+			"				i++;\n" +
+			"			}\n" +
+			"			System.out.println(\"\" + i + \" lines\");\n" +
+			"		}\n" +
+			"	}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 7)\n" + 
-		"	int i = 0;\n" + 
-		"	    ^\n" + 
-		"Duplicate local variable i\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 7)\n" +
+		"	int i = 0;\n" +
+		"	    ^\n" +
+		"Duplicate local variable i\n" +
 		"----------\n");
 }
 //Scope, visibility related tests.
@@ -164,31 +164,31 @@ public void test004a() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
-			"import java.io.*;\n" + 
-			"public class X {\n" + 
-			"	public static void main(String[] args) throws IOException {\n" + 
-			"		try (LineNumberReader r = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" + 
-			"			String s;\n" + 
-			"			int r = 0;\n" + 
-			"			while ((s = r.readLine()) != null) {\n" + 
-			"				System.out.println(s);\n" + 
-			"				r++;\n" + 
-			"			}\n" + 
-			"			System.out.println(\"\" + r + \" lines\");\n" + 
-			"		}\n" + 
-			"	}\n" + 
+			"import java.io.*;\n" +
+			"public class X {\n" +
+			"	public static void main(String[] args) throws IOException {\n" +
+			"		try (LineNumberReader r = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" +
+			"			String s;\n" +
+			"			int r = 0;\n" +
+			"			while ((s = r.readLine()) != null) {\n" +
+			"				System.out.println(s);\n" +
+			"				r++;\n" +
+			"			}\n" +
+			"			System.out.println(\"\" + r + \" lines\");\n" +
+			"		}\n" +
+			"	}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 6)\n" + 
-		"	int r = 0;\n" + 
-		"	    ^\n" + 
-		"Duplicate local variable r\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 7)\n" + 
-		"	while ((s = r.readLine()) != null) {\n" + 
-		"	            ^^^^^^^^^^^^\n" + 
-		"Cannot invoke readLine() on the primitive type int\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	int r = 0;\n" +
+		"	    ^\n" +
+		"Duplicate local variable r\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 7)\n" +
+		"	while ((s = r.readLine()) != null) {\n" +
+		"	            ^^^^^^^^^^^^\n" +
+		"Cannot invoke readLine() on the primitive type int\n" +
 		"----------\n");
 }
 // check that resources are implicitly final
@@ -196,20 +196,20 @@ public void test005() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
-			"import java.io.*;\n" + 
-			"public class X {\n" + 
-			"	public static void main(String[] args) throws IOException {\n" + 
-			"		try (Reader r = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" + 
-			"			r = new FileReader(args[0]);\n" + 
-			"		}\n" + 
-			"	}\n" + 
+			"import java.io.*;\n" +
+			"public class X {\n" +
+			"	public static void main(String[] args) throws IOException {\n" +
+			"		try (Reader r = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" +
+			"			r = new FileReader(args[0]);\n" +
+			"		}\n" +
+			"	}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	r = new FileReader(args[0]);\n" + 
-		"	^\n" + 
-		"The resource r of a try-with-resources statement cannot be assigned\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	r = new FileReader(args[0]);\n" +
+		"	^\n" +
+		"The resource r of a try-with-resources statement cannot be assigned\n" +
 		"----------\n");
 }
 //check that try statement can be empty
@@ -217,41 +217,41 @@ public void test006() {
 	this.runNegativeTest( // cannot be a conform test as this triggers an AIOOB.
 		new String[] {
 			"X.java",
-			"import java.io.*;\n" + 
-			"public class X {\n" + 
-			"	public static void main(String[] args) throws IOException {\n" + 
-			"		try (Reader r = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" + 
+			"import java.io.*;\n" +
+			"public class X {\n" +
+			"	public static void main(String[] args) throws IOException {\n" +
+			"		try (Reader r = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" +
 			"		} catch(Zork z) {" +
-			"       }\n" + 
-			"	}\n" + 
+			"       }\n" +
+			"	}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	} catch(Zork z) {       }\n" + 
-		"	        ^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	} catch(Zork z) {       }\n" +
+		"	        ^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
 		"----------\n");
 }
-//check that resources are implicitly final but they can be explicitly final 
+//check that resources are implicitly final but they can be explicitly final
 public void test007() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
-			"import java.io.*;\n" + 
-			"public class X {\n" + 
-			"	public static void main(String[] args) throws IOException {\n" + 
-			"		try (final Reader r = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" + 
-			"			r = new FileReader(args[0]);\n" + 
-			"		}\n" + 
-			"	}\n" + 
+			"import java.io.*;\n" +
+			"public class X {\n" +
+			"	public static void main(String[] args) throws IOException {\n" +
+			"		try (final Reader r = new LineNumberReader(new BufferedReader(new FileReader(args[0])))) {\n" +
+			"			r = new FileReader(args[0]);\n" +
+			"		}\n" +
+			"	}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	r = new FileReader(args[0]);\n" + 
-		"	^\n" + 
-		"The resource r of a try-with-resources statement cannot be assigned\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	r = new FileReader(args[0]);\n" +
+		"	^\n" +
+		"The resource r of a try-with-resources statement cannot be assigned\n" +
 		"----------\n");
 }
 // resource type tests
@@ -270,11 +270,11 @@ public void test008() {
 			"    public void close () {}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Y [] i = null) {\n" + 
-		"	     ^^^^\n" + 
-		"The resource type Y[] does not implement java.lang.AutoCloseable\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Y [] i = null) {\n" +
+		"	     ^^^^\n" +
+		"The resource type Y[] does not implement java.lang.AutoCloseable\n" +
 		"----------\n");
 }
 // Resource Type tests
@@ -293,11 +293,11 @@ public void test009() {
 			"    public void close () {}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Y i [] = null) {\n" + 
-		"	     ^\n" + 
-		"The resource type Y[] does not implement java.lang.AutoCloseable\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Y i [] = null) {\n" +
+		"	     ^\n" +
+		"The resource type Y[] does not implement java.lang.AutoCloseable\n" +
 		"----------\n");
 }
 // Scope, visibility tests
@@ -317,21 +317,21 @@ public void test010() {
 			"    public void close () {}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 4)\n" + 
-		"	try (Y i = new Y(); Y i = new Y(); Y p = new Y(); Y k = new Y();) {\n" + 
-		"	                      ^\n" + 
-		"Duplicate local variable i\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 4)\n" + 
-		"	try (Y i = new Y(); Y i = new Y(); Y p = new Y(); Y k = new Y();) {\n" + 
-		"	                                     ^\n" + 
-		"Duplicate local variable p\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 4)\n" + 
-		"	try (Y i = new Y(); Y i = new Y(); Y p = new Y(); Y k = new Y();) {\n" + 
-		"	                                                    ^\n" + 
-		"Duplicate local variable k\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\n" +
+		"	try (Y i = new Y(); Y i = new Y(); Y p = new Y(); Y k = new Y();) {\n" +
+		"	                      ^\n" +
+		"Duplicate local variable i\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 4)\n" +
+		"	try (Y i = new Y(); Y i = new Y(); Y p = new Y(); Y k = new Y();) {\n" +
+		"	                                     ^\n" +
+		"Duplicate local variable p\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 4)\n" +
+		"	try (Y i = new Y(); Y i = new Y(); Y p = new Y(); Y k = new Y();) {\n" +
+		"	                                                    ^\n" +
+		"Duplicate local variable k\n" +
 		"----------\n");
 }
 // Scope, visibility tests
@@ -356,16 +356,16 @@ public void test011() {
 			"    public void close () {}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 7)\n" + 
-		"	System.out.println(i);\n" + 
-		"	                   ^\n" + 
-		"i cannot be resolved to a variable\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 10)\n" + 
-		"	System.out.println(p);\n" + 
-		"	                   ^\n" + 
-		"p cannot be resolved to a variable\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 7)\n" +
+		"	System.out.println(i);\n" +
+		"	                   ^\n" +
+		"i cannot be resolved to a variable\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 10)\n" +
+		"	System.out.println(p);\n" +
+		"	                   ^\n" +
+		"p cannot be resolved to a variable\n" +
 		"---" +
 		"-------\n");
 }
@@ -394,21 +394,21 @@ public void test012() {
 			"    public void close () {}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 6)\n" + 
-		"	} catch (Exception i) {\n" + 
-		"	                   ^\n" + 
-		"Duplicate parameter i\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 10)\n" + 
-		"	System.out.println(i);\n" + 
-		"	                   ^\n" + 
-		"i cannot be resolved to a variable\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 13)\n" + 
-		"	System.out.println(p);\n" + 
-		"	                   ^\n" + 
-		"p cannot be resolved to a variable\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	} catch (Exception i) {\n" +
+		"	                   ^\n" +
+		"Duplicate parameter i\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 10)\n" +
+		"	System.out.println(i);\n" +
+		"	                   ^\n" +
+		"i cannot be resolved to a variable\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 13)\n" +
+		"	System.out.println(p);\n" +
+		"	                   ^\n" +
+		"p cannot be resolved to a variable\n" +
 		"----------\n");
 }
 // Shadowing behavior tests
@@ -439,21 +439,21 @@ public void test013() {
 			"	}\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 5)\n" + 
-		"	public void foo(int p) {\n" + 
-		"	                    ^\n" + 
-		"The parameter p is hiding another local variable defined in an enclosing scope\n" + 
-		"----------\n" + 
-		"2. WARNING in X.java (at line 8)\n" + 
-		"	} catch (Exception y) {\n" + 
-		"	                   ^\n" + 
-		"The parameter y is hiding another local variable defined in an enclosing scope\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 13)\n" + 
-		"	System.out.println(y);\n" + 
-		"	                   ^\n" + 
-		"y cannot be resolved to a variable\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 5)\n" +
+		"	public void foo(int p) {\n" +
+		"	                    ^\n" +
+		"The parameter p is hiding another local variable defined in an enclosing scope\n" +
+		"----------\n" +
+		"2. WARNING in X.java (at line 8)\n" +
+		"	} catch (Exception y) {\n" +
+		"	                   ^\n" +
+		"The parameter y is hiding another local variable defined in an enclosing scope\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 13)\n" +
+		"	System.out.println(y);\n" +
+		"	                   ^\n" +
+		"y cannot be resolved to a variable\n" +
 		"----------\n");
 }
 // Test for unhandled exceptions
@@ -486,31 +486,31 @@ public void test014() {
 			"\n" +
 			"class WeirdException extends Throwable {}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Y y = new Y();) {\n" + 
-		"	           ^^^^^^^\n" + 
-		"Unhandled exception type WeirdException\n" + 
-		"----------\n" + 
-		"2. WARNING in X.java (at line 4)\n" + 
-		"	if (y == null) {}\n" + 
-		"	               ^^\n" + 
-		"Dead code\n" + 
-		"----------\n" + 
-		"3. WARNING in X.java (at line 5)\n" + 
-		"	Y why = new Y();\n" + 
-		"	  ^^^\n" + 
-		"Resource leak: 'why' is never closed\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 5)\n" + 
-		"	Y why = new Y();\n" + 
-		"	        ^^^^^^^\n" + 
-		"Unhandled exception type WeirdException\n" + 
-		"----------\n" + 
-		"5. WARNING in X.java (at line 22)\n" + 
-		"	class WeirdException extends Throwable {}\n" + 
-		"	      ^^^^^^^^^^^^^^\n" + 
-		"The serializable class WeirdException does not declare a static final serialVersionUID field of type long\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Y y = new Y();) {\n" +
+		"	           ^^^^^^^\n" +
+		"Unhandled exception type WeirdException\n" +
+		"----------\n" +
+		"2. WARNING in X.java (at line 4)\n" +
+		"	if (y == null) {}\n" +
+		"	               ^^\n" +
+		"Dead code\n" +
+		"----------\n" +
+		"3. WARNING in X.java (at line 5)\n" +
+		"	Y why = new Y();\n" +
+		"	  ^^^\n" +
+		"Resource leak: 'why' is never closed\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 5)\n" +
+		"	Y why = new Y();\n" +
+		"	        ^^^^^^^\n" +
+		"Unhandled exception type WeirdException\n" +
+		"----------\n" +
+		"5. WARNING in X.java (at line 22)\n" +
+		"	class WeirdException extends Throwable {}\n" +
+		"	      ^^^^^^^^^^^^^^\n" +
+		"The serializable class WeirdException does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n",
 		null, true, options);
 }
@@ -535,11 +535,11 @@ public void test015() {
 			"}\n"
 		};
 	runner.expectedCompilerLog =
-		"----------\n" + 
-		"1. WARNING in X.java (at line 5)\n" + 
-		"	{}\n" + 
-		"	^^\n" + 
-		"Dead code\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 5)\n" +
+		"	{}\n" +
+		"	^^\n" +
+		"Dead code\n" +
 		"----------\n";
 	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
 	runner.runWarningTest();
@@ -572,31 +572,31 @@ public void test016() {
 			"\n" +
 			"class WeirdException extends Throwable {}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Y y = new Y();) {\n" + 
-		"	           ^^^^^^^\n" + 
-		"Unhandled exception type WeirdException\n" + 
-		"----------\n" + 
-		"2. WARNING in X.java (at line 4)\n" + 
-		"	if (y == null) {}\n" + 
-		"	               ^^\n" + 
-		"Dead code\n" + 
-		"----------\n" + 
-		"3. WARNING in X.java (at line 5)\n" + 
-		"	Y why = new Y();\n" + 
-		"	  ^^^\n" + 
-		"Resource leak: 'why' is never closed\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 5)\n" + 
-		"	Y why = new Y();\n" + 
-		"	        ^^^^^^^\n" + 
-		"Unhandled exception type WeirdException\n" + 
-		"----------\n" + 
-		"5. WARNING in X.java (at line 20)\n" + 
-		"	class WeirdException extends Throwable {}\n" + 
-		"	      ^^^^^^^^^^^^^^\n" + 
-		"The serializable class WeirdException does not declare a static final serialVersionUID field of type long\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Y y = new Y();) {\n" +
+		"	           ^^^^^^^\n" +
+		"Unhandled exception type WeirdException\n" +
+		"----------\n" +
+		"2. WARNING in X.java (at line 4)\n" +
+		"	if (y == null) {}\n" +
+		"	               ^^\n" +
+		"Dead code\n" +
+		"----------\n" +
+		"3. WARNING in X.java (at line 5)\n" +
+		"	Y why = new Y();\n" +
+		"	  ^^^\n" +
+		"Resource leak: 'why' is never closed\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 5)\n" +
+		"	Y why = new Y();\n" +
+		"	        ^^^^^^^\n" +
+		"Unhandled exception type WeirdException\n" +
+		"----------\n" +
+		"5. WARNING in X.java (at line 20)\n" +
+		"	class WeirdException extends Throwable {}\n" +
+		"	      ^^^^^^^^^^^^^^\n" +
+		"The serializable class WeirdException does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n",
 		null,
 		true,
@@ -624,11 +624,11 @@ public void test017() {
 			"}\n"
 		};
 	runner.expectedCompilerLog =
-		"----------\n" + 
-		"1. WARNING in X.java (at line 5)\n" + 
-		"	{}\n" + 
-		"	^^\n" + 
-		"Dead code\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 5)\n" +
+		"	{}\n" +
+		"	^^\n" +
+		"Dead code\n" +
 		"----------\n";
 	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
 	runner.runWarningTest();
@@ -646,11 +646,11 @@ public void test018() {
 			"	}\n" +
 			"} \n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try () {\n" + 
-		"	    ^\n" + 
-		"Syntax error on token \"(\", Resources expected after this token\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try () {\n" +
+		"	    ^\n" +
+		"Syntax error on token \"(\", Resources expected after this token\n" +
 		"----------\n");
 }
 // Unhandled exception tests
@@ -698,56 +698,56 @@ public void test020() {
 			"class ZException extends Exception {}\n" +
 			"class ZZException extends Exception {}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" + 
-		"	       ^\n" + 
-		"Unhandled exception type XXException thrown by automatic close() invocation on x\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 3)\n" + 
-		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" + 
-		"	                      ^\n" + 
-		"Unhandled exception type YYException thrown by automatic close() invocation on y\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 3)\n" + 
-		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" + 
-		"	                                     ^\n" + 
-		"Unhandled exception type ZZException thrown by automatic close() invocation on z\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 4)\n" + 
-		"	throw new XXException();\n" + 
-		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Unhandled exception type XXException\n" + 
-		"----------\n" + 
-		"5. WARNING in X.java (at line 34)\n" + 
-		"	class XException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class XException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"6. WARNING in X.java (at line 35)\n" + 
-		"	class XXException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class XXException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"7. WARNING in X.java (at line 36)\n" + 
-		"	class YException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class YException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"8. WARNING in X.java (at line 37)\n" + 
-		"	class YYException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class YYException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"9. WARNING in X.java (at line 38)\n" + 
-		"	class ZException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class ZException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"10. WARNING in X.java (at line 39)\n" + 
-		"	class ZZException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class ZZException does not declare a static final serialVersionUID field of type long\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" +
+		"	       ^\n" +
+		"Unhandled exception type XXException thrown by automatic close() invocation on x\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 3)\n" +
+		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" +
+		"	                      ^\n" +
+		"Unhandled exception type YYException thrown by automatic close() invocation on y\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 3)\n" +
+		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" +
+		"	                                     ^\n" +
+		"Unhandled exception type ZZException thrown by automatic close() invocation on z\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 4)\n" +
+		"	throw new XXException();\n" +
+		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Unhandled exception type XXException\n" +
+		"----------\n" +
+		"5. WARNING in X.java (at line 34)\n" +
+		"	class XException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class XException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"6. WARNING in X.java (at line 35)\n" +
+		"	class XXException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class XXException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"7. WARNING in X.java (at line 36)\n" +
+		"	class YException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class YException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"8. WARNING in X.java (at line 37)\n" +
+		"	class YYException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class YYException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"9. WARNING in X.java (at line 38)\n" +
+		"	class ZException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class ZException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"10. WARNING in X.java (at line 39)\n" +
+		"	class ZZException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class ZZException does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n");
 }
 // Resource type test
@@ -766,11 +766,11 @@ public void test021() {
 			"    public void close () {}\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Y i = null) {\n" + 
-		"	     ^\n" + 
-		"The resource type Y does not implement java.lang.AutoCloseable\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Y i = null) {\n" +
+		"	     ^\n" +
+		"The resource type Y does not implement java.lang.AutoCloseable\n" +
 		"----------\n");
 }
 // Interface method return type compatibility test
@@ -789,11 +789,11 @@ public void test022() {
 			"    public int close () { return 0; }\n" +
 			"}",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 9)\n" + 
-		"	public int close () { return 0; }\n" + 
-		"	       ^^^\n" + 
-		"The return type is incompatible with AutoCloseable.close()\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 9)\n" +
+		"	public int close () { return 0; }\n" +
+		"	       ^^^\n" +
+		"The return type is incompatible with AutoCloseable.close()\n" +
 		"----------\n");
 }
 // Exception handling, compatibility tests
@@ -813,21 +813,21 @@ public void test023() {
 			"}\n" +
 			"class Blah extends Throwable {}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Y i = null) {\n" + 
-		"	       ^\n" + 
-		"Unhandled exception type Blah thrown by automatic close() invocation on i\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 9)\n" + 
-		"	public void close () throws Blah {}\n" + 
-		"	            ^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Exception Blah is not compatible with throws clause in AutoCloseable.close()\n" + 
-		"----------\n" + 
-		"3. WARNING in X.java (at line 11)\n" + 
-		"	class Blah extends Throwable {}\n" + 
-		"	      ^^^^\n" + 
-		"The serializable class Blah does not declare a static final serialVersionUID field of type long\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Y i = null) {\n" +
+		"	       ^\n" +
+		"Unhandled exception type Blah thrown by automatic close() invocation on i\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 9)\n" +
+		"	public void close () throws Blah {}\n" +
+		"	            ^^^^^^^^^^^^^^^^^^^^\n" +
+		"Exception Blah is not compatible with throws clause in AutoCloseable.close()\n" +
+		"----------\n" +
+		"3. WARNING in X.java (at line 11)\n" +
+		"	class Blah extends Throwable {}\n" +
+		"	      ^^^^\n" +
+		"The serializable class Blah does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n");
 }
 // Exception handling tests
@@ -878,36 +878,36 @@ public void test024() {
 			"class ZException extends Exception {}\n" +
 			"class ZZException extends Exception {}\n"
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 37)\n" + 
-		"	class XException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class XException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"2. WARNING in X.java (at line 38)\n" + 
-		"	class XXException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class XXException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"3. WARNING in X.java (at line 39)\n" + 
-		"	class YException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class YException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"4. WARNING in X.java (at line 40)\n" + 
-		"	class YYException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class YYException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"5. WARNING in X.java (at line 41)\n" + 
-		"	class ZException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class ZException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"6. WARNING in X.java (at line 42)\n" + 
-		"	class ZZException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class ZZException does not declare a static final serialVersionUID field of type long\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 37)\n" +
+		"	class XException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class XException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"2. WARNING in X.java (at line 38)\n" +
+		"	class XXException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class XXException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"3. WARNING in X.java (at line 39)\n" +
+		"	class YException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class YException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"4. WARNING in X.java (at line 40)\n" +
+		"	class YYException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class YYException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"5. WARNING in X.java (at line 41)\n" +
+		"	class ZException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class ZException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"6. WARNING in X.java (at line 42)\n" +
+		"	class ZZException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class ZZException does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n");
 }
 // Unhandled exception tests
@@ -955,56 +955,56 @@ public void test025() {
 			"class ZException extends Exception {}\n" +
 			"class ZZException extends Exception {}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" + 
-		"	       ^\n" + 
-		"Unhandled exception type XXException thrown by automatic close() invocation on x\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 3)\n" + 
-		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" + 
-		"	                      ^\n" + 
-		"Unhandled exception type YYException thrown by automatic close() invocation on y\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 3)\n" + 
-		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" + 
-		"	                                     ^\n" + 
-		"Unhandled exception type ZZException thrown by automatic close() invocation on z\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 4)\n" + 
-		"	throw new XXException();\n" + 
-		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Unhandled exception type XXException\n" + 
-		"----------\n" + 
-		"5. WARNING in X.java (at line 34)\n" + 
-		"	class XException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class XException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"6. WARNING in X.java (at line 35)\n" + 
-		"	class XXException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class XXException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"7. WARNING in X.java (at line 36)\n" + 
-		"	class YException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class YException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"8. WARNING in X.java (at line 37)\n" + 
-		"	class YYException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class YYException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"9. WARNING in X.java (at line 38)\n" + 
-		"	class ZException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class ZException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"10. WARNING in X.java (at line 39)\n" + 
-		"	class ZZException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class ZZException does not declare a static final serialVersionUID field of type long\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" +
+		"	       ^\n" +
+		"Unhandled exception type XXException thrown by automatic close() invocation on x\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 3)\n" +
+		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" +
+		"	                      ^\n" +
+		"Unhandled exception type YYException thrown by automatic close() invocation on y\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 3)\n" +
+		"	try (X x = new X(); Y y = new Y(); Z z = new Z()) {\n" +
+		"	                                     ^\n" +
+		"Unhandled exception type ZZException thrown by automatic close() invocation on z\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 4)\n" +
+		"	throw new XXException();\n" +
+		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Unhandled exception type XXException\n" +
+		"----------\n" +
+		"5. WARNING in X.java (at line 34)\n" +
+		"	class XException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class XException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"6. WARNING in X.java (at line 35)\n" +
+		"	class XXException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class XXException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"7. WARNING in X.java (at line 36)\n" +
+		"	class YException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class YException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"8. WARNING in X.java (at line 37)\n" +
+		"	class YYException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class YYException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"9. WARNING in X.java (at line 38)\n" +
+		"	class ZException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class ZException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"10. WARNING in X.java (at line 39)\n" +
+		"	class ZZException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class ZZException does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n");
 }
 public void test026() {
@@ -1053,36 +1053,36 @@ public void test026() {
 			"class ZException extends Exception {}\n" +
 			"class ZZException extends Exception {}\n"
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 37)\n" + 
-		"	class XException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class XException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"2. WARNING in X.java (at line 38)\n" + 
-		"	class XXException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class XXException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"3. WARNING in X.java (at line 39)\n" + 
-		"	class YException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class YException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"4. WARNING in X.java (at line 40)\n" + 
-		"	class YYException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class YYException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"5. WARNING in X.java (at line 41)\n" + 
-		"	class ZException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^\n" + 
-		"The serializable class ZException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"6. WARNING in X.java (at line 42)\n" + 
-		"	class ZZException extends Exception {}\n" + 
-		"	      ^^^^^^^^^^^\n" + 
-		"The serializable class ZZException does not declare a static final serialVersionUID field of type long\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 37)\n" +
+		"	class XException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class XException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"2. WARNING in X.java (at line 38)\n" +
+		"	class XXException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class XXException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"3. WARNING in X.java (at line 39)\n" +
+		"	class YException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class YException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"4. WARNING in X.java (at line 40)\n" +
+		"	class YYException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class YYException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"5. WARNING in X.java (at line 41)\n" +
+		"	class ZException extends Exception {}\n" +
+		"	      ^^^^^^^^^^\n" +
+		"The serializable class ZException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"6. WARNING in X.java (at line 42)\n" +
+		"	class ZZException extends Exception {}\n" +
+		"	      ^^^^^^^^^^^\n" +
+		"The serializable class ZZException does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n");
 }
 public void test027() {
@@ -1123,14 +1123,14 @@ public void test027() {
 			"    }\n" +
 			"}\n"
 		},
-		"X CTOR\n" + 
-		"Y CTOR\n" + 
-		"Body\n" + 
-		"Y Close\n" + 
-		"X Close\n" + 
-		"java.lang.Exception: Body\n" + 
-		"Suppressed:java.lang.Exception: Y Close\n" + 
-		"Suppressed:java.lang.Exception: X Close\n" + 
+		"X CTOR\n" +
+		"Y CTOR\n" +
+		"Body\n" +
+		"Y Close\n" +
+		"X Close\n" +
+		"java.lang.Exception: Body\n" +
+		"Suppressed:java.lang.Exception: Y Close\n" +
+		"Suppressed:java.lang.Exception: X Close\n" +
 		"10");
 }
 public void test028() {
@@ -1161,10 +1161,10 @@ public void test028() {
 			"    }\n" +
 			"}\n"
 		},
-		"X CTOR\n" + 
-		"Y CTOR\n" + 
-		"Body\n" + 
-		"Y DTOR\n" + 
+		"X CTOR\n" +
+		"Y CTOR\n" +
+		"Body\n" +
+		"Y DTOR\n" +
 		"X DTOR");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=338881
@@ -1242,21 +1242,21 @@ public void test030() {  // test return + resources
 			"    }\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"X::X\n" + 
-		"X::X\n" + 
-		"Outer Try\n" + 
-		"Y::Y\n" + 
-		"Y::Y\n" + 
-		"Middle Try\n" + 
-		"Z::Z\n" + 
-		"Z::Z\n" + 
-		"Inner Try\n" + 
-		"Z::~Z\n" + 
-		"Z::~Z\n" + 
-		"Y::~Y\n" + 
-		"Y::~Y\n" + 
-		"X::~X\n" + 
+		"Main\n" +
+		"X::X\n" +
+		"X::X\n" +
+		"Outer Try\n" +
+		"Y::Y\n" +
+		"Y::Y\n" +
+		"Middle Try\n" +
+		"Z::Z\n" +
+		"Z::Z\n" +
+		"Inner Try\n" +
+		"Z::~Z\n" +
+		"Z::~Z\n" +
+		"Y::~Y\n" +
+		"Y::~Y\n" +
+		"X::~X\n" +
 		"X::~X");
 }
 public void test030a() {  // test return + resources + with exceptions being thrown by close()
@@ -1317,27 +1317,27 @@ public void test030a() {  // test return + resources + with exceptions being thr
 			"    }\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"X::X\n" + 
-		"X::X\n" + 
-		"Outer Try\n" + 
-		"Y::Y\n" + 
-		"Y::Y\n" + 
-		"Middle Try\n" + 
-		"Z::Z\n" + 
-		"Z::Z\n" + 
-		"Inner Try\n" + 
-		"Z::~Z\n" + 
-		"Z::~Z\n" + 
-		"Y::~Y\n" + 
-		"Y::~Y\n" + 
-		"X::~X\n" + 
-		"X::~X\n" + 
-		"java.lang.Exception: Z::~Z\n" + 
-		"Suppressed: java.lang.Exception: Z::~Z\n" + 
-		"Suppressed: java.lang.Exception: Y::~Y\n" + 
-		"Suppressed: java.lang.Exception: Y::~Y\n" + 
-		"Suppressed: java.lang.Exception: X::~X\n" + 
+		"Main\n" +
+		"X::X\n" +
+		"X::X\n" +
+		"Outer Try\n" +
+		"Y::Y\n" +
+		"Y::Y\n" +
+		"Middle Try\n" +
+		"Z::Z\n" +
+		"Z::Z\n" +
+		"Inner Try\n" +
+		"Z::~Z\n" +
+		"Z::~Z\n" +
+		"Y::~Y\n" +
+		"Y::~Y\n" +
+		"X::~X\n" +
+		"X::~X\n" +
+		"java.lang.Exception: Z::~Z\n" +
+		"Suppressed: java.lang.Exception: Z::~Z\n" +
+		"Suppressed: java.lang.Exception: Y::~Y\n" +
+		"Suppressed: java.lang.Exception: Y::~Y\n" +
+		"Suppressed: java.lang.Exception: X::~X\n" +
 		"Suppressed: java.lang.Exception: X::~X");
 }
 public void test031() { // test break + resources
@@ -1389,22 +1389,22 @@ public void test031() { // test break + resources
 			"    }\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"X::X\n" + 
-		"X::X\n" + 
-		"Outer Try\n" + 
-		"Y::Y\n" + 
-		"Y::Y\n" + 
-		"Middle Try\n" + 
-		"Z::Z\n" + 
-		"Z::Z\n" + 
-		"Inner Try\n" + 
-		"Z::~Z\n" + 
-		"Z::~Z\n" + 
-		"Y::~Y\n" + 
-		"Y::~Y\n" + 
-		"Out of while\n" + 
-		"X::~X\n" + 
+		"Main\n" +
+		"X::X\n" +
+		"X::X\n" +
+		"Outer Try\n" +
+		"Y::Y\n" +
+		"Y::Y\n" +
+		"Middle Try\n" +
+		"Z::Z\n" +
+		"Z::Z\n" +
+		"Inner Try\n" +
+		"Z::~Z\n" +
+		"Z::~Z\n" +
+		"Y::~Y\n" +
+		"Y::~Y\n" +
+		"Out of while\n" +
+		"X::~X\n" +
 		"X::~X");
 }
 public void test032() { // test continue + resources
@@ -1461,25 +1461,25 @@ public void test032() { // test continue + resources
 			"    }\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"X::X\n" + 
-		"X::X\n" + 
-		"Outer Try\n" + 
-		"Y::Y\n" + 
-		"Y::Y\n" + 
-		"Middle Try\n" + 
-		"Z::Z\n" + 
-		"Z::Z\n" + 
-		"Inner Try\n" + 
-		"Z::~Z\n" + 
-		"Z::~Z\n" + 
-		"Inner Finally\n" + 
-		"Y::~Y\n" + 
-		"Y::~Y\n" + 
-		"Middle Finally\n" + 
-		"Out of while\n" + 
-		"X::~X\n" + 
-		"X::~X\n" + 
+		"Main\n" +
+		"X::X\n" +
+		"X::X\n" +
+		"Outer Try\n" +
+		"Y::Y\n" +
+		"Y::Y\n" +
+		"Middle Try\n" +
+		"Z::Z\n" +
+		"Z::Z\n" +
+		"Inner Try\n" +
+		"Z::~Z\n" +
+		"Z::~Z\n" +
+		"Inner Finally\n" +
+		"Y::~Y\n" +
+		"Y::~Y\n" +
+		"Middle Finally\n" +
+		"Out of while\n" +
+		"X::~X\n" +
+		"X::~X\n" +
 		"Outer Finally");
 }
 public void test033() { // test null resources
@@ -1520,10 +1520,10 @@ public void test033() { // test null resources
 			"    }\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"Y::Y\n" + 
-		"Body\n" + 
-		"Y::~Y\n" + 
+		"Main\n" +
+		"Y::Y\n" +
+		"Body\n" +
+		"Y::~Y\n" +
 		"Outer Finally");
 }
 public void test034() {
@@ -1624,9 +1624,9 @@ public void test034() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"java.lang.Exception: A::A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"java.lang.Exception: A::A\n" +
 		"All done");
 }
 public void test035() {
@@ -1726,12 +1726,12 @@ public void test035() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: B::B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: B::B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test036() {
@@ -1830,16 +1830,16 @@ public void test036() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: C::C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: C::C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test037() {
@@ -1937,19 +1937,19 @@ public void test037() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: D::D\n" + 
-		"Suppressed: java.lang.Exception: C::~C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: D::D\n" +
+		"Suppressed: java.lang.Exception: C::~C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test038() {
@@ -2046,23 +2046,23 @@ public void test038() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: E::E\n" + 
-		"Suppressed: java.lang.Exception: D::~D\n" + 
-		"Suppressed: java.lang.Exception: C::~C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: E::E\n" +
+		"Suppressed: java.lang.Exception: D::~D\n" +
+		"Suppressed: java.lang.Exception: C::~C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test039() {
@@ -2158,26 +2158,26 @@ public void test039() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: F::F\n" + 
-		"Suppressed: java.lang.Exception: E::~E\n" + 
-		"Suppressed: java.lang.Exception: D::~D\n" + 
-		"Suppressed: java.lang.Exception: C::~C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: F::F\n" +
+		"Suppressed: java.lang.Exception: E::~E\n" +
+		"Suppressed: java.lang.Exception: D::~D\n" +
+		"Suppressed: java.lang.Exception: C::~C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test040() {
@@ -2272,29 +2272,29 @@ public void test040() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"Inner try\n" + 
-		"F::~F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: Body\n" + 
-		"Suppressed: java.lang.Exception: F::~F\n" + 
-		"Suppressed: java.lang.Exception: E::~E\n" + 
-		"Suppressed: java.lang.Exception: D::~D\n" + 
-		"Suppressed: java.lang.Exception: C::~C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"Inner try\n" +
+		"F::~F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: Body\n" +
+		"Suppressed: java.lang.Exception: F::~F\n" +
+		"Suppressed: java.lang.Exception: E::~E\n" +
+		"Suppressed: java.lang.Exception: D::~D\n" +
+		"Suppressed: java.lang.Exception: C::~C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test041() {
@@ -2388,28 +2388,28 @@ public void test041() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"Inner try\n" + 
-		"F::~F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: F::~F\n" + 
-		"Suppressed: java.lang.Exception: E::~E\n" + 
-		"Suppressed: java.lang.Exception: D::~D\n" + 
-		"Suppressed: java.lang.Exception: C::~C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"Inner try\n" +
+		"F::~F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: F::~F\n" +
+		"Suppressed: java.lang.Exception: E::~E\n" +
+		"Suppressed: java.lang.Exception: D::~D\n" +
+		"Suppressed: java.lang.Exception: C::~C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test042() {
@@ -2502,27 +2502,27 @@ public void test042() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"Inner try\n" + 
-		"F::~F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: E::~E\n" + 
-		"Suppressed: java.lang.Exception: D::~D\n" + 
-		"Suppressed: java.lang.Exception: C::~C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"Inner try\n" +
+		"F::~F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: E::~E\n" +
+		"Suppressed: java.lang.Exception: D::~D\n" +
+		"Suppressed: java.lang.Exception: C::~C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test043() {
@@ -2614,26 +2614,26 @@ public void test043() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"Inner try\n" + 
-		"F::~F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: D::~D\n" + 
-		"Suppressed: java.lang.Exception: C::~C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"Inner try\n" +
+		"F::~F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: D::~D\n" +
+		"Suppressed: java.lang.Exception: C::~C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test044() {
@@ -2724,25 +2724,25 @@ public void test044() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"Inner try\n" + 
-		"F::~F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: C::~C\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"Inner try\n" +
+		"F::~F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: C::~C\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test045() {
@@ -2832,24 +2832,24 @@ public void test045() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"Inner try\n" + 
-		"F::~F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"Inner try\n" +
+		"F::~F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test046() {
@@ -2938,23 +2938,23 @@ public void test046() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"Inner try\n" + 
-		"F::~F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
-		"java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"Inner try\n" +
+		"F::~F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
+		"java.lang.Exception: A::~A\n" +
 		"All done");
 }
 public void test047() {
@@ -3042,22 +3042,22 @@ public void test047() {
 			"	}\n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"B::B\n" + 
-		"Outer try\n" + 
-		"C::C\n" + 
-		"D::D\n" + 
-		"Middle try\n" + 
-		"E::E\n" + 
-		"F::F\n" + 
-		"Inner try\n" + 
-		"F::~F\n" + 
-		"E::~E\n" + 
-		"D::~D\n" + 
-		"C::~C\n" + 
-		"B::~B\n" + 
-		"A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"B::B\n" +
+		"Outer try\n" +
+		"C::C\n" +
+		"D::D\n" +
+		"Middle try\n" +
+		"E::E\n" +
+		"F::F\n" +
+		"Inner try\n" +
+		"F::~F\n" +
+		"E::~E\n" +
+		"D::~D\n" +
+		"C::~C\n" +
+		"B::~B\n" +
+		"A::~A\n" +
 		"All done");
 }
 public void test048() {
@@ -3131,22 +3131,22 @@ public void test048() {
 			"	} \n" +
 			"}\n"
 		},
-		"Main\n" + 
-		"A::A\n" + 
-		"X::Try\n" + 
-		"A::~A\n" + 
-		"B::B\n" + 
-		"A::~A::Try\n" + 
-		"B::~B\n" + 
-		"C::C\n" + 
-		"B::~B::Try\n" + 
-		"C::~C\n" + 
-		"java.lang.Exception: B::~B\n" + 
-		"Suppressed: java.lang.Exception: C::~C\n" + 
-		"java.lang.Exception: A::~A\n" + 
-		"Suppressed: java.lang.Exception: B::~B\n" + 
-		"java.lang.Exception: X::Main\n" + 
-		"Suppressed: java.lang.Exception: A::~A\n" + 
+		"Main\n" +
+		"A::A\n" +
+		"X::Try\n" +
+		"A::~A\n" +
+		"B::B\n" +
+		"A::~A::Try\n" +
+		"B::~B\n" +
+		"C::C\n" +
+		"B::~B::Try\n" +
+		"C::~C\n" +
+		"java.lang.Exception: B::~B\n" +
+		"Suppressed: java.lang.Exception: C::~C\n" +
+		"java.lang.Exception: A::~A\n" +
+		"Suppressed: java.lang.Exception: B::~B\n" +
+		"java.lang.Exception: X::Main\n" +
+		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
 //ensure that it doesn't completely fail when using TWR and 1.5 mode
@@ -3179,11 +3179,11 @@ public void test049() {
 			"}\n"
 		};
 	runner.expectedCompilerLog =
-		"----------\n" + 
-		"1. ERROR in X.java (at line 7)\n" + 
-		"	try(FileReader fileReader = new FileReader(file);) {\n" + 
-		"	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Resource specification not allowed here for source level below 1.7\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 7)\n" +
+		"	try(FileReader fileReader = new FileReader(file);) {\n" +
+		"	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Resource specification not allowed here for source level below 1.7\n" +
 		"----------\n";
 	runner.javacTestOptions = JavacTestOptions.forRelease("5");
 	runner.runNegativeTest();
@@ -3220,11 +3220,11 @@ public void test050() {
 			"	}\n" +
 			"}"
 		},
-		"Main\n" + 
-		"E::E\n" + 
-		"Outer try\n" + 
-		"E::~E\n" + 
-		"java.lang.Exception: E::~E\n" + 
+		"Main\n" +
+		"E::E\n" +
+		"Outer try\n" +
+		"E::~E\n" +
+		"java.lang.Exception: E::~E\n" +
 		"All done");
 }
 public void test051() {
@@ -3277,13 +3277,13 @@ public void test052() {
 					"    }\n" +
 					"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Test t = new Test()) {\n" + 
-		"	     ^^^^^^^^^^^^^^^^^^^\n" + 
-		"Resource specification not allowed here for source level below 1.7\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Test t = new Test()) {\n" +
+		"	     ^^^^^^^^^^^^^^^^^^^\n" +
+		"Resource specification not allowed here for source level below 1.7\n" +
 		"----------\n",
-		null, 
+		null,
 		true,
 		options);
 }
@@ -3309,31 +3309,31 @@ public void test053() {
 			"}\n" +
 			"interface Managed extends AutoCloseable {}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Y y = new Y()) { \n" + 
-		"	       ^\n" + 
-		"Unhandled exception type ClassNotFoundException thrown by automatic close() invocation on y\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 3)\n" + 
-		"	try (Y y = new Y()) { \n" + 
-		"	       ^\n" + 
-		"Unhandled exception type IOException thrown by automatic close() invocation on y\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 3)\n" + 
-		"	try (Y y = new Y()) { \n" + 
-		"	           ^^^^^^^\n" + 
-		"Unhandled exception type CloneNotSupportedException\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 4)\n" + 
-		"	y.close();\n" + 
-		"	^^^^^^^^^\n" + 
-		"Unhandled exception type ClassNotFoundException\n" + 
-		"----------\n" + 
-		"5. ERROR in X.java (at line 4)\n" + 
-		"	y.close();\n" + 
-		"	^^^^^^^^^\n" + 
-		"Unhandled exception type IOException\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Y y = new Y()) { \n" +
+		"	       ^\n" +
+		"Unhandled exception type ClassNotFoundException thrown by automatic close() invocation on y\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 3)\n" +
+		"	try (Y y = new Y()) { \n" +
+		"	       ^\n" +
+		"Unhandled exception type IOException thrown by automatic close() invocation on y\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 3)\n" +
+		"	try (Y y = new Y()) { \n" +
+		"	           ^^^^^^^\n" +
+		"Unhandled exception type CloneNotSupportedException\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 4)\n" +
+		"	y.close();\n" +
+		"	^^^^^^^^^\n" +
+		"Unhandled exception type ClassNotFoundException\n" +
+		"----------\n" +
+		"5. ERROR in X.java (at line 4)\n" +
+		"	y.close();\n" +
+		"	^^^^^^^^^\n" +
+		"Unhandled exception type IOException\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=348705
@@ -3360,31 +3360,31 @@ public void test053a() {
 			"}\n" +
 			"interface Managed extends AutoCloseable {}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Y y = new Y()) { \n" + 
-		"	       ^\n" + 
-		"Unhandled exception type ClassNotFoundException thrown by automatic close() invocation on y\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 3)\n" + 
-		"	try (Y y = new Y()) { \n" + 
-		"	       ^\n" + 
-		"Unhandled exception type IOException thrown by automatic close() invocation on y\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 3)\n" + 
-		"	try (Y y = new Y()) { \n" + 
-		"	           ^^^^^^^\n" + 
-		"Unhandled exception type CloneNotSupportedException\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 4)\n" + 
-		"	y.close();\n" + 
-		"	^^^^^^^^^\n" + 
-		"Unhandled exception type ClassNotFoundException\n" + 
-		"----------\n" + 
-		"5. ERROR in X.java (at line 4)\n" + 
-		"	y.close();\n" + 
-		"	^^^^^^^^^\n" + 
-		"Unhandled exception type IOException\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Y y = new Y()) { \n" +
+		"	       ^\n" +
+		"Unhandled exception type ClassNotFoundException thrown by automatic close() invocation on y\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 3)\n" +
+		"	try (Y y = new Y()) { \n" +
+		"	       ^\n" +
+		"Unhandled exception type IOException thrown by automatic close() invocation on y\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 3)\n" +
+		"	try (Y y = new Y()) { \n" +
+		"	           ^^^^^^^\n" +
+		"Unhandled exception type CloneNotSupportedException\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 4)\n" +
+		"	y.close();\n" +
+		"	^^^^^^^^^\n" +
+		"Unhandled exception type ClassNotFoundException\n" +
+		"----------\n" +
+		"5. ERROR in X.java (at line 4)\n" +
+		"	y.close();\n" +
+		"	^^^^^^^^^\n" +
+		"Unhandled exception type IOException\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=349862 (NPE when union type is used in the resource section.)
@@ -3400,11 +3400,11 @@ public void test054() {
 			"    }\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Object | Integer res = null) {\n" + 
-		"	            ^\n" + 
-		"Syntax error on token \"|\", . expected\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Object | Integer res = null) {\n" +
+		"	            ^\n" +
+		"Syntax error on token \"|\", . expected\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=349862 (NPE when union type is used in the resource section.)
@@ -3420,11 +3420,11 @@ public void test054a() {
 			"    }\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	try (Object.Integer res = null) {\n" + 
-		"	     ^^^^^^^^^^^^^^\n" + 
-		"Object.Integer cannot be resolved to a type\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	try (Object.Integer res = null) {\n" +
+		"	     ^^^^^^^^^^^^^^\n" +
+		"Object.Integer cannot be resolved to a type\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353535 (verify error with try with resources)
@@ -3492,7 +3492,7 @@ public void test057() {
 			"		}\n" +
 			"	}\n" +
 			"}\n"
-		},  "");	
+		},  "");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=364008
 public void test058() {
@@ -3513,7 +3513,7 @@ public void test058() {
 			"    }\n" +
 			"  }\n" +
 			"}\n"
-		},  "");	
+		},  "");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=367566 - In try-with-resources statement close() method of resource is not called
 public void test059() {
@@ -3538,8 +3538,8 @@ public void test059() {
 			"    isOpen = false;\n" +
 			"  }\n" +
 			"}\n"
-		},  
-		"false");	
+		},
+		"false");
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=367566 - In try-with-resources statement close() method of resource is not called
@@ -3607,40 +3607,40 @@ public void test060() {
 			"        System.out.println(\"Z::~Z\");\n" +
 			"    }\n" +
 			"}\n"
-		}, 
-		"Main\n" + 
-		"X::X\n" + 
-		"X::X\n" + 
-		"X::~X\n" + 
-		"X::~X\n" + 
-		"true\n" + 
-		"Main\n" + 
-		"X::X\n" + 
-		"X::X\n" + 
-		"Outer Try\n" + 
-		"Y::Y\n" + 
-		"Y::Y\n" + 
-		"Y::~Y\n" + 
-		"Y::~Y\n" + 
-		"X::~X\n" + 
-		"X::~X\n" + 
-		"true\n" + 
-		"Main\n" + 
-		"X::X\n" + 
-		"X::X\n" + 
-		"Outer Try\n" + 
-		"Y::Y\n" + 
-		"Y::Y\n" + 
-		"Middle Try\n" + 
-		"Z::Z\n" + 
-		"Z::Z\n" + 
-		"Inner Try\n" + 
-		"Z::~Z\n" + 
-		"Z::~Z\n" + 
-		"Y::~Y\n" + 
-		"Y::~Y\n" + 
-		"X::~X\n" + 
-		"X::~X\n" + 
+		},
+		"Main\n" +
+		"X::X\n" +
+		"X::X\n" +
+		"X::~X\n" +
+		"X::~X\n" +
+		"true\n" +
+		"Main\n" +
+		"X::X\n" +
+		"X::X\n" +
+		"Outer Try\n" +
+		"Y::Y\n" +
+		"Y::Y\n" +
+		"Y::~Y\n" +
+		"Y::~Y\n" +
+		"X::~X\n" +
+		"X::~X\n" +
+		"true\n" +
+		"Main\n" +
+		"X::X\n" +
+		"X::X\n" +
+		"Outer Try\n" +
+		"Y::Y\n" +
+		"Y::Y\n" +
+		"Middle Try\n" +
+		"Z::Z\n" +
+		"Z::Z\n" +
+		"Inner Try\n" +
+		"Z::~Z\n" +
+		"Z::~Z\n" +
+		"Y::~Y\n" +
+		"Y::~Y\n" +
+		"X::~X\n" +
+		"X::~X\n" +
 		"true");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375248 (AIOOB with try with resources)
@@ -3774,7 +3774,7 @@ public void test375248c() {
 			"	     System.out.println(\"Try\");\n" +
 			"	     throw new Exception();\n" +
 			"        } catch (Exception e) {\n" +
-			"	     System.out.println(\"Catch\");\n"+ 
+			"	     System.out.println(\"Catch\");\n"+
 			"             return;\n" +
 			"        } finally {\n" +
 			"        	System.out.println(\"Finally\");\n" +
@@ -3786,11 +3786,11 @@ public void test375248c() {
 			"	public static void main(String[] args) {\n" +
 			"		new X().foo();\n" +
 			"	}\n" +
-			"}\n" 
+			"}\n"
 		},
-		"Try\n" + 
-		"Close\n" + 
-		"Catch\n" + 
+		"Try\n" +
+		"Close\n" +
+		"Catch\n" +
 		"Finally");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375248 (AIOOB with try with resources)
@@ -3811,7 +3811,7 @@ public void test375248d() {
 			"        try (X x = new X()) {\n" +
 			"	     System.out.println(\"Try\");\n" +
 			"        } catch (Exception e) {\n" +
-			"	     System.out.println(\"Catch\");\n"+ 
+			"	     System.out.println(\"Catch\");\n"+
 			"             return;\n" +
 			"        } finally {\n" +
 			"        	System.out.println(\"Finally\");\n" +
@@ -3824,10 +3824,10 @@ public void test375248d() {
 			"	public static void main(String[] args) {\n" +
 			"		new X().foo();\n" +
 			"	}\n" +
-			"}\n" 
+			"}\n"
 		},
-		"Try\n" + 
-		"Close\n" + 
+		"Try\n" +
+		"Close\n" +
 		"Finally");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375326
@@ -3835,26 +3835,26 @@ public void test375326() {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"public class X {\n" + 
-			"	public static void main(String[] args) throws Exception {\n" + 
-			"		HasAutoCloseable a;\n" + 
-			"		try(AutoCloseable b=(a=new HasAutoCloseable()).a) {\n" + 
-			"		}\n" + 
-			"		System.out.println(a);\n" + 
+			"public class X {\n" +
+			"	public static void main(String[] args) throws Exception {\n" +
+			"		HasAutoCloseable a;\n" +
+			"		try(AutoCloseable b=(a=new HasAutoCloseable()).a) {\n" +
+			"		}\n" +
+			"		System.out.println(a);\n" +
 			"	}\n" +
-			"	public static class AutoCloseableA implements AutoCloseable {\n" + 
-			"		@Override\n" + 
-			"		public void close() {\n" + 
-			"			// TODO Auto-generated method stub\n" + 
-			"		}\n" + 
-			"	}\n" + 
-			"	public static class HasAutoCloseable {\n" + 
-			"		AutoCloseable a = new AutoCloseableA();\n" + 
-			"		public String toString() {\n" + 
-			"			return \"SUCCESS\";\n" + 
-			"		}\n" + 
-			"	}\n" + 
-			"}" 
+			"	public static class AutoCloseableA implements AutoCloseable {\n" +
+			"		@Override\n" +
+			"		public void close() {\n" +
+			"			// TODO Auto-generated method stub\n" +
+			"		}\n" +
+			"	}\n" +
+			"	public static class HasAutoCloseable {\n" +
+			"		AutoCloseable a = new AutoCloseableA();\n" +
+			"		public String toString() {\n" +
+			"			return \"SUCCESS\";\n" +
+			"		}\n" +
+			"	}\n" +
+			"}"
 		},
 		"SUCCESS");
 }
@@ -3883,11 +3883,11 @@ public void test375326a() {
 			"    }\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 9)\n" + 
-		"	System.out.println(aLocal.toString());       \n" + 
-		"	                   ^^^^^^\n" + 
-		"The local variable aLocal may not have been initialized\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 9)\n" +
+		"	System.out.println(aLocal.toString());       \n" +
+		"	                   ^^^^^^\n" +
+		"The local variable aLocal may not have been initialized\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375326
@@ -3915,11 +3915,11 @@ public void test375326b() {
 			"    }\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 9)\n" + 
-		"	System.out.println(aLocal.toString());       \n" + 
-		"	                   ^^^^^^\n" + 
-		"The local variable aLocal may not have been initialized\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 9)\n" +
+		"	System.out.println(aLocal.toString());       \n" +
+		"	                   ^^^^^^\n" +
+		"The local variable aLocal may not have been initialized\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375326
@@ -3927,30 +3927,30 @@ public void test375326c() {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"public class X {\n" + 
-			"	public static void main(String[] args) throws Exception {\n" + 
-			"		HasAutoCloseable a;\n" + 
-			"		try(AutoCloseable b=(a=new HasAutoCloseable()).a) {\n" + 
+			"public class X {\n" +
+			"	public static void main(String[] args) throws Exception {\n" +
+			"		HasAutoCloseable a;\n" +
+			"		try(AutoCloseable b=(a=new HasAutoCloseable()).a) {\n" +
 			"       } finally {\n" +
 			"            System.out.println(\"Finally\");\n" +
 			"        }\n" +
-			"		System.out.println(a);\n" + 
+			"		System.out.println(a);\n" +
 			"	}\n" +
-			"	public static class AutoCloseableA implements AutoCloseable {\n" + 
-			"		@Override\n" + 
-			"		public void close() {\n" + 
-			"			// TODO Auto-generated method stub\n" + 
-			"		}\n" + 
-			"	}\n" + 
-			"	public static class HasAutoCloseable {\n" + 
-			"		AutoCloseable a = new AutoCloseableA();\n" + 
-			"		public String toString() {\n" + 
-			"			return \"SUCCESS\";\n" + 
-			"		}\n" + 
-			"	}\n" + 
-			"}" 
+			"	public static class AutoCloseableA implements AutoCloseable {\n" +
+			"		@Override\n" +
+			"		public void close() {\n" +
+			"			// TODO Auto-generated method stub\n" +
+			"		}\n" +
+			"	}\n" +
+			"	public static class HasAutoCloseable {\n" +
+			"		AutoCloseable a = new AutoCloseableA();\n" +
+			"		public String toString() {\n" +
+			"			return \"SUCCESS\";\n" +
+			"		}\n" +
+			"	}\n" +
+			"}"
 		},
-		"Finally\n" + 
+		"Finally\n" +
 		"SUCCESS");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375326
@@ -3980,11 +3980,11 @@ public void test375326d() {
 			"    }\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 11)\n" + 
-		"	System.out.println(aLocal.toString());       \n" + 
-		"	                   ^^^^^^\n" + 
-		"The local variable aLocal may not have been initialized\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 11)\n" +
+		"	System.out.println(aLocal.toString());       \n" +
+		"	                   ^^^^^^\n" +
+		"The local variable aLocal may not have been initialized\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375326
@@ -4014,11 +4014,11 @@ public void test375326e() {
 			"    }\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 11)\n" + 
-		"	System.out.println(aLocal.toString());       \n" + 
-		"	                   ^^^^^^\n" + 
-		"The local variable aLocal may not have been initialized\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 11)\n" +
+		"	System.out.println(aLocal.toString());       \n" +
+		"	                   ^^^^^^\n" +
+		"The local variable aLocal may not have been initialized\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375326
@@ -4044,11 +4044,11 @@ public void test375326f() {
 			"    }\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 6)\n" + 
-		"	System.out.println(a);\n" + 
-		"	                   ^\n" + 
-		"The local variable a may not have been initialized\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	System.out.println(a);\n" +
+		"	                   ^\n" +
+		"The local variable a may not have been initialized\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375326
@@ -4078,21 +4078,21 @@ public void test375326g() {
 			"    }\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 1)\n" + 
-		"	class CheckedException extends Throwable {}\n" + 
-		"	      ^^^^^^^^^^^^^^^^\n" + 
-		"The serializable class CheckedException does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 8)\n" + 
-		"	System.out.println(a);\n" + 
-		"	                   ^\n" + 
-		"The local variable a may not have been initialized\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 10)\n" + 
-		"	System.out.println(a);\n" + 
-		"	                   ^\n" + 
-		"The local variable a may not have been initialized\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 1)\n" +
+		"	class CheckedException extends Throwable {}\n" +
+		"	      ^^^^^^^^^^^^^^^^\n" +
+		"The serializable class CheckedException does not declare a static final serialVersionUID field of type long\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 8)\n" +
+		"	System.out.println(a);\n" +
+		"	                   ^\n" +
+		"The local variable a may not have been initialized\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 10)\n" +
+		"	System.out.println(a);\n" +
+		"	                   ^\n" +
+		"The local variable a may not have been initialized\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=380112
@@ -4112,7 +4112,7 @@ public void test380112a() {
 				"    public static I getX() { return null;}\n"+
 				"    public X(){}\n" +
 				"}\n"
-			}, 
+			},
 			"Done");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=380112
@@ -4134,7 +4134,7 @@ public void test380112b() {
 				"    public static I getX() { return null;}\n"+
 				"    public X(){}\n" +
 				"}\n"
-			}, 
+			},
 			"Done");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=380112
@@ -4157,7 +4157,7 @@ public void test380112c() {
 				"    public static I getX() { return null;}\n"+
 				"    public X(){}\n" +
 				"}\n"
-			}, 
+			},
 			"Done");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=380112
@@ -4180,7 +4180,7 @@ public void test380112d() {
 				"    public static I getX() { return null;}\n"+
 				"    public X(){}\n" +
 				"}\n"
-			}, 
+			},
 			"Done");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=380112
@@ -4212,36 +4212,36 @@ public void test380112e() {
 public void test394780() {
 	this.runConformTest(
 			new String[] {
-				"X.java", 
-				"public class X<R extends Resource> {\n" + 
-				"    public static void main(String[] args) {\n" + 
-				"        X<Resource> m = new X<>();\n" + 
-				"        m.tryWithResource(new ResourceImpl());\n" + 
-				"    }\n" + 
-				"    public void tryWithResource(R resource) {\n" + 
-				"        try (R r = resource) {\n" + 
-				"            r.compute();\n" + 
-				"        }\n" + 
-				"    }\n" + 
+				"X.java",
+				"public class X<R extends Resource> {\n" +
+				"    public static void main(String[] args) {\n" +
+				"        X<Resource> m = new X<>();\n" +
+				"        m.tryWithResource(new ResourceImpl());\n" +
+				"    }\n" +
+				"    public void tryWithResource(R resource) {\n" +
+				"        try (R r = resource) {\n" +
+				"            r.compute();\n" +
+				"        }\n" +
+				"    }\n" +
 				"}",
 				"Resource.java",
-				"public interface Resource extends AutoCloseable {\n" + 
-				"    void compute();\n" + 
-				"    @Override\n" + 
-				"    public void close();\n" + 
+				"public interface Resource extends AutoCloseable {\n" +
+				"    void compute();\n" +
+				"    @Override\n" +
+				"    public void close();\n" +
 				"}",
 				"ResourceImpl.java",
-				"public class ResourceImpl implements Resource {\n" + 
-				"    @Override\n" + 
-				"    public void close() {\n" + 
-				"        System.out.print(\"close\");\n" + 
-				"    }\n" + 
-				"    @Override\n" + 
-				"    public void compute() {\n" + 
-				"        System.out.print(\"compute\");\n" + 
-				"    }\n" + 
+				"public class ResourceImpl implements Resource {\n" +
+				"    @Override\n" +
+				"    public void close() {\n" +
+				"        System.out.print(\"close\");\n" +
+				"    }\n" +
+				"    @Override\n" +
+				"    public void compute() {\n" +
+				"        System.out.print(\"compute\");\n" +
+				"    }\n" +
 				"}"
-			}, 
+			},
 			"computeclose");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=533187
@@ -4249,36 +4249,36 @@ public void testBug533187() {
 	this.runConformTest(
 			true,
 			new String[] {
-				"Stuck.java", 
-				"public class Stuck {\n" + 
-				"    public static void main(String[] args) {\n" + 
-				"        System.out.println(snippet1());\n" + 
-				"    }\n" + 
-				"    public static String snippet1() {\n" + 
-				"        try {\n" + 
-				"            synchronized (String.class) {\n" + 
-				"                try (AutoCloseable scope = null) { \n" + 
-				"                    return \"RETURN\";\n" + 
-				"                } catch (Throwable t) {\n" + 
-				"                    return t.toString();\n" + 
-				"                }\n" + 
-				"            }\n" + 
-				"        } finally {\n" + 
-				"            raise();\n" + 
-				"        }\n" + 
-				"    }\n" + 
-				"    public static void raise() {\n" + 
-				"        throw new RuntimeException();\n" + 
-				"    }\n" + 
+				"Stuck.java",
+				"public class Stuck {\n" +
+				"    public static void main(String[] args) {\n" +
+				"        System.out.println(snippet1());\n" +
+				"    }\n" +
+				"    public static String snippet1() {\n" +
+				"        try {\n" +
+				"            synchronized (String.class) {\n" +
+				"                try (AutoCloseable scope = null) { \n" +
+				"                    return \"RETURN\";\n" +
+				"                } catch (Throwable t) {\n" +
+				"                    return t.toString();\n" +
+				"                }\n" +
+				"            }\n" +
+				"        } finally {\n" +
+				"            raise();\n" +
+				"        }\n" +
+				"    }\n" +
+				"    public static void raise() {\n" +
+				"        throw new RuntimeException();\n" +
+				"    }\n" +
 				"}"
 			},
 			null,
 			null,
 			null,
 			null,
-			"java.lang.RuntimeException\n" + 
-			"	at Stuck.raise(Stuck.java:19)\n" + 
-			"	at Stuck.snippet1(Stuck.java:15)\n" + 
+			"java.lang.RuntimeException\n" +
+			"	at Stuck.raise(Stuck.java:19)\n" +
+			"	at Stuck.snippet1(Stuck.java:15)\n" +
 			"	at Stuck.main(Stuck.java:3)\n",
 			null);
 }
@@ -4287,27 +4287,27 @@ public void testBug467230() {
 	this.runConformTest(
 			true,
 			new String[] {
-				"Test.java", 
-				"public class Test {\n" + 
-				"	static class C implements AutoCloseable {\n" + 
-				"		@Override\n" + 
-				"		public void close() {\n" + 
-				"			System.out.println(\"close\");\n" + 
-				"		}\n" + 
-				"	}\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		try (C c = new C()) {\n" + 
-				"			return;\n" + 
-				"		} catch (Exception e) {\n" + 
-				"			System.out.println(\"catch\");\n" + 
-				"		} finally {\n" + 
-				"			f();\n" + 
-				"		}\n" + 
-				"	}\n" + 
-				"	private static void f() {\n" + 
-				"		System.out.println(\"finally\");\n" + 
-				"		throw new RuntimeException();\n" + 
-				"	}\n" + 
+				"Test.java",
+				"public class Test {\n" +
+				"	static class C implements AutoCloseable {\n" +
+				"		@Override\n" +
+				"		public void close() {\n" +
+				"			System.out.println(\"close\");\n" +
+				"		}\n" +
+				"	}\n" +
+				"	public static void main(String[] args) {\n" +
+				"		try (C c = new C()) {\n" +
+				"			return;\n" +
+				"		} catch (Exception e) {\n" +
+				"			System.out.println(\"catch\");\n" +
+				"		} finally {\n" +
+				"			f();\n" +
+				"		}\n" +
+				"	}\n" +
+				"	private static void f() {\n" +
+				"		System.out.println(\"finally\");\n" +
+				"		throw new RuntimeException();\n" +
+				"	}\n" +
 				"}"
 			},
 			null,
@@ -4315,9 +4315,85 @@ public void testBug467230() {
 			null,
 			"close\n" +
 			"finally",
-			"java.lang.RuntimeException\n" + 
-			"	at Test.f(Test.java:19)\n" + 
+			"java.lang.RuntimeException\n" +
+			"	at Test.f(Test.java:19)\n" +
 			"	at Test.main(Test.java:14)\n",
+			null);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/934
+public void _testGHIssue934() {
+	this.runConformTest(
+			true,
+			new String[] {
+				"X.java",
+				"public class X {\n" +
+				"	static class Y implements AutoCloseable {\n" +
+				"		RuntimeException e;\n" +
+				"\n" +
+				"		public Y(RuntimeException e) {\n" +
+				"			this.e = e;\n" +
+				"		}\n" +
+				"\n" +
+				"		@Override\n" +
+				"		public void close() {\n" +
+				"			throw e;\n" +
+				"		}\n" +
+				"	}\n" +
+				"    public static void main(String[] args) {\n" +
+				"        RuntimeException e = new RuntimeException(\"My Exception\");\n" +
+				"        try {\n" +
+				"            try (Y A = new Y(e)) {\n" +
+				"                throw e;\n" +
+				"            }\n" +
+				"        } catch (IllegalArgumentException iae) {\n" +
+				"            if (iae.getCause() == e) \n" +
+				"                System.out.println(\"OK!\");\n" +
+				"        }\n" +
+				"    }\n" +
+				"}\n"
+
+			},
+			null,
+			null,
+			null,
+			"OK!",
+			"",
+			null);
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1063
+// Regression in code generation for try with resources with the fix for Issue # 934
+public void testGHIssue1063() {
+	this.runConformTest(
+			true,
+			new String[] {
+				"X.java",
+				"import java.io.Closeable;\n" +
+				"import java.io.IOException;\n" +
+				"\n" +
+				"public class X {\n" +
+				"	public static void main(String[] args) throws IOException {\n" +
+				"		try (DummyClosable closable = new DummyClosable()) {\n" +
+				"			throw new IOException(\"OMG!!!\");\n" +
+				"		} catch (IOException e) {\n" +
+				"			throw e;\n" +
+				"		}\n" +
+				"	}\n" +
+				"\n" +
+				"	static class DummyClosable implements Closeable {\n" +
+				"		@Override\n" +
+				"		public void close() throws IOException {\n" +
+				"			System.out.println(\"Closed!\");\n" +
+				"		}\n" +
+				"	}\n" +
+				"}\n"
+			},
+			null,
+			null,
+			null,
+			"Closed!",
+			"java.io.IOException: OMG!!!\n" +
+			"	at X.main(X.java:7)\n",
 			null);
 }
 public static Class testClass() {

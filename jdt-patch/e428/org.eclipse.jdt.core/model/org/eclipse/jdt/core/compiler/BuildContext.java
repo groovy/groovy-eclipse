@@ -15,12 +15,15 @@
 
 package org.eclipse.jdt.core.compiler;
 
+import java.io.ByteArrayInputStream;
+
 import org.eclipse.core.resources.IFile;
 
 /**
  * The context of a build event that is notified to interested compilation
  * participants when {@link CompilationParticipant#buildStarting(BuildContext[], boolean) a build is starting},
- * or to annotations processors when {@link CompilationParticipant#processAnnotations(BuildContext[]) a source file has annotations}.
+ * to annotations processors when {@link CompilationParticipant#processAnnotations(BuildContext[]) a source file has annotations},
+ * or to post processors when {@link CompilationParticipant#postProcess(BuildContext, ByteArrayInputStream) a class has finished compiling}.
  *
  * @since 3.2
  * @noinstantiate This class is not intended to be instantiated by clients.

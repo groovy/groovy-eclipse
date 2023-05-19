@@ -28,17 +28,17 @@ public class NameImpl implements Name {
 	@SuppressWarnings("unused")
 	private NameImpl()
 	{
-		_name = null;
+		this._name = null;
 	}
 
 	public NameImpl(CharSequence cs)
 	{
-		_name = cs.toString();
+		this._name = cs.toString();
 	}
 
 	public NameImpl(char[] chars)
 	{
-		_name = String.valueOf(chars);
+		this._name = String.valueOf(chars);
 	}
 
 	/* (non-Javadoc)
@@ -46,7 +46,7 @@ public class NameImpl implements Name {
 	 */
 	@Override
 	public boolean contentEquals(CharSequence cs) {
-		return _name.equals(cs.toString());
+		return this._name.equals(cs.toString());
 	}
 
 	/* (non-Javadoc)
@@ -54,7 +54,7 @@ public class NameImpl implements Name {
 	 */
 	@Override
 	public char charAt(int index) {
-		return _name.charAt(index);
+		return this._name.charAt(index);
 	}
 
 	/* (non-Javadoc)
@@ -62,7 +62,7 @@ public class NameImpl implements Name {
 	 */
 	@Override
 	public int length() {
-		return _name.length();
+		return this._name.length();
 	}
 
 	/* (non-Javadoc)
@@ -70,17 +70,17 @@ public class NameImpl implements Name {
 	 */
 	@Override
 	public CharSequence subSequence(int start, int end) {
-		return _name.subSequence(start, end);
+		return this._name.subSequence(start, end);
 	}
 
 	@Override
 	public String toString() {
-		return _name;
+		return this._name;
 	}
 
 	@Override
 	public int hashCode() {
-		return _name.hashCode();
+		return this._name.hashCode();
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class NameImpl implements Name {
 		if (getClass() != obj.getClass())
 			return false;
 		final NameImpl other = (NameImpl) obj;
-		return _name.equals(other._name);
+		return this._name.equals(other._name);
 	}
 
 }

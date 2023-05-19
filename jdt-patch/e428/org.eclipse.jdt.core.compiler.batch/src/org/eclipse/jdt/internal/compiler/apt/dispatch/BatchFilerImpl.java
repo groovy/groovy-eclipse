@@ -48,18 +48,18 @@ public class BatchFilerImpl implements Filer {
 
 	public BatchFilerImpl(BaseAnnotationProcessorManager dispatchManager, BatchProcessingEnvImpl env)
 	{
-		_dispatchManager = dispatchManager;
-		_fileManager = env._fileManager;
-		_env = env;
-		_createdFiles = new HashSet<>();
+		this._dispatchManager = dispatchManager;
+		this._fileManager = env._fileManager;
+		this._env = env;
+		this._createdFiles = new HashSet<>();
 	}
 
 	public void addNewUnit(ICompilationUnit unit) {
-		_env.addNewUnit(unit);
+		this._env.addNewUnit(unit);
 	}
 
 	public void addNewClassFile(ReferenceBinding binding) {
-		_env.addNewClassFile(binding);
+		this._env.addNewClassFile(binding);
 	}
 
 	/* (non-Javadoc)
@@ -68,14 +68,14 @@ public class BatchFilerImpl implements Filer {
 	@Override
 	public JavaFileObject createClassFile(CharSequence name,
 			Element... originatingElements) throws IOException {
-		JavaFileObject jfo = _fileManager.getJavaFileForOutput(
+		JavaFileObject jfo = this._fileManager.getJavaFileForOutput(
 				StandardLocation.CLASS_OUTPUT, name.toString(), JavaFileObject.Kind.CLASS, null);
 		URI uri = jfo.toUri();
-		if (_createdFiles.contains(uri)) {
+		if (this._createdFiles.contains(uri)) {
 			throw new FilerException("Class file already created : " + name); //$NON-NLS-1$
 		}
 
-		_createdFiles.add(uri);
+		this._createdFiles.add(uri);
 		return new HookedJavaFileObject(jfo, jfo.getName(), name.toString(), this);
 	}
 
@@ -87,14 +87,14 @@ public class BatchFilerImpl implements Filer {
 			CharSequence relativeName, Element... originatingElements)
 			throws IOException {
 		validateName(relativeName);
-		FileObject fo = _fileManager.getFileForOutput(
+		FileObject fo = this._fileManager.getFileForOutput(
 				location, pkg.toString(), relativeName.toString(), null);
 		URI uri = fo.toUri();
-		if (_createdFiles.contains(uri)) {
+		if (this._createdFiles.contains(uri)) {
 			throw new FilerException("Resource already created : " + location + '/' + pkg + '/' + relativeName); //$NON-NLS-1$
 		}
 
-		_createdFiles.add(uri);
+		this._createdFiles.add(uri);
 		return fo;
 	}
 
@@ -144,18 +144,18 @@ public class BatchFilerImpl implements Filer {
 			name = moduleAndPkgString.substring(slash + 1, name.length());
 			mod = moduleAndPkgString.substring(0, slash);
 		}
-		TypeElement typeElement = _env._elementUtils.getTypeElement(name);
+		TypeElement typeElement = this._env._elementUtils.getTypeElement(name);
 		if (typeElement != null) {
 			throw new FilerException("Source file already exists : " + moduleAndPkgString); //$NON-NLS-1$
 		}
-		Location location = mod == null ? StandardLocation.SOURCE_OUTPUT : _fileManager.getLocationForModule(StandardLocation.SOURCE_OUTPUT, mod);
-		JavaFileObject jfo = _fileManager.getJavaFileForOutput(location, name.toString(), JavaFileObject.Kind.SOURCE, null);
+		Location location = mod == null ? StandardLocation.SOURCE_OUTPUT : this._fileManager.getLocationForModule(StandardLocation.SOURCE_OUTPUT, mod);
+		JavaFileObject jfo = this._fileManager.getJavaFileForOutput(location, name.toString(), JavaFileObject.Kind.SOURCE, null);
 		URI uri = jfo.toUri();
-		if (_createdFiles.contains(uri)) {
+		if (this._createdFiles.contains(uri)) {
 			throw new FilerException("Source file already created : " + name); //$NON-NLS-1$
 		}
 
-		_createdFiles.add(uri);
+		this._createdFiles.add(uri);
 		// hook the file object's writers to create compilation unit and add to addedUnits()
 		return new HookedJavaFileObject(jfo, jfo.getName(), name.toString(), this);
 	}
@@ -167,13 +167,13 @@ public class BatchFilerImpl implements Filer {
 	public FileObject getResource(Location location, CharSequence pkg,
 			CharSequence relativeName) throws IOException {
 		validateName(relativeName);
-		FileObject fo = _fileManager.getFileForInput(
+		FileObject fo = this._fileManager.getFileForInput(
 				location, pkg.toString(), relativeName.toString());
 		if (fo == null) {
 			throw new FileNotFoundException("Resource does not exist : " + location + '/' + pkg + '/' + relativeName); //$NON-NLS-1$
 		}
 		URI uri = fo.toUri();
-		if (_createdFiles.contains(uri)) {
+		if (this._createdFiles.contains(uri)) {
 			throw new FilerException("Resource already created : " + location + '/' + pkg + '/' + relativeName); //$NON-NLS-1$
 		}
 		return fo;

@@ -21,7 +21,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.compiler.BuildContext;
-import org.eclipse.jdt.core.tests.builder.ParticipantBuildTests.BuildTestParticipant;
+import org.eclipse.jdt.core.compiler.CompilationParticipant;
+import org.eclipse.jdt.core.tests.builder.participants.TestCompilationParticipant2;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 
@@ -66,7 +67,7 @@ public class Bug531382Test extends BuilderTests {
 
 	@Override
 	protected void tearDown() throws Exception {
-		TestBuilderParticipant.PARTICIPANT = null;
+		TestCompilationParticipant2.PARTICIPANT = null;
 
 		AbstractImageBuilder.MAX_AT_ONCE = this.previousLimit;
 
@@ -96,7 +97,7 @@ public class Bug531382Test extends BuilderTests {
 		final IFile generatedFile = srcPackageFolder.getFile("Generated.java");
 		final String contents = "package p;\n public class NameMismatch {}";
 
-		class GenerateBrokenSource extends BuildTestParticipant {
+		class GenerateBrokenSource extends CompilationParticipant {
 			public void buildStarting(BuildContext[] files, boolean isBatch) {
 				if (files.length > 0 && !generatedFile.exists()) {
 					BuildContext context = files[0];
@@ -107,7 +108,7 @@ public class Bug531382Test extends BuilderTests {
 			}
 		}
 		// Creating this sets the build participant singleton.
-		new GenerateBrokenSource();
+		TestCompilationParticipant2.PARTICIPANT = new GenerateBrokenSource();
 
 		assertFalse("source to be generated from build participant should not exist before build", generatedFile.exists());
 		fullBuild(this.project);

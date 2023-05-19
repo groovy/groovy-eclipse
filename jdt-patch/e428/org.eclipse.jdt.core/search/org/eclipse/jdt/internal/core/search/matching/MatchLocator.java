@@ -990,6 +990,10 @@ public MethodBinding getMethodBinding(MethodPattern methodPattern) {
     	return methodBinding; // known to be valid.
     // special handling for methods of anonymous/local types. Since these cannot be looked up in the environment the usual way ...
     if (methodPattern.focus instanceof SourceMethod) {
+    	MethodBinding binding = getClosestMatchMethodBinding(methodPattern);
+    	if (binding != null) {
+    		return binding;
+    	}
     	char[] typeName = PatternLocator.qualifiedPattern(methodPattern.declaringSimpleName, methodPattern.declaringQualification);
     	if (typeName != null) {
     		IType type = methodPattern.declaringType;
@@ -1018,24 +1022,22 @@ public MethodBinding getMethodBinding(MethodPattern methodPattern) {
     } else if (methodPattern.focus instanceof BinaryMethod &&
     		methodPattern.declaringType instanceof BinaryType &&
     		this.unitScopeTypeBinding instanceof ProblemReferenceBinding) {//Get binding from unit scope for non-visible member of binary type
-    	char[] typeName = PatternLocator.qualifiedPattern(methodPattern.declaringSimpleName, methodPattern.declaringQualification);
-    	if (typeName != null) {
-    		IType type = methodPattern.declaringType;
-    		IType enclosingType = type.getDeclaringType();
-    		while (enclosingType != null) {
-    			type = enclosingType;
-    			enclosingType = type.getDeclaringType();
-    		}
-    		typeName = type.getFullyQualifiedName().toCharArray();
-    		TypeBinding typeBinding = this.unitScopeTypeBinding;
-    		if (typeBinding instanceof ProblemReferenceBinding) {
-    			ProblemReferenceBinding problemReferenceBinding = (ProblemReferenceBinding) this.unitScopeTypeBinding;
-    			ReferenceBinding closestMatch = (problemReferenceBinding.problemId() == ProblemReasons.NotVisible) ?
-    					problemReferenceBinding.closestReferenceMatch() : null;
-    					return closestMatch != null ?  getMethodBinding(methodPattern, closestMatch) : null;
-    		}
-    	}
+    	return getClosestMatchMethodBinding(methodPattern);
     }
+	return null;
+}
+
+private MethodBinding getClosestMatchMethodBinding(MethodPattern methodPattern) {
+	TypeBinding typeBinding = this.unitScopeTypeBinding;
+	if (typeBinding instanceof ProblemReferenceBinding) {
+		ProblemReferenceBinding problemReferenceBinding = (ProblemReferenceBinding) this.unitScopeTypeBinding;
+		if (problemReferenceBinding.problemId() == ProblemReasons.NotVisible) {
+			ReferenceBinding closestMatch = problemReferenceBinding.closestReferenceMatch();
+			if (closestMatch != null) {
+				return getMethodBinding(methodPattern, closestMatch);
+			}
+		}
+	}
 	return null;
 }
 

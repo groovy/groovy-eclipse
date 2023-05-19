@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019, 2021 IBM Corporation and others.
+ * Copyright (c) 2019, 2023 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -6166,5 +6166,22 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"	^\n" +
 			"Syntax error, insert \";\" to complete BlockStatements\n" +
 			"----------\n");
+	}
+	public void testIssue966_001() {
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"public class X {\n"+
+				"    private static final String SOME_CONSTANT = \"PASS\";\n"+
+				"    public static void main(String[] args) {\n"+
+				"        switch (\"\") {\n"+
+				"            case (SOME_CONSTANT) -> {}\n"+
+				"            default -> {}\n"+
+				"        }\n"+
+				"        System.out.println(SOME_CONSTANT);\n"+
+				"    }\n"+
+				"}"
+				},
+				"PASS");
 	}
 }

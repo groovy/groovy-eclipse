@@ -54,11 +54,11 @@ public class NoTypeImpl extends TypeMirrorImpl implements NoType, NullType
 
 	public NoTypeImpl(TypeKind kind) {
 		super(null, NO_TYPE_BINDING);
-		_kind = kind;
+		this._kind = kind;
 	}
 	public NoTypeImpl(TypeKind kind, Binding binding) {
 		super(null, binding);
-		_kind = kind;
+		this._kind = kind;
 	}
 
 	@Override
@@ -76,13 +76,13 @@ public class NoTypeImpl extends TypeMirrorImpl implements NoType, NullType
 	@Override
 	public TypeKind getKind()
 	{
-		return _kind;
+		return this._kind;
 	}
 
 	@Override
 	public String toString()
 	{
-		switch (_kind) {
+		switch (this._kind) {
 		default:
 		case NONE:
 			return "none"; //$NON-NLS-1$

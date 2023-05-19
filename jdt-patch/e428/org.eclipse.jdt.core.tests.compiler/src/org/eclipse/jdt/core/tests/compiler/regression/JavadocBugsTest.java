@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -8486,7 +8486,8 @@ public void testBug267833_2() {
 				int length = JavadocTagConstants.BLOCK_TAGS[i].length;
 				for (int j=0; j < length; j++) {
 					if (tagName == JavadocTagConstants.BLOCK_TAGS[i][j]) {
-						assertEquals(JavadocTagConstants.JAVADOC_TAG_TYPE[index], JavadocTagConstants.TAG_TYPE_BLOCK);
+						int tagType = JavadocTagConstants.JAVADOC_TAG_TYPE[index];
+						assertTrue((tagType & JavadocTagConstants.TAG_TYPE_BLOCK) != 0);
 						continue nextTag;
 					}
 				}
@@ -8495,7 +8496,8 @@ public void testBug267833_2() {
 				int length = JavadocTagConstants.INLINE_TAGS[i].length;
 				for (int j=0; j < length; j++) {
 					if (tagName == JavadocTagConstants.INLINE_TAGS[i][j]) {
-						assertEquals(JavadocTagConstants.JAVADOC_TAG_TYPE[index], JavadocTagConstants.TAG_TYPE_INLINE);
+						int tagType = JavadocTagConstants.JAVADOC_TAG_TYPE[index];
+						assertTrue((tagType & JavadocTagConstants.TAG_TYPE_INLINE) != 0);
 						continue nextTag;
 					}
 				}
@@ -8518,6 +8520,9 @@ public void testBug267833_2() {
  * @test Ensure that a warning is raised when block tags are used as inline tags.
  */
 public void testBug267833_3() {
+	if(this.complianceLevel >= ClassFileConstants.JDK16) {
+		return;
+	}
 	runNegativeTest(
 		new String[] {
 			"X.java",
@@ -8604,6 +8609,105 @@ public void testBug267833_3() {
 			"	* and more {@since 1.0}, {@serial 0L}, {@serialData data}, {@serialField field}\n" +
 			"	                                                             ^^^^^^^^^^^\n" +
 			"Javadoc: Unexpected tag\n" +
+			"----------\n");
+}
+/**
+ * Additional test for bug 267833 and https://github.com/eclipse-jdt/eclipse.jdt.core/issues/795
+ * For java 16+:
+ * 1) Ensure that a warning is raised when block tags are used as inline tags.
+ * 2) Ensure there is no error reported for return tag used inline
+ * 3) TODO: ensure  there is no error reported for duplicated return tag if it is used inline and as block
+ */
+public void testBug267833_3a() {
+	if(this.complianceLevel < ClassFileConstants.JDK16) {
+		return;
+	}
+	runNegativeTest(
+			new String[] {
+					"X.java",
+					"public class X {\n" +
+							"/** \n" +
+							"* Description {@see String} , {@return int}, {@since 1.0}, {@param i}, {@throws NullPointerException}\n" +
+							"* and more {@author jay}, {@category cat}, {@deprecated}, {@exception NullPointerException}, {@version 1.1}\n" +
+							"* and more {@since 1.0}, {@serial 0L}, {@serialData data}, {@serialField field}\n" +
+							"* @param i\n" +
+							"* @return value\n" +
+							"* @throws NullPointerException \n" +
+							"*/\n" +
+							"public int foo(int i) {\n" +
+							"	return 0;\n" +
+							"}\n" +
+			"}\n" },
+			"----------\n" +
+					"1. ERROR in X.java (at line 3)\n" +
+					"	* Description {@see String} , {@return int}, {@since 1.0}, {@param i}, {@throws NullPointerException}\n" +
+					"	                ^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 3)\n" +
+					"	* Description {@see String} , {@return int}, {@since 1.0}, {@param i}, {@throws NullPointerException}\n" +
+					"	                                               ^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 3)\n" +
+					"	* Description {@see String} , {@return int}, {@since 1.0}, {@param i}, {@throws NullPointerException}\n" +
+					"	                                                             ^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"4. ERROR in X.java (at line 3)\n" +
+					"	* Description {@see String} , {@return int}, {@since 1.0}, {@param i}, {@throws NullPointerException}\n" +
+					"	                                                                         ^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"5. ERROR in X.java (at line 4)\n" +
+					"	* and more {@author jay}, {@category cat}, {@deprecated}, {@exception NullPointerException}, {@version 1.1}\n" +
+					"	             ^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"6. ERROR in X.java (at line 4)\n" +
+					"	* and more {@author jay}, {@category cat}, {@deprecated}, {@exception NullPointerException}, {@version 1.1}\n" +
+					"	                            ^^^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"7. ERROR in X.java (at line 4)\n" +
+					"	* and more {@author jay}, {@category cat}, {@deprecated}, {@exception NullPointerException}, {@version 1.1}\n" +
+					"	                                             ^^^^^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"8. ERROR in X.java (at line 4)\n" +
+					"	* and more {@author jay}, {@category cat}, {@deprecated}, {@exception NullPointerException}, {@version 1.1}\n" +
+					"	                                                            ^^^^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"9. ERROR in X.java (at line 4)\n" +
+					"	* and more {@author jay}, {@category cat}, {@deprecated}, {@exception NullPointerException}, {@version 1.1}\n" +
+					"	                                                                                               ^^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"10. ERROR in X.java (at line 5)\n" +
+					"	* and more {@since 1.0}, {@serial 0L}, {@serialData data}, {@serialField field}\n" +
+					"	             ^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"11. ERROR in X.java (at line 5)\n" +
+					"	* and more {@since 1.0}, {@serial 0L}, {@serialData data}, {@serialField field}\n" +
+					"	                           ^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"12. ERROR in X.java (at line 5)\n" +
+					"	* and more {@since 1.0}, {@serial 0L}, {@serialData data}, {@serialField field}\n" +
+					"	                                         ^^^^^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"13. ERROR in X.java (at line 5)\n" +
+					"	* and more {@since 1.0}, {@serial 0L}, {@serialData data}, {@serialField field}\n" +
+					"	                                                             ^^^^^^^^^^^\n" +
+					"Javadoc: Unexpected tag\n" +
+					"----------\n" +
+					"14. ERROR in X.java (at line 7)\n" + // XXX should be WARNING
+					"	* @return value\n" +
+					"	   ^^^^^^\n" +
+					"Javadoc: Duplicate tag for return type\n" + // XXX change to: "Javadoc: @return has already been specified"
 			"----------\n");
 }
 

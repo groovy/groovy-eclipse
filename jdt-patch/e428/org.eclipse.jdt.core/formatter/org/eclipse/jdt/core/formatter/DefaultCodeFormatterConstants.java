@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1705,6 +1705,19 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.6
 	 */
 	public final static String FORMATTER_COMMENT_NEW_LINES_AT_JAVADOC_BOUNDARIES = "org.eclipse.jdt.core.formatter.comment.new_lines_at_javadoc_boundaries"; //$NON-NLS-1$
+
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control whether paragraph tags in javadoc comments are put with the content or on their own line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.comment.javadoc_paragraphs_tags_with_content"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           FALSE
+	 * </pre>
+	 * @see #TRUE
+	 * @see #FALSE
+	 * @since 3.34
+	 */
+	public final static String FORMATTER_COMMENT_JAVADOC_DO_NOT_SEPARATE_BLOCK_TAGS = "org.eclipse.jdt.core.formatter.comment.javadoc_do_not_separate_block_tags"; //$NON-NLS-1$
 
 	/**
 	 * <pre>

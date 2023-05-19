@@ -2051,7 +2051,6 @@ public void configure(String[] argv) {
 						currentArg = currentArg.substring(0, encodingStart - 1);
 					}
 				}
-
 				// GROOVY add
 				if (currentArg.endsWith(".groovy")) { //$NON-NLS-1$
 					encounteredGroovySourceFile = true;

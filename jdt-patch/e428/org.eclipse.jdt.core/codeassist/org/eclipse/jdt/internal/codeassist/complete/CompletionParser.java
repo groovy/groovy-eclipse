@@ -5509,8 +5509,12 @@ protected NameReference getUnspecifiedReference(boolean rejectTypeAnnotations) {
 		char[] token = this.identifierStack[this.identifierPtr];
 		long position = this.identifierPositionStack[this.identifierPtr--];
 		int start = (int) (position >>> 32), end = (int) position;
-		if (this.assistNode == null && start <= this.cursorLocation && end >= this.cursorLocation) {
+		// in expression like new Foo(<completion>Collection.emptyList(), 1), the token becomes empty, 
+		// but the positions represents the static type name identifier.
+		int adjustedStart = ((token.length == 0) ? start - 1 : start);
+		if (this.assistNode == null && adjustedStart <= this.cursorLocation && end >= this.cursorLocation) {
 			ref = new CompletionOnSingleNameReference(token, position, isInsideAttributeValue());
+			ref.sourceEnd = (token.length == 0) ? adjustedStart : ref.sourceEnd;
 			this.assistNode = ref;
 		} else {
 			ref = new SingleNameReference(token, position);
@@ -5794,12 +5798,33 @@ private MessageSend internalNewMessageSend() {
 }
 @Override
 protected AllocationExpression newAllocationExpression(boolean isQualified) {
-	if (this.assistNode != null && this.lParenPos == this.assistNode.sourceEnd) {
+	if (this.assistNode != null && checkIfAtFirstArgumentOfConstructor()) {
 		CompletionOnQualifiedAllocationExpression allocation = new CompletionOnQualifiedAllocationExpression();
 		this.assistNode = allocation;
 		return allocation;
 	}
 	return super.newAllocationExpression(isQualified);
+}
+private boolean checkIfAtFirstArgumentOfConstructor() {
+	// See if we are in a simple constructure like Foo(|) or Foo(|null, null)
+	if (this.lParenPos == this.assistNode.sourceEnd) {
+		return true;
+	}
+	// We try to handle the situation where lParenPos represents a argument MessageSend's left paren in the AllocationExpression like
+	// Foo(|null, Collections.empty(), null). Here we try to calculate the constructor's left paren and match it with the 
+	// assistNode position if the assistNode is a CompletionOnSingleNameReference or CompletionOnMessageSendName.
+	
+	// following int literals represents
+	// 1 -> '('
+	// 3 -> 'new'
+	int startPos = this.intStack[this.intPtr] + this.identifierStack[this.identifierPtr].length + 1 + 3;
+
+	if (this.assistNode instanceof CompletionOnSingleNameReference) {
+		return startPos == this.assistNode.sourceEnd;
+	} else if (this.assistNode instanceof CompletionOnMessageSendName ms) {
+		return startPos == ms.sourceStart - 1;
+	}
+	return false;
 }
 public CompilationUnitDeclaration parse(ICompilationUnit sourceUnit, CompilationResult compilationResult, int cursorLoc) {
 
