@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.tests.builder.EfficiencyCompilerRequestor;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.TestVerifier;
+import org.eclipse.jdt.groovy.core.tests.GroovyBundle;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -296,7 +297,7 @@ public abstract class BuilderTestSuite {
 
                 // add JRE container to classpath
                 IClasspathAttribute[] attributes;
-                if (JavaCore.compareJavaVersions(compliance, "9") < 0) {
+                if (JavaCore.compareJavaVersions(compliance, "9") < 0 || !GroovyBundle.isAtLeastGroovy(40)) {
                     attributes = new IClasspathAttribute[0];
                 } else {
                     attributes = new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.MODULE, "true")};
