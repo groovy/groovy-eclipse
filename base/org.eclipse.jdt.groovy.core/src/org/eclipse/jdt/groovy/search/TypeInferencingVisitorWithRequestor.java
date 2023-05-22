@@ -1881,15 +1881,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             node.removeNodeMetaData("tuple.types");
             if (isNotEmpty(node.getExpressions())) {
-                List<ClassNode> tupleTypes = new ArrayList<>();
+                List<ClassNode> types = new ArrayList<>(node.getExpressions().size());
                 for (Expression expr : node) {
                     // prevent revisit of statically-compiled chained assignment nodes
                     if (!(expr instanceof TemporaryVariableExpression)) {
                         expr.visit(this);
-                        tupleTypes.add(primaryTypeStack.removeLast());
+                        ClassNode type = primaryTypeStack.removeLast();
+                        if (!(expr instanceof SpreadExpression)) {
+                            types.add(type);
+                        } else if (type.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE)) {
+                            GenericsType[] spec = GroovyUtils.getGenericsTypes(type);
+                            for (GenericsType elem : spec) types.add(elem.getType());
+                        } else {
+                            ClassNode spread = VariableScope.extractSpreadType(type);
+                            types.add(spread); // rough but helps for calling varargs
+                        }
                     }
                 }
-                node.putNodeMetaData("tuple.types", tupleTypes);
+                node.putNodeMetaData("tuple.types", types);
             }
         } finally {
             completeExpressionStack.removeLast();
@@ -2335,10 +2344,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         types.add(createParameterizedList(_));
                     } else if (expression instanceof RangeExpression) {
                         types.add(createParameterizedRange(_));
-                    } else if (expression instanceof SpreadExpression) {
-                        types.add(createSpreadResult(_, _));???
-                    } else if (expression instanceof ClosureExpression ||
-                            expression instanceof MethodPointerExpression) {
+                    } else if (expression instanceof ClosureExpression) {
                         types.add(createParameterizedClosure(_));
                     } else*/ if (expression instanceof ClassExpression) {
                         types.add(VariableScope.newClassClassNode(exprType));
@@ -2371,6 +2377,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         types.add(createParameterizedClosure(((MethodPointerExpression) expression).getExpression().getType()));
                     } else if (expression instanceof NamedArgumentListExpression) {
                         types.add(createParameterizedMap(VariableScope.STRING_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE));
+                    } else if (expression instanceof SpreadExpression) {
+                        Expression sub = ((SpreadExpression) expression).getExpression();
+                        ClassNode type = lookupExpressionType(sub, null, false, scopes.getLast()).type;
+                        if (type.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE)) { // Tuple[0..16]
+                            GenericsType[] spec = GroovyUtils.getGenericsTypes(type);
+                            for (GenericsType elem : spec) types.add(elem.getType());
+                        } else {
+                            ClassNode spread = VariableScope.extractSpreadType(type);
+                            types.add(spread); // rough but helps for calling varargs
+                        }
                     } else {
                         VariableScope scope = scopes.getLast();
                         scope.setMethodCallArgumentTypes(null);
@@ -2397,19 +2413,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         } else if (expression instanceof StaticMethodCallExpression) {
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
                             tlr = lookupExpressionType(expression, null, true, scope);
-
-//                        } else if (expression instanceof MethodPointerExpression) {
-//                            MethodPointerExpression ref = (MethodPointerExpression) expression;
-//                            ClassNode type = recursively.apply(ref.getExpression());
-//                            scope.setCurrentNode(ref.getMethodName());
-//                            tlr = lookupExpressionType(ref.getMethodName(), type, ref.getExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
-//                            if (tlr.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED))
-//                                types.add(createParameterizedClosure(tlr.type));
-//                            else types.add(exprType);
-//                            scope.forgetCurrentNode();
-//                            scope.forgetCurrentNode();
-//                            continue;
-
+/*
+                        } else if (expression instanceof MethodPointerExpression) {
+                            MethodPointerExpression ref = (MethodPointerExpression) expression;
+                            ClassNode type = recursively.apply(ref.getExpression());
+                            scope.setCurrentNode(ref.getMethodName());
+                            tlr = lookupExpressionType(ref.getMethodName(), type, ref.getExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
+                            if (tlr.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED))
+                                types.add(createParameterizedClosure(tlr.type));
+                            else types.add(exprType);
+                            scope.forgetCurrentNode();
+                            scope.forgetCurrentNode();
+                            continue;
+*/
                         } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
                             ClassNode type = recursively.apply(((BinaryExpression) expression).getLeftExpression());
                             scope.setMethodCallArgumentTypes(Collections.singletonList(recursively.apply(((BinaryExpression) expression).getRightExpression())));

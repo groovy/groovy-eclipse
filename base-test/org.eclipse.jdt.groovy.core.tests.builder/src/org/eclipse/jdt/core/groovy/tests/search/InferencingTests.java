@@ -844,6 +844,16 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testSpread21() {
+        String contents =
+            "void m(String str, List list, Number n) {}\n" +
+            "void test(Tuple3<String,List,Long> tuple){\n" +
+            "  m(*tuple)\n" +
+            "}\n";
+        assertType(contents, "m", "java.lang.Void");
+    }
+
+    @Test
     public void testMapLiteral() {
         assertType("[:]", "java.util.Map<java.lang.Object,java.lang.Object>");
     }

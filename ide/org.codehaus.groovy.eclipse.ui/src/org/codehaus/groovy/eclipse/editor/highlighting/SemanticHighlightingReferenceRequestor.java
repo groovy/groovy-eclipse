@@ -113,10 +113,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         if (result.confidence == TypeLookupResult.TypeConfidence.UNKNOWN && node.getEnd() > 0) {
             // GRECLIPSE-1327: check to see if this is a synthetic call() on a closure reference
             if (isRealASTNode(node) || node.getText().contains("trait$super$")) {
-                Position p = getPosition(node);
-                typedPositions.add(new HighlightedTypedPosition(p, HighlightKind.UNKNOWN));
-                // don't continue past an unknown reference
-                return VisitStatus.CANCEL_BRANCH;
+                pos = new HighlightedTypedPosition(getPosition(node), HighlightKind.UNKNOWN);
             }
         } else if (GroovyUtils.isDeprecated(result.declaration) && !(node instanceof ClassExpression || node instanceof DeclarationExpression)) {
             pos = new HighlightedTypedPosition(getPosition(node), HighlightKind.DEPRECATED);
@@ -532,6 +529,13 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
      * An AST node is "real" if its text matches the source code.
      */
     private boolean isRealASTNode(ASTNode node) {
+        if (node instanceof StaticMethodCallExpression) { // cannot rely on text
+            StaticMethodCallExpression call = (StaticMethodCallExpression) node;
+            Expression name = new ConstantExpression(call.getMethod());
+            name.setStart(call.getNameStart());
+            name.setEnd(call.getNameEnd() + 1);
+            node = name;
+        }
         String text = node.getText();
         if (text.length() != node.getLength()) {
             return false;

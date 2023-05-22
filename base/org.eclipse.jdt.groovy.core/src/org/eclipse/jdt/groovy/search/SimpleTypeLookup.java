@@ -302,6 +302,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
 
             MethodNode closestMatch = findMethodDeclaration0(candidates, scope.getMethodCallArgumentTypes(), true);
+            if (closestMatch == null) return new TypeLookupResult(null, null, null, TypeConfidence.UNKNOWN, scope);
             return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, TypeConfidence.INFERRED, scope);
 
         } else if (node instanceof ClosureExpression) {

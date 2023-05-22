@@ -629,6 +629,53 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL))
     }
 
+    @Test // GROOVY-11060
+    void testStaticMethods8() {
+        String contents = '''\
+            |class C {
+            |  static List<String> STRINGS=[]
+            |  static bar(String[] strings) {
+            |  }
+            |  static baz() {
+            |    bar(*STRINGS)
+            |    bar("")
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('List'), 4, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('STRINGS'), 7, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String[]'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('bar(*'), 3, STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('STRINGS'), 7, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL))
+    }
+
+    @Test
+    void testStaticMethods9() {
+        String contents = '''\
+            static void sm(Number number) {}
+            List<Number> numbers
+            sm(numbers)
+        '''
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('sm'     ), 2, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Number' ), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('number' ), 6, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('List'   ), 4, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Number>'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('numbers'), 7, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('sm('), 2, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('num'), 7, VARIABLE))
+    }
+
     @Test // GRECLIPSE-1138
     void testMultipleStaticMethods() {
         String contents = '''\
