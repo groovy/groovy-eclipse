@@ -631,7 +631,7 @@ public class NullAnnotationTests18 extends AbstractNullAnnotationTest {
 				"----------\n";
 		runner.runNegativeTest();
 	}
-	public void testGH629_01() {
+	public void _testGH629_01() {
 		Map<String, String> options = getCompilerOptions();
 		options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_18);
 		options.put(JavaCore.COMPILER_NONNULL_ANNOTATION_NAME, "test.NonNull");
@@ -660,7 +660,7 @@ public class NullAnnotationTests18 extends AbstractNullAnnotationTest {
 				options,
 				"");
 	}
-	public void testGH629_02() {
+	public void _testGH629_02() {
 		Map<String, String> options = getCompilerOptions();
 		options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_18);
 		options.put(JavaCore.COMPILER_NONNULL_ANNOTATION_NAME, "test.NonNull");

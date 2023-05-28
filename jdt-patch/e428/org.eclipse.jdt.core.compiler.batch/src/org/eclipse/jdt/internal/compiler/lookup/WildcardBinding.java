@@ -614,11 +614,6 @@ public class WildcardBinding extends ReferenceBinding {
         return this.genericSignature;
     }
 
-    @Override
-    public char[] genericTypeSignature(boolean approximateToDenotable) {
-    	return approximateToDenotable ? erasure().genericTypeSignature() : genericTypeSignature();
-    }
-
 	@Override
 	public int hashCode() {
 		return this.genericType.hashCode();
@@ -1091,5 +1086,10 @@ public class WildcardBinding extends ReferenceBinding {
 			}
 		}
 		return super.updateTagBits();
+	}
+
+	@Override
+	public boolean isNonDenotable() {
+		return true;
 	}
 }

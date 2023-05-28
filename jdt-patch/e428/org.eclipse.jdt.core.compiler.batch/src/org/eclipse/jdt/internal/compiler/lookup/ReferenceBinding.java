@@ -61,7 +61,6 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.JavaFeature;
@@ -1357,27 +1356,6 @@ public boolean implementsInterface(ReferenceBinding anInterface, boolean searchH
 				for (int b = 0; b < nextPosition; b++)
 					if (TypeBinding.equalsEquals(next, interfacesToVisit[b])) continue nextInterface;
 				interfacesToVisit[nextPosition++] = next;
-			}
-		}
-	}
-	// see https://github.com/eclipse-jdt/eclipse.jdt.core/issues/629
-	if (nextPosition == 0 && this instanceof SourceTypeBinding) {
-		SourceTypeBinding sourceType = (SourceTypeBinding) this;
-		if (sourceType.scope != null && sourceType.scope.referenceContext != null && sourceType.scope.compilerOptions().isAnnotationBasedNullAnalysisEnabled) {
-			TypeReference[] references = sourceType.scope.referenceContext.superInterfaces;
-			if (references == null || references.length == 0) {
-				return false;
-			}
-			for (TypeReference reference: references) {
-				if (!(reference.resolvedType instanceof ReferenceBinding)) {
-					reference.resolveType(sourceType.scope);
-				}
-				if (reference.resolvedType instanceof ReferenceBinding) {
-					ReferenceBinding binding = (ReferenceBinding) reference.resolvedType;
-					if (binding.isEquivalentTo(anInterface)) {
-						return true;
-					}
-				}
 			}
 		}
 	}

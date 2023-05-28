@@ -603,9 +603,6 @@ public MethodBinding findOriginalInheritedMethod(MethodBinding inheritedMethod) 
  */
 public char[] genericSignature() {
 	if ((this.modifiers & ExtraCompilerModifiers.AccGenericSignature) == 0) return null;
-	// Synthetic methods may have non-denotable inferred types in their signatures,
-	// fold them into approximate denotable forms so class file parsers don't choke
-	boolean approximateToDenotable = (this.modifiers & ClassFileConstants.AccSynthetic) != 0;
 	StringBuilder sig = new StringBuilder(10);
 	if (this.typeVariables != Binding.NO_TYPE_VARIABLES) {
 		sig.append('<');
@@ -616,11 +613,11 @@ public char[] genericSignature() {
 	}
 	sig.append('(');
 	for (int i = 0, length = this.parameters.length; i < length; i++) {
-		sig.append(this.parameters[i].genericTypeSignature(approximateToDenotable));
+		sig.append(this.parameters[i].genericTypeSignature());
 	}
 	sig.append(')');
 	if (this.returnType != null)
-		sig.append(this.returnType.genericTypeSignature(approximateToDenotable));
+		sig.append(this.returnType.genericTypeSignature());
 
 	// only append thrown exceptions if any is generic/parameterized
 	boolean needExceptionSignatures = false;
@@ -634,7 +631,7 @@ public char[] genericSignature() {
 	if (needExceptionSignatures) {
 		for (int i = 0; i < length; i++) {
 			sig.append('^');
-			sig.append(this.thrownExceptions[i].genericTypeSignature(approximateToDenotable));
+			sig.append(this.thrownExceptions[i].genericTypeSignature());
 		}
 	}
 	int sigLength = sig.length();

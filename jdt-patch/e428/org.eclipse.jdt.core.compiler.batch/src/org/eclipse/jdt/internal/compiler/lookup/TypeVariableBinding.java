@@ -247,6 +247,17 @@ public class TypeVariableBinding extends ReferenceBinding {
 					break;
 			}
 			return BoundCheckStatus.OK;
+		} else if (checkNullAnnotations && argumentType.kind() == Binding.TYPE_PARAMETER) {
+			// refresh argumentType in case a nullness default(TYPE_PARAMETER) was applied late:
+			TypeVariableBinding tvb = (TypeVariableBinding) argumentType;
+			if (tvb.declaringElement instanceof SourceTypeBinding) {
+				TypeVariableBinding[] typeVariables = ((SourceTypeBinding) tvb.declaringElement).typeVariables;
+				if (typeVariables != null && typeVariables.length > tvb.rank) {
+					TypeVariableBinding refreshed = typeVariables[tvb.rank];
+					if (refreshed.id == argumentType.id)
+						argumentType = refreshed;
+				}
+			}
 		}
 		boolean unchecked = false;
 		if (this.superclass.id != TypeIds.T_JavaLangObject) {

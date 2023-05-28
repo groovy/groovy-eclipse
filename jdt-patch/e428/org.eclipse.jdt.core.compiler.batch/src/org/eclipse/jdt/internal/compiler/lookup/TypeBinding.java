@@ -527,15 +527,6 @@ public char[] genericTypeSignature() {
 }
 
 /**
- * Answer the receiver classfile signature, folding any non-denotable types
- * to a denotable approximation by using erasure.
- * NOTE: This method should only be used during/after code gen.
- */
-public char[] genericTypeSignature(boolean approximateToDenotable) {
-	return genericTypeSignature();
-}
-
-/**
  * Return the supertype which would erase as a subtype of a given declaring class.
  * If the receiver is already erasure compatible, then it will returned. If not, then will return the alternate lowest
  * upper bound compatible with declaring class.
@@ -1776,4 +1767,12 @@ public long updateTagBits() {
 public boolean isFreeTypeVariable() {
 	return false;
 }
+
+/**
+ * Does this type lack a class file representation on its own ?
+ */
+public boolean isNonDenotable() {
+	return false;
+}
+
 }

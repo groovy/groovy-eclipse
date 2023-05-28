@@ -7724,6 +7724,103 @@ public void test483219_comment_3() {
 			);
 }
 
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1048
+// Reflection APIs fail with NPE processing class file produced by JDT compiler
+public void testGHIssue1048() {
+	this.runConformTest(
+			new String[] {
+				"Reproducer.java",
+				"import java.io.IOException;\n" +
+				"import java.io.Serializable;\n" +
+				"import java.lang.reflect.Method;\n" +
+				"import java.util.Optional;\n" +
+				"import java.util.stream.Stream;\n" +
+				"public class Reproducer {\n" +
+				"    public static void main(String[] args) {\n" +
+				"        try {\n" +
+				"            new Reproducer().testClassWithStreamAndOptional2();\n" +
+				"        } catch (IOException e) {\n" +
+				"            e.printStackTrace();\n" +
+				"        }\n" +
+				"    }\n" +
+				"    private void testClassWithStreamAndOptional2() throws IOException {\n" +
+				"        Class<?> c = this.getClass();\n" +
+				"        for (Method m : c.getDeclaredMethods()) {\n" +
+				"            if (m.isSynthetic())\n" +
+				"                System.out.println(m.getGenericReturnType());\n" +
+				"        }\n" +
+				"    }\n" +
+				"    private Stream<Serializable> doMyStuff() {\n" +
+				"        Stream<Serializable> s = Stream.empty(); \n" +
+				"        return Optional.ofNullable(s).orElseGet(Stream::of);\n" +
+				"    }\n" +
+				"}\n"
+			},
+			"interface java.util.stream.Stream"
+			);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1054
+// AIOOBE when checking implicit lambda generation requirement
+public void testGHIssue1054() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"import java.lang.invoke.MethodHandle;\n" +
+				"interface FI {\n" +
+				"    Object invokeMethodReference(String s, char c1, char c2) throws Throwable;\n" +
+				"}\n" +
+				"public class X {\n" +
+				"    private static MethodHandle createMethodHandle() {\n" +
+				"    	return null;\n" +
+				"    }\n" +
+				"    public static void run() throws Throwable {\n" +
+				"        MethodHandle ms = createMethodHandle(); \n" +
+				"        FI fi = ms::invoke;\n" +
+				"        fi.invokeMethodReference(\"\", (char)0, (char)0);\n" +
+				"    }\n" +
+				"    public static void main(String [] args) throws Throwable {\n" +
+				"        try { \n" +
+				"            run();\n" +
+				"        } catch(NullPointerException npe) {\n" +
+				"            System.out.println(\"NPE as expected\");\n" +
+				"        }\n" +
+				"    }\n" +
+				"}\n"},
+			"NPE as expected"
+			);
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1054
+// AIOOBE when checking implicit lambda generation requirement
+public void testGHIssue1054_2() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"import java.lang.invoke.MethodHandle;\n" +
+				"interface FI {\n" +
+				"    <T extends Object & Runnable> Object invokeMethodReference(Object o, T t2) throws Throwable;\n" +
+				"}\n" +
+				"public class X {\n" +
+				"    private static MethodHandle createMethodHandle() {\n" +
+				"    	return null;\n" +
+				"    }\n" +
+				"    public static void run() throws Throwable {\n" +
+				"        MethodHandle ms = createMethodHandle(); \n" +
+				"        FI fi = ms::invoke;\n" +
+				"        fi.invokeMethodReference(null, ()-> {}); \n" +
+				"    }\n" +
+				"    public static void main(String[] args) throws Throwable {\n" +
+				"    	try {\n" +
+				"    		run();\n" +
+				"    	} catch (NullPointerException npe) {\n" +
+				"    		System.out.println(\"NPE as expected\");\n" +
+				"    	}\n" +
+				"	}\n" +
+				"}\n"},
+			"NPE as expected"
+			);
+}
+
 public static Class testClass() {
 	return LambdaExpressionsTest.class;
 }

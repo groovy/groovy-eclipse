@@ -18748,4 +18748,119 @@ public void testRedundantNonNull_field() {
 	runner.classLibraries = this.LIBS;
 	runner.runWarningTest();
 }
+public void testGH1007_srikanth() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"SubClass.java",
+			"// ECJ error in next line: Type mismatch: cannot convert from Class<SubClass> to Class<? extends SuperClass>[]\n" +
+			"@AnnotationWithArrayInitializer(annotationArgument = SubClass.class)\n" +
+			"class AnnotatedClass2 extends AnnotatedSuperClass {}\n" +
+			"\n" +
+			"//ECJ error in next line: Type mismatch: cannot convert from Class<SubClass> to Class<? extends SuperClass>\n" +
+			"@AnnotationWithArrayInitializer(annotationArgument = {SubClass.class})\n" +
+			"class AnnotatedClass extends AnnotatedSuperClass {}\n" +
+			"\n" +
+			"\n" +
+			"class AnnotatedSuperClass {}\n" +
+			"\n" +
+			"@interface AnnotationWithArrayInitializer {\n" +
+			"    Class<? extends SuperClass>[] annotationArgument();\n" +
+			"}\n" +
+			"\n" +
+			"class SubClass extends SuperClass {}\n" +
+			"abstract class SuperClass {}"
+		};
+	runner.runConformTest();
+}
+public void _testGH854() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"Annot.java",
+			"public @interface Annot {\n" +
+			"    Class<? extends Init<? extends Configuration>>[] inits(); \n" +
+			"}\n",
+			"Configuration.java",
+			"public interface Configuration {\n" +
+			"}\n",
+			"Init.java",
+			"public interface Init<C extends Configuration> {\n" +
+			"}\n",
+			"App.java",
+			"interface I<T> {}\n" +
+			"class IImpl<T> implements I<String>, Init<Configuration> {}\n" +
+			"@Annot(inits = {App.MyInit.class})\n" +
+			"public class App {\n" +
+			"	static class MyInit extends IImpl<Configuration> {}\n" +
+			"}\n"
+		};
+	runner.runConformTest();
+}
+public void testVSCodeIssue3076() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"demo/cache/AbstractCache.java",
+			"package demo.cache;\n" +
+			"\n" +
+			"public abstract class AbstractCache {\n" +
+			"    public enum Expiry {\n" +
+			"        ONE, TWO, THREE\n" +
+			"    }\n" +
+			"\n" +
+			"    protected abstract void cacheThis(int param1, Expiry param2);\n" +
+			"}\n",
+			"demo/Annot.java",
+			"package demo;\n" +
+			"public @interface Annot {\n" +
+			"	String defaultProperty();\n" +
+			"}\n",
+			"demo/cache/MyCache.java",
+			"package demo.cache;\n" +
+			"\n" +
+			"import demo.Annot;\n" +
+			"\n" +
+			"/**\n" +
+			" * This annotation is what causes the confusion around the nested Expiry type.\n" +
+			" *\n" +
+			" * If you comment out this annotation the language server has no problem\n" +
+			" * figuring it out.\n" +
+			" *\n" +
+			" * It can be *any* annotation.\n" +
+			" * So it would seem that referring to your own class outside of the\n" +
+			" * class definition is what triggers this particular bug.\n" +
+			" */\n" +
+			"@Annot(defaultProperty = MyCache.DEFAULT_PROPERTY_NAME)\n" +
+			"public class MyCache extends AbstractCache {\n" +
+			"    public static final String DEFAULT_PROPERTY_NAME = \"WHATEVER\";\n" +
+			"\n" +
+			"    @Override\n" +
+			"    protected void cacheThis(int param1, Expiry param2) {\n" +
+			"        throw new UnsupportedOperationException(\"Unimplemented method 'doSomethingElse'\");\n" +
+			"    }\n" +
+			"}\n"
+		};
+	runner.runConformTest();
+}
+public void testGH969() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"mypackage/Example.java",
+			"package mypackage;\n" +
+			"\n" +
+			"import java.io.Serializable;\n" +
+			"\n" +
+			"@Deprecated(since = Example.SINCE)\n" +
+			"public class Example<T> implements Serializable {\n" +
+			"	\n" +
+			"	static final String SINCE = \"...\";\n" +
+			"\n" +
+			"	private T target;\n" +
+			"\n" +
+			"}"
+		};
+	runner.runConformTest();
+}
 }

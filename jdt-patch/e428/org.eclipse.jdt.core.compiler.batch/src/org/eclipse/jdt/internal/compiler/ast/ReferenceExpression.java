@@ -306,11 +306,12 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 				for (int i = 0; i < descriptorParams.length; i++) {
 					TypeBinding descType = descriptorParams[i];
 					TypeBinding origDescType = origDescParams[i];
-					TypeBinding origParam = this.receiverPrecedesParameters
-							? i == 0 ? this.receiverType : origParams[i - 1]
-							: origParams[i];
 					if (descType.isIntersectionType18()
 							|| (descType.isTypeVariable() && ((TypeVariableBinding) descType).boundsCount() > 1)) {
+						boolean varargs = this.binding.original().isVarargs();
+						TypeBinding origParam = this.receiverPrecedesParameters
+								? i == 0 ? this.receiverType : InferenceContext18.getParameter(origParams, i-1, varargs)
+								: InferenceContext18.getParameter(origParams, i, varargs);
 						if (!CharOperation.equals(origDescType.signature(), origParam.signature()))
 							return false;
 					}
