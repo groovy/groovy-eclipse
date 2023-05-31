@@ -37,7 +37,6 @@
         <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum)Visitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/(Extended)?Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/WriterController.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
@@ -59,7 +58,6 @@
         <file-match-pattern match-pattern="groovy/transform/trait/TraitComposer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitReceiverTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/Traits.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/util/ListHashMap.java" include-pattern="false" />
     </fileset>
     <filter name="DerivedFiles" enabled="true" />
 </fileset-config>

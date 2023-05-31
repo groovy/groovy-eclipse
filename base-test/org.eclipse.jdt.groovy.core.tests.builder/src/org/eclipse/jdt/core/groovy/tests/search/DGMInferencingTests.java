@@ -567,7 +567,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "  a.trim() <=> b.trim()\n" +
             "}\n";
         //@formatter:on
-        assertDeclType(contents, "sort", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        assertDeclType(contents, "sort", "org.codehaus.groovy.runtime." + (isAtLeastGroovy(50) ? "Array" : "Default") + "GroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1077
@@ -588,7 +588,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "String[] array = ['1','22','333']\n" +
             "array.sort(true, Comparator.<String,Integer>comparing({it.length()}).reversed())\n";
         //@formatter:on
-        assertDeclType(contents, "sort", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        assertDeclType(contents, "sort", "org.codehaus.groovy.runtime." + (isAtLeastGroovy(50) ? "Array" : "Default") + "GroovyMethods");
     }
 
     @Test
@@ -701,7 +701,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "}\n";
         //@formatter:on
         assertExprType(contents, "toString", "java.lang.String");
-        assertDeclType(contents, "toString", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        assertDeclType(contents, "toString", "org.codehaus.groovy.runtime." + (isAtLeastGroovy(50) ? "Array" : "Default") + "GroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1076
@@ -713,7 +713,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "}\n";
         //@formatter:on
         assertExprType(contents, "equals", "java.lang.Boolean");
-        assertDeclType(contents, "equals", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        assertDeclType(contents, "equals", "org.codehaus.groovy.runtime." + (isAtLeastGroovy(50) ? "Array" : "Default") + "GroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1076

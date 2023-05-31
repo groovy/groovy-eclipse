@@ -8190,4 +8190,25 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testCompileStatic11060() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static List<String> STRINGS = ['y','z']\n" +
+            "  static foo(String[] strings) {\n" +
+            "    print strings.toString()\n" +
+            "  }\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  static main(args) {\n" +
+            "    foo(['x',*STRINGS] as String[])\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[x, y, z]");
+    }
 }

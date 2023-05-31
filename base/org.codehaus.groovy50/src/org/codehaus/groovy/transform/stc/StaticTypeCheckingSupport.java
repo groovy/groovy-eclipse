@@ -360,27 +360,24 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     /**
-     * Checks that arguments and parameter types match.
+     * Determines if the specific argument types fit the parameters.
      *
-     * @return -1 if arguments do not match, 0 if arguments are of the exact type and &gt; 0 when one or more argument is
-     * not of the exact type but still match
+     * @return -1 if arguments do not match, 0 if arguments are of the exact type,
+     * and &gt; 0 when one or more argument is not of the exact type but still match
      */
     public static int allParametersAndArgumentsMatch(Parameter[] parameters, final ClassNode[] argumentTypes) {
-        if (parameters == null) {
-            parameters = Parameter.EMPTY_ARRAY;
-        }
-        int dist = 0;
-        if (argumentTypes.length < parameters.length) {
+        if (parameters == null) parameters = Parameter.EMPTY_ARRAY;
+        final int nParameters = parameters.length;
+        if (argumentTypes.length < nParameters) {
             return -1;
         }
-        // we already know there are at least params.length elements in both arrays
-        for (int i = 0, n = parameters.length; i < n; i += 1) {
-            ClassNode paramType = parameters[i].getType();
-            ClassNode argType = argumentTypes[i];
-            if (!isAssignableTo(argType, paramType)) {
+        int dist = 0;
+        for (int i = 0; i < nParameters; i += 1) { // extra argument(s) ignored!
+            ClassNode aType = argumentTypes[i], pType = parameters[i].getType();
+            if (!isAssignableTo(aType, pType)) {
                 return -1;
-            } else if (!paramType.equals(argType)) {
-                dist += getDistance(argType, paramType);
+            } else if (!aType.equals(pType)) {
+                dist += getDistance(aType, pType);
             }
         }
         return dist;
@@ -473,9 +470,10 @@ public abstract class StaticTypeCheckingSupport {
         if (NUMBER_TYPES.containsKey(type.redirect()) && NUMBER_TYPES.containsKey(toBeAssignedTo.redirect())) {
             return NUMBER_TYPES.get(type.redirect()) <= NUMBER_TYPES.get(toBeAssignedTo.redirect());
         }
-        if (type.isArray() && toBeAssignedTo.isArray()) { // GROOVY-10720: check primitive to/from non-primitive
+        if (type.isArray() && toBeAssignedTo.isArray()) {
             ClassNode sourceComponent = type.getComponentType(), targetComponent = toBeAssignedTo.getComponentType();
-            return (isPrimitiveType(sourceComponent) == isPrimitiveType(targetComponent)) && isAssignableTo(sourceComponent, targetComponent);
+            return isPrimitiveType(targetComponent) ? sourceComponent.equals(targetComponent) // GROOVY-11053: strict
+                : !isPrimitiveType(sourceComponent) && isAssignableTo(sourceComponent, targetComponent); // GROOVY-10720
         }
         if (type.isDerivedFrom(GSTRING_TYPE) && isStringType(toBeAssignedTo)) {
             return true;
@@ -682,9 +680,7 @@ public abstract class StaticTypeCheckingSupport {
 
         if (left.isArray()) {
             if (right.isArray()) {
-                ClassNode leftComponent = left.getComponentType();
-                ClassNode rightComponent = right.getComponentType();
-                if (isPrimitiveType(leftComponent) != isPrimitiveType(rightComponent)) return false;
+                ClassNode leftComponent = left.getComponentType(), rightComponent = right.getComponentType();
                 return checkCompatibleAssignmentTypes(leftComponent, rightComponent, rightExpression, false);
             }
             if (GeneralUtils.isOrImplements(right, Collection_TYPE) && !(rightExpression instanceof ListExpression)) {
@@ -932,40 +928,40 @@ public abstract class StaticTypeCheckingSupport {
                       - NUMBER_TYPES.getOrDefault(primB, NON_NUMBER_DEFAULT));
     }
 
-    static int getDistance(final ClassNode receiver, final ClassNode compare) {
-        if (receiver.isArray() && compare.isArray()) {
-            return getDistance(receiver.getComponentType(), compare.getComponentType());
+    static int getDistance(final ClassNode actual, final ClassNode expect) {
+        if (actual.isArray() && expect.isArray()) {
+            return getDistance(actual.getComponentType(), expect.getComponentType());
         }
-        if (isGStringOrGStringStringLUB(receiver) && isStringType(compare)) {
+        if (isGStringOrGStringStringLUB(actual) && isStringType(expect)) {
             return 3; // GROOVY-6668, GROOVY-8212: closer than Object and GroovyObjectSupport
         }
         int dist = 0;
-        ClassNode unwrapReceiver = getUnwrapper(receiver);
-        ClassNode unwrapCompare = getUnwrapper(compare);
-        if (isPrimitiveType(unwrapReceiver)
-                && isPrimitiveType(unwrapCompare)
-                && unwrapReceiver != unwrapCompare) {
-            dist = getPrimitiveDistance(unwrapReceiver, unwrapCompare);
+        ClassNode unwrapActual = getUnwrapper(actual);
+        ClassNode unwrapExpect = getUnwrapper(expect);
+        if (isPrimitiveType(unwrapActual)
+                && isPrimitiveType(unwrapExpect)
+                && unwrapActual != unwrapExpect) {
+            dist = getPrimitiveDistance(unwrapActual, unwrapExpect);
         }
-        // Add a penalty against boxing or unboxing, to get a resolution similar to JLS 15.12.2
+        // Add a penalty against boxing/unboxing to get a resolution similar to JLS 15.12.2
         // (http://docs.oracle.com/javase/specs/jls/se7/html/jls-15.html#jls-15.12.2).
-        if (isPrimitiveType(receiver) ^ isPrimitiveType(compare)) {
+        if (isPrimitiveType(actual) ^ isPrimitiveType(expect)) {
             dist = (dist + 1) << 1;
         }
-        if (unwrapCompare.equals(unwrapReceiver)
-                || receiver == UNKNOWN_PARAMETER_TYPE) {
+        if (unwrapExpect.equals(unwrapActual)
+                || actual == UNKNOWN_PARAMETER_TYPE) {
             return dist;
         }
-        if (receiver.isArray()) {
-            dist += 256; // GROOVY-5114: Object[] vs Object
+        if (actual.isArray()) {
+            dist += 131; // GROOVY-5114, GROOVY-11073: Object[] vs Object
         }
-        if (compare.isInterface()) { MethodNode sam;
-            if (receiver.implementsInterface(compare)) {
-                return dist + getMaximumInterfaceDistance(receiver, compare);
-            } else if (receiver.equals(CLOSURE_TYPE) && (sam = findSAM(compare)) != null) {
+        if (expect.isInterface()) { MethodNode sam;
+            if (actual.implementsInterface(expect)) {
+                return dist + getMaximumInterfaceDistance(actual, expect);
+            } else if (actual.equals(CLOSURE_TYPE) && (sam = findSAM(expect)) != null) {
                 // In the case of multiple overloads, give preference to equal parameter count
-                // with fuzzy matching of length for implicit arg Closures
-                Integer closureParamCount = receiver.getNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS);
+                // with fuzzy matching of length for implicit-argument Closures.
+                Integer closureParamCount = actual.getNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS);
                 if (closureParamCount != null) {
                     int samParamCount = sam.getParameters().length;
                     if ((closureParamCount == samParamCount) ||                                  // GROOVY-9881
@@ -976,8 +972,8 @@ public abstract class StaticTypeCheckingSupport {
                 return dist + 13; // GROOVY-9852: @FunctionalInterface vs Object
             }
         }
-        ClassNode cn = isPrimitiveType(receiver) && !isPrimitiveType(compare) ? getWrapper(receiver) : receiver;
-        while (cn != null && !cn.equals(compare)) {
+        ClassNode cn = isPrimitiveType(actual) && !isPrimitiveType(expect) ? getWrapper(actual) : actual;
+        while (cn != null && !cn.equals(expect)) {
             cn = cn.getSuperClass();
             dist += 1;
             if (isObjectType(cn))
@@ -1917,7 +1913,7 @@ public abstract class StaticTypeCheckingSupport {
         }
 
         if (type.getGenericsTypes()[0] != gt[0]) { // convert T to X
-            ClassNode cn = make(gt[0].getName()) , erasure = getCombinedBoundType(gt[0]);
+            ClassNode cn = make(gt[0].getName()) , erasure = getCombinedBoundType(gt[0]).redirect();
             cn.setGenericsPlaceHolder(true);
             cn.setGenericsTypes(gt);
             cn.setRedirect(erasure);

@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -1110,7 +1111,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String target = "iterator";
         int offset = contents.lastIndexOf(target), end = offset + target.length();
         assertType(contents, offset, end, "java.util.Iterator<java.lang.String>");
-        MethodNode dgm = assertDeclaration(contents, offset, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "iterator", DeclarationKind.METHOD);
+        MethodNode dgm = assertDeclaration(contents, offset, end, "org.codehaus.groovy.runtime." + (isAtLeastGroovy(50) ? "Array" : "Default") + "GroovyMethods", "iterator", DeclarationKind.METHOD);
         assertEquals("First parameter type should be resolved from object expression", "java.lang.String[]", printTypeName(dgm.getParameters()[0].getType()));
     }
 
