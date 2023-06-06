@@ -8193,6 +8193,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic11060() {
+        assumeTrue(isAtLeastGroovy(50));
+
         //@formatter:off
         String[] sources = {
             "Main.groovy",

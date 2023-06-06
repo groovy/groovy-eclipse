@@ -958,7 +958,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         if (samParameterTypes.length == 1 && hasImplicitParameter(rhsExpression)) {
             Variable it = rhsExpression.getVariableScope().getDeclaredVariable("it"); // GROOVY-7141
-            closureParameters = new Parameter[] {it instanceof Parameter ? (Parameter) it : new Parameter(DYNAMIC_TYPE, "")};
+            closureParameters = new Parameter[]{it instanceof Parameter ? (Parameter) it : new Parameter(ClassHelper.dynamicType(), "")};
         }
 
         int n = closureParameters.length;
@@ -969,6 +969,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (parameter.isDynamicTyped()) {
                     parameter.setType(samParameterTypes[i]);
                 }
+                // GRECLIPSE add -- GROOVY-10372
+                else checkParamType(parameter, samParameterTypes[i], i == n-1, rhsExpression instanceof LambdaExpression);
+                // GRECLIPSE end
             }
         } else {
             String descriptor = toMethodParametersString(findSAM(lhsType).getName(), samParameterTypes);
@@ -3314,11 +3317,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
-
+            /* GRECLIPSE edit
             ClassNode[] samParamTypes = GenericsUtils.parameterizeSAM(applyGenericsContext(context, target.getType())).getV1();
-
+            */
             ClassNode[] paramTypes = expression.getNodeMetaData(CLOSURE_ARGUMENTS);
             if (paramTypes == null) {
+                // GRECLIPSE add
+                ClassNode targetType = target.getType();
+                if (targetType != null && targetType.isGenericsPlaceHolder())
+                    targetType = getCombinedBoundType(targetType.asGenericsType());
+                targetType = applyGenericsContext(context, targetType); // fill place-holders
+                ClassNode[] samParamTypes = GenericsUtils.parameterizeSAM(targetType).getV1();
+                // GRECLIPSE end
                 int n; Parameter[] p = expression.getParameters();
                 if (p == null) {
                     // zero parameters
@@ -3326,15 +3336,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else if ((n = p.length) == 0) {
                     // implicit parameter(s)
                     paramTypes = samParamTypes;
-                } else { // TODO: error for length mismatch
+                } else {
                     paramTypes = Arrays.copyOf(samParamTypes, n);
+                    // GRECLIPSE add -- GROOVY-9910, GROOVY-10072, GROOVY-10372
+                    for (int i = 0, j = Math.min(n, samParamTypes.length); i < j; i += 1) {
+                        if (p[i].isDynamicTyped()) { p[i].setType(samParamTypes[i]); } else
+                        checkParamType(p[i], paramTypes[i], i == n-1, expression instanceof LambdaExpression);
+                    }
+                    // GRECLIPSE end
                 }
-                expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
                 // GRECLIPSE add -- GROOVY-8499
                 if (paramTypes.length != samParamTypes.length) {
                     addError("Incorrect number of parameters. Expected " + samParamTypes.length + " but found " + paramTypes.length, expression);
                 }
                 // GRECLIPSE end
+                expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
             }
         }
     }
@@ -3450,14 +3466,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             addError("Incorrect number of parameters. Expected " + inferred.length + " but found " + n, expression);
                         }
                     }
+                    /* GRECLIPSE edit
                     if (!typeCheckMethodArgumentWithGenerics(declaredType, inferredType, i == n-1)) {
                         addError("Expected parameter of type " + prettyPrintType(inferredType) + " but got " + prettyPrintType(declaredType), closureParam.getType());
                     }
+                    */
+                    checkParamType(closureParam, inferredType, i == n-1, false);
+                    // GRECLIPSE end
                     typeCheckingContext.controlStructureVariables.put(closureParam, inferredType);
                 }
             }
         }
     }
+
+    // GRECLIPSE add
+    private void checkParamType(final Parameter source, final ClassNode target, final boolean isLast, final boolean lambda) {
+        if (!typeCheckMethodArgumentWithGenerics(source.getOriginType(), target, isLast))
+            addStaticTypeError("Expected type " + prettyPrintType(target) + " for " + (lambda ? "lambda" : "closure") + " parameter: " + source.getName(), source);
+    }
+    // GRECLIPSE end
 
     private ClassNode[] resolveGenericsFromTypeHint(final ClassNode receiver, final Expression arguments, final MethodNode selectedMethod, final ClassNode[] signature) {
         ClassNode dummyResultNode = new ClassNode("ClForInference$" + UNIQUE_LONG.incrementAndGet(), 0, OBJECT_TYPE).getPlainNodeReference();

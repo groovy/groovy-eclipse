@@ -3201,6 +3201,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9910() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  java.util.stream.IntStream.range(0, 2).forEach(\n" +
+            "    {String s ->}\n" + // no reference to "s"
+            "  )\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\t{String s ->}\n" +
+            "\t ^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Expected type int for closure parameter: s\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked9915() {
         for (String type : new String[] {"List", "Collection", "Iterable"}) {
             //@formatter:off
@@ -5887,6 +5910,97 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10372() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Consumer\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Consumer<String> c = {Date d ->}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tConsumer<String> c = {Date d ->}\n" +
+            "\t                      ^^^^^^\n" +
+            "Groovy:[Static type checking] - Expected type java.lang.String for closure parameter: d\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10372a() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Consumer\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Consumer<String> c = (Date d) -> {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tConsumer<String> c = (Date d) -> {}\n" +
+            "\t                      ^^^^^^\n" +
+            "Groovy:[Static type checking] - Expected type java.lang.String for lambda parameter: d\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10372b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Consumer\n" +
+            "void setFoo(Consumer<String> c) {}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  foo = {Date d ->}\n" +
+            "  foo = {s -> s.indexOf(' ')}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tfoo = {Date d ->}\n" +
+            "\t       ^^^^^^\n" +
+            "Groovy:[Static type checking] - Expected type java.lang.String for closure parameter: d\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked10372c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  ['a','b'].collect{Date d ->}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\t['a','b'].collect{Date d ->}\n" +
+            "\t                  ^^^^^^\n" +
+            "Groovy:[Static type checking] - Expected type java.lang.String for closure parameter: d\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10414() {
         //@formatter:off
         String[] sources = {
@@ -6932,5 +7046,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testTypeChecked11083() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Consumer\n" +
+            "void setFoo(Consumer<Number> c) {}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Date d) {\n" +
+            "  foo = {n = d ->}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tfoo = {n = d ->}\n" +
+            "\t           ^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.util.Date to variable of type java.lang.Number\n" +
+            "----------\n");
     }
 }

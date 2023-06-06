@@ -3016,18 +3016,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else if ((n = p.length) == 0) {
                     // implicit parameter(s)
                     paramTypes = samParamTypes;
-                } else { // TODO: error for length mismatch
+                } else {
                     paramTypes = Arrays.copyOf(samParamTypes, n);
-                    for (int i = 0; i < Math.min(n, samParamTypes.length); i += 1) {
+                    for (int i = 0, j = Math.min(n, samParamTypes.length); i < j; i += 1) {
+                        // GRECLIPSE add -- GROOVY-10072, GROOVY-11083
+                        if (p[i].isDynamicTyped()) { p[i].setType(samParamTypes[i]); } else
+                        // GRECLIPSE end
                         checkParamType(p[i], paramTypes[i], i == n-1, expression instanceof LambdaExpression);
                     }
                 }
-                expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
                 // GRECLIPSE add -- GROOVY-8499
                 if (paramTypes.length != samParamTypes.length) {
                     addError("Incorrect number of parameters. Expected " + samParamTypes.length + " but found " + paramTypes.length, expression);
                 }
                 // GRECLIPSE end
+                expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
             }
         }
     }

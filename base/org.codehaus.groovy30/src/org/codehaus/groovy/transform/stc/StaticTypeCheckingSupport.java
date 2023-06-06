@@ -1344,7 +1344,7 @@ public abstract class StaticTypeCheckingSupport {
         if (cn.isArray()) {
             return isUsingGenericsOrIsArrayUsingGenerics(cn.getComponentType());
         }
-        return (cn.isUsingGenerics() && cn.getGenericsTypes() != null);
+        return (cn.isUsingGenerics() && (cn.getGenericsTypes() != null || cn.isGenericsPlaceHolder())); // GRECLIPSE add
     }
 
     /**
