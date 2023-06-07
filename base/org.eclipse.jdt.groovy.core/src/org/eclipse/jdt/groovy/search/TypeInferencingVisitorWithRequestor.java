@@ -2518,12 +2518,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             // determine closure param types from ClosureSignatureHint
                             List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(methodNode, sourceUnit, compilationUnit, opts, (Expression) cat.call);
                             if (isNotEmpty(sigs)) {
+                                GenericsType[]  typeArgs = getMethodCallGenericsTypes((Expression) cat.call);
+                                List<ClassNode> pTypes = GroovyUtils.getParameterTypes(methodNode.getParameters());
+                                GenericsMapper  mapper = GenericsMapper.gatherGenerics(pTypes, cat.declaringType, methodNode.getOriginal(), typeArgs);
+
                                 for (ClassNode[] sig : sigs) {
                                     if (sig != null && sig.length == inferredTypes.length) {
-                                        GenericsType[]  typeArgs = getMethodCallGenericsTypes((Expression) cat.call);
-                                        List<ClassNode> pTypes = GroovyUtils.getParameterTypes(methodNode.getParameters());
-                                        GenericsMapper  mapper = GenericsMapper.gatherGenerics(pTypes, cat.declaringType, methodNode.getOriginal(), typeArgs);
-
                                         for (int i = 0, n = sig.length; i < n; i += 1) {
                                             // TODO: If result still has generics, use Object or ???
                                             if (i == 0 && opts.length == 1 && opts[0].startsWith("?")) continue;
@@ -2531,6 +2531,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                                         }
 
                                         break; // TODO: What if more than one signature matches parameter count?
+                                    }
+                                }
+
+                                // list can be spread across params -- see ClosureMetaClass
+                                if (inferredTypes[0] == null && inferredTypes.length > 1) {
+                                    for (ClassNode[] sig : sigs) {
+                                        if (sig != null && sig.length == 1) {
+                                            ClassNode t = VariableScope.resolveTypeParameterization(mapper, sig[0]);
+                                            if (GeneralUtils.isOrImplements(t, VariableScope.LIST_CLASS_NODE)) {
+                                                Arrays.fill(inferredTypes, VariableScope.extractElementType(t));
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -2556,13 +2569,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
         }
 
-        if (inferredTypes[0] == null) {
+out:    if (inferredTypes[0] == null) {
             int i = 0;
             MethodNode sam;
             // check for SAM-type coercion of closure/lambda expression
             if (primaryType != null && (sam = ClassHelper.findSAM(primaryType)) != null) {
                 GenericsMapper m = GenericsMapper.gatherGenerics(primaryType, sam.getDeclaringClass());
-                for (ClassNode t : GroovyUtils.getParameterTypes(sam.getParameters())) {
+                List<ClassNode> samParameterTypes = GroovyUtils.getParameterTypes(sam.getParameters());
+                if (inferredTypes.length > 1 && samParameterTypes.size() == 1) { // spread across params?
+                    ClassNode t = VariableScope.resolveTypeParameterization(m, samParameterTypes.get(0));
+                    if (GeneralUtils.isOrImplements(t, VariableScope.LIST_CLASS_NODE)) {
+                        Arrays.fill(inferredTypes, VariableScope.extractElementType(t));
+                        break out;
+                    }
+                }
+                for (ClassNode t : samParameterTypes) {
                     if (i == inferredTypes.length) break;
                     inferredTypes[i++] = VariableScope.resolveTypeParameterization(m, t);
                 }

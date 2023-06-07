@@ -175,7 +175,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/502
-    public void testClosure9a() {
+    public void testClosure10() {
         //@formatter:off
         String contents =
             "class Foo {\n" +
@@ -193,7 +193,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/502
-    public void testClosure9b() {
+    public void testClosure11() {
         //@formatter:off
         String contents =
             "class Foo {\n" +
@@ -213,7 +213,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure10() {
+    public void testClosure12() {
         //@formatter:off
         String contents =
             "class Foo {}\n" +
@@ -231,7 +231,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // non-static delegate is same type as static owner
-    public void testClosure11() {
+    public void testClosure13() {
         //@formatter:off
         String contents =
             "class Foo {\n" +
@@ -257,7 +257,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // static object expression for delegate
-    public void testClosure11a() {
+    public void testClosure14() {
         //@formatter:off
         String contents =
             "class Boo {}\n" +
@@ -286,7 +286,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // other (invariant) members of Closure
-    public void testClosure12() {
+    public void testClosure15() {
         //@formatter:off
         String contents =
             "def fn = {\n" +
@@ -311,7 +311,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // other members of Closure (in static scope wrt owner)
-    public void testClosure13() {
+    public void testClosure16() {
         //@formatter:off
         String contents =
             "class A { static void main(args) { def fn = {\n" +
@@ -336,7 +336,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure14() {
+    public void testClosure17() {
         //@formatter:off
         String contents =
             "class A {\n" +
@@ -353,7 +353,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure15() {
+    public void testClosure18() {
         //@formatter:off
         String contents =
             "class A {\n" +
@@ -370,7 +370,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/360
-    public void testClosure16() {
+    public void testClosure19() {
         //@formatter:off
         String contents =
             "class A {\n" +
@@ -393,7 +393,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // closure is part of method call expression
-    public void testClosure17() {
+    public void testClosure20() {
         //@formatter:off
         String contents =
             "class A {\n" +
@@ -417,7 +417,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure18() {
+    public void testClosure21() {
         //@formatter:off
         String contents =
             "class A {\n" +
@@ -446,7 +446,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure19() {
+    public void testClosure22() {
         //@formatter:off
         String contents =
             "class A {\n" +
@@ -468,7 +468,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure20() {
+    public void testClosure23() {
         //@formatter:off
         String contents =
             "''.foo {\n" +
@@ -480,7 +480,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure21() {
+    public void testClosure24() {
         //@formatter:off
         String contents =
             "''.foo {\n" +
@@ -492,7 +492,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure22() {
+    public void testClosure25() {
         //@formatter:off
         String contents =
             "''.foo {\n" +
@@ -504,7 +504,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure23() {
+    public void testClosure26() {
         //@formatter:off
         String contents =
             "''.with {\n" +
@@ -517,7 +517,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure24() {
+    public void testClosure27() {
         //@formatter:off
         String contents =
             "new Date().with {\n" +
@@ -530,7 +530,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure25() {
+    public void testClosure28() {
         //@formatter:off
         String contents =
             "new Date().with {\n" +
@@ -543,7 +543,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure26() {
+    public void testClosure29() {
         //@formatter:off
         String contents =
             "new Date().with {\n" +
@@ -557,7 +557,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/660
-    public void testClosure27() {
+    public void testClosure30() {
         //@formatter:off
         String contents =
             "new Date().with { one, two = delegate ->\n" +
@@ -568,7 +568,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure28() {
+    public void testClosure31() {
         //@formatter:off
         String contents =
             "def closure = { int i = 2 ->\n" +
@@ -579,7 +579,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure29() {
+    public void testClosure32() {
         //@formatter:off
         String contents =
             "class Foo {\n" +
@@ -597,7 +597,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1120
-    public void testClosure30() {
+    public void testClosure33() {
         //@formatter:off
         String contents =
             "def value = flag ? { -> optionValue(cli, name) } : { -> cli.defaultValue(name) }";
@@ -607,24 +607,10 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1446
-    public void testClosure31() {
+    public void testClosure34() {
         //@formatter:off
         String contents =
             "void test(Map<String,String> args, java.util.function.Consumer<String> proc) { }\n" +
-            "test(foo:'bar', baz:null) { str ->\n" +
-            "  str.toUpperCase()\n" +
-            "}\n";
-        //@formatter:on
-        int offset = contents.lastIndexOf("str");
-        assertType(contents, offset, offset + "str".length(), "java.lang.String");
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1446
-    public void testClosure32() {
-        //@formatter:off
-        String contents =
-            "import groovy.transform.stc.*\n" +
-            "void test(Map<String,String> args, @ClosureParams(value=SimpleType, options='java.lang.String') Closure<?> proc) { }\n" +
             "test(foo:'bar', baz:null) { str ->\n" +
             "  str.toUpperCase()\n" +
             "}\n";
@@ -981,6 +967,16 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         }
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1484
+    public void testCoercedClosure4() {
+        //@formatter:off
+        String contents = "java.util.function.Consumer<List<String>> c = { x, y, z-> }";
+        //@formatter:on
+        assertType(contents, "x", "java.lang.String");
+        assertType(contents, "y", "java.lang.String");
+        assertType(contents, "z", "java.lang.String");
+    }
+
     @Test // Closure type inference without @CompileStatic
     public void testCompileStaticClosure0() {
         //@formatter:off
@@ -1328,6 +1324,16 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "getX", "java.lang.Number");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1484
+    public void testWithAndClosure11() {
+        //@formatter:off
+        String contents = "['a','b','c'].with { x, y, z-> }";
+        //@formatter:on
+        assertType(contents, "x", "java.lang.String");
+        assertType(contents, "y", "java.lang.String");
+        assertType(contents, "z", "java.lang.String");
+    }
+
     @Test
     public void testClosureReturnType1() {
         //@formatter:off
@@ -1529,8 +1535,22 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "y", "java.lang.Character");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1472
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1446
     public void testClosureParamsAnnotation7() {
+        //@formatter:off
+        String contents =
+            "import groovy.transform.stc.*\n" +
+            "void test(Map<String,String> args, @ClosureParams(value=SimpleType, options='java.lang.String') Closure c) { }\n" +
+            "test(foo:'bar', baz:null) { str ->\n" +
+            "  str.toUpperCase()\n" +
+            "}\n";
+        //@formatter:on
+        int offset = contents.lastIndexOf("str");
+        assertType(contents, offset, offset + "str".length(), "java.lang.String");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1472
+    public void testClosureParamsAnnotation8() {
         //@formatter:off
         String contents =
             "import groovy.transform.stc.*\n" +
