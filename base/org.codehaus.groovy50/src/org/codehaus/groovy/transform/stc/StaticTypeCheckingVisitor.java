@@ -42,6 +42,7 @@ import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
+import org.codehaus.groovy.ast.GroovyCodeVisitor;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -136,7 +137,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -1987,8 +1987,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     @Override
     public void visitForLoop(final ForStatement forLoop) {
         // collect every variable expression used in the loop body
-        Map<VariableExpression, ClassNode> varOrigType = new HashMap<>();
-        forLoop.getLoopBlock().visit(new VariableExpressionTypeMemoizer(varOrigType));
+        Map<VariableExpression, ClassNode> varTypes = new HashMap<>();
+        forLoop.getLoopBlock().visit(new VariableExpressionTypeMemoizer(varTypes));
 
         // visit body
         Map<VariableExpression, List<ClassNode>> oldTracker = pushAssignmentTracking();
@@ -2026,7 +2026,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 typeCheckingContext.controlStructureVariables.remove(forLoop.getVariable());
             }
         }
-        if (isSecondPassNeededForControlStructure(varOrigType, oldTracker)) {
+        if (isSecondPassNeededForControlStructure(varTypes, oldTracker)) {
             visitForLoop(forLoop);
         }
     }
@@ -2071,15 +2071,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return componentType;
     }
 
-    protected boolean isSecondPassNeededForControlStructure(final Map<VariableExpression, ClassNode> varOrigType, final Map<VariableExpression, List<ClassNode>> oldTracker) {
+    protected boolean isSecondPassNeededForControlStructure(final Map<VariableExpression, ClassNode> startTypes, final Map<VariableExpression, List<ClassNode>> oldTracker) {
         for (Map.Entry<VariableExpression, ClassNode> entry : popAssignmentTracking(oldTracker).entrySet()) {
             Variable key = findTargetVariable(entry.getKey());
-            if (key instanceof VariableExpression && varOrigType.containsKey(key)) {
-                ClassNode origType = varOrigType.get(key);
-                ClassNode newType = entry.getValue();
-                if (!newType.equals(origType)) {
-                    return true;
-                }
+            if (startTypes.containsKey(key)
+                    && !startTypes.get(key).equals(entry.getValue())) {
+                return true;
             }
         }
         return false;
@@ -2400,27 +2397,36 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ).toArray(ClassNode[]::new);
     }
 
+    private Map<VariableExpression, ClassNode> scanVars(final ClosureExpression expr) {
+        Map<VariableExpression, ClassNode> varTypes = new HashMap<>();
+
+        GroovyCodeVisitor visitor = new VariableExpressionTypeMemoizer(varTypes, true);
+        if (expr.isParameterSpecified()) {
+            for (Parameter p : expr.getParameters()) {
+                if (p.hasInitialExpression()) {
+                    p.getInitialExpression().visit(visitor);
+                }
+            }
+        }
+        expr.getCode().visit(visitor);
+
+        return varTypes;
+    }
+
     @Override
     public void visitClosureExpression(final ClosureExpression expression) {
-        // collect every variable expression used in the closure body
-        Map<VariableExpression, ClassNode> varTypes = new HashMap<>();
-        expression.getCode().visit(new VariableExpressionTypeMemoizer(varTypes, true));
+        Map<VariableExpression, ClassNode> varTypes = scanVars(expression);
         Map<VariableExpression, List<ClassNode>> oldTracker = pushAssignmentTracking();
         SharedVariableCollector collector = new SharedVariableCollector(getSourceUnit());
-        collector.visitClosureExpression(expression);
-
+        expression.visit(collector); // collect every variable expression the closure references
         Set<VariableExpression> closureSharedVariables = collector.getClosureSharedExpressions();
-        Map<VariableExpression, Map<StaticTypesMarker, Object>> variableMetadata;
+
+        Map<VariableExpression, Map<StaticTypesMarker, Object>> variableMetadata = new HashMap<>();
         if (!closureSharedVariables.isEmpty()) {
-            // GROOVY-6921: call getType in order to update closure shared variables
+            // GROOVY-6921: do getType in order to update closure shared variables
             // whose types are inferred thanks to closure parameter type inference
-            for (VariableExpression ve : closureSharedVariables) {
-                getType(ve);
-            }
-            variableMetadata = new HashMap<>();
+            for (VariableExpression vexp : closureSharedVariables) getType(vexp);
             saveVariableExpressionMetadata(closureSharedVariables, variableMetadata);
-        } else {
-            variableMetadata = null;
         }
 
         // perform visit
@@ -3061,7 +3067,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 Expression value = annotation.getMember("value");
                 Expression options = annotation.getMember("options");
                 Expression conflictResolver = annotation.getMember("conflictResolutionStrategy");
-                doInferClosureParameterTypes(receiver, arguments, expression, method, value, conflictResolver, options);
+                processClosureParams(receiver, arguments, expression, method, value, conflictResolver, options);
             }
         } else if (isSAMType(target.getOriginType())) { // SAM-type coercion
             boolean isConstructor = method.isConstructor();
@@ -3147,9 +3153,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else { // TODO: error for length mismatch
                     paramTypes = Arrays.copyOf(samParamTypes, n);
                     for (int i = 0, j = Math.min(n, samParamTypes.length); i < j; i += 1) {
-                        // GRECLIPSE add -- GROOVY-10072, GROOVY-11083
-                        if (p[i].isDynamicTyped()) { p[i].setType(samParamTypes[i]); } else
-                        // GRECLIPSE end
+                        if (p[i].isDynamicTyped()) { p[i].setType(samParamTypes[i]); } else // GROOVY-11083
                         checkParamType(p[i], paramTypes[i], i == n-1, expression instanceof LambdaExpression);
                     }
                 }
@@ -3201,15 +3205,36 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return Optional.ofNullable(typeCheckingContext.getCompilationUnit()).map(CompilationUnit::getTransformLoader).orElseGet(() -> getSourceUnit().getClassLoader());
     }
 
-    private void doInferClosureParameterTypes(final ClassNode receiver, final Expression arguments, final ClosureExpression expression, final MethodNode selectedMethod, final Expression hintClass, final Expression resolverClass, final Expression options) {
-        Parameter[] closureParams = hasImplicitParameter(expression) ? new Parameter[]{new Parameter(dynamicType(),"it")} : getParametersSafe(expression);
+    private void processClosureParams(final ClassNode receiver, final Expression arguments, final ClosureExpression expression, final MethodNode selectedMethod, final Expression hintClass, final Expression resolverClass, final Expression options) {
+        Parameter[] parameters = hasImplicitParameter(expression) ? new Parameter[]{new Parameter(dynamicType(),"it")} : getParametersSafe(expression);
 
-        List<ClassNode[]> closureSignatures = getSignaturesFromHint(selectedMethod, hintClass, options, expression);
+        List<ClassNode[]> closureSignatures = new LinkedList<>(getSignaturesFromHint(selectedMethod, hintClass, options, expression));
         List<ClassNode[]> candidates = new LinkedList<>();
-        for (ClassNode[] signature : closureSignatures) {
+        for (var it = closureSignatures.listIterator(); it.hasNext();) { ClassNode[] signature = it.next();
             resolveGenericsFromTypeHint(receiver, arguments, selectedMethod, signature);
-            if (signature.length == closureParams.length // matching number of parameters
-                    || (closureParams.length > signature.length && last(signature).isArray())) { // vargs
+            if (parameters.length == signature.length) {
+                candidates.add(signature);
+            }
+            if ((parameters.length != 1 || !isObjectType(parameters[0].getOriginType()))
+                    && signature.length == 1 && isOrImplements(signature[0], LIST_TYPE)) {
+                // list element(s) spread across closure parameter(s) : ClosureMetaClass
+                int itemCount = TUPLE_TYPES.indexOf(signature[0]);
+                if (itemCount >= 0) { // GROOVY-11090: Tuple[0-16]
+                    if (itemCount != parameters.length) {
+                        // for param count error messages
+                        it.add(new ClassNode[itemCount]);
+                        continue;
+                    }
+                    GenericsType[] spec = signature[0].getGenericsTypes();
+                    if (spec != null) { // edge case: Tuple0 falls through
+                        signature = Arrays.stream(spec).map(GenericsType::getType).toArray(ClassNode[]::new);
+                        candidates.add(signature);
+                        continue;
+                    }
+                }
+                ClassNode itemType = inferLoopElementType(signature[0]);
+                signature = new ClassNode[parameters.length];
+                Arrays.fill(signature, itemType);
                 candidates.add(signature);
             }
         }
@@ -3217,58 +3242,42 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (candidates.isEmpty() && !closureSignatures.isEmpty()) {
             String spec = closureSignatures.stream().mapToInt(sig -> sig.length).distinct()
                                            .sorted().mapToObj(Integer::toString).collect(Collectors.joining(" or "));
-            addError("Incorrect number of parameters. Expected " + spec + " but found " + closureParams.length, expression);
+            addError("Incorrect number of parameters. Expected " + spec + " but found " + parameters.length, expression);
         }
 
         if (candidates.size() > 1) {
+            closureSignatures = new ArrayList<>(candidates);
             for (Iterator<ClassNode[]> candIt = candidates.iterator(); candIt.hasNext(); ) {
-                ClassNode[] inferred = candIt.next();
-                checkClosureSignature(closureParams, inferred, (closureParam, inferredType) -> {
-                    ClassNode declaredType = closureParam.getOriginType();
-                    if (!typeCheckMethodArgumentWithGenerics(declaredType, inferredType, false)) candIt.remove();
-                }, () -> {
-                    candIt.remove();
-                });
+                ClassNode[] inferredTypes = candIt.next();
+                for (int i = 0; i < inferredTypes.length; i += 1) {
+                    ClassNode inferredType = inferredTypes[i], parameterType = parameters[i].getOriginType();
+                    if (parameterType.getGenericsTypes() != null) parameterType = GenericsUtils.nonGeneric(parameterType);
+                    if (!typeCheckMethodArgumentWithGenerics(parameterType, inferredType, false)) { candIt.remove(); break; }
+                }
             }
             if (candidates.size() > 1 && resolverClass instanceof ClassExpression) {
                 candidates = resolveWithResolver(candidates, receiver, arguments, expression, selectedMethod, resolverClass, options);
             }
-            if (candidates.size() > 1) {
+            if (candidates.isEmpty()) {
+                String actual = toMethodParametersString("", extractTypesFromParameters(parameters));
+                String expect = closureSignatures.stream().map(sig -> toMethodParametersString("",sig)).collect(Collectors.joining(" or "));
+                addStaticTypeError("Incorrect parameter type(s). Expected " + expect + " but found " + actual, expression); // at least one fails
+            } else if (candidates.size() > 1) {
                 addError("Ambiguous prototypes for closure. More than one target method matches. Please use explicit argument types.", expression);
             }
         }
 
         if (candidates.size() == 1) {
-            ClassNode[] inferred = candidates.get(0);
-            if (hasImplicitParameter(expression) && inferred.length == 1) {
-                expression.putNodeMetaData(CLOSURE_ARGUMENTS, inferred);
+            ClassNode[] inferredTypes = candidates.get(0);
+            if (inferredTypes.length == 1 && hasImplicitParameter(expression)) {
+                expression.putNodeMetaData(CLOSURE_ARGUMENTS, inferredTypes);
             } else {
-                checkClosureSignature(closureParams, inferred, (closureParam, inferredType) -> {
-                    checkParamType(closureParam, inferredType, false, false);
-                    typeCheckingContext.controlStructureVariables.put(closureParam, inferredType);
-                }, () -> {
-                    addError("Incorrect number of parameters. Expected " + inferred.length + " but found " + closureParams.length, expression);
-                });
-            }
-        }
-    }
-
-    private static void checkClosureSignature(final Parameter[] declared, final ClassNode[] inferred, final BiConsumer<Parameter,ClassNode> consumer, final Runnable reject) {
-        for (int i = 0, j = inferred.length-1, n = declared.length; i < n; i += 1) {
-            ClassNode declaredType = declared[i].getOriginType();
-            ClassNode inferredType = inferred[Math.min(i, j)];
-            if (isDynamicTyped(inferredType)) continue;
-            if (i >= j) { // at or past end
-                if (inferredType.isArray()) {
-                    if (n > inferred.length || !declaredType.isArray() && !isObjectType(declaredType)) {
-                        inferredType = inferredType.getComponentType(); // spread array out
-                    }
-                } else if (i > j) {
-                    reject.run();
-                    continue;
+                for (int i = 0; i < inferredTypes.length; i += 1) {
+                    if (isDynamicTyped(inferredTypes[i])) continue; // GROOVY-6939
+                    checkParamType(parameters[i], inferredTypes[i], false, false);
+                    typeCheckingContext.controlStructureVariables.put(parameters[i], inferredTypes[i]);
                 }
             }
-            consumer.accept(declared[i], inferredType);
         }
     }
 
@@ -5196,30 +5205,35 @@ out:                if (mn.size() != 1) {
     }
 
     /**
-     * Stores the inferred return type of a closure or a method. We are using a separate key to store
-     * inferred return type because the inferred type of a closure is {@link Closure}, which is different
-     * from the inferred type of the code of the closure.
+     * Stores the inferred return type of a closure or method.  We are using a
+     * separate key to store inferred return type because the inferred type of
+     * a closure is {@link Closure}, which is different from the inferred type
+     * of the code of the closure.
      *
-     * @param node a {@link ClosureExpression} or a {@link MethodNode}
+     * @param node a {@link ClosureExpression} or {@link MethodNode}
      * @param type the inferred return type of the code
-     * @return the old value of the inferred type
+     * @return The old value of the inferred type.
      */
     protected ClassNode storeInferredReturnType(final ASTNode node, final ClassNode type) {
         if (node instanceof ClosureExpression) {
-            return (ClassNode) node.putNodeMetaData(INFERRED_RETURN_TYPE, type);
+            if (node.getNodeMetaData(INFERRED_TYPE) != null) {
+                return getInferredReturnType(node); // GROOVY-11079
+            } else {
+                return (ClassNode) node.putNodeMetaData(INFERRED_RETURN_TYPE, type);
+            }
         }
         throw new IllegalArgumentException("Storing inferred return type is only allowed on closures but found " + node.getClass());
     }
 
     /**
-     * Returns the inferred return type of a closure or a method, if stored on the AST node. This method
-     * doesn't perform any type inference by itself.
+     * Returns the inferred return type of a closure or method, if stored on the
+     * AST node. This method doesn't perform any type inference by itself.
      *
-     * @param exp a {@link ClosureExpression} or {@link MethodNode}
-     * @return the inferred type, as stored on node metadata.
+     * @param node a {@link ClosureExpression} or {@link MethodNode}
+     * @return The expected return type.
      */
-    protected ClassNode getInferredReturnType(final ASTNode exp) {
-        return exp.getNodeMetaData(INFERRED_RETURN_TYPE);
+    protected ClassNode getInferredReturnType(final ASTNode node) {
+        return node.getNodeMetaData(INFERRED_RETURN_TYPE);
     }
 
     protected static boolean isNullConstant(final Expression expression) {
@@ -6098,6 +6112,7 @@ out:                if (mn.size() != 1) {
 
     protected class VariableExpressionTypeMemoizer extends ClassCodeVisitorSupport {
         private final boolean onlySharedVariables;
+        private final Set<VariableExpression> decl = new HashSet<>();
         private final Map<VariableExpression, ClassNode> varOrigType;
 
         public VariableExpressionTypeMemoizer(final Map<VariableExpression, ClassNode> varOrigType) {
@@ -6114,16 +6129,31 @@ out:                if (mn.size() != 1) {
             return StaticTypeCheckingVisitor.this.getSourceUnit();
         }
 
+        private boolean isOuterScopeShared(final Variable var) {
+            return var.isClosureSharedVariable() && !decl.contains(var);
+        }
+
         @Override
         public void visitVariableExpression(final VariableExpression expression) {
             Variable var = findTargetVariable(expression);
-            if ((!onlySharedVariables || var.isClosureSharedVariable()) && var instanceof VariableExpression) {
+            if ((!onlySharedVariables || isOuterScopeShared(var)) && var instanceof VariableExpression) {
                 VariableExpression ve = (VariableExpression) var;
                 ClassNode cn = ve.getNodeMetaData(INFERRED_TYPE);
                 if (cn == null) cn = ve.getOriginType();
                 varOrigType.put(ve, cn);
             }
             super.visitVariableExpression(expression);
+        }
+
+        @Override
+        public void visitDeclarationExpression(final DeclarationExpression expression) {
+            if (expression.isMultipleAssignmentDeclaration()) {
+                List<?> vars = expression.getTupleExpression().getExpressions();
+                decl.addAll((List<VariableExpression>) vars);
+            } else {
+                decl.add(expression.getVariableExpression());
+            }
+            super.visitDeclarationExpression(expression);
         }
     }
 }
