@@ -977,6 +977,16 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "z", "java.lang.String");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1484
+    public void testCoercedClosure5() {
+        //@formatter:off
+        String contents = "java.util.function.Consumer<Tuple3<String,Number,?>> c = { x, y, z-> }";
+        //@formatter:on
+        assertType(contents, "x", "java.lang.String");
+        assertType(contents, "y", "java.lang.Number");
+        assertType(contents, "z", "java.lang.Object");
+    }
+
     @Test // Closure type inference without @CompileStatic
     public void testCompileStaticClosure0() {
         //@formatter:off
@@ -1332,6 +1342,16 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.String");
         assertType(contents, "y", "java.lang.String");
         assertType(contents, "z", "java.lang.String");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1484
+    public void testWithAndClosure12() {
+        //@formatter:off
+        String contents = "Tuple.tuple('a','b',(Number)3).with { x, y, z-> }";
+        //@formatter:on
+        assertType(contents, "x", "java.lang.String");
+        assertType(contents, "y", "java.lang.String");
+        assertType(contents, "z", "java.lang.Number");
     }
 
     @Test

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -2484,6 +2485,20 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         ClassNode[] inferredTypes = new ClassNode[node.isParameterSpecified() ? node.getParameters().length : 1];
 
+        Consumer<ClassNode> spread = (listType) -> {
+            if (listType.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE) && !listType.equals(VariableScope.TUPLE_CLASS_NODE)) { // Tuple[0..16]
+                GenericsType[] generics = GroovyUtils.getGenericsTypes(listType);
+                int n = generics.length;
+                if (n == inferredTypes.length) {
+                    for (int i = 0; i < n; i += 1) {
+                        inferredTypes[i] = generics[i].getType();
+                    }
+                }
+            } else {
+                Arrays.fill(inferredTypes, VariableScope.extractElementType(listType));
+            }
+        };
+
         ClassNode primaryType = null;
         VariableScope.CallAndType cat;
 
@@ -2540,7 +2555,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                                         if (sig != null && sig.length == 1) {
                                             ClassNode t = VariableScope.resolveTypeParameterization(mapper, sig[0]);
                                             if (GeneralUtils.isOrImplements(t, VariableScope.LIST_CLASS_NODE)) {
-                                                Arrays.fill(inferredTypes, VariableScope.extractElementType(t));
+                                                spread.accept(t);
                                                 break;
                                             }
                                         }
@@ -2579,7 +2594,7 @@ out:    if (inferredTypes[0] == null) {
                 if (inferredTypes.length > 1 && samParameterTypes.size() == 1) { // spread across params?
                     ClassNode t = VariableScope.resolveTypeParameterization(m, samParameterTypes.get(0));
                     if (GeneralUtils.isOrImplements(t, VariableScope.LIST_CLASS_NODE)) {
-                        Arrays.fill(inferredTypes, VariableScope.extractElementType(t));
+                        spread.accept(t);
                         break out;
                     }
                 }
