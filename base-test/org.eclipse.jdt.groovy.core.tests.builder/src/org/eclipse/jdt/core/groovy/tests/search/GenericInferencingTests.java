@@ -170,18 +170,18 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testList12() {
         String contents =
             "def x = 9\n" +
-            "def xxx = [x, '']\n";
+            "def xxx = [x, (Number)8]\n";
 
-        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
+        assertType(contents, "xxx", "java.util.List<java.lang.Number>");
     }
 
     @Test
     public void testList13() {
         String contents =
             "def x = 9\n" +
-            "def xxx = [x + 9 * 8, '']\n";
+            "def xxx = [x + 8 * 7, (Serializable)6]\n";
 
-        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
+        assertType(contents, "xxx", "java.util.List<java.io.Serializable>");
     }
 
     @Test

@@ -1352,22 +1352,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         ClassNode itemType;
         try {
             if (isNotEmpty(node.getExpressions())) {
-                Iterator<Expression> items = node.getExpressions().iterator();
-
-                items.next().visit(this);
-                itemType = primaryTypeStack.removeLast();
-
-                while (items.hasNext()) {
-                    items.next().visit(this);
-                }
+                List<ClassNode> types = visitTupleExpressions(node.getExpressions());
+                types.replaceAll(GroovyUtils::getWrapperTypeIfPrimitive);
+                itemType = WideningCategories.lowestUpperBound(types);
+                node.putNodeMetaData("tuple.types", types);
             } else {
                 itemType = VariableScope.OBJECT_CLASS_NODE;
             }
         } finally {
             completeExpressionStack.removeLast();
         }
-        ClassNode exprType = createParameterizedList(itemType);
-        handleCompleteExpression(node, exprType, null);
+        handleCompleteExpression(node, createParameterizedList(itemType), null);
 
         scopes.getLast().forgetCurrentNode();
     }
@@ -1880,31 +1875,34 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitTupleExpression(final TupleExpression node) {
         completeExpressionStack.add(node);
         try {
-            node.removeNodeMetaData("tuple.types");
             if (isNotEmpty(node.getExpressions())) {
-                List<ClassNode> types = new ArrayList<>(node.getExpressions().size());
-                for (Expression expr : node) {
-                    // prevent revisit of statically-compiled chained assignment nodes
-                    if (!(expr instanceof TemporaryVariableExpression)) {
-                        expr.visit(this);
-                        ClassNode type = primaryTypeStack.removeLast();
-                        if (!(expr instanceof SpreadExpression)) {
-                            types.add(type);
-                        } else if (type.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE)) {
-                            GenericsType[] spec = GroovyUtils.getGenericsTypes(type);
-                            for (GenericsType elem : spec) types.add(elem.getType());
-                        } else {
-                            ClassNode spread = VariableScope.extractSpreadType(type);
-                            types.add(spread); // rough but helps for calling varargs
-                        }
-                    }
-                }
-                node.putNodeMetaData("tuple.types", types);
+                node.putNodeMetaData("tuple.types", visitTupleExpressions(node.getExpressions()));
             }
         } finally {
             completeExpressionStack.removeLast();
         }
-        handleCompleteExpression(node, VariableScope.VOID_CLASS_NODE, null);
+        handleCompleteExpression(node,null,null);
+    }
+
+    private List<ClassNode> visitTupleExpressions(final List<Expression> nodes) {
+        List<ClassNode> types = new ArrayList<>(nodes.size());
+        for (Expression node : nodes) {
+            // prevent revisit of statically-compiled chained assignment nodes
+            if (!(node instanceof TemporaryVariableExpression)) {
+                node.visit(this);
+                ClassNode type = primaryTypeStack.removeLast();
+                if (!(node instanceof SpreadExpression)) {
+                    types.add(type);
+                } else if (type.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE)) {
+                    GenericsType[] spec = GroovyUtils.getGenericsTypes(type);
+                    for (GenericsType elem : spec) types.add(elem.getType());
+                } else {
+                    ClassNode spread = VariableScope.extractSpreadType(type);
+                    types.add(spread); // rough but helps for calling varargs
+                }
+            }
+        }
+        return types;
     }
 
     private void visitUnaryExpression(final Expression node, final Expression operand, final String operation) {
@@ -2699,7 +2697,7 @@ out:    if (inferredTypes[0] == null) {
                 }
 
                 @Override public void visitListExpression(final ListExpression expression) {
-                    result[0] = (isNotEmpty(expression.getExpressions()) && expr == expression.getExpression(0));
+                    result[0] = (expression.getExpressions().stream().anyMatch(item -> expr == item));
                 }
 
                 @Override public void visitMapEntryExpression(final MapEntryExpression expression) {

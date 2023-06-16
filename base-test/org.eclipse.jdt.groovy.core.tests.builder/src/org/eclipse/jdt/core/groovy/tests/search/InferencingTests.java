@@ -3002,30 +3002,51 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testMultiDecl10() {
-        String contents = "List<Double> field\ndef (x, y) = field\nx\ny";
+        String contents = "@groovy.transform.Field List<Double> field\ndef (x, y) = field\nx\ny";
         assertType(contents, "x", "java.lang.Double");
         assertType(contents, "y", "java.lang.Double");
     }
 
     @Test
     public void testMultiDecl11() {
-        String contents = "List<Double> field\ndef x\ndef y\n (x, y)= field\nx\ny";
+        String contents = "@groovy.transform.Field List<Double> field\ndef x\ndef y\n(x, y) = field\nx\ny";
         assertType(contents, "x", "java.lang.Double");
         assertType(contents, "y", "java.lang.Double");
     }
 
     @Test
     public void testMultiDecl12() {
-        String contents = "def (x, y) = 1d\nx\ny";
-        assertType(contents, "x", "java.lang.Double");
-        assertType(contents, "y", "java.lang.Double");
+        String contents = "def (int x, float y) = [1,2]\nx\ny";
+        assertType(contents, "x", "java.lang.Integer");
+        assertType(contents, "y", "java.lang.Float");
     }
 
     @Test
     public void testMultiDecl13() {
-        String contents = "def (int x, float y) = [1,2]\nx\ny";
+        String contents = "def (x, y) = Tuple.tuple((Number)1, 2d)";
+        assertType(contents, "x", "java.lang.Number");
+        assertType(contents, "y", "java.lang.Double");
+    }
+
+    @Test
+    public void testMultiDecl14() {
+        String contents = "def (x, y) = (Tuple3<Double,Number,String>)null";
+        assertType(contents, "x", "java.lang.Double");
+        assertType(contents, "y", "java.lang.Number");
+    }
+
+    @Test
+    public void testMultiDecl15() {
+        String contents = "int foo(){}\ndouble bar(){}\ndef (x, y) = [foo(), bar()]";
         assertType(contents, "x", "java.lang.Integer");
-        assertType(contents, "y", "java.lang.Float");
+        assertType(contents, "y", "java.lang.Double");
+    }
+
+    @Test
+    public void testMultiDecl16() {
+        String contents = "int foo(){}\nList<Double> bar(){}\ndef (x, y) = [foo(), *bar()]";
+        assertType(contents, "x", "java.lang.Integer");
+        assertType(contents, "y", "java.lang.Double");
     }
 
     @Test // GRECLIPSE-1174 groovy casting

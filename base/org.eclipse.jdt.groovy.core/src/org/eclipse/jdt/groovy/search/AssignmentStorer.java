@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,12 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.util.Collections;
+import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getGenericsTypes;
+
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -125,12 +130,20 @@ public class AssignmentStorer {
 
     private static void handleMultiAssignment(final TupleExpression lhs, final Expression rhs, final VariableScope scope, final ClassNode rhsListType) {
         List<Expression> lhsExprs = lhs.getExpressions();
-        List<Expression> rhsExprs = rhs instanceof ListExpression ? ((ListExpression) rhs).getExpressions() : Collections.emptyList();
+        List<ClassNode>  rhsTypes = rhs.getNodeMetaData("tuple.types");
+
+        if (rhs instanceof ListExpression) {
+            if (rhsTypes == null) rhsTypes = ((ListExpression) rhs).getExpressions().stream().map(e -> e.getType()).collect(toList());
+        } else if (rhsListType.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE) && !rhsListType.equals(VariableScope.TUPLE_CLASS_NODE)) {
+            rhsTypes = stream(getGenericsTypes(rhsListType)).map(gt -> gt.getType()).collect(toList());
+        } else {
+            rhsTypes = emptyList();
+        }
 
         // try to associate each tuple expression element with something on the right-hand side
-        for (int i = 0, lhsSize = lhsExprs.size(), rhsSize = rhsExprs.size(); i < lhsSize; i += 1) {
+        for (int i = 0, lhsSize = lhsExprs.size(), rhsSize = rhsTypes.size(); i < lhsSize; i += 1) {
             Expression lhsExpr = lhsExprs.get(i);
-            ClassNode  rhsType = (i < rhsSize ? rhsExprs.get(i).getType() : findComponentType(rhsListType));
+            ClassNode  rhsType = (i < rhsSize ? rhsTypes.get(i) : findComponentType(rhsListType));
 
             if (lhsExpr instanceof VariableExpression) {
                 VariableExpression var = (VariableExpression) lhsExpr;
