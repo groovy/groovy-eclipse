@@ -308,7 +308,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
 
             if (!node.isEnum()) {
-                visitGenericTypes(node);
+                visitGenericTypes(node.getGenericsTypes());
                 visitClassReference(node.getUnresolvedSuperClass());
                 node.getPermittedSubclasses().forEach(this::visitClassReference);
             }
@@ -601,7 +601,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VisitStatus status = notifyRequestor(type, requestor, result);
         switch (status) {
         case CONTINUE:
-            if (!type.isEnum()) visitGenericTypes(type);
+            visitGenericTypes(type.getGenericsTypes());
             visitAnnotations(type.getTypeAnnotations());
             // fall through
         case CANCEL_BRANCH:
@@ -1105,7 +1105,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         switch (status) {
         case CONTINUE:
-            visitGenericTypes(node.getGenericsTypes(), null);
+            visitGenericTypes(node.getGenericsTypes());
             visitClassReference(node.getReturnType());
             if (node.getExceptions() != null) {
                 for (ClassNode e : node.getExceptions()) {
@@ -1264,11 +1264,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private void visitGenericTypes(final ClassNode node) {
-        visitGenericTypes(node.getGenericsTypes(), node.getName());
-    }
-
-    private void visitGenericTypes(final GenericsType[] generics, final String typeName) {
+    private void visitGenericTypes(final GenericsType[] generics) {
         if (generics != null) {
             for (GenericsType gt : generics) {
                 ClassNode type = gt.getType();
@@ -1280,10 +1276,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
                 if (gt.getUpperBounds() != null) {
                     for (ClassNode upper : gt.getUpperBounds()) {
-                        // handle enums where the upper bound is the same as the type
-                        if (!upper.getName().equals(typeName)) {
-                            visitClassReference(upper);
-                        }
+                        visitClassReference(upper);
                     }
                 }
             }
@@ -1501,7 +1494,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
             if (node.isUsingGenerics()) {
                 objExprType = primaryTypeStack.removeLast();
-                visitGenericTypes(node.getGenericsTypes(), null);
+                visitGenericTypes(node.getGenericsTypes());
                 primaryTypeStack.add(objExprType);
             } else {
                 objExprType = primaryTypeStack.getLast();

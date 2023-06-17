@@ -132,7 +132,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
 
         if (node.getEnd() > 0) {
             if (!(node instanceof ConstructorNode) && isNotEmpty(node.getGenericsTypes())) {
-                checkGenerics(node.getGenericsTypes(), null);
+                checkGenerics(node.getGenericsTypes());
             }
 
             ClassNode returnType = node.getReturnType();
@@ -267,7 +267,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     public void visitMethodCallExpression(MethodCallExpression call) {
         if (call.isUsingGenerics()) {
-            checkGenerics(call.getGenericsTypes(), null);
+            checkGenerics(call.getGenericsTypes());
         }
         super.visitMethodCallExpression(call);
     }
@@ -508,12 +508,12 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     private void checkGenerics(ClassNode node) {
-        if (node.isUsingGenerics() && isNotEmpty(node.getGenericsTypes())) {
-            checkGenerics(node.getGenericsTypes(), node.getName());
+        if (isNotEmpty(node.getGenericsTypes()) && !node.isEnum()) {
+            checkGenerics(node.getGenericsTypes());
         }
     }
 
-    private void checkGenerics(GenericsType[] generics, String typeName) {
+    private void checkGenerics(GenericsType[] generics) {
         for (GenericsType generic : generics) {
             int start = generic.getStart(),
                 until = start + generic.getName().length();
@@ -532,12 +532,9 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                 start += "extends ".length(); // assume 1 space
                 for (ClassNode upper : generic.getUpperBounds()) {
                     String name = upper.getName();
-                    // handle enums where the upper bound is the same as the type
-                    if (!name.equals(typeName)) {
-                        check(upper, start, Math.min(start + name.length(), until));
-                        if (upper.getEnd() > 0)
-                            start = upper.getEnd() + 1;
-                    }
+                    check(upper, start, Math.min(start + name.length(), until));
+                    if (upper.getEnd() > 0)
+                        start = upper.getEnd() + 1;
                 }
             }
         }

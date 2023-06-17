@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -245,8 +245,8 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     }
 
     protected static boolean isTypeDeclaration(final ASTNode node, final ModuleNode module) {
-        // don't use inner class nodes since they really should resolve to the super type
-        if (node instanceof ClassNode && ((ClassNode) node).getOuterClass() == null) {
+        // not inner class nodes since they really should resolve to the super type
+        if (node instanceof ClassNode && ((ClassNode) node).getOuterClass() == null && !((ClassNode) node).isGenericsPlaceHolder()) {
             for (ClassNode clazz : module.getClasses()) {
                 if (clazz.equals(node)) {
                     return true;

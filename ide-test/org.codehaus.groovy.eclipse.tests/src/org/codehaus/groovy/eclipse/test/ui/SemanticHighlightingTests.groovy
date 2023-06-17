@@ -4614,19 +4614,60 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testGenericType1() {
         String contents = '''\
             |interface I<T> {
-            |  T bar()
+            |  T m()
             |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('I'), 1, INTERFACE),
-            new HighlightedTypedPosition(contents.indexOf('T'), 1, PLACEHOLDER),
-            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, PLACEHOLDER),
-            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD))
+            new HighlightedTypedPosition(contents.indexOf('I'),  1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('T>'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('T '), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('m('), 1, METHOD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1486
+    void testGenericType2() {
+        String contents = '''\
+            |interface I<Self extends I<Self,T>, T> {
+            |  T m()
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('I'),     1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Self '), 4, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.lastIndexOf('I'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Self,'), 4, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('T>,'),   1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('T> '),   1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('T '),    1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('m('),    1, METHOD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1486
+    void testGenericType3() {
+        String contents = '''\
+            |class C<T> {
+            |  static <X> C<X> m(C<? extends C<? extends X>> c) {
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'),     1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('T'),     1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('X'),     1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('C<X>'),  1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('X> m'),  1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('m('),    1, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('C<? '),  1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.lastIndexOf('c'), 1, PARAMETER))
     }
 
     @Test
-    void testGenericType2() {
+    void testGenericType4() {
         String contents = 'Class<? extends List<? extends CharSequence>> clazz'
 
         assertHighlighting(contents,
