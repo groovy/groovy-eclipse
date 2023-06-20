@@ -1163,13 +1163,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 boolean isEnum = classNode.isEnum();
-                if (!isEnum && !isTrait(classNode)) configureSuperClass(typeDeclaration,
+                boolean isTrait = isTrait(classNode);
+                if (!isEnum && !isTrait) configureSuperClass(typeDeclaration,
                     isRecord(classNode) ? ClassHelper.make("java.lang.Record") : classNode.getSuperClass());
                 configureSuperInterfaces(typeDeclaration, classNode);
                 if (isSealed(classNode))
                     configurePermittedSubtypes(typeDeclaration, classNode);
 
-                typeDeclaration.fields  = createFieldDeclarations(classNode);
+                typeDeclaration.fields  = isTrait?new FieldDeclaration[0]:createFieldDeclarations(classNode);
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, typeDeclaration);
 
                 for (Statement statement : classNode.getObjectInitializerStatements()) {
@@ -1313,15 +1314,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             List<FieldDeclaration> fieldDeclarations = new ArrayList<>();
             List<FieldNode> fieldNodes = classNode.getFields();
             if (fieldNodes != null && !fieldNodes.isEmpty()) {
-                boolean isTrait = isTrait(classNode);
                 for (FieldNode fieldNode : fieldNodes) {
-                    if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
-                        continue;
-                    }
-                    if (fieldNode.getStart() == fieldNode.getNameStart() && fieldNode.getType().equals(ClassHelper.void_WRAPPER_TYPE)) {
-                        continue;
-                    }
-                    if (!GroovyUtils.isSynthetic(fieldNode)) {
+                    if (!GroovyUtils.isSynthetic(fieldNode) && !(fieldNode.getStart() == fieldNode.getNameStart() && fieldNode.getType().equals(ClassHelper.void_WRAPPER_TYPE))) {
                         FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), fieldNode.getNameStart(), fieldNode.getNameEnd());
                         fieldDeclaration.annotations = createAnnotations(fieldNode.getAnnotations());
                         if (!fieldNode.isEnum()) {

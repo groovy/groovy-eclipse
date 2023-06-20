@@ -2886,6 +2886,31 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits10000() {
+        //@formatter:off
+        String[] sources = {
+            "J.java",
+            "class J {\n" +
+            "  private String f = T.FOO;\n" +
+            "}\n",
+
+            "T.groovy",
+            "trait T {\n" +
+            "  public static final String FOO = 'foo'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in J.java (at line 2)\n" +
+            "\tprivate String f = T.FOO;\n" +
+            "\t                     ^^^\n" +
+            "FOO cannot be resolved or is not a field\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTraits10102() {
         //@formatter:off
         String[] sources = {
@@ -2979,7 +3004,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "xx");
     }
 
-    @Ignore @Test // see also GROOVY-10000
+    @Test // see also GROOVY-10000
     public void testTraits10312a() {
         //@formatter:off
         String[] sources = {
@@ -2989,7 +3014,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "trait T2 implements T1 {\n" +
             "  static void staticMethodWithDefaultArgument(String string = 'x') {\n" +
-            "    print(string + BANG)\n" + // MissingPropertyException
+            "    print(string + T1__BANG)\n" + // MissingPropertyException
             "  }\n" +
             "}\n" +
             "class X implements T2 {\n" +
