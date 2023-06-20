@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -365,25 +365,25 @@ public final class GroovyClassLoaderFactory {
                     if (defaultCategories == null) {
                         Set<Class> objectCategories = new LinkedHashSet<>(), staticCategories = new LinkedHashSet<>();
                         try {
-                            Class dgm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyMethods", false, true);
-                            Class dgsm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods", false, true);
+                            Class dgm  = loadFromClasspathOrTools("org.codehaus.groovy.runtime.DefaultGroovyMethods");
+                            Class dgsm = loadFromClasspathOrTools("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
 
                             Collections.addAll(objectCategories, (Class[]) dgm.getField("DGM_LIKE_CLASSES").get(dgm));
                             Collections.addAll(objectCategories, (Class[]) dgm.getField("ADDITIONAL_CLASSES").get(dgm));
 
-                            Class vmpf = loadClass("org.codehaus.groovy.vmplugin.VMPluginFactory", false, true);
+                            Class vmpf = loadFromClasspathOrTools("org.codehaus.groovy.vmplugin.VMPluginFactory");
                             @SuppressWarnings("unchecked") Object vmp = vmpf.getMethod("getPlugin").invoke(vmpf);
 
                             Collections.addAll(objectCategories, (Class[]) vmp.getClass().getMethod("getPluginDefaultGroovyMethods").invoke(vmp));
                             Collections.addAll(staticCategories, (Class[]) vmp.getClass().getMethod("getPluginStaticGroovyMethods").invoke(vmp));
-
-                            new ExtensionModuleScanner(module -> {
-                                if (module instanceof SimpleExtensionModule) {
-                                    objectCategories.addAll(((SimpleExtensionModule) module).getInstanceMethodsExtensionClasses());
-                                    staticCategories.addAll(((SimpleExtensionModule) module).getStaticMethodsExtensionClasses());
-                                }
-                            }, this).scanClasspathModules();
-
+                            if (dgm.getClassLoader() != CompilerConfiguration.class.getClassLoader()) {
+                                new ExtensionModuleScanner(module -> {
+                                    if (module instanceof SimpleExtensionModule) {
+                                        objectCategories.addAll(((SimpleExtensionModule) module).getInstanceMethodsExtensionClasses());
+                                        staticCategories.addAll(((SimpleExtensionModule) module).getStaticMethodsExtensionClasses());
+                                    }
+                                }, this).scanClasspathModules();
+                            }
                             staticCategories.add(dgsm);
                             objectCategories.addAll(staticCategories);
 
@@ -407,6 +407,18 @@ public final class GroovyClassLoaderFactory {
         public boolean isDefaultStaticCategory(final String name) {
             if (defaultStaticCategories == null) getDefaultCategories();
             return defaultStaticCategories.stream().map(Class::getName).anyMatch(name::equals);
+        }
+
+        private Class loadFromClasspathOrTools(final String name) throws ClassNotFoundException {
+            try {
+                return loadClass(name, false, true, false);
+            } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                // provide minimal extension method resolution from eclipse environment
+                if (name.startsWith("org.codehaus.groovy.runtime.") || name.startsWith("org.codehaus.groovy.vmplugin.")) {
+                    return CompilerConfiguration.class.getClassLoader().loadClass(name);
+                }
+                throw e;
+            }
         }
     }
 }
