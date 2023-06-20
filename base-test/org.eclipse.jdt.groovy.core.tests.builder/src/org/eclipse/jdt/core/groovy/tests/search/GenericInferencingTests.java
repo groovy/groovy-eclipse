@@ -1747,7 +1747,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testCircularReference() {
+    public void testCircularReference1() {
         String contents =
             "abstract class Abstract<T extends Abstract<T>> {\n" +
             "  T withStuff(value) {\n" +
@@ -1765,8 +1765,36 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("withThing(x)");
         assertType(contents, offset, offset + "withThing".length(), "Concrete");
-            offset = contents.lastIndexOf("withStuff(x)");
+        /**/offset = contents.lastIndexOf("withStuff(x)");
         assertType(contents, offset, offset + "withStuff".length(), "Concrete");
+    }
+
+    @Test
+    public void testCircularReference2() {
+        createJavaUnit("FeatureName",
+            "enum FeatureName{\n" +
+            "}\n");
+
+        createJavaUnit("Scorable",
+            "interface Scorable<T, F extends Enum<F>> extends Comparable<T> {\n" +
+            "}\n");
+
+        createJavaUnit("ScoreAndRank", "import java.util.concurrent.Callable;\n" +
+            "abstract class ScoreAndRank<T extends Scorable<? super T, FeatureName>, O> implements Callable<O> {\n" +
+            "}\n");
+
+        createJavaUnit("ScoreAndRankWithSearchRequest",
+            "abstract class ScoreAndRankWithSearchRequest<T extends Scorable<? super T, FeatureName>, O> extends ScoreAndRank<T, O> {\n" +
+            "}\n");
+
+        String contents =
+            "abstract class FakeScoreAndRank<T extends Scorable<? super T, FeatureName>> extends ScoreAndRankWithSearchRequest<T, Object> {\n" +
+            "}\n";
+
+        int offset = contents.indexOf("T");
+        assertType(contents, offset, offset + 1, "T");
+        /**/offset = contents.indexOf("Scorable");
+        assertType(contents, offset, offset + 8, "Scorable<? super T,FeatureName>");
     }
 
     @Test

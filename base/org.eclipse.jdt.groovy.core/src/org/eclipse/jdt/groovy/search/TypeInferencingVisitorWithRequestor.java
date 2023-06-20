@@ -601,7 +601,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VisitStatus status = notifyRequestor(type, requestor, result);
         switch (status) {
         case CONTINUE:
-            visitGenericTypes(type.getGenericsTypes());
+            if (!type.isGenericsPlaceHolder()) {
+                visitGenericTypes(type.getGenericsTypes());
+            }
             visitAnnotations(type.getTypeAnnotations());
             // fall through
         case CANCEL_BRANCH:

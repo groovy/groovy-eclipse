@@ -357,7 +357,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             if (type.isArray()) {
                 check(type.getComponentType(), node.getStart(), node.getEnd() - 2);
             } else {
-                checkGenerics(type);
+                if (!type.isGenericsPlaceHolder()) checkGenerics(type);
             }
         }
         if (node.getEnd() > 0 && sloc.regionIsCoveredByNode(node)) {
