@@ -1169,8 +1169,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (isSealed(classNode))
                     configurePermittedSubtypes(typeDeclaration, classNode);
 
-                typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
-                typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
+                typeDeclaration.fields  = createFieldDeclarations(classNode);
+                typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, typeDeclaration);
 
                 for (Statement statement : classNode.getObjectInitializerStatements()) {
                     if (statement.getEnd() > 0 && statement instanceof BlockStatement) {
@@ -1309,7 +1309,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         /**
          * Build JDT representations of all the fields on the Groovy type.
          */
-        private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
+        private FieldDeclaration[] createFieldDeclarations(ClassNode classNode) {
             List<FieldDeclaration> fieldDeclarations = new ArrayList<>();
             List<FieldNode> fieldNodes = classNode.getFields();
             if (fieldNodes != null && !fieldNodes.isEmpty()) {
@@ -1318,19 +1318,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
                         continue;
                     }
-                    if (isEnum && (fieldNode.getName().equals("MAX_VALUE") || fieldNode.getName().equals("MIN_VALUE"))) {
-                        continue;
-                    }
                     if (fieldNode.getStart() == fieldNode.getNameStart() && fieldNode.getType().equals(ClassHelper.void_WRAPPER_TYPE)) {
                         continue;
                     }
-                    boolean isEnumField = fieldNode.isEnum();
-                    boolean isSynthetic = GroovyUtils.isSynthetic(fieldNode);
-                    if (!isSynthetic) {
-                        // JavaStubGenerator ignores private fields but I don't think we want to here
+                    if (!GroovyUtils.isSynthetic(fieldNode)) {
                         FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), fieldNode.getNameStart(), fieldNode.getNameEnd());
                         fieldDeclaration.annotations = createAnnotations(fieldNode.getAnnotations());
-                        if (!isEnumField) {
+                        if (!fieldNode.isEnum()) {
                             fieldDeclaration.modifiers = getModifiers(fieldNode);
                             fieldDeclaration.initializer = fieldNode.getInitialExpression();
                             if (fieldNode.isStatic() && fieldNode.isFinal()) {
@@ -1338,7 +1332,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 fieldDeclaration.initialization = createInitializationExpression(fieldNode.getInitialExpression(), fieldNode.getType());
                             }
                             ClassNode fieldType = fieldNode.getType();
-                            if (fieldNode.getEnd() > 0 && fieldType.getEnd() < 1) { // 'def' or 'var' or modifier(s) or primitive
+                            if (fieldNode.getEnd() > 0 && fieldType.getEnd() < 1) { // 'def', 'var', primitive, modifier(s)
                                 assert fieldType.equals(ClassHelper.OBJECT_TYPE) || ClassHelper.isPrimitiveType(fieldType);
                                 ClassNode ft = new ClassNode(fieldType.getTypeClass());
                                 ft.setStart(fieldNode.getNameStart() - 1);
@@ -1387,21 +1381,22 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         /**
          * Build JDT representations of all the constructors and methods on the Groovy type.
          */
-        private AbstractMethodDeclaration[] createConstructorAndMethodDeclarations(ClassNode classNode, boolean isEnum,
+        private AbstractMethodDeclaration[] createConstructorAndMethodDeclarations(ClassNode classNode,
                 GroovyTypeDeclaration typeDeclaration) {
             List<AbstractMethodDeclaration> methodDeclarations = new ArrayList<>();
-            createConstructorDeclarations(classNode, isEnum, methodDeclarations);
-            createMethodDeclarations(classNode, isEnum, typeDeclaration, methodDeclarations);
+            createConstructorDeclarations(classNode, methodDeclarations);
+            createMethodDeclarations(classNode, typeDeclaration, methodDeclarations);
             return methodDeclarations.toArray(new AbstractMethodDeclaration[methodDeclarations.size()]);
         }
 
         /**
          * Build JDT representations of all the constructors on the Groovy type.
          */
-        private void createConstructorDeclarations(ClassNode classNode, boolean isEnum, List<AbstractMethodDeclaration> methodDeclarations) {
+        private void createConstructorDeclarations(ClassNode classNode, List<AbstractMethodDeclaration> methodDeclarations) {
             List<ConstructorNode> constructorNodes = classNode.isInterface() ? Collections.emptyList() : getDeclaredAndGeneratedConstructors(classNode);
 
-            char[] ctorName; boolean isAnon = false;
+            boolean isEnum = classNode.isEnum();
+            boolean isAnon = false; char[] ctorName;
             if (classNode instanceof InnerClassNode) {
                 isAnon = ((InnerClassNode) classNode).isAnonymous();
                 int qualLength = classNode.getOuterClass().getNameWithoutPackage().length() + 1;
@@ -1548,9 +1543,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         /**
          * Build JDT representations of all the methods on the Groovy type.
          */
-        private void createMethodDeclarations(ClassNode classNode, boolean isEnum, GroovyTypeDeclaration typeDeclaration, List<AbstractMethodDeclaration> methodDeclarations) {
+        private void createMethodDeclarations(ClassNode classNode, GroovyTypeDeclaration typeDeclaration, List<AbstractMethodDeclaration> methodDeclarations) {
             List<MethodNode> methodNodes = classNode.getMethods();
             if (methodNodes != null && !methodNodes.isEmpty()) {
+                boolean isEnum = classNode.isEnum();
                 boolean isTrait = isTrait(classNode);
                 for (MethodNode methodNode : methodNodes) {
                     if (isEnum && methodNode.isSynthetic()) {
@@ -2284,7 +2280,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
             }
 
-            String name = classNode.getName();
+            String name = classNode.getName().replace('$', '.');
 
             if (name.length() == 1 && name.charAt(0) == '?') {
                 TypeReference tr = new Wildcard(Wildcard.UNBOUND);

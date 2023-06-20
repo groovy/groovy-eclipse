@@ -702,6 +702,8 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "package be.flow;\n" +
             "public enum C1 {\n" +
             "  TEST_C1,\n" +
+            "  public static final be.flow.C1 MIN_VALUE;\n" +
+            "  public static final be.flow.C1 MAX_VALUE;\n" +
             "  private @groovy.transform.Generated C1() {\n" +
             "  }\n" +
             "  private @groovy.transform.Generated C1(java.util.LinkedHashMap __namedArgs) {\n" +
@@ -710,6 +712,8 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "public class A {\n" +
             "  public static enum C2 {\n" +
             "    TEST_C2,\n" +
+            "    public static final be.flow.A.C2 MIN_VALUE;\n" +
+            "    public static final be.flow.A.C2 MAX_VALUE;\n" +
             "    private @groovy.transform.Generated C2() {\n" +
             "    }\n" +
             "    private @groovy.transform.Generated C2(java.util.LinkedHashMap __namedArgs) {\n" +
@@ -996,6 +1000,8 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "    public @Override int foo() {\n" +
             "    }\n" +
             "  },\n" +
+            "  public static final Good MIN_VALUE;\n" +
+            "  public static final Good MAX_VALUE;\n" +
             "  private @groovy.transform.Generated Good() {\n" +
             "  }\n" +
             "  private @groovy.transform.Generated Good(java.util.LinkedHashMap __namedArgs) {\n" +
