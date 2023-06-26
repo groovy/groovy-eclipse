@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,10 @@ import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jdt.internal.core.util.Util;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.prefs.BackingStoreException;
 
 public class Activator extends Plugin {
 
@@ -108,8 +107,8 @@ public class Activator extends Plugin {
             preferences.put(GROOVY_COMPILER_LEVEL, level);
             try {
                 preferences.flush();
-            } catch (BackingStoreException e) {
-                Util.log(e);
+            } catch (org.osgi.service.prefs.BackingStoreException e) {
+                getLog().log(new Status(0x4, PLUGIN_ID, null, e));
             }
         }
     }
@@ -131,8 +130,8 @@ public class Activator extends Plugin {
         preferences.put(GROOVY_SCRIPT_FILTERS, value);
         try {
             preferences.flush();
-        } catch (BackingStoreException e) {
-            Util.log(e);
+        } catch (org.osgi.service.prefs.BackingStoreException e) {
+            getLog().log(new Status(0x4, PLUGIN_ID, null, e));
         }
     }
 

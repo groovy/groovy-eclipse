@@ -1,89 +1,120 @@
-/*******************************************************************************
- * Copyright (c) 2012 Pivotal Software, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * https://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2023 the original author or authors.
  *
- * Contributors:
- *     Pivotal Software, Inc. - initial API and implementation
- *******************************************************************************/
-package org.grails.ide.eclipse.groovy.debug.core.evaluation;
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.codehaus.groovy.eclipse.debug;
+
+import static org.eclipse.jdt.internal.debug.core.model.LambdaUtils.getLambdaFrameVariables;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import groovy.lang.Binding;
-import groovy.util.Proxy;
 
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.model.IVariable;
 import org.eclipse.jdt.debug.core.IJavaObject;
-import org.eclipse.jdt.debug.core.IJavaPrimitiveValue;
 import org.eclipse.jdt.debug.core.IJavaStackFrame;
 import org.eclipse.jdt.debug.core.IJavaValue;
+import org.eclipse.jdt.debug.core.IJavaVariable;
 
 /**
- * A binding that will properly update, set
- * fields and variables in the currently debugged application
+ * A binding that will properly update fields and variables in the currently debugged application.
+ *
  * @author Andrew Eisenberg
- * @since 2.5.1
  */
 public class JDIBinding extends Binding {
 
     private final JDITargetDelegate delegate;
-    private final IJavaStackFrame frame;
-    
-    // the metaclass for the 'this'object
-    private JDIMetaClass thisMetaClass;
-    private boolean initialized;
-    
-    public JDIBinding(JDITargetDelegate delegate, IJavaStackFrame frame) {
+
+    JDIBinding(JDITargetDelegate delegate, IJavaStackFrame stackFrame, IJavaObject thisObject) throws DebugException {
+        super(variables(delegate, stackFrame, thisObject));
         this.delegate = delegate;
-        this.frame = frame;
-        this.initialized = false;
+
+        setMetaClass(new JDIMetaClass(getThis(), delegate));
     }
-    
-    public void markAsInitialized() {
-        this.initialized = true;
+
+    private static Map<String, Object> variables(JDITargetDelegate delegate, IJavaStackFrame stackFrame, IJavaObject thisObject) throws DebugException {
+        Map<String, Object> map = new HashMap<>();
+        if (stackFrame != null) {
+            for (IVariable variable : stackFrame.getLocalVariables()) {
+                map.put(variable.getName(), variable);
+            }
+            for (IVariable variable : getLambdaFrameVariables(stackFrame)) {
+                var variableName = variable.getName();
+                if (variableName.startsWith("val$")) {
+                    map.put(variableName.substring(4), variable);
+                }
+            }
+            map.put("this", stackFrame.isStatic() ? stackFrame.getReferenceType().getClassObject() : stackFrame.getThis());
+        } else {
+            map.put("this", thisObject);
+        }
+        map.put("__comparator", new JDIComparator(delegate)); // JDIScriptLoader
+        return map;
     }
-    
-    public void setThisMetaClass(JDIMetaClass thisMetaClass) {
-        this.thisMetaClass = thisMetaClass;
+
+    //--------------------------------------------------------------------------
+
+    IJavaObject getThis() {
+        return (IJavaObject) super.getVariable("this");
     }
-    
+
     @Override
-    public void setVariable(String property, Object newValue) {
-        if (!initialized) {
-            // if not yet initialized, only add to binding
-            // don't try to make any changes to running application
-            super.setVariable(property, newValue);
-            return;
+    public Map getVariables() {
+        return ((Map<String, Object>) super.getVariables())
+            .keySet().stream().filter(name -> !"this".equals(name))
+            .collect(Collectors.toMap(name -> name, this::getVariable));
+    }
+
+    @Override
+    public Object getVariable(String variableName) {
+        Object o = super.getVariable(variableName);
+        if (o instanceof IVariable) {
+            try {
+                IJavaValue value = (IJavaValue) ((IVariable) o).getValue();
+                return delegate.createProxyFor(value);
+            } catch (DebugException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return o;
+    }
+
+    @Override
+    public void removeVariable(String variableName) {
+    }
+
+    @Override
+    public void setVariable(String variableName, Object newValue) {
+        if ("this".equals(variableName) || "__comparator".equals(variableName)) {
+            throw new IllegalArgumentException(variableName);
         }
         try {
-            IJavaValue newJDIObject = delegate.toJDIObject(newValue);
-            if (getVariables().containsKey(property)) {
-                // this is a local variable
-                Proxy variable = (Proxy) getVariable(property);
-                variable.setAdaptee(newJDIObject);
-                variable.setMetaClass(new JDIMetaClass((IJavaObject) newJDIObject, delegate));
-                IVariable[] vars = frame.getVariables();
-                for (IVariable var : vars) {
-                    if (var.getName().equals(property)) {
-                        if (var.getValue() instanceof IJavaPrimitiveValue) {
-                            newJDIObject = delegate.convertToUnboxedType(newJDIObject);
-                        }
-                        
-                        var.setValue(newJDIObject);
-                        break;
-                    }
+            IJavaValue jdiValue = delegate.toJDIObject(newValue);
+            if (hasVariable(variableName)) {
+                IVariable variable = (IVariable) super.getVariable(variableName);
+                if (((IJavaVariable) variable).getSignature().length() == 1) {
+                    jdiValue = delegate.toJDIValue(jdiValue); // unbox
                 }
-            
+                variable.setValue(jdiValue);
             } else {
-                // assume that this is a property on 'this'
-                // need to call set property on 'this'
-                getMetaClass().setProperty(delegate.getThis(), property, newJDIObject);
+                getMetaClass().setProperty(getThis(), variableName, jdiValue);
             }
         } catch (DebugException e) {
             throw new RuntimeException(e);
         }
     }
-
 }

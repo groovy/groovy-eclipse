@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,11 @@
  */
 package org.codehaus.groovy.eclipse;
 
+import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.codehaus.groovy.eclipse.adapters.ClassFileEditorAdapterFactory;
 import org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -29,6 +34,10 @@ import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchListener;
+import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.jdt.debug.core.IJavaStackFrame;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -122,6 +131,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
         adapterManager.registerAdapters(new GroovyJavaDebugElementAdapterFactory(), IJavaStackFrame.class);
         adapterManager.registerAdapters(new GroovyIFileEditorInputAdapterFactory(), IFileEditorInput.class);
 
+        if (Boolean.parseBoolean(System.getProperty("eclipse.groovy.debug", "true"))) addDebugLaunchListener();
         if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP)) {
             new GroovyDebugOptionsEnforcer().maybeForce(getPreferenceStore());
         }
@@ -141,6 +151,32 @@ public class GroovyPlugin extends AbstractUIPlugin {
         } finally {
             super.stop(context);
         }
+    }
+
+    private void addDebugLaunchListener() {
+        DebugPlugin.getDefault().getLaunchManager().addLaunchListener(new ILaunchListener() {
+            @Override
+            public void launchAdded(ILaunch launch) {
+            }
+
+            @Override
+            public void launchChanged(ILaunch launch) {
+                for (IDebugTarget target : launch.getDebugTargets()) {
+                    if (target instanceof org.eclipse.jdt.debug.core.IJavaDebugTarget) try { //@formatter:off
+                        if (ReflectionUtils.throwableGetPrivateField(target.getClass(), "fEngines", target) == null) {
+                            ReflectionUtils.throwableSetPrivateField(target.getClass(), "fEngines", target, evalEngineInterceptor(target));
+                        }
+                    } catch (Exception e) {
+                        logError("Error installing evaluation engine hooks", e);
+                    }
+                    //@formatter:on
+                }
+            }
+
+            @Override
+            public void launchRemoved(ILaunch launch) {
+            }
+        });
     }
 
     private void addMonospaceFontListener() {
@@ -212,5 +248,48 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     private void log(int severity, String message, Throwable cause) {
         getLog().log(new Status(severity, PLUGIN_ID, message, cause));
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static Object evalEngineInterceptor(IDebugTarget target) {
+        return Collections.synchronizedMap(new AbstractMap<org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.debug.eval.IAstEvaluationEngine>() {
+
+            private Set<Entry<org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.debug.eval.IAstEvaluationEngine>> entries = new HashSet<>(2);
+
+            @Override
+            public  Set<Entry<org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.debug.eval.IAstEvaluationEngine>> entrySet() {
+                return entries;
+            }
+
+            @Override
+            public org.eclipse.jdt.debug.eval.IAstEvaluationEngine get(Object key) {
+                if (!containsKey(key) && key instanceof org.eclipse.jdt.core.IJavaProject) {
+                    org.eclipse.jdt.core.IJavaProject javaProject = (org.eclipse.jdt.core.IJavaProject) key;
+                    if (org.codehaus.jdt.groovy.model.GroovyNature.hasGroovyNature(javaProject.getProject())) {
+                        org.eclipse.jdt.debug.eval.IAstEvaluationEngine evalEngine =
+                            new org.codehaus.groovy.eclipse.debug.EvaluationEngine(javaProject, (org.eclipse.jdt.debug.core.IJavaDebugTarget) target);
+                        entries.add(new SimpleEntry<>(javaProject, evalEngine));
+                        return evalEngine;
+                    }
+                }
+                return super.get(key);
+            }
+
+            @Override
+            public org.eclipse.jdt.debug.eval.IAstEvaluationEngine put(org.eclipse.jdt.core.IJavaProject key, org.eclipse.jdt.debug.eval.IAstEvaluationEngine value) {
+                if (org.codehaus.jdt.groovy.model.GroovyNature.hasGroovyNature(key.getProject())) {
+                    value.dispose();
+                    value = new org.codehaus.groovy.eclipse.debug.EvaluationEngine(key, (org.eclipse.jdt.debug.core.IJavaDebugTarget) target);
+                }
+                for (Entry<org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.debug.eval.IAstEvaluationEngine> entry : entrySet()) {
+                    if (entry.getKey().equals(key)) {
+                        return entry.setValue(value);
+                    }
+                }
+                entries.add(new SimpleEntry<>(key, value));
+                return null;
+            }
+        });
     }
 }

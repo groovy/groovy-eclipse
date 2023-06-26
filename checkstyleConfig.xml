@@ -738,7 +738,7 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Groovy property notation should be used instead of accessors" />
-        <property name="format" value="^(?!\s*\|(?!\|)).*(?&lt;!\b\p{Upper}\w{0,99}\s{0,99})\.(get\p{Upper}\p{Alnum}*\(\s*\)|set\p{Upper}\p{Alnum}*\([^,]+\))(?!;?[&apos;&quot;](?:,|$))" />
+        <property name="format" value="^(?!\s*\|(?!\|)).*(?&lt;!\b\p{Upper}\w{0,99}\s{0,99})\.(get(?!Class|Super|This)\p{Upper}\p{Alnum}*\(\s*\)|set(?!Class|Super|This)\p{Upper}\p{Alnum}*\([^,]+\))(?!;?[&apos;&quot;](?:,|$))" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyPropertyAccess" />
     </module>
