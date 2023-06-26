@@ -53,7 +53,6 @@ import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -348,27 +347,24 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     /**
-     * Checks that arguments and parameter types match.
+     * Determines if the specific argument types fit the parameters.
      *
-     * @return -1 if arguments do not match, 0 if arguments are of the exact type and &gt; 0 when one or more argument is
-     * not of the exact type but still match
+     * @return -1 if arguments do not match, 0 if arguments are of the exact type,
+     * and &gt; 0 when one or more argument is not of the exact type but still match
      */
     public static int allParametersAndArgumentsMatch(Parameter[] parameters, final ClassNode[] argumentTypes) {
-        if (parameters == null) {
-            parameters = Parameter.EMPTY_ARRAY;
-        }
-        int dist = 0;
-        if (argumentTypes.length < parameters.length) {
+        if (parameters == null) parameters = Parameter.EMPTY_ARRAY;
+        final int nParameters = parameters.length;
+        if (argumentTypes.length < nParameters) {
             return -1;
         }
-        // we already know there are at least params.length elements in both arrays
-        for (int i = 0, n = parameters.length; i < n; i += 1) {
-            ClassNode paramType = parameters[i].getType();
-            ClassNode argType = argumentTypes[i];
-            if (!isAssignableTo(argType, paramType)) {
+        int dist = 0;
+        for (int i = 0; i < nParameters; i += 1) { // extra argument(s) ignored!
+            ClassNode aType = argumentTypes[i], pType = parameters[i].getType();
+            if (!isAssignableTo(aType, pType)) {
                 return -1;
-            } else if (!paramType.equals(argType)) {
-                dist += getDistance(argType, paramType);
+            } else if (!aType.equals(pType)) {
+                dist += getDistance(aType, pType);
             }
         }
         return dist;
@@ -461,9 +457,10 @@ public abstract class StaticTypeCheckingSupport {
         if (NUMBER_TYPES.containsKey(type.redirect()) && NUMBER_TYPES.containsKey(toBeAssignedTo.redirect())) {
             return NUMBER_TYPES.get(type.redirect()) <= NUMBER_TYPES.get(toBeAssignedTo.redirect());
         }
-        if (type.isArray() && toBeAssignedTo.isArray()) { // GROOVY-10720: check primitive to/from non-primitive
+        if (type.isArray() && toBeAssignedTo.isArray()) {
             ClassNode sourceComponent = type.getComponentType(), targetComponent = toBeAssignedTo.getComponentType();
-            return (isPrimitiveType(sourceComponent) == isPrimitiveType(targetComponent)) && isAssignableTo(sourceComponent, targetComponent);
+            return isPrimitiveType(targetComponent) ? sourceComponent.equals(targetComponent) // GROOVY-11053: strict
+                : !isPrimitiveType(sourceComponent) && isAssignableTo(sourceComponent, targetComponent); // GROOVY-10720
         }
         if (type.isDerivedFrom(GSTRING_TYPE) && toBeAssignedTo.equals(STRING_TYPE)) {
             return true;
@@ -666,9 +663,7 @@ public abstract class StaticTypeCheckingSupport {
         }
 
         if (left.isArray() && right.isArray()) {
-            ClassNode leftComponent = left.getComponentType();
-            ClassNode rightComponent = right.getComponentType();
-            if (isPrimitiveType(leftComponent) != isPrimitiveType(rightComponent)) return false;
+            ClassNode leftComponent = left.getComponentType(), rightComponent = right.getComponentType();
             return checkCompatibleAssignmentTypes(leftComponent, rightComponent, rightExpression, false);
         }
         // GRECLIPSE add -- GROOVY-8983, GROOVY-8984
@@ -1378,16 +1373,15 @@ public abstract class StaticTypeCheckingSupport {
         if (type.isArray()) {
             return fullyResolveType(type.getComponentType(), placeholders).makeArray();
         }
-        if (!type.isUsingGenerics()) {
-            return type;
-        }
         if (type.isGenericsPlaceHolder()) {
             GenericsType gt = placeholders.get(new GenericsTypeName(type.getUnresolvedName()));
             if (gt != null) {
                 return gt.getType();
             }
-            ClassNode cn = extractType(type.asGenericsType()); // GROOVY-10756
-            return cn != type ? cn : OBJECT_TYPE; // do not return placeholder
+            return type.redirect(); // GROOVY-10756: don't return placeholder
+        }
+        if (!type.isUsingGenerics()) {
+            return type;
         }
 
         GenericsType[] gts = type.getGenericsTypes();
@@ -1424,9 +1418,12 @@ public abstract class StaticTypeCheckingSupport {
             // called with null
             return !isPrimitiveType(parameterType);
         }
-        boolean isArrayParameter = parameterType.isArray();
-        if (!isAssignableTo(argumentType, parameterType)) {
-            if (isArrayParameter && lastArg) {
+        if (!isAssignableTo(argumentType, parameterType) && !lastArg) {
+            // incompatible assignment
+            return false;
+        }
+        if (!isAssignableTo(argumentType, parameterType) && lastArg) {
+            if (parameterType.isArray()) {
                 if (!isAssignableTo(argumentType, parameterType.getComponentType())) {
                     return false;
                 }
@@ -1434,21 +1431,20 @@ public abstract class StaticTypeCheckingSupport {
                 return false;
             }
         }
-        if (isArrayParameter && argumentType.isArray()) {
+        if (parameterType.isUsingGenerics() && argumentType.isUsingGenerics()) {
+            GenericsType gt = GenericsUtils.buildWildcardType(parameterType);
+            if (!gt.isCompatibleWith(argumentType)) {
+                boolean samCoercion = isSAMType(parameterType) && argumentType.equals(CLOSURE_TYPE);
+                if (!samCoercion) return false;
+            }
+        } else if (parameterType.isArray() && argumentType.isArray()) {
             // verify component type
             return typeCheckMethodArgumentWithGenerics(parameterType.getComponentType(), argumentType.getComponentType(), lastArg);
-
-        } else if (isArrayParameter && lastArg) {
+        } else if (lastArg && parameterType.isArray()) {
             // verify component type, but if we reach that point, the only possibility is that the argument is
             // the last one of the call, so we're in the cast of a vargs call
             // (otherwise, we face a type checker bug)
             return typeCheckMethodArgumentWithGenerics(parameterType.getComponentType(), argumentType, lastArg);
-
-        } else if (parameterType.isUsingGenerics() && argumentType.isUsingGenerics()) {
-            if (!GenericsUtils.buildWildcardType(parameterType).isCompatibleWith(argumentType)) {
-                boolean samCoercion = argumentType.equals(CLOSURE_TYPE) && isSAMType(parameterType);
-                if (!samCoercion) return false;
-            }
         }
         return true;
     }
@@ -1535,11 +1531,9 @@ public abstract class StaticTypeCheckingSupport {
         Map<GenericsTypeName, GenericsType> connections = new HashMap<>();
         if (isPrimitiveType(wrappedArgument)) wrappedArgument = getWrapper(wrappedArgument);
 
-        if (lastArg &&
-                type.isArray() && type.getComponentType().isGenericsPlaceHolder() &&
-                !wrappedArgument.isArray() && wrappedArgument.isGenericsPlaceHolder()) {
-            // GROOVY-8090: handle generics varargs, e.g. "U x = ...; Arrays.asList(x)"
-            // we should connect the type of vararg(e.g. T is the type of T...) to the argument type
+        // GROOVY-8090, GROOVY-11003: handle vararg generics like "T x = ...; Arrays.asList(x)"
+        if (lastArg && type.isArray() && dimensions(type) != dimensions(wrappedArgument)
+                && isUsingGenericsOrIsArrayUsingGenerics(type.getComponentType())) {
             type = type.getComponentType();
         }
         // the context we compare with in the end is the one of the callsite
@@ -1603,6 +1597,15 @@ public abstract class StaticTypeCheckingSupport {
             }
         }
         return true;
+    }
+
+    private static int dimensions(ClassNode cn) {
+        int dims = 0;
+        while (cn.isArray()) {
+            cn = cn.getComponentType();
+            dims += 1;
+        }
+        return dims;
     }
 
     private static boolean compatibleConnection(final GenericsType resolved, final GenericsType connection) {
@@ -1972,10 +1975,10 @@ public abstract class StaticTypeCheckingSupport {
         }
 
         if (type.getGenericsTypes()[0] != gt[0]) { // convert T to X
-            ClassNode cn = make(gt[0].getName());
-            cn.setRedirect(gt[0].getType());
+            ClassNode cn = make(gt[0].getName()) , erasure = getCombinedBoundType(gt[0]).redirect();
             cn.setGenericsPlaceHolder(true);
             cn.setGenericsTypes(gt);
+            cn.setRedirect(erasure);
             return cn;
         }
 

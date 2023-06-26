@@ -898,6 +898,25 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testEnumSetOf11107() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import static Numeral.*\n" +
+            "enum Numeral {\n" +
+            "  I, II, III, IV, V, VI, VII, VIII, IX, X;\n" +
+            "}\n" +
+            "EnumSet<Numeral> set = EnumSet.of(I, II, III, IV, V, VI)\n" +
+            "assert set.size() == 6\n" +
+            "assert set.contains(I)\n" +
+            "assert set.contains(V)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testEnumValues_GRE1071() {
         //@formatter:off
         String[] sources = {

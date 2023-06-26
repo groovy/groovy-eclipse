@@ -2845,7 +2845,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\t[].stream().map{item,xxxx ->}\n" +
             "\t               ^^^^^^^^^^^^^^\n" +
-            "Groovy:Incorrect number of parameters. Expected 1 but found 2\n" +
+            "Groovy:[Static type checking] - Wrong number of parameters for method target: apply(E)\n" +
             "----------\n");
     }
 

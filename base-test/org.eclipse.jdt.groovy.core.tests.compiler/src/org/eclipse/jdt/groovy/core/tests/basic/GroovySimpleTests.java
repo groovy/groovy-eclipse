@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -4312,8 +4312,39 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "8:30pm");
     }
 
-    @Test // GROOVY-9259
+    @Test // GROOVY-8164
     public void testImplementingInterface10() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C implements p.I, p.J {\n" +
+            "}\n" +
+            "C.m()\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "  static String m() {\n" +
+            "    return \"I\";\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/J.java",
+            "package p;\n" +
+            "public interface J {\n" +
+            "  static String m() {\n" +
+            "    return \"J\";\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+            "No signature of method: static C.m() is applicable for argument types: () values: []");
+    }
+
+    @Test // GROOVY-9259
+    public void testImplementingInterface11() {
         assumeTrue(isParrotParser()); // TODO: support default in antlr2 parser?
 
         //@formatter:off
@@ -5298,7 +5329,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testGroovyBug() {
+    public void testGroovyBug1() {
         //@formatter:off
         String[] sources = {
             "p/A.groovy",
@@ -5325,6 +5356,21 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "p/A.groovy",
             "package p\n" +
             "public class A<T> { }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "a");
+    }
+
+    @Test
+    public void testGroovyBug3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "static void test() {\n" +
+            "  print 'A'.with { \"${'toLowerCase'}\"() }\n" +
+            "}\n" +
+            "test()\n",
         };
         //@formatter:on
 
