@@ -116,7 +116,6 @@ import org.codehaus.groovy.transform.StaticTypesTransformation;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1012,39 +1011,56 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    /**
-     * @see #inferClosureParameterTypes
-     */
     private void inferParameterAndReturnTypesOfClosureOnRHS(final ClassNode lhsType, final ClosureExpression rhsExpression) {
-        Tuple2<ClassNode[], ClassNode> typeInfo = GenericsUtils.parameterizeSAM(lhsType);
-        Parameter[] closureParameters = getParametersSafe(rhsExpression);
-        ClassNode[] samParameterTypes = typeInfo.getV1();
+        ClassNode[] samParameterTypes;
+        {
+            Tuple2<ClassNode[], ClassNode> typeInfo = GenericsUtils.parameterizeSAM(lhsType);
+            storeInferredReturnType(rhsExpression, typeInfo.getV2());
+            samParameterTypes = typeInfo.getV1();
+        }
 
+        Parameter[] closureParameters = getParametersSafe(rhsExpression);
         if (samParameterTypes.length == 1 && hasImplicitParameter(rhsExpression)) {
             Variable it = rhsExpression.getVariableScope().getDeclaredVariable("it"); // GROOVY-7141
-            closureParameters = new Parameter[]{it instanceof Parameter ? (Parameter) it : new Parameter(dynamicType(), "")};
+            closureParameters = new Parameter[]{it instanceof Parameter ? (Parameter) it : new Parameter(dynamicType(),"it")};
         }
 
         int n = closureParameters.length;
-        if (n == samParameterTypes.length) {
+        ClassNode[] expectedTypes = samParameterTypes;
+out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0], LIST_TYPE)) // GROOVY-11092
+                && (n != 1 || !typeCheckMethodArgumentWithGenerics(GenericsUtils.nonGeneric(closureParameters[0].getOriginType()), samParameterTypes[0], false))) {
+            int itemCount = TUPLE_TYPES.indexOf(samParameterTypes[0]);
+            if (itemCount >= 0) {//Tuple[0-16]
+                if (itemCount != n) break out;
+                GenericsType[] spec = samParameterTypes[0].getGenericsTypes();
+                if (spec != null) { // edge case: raw type or Tuple0 falls through
+                    expectedTypes = Arrays.stream(spec).map(GenericsType::getType).toArray(ClassNode[]::new);
+                    break out;
+                }
+            }
+            expectedTypes = new ClassNode[n];
+            Arrays.fill(expectedTypes, inferLoopElementType(samParameterTypes[0]));
+        }
+
+        if (n == expectedTypes.length) {
             for (int i = 0; i < n; i += 1) {
                 Parameter parameter = closureParameters[i];
                 if (parameter.isDynamicTyped()) {
-                    parameter.setType(samParameterTypes[i]);
+                    parameter.setType(expectedTypes[i]); // GROOVY-11083, GROOVY-11085, et al.
                 } else {
-                    checkParamType(parameter, samParameterTypes[i], i == n-1, rhsExpression instanceof LambdaExpression);
+                    checkParamType(parameter, expectedTypes[i], i == n-1, rhsExpression instanceof LambdaExpression);
                 }
             }
+            rhsExpression.putNodeMetaData(CLOSURE_ARGUMENTS, expectedTypes);
         } else {
-            addStaticTypeError("Wrong number of parameters for method target " + toMethodParametersString(findSAM(lhsType).getName(), samParameterTypes), rhsExpression);
+            addStaticTypeError("Wrong number of parameters for method target: " + toMethodParametersString(findSAM(lhsType).getName(), samParameterTypes), rhsExpression);
         }
 
-        rhsExpression.putNodeMetaData(PARAMETER_TYPE, lhsType);
-        storeInferredReturnType(rhsExpression, typeInfo.getV2());
+        rhsExpression.putNodeMetaData(PARAMETER_TYPE, expectedTypes == samParameterTypes ? lhsType : null);
     }
 
     private void checkParamType(final Parameter source, final ClassNode target, final boolean isLast, final boolean lambda) {
-        if (/*lambda ? !source.getOriginType().equals(target) :*/!typeCheckMethodArgumentWithGenerics(source.getOriginType(), target, isLast))
+        if (/*lambda ? !source.getOriginType().isDerivedFrom(target) :*/!typeCheckMethodArgumentWithGenerics(source.getOriginType(), target, isLast))
             addStaticTypeError("Expected type " + prettyPrintType(target) + " for " + (lambda ? "lambda" : "closure") + " parameter: " + source.getName(), source);
     }
 
@@ -3140,69 +3156,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode targetType = target.getType();
                 if (targetType != null && targetType.isGenericsPlaceHolder())
                     targetType = getCombinedBoundType(targetType.asGenericsType());
-                targetType = applyGenericsContext(context, targetType); // fill place-holders
-                ClassNode[] samParamTypes = GenericsUtils.parameterizeSAM(targetType).getV1();
-
-                int n; Parameter[] p = expression.getParameters();
-                if (p == null) {
-                    // zero parameters
-                    paramTypes = ClassNode.EMPTY_ARRAY;
-                } else if ((n = p.length) == 0) {
-                    // implicit parameter(s)
-                    paramTypes = samParamTypes;
-                } else { // TODO: error for length mismatch
-                    paramTypes = Arrays.copyOf(samParamTypes, n);
-                    for (int i = 0, j = Math.min(n, samParamTypes.length); i < j; i += 1) {
-                        if (p[i].isDynamicTyped()) { p[i].setType(samParamTypes[i]); } else // GROOVY-11083
-                        checkParamType(p[i], paramTypes[i], i == n-1, expression instanceof LambdaExpression);
-                    }
-                }
-                if (paramTypes.length != samParamTypes.length) { // GROOVY-8499
-                    addError("Incorrect number of parameters. Expected " + samParamTypes.length + " but found " + paramTypes.length, expression);
-                }
-                expression.putNodeMetaData(CLOSURE_ARGUMENTS, paramTypes);
+                targetType = applyGenericsContext(context, targetType); // fill "T"
+                inferParameterAndReturnTypesOfClosureOnRHS(targetType, expression);
             }
         }
-    }
-
-    private List<ClassNode[]> getSignaturesFromHint(final MethodNode mn, final Expression hintType, final Expression options, final ASTNode usage) {
-        String hintTypeName = hintType.getText(); // load hint class using compiler's classloader
-        try {
-            Class<? extends ClosureSignatureHint> hintClass = (Class<? extends ClosureSignatureHint>) getTransformLoader().loadClass(hintTypeName);
-            List<ClassNode[]> closureSignatures = hintClass.getDeclaredConstructor().newInstance().getClosureSignatures(
-                    mn instanceof ExtensionMethodNode ? ((ExtensionMethodNode) mn).getExtensionMethodNode() : mn,
-                    typeCheckingContext.getSource(),
-                    typeCheckingContext.getCompilationUnit(),
-                    convertToStringArray(options),
-                    usage);
-            return closureSignatures;
-        } catch (ReflectiveOperationException e) {
-            throw new GroovyBugError(e);
-        }
-    }
-
-    private List<ClassNode[]> resolveWithResolver(final List<ClassNode[]> candidates, final ClassNode receiver, final Expression arguments, final ClosureExpression expression, final MethodNode selectedMethod, final Expression resolverClass, final Expression options) {
-        // initialize resolver
-        try {
-            ClassLoader transformLoader = getTransformLoader();
-            Class<? extends ClosureSignatureConflictResolver> resolver = (Class<? extends ClosureSignatureConflictResolver>) transformLoader.loadClass(resolverClass.getText());
-            ClosureSignatureConflictResolver resolverInstance = resolver.getDeclaredConstructor().newInstance();
-            return resolverInstance.resolve(
-                    candidates,
-                    receiver,
-                    arguments,
-                    expression,
-                    selectedMethod instanceof ExtensionMethodNode ? ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode() : selectedMethod,
-                    typeCheckingContext.getSource(),
-                    typeCheckingContext.getCompilationUnit(),
-                    convertToStringArray(options));
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
-            throw new GroovyBugError(e);
-        }
-    }
-
-    private ClassLoader getTransformLoader() {
-        return Optional.ofNullable(typeCheckingContext.getCompilationUnit()).map(CompilationUnit::getTransformLoader).orElseGet(() -> getSourceUnit().getClassLoader());
     }
 
     private void processClosureParams(final ClassNode receiver, final Expression arguments, final ClosureExpression expression, final MethodNode selectedMethod, final Expression hintClass, final Expression resolverClass, final Expression options) {
@@ -3281,6 +3238,60 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    private List<ClassNode[]> getSignaturesFromHint(final MethodNode method, final Expression hintType, final Expression options, final ASTNode usage) {
+        String hintTypeName = hintType.getText();
+        try {
+            // load hint class using compiler's ClassLoader
+            Class<? extends ClosureSignatureHint> hintClass = (Class<? extends ClosureSignatureHint>) getTransformLoader().loadClass(hintTypeName);
+            ClosureSignatureHint hint = hintClass.getDeclaredConstructor().newInstance();
+            return hint.getClosureSignatures(
+                    method instanceof ExtensionMethodNode ? ((ExtensionMethodNode) method).getExtensionMethodNode() : method,
+                    typeCheckingContext.getSource(),
+                    typeCheckingContext.getCompilationUnit(),
+                    convertToStringArray(options),
+                    usage);
+        } catch (ReflectiveOperationException e) {
+            throw new GroovyBugError(e);
+        }
+    }
+
+    private List<ClassNode[]> resolveWithResolver(final List<ClassNode[]> candidates, final ClassNode receiver, final Expression arguments, final ClosureExpression expression, final MethodNode method, final Expression resolverType, final Expression options) {
+        String resolverTypeName = resolverType.getText();
+        try {
+            // load conflict resolver class using compiler's ClassLoader
+            Class<? extends ClosureSignatureConflictResolver> resolverClass = (Class<? extends ClosureSignatureConflictResolver>) getTransformLoader().loadClass(resolverTypeName);
+            ClosureSignatureConflictResolver resolver = resolverClass.getDeclaredConstructor().newInstance();
+            return resolver.resolve(
+                    candidates,
+                    receiver,
+                    arguments,
+                    expression,
+                    method instanceof ExtensionMethodNode ? ((ExtensionMethodNode) method).getExtensionMethodNode() : method,
+                    typeCheckingContext.getSource(),
+                    typeCheckingContext.getCompilationUnit(),
+                    convertToStringArray(options));
+        } catch (ReflectiveOperationException e) {
+            throw new GroovyBugError(e);
+        }
+    }
+
+    private static String[] convertToStringArray(final Expression options) {
+        if (options == null) {
+            return ResolveVisitor.EMPTY_STRING_ARRAY;
+        }
+        if (options instanceof ConstantExpression) {
+            return new String[]{options.getText()};
+        }
+        if (options instanceof ListExpression) {
+            return ((ListExpression) options).getExpressions().stream().map(Expression::getText).toArray(String[]::new);
+        }
+        throw new IllegalArgumentException("Unexpected options for @ClosureParams:" + options);
+    }
+
+    private ClassLoader getTransformLoader() {
+        return Optional.ofNullable(typeCheckingContext.getCompilationUnit()).map(CompilationUnit::getTransformLoader).orElseGet(() -> getSourceUnit().getClassLoader());
+    }
+
     /**
      * Computes the inferred types of the closure parameters using the following trick:
      * <ol>
@@ -3333,19 +3344,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 signature[i] = getCombinedBoundType(gt);
             }
         }
-    }
-
-    private static String[] convertToStringArray(final Expression options) {
-        if (options == null) {
-            return ResolveVisitor.EMPTY_STRING_ARRAY;
-        }
-        if (options instanceof ConstantExpression) {
-            return new String[]{options.getText()};
-        }
-        if (options instanceof ListExpression) {
-            return ((ListExpression) options).getExpressions().stream().map(Expression::getText).toArray(String[]::new);
-        }
-        throw new IllegalArgumentException("Unexpected options for @ClosureParams:" + options);
     }
 
     private void checkClosureWithDelegatesTo(final ClassNode receiver, final MethodNode mn, final ArgumentListExpression arguments, final Parameter[] params, final Expression expression, final Parameter param) {

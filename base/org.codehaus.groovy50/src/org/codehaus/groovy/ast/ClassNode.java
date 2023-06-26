@@ -1431,8 +1431,28 @@ public class ClassNode extends AnnotatedNode {
         return ClassNodeUtils.hasPossibleStaticMethod(this, name, arguments, false);
     }
 
+    public boolean isAbstract() {
+        return (getModifiers() & ACC_ABSTRACT) != 0;
+    }
+
     public boolean isInterface() {
         return (getModifiers() & ACC_INTERFACE) != 0;
+    }
+
+    public boolean isAnnotationDefinition() {
+        return isInterface() && (getModifiers() & ACC_ANNOTATION) != 0;
+    }
+
+    public boolean isEnum() {
+        return (getModifiers() & ACC_ENUM) != 0;
+    }
+
+    public boolean isArray() {
+        return (componentType != null);
+    }
+
+    public ClassNode getComponentType() {
+        return componentType;
     }
 
     /**
@@ -1476,10 +1496,6 @@ public class ClassNode extends AnnotatedNode {
         }
     }
 
-    public boolean isAbstract() {
-        return (getModifiers() & ACC_ABSTRACT) != 0;
-    }
-
     /**
      * @return {@code true} for native and emulated (annotation based) sealed classes
      * @since 4.0.0
@@ -1494,14 +1510,6 @@ public class ClassNode extends AnnotatedNode {
         if (clazz != null) return true;
         if (redirect != null) return redirect.isResolved();
         return (componentType != null && componentType.isResolved());
-    }
-
-    public boolean isArray() {
-        return (componentType != null);
-    }
-
-    public ClassNode getComponentType() {
-        return componentType;
     }
 
     /**
@@ -1526,15 +1534,15 @@ public class ClassNode extends AnnotatedNode {
         return (redirect().name.indexOf('.') > 0);
     }
 
+    public boolean isAnnotated() {
+        return this.annotated;
+    }
+
     /**
      * Marks if the current class uses annotations or not.
      */
     public void setAnnotated(boolean annotated) {
         this.annotated = annotated;
-    }
-
-    public boolean isAnnotated() {
-        return this.annotated;
     }
 
     public GenericsType asGenericsType() {
@@ -1590,10 +1598,6 @@ public class ClassNode extends AnnotatedNode {
         return getPlainNodeReference(true);
     }
 
-    public boolean isAnnotationDefinition() {
-        return isInterface() && (getModifiers() & ACC_ANNOTATION) != 0;
-    }
-
     @Override
     public List<AnnotationNode> getAnnotations() {
         if (redirect != null)
@@ -1638,10 +1642,6 @@ public class ClassNode extends AnnotatedNode {
         Map<String, FieldNode> index = r.fieldIndex;
         r.fields.remove(index.get(oldName));
         index.remove(oldName);
-    }
-
-    public boolean isEnum() {
-        return (getModifiers() & ACC_ENUM) != 0;
     }
 
     /**
