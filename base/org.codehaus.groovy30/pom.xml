@@ -4,7 +4,7 @@
     <relativePath>../../pom.xml</relativePath>
     <groupId>org.codehaus.groovy.eclipse</groupId>
     <artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.1.0-SNAPSHOT</version>
   </parent>
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.codehaus.groovy</artifactId>

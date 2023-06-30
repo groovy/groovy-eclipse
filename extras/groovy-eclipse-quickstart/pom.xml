@@ -3,7 +3,7 @@
 
 	<artifactId>groovy-eclipse-quickstart</artifactId>
 	<groupId>org.codehaus.groovy</groupId>
-	<version>5.0.0-SNAPSHOT</version>
+	<version>5.1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Archetype: groovy-eclipse-quickstart</name>
