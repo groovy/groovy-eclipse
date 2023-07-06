@@ -100,6 +100,44 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
         }
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1492
+    void testEvalSnippet4() {
+        def (launch, thread) = runToLine(3, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('args.collect(String.&toUpperCase).first()', thread)
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.valueString == 'FOO'
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1492
+    void testEvalSnippet5() {
+        def (launch, thread) = runToLine(3, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('Arrays.stream(args).map(String::toUpperCase).skip(1).findFirst().get()', thread)
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.valueString == 'BAR'
+        } finally {
+            launch.terminate()
+        }
+    }
+
     //--------------------------------------------------------------------------
 
     IEvaluationResult evaluate(String snippet, IThread thread) {

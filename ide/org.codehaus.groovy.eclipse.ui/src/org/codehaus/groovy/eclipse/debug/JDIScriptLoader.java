@@ -30,11 +30,14 @@ import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.ParserPluginFactory;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.runtime.ScriptBytecodeAdapter;
 
 /**
  * A class loader for the script to be evaluated that has a different parent
@@ -70,6 +73,9 @@ public class JDIScriptLoader extends GroovyClassLoader {
 
     @Override
     protected CompilationUnit createCompilationUnit(CompilerConfiguration config, CodeSource source) {
+        config = new CompilerConfiguration(config);
+        config.setPluginFactory(ParserPluginFactory.antlr4()); // for java parsing
+        config.getCompilationCustomizers().addAll(config.getCompilationCustomizers()); // GROOVY-9585
         CompilationUnit compilationUnit = super.createCompilationUnit(config, source);
 
         compilationUnit.addPhaseOperation(sourceUnit -> {
@@ -90,6 +96,11 @@ public class JDIScriptLoader extends GroovyClassLoader {
                             Expression rhs = transform(b.getRightExpression());
                             return callX(varX("__comparator"), methodName, args(lhs, rhs));
                         }
+                    }
+                    if (expression instanceof MethodPointerExpression) {
+                        MethodPointerExpression m = (MethodPointerExpression) expression;
+                        return callX(classX(ScriptBytecodeAdapter.class), "getMethodPointer",
+                            args(transform(m.getExpression()), transform(m.getMethodName())));
                     }
                     if (expression instanceof StaticMethodCallExpression) {
                         // to MethodCallExpression so that JDIMetaClass#invokeStaticMethod runs
