@@ -57,6 +57,10 @@ public class JDIComparator {
         return result.getBooleanValue();
     }
 
+    public boolean isCase(Object o1, Object o2) throws DebugException {
+        return invoke("isCase", o1, o2);
+    }
+
     public boolean isEqual(Object o1, Object o2) throws DebugException {
         return invoke("compareEqual", o1, o2);
     }
@@ -81,6 +85,10 @@ public class JDIComparator {
         return invoke("compareLessThanEqual", o1, o2);
     }
 
+    public boolean isNotCase(Object o1, Object o2) throws DebugException {
+        return invoke("isNotCase", o1, o2);
+    }
+
     public boolean isNotEqual(Object o1, Object o2) throws DebugException {
         return invoke("compareNotEqual", o1, o2);
     }
@@ -91,6 +99,9 @@ public class JDIComparator {
 
     static String methodNameFor(Token operation) {
         switch (operation.getType()) {
+        case Types.COMPARE_TO:
+            return "compareTo";
+
         case Types.COMPARE_LESS_THAN:
             return "isLessThan";
 
@@ -103,6 +114,14 @@ public class JDIComparator {
         case Types.COMPARE_GREATER_THAN_EQUAL:
             return "isGreaterThanOrEqual";
 
+        case Types.KEYWORD_IN:
+        case Types.KEYWORD_INSTANCEOF:
+            return "isCase";
+
+        case Types.COMPARE_NOT_IN:
+        case Types.COMPARE_NOT_INSTANCEOF:
+            return "isNotCase";
+
         case Types.COMPARE_EQUAL:
             return "isEqual";
 
@@ -114,9 +133,6 @@ public class JDIComparator {
 
         case Types.COMPARE_NOT_IDENTICAL:
             return "isNotIdentical";
-
-        case Types.COMPARE_TO:
-            return "compareTo";
 
         default:
             return null;

@@ -29,6 +29,7 @@ import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.ILaunchManager
 import org.eclipse.debug.core.model.IThread
 import org.eclipse.jdt.debug.core.IJavaDebugTarget
+import org.eclipse.jdt.debug.core.IJavaObject
 import org.eclipse.jdt.debug.eval.IEvaluationResult
 import org.eclipse.jdt.internal.debug.ui.BreakpointUtils
 import org.junit.Before
@@ -80,8 +81,65 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
         }
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1491
+    @Test
     void testEvalSnippet3() {
+        def (launch, thread) = runToLine(3, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('"baz" in args', thread)
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.booleanValue
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test
+    void testEvalSnippet4() {
+        def (launch, thread) = runToLine(3, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('"buzz" !in args', thread)
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.booleanValue
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test
+    void testEvalSnippet5() {
+        def (launch, thread) = runToLine(3, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('args[2] <=> args[1]', thread)
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.intValue > 0 // 'baz' > 'bar'
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1491
+    void testEvalSnippet6() {
         def (launch, thread) = runToLine(4, '''\
             |public class Main {
             |  public static void main(String[] args) {
@@ -101,7 +159,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1492
-    void testEvalSnippet4() {
+    void testEvalSnippet7() {
         def (launch, thread) = runToLine(3, '''\
             |public class Main {
             |  public static void main(String[] args) {
@@ -120,7 +178,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1492
-    void testEvalSnippet5() {
+    void testEvalSnippet8() {
         def (launch, thread) = runToLine(3, '''\
             |public class Main {
             |  public static void main(String[] args) {
@@ -138,13 +196,92 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
         }
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1493
+    void testEvalSnippet9() {
+        def (launch, thread) = runToLine(4, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    var pe = new org.codehaus.groovy.ast.expr.PropertyExpression(null, "foo");
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('getProperty() instanceof ConstantExpression', thread, thread.findVariable('pe').value)
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.booleanValue
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1493
+    void testEvalSnippet10() {
+        def (launch, thread) = runToLine(4, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    var pe = new org.codehaus.groovy.ast.expr.PropertyExpression(null, "foo");
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('getProperty() !instanceof VariableExpression', thread, thread.findVariable('pe').value)
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.booleanValue
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1493
+    void testEvalSnippet11() {
+        def (launch, thread) = runToLine(3, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('getState() instanceof State', thread, thread.threadObject) // State is an inner class
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.booleanValue
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test
+    void testEvalSnippet12() {
+        def (launch, thread) = runToLine(4, '''\
+            |import static java.util.regex.Pattern.*;
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('compile("") !== null', thread) // StaticImportVisitor and JDIScriptLoader transforms
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.booleanValue
+        } finally {
+            launch.terminate()
+        }
+    }
+
     //--------------------------------------------------------------------------
 
-    IEvaluationResult evaluate(String snippet, IThread thread) {
+    IEvaluationResult evaluate(String source, IThread thread, IJavaObject o = null) {
         assert thread.isSuspended()
         def result = new SynchronousQueue<IEvaluationResult>()
         def engine = jdiPlugin.getEvaluationEngine(packageFragmentRoot.javaProject, (IJavaDebugTarget) thread.debugTarget)
-        engine.evaluate(snippet, thread.topStackFrame, result.&put, DebugEvent.EVALUATION, false)
+        engine.evaluate(source, *(o ? [o, thread] : [thread.topStackFrame]), result.&put, DebugEvent.EVALUATION, false)
         result.poll(5, TimeUnit.SECONDS)
     }
 

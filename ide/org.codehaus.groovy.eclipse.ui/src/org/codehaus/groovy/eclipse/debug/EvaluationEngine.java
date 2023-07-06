@@ -190,7 +190,23 @@ public class EvaluationEngine implements IAstEvaluationEngine {
 
     @Override
     public ICompiledExpression getCompiledExpression(String snippet, IJavaReferenceType type) throws DebugException {
-        return getCompiledExpression(snippet, type, Collections.emptyMap());
+        StringBuilder header = new StringBuilder();
+
+        String typeName = type.getName();
+        if (!typeName.endsWith("]")) {
+            int i = typeName.lastIndexOf('.');
+            if (i != -1) {
+                String packageName = typeName.substring(0, i);
+                if (!"java.lang".equals(packageName)) {
+                    header.append("import ").append(packageName);
+                    header.append(".*;\n");
+                }
+            }
+
+            header.append("import static ").append(typeName).append(".*;\n");
+        }
+
+        return getCompiledExpression(snippet, type, Collections.singletonMap("header", header.toString()));
     }
 
     @Override
