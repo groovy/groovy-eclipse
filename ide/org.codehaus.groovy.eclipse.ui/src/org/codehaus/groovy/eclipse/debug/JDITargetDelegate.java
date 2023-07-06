@@ -170,7 +170,9 @@ public class JDITargetDelegate {
     public Proxy createProxyFor(IJavaValue value) throws DebugException {
         if (value.isNull()) return null;
         Proxy jdiProxy = new JDIProxy();
-        if (value instanceof IJavaObject && value.getJavaType().getName().equals("groovy.lang.Reference")) {
+        if (value instanceof IJavaPrimitiveValue) {
+            value = toJDIObject(value); // box value
+        } else if (value.getJavaType().getName().equals("groovy.lang.Reference")) {
             value = ((IJavaObject) value).sendMessage("get", "()Ljava/lang/Object;", new IJavaValue[0], getThread(), false);
         }
         jdiProxy.setMetaClass(new JDIMetaClass(null, getMetaClass(value), this));
@@ -554,7 +556,7 @@ public class JDITargetDelegate {
     /**
      * Likely an implicit call to iterator as part of a for loop
      */
-    public Iterator<Proxy> convertToIterator(IJavaValue result, JDIMetaClass metaClass) throws DebugException {
+    public Iterator<Proxy> convertToIterator(IJavaValue result) throws DebugException {
         return new JDIIterator((IJavaObject) result, this);
     }
 

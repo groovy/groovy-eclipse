@@ -234,7 +234,7 @@ public class JDIMetaClass implements MetaClass {
                     return delegate.convertToInteger(returnValue);
                 }
                 if ("iterator".equals(methodName)) { // part of a for-each loop?
-                    return delegate.convertToIterator(returnValue, new JDIMetaClass((IJavaObject) returnValue, delegate));
+                    return delegate.convertToIterator(returnValue);
                 }
             }
             return delegate.createProxyFor(returnValue);

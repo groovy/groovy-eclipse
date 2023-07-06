@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test
 
 import static org.codehaus.groovy.eclipse.GroovyPlugin.getDefault as getGroovyPlugin
 import static org.eclipse.jdt.internal.ui.JavaPlugin.getDefault as getJavaPlugin
-import static org.eclipse.jdt.ui.PreferenceConstants.EDITOR_MARK_OCCURRENCES
 import static org.eclipse.ltk.core.refactoring.RefactoringCore.getUndoManager
 
 import groovy.transform.stc.ClosureParams
@@ -44,6 +43,9 @@ import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.core.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
+import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jface.dialogs.ErrorDialog
+import org.eclipse.jface.util.SafeRunnable
 import org.junit.After
 import org.junit.AfterClass
 import org.junit.Before
@@ -57,7 +59,9 @@ abstract class GroovyEclipseTestSuite {
 
     @BeforeClass
     static final void setUpTestSuite() {
-        testProject = new TestProject()
+        ErrorDialog.AUTOMATED_MODE = true
+        SafeRunnable.setIgnoreErrors(true)
+        this.testProject = new TestProject()
         def projectScope = new ProjectScope(testProject.project)
         projectScope.getNode(Platform.PI_RUNTIME).put(Platform.PREF_LINE_SEPARATOR, '\n')
         projectScope.getNode('org.eclipse.jdt.launching').put('org.eclipse.jdt.launching.PREF_COMPILER_COMPLIANCE_DOES_NOT_MATCH_JRE', JavaCore.IGNORE)
@@ -201,7 +205,7 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final JavaEditor openInEditor(ICompilationUnit unit) {
-        setJavaPreference(EDITOR_MARK_OCCURRENCES, false)
+        setJavaPreference(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
         EditorUtility.openInEditor(unit).tap {
             final reconcile = new java.util.concurrent.CountDownLatch(1)
             addReconcileListener(reconcile.&countDown as ReconcileListener)
@@ -222,15 +226,16 @@ abstract class GroovyEclipseTestSuite {
     //--------------------------------------------------------------------------
 
     abstract static class ReconcileListener implements org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener {
+
         @Override
         void aboutToBeReconciled() {
         }
 
         @Override
         void reconciled(org.eclipse.jdt.core.dom.CompilationUnit ast, boolean forced, org.eclipse.core.runtime.IProgressMonitor monitor) {
-            reconcile()
+            update()
         }
 
-        abstract reconcile()
+        abstract update() // bound to CountDownLatch
     }
 }
