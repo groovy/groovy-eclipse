@@ -276,10 +276,15 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 }
             }
         } else {
-            categories = scopeNode.getNodeMetaData(DefaultGroovyMethods.class, key -> {
+            categories = scopeNode.getNodeMetaData(DefaultGroovyMethods.class);
+            if (categories == null) {
                 GrapeAwareGroovyClassLoader gcl = (GrapeAwareGroovyClassLoader) ((ModuleNode) scopeNode).getUnit().getClassLoader();
-                return gcl.getDefaultCategories().stream().map(ClassNode::new).collect(Collectors.toCollection(LinkedHashSet::new));
-            });
+                categories = gcl.getDefaultCategories().stream().map(ClassNode::new).collect(Collectors.toCollection(LinkedHashSet::new));
+                synchronized (scopeNode) {
+                    Set<ClassNode> value = categories;
+                    scopeNode.getNodeMetaData(DefaultGroovyMethods.class, key -> value);
+                }
+            }
         }
 
         return categories;

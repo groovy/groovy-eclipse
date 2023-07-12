@@ -42,7 +42,7 @@
             </dependency>
             <dependency>
               <type>eclipse-plugin</type>
-              <artifactId>org.eclipse.jdt.compiler.apt</artifactId>
+              <artifactId>org.eclipse.jdt.apt.core</artifactId>
             </dependency>
             <dependency>
               <type>eclipse-plugin</type>

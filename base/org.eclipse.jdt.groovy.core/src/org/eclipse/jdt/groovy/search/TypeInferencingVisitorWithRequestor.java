@@ -3462,5 +3462,10 @@ out:    if (inferredTypes[0] == null) {
         public VisitCompleted(final VisitStatus status) {
             this.status = status;
         }
+
+        @Override @SuppressWarnings("sync-override")
+        public Throwable fillInStackTrace() {
+            return this;
+        }
     }
 }

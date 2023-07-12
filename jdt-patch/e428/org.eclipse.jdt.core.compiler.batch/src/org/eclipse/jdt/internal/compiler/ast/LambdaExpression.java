@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2012, 2019 IBM Corporation and others.
+ * Copyright (c) 2012, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -859,10 +860,10 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	public boolean isPotentiallyCompatibleWith(TypeBinding targetType, Scope skope) {
 		/* We get here only when the lambda is NOT pertinent to applicability and that too only for type elided lambdas. */
 
-		/* 15.12.2.1: A lambda expression (Â§15.27) is potentially compatible with a functional interface type (Â§9.8) if all of the following are true:
-		       â€“ The arity of the target type's function type is the same as the arity of the lambda expression.
-		       â€“ If the target type's function type has a void return, then the lambda body is either a statement expression (Â§14.8) or a void-compatible block (Â§15.27.2).
-		       â€“ If the target type's function type has a (non-void) return type, then the lambda body is either an expression or a value-compatible block (Â§15.27.2).
+		/* 15.12.2.1: A lambda expression (§15.27) is potentially compatible with a functional interface type (§9.8) if all of the following are true:
+		       – The arity of the target type's function type is the same as the arity of the lambda expression.
+		       – If the target type's function type has a void return, then the lambda body is either a statement expression (§14.8) or a void-compatible block (§15.27.2).
+		       – If the target type's function type has a (non-void) return type, then the lambda body is either an expression or a value-compatible block (§15.27.2).
 		*/
 		if (!super.isPertinentToApplicability(targetType, null))
 			return true;
@@ -1126,11 +1127,11 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	/**
 	 * @return a virgin copy of `this' by reparsing the stashed textual form.
 	 */
-	LambdaExpression copy() {
-		final Parser parser = new Parser(this.enclosingScope.problemReporter(), false);
-		char [] source = new char [this.sourceEnd+1];
+	LambdaExpression copy() { if (this.text == null) return null; // GROOVY edit
+		Parser parser = new Parser(this.enclosingScope.problemReporter(), false);
+		char[] source = new char[this.sourceEnd+1];
 		System.arraycopy(this.text, 0, source, this.sourceStart, this.sourceEnd - this.sourceStart + 1);
-		LambdaExpression copy =  (LambdaExpression) parser.parseLambdaExpression(source,this.sourceStart, this.sourceEnd - this.sourceStart + 1,
+		LambdaExpression copy = (LambdaExpression) parser.parseLambdaExpression(source, this.sourceStart, this.sourceEnd - this.sourceStart + 1,
 										this.enclosingScope.referenceCompilationUnit(), false /* record line separators */);
 
 		if (copy != null) { // ==> syntax errors == null

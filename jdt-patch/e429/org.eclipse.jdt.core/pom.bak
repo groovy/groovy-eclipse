@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2012, 2021 Eclipse Foundation and others.
+  All rights reserved. This program and the accompanying materials
+  are made available under the terms of the Eclipse Distribution License v1.0
+  which accompanies this distribution, and is available at
+  http://www.eclipse.org/org/documents/edl-v10.php
+
+  Contributors:
+     Igor Fedorenko - initial implementation
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>eclipse.jdt.core</artifactId>
+    <groupId>org.eclipse.jdt</groupId>
+    <version>4.29.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>org.eclipse.jdt.core</artifactId>
+  <version>3.35.0-SNAPSHOT</version>
+  <packaging>eclipse-plugin</packaging>
+
+  <properties>
+    <defaultSigning-excludeInnerJars>true</defaultSigning-excludeInnerJars>
+    <code.ignoredWarnings>-warn:+fieldHiding,-unavoidableGenericProblems</code.ignoredWarnings>
+  </properties>
+
+  <build>
+    <plugins>
+    <plugin>
+		<artifactId>maven-antrun-plugin</artifactId>
+		<executions>
+			<execution>
+				<phase>prepare-package</phase>
+				<configuration>
+					<target>
+						<replace token="bundle_qualifier," value="${buildQualifier}," dir="${project.build.directory}/classes">
+							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
+						</replace>
+						<replace token="bundle_version" value="${unqualifiedVersion}" dir="${project.build.directory}/classes">
+							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
+						</replace>
+						<copy todir="${project.build.directory}/jdtCompilerAdapter.jar-classes">
+							<fileset dir="${project.build.directory}/../../org.eclipse.jdt.core.compiler.batch/target/classes">
+								<include name="org/eclipse/jdt/core/*.class"/>
+								<include name="org/eclipse/jdt/internal/antadapter/**"/>
+							</fileset>
+						</copy>
+					</target>
+				</configuration>
+				<goals>
+					<goal>run</goal>
+				</goals>
+			</execution>
+		</executions>
+	  </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-batch-compiler-source</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/scripts/source</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/scripts/source</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho.extras</groupId>
+        <artifactId>tycho-custom-bundle-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <executions>
+          <execution>
+            <id>antadapter</id>
+            <phase>package</phase>
+            <goals>
+              <goal>custom-bundle</goal>
+            </goals>
+			<configuration>
+				<archive>
+					<addMavenDescriptor>false</addMavenDescriptor>
+				</archive>
+              <bundleLocation>${project.basedir}/scripts/antadapter</bundleLocation>
+              <classifier>antadapter</classifier>
+              <fileSets>
+                <fileSet>
+                  <directory>${project.build.directory}/jdtCompilerAdapter.jar-classes</directory>
+                  <excludes>
+                    <exclude>org/eclipse/jdt/core/CheckDebugAttributes*.*</exclude>
+                    <exclude>org/eclipse/jdt/core/BuildJarIndex*.*</exclude>
+                  </excludes>
+                </fileSet>
+              </fileSets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-p2-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <baselineMode>warn</baselineMode>
+          <baselineReplace>common</baselineReplace>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attached-p2-metadata</id>
+            <phase>package</phase>
+            <goals>
+              <goal>p2-metadata</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

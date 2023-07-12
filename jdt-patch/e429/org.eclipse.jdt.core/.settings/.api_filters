@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.jdt.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="926941240">
+            <message_arguments>
+                <message_argument value="3.35.0"/>
+                <message_argument value="3.34.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/AbstractTagElement.java" type="org.eclipse.jdt.core.dom.AbstractTagElement">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IDocElement"/>
+                <message_argument value="AbstractTagElement"/>
+            </message_arguments>
+        </filter>
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="AbstractTagElement"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/AbstractTextElement.java" type="org.eclipse.jdt.core.dom.AbstractTextElement">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IDocElement"/>
+                <message_argument value="AbstractTextElement"/>
+            </message_arguments>
+        </filter>
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="AbstractTextElement"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Annotation.java" type="org.eclipse.jdt.core.dom.Annotation">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IExtendedModifier"/>
+                <message_argument value="Annotation"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/AnonymousClassDeclaration.java" type="org.eclipse.jdt.core.dom.AnonymousClassDeclaration">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="AnonymousClassDeclaration"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/BodyDeclaration.java" type="org.eclipse.jdt.core.dom.BodyDeclaration">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="BodyDeclaration"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/CatchClause.java" type="org.eclipse.jdt.core.dom.CatchClause">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="CatchClause"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Comment.java" type="org.eclipse.jdt.core.dom.Comment">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="Comment"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Dimension.java" type="org.eclipse.jdt.core.dom.Dimension">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="Dimension"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Expression.java" type="org.eclipse.jdt.core.dom.Expression">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="Expression"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ImportDeclaration.java" type="org.eclipse.jdt.core.dom.ImportDeclaration">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="ImportDeclaration"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/MemberRef.java" type="org.eclipse.jdt.core.dom.MemberRef">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IDocElement"/>
+                <message_argument value="MemberRef"/>
+            </message_arguments>
+        </filter>
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="MemberRef"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/MemberValuePair.java" type="org.eclipse.jdt.core.dom.MemberValuePair">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="MemberValuePair"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/MethodRef.java" type="org.eclipse.jdt.core.dom.MethodRef">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IDocElement"/>
+                <message_argument value="MethodRef"/>
+            </message_arguments>
+        </filter>
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="MethodRef"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/MethodRefParameter.java" type="org.eclipse.jdt.core.dom.MethodRefParameter">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="MethodRefParameter"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Modifier.java" type="org.eclipse.jdt.core.dom.Modifier">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IExtendedModifier"/>
+                <message_argument value="Modifier"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ModuleQualifiedName.java" type="org.eclipse.jdt.core.dom.ModuleQualifiedName">
+        <filter comment="Java 15 Merge" id="576778288">
+            <message_arguments>
+                <message_argument value="Name"/>
+                <message_argument value="ModuleQualifiedName"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Name.java" type="org.eclipse.jdt.core.dom.Name">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IDocElement"/>
+                <message_argument value="Name"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/PackageDeclaration.java" type="org.eclipse.jdt.core.dom.PackageDeclaration">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="PackageDeclaration"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/QualifiedName.java" type="org.eclipse.jdt.core.dom.QualifiedName">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="Name"/>
+                <message_argument value="QualifiedName"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/SimpleName.java" type="org.eclipse.jdt.core.dom.SimpleName">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="Name"/>
+                <message_argument value="SimpleName"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Statement.java" type="org.eclipse.jdt.core.dom.Statement">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="Statement"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/TagProperty.java" type="org.eclipse.jdt.core.dom.TagProperty">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IDocElement"/>
+                <message_argument value="TagProperty"/>
+            </message_arguments>
+        </filter>
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="TagProperty"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Type.java" type="org.eclipse.jdt.core.dom.Type">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="Type"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/TypeParameter.java" type="org.eclipse.jdt.core.dom.TypeParameter">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="TypeParameter"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/VariableDeclaration.java" type="org.eclipse.jdt.core.dom.VariableDeclaration">
+        <filter id="576778288">
+            <message_arguments>
+                <message_argument value="ASTNode"/>
+                <message_argument value="VariableDeclaration"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/SourceRange.java" type="org.eclipse.jdt.core.SourceRange">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="ISourceRange"/>
+                <message_argument value="SourceRange"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/jdom/DOMFactory.java" type="org.eclipse.jdt.core.jdom.DOMFactory">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IDOMFactory"/>
+                <message_argument value="DOMFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/util/ByteCodeVisitorAdapter.java" type="org.eclipse.jdt.core.util.ByteCodeVisitorAdapter">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IBytecodeVisitor"/>
+                <message_argument value="ByteCodeVisitorAdapter"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/util/OpcodeStringValues.java" type="org.eclipse.jdt.core.util.OpcodeStringValues">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IOpcodeMnemonics"/>
+                <message_argument value="OpcodeStringValues"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

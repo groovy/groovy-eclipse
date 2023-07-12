@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.jdt.core.compiler.batch" version="2">
+    <resource path="META-INF/MANIFEST.MF" type="org.eclipse.jdt.core.BuildJarIndex">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.BuildJarIndex"/>
+                <message_argument value="org.eclipse.jdt.core.compiler.batch_3.33.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.eclipse.jdt.core.CheckDebugAttributes">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.CheckDebugAttributes"/>
+                <message_argument value="org.eclipse.jdt.core.compiler.batch_3.33.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/eclipse/jdt/core/JDTCompilerAdapter.java" type="org.eclipse.jdt.core.JDTCompilerAdapter">
+        <filter comment="See eclipse-pde/eclipse.pde#419 issue" id="305365105">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+                <message_argument value="org.eclipse.jdt.core.compiler.batch_3.33.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/eclipse/jdt/core/compiler/batch/BatchCompiler.java" type="org.eclipse.jdt.core.compiler.batch.BatchCompiler">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="3.4"/>
+                <message_argument value="3.33"/>
+                <message_argument value="org.eclipse.jdt.core.compiler.batch.BatchCompiler"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>
