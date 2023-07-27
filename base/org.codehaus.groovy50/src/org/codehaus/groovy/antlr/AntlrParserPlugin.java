@@ -451,13 +451,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
                 // fix the run method to contain the start and end locations of the statement block
                 MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
-                runMethod.setStart(first.getStart());
-                runMethod.setLineNumber(first.getLineNumber());
-                runMethod.setColumnNumber(first.getColumnNumber());
-                runMethod.setEnd(last.getEnd());
-                runMethod.setLastLineNumber(last.getLastLineNumber());
-                runMethod.setLastColumnNumber(last.getLastColumnNumber());
-                runMethod.addAnnotation(makeAnnotationNode(Override.class));
+                if (runMethod != null) {
+                    runMethod.setStart(first.getStart());
+                    runMethod.setLineNumber(first.getLineNumber());
+                    runMethod.setColumnNumber(first.getColumnNumber());
+                    runMethod.setEnd(last.getEnd());
+                    runMethod.setLastLineNumber(last.getLastLineNumber());
+                    runMethod.setLastColumnNumber(last.getLastColumnNumber());
+                    runMethod.addAnnotation(makeAnnotationNode(Override.class));
+                }
             }
             output.putNodeMetaData(LocationSupport.class, locations);
             // GRECLIPSE end

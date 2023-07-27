@@ -8163,6 +8163,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic10972() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.function.Function\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  LinkedList<String> list = new LinkedList<>(['works'])\n" +
+            "  Function<Integer,String> func = list::remove\n" +
+            "  print(func.apply(0))\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic11029() {
         //@formatter:off
         String[] sources = {

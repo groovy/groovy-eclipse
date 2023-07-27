@@ -21,9 +21,6 @@ import org.codehaus.groovy.ast.expr.*
 
 import static org.apache.groovy.util.BeanUtils.capitalize
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName
-import static org.codehaus.groovy.transform.NamedVariantASTTransformation.NAMED_PARAM_TYPE
-
-@Field static final ClassNode NAMED_PARAMS_TYPE = ClassHelper.makeWithoutCaching(NamedParams)
 
 // http://groovy-lang.org/metaprogramming.html#_available_ast_transformations
 
@@ -106,7 +103,7 @@ contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: an
             def resolveNewifyType = { String name ->
                 if (name.split('\\.')[-1].matches(expr.text)) {
                     ClassNode type = currentType.module.context.resolver.resolve(name)
-                    if (type != ClassHelper.DYNAMIC_TYPE) {
+                    if (!ClassHelper.isDynamicTyped(type)) {
                         addNewifyMethods(type)
                     }
                 }
@@ -221,8 +218,8 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | ha
         }
 
         Map<String, ?> requiredParams = [:], optionalParams = [:]
-        for (AnnotationNode anno : parm.getAnnotations(NAMED_PARAM_TYPE) ?:
-                parm.getAnnotations(NAMED_PARAMS_TYPE).collectMany { it.getMember('value').expressions*.value }) {
+        for (AnnotationNode anno : parm.getAnnotations(ClassHelper.make(NamedParam)) ?:
+                parm.getAnnotations(ClassHelper.make(NamedParams)).collectMany { it.getMember('value').expressions*.value }) {
             String name = anno.getMember('value').value
             def type = anno.getMember('type')?.type
             if (type == null) NamedParam.getMethod('type').defaultValue

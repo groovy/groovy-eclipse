@@ -448,6 +448,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('e('), 1, METHOD))
     }
 
+    @Test // JEP 445
+    void testMainMethod() {
+        String contents = '''\
+            |void main() {
+            |  this.toString()
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('main'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('toString'), 8, GROOVY_CALL))
+    }
+
     @Test
     void testClassMethods1() {
         String contents = '''\
@@ -1670,7 +1683,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testRecordType1() {
-        assumeTrue(isAtLeastGroovy(40) && isParrotParser())
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
 
         String contents = '''\
             |record Person(String name, Date dob = new Date()) {
@@ -1696,7 +1709,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testRecordType2() {
-        assumeTrue(isAtLeastGroovy(40) && isParrotParser())
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
 
         String contents = '''\
             |record Person(String name, Date dob) {
@@ -1721,7 +1734,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testRecordType3() {
-        assumeTrue(isAtLeastGroovy(40) && isParrotParser())
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
 
         String contents = '''\
             |public record Person<T>(String s, T t) implements Serializable {
@@ -1741,7 +1754,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testSealedClass() {
-        assumeTrue(isAtLeastGroovy(40) && isParrotParser())
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
 
         String contents = '''\
             |sealed class Foo permits Bar,Baz {

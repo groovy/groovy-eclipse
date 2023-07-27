@@ -387,13 +387,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             // fix the run method to contain the start and end locations of the statement block
             MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
-            runMethod.setStart(alpha.getStart());
-            runMethod.setLineNumber(alpha.getLineNumber());
-            runMethod.setColumnNumber(alpha.getColumnNumber());
-            runMethod.setEnd(omega.getEnd());
-            runMethod.setLastLineNumber(omega.getLastLineNumber());
-            runMethod.setLastColumnNumber(omega.getLastColumnNumber());
-            runMethod.addAnnotation(makeAnnotationNode(Override.class));
+            if (runMethod != null) {
+                runMethod.setStart(alpha.getStart());
+                runMethod.setLineNumber(alpha.getLineNumber());
+                runMethod.setColumnNumber(alpha.getColumnNumber());
+                runMethod.setEnd(omega.getEnd());
+                runMethod.setLastLineNumber(omega.getLastLineNumber());
+                runMethod.setLastColumnNumber(omega.getLastColumnNumber());
+                runMethod.addAnnotation(makeAnnotationNode(Override.class));
+            }
         }
         moduleNode.putNodeMetaData(LocationSupport.class, locationSupport);
         sourceUnit.setComments(lexer.getComments());
@@ -4353,13 +4355,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         for (int n = parameterList.size(), i = n - 1; i >= 0; i -= 1) {
             Parameter parameter = parameterList.get(i);
 
+            String name = parameter.getName();
+            if (name.equals("_")) {
+                continue; // check this later
+            }
             for (Parameter otherParameter : parameterList) {
                 if (otherParameter == parameter) {
                     continue;
                 }
 
-                if (otherParameter.getName().equals(parameter.getName())) {
-                    throw createParsingFailedException("Duplicated parameter '" + parameter.getName() + "' found.", parameter);
+                if (otherParameter.getName().equals(name)) {
+                    throw createParsingFailedException("Duplicated parameter '" + name + "' found.", parameter);
                 }
             }
         }
@@ -5152,20 +5158,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
      * Sets the script source position.
      */
     private void configureScriptClassNode() {
-        ClassNode scriptClassNode = moduleNode.getScriptClassDummy();
-
-        if (!asBoolean(scriptClassNode)) {
-            return;
-        }
-
-        List<Statement> statements = moduleNode.getStatementBlock().getStatements();
-        if (!statements.isEmpty()) {
-            Statement firstStatement = statements.get(0);
-            Statement lastStatement = statements.get(statements.size() - 1);
-
-            scriptClassNode.setSourcePosition(firstStatement);
-            scriptClassNode.setLastColumnNumber(lastStatement.getLastColumnNumber());
-            scriptClassNode.setLastLineNumber(lastStatement.getLastLineNumber());
+        var scriptClassNode = moduleNode.getScriptClassDummy();
+        if (scriptClassNode != null) {
+            List<Statement> statements = moduleNode.getStatementBlock().getStatements();
+            if (!statements.isEmpty()) {
+                Statement firstStatement = statements.get(0);
+                scriptClassNode.setSourcePosition(firstStatement);
+                Statement lastStatement  = statements.get(statements.size() - 1);
+                scriptClassNode.setLastLineNumber(lastStatement.getLastLineNumber());
+                scriptClassNode.setLastColumnNumber(lastStatement.getLastColumnNumber());
+            }
         }
     }
 

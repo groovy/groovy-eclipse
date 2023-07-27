@@ -106,7 +106,7 @@ contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: an
             def resolveNewifyType = { String name ->
                 if (name.split('\\.')[-1].matches(expr.text)) {
                     ClassNode type = currentType.module.context.resolver.resolve(name)
-                    if (type != ClassHelper.DYNAMIC_TYPE) {
+                    if (!ClassHelper.isDynamicTyped(type)) {
                         addNewifyMethods(type)
                     }
                 }

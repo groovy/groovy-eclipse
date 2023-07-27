@@ -860,10 +860,10 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	public boolean isPotentiallyCompatibleWith(TypeBinding targetType, Scope skope) {
 		/* We get here only when the lambda is NOT pertinent to applicability and that too only for type elided lambdas. */
 
-		/* 15.12.2.1: A lambda expression (§15.27) is potentially compatible with a functional interface type (§9.8) if all of the following are true:
-		       – The arity of the target type's function type is the same as the arity of the lambda expression.
-		       – If the target type's function type has a void return, then the lambda body is either a statement expression (§14.8) or a void-compatible block (§15.27.2).
-		       – If the target type's function type has a (non-void) return type, then the lambda body is either an expression or a value-compatible block (§15.27.2).
+		/* 15.12.2.1: A lambda expression (Â§15.27) is potentially compatible with a functional interface type (Â§9.8) if all of the following are true:
+		       â€“ The arity of the target type's function type is the same as the arity of the lambda expression.
+		       â€“ If the target type's function type has a void return, then the lambda body is either a statement expression (Â§14.8) or a void-compatible block (Â§15.27.2).
+		       â€“ If the target type's function type has a (non-void) return type, then the lambda body is either an expression or a value-compatible block (Â§15.27.2).
 		*/
 		if (!super.isPertinentToApplicability(targetType, null))
 			return true;

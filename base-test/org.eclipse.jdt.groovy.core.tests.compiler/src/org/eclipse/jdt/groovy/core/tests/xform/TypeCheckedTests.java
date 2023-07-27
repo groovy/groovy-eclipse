@@ -7049,6 +7049,38 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10981b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void accept(CharSequence cs) { print cs }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(I i) {\n" +
+            "  i.j.with {\n" +
+            "    if (charSequence instanceof String) {\n" +
+            "      charSequence.toUpperCase()\n" +
+            "      accept(charSequence)\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test({ -> { -> 'works' } as J } as I)\n",
+
+            "I.java",
+            "interface I {\n" +
+            "  J getJ();\n" +
+            "}\n",
+
+            "J.java",
+            "interface J {\n" +
+            "  CharSequence getCharSequence();\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testTypeChecked11083() {
         //@formatter:off
         String[] sources = {

@@ -2711,11 +2711,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (actual.equals(expect.substring(dot + 1))){
                     String pkg = expect.substring(0, dot + 1);
                     for (ImportNode sin : mod.getStarImports()) {
-                        if (sin.getPackageName().equals(pkg)) {
+                        if (pkg.equals(sin.getPackageName())) {
                             return true;
                         }
                     }
-                    return "groovy.lang.".equals(pkg);
+                    return "groovy.lang.".equals(pkg) || pkg.equals(mod.getPackageName());
                   //return Stream.of(org.codehaus.groovy.control.ResolveVisitor.DEFAULT_IMPORTS).anyMatch(pkg::equals);
                 }
             }
