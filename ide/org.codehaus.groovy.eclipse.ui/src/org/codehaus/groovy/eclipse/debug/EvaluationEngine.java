@@ -171,11 +171,16 @@ public class EvaluationEngine implements IAstEvaluationEngine {
             if (compilationUnit != null) {
                 try {
                     for (var importDeclaration : compilationUnit.getImports()) {
+                        String label = importDeclaration.getElementName();
+                        if (!importDeclaration.isOnDemand()) {
+                            int x = label.lastIndexOf(' '); if (x == -1) x = label.lastIndexOf('.');
+                            if (!snippet.contains(x == -1 ? label : label.substring(x+1))) continue;
+                        }
                         header.append("import ");
                         if (Flags.isStatic(importDeclaration.getFlags())) {
                             header.append("static ");
                         }
-                        header.append(importDeclaration.getElementName());
+                        header.append(label);
                         header.append(";\n");
                     }
                     header.append("\n");

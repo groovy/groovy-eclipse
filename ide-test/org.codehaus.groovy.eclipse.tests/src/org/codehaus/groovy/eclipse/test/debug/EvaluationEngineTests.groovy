@@ -275,6 +275,26 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
         }
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1496
+    void testEvalSnippet13() {
+        def (launch, thread) = runToLine(4, '''\
+            |import not.Found;
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('1 == 1', thread)
+            assert !result.hasErrors() : result.errorMessages[0]
+            assert result.value.booleanValue
+        } finally {
+            launch.terminate()
+        }
+    }
+
     //--------------------------------------------------------------------------
 
     IEvaluationResult evaluate(String source, IThread thread, IJavaObject o = null) {
