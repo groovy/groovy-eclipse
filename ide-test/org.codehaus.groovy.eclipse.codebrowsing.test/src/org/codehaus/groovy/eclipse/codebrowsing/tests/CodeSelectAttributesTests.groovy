@@ -15,10 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.eclipse.jdt.groovy.core.util.JavaConstants.AST_LEVEL
+
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.MethodNode
 import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.dom.*
 import org.junit.Test
 
 final class CodeSelectAttributesTests extends BrowsingTestSuite {
@@ -273,5 +276,32 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
             assert inferredElement instanceof MethodNode
             assert inferredElement.declaringClass.name == 'org.codehaus.groovy.ast.ASTNode'
         }
+
+        def unit = addGroovySource(source, nextUnitName())
+        unit = unit.reconcile(AST_LEVEL, true, null, null)
+        def elem = NodeFinder.perform(unit, source.indexOf('node'), 4)
+        assert elem instanceof Block
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1497
+    void testCodeSelectOnAttributeValue11() {
+        String source = '''\
+            |class C {
+            |  @groovy.transform.ASTTest({
+            |    node
+            |  })
+            |  void m() {
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertCodeSelect([source], 'node').with {
+            assert elementType == IJavaElement.LOCAL_VARIABLE
+        }
+
+        def unit = addGroovySource(source, nextUnitName())
+        unit = unit.reconcile(AST_LEVEL, true, null, null)
+        def elem = NodeFinder.perform(unit, source.indexOf('node'), 4)
+        assert !(elem instanceof Annotation) : 'expect closure placeholder'
     }
 }
