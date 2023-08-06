@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class ResolverCache {
      */
     public ClassNode resolve(String name) {
         if (name == null || (name = name.trim()).isEmpty()) {
-            return ClassHelper.DYNAMIC_TYPE;
+            return ClassHelper.dynamicType();
         }
         if ("void".equals(name) || "java.lang.Void".equals(name)) {
             return VariableScope.VOID_CLASS_NODE;

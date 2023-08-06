@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,8 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
     }
 
     @Override
-    public void requestClasspathContainerUpdate(final IPath containerPath, final IJavaProject javaProject, final IClasspathContainer containerSuggestion) throws CoreException {
+    public void requestClasspathContainerUpdate(final IPath containerPath, final IJavaProject javaProject, final IClasspathContainer containerSuggestion)
+            throws CoreException {
         IClasspathContainer container = JavaCore.getClasspathContainer(containerPath, javaProject);
         if (container instanceof DSLDClasspathContainer) {
             ((DSLDClasspathContainer) container).reset();

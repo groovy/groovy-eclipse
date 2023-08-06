@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -394,17 +394,17 @@ public class DSLContributionGroup extends ContributionGroup {
             String declaringType = asString(args.get("declaringType"));
             if (declaringType == null) declaringType = getTypeName(currentType);
 
-            int modifiers = 0;
-            if (isStatic) modifiers |= Flags.AccStatic;
-            if (isFinal(args)) modifiers |= Flags.AccFinal;
+            int mods = 0;
+            if (isStatic) mods |= Flags.AccStatic;
+            if (isFinal(args)) mods |= Flags.AccFinal;
 
-            String provider = asString(args.get("provider"));
-            if (provider == null) provider = this.provider;
+            String theProvider = asString(args.get("provider"));
+            if (theProvider == null) theProvider = this.provider;
 
             String doc = asString(args.get("doc"));
             boolean isDeprecated = isDeprecated(args);
 
-            contributions.add(new PropertyContributionElement(name, type, declaringType, modifiers, provider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+            contributions.add(new PropertyContributionElement(name, type, declaringType, mods, theProvider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 
@@ -423,8 +423,8 @@ public class DSLContributionGroup extends ContributionGroup {
             String declaringType = asString(args.get("declaringType"));
             if (declaringType == null) declaringType = getTypeName(currentType);
 
-            String provider = asString(args.get("provider"));
-            if (provider == null) provider = this.provider;
+            String theProvider = asString(args.get("provider"));
+            if (theProvider == null) theProvider = this.provider;
 
             String doc = asString(args.get("doc"));
             boolean isDeprecated = isDeprecated(args);
@@ -435,7 +435,7 @@ public class DSLContributionGroup extends ContributionGroup {
             ParameterContribution[] optionalParams = extractParams(args, "optionalParams");
 
             contributions.add(new MethodContributionElement(name, params, namedParams, optionalParams, returnType,
-                declaringType, isStatic, provider, doc, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+                declaringType, isStatic, theProvider, doc, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,12 +32,14 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 public class DSLDProposalFilter implements IProposalFilterExtension {
 
     @Override
-    public List<IGroovyProposal> filterProposals(List<IGroovyProposal> proposals, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+    public List<IGroovyProposal> filterProposals(List<IGroovyProposal> proposals,
+            ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         return null;
     }
 
     @Override
-    public List<ICompletionProposal> filterExtendedProposals(List<ICompletionProposal> proposals, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+    public List<ICompletionProposal> filterExtendedProposals(List<ICompletionProposal> proposals,
+                    ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         Map<String, ICompletionProposal> map = new LinkedHashMap<>();
 
         for (ICompletionProposal proposal : proposals) {
@@ -80,5 +82,6 @@ public class DSLDProposalFilter implements IProposalFilterExtension {
         return key;
     }
 
-    private static final Pattern BASE_DESC = Pattern.compile("^.* - (\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*");
+    private static final Pattern BASE_DESC = Pattern.compile("^.* - " +
+        "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*");
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -115,7 +115,8 @@ public interface IPointcut {
      * The pointcut and the contribution group are registered in the {@link DSLDStore}
      * @param contributionGroupClosure the closure that will be used by an {@link IContributionGroup}
      */
-    void accept(@DelegatesTo(value = IContributionGroup.class, strategy = Closure.DELEGATE_FIRST) @SuppressWarnings("rawtypes") Closure contributionGroupClosure);
+    @SuppressWarnings("rawtypes")
+    void accept(@DelegatesTo(value = IContributionGroup.class, strategy = Closure.DELEGATE_FIRST) Closure contributionGroupClosure);
 
     /**
      * User-readable name of the pointcut

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -80,6 +80,7 @@ public class PointcutFactory {
     private static final Set<String> deprecatedRegistry = new HashSet<>();
     static {
         // combinatorial pointcuts
+
         registerGlobalPointcut("and", AndPointcut.class, createDoc(//
             "The exclusive combination of two or more pointcuts.  The 'and' pointcut matches when all containing pointcuts match.  Also, the bindings of all containing pointcuts are combined.  This pointcut is implicitly created when using the '<em>&</em>' operator to combine two or more pointcuts.",
             "This pointcut expects one or more pointcuts as arguments.  These pointcuts can be of any kind.",
@@ -95,14 +96,15 @@ public class PointcutFactory {
             "any pointcut",
             "If the contained pointcut is not matched, then the return value is a singleton set consisting of <code>new Object()</code>, or else it is null"));
 
-
         // binding pointcuts
+
         registerGlobalPointcut("bind", BindPointcut.class, createDoc(//
             "Adds a named binding for the contained pointcut.  This pointcut is implicitly used when a named argument is applied to any other pointcut",
             "any pointcut",
             "the return value of the contained pointcut"));
 
         // semantic pointcuts
+
         registerGlobalPointcut("currentType", CurrentTypePointcut.class, createDoc(//
             "Attempts to match on the declared type of the current expression.",
             "A String, Class, or ClassNode to match against.  Alternatively, another pointcut can be passed in to match against",
@@ -113,8 +115,8 @@ public class PointcutFactory {
             "This pointcut does not take any arguments",
             "The singleton set of the current type as a ClassNode."));
 
-
         // filtering pointcuts
+
         registerGlobalPointcut("subType", SubTypePointcut.class, createDoc(//
             "Matches when the containing pointcut passes in a type (or a field or method declaration whose type) is a sub-type of the argument.",
             "A String, Class, or ClassNode specifying a type.  The type passed in must be a sub-type of this argument.",
@@ -154,11 +156,12 @@ public class PointcutFactory {
 
         registerGlobalPointcut("sourceFolderOfCurrentType", SourceFolderOfTypePointcut.class, createDoc(//
             "Matches on the source folder of the current type.",
-            "the name of the source folder to match on.  Do not include the project name or a slash at the beginning of the name.  For example, the following will match the controller folder:<pre>SourceFolderOfTypePointcut('grails-app/controllers')</pre>",
+            "The name of the source folder to match on.  Do not include the project name or a slash at the beginning of the name." +
+                "  For example, the following will match the controller folder:<pre>SourceFolderOfTypePointcut('grails-app/controllers')</pre>",
             "If there is a match, then the source folder name is returned as a singleton set, otherwise null."));
 
-
         // inside of method calls, declarations, and annotations
+
         registerGlobalPointcut("hasAttribute", HasAttributesPointcut.class, createDoc(//
             "Matches if the enclosing <code>annotatedBy</code> pointcut has attributes specified by the pointcut argument.",
             "If the enclosing argument is a String, then the match will be on the attribute name.  Otherwise, the <code>name</code> and <code>value</code> pointcuts can be used instead.",
@@ -186,8 +189,8 @@ public class PointcutFactory {
             "A String, Class object, or ClassNode corresponding to the type to match.",
             "A singleton set of the type as a Groovy ClassNode."));
 
-
         // lexical pointcuts
+
         registerGlobalPointcut("enclosingClass", EnclosingClassPointcut.class, createDoc(//
             "Matches if the current inferencing location is inside of a class or enum declaration.  A synonym for <code>isClass</code>",
             "A string, Class, ClassNode, or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing type is performed.",
@@ -258,8 +261,8 @@ public class PointcutFactory {
             "The identifier name on which to match",
             "The matched <code>ConstantExpression</code> or <code>VariableExpression</code> as a singleton set."));
 
-
         // structural pointcuts
+
         registerGlobalPointcut("fileExtension", FileExtensionPointcut.class, createDoc(//
             "Matches on the file extension of the file being inferred.",
             "The file extension without the '.'",
@@ -288,8 +291,8 @@ public class PointcutFactory {
             "The name of the source folder to match",
             "The full name of the source folder, or null if there was no match."));
 
-
         // deprecated
+
         registerGlobalPointcut("currentTypeIsEnclosingType", CurrentTypeIsEnclosingTypePointcut.class, createDoc(//
             "<b>Deprecated:</b> use <code>isThisType</code> instead.<br/><br/>" +
                 "Matches when the current type being inferred is the same as the enclosing type declaration.  " +
@@ -312,9 +315,9 @@ public class PointcutFactory {
     private static String createFind(String kind, String kinds) {
         return createDoc(
             "Matches when the containing pointcut passes in a type or a list of " + kinds + " that has at least one " + kind + " specified by the argument of this pointcut.",
-            "A String corresponding to a " + kind + ".  Alternatively, a pointcut, such as <code>annotatedBy</code>, which " + "would match all " + kinds + " annotated by the inner pointcut.",
-            "The " + kind + " or " + kinds + " matched by the argument. " + "Eg- If the surrounding pointcut passes in a type, then the value returned will be the set of all " + kinds + " in that " +
-                "type that match the contained pointcut or have the specified signature." + "  If the surrounding pointcut passes in a set of " + kinds + ", then the result will be a subset of those " + kinds + " that satisfy the contained pointcut or have the specified signature.");
+            "A String corresponding to a " + kind + ".  Alternatively, a pointcut, such as <code>annotatedBy</code>, which would match all " + kinds + " annotated by the inner pointcut.",
+            "The " + kind + " or " + kinds + " matched by the argument. Eg- If the surrounding pointcut passes in a type, then the value returned will be the set of all " + kinds + " in that " +
+                "type that match the contained pointcut or have the specified signature.  If the surrounding pointcut passes in a set of " + kinds + ", then the result will be a subset of those " + kinds + " that satisfy the contained pointcut or have the specified signature.");
     }
 
     private static String createModifier(String modifier) {

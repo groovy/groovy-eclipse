@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,6 @@ public class DSLDScriptExecutor {
                 dsldScript.setBinding(new DSLDScriptBinding(dsldScript));
 
                 return dsldScript.run();
-
             } catch (UnsupportedDSLVersion e) {
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
@@ -317,6 +316,7 @@ public class DSLDScriptExecutor {
         DSLDScriptBinding(Script dsldScript) {
             this.dsldScript = dsldScript;
         }
+
         private final Script dsldScript;
 
         @Override
@@ -367,7 +367,7 @@ public class DSLDScriptExecutor {
                 return new RegisterClosure(this);
 
             case "supportsVersion":
-                return new Closure<Object>(this) {
+                return new Closure<>(this) {
                     private static final long serialVersionUID = 1L;
 
                     @Override
@@ -378,7 +378,7 @@ public class DSLDScriptExecutor {
                 };
 
             case "assertVersion":
-                return new Closure<Object>(this) {
+                return new Closure<>(this) {
                     private static final long serialVersionUID = 1L;
 
                     @Override
@@ -392,7 +392,7 @@ public class DSLDScriptExecutor {
                 };
 
             case "contribute":
-                return new Closure<Object>(this) {
+                return new Closure<>(this) {
                     private static final long serialVersionUID = 1L;
                     @Override
                     public Object call(Object... args) {
@@ -405,7 +405,7 @@ public class DSLDScriptExecutor {
                 };
 
             case "log":
-                return new Closure<Object>(this) {
+                return new Closure<>(this) {
                     private static final long serialVersionUID = 1L;
                     @Override
                     public Object call(Object... args) {

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,6 +43,55 @@ import org.eclipse.jdt.internal.core.util.Util;
  * Performs static checking on all groovy files contained in the resource passed in.
  */
 public class ResourceTypeChecker {
+
+    private final IStaticCheckerHandler handler;
+    private final List<IResource> resources;
+
+    protected boolean onlyAssertions;
+    protected final char[][] includes;
+    protected final char[][] excludes;
+
+    public ResourceTypeChecker(IStaticCheckerHandler handler, String projectName, char[][] includes, char[][] excludes, boolean onlyAssertions) {
+        this(handler, createProject(projectName), includes, excludes, onlyAssertions);
+    }
+
+    public ResourceTypeChecker(IStaticCheckerHandler handler, List<IResource> resources, char[][] includes, char[][] excludes, boolean onlyAssertions) {
+        this.handler = handler;
+        this.resources = resources;
+        this.includes = includes;
+        this.excludes = excludes;
+        this.onlyAssertions = onlyAssertions;
+    }
+
+    private static List<IResource> createProject(String projectName) {
+        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+        if (!GroovyNature.hasGroovyNature(project)) {
+            throw new IllegalArgumentException("Invalid project: " + projectName);
+        }
+        return Collections.<IResource>singletonList(project);
+    }
+
+    /**
+     * Performs the tpe checking on the selected resources.
+     * @param monitor progress monitor, can be null
+     * @return true iff no type problems were found
+     * @throws CoreException
+     */
+    public boolean doCheck(IProgressMonitor monitor) throws CoreException {
+        if (monitor == null) {
+            monitor = new NullProgressMonitor();
+        }
+        monitor.beginTask("Static type analysis", resources.size());
+        for (IResource resource : resources) {
+            if (monitor.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+            CheckerVisitor visitor = new CheckerVisitor(monitor);
+            resource.accept(visitor);
+            monitor.worked(1);
+        }
+        return handler.finish(null);
+    }
 
     class CheckerVisitor implements IResourceVisitor {
         private IProgressMonitor monitor;
@@ -105,7 +154,7 @@ public class ResourceTypeChecker {
                 String candidate;
                 if (stok.hasMoreTokens() && (candidate = stok.nextToken()).startsWith("TYPE:")) {
                     // may or may not have a space after the colon
-                    if (candidate.equals("TYPE:")) {
+                    if ("TYPE:".equals(candidate)) {
                         if (stok.hasMoreTokens()) {
                             type = stok.nextToken();
                         }
@@ -120,54 +169,5 @@ public class ResourceTypeChecker {
             }
             return allComments;
         }
-    }
-
-    private final IStaticCheckerHandler handler;
-    private final List<IResource> resources;
-
-    protected boolean onlyAssertions;
-    protected final char[][] includes;
-    protected final char[][] excludes;
-
-    public ResourceTypeChecker(IStaticCheckerHandler handler, String projectName, char[][] includes, char[][] excludes, boolean onlyAssertions) {
-        this(handler, createProject(projectName), includes, excludes, onlyAssertions);
-    }
-
-    public ResourceTypeChecker(IStaticCheckerHandler handler, List<IResource> resources, char[][] includes, char[][] excludes, boolean onlyAssertions) {
-        this.handler = handler;
-        this.resources = resources;
-        this.includes = includes;
-        this.excludes = excludes;
-        this.onlyAssertions = onlyAssertions;
-    }
-
-    private static List<IResource> createProject(String projectName) {
-        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-        if (!GroovyNature.hasGroovyNature(project)) {
-            throw new IllegalArgumentException("Invalid project: " + projectName);
-        }
-        return Collections.<IResource>singletonList(project);
-    }
-
-    /**
-     * Performs the tpe checking on the selected resources.
-     * @param monitor progress monitor, can be null
-     * @return true iff no type problems were found
-     * @throws CoreException
-     */
-    public boolean doCheck(IProgressMonitor monitor) throws CoreException {
-        if (monitor == null) {
-            monitor = new NullProgressMonitor();
-        }
-        monitor.beginTask("Static type analysis", resources.size());
-        for (IResource resource : resources) {
-            if (monitor.isCanceled()) {
-                throw new OperationCanceledException();
-            }
-            CheckerVisitor visitor = new CheckerVisitor(monitor);
-            resource.accept(visitor);
-            monitor.worked(1);
-        }
-        return handler.finish(null);
     }
 }

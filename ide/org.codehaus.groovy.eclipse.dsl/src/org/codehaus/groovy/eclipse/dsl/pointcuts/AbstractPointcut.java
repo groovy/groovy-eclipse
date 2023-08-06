@@ -277,13 +277,28 @@ public abstract class AbstractPointcut implements IPointcut {
      */
     protected final String allArgsArePointcuts() throws PointcutVerificationException {
         for (Object arg : elements.getElements()) {
-            if (arg == null) {
-                continue;
-            }
-            if (!(arg instanceof IPointcut)) {
-                return "All arguments should be pointcuts";
-            } else {
+            if (arg instanceof IPointcut) {
                 ((IPointcut) arg).verify();
+            } else if (arg != null) {
+                return "All arguments should be pointcuts";
+            }
+        }
+        return null;
+    }
+
+    protected final String allArgsAreClasses() {
+        for (Object arg : elements.getElements()) {
+            if (arg != null && !(arg instanceof Class)) {
+                return "All arguments should be classes";
+            }
+        }
+        return null;
+    }
+
+    protected final String allArgsAreStrings() {
+        for (Object arg : elements.getElements()) {
+            if (arg != null && !(arg instanceof String)) {
+                return "All arguments should be strings";
             }
         }
         return null;
@@ -334,77 +349,42 @@ public abstract class AbstractPointcut implements IPointcut {
         }
     }
 
-    protected final String allArgsAreStrings() {
-        for (Object arg : elements.getElements()) {
-            if (arg == null) {
-                continue;
-            }
-            if (!(arg instanceof String)) {
-                return "All arguments should be strings";
-            }
-        }
-        return null;
-    }
-
     protected final String oneStringOrOnePointcutArg() throws PointcutVerificationException {
-        String maybeStatus = allArgsAreStrings();
-        String maybeStatus2 = allArgsArePointcuts();
-        if (maybeStatus != null && maybeStatus2 != null) {
+        if (allArgsArePointcuts() != null && allArgsAreStrings() != null) {
             return "This pointcut supports exactly one argument of type Pointcut or String.  Consider using '&' or '|' to connect arguments.";
         }
-        maybeStatus = hasOneArg();
-        if (maybeStatus != null) {
-            return maybeStatus;
-        }
-        return null;
+        String message = hasOneArg();
+        return message != null ? message : null;
     }
 
     protected final String oneStringOrOnePointcutOrOneClassArg() throws PointcutVerificationException {
-        String maybeStatus = allArgsAreStrings();
-        String maybeStatus2 = allArgsArePointcuts();
-        String maybeStatus3 = allArgsAreClasses();
-        if (maybeStatus != null && maybeStatus2 != null && maybeStatus3 != null) {
+        if (allArgsArePointcuts() != null && allArgsAreStrings() != null && allArgsAreClasses() != null) {
             return "This pointcut supports exactly one argument of type Pointcut or String or Class.  Consider using '&' or '|' to connect arguments.";
         }
-        maybeStatus = hasOneArg();
-        if (maybeStatus != null) {
-            return maybeStatus;
-        }
-        return null;
-    }
-
-    protected final String allArgsAreClasses() {
-        for (Object arg : elements.getElements()) {
-            if (arg == null) {
-                continue;
-            }
-            if (!(arg instanceof Class)) {
-                return "All arguments should be classes";
-            }
-        }
-        return null;
+        String message = hasOneArg();
+        return message != null ? message : null;
     }
 
     protected IPointcut and(IPointcut other) {
         AbstractPointcut andPointcut = new AndPointcut(containerIdentifier, "and");
-        andPointcut.setProject(project);
         andPointcut.addArgument(this);
         andPointcut.addArgument(other);
+        andPointcut.setProject(project);
         return andPointcut;
     }
 
     protected IPointcut or(IPointcut other) {
         AbstractPointcut orPointcut = new OrPointcut(containerIdentifier, "or");
-        orPointcut.setProject(project);
         orPointcut.addArgument(this);
         orPointcut.addArgument(other);
+        orPointcut.setProject(project);
         return orPointcut;
     }
 
     protected IPointcut bitwiseNegate() {
         AbstractPointcut notPointcut = new NotPointcut(containerIdentifier, "not");
-        notPointcut.setProject(project);
         notPointcut.addArgument(this);
+        notPointcut.setProject(project);
         return notPointcut;
     }
 
@@ -424,7 +404,7 @@ public abstract class AbstractPointcut implements IPointcut {
 
     static String spaces(int indent) {
         StringBuilder sb = new StringBuilder(indent + 2);
-        for (int i = 0; i < indent; i++) {
+        for (int i = 0; i < indent; i += 1) {
             sb.append(' ');
         }
         return sb.toString();

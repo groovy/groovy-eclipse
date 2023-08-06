@@ -181,7 +181,8 @@ public class MethodContributionElement implements IContributionElement {
 
         List<IGroovyProposal> extraProposals = new ArrayList<>(availableNamedParams.size());
         for (Map.Entry<String, ClassNode> available : availableNamedParams.entrySet()) {
-            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), getContributionName()));
+            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(),
+                                    toMethod(declaringType.redirect(), resolver), getContributionName()));
         }
         return extraProposals;
     }
@@ -226,7 +227,7 @@ public class MethodContributionElement implements IContributionElement {
         }
     }
 
-    private MethodNode toMethod(ClassNode declaringType, ResolverCache resolver) {
+    private MethodNode toMethod(final ClassNode declaringType, final ResolverCache resolver) {
         if (cachedNamedParameters == null) {
             cachedNamedParameters = toParameters(namedParams, resolver);
             cachedOptionalParameters = toParameters(optionalParams, resolver);
@@ -239,13 +240,14 @@ public class MethodContributionElement implements IContributionElement {
             if (type == declaringType) type = returnType(resolver);
             method.setDeclaringClass(type);
         } else {
-            method = new MethodContribution(methodName, modifiers(), returnType(resolver), cachedNamedParameters, cachedOptionalParameters, cachedPositionalParameters);
+            method = new MethodContribution(methodName, modifiers(), returnType(resolver),
+                cachedNamedParameters, cachedOptionalParameters, cachedPositionalParameters);
             method.setDeclaringClass(declaringType(declaringType, resolver));
         }
         return method;
     }
 
-    private static Parameter[] toParameters(ParameterContribution[] pcs, ResolverCache resolver) {
+    private static Parameter[] toParameters(final ParameterContribution[] pcs, final ResolverCache resolver) {
         Parameter[] ps;
         if (pcs == null) {
             ps = Parameter.EMPTY_ARRAY;
@@ -259,14 +261,14 @@ public class MethodContributionElement implements IContributionElement {
         return ps;
     }
 
-    private ClassNode declaringType(ClassNode lexicalDeclaringType, ResolverCache resolver) {
+    private ClassNode declaringType(final ClassNode lexicalDeclaringType, final ResolverCache resolver) {
         if (declaringType != null && cachedDeclaringType == null) {
             cachedDeclaringType = resolver.resolve(declaringType);
         }
         return cachedDeclaringType == null ? lexicalDeclaringType : cachedDeclaringType;
     }
 
-    private ClassNode returnType(ResolverCache resolver) {
+    private ClassNode returnType(final ResolverCache resolver) {
         if (cachedReturnType == null) {
             if (resolver != null) {
                 cachedReturnType = resolver.resolve(returnType);
@@ -326,7 +328,8 @@ public class MethodContributionElement implements IContributionElement {
 
     public static class MethodContribution extends MethodNode implements MethodNodeWithNamedParams {
 
-        public MethodContribution(String name, int modifiers, ClassNode returnType, Parameter[] namedParams, Parameter[] optionalParams, Parameter[] positionalParams) {
+        public MethodContribution(final String name, final int modifiers, final ClassNode returnType,
+                final Parameter[] namedParams, final Parameter[] optionalParams, final Parameter[] positionalParams) {
             super(name, modifiers, returnType, MethodNodeWithNamedParams.concatParams(positionalParams, namedParams, optionalParams), null, null);
 
             this.namedParams = namedParams;
@@ -354,7 +357,8 @@ public class MethodContributionElement implements IContributionElement {
 
     public static class ConstructorContribution extends ConstructorNode implements MethodNodeWithNamedParams {
 
-        public ConstructorContribution(int modifiers, Parameter[] namedParams, Parameter[] optionalParams, Parameter[] positionalParams) {
+        public ConstructorContribution(final int modifiers,
+                final Parameter[] namedParams, final Parameter[] optionalParams, final Parameter[] positionalParams) {
             super(modifiers, MethodNodeWithNamedParams.concatParams(positionalParams, namedParams, optionalParams), null, null);
 
             this.namedParams = namedParams;
