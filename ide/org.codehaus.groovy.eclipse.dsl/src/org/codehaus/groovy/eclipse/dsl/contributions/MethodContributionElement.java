@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
@@ -119,7 +120,8 @@ public class MethodContributionElement implements IContributionElement {
         if (name.equals(methodName)) {
             MethodNode decl = toMethod(declaringType, resolver);
             ClassNode  type = (decl instanceof ConstructorNode ? decl.getDeclaringClass() : decl.getReturnType());
-            if (!scope.isMethodCall()) {
+            if (!scope.isMethodCall() || scope.getWormhole().get("lhs") instanceof Variable &&
+                            (((Variable) scope.getWormhole().get("lhs")).getName().equals(name))) {
                 return new TypeAndDeclaration(type, decl, decl.getDeclaringClass(), doc, TypeConfidence.LOOSELY_INFERRED);
             }
 

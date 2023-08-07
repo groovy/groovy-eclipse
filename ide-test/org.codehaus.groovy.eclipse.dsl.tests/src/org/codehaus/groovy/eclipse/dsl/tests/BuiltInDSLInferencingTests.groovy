@@ -81,7 +81,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'get').with {
-            assert result.extraDoc.replace('}', '') =~ 'Delegate AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
             assert declaringTypeName == 'java.util.List<java.lang.Integer>'
             assert typeName == 'java.lang.Integer'
         }
@@ -97,7 +97,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'file').with {
-            assert result.extraDoc.replace('}', '') =~ 'Delegate AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
             assert declaringTypeName == 'java.net.URL'
             assert typeName == 'java.lang.String'
         }
@@ -167,7 +167,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'setFoo').with {
-            assert result.extraDoc.replace('}', '') =~ 'Field AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Field AST transform'
             assert declaringTypeName =~ '^TestUnit_'
             assert typeName == 'java.lang.Void'
         }
@@ -220,7 +220,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'fly').with {
-            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Mixin AST transform'
             assert declaringTypeName == 'FlyingAbility'
             assert typeName == 'java.lang.String'
         }
@@ -249,7 +249,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'dive').with {
-            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Mixin AST transform'
             assert declaringTypeName == 'DivingAbility'
             assert typeName == 'java.lang.String'
         }
@@ -278,7 +278,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'fly').with {
-            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Mixin AST transform'
             assert declaringTypeName == 'FlyingAbility'
             assert typeName == 'java.lang.String'
         }
@@ -307,7 +307,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'dive').with {
-            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Mixin AST transform'
             assert declaringTypeName == 'DivingAbility'
             assert typeName == 'java.lang.String'
         }
@@ -322,7 +322,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'instance').with {
-            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Singleton AST transform'
             assert Flags.isFinal(result.declaration.modifiers)
             assert declaringTypeName == 'A'
             assert typeName == 'A'
@@ -338,7 +338,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'getInstance').with {
-            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Singleton AST transform'
             assert declaringTypeName == 'B'
             assert typeName == 'B'
         }
@@ -353,7 +353,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'thereCanBeOnlyOne').with {
-            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Singleton AST transform'
             assert declaringTypeName == 'C'
             assert typeName == 'C'
         }
@@ -368,7 +368,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'getThereCanBeOnlyOne').with {
-            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Singleton AST transform'
             assert declaringTypeName == 'D'
             assert typeName == 'D'
         }
@@ -386,7 +386,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'compareTo').with {
-            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.lang.Integer'
         }
     }
@@ -403,7 +403,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'comparatorByValue').with {
-            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.util.Comparator'
         }
     }
@@ -421,7 +421,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'comparatorByValue').with {
-            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.util.Comparator'
         }
     }
@@ -473,7 +473,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'comparatorByValue').with {
-            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.util.Comparator'
         }
     }

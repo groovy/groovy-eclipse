@@ -95,17 +95,17 @@ contribute(dsldFile & (~insideContribution()) & currentType(subType(Script)) & (
             type: void,
             params: [versionConstraints: 'java.util.Map<java.lang.String, java.lang.String>'],
             doc: '''\
-                Specifies that this script is only active when the specified version constraints are met. The following constraint keys are available: {@code groovy}, {@code groovyEclipse}, {@code grailsTooling}, and {@code sts}.
-                <p>For example, to indicate that a script requires <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later: <code>assertVersion(groovy: '1.7.10', groovyEclipse: '2.1.3')</code>
-                '''.stripIndent()
+                |Specifies that this script is only active when the specified version constraints are met. The following constraint keys are available: {@code groovy}, {@code groovyEclipse}, {@code grailsTooling}, and {@code sts}.
+                |<p>For example, to indicate that a script requires <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later: <code>assertVersion(groovy: '1.7.10', groovyEclipse: '2.1.3')</code>
+                |'''.stripMargin()
 
     method  name: 'supportsVersion',
             type: boolean,
             params: [versionConstraints: 'java.util.Map<java.lang.String, java.lang.String>'],
             doc: '''\
-                Determines if the specified version constraints are met. The following constraint keys are available: {@code groovy}, {@code groovyEclipse}, {@code grailsTooling}, and {@code sts}.
-                <p>For example, to check for <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later: <code>def result = supportsVersion(groovy: '1.7.10', groovyEclipse: '2.1.3')</code>
-                '''.stripIndent()
+                |Determines if the specified version constraints are met. The following constraint keys are available: {@code groovy}, {@code groovyEclipse}, {@code grailsTooling}, and {@code sts}.
+                |<p>For example, to check for <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later: <code>def result = supportsVersion(groovy: '1.7.10', groovyEclipse: '2.1.3')</code>
+                |'''.stripMargin()
 
     method  name: 'log', params: [message: Object], doc: 'Logs a message to the Groovy Event Console.'
 }
@@ -113,8 +113,6 @@ contribute(dsldFile & (~insideContribution()) & currentType(subType(Script)) & (
 // Here, specify everything that can be used inside of an accept block (also called a Contribution Group)
 contribute(dsldFile & insideContribution() & isThisType()) {
     provider = 'the meta-DSLD script'
-
-    property name: 'provider', type: String, doc: 'Specifies a <em>Provider</em> for the current contribution. This is displayed during content assist and in other places to give a hint of the contribution\'s origin.'
 
     method  name: 'property',
             namedParams: [
@@ -132,17 +130,17 @@ contribute(dsldFile & insideContribution() & isThisType()) {
             noParens: true,
             type: void,
             doc: '''\
-                Specifies a new property contribution.
-                <p>
-                @param name property name
-                @param type property type (as Class, String or AST Node); type is java.lang.Object if unset
-                @param declaringType property source (as Class, String or AST Node); source is {@code currentType} if unset
-                @param isDeprecated
-                @param isStatic
-                @param readOnly
-                @param provider content assist label
-                @param doc javadoc content
-                '''.stripIndent()
+                |Specifies a new property contribution.
+                |<p>
+                |@param name property name
+                |@param type property type (as Class, String or AST Node); type is java.lang.Object if unset
+                |@param declaringType property source (as Class, String or AST Node); source is {@code currentType} if unset
+                |@param isDeprecated
+                |@param isStatic
+                |@param readOnly
+                |@param provider content assist label
+                |@param doc javadoc content
+                |'''.stripMargin()
 
     method  name: 'method',
             namedParams: [
@@ -164,50 +162,29 @@ contribute(dsldFile & insideContribution() & isThisType()) {
             noParens: true,
             type: void,
             doc: '''\
-                Specifies a new method contribution.
-                <p>
-                @param name method name
-                @param type return type (as Class, String or AST Node); type is java.lang.Object if unset
-                @param params regular (aka positional) parameter name-type pairs
-                @param namedParams named parameter name-type pairs
-                @param optionalParams named parameter name-type pairs -- not part of method's content assist completion
-                @param declaringType method source (as Class, String or AST Node); source is {@code currentType} if unset
-                @param isDeprecated
-                @param isStatic
-                @param noParens if {@code true} use command-chain style for completion
-                @param useNamedArgs if {@code true} use builder-DSL style for completion
-                @param provider content assist label
-                @param doc javadoc content
-                '''.stripIndent()
+                |Specifies a new method contribution.
+                |<p>
+                |@param name method name
+                |@param type return type (as Class, String or AST Node); type is java.lang.Object if unset
+                |@param params regular (aka positional) parameter name-type pairs
+                |@param namedParams named parameter name-type pairs
+                |@param optionalParams named parameter name-type pairs -- not part of method's content assist completion
+                |@param declaringType method source (as Class, String or AST Node); source is {@code currentType} if unset
+                |@param isDeprecated
+                |@param isStatic
+                |@param noParens if {@code true} use command-chain style for completion
+                |@param useNamedArgs if {@code true} use builder-DSL style for completion
+                |@param provider content assist label
+                |@param doc javadoc content
+                |'''.stripMargin()
 
     method  name: 'params',
             params: [node: MethodNode],
             type: 'java.util.Map<java.lang.String, org.codehaus.groovy.ast.ClassNode>',
             doc: '''\
-                Returns the parameter names and types of the given method node. Parameter name resolution is performed
-                using the enclosing project's classpath.
-                '''.stripIndent()
-
-    method  name: 'delegatesToCategory',
-            params: [type: Object],
-            isDeprecated: true,
-            type: void,
-            doc: '''\
-                Specifies that the currentType delegates to the given type. The currentType is the type being analyzed.
-                And the given type is specified as a parameter (either a String, Class, AnnotatedNode). All methods of
-                the given type will be available from the currentType.
-                '''.stripIndent()
-
-    method  name: 'delegatesToUseNamedArgs',
-            params: [type: Object],
-            isDeprecated: true,
-            type: void,
-            doc: '''\
-                Specifies that the currentType delegates to the given type.  The currentType is the type being analyzed.
-                And the given type is specified as a parameter (either a String, Class, or ClassNode). All fields and
-                methods of the given type will be available from the currentType.
-                <p>Named arguments will be used for all methods.
-                '''.stripIndent()
+                |Returns the parameter names and types of the given method node. Parameter name resolution is performed
+                |using the enclosing project's classpath.
+                |'''.stripMargin()
 
     method  name: 'delegatesTo',
             namedParams: [type: Object],
@@ -215,38 +192,67 @@ contribute(dsldFile & insideContribution() & isThisType()) {
             noParens: true,
             type: void,
             doc: '''\
-                Specifies that the currentType delegates to the given type. The currentType is the type being analyzed.
-                And the given type is specified as a parameter (either a String, Class, or ClassNode). All fields and
-                methods of the given type will be available from the currentType.
-                <p>This variant allows you to specify options through the optional arguments.
-                @param type (required) delegate type (as Class, String or AST Node)
-                @param except (optional) list of method names to exclude from the delegation
-                @param useNamed (optional) if {@code true}, named arguments are used in completion
-                @param noParens (optional) if {@code true}, parentheses are excluded from completion
-                @param asCategory (optional) if {@code true}, this delegation is treated as a category and the first
-                    parameter of each method is used to determine if it is applicable for the current caller
-                '''.stripIndent()
+                |Specifies that the currentType delegates to the given type. The currentType is the type being analyzed.
+                |And the given type is specified as a parameter (either a String, Class, or ClassNode). All fields and
+                |methods of the given type will be available from the currentType.
+                |<p>This variant allows you to specify options through the optional arguments.
+                |@param type (required) delegate type (as Class, String or AST Node)
+                |@param except (optional) list of method names to exclude from the delegation
+                |@param useNamed (optional) if {@code true}, named arguments are used in completion
+                |@param noParens (optional) if {@code true}, parentheses are excluded from completion
+                |@param asCategory (optional) if {@code true}, this delegation is treated as a category and the first
+                |    parameter of each method is used to determine if it is applicable for the current caller
+                |'''.stripMargin()
 
-    method  name: 'setDelegateType',
-            params: [type: String],
+    method  name: 'delegatesToCategory',
+            params: [type: Object],
+            isDeprecated: true,
             type: void,
             doc: '''\
-                Sets the delegate type inside a closure. This is different from {@code delegatesTo} in that the receiving
-                type is changed in the current scope. In {@code delegatesTo}, the scope is not changed -- rather, the
-                methods of the delegate are added to the target type's list of recognized methods.
-                '''.stripIndent()
+                |Specifies that the currentType delegates to the given type. The currentType is the type being analyzed.
+                |And the given type is specified as a parameter (either a String, Class, AnnotatedNode). All methods of
+                |the given type will be available from the currentType.
+                |'''.stripMargin()
 
-    method  name: 'log', params: [message: Object], doc: 'Logs a message to the Groovy Event Console.'
+    method  name: 'delegatesToUseNamedArgs',
+            params: [type: Object],
+            isDeprecated: true,
+            type: void,
+            doc: '''\
+                |Specifies that the currentType delegates to the given type.  The currentType is the type being analyzed.
+                |And the given type is specified as a parameter (either a String, Class, or ClassNode). All fields and
+                |methods of the given type will be available from the currentType.
+                |<p>Named arguments will be used for all methods.
+                |'''.stripMargin()
 
-    property name: 'currentType', type: ClassNode, doc: 'This is the declaring type of the current expression being evaluated.'
+    method  name: 'setDelegateType',
+            params: [type: Object],
+            type: void,
+            doc: '''\
+                |Sets the delegate type inside a closure. This is different from {@code delegatesTo} in that the receiving
+                |type is changed in the current scope. For {@code delegatesTo}, the scope is not changed -- rather, the
+                |methods of the delegate are added to the target type's list of recognized methods.
+                |'''.stripMargin()
 
-    property name: 'currentNode', type: ASTNode, doc: 'This is the ASTNode being evaluated.'
+    method  name: 'setProvider',
+            params: [description: String],
+            type: void,
+            doc: '''\
+                |Specifies a <em>Provider</em> for the current contribution. This is displayed during content assist and
+                |in other places to give a hint of the contribution's origin.
+                |'''.stripMargin()
 
-    property name: 'enclosingNode', type: ASTNode, doc: 'This is the ASTNode enclosing the ASTNode being evaluated.'
+    method  name: 'log', params: [object: Object], doc: 'Logs a message to the Groovy Event Console.'
 
-    property name: 'resolver', type: 'org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache', doc: 'Use the resolver to translate from class names to class nodes.'
+    property name: 'currentType', type: ClassNode, readOnly: true, doc: 'This is the declaring type of the current expression being evaluated.'
 
-    property name: 'wormhole', type: Map, doc: 'Use the wormhole to stuff in values calculated in one contribution group to make it available later in another contribution group.'
+    property name: 'currentNode', type: ASTNode, readOnly: true, doc: 'This is the ASTNode being evaluated.'
+
+    property name: 'enclosingNode', type: ASTNode, readOnly: true, doc: 'This is the ASTNode enclosing the ASTNode being evaluated.'
+
+    property name: 'resolver', type: 'org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache', readOnly: true, doc: 'Use its {@code resolve(String)} to translate from class names to class nodes.'
+
+    property name: 'wormhole', type: Map, readOnly: true, doc: 'Use the wormhole to stuff in values calculated in one contribution group to make it available later in another contribution group.'
 
     // extract all bindings from the wormhole and add them as contributions
     for (binding in wormhole.bindings) {

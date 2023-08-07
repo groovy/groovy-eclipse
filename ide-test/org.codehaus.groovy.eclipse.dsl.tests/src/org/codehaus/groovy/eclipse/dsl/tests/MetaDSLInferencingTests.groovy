@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,18 +79,18 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         def unit = addDsldSource '''\
             |currentType().accept {
             |  method
+            |  property
             |  wormhole
-            |  setDelegateType
-            |  delegatesToUseNamedArgs
             |  delegatesTo
+            |  setDelegateType('Foo')
             |}
             |'''.stripMargin()
 
         assertDsldType(unit, 'method')
+        assertDsldType(unit, 'property')
         assertDsldType(unit, 'wormhole')
-        assertDsldType(unit, 'setDelegateType')
-        assertDsldType(unit, 'delegatesToUseNamedArgs')
         assertDsldType(unit, 'delegatesTo')
+        assertDsldType(unit, 'setDelegateType')
     }
 
     @Test
@@ -100,18 +100,18 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
             |currentType().accept {
             |  String x = 'x'
             |  x.method
+            |  x.property
             |  x.wormhole
-            |  x.setDelegateType
-            |  x.delegatesToUseNamedArgs
             |  x.delegatesTo
+            |  x.setDelegateType('Foo')
             |}
             |'''.stripMargin()
 
         assertUnknown(unit, 'method')
+        assertUnknown(unit, 'property')
         assertUnknown(unit, 'wormhole')
-        assertUnknown(unit, 'setDelegateType')
-        assertUnknown(unit, 'delegatesToUseNamedArgs')
         assertUnknown(unit, 'delegatesTo')
+        assertUnknown(unit, 'setDelegateType')
     }
 
     @Test
@@ -119,17 +119,17 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         // unknown outside contribution block
         def unit = addDsldSource '''\
             |method
+            |property
             |wormhole
-            |setDelegateType
-            |delegatesToUseNamedArgs
             |delegatesTo
+            |setDelegateType('Foo')
             |'''.stripMargin()
 
         assertUnknown(unit, 'method')
+        assertUnknown(unit, 'property')
         assertUnknown(unit, 'wormhole')
-        assertUnknown(unit, 'setDelegateType')
-        assertUnknown(unit, 'delegatesToUseNamedArgs')
         assertUnknown(unit, 'delegatesTo')
+        assertUnknown(unit, 'setDelegateType')
     }
 
     @Test
@@ -138,20 +138,20 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         def unit = addGroovySource '''\
             |currentType().accept {
             |  method
+            |  property
             |  wormhole
-            |  setDelegateType
-            |  delegatesToUseNamedArgs
             |  delegatesTo
+            |  setDelegateType('Foo')
             |}
             |'''.stripMargin()
 
         assertUnknown(unit, 'currentType')
         assertUnknown(unit, 'accept')
         assertUnknown(unit, 'method')
+        assertUnknown(unit, 'property')
         assertUnknown(unit, 'wormhole')
-        assertUnknown(unit, 'setDelegateType')
-        assertUnknown(unit, 'delegatesToUseNamedArgs')
         assertUnknown(unit, 'delegatesTo')
+        assertUnknown(unit, 'setDelegateType')
     }
 
     @Test
@@ -159,9 +159,10 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         // local declarations take precedence over meta-DSL contributions
         def unit = addDsldSource '''\
             |import org.codehaus.groovy.ast.*
+            |def name = null; name = 'foobar'
             |contribute(bind(methods: enclosingMethod())) {
             |  MethodNode mn = null
-            |  for (MethodNode method in methods) {
+            |  for (MethodNode method : methods) {
             |    Parameter[] params = method.parameters
             |    // ... if (...) {
             |    mn = method
@@ -171,23 +172,36 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
             |}
             |'''.stripMargin()
 
+        assert inferType(unit, 'name = ', 4).typeName == 'java.lang.String' // not IPointcut
+
         // "method" in "Parameter[] params = method.parameters"
-        assert inferType(unit, 'method.', 'method'.length()).typeName == 'org.codehaus.groovy.ast.MethodNode'
+        assert inferType(unit, 'method.', 6).typeName == 'org.codehaus.groovy.ast.MethodNode'
 
         // "method()" in "method(name:'other', params: params(mn))"
         assert inferType(unit, 'method').result.declaration instanceof org.codehaus.groovy.ast.MethodNode
 
         // "params" in "Parameter[] params = method.parameters"
-        assert inferType(unit, 'params =', 'params'.length()).typeName == 'org.codehaus.groovy.ast.Parameter[]'
+        assert inferType(unit, 'params =', 6).typeName == 'org.codehaus.groovy.ast.Parameter[]'
 
         // "params:" in "method(name:'other', params: params(mn))"
-        assert inferType(unit, 'params:', 'params'.length()).typeName == 'java.lang.String'
+        assert inferType(unit, 'params:', 6).typeName == 'java.lang.String'
 
         // "params()" in "method(name:'other', params: params(mn))"
         inferType(unit, 'params(', 'params'.length()).with {
             assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
             assert typeName == 'java.util.Map<java.lang.String,org.codehaus.groovy.ast.ClassNode>'
         }
+    }
+
+    @Test
+    void testMetaDSL9() {
+        def unit = addDsldSource '''\
+            |contribute(inClosure()) {
+            |  delegateType = null
+            |}
+            |'''.stripMargin()
+
+        assert inferType(unit, 'delegateType').result.declaration.name == 'setDelegateType'
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/638

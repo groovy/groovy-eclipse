@@ -189,32 +189,30 @@ public class DSLContributionGroup extends ContributionGroup {
         return sb.toString();
     }
 
-    private void internalDelegatesTo(final AnnotatedNode expr, final boolean useNamedArgs, final boolean isStatic,
+    private void internalDelegatesTo(final AnnotatedNode node, final boolean useNamedArgs, final boolean isStatic,
             final boolean asCategory, final boolean isDeprecated, final List<String> exceptions, final boolean noParens) {
         if (staticScope && !isStatic && !VariableScope.CLASS_CLASS_NODE.equals(currentType)) {
             return;
         }
         ClassNode type;
-        if (expr instanceof ClassNode) {
-            type = (ClassNode) expr;
-        } else if (expr instanceof FieldNode) {
-            type = ((FieldNode) expr).getType();
-        } else if (expr instanceof MethodNode) {
-            type = ((MethodNode) expr).getReturnType();
-        } else if (expr instanceof ClassExpression) {
-            type = ((ClassExpression) expr).getType();
+        if (node instanceof ClassNode) {
+            type = (ClassNode) node;
+        } else if (node instanceof FieldNode) {
+            type = ((FieldNode) node).getType();
+        } else if (node instanceof MethodNode) {
+            type = ((MethodNode) node).getReturnType();
+        } else if (node instanceof ClassExpression) {
+            type = ((ClassExpression) node).getType();
         } else {
-            // invalid
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot invoke delegatesTo() on an invalid object: " + expr);
+                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot invoke delegatesTo() on an invalid object: " + node);
             }
             return;
         }
         if (!VariableScope.OBJECT_CLASS_NODE.equals(type)) {
             GenericsMapper mapper = GenericsMapper.gatherGenerics(type);
             Map<String, MethodNode> methods = currentType.getDeclaredMethodsMap();
-            // naked variants of getter and setter methods must be added at the end
-            // FIXADE why???
+            // variants of getter and setter methods must be added at the end
             List<IContributionElement> accessorContribs = new ArrayList<>(1);
             for (MethodNode method : type.getMethods()) {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && !method.getName().contains("$")) {
@@ -230,46 +228,34 @@ public class DSLContributionGroup extends ContributionGroup {
                     case "java.lang.Object invokeMethod(java.lang.String, java.lang.Object)":
                         continue;
                     }
-                    if (asCategory) {
-                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method, method.getReturnType(), isDeprecated, accessorContribs, noParens);
-                    } else {
-                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, method.getReturnType(), isDeprecated, accessorContribs, noParens);
+                    String name = method.getName();
+                    ParameterContribution[] params = null;
+                    if (!asCategory) {
+                        params = toParameterContribution(method.getParameters());
+                    } else if (method.getParameters() != null && method.getParameters().length > 0) {
+                        ClassNode selfType = method.getParameters()[0].getType();
+                        if (currentType.isDerivedFrom(selfType) || currentType.implementsInterface(selfType)) {
+                            params = toParameterContributionRemoveFirst(method.getParameters());
+                        }
+                    }
+                    if (params != null) {
+                        String declaringType = getTypeName(type), returnType = getTypeName(method.getReturnType());
+                        boolean staticMethod = (isStatic || !asCategory && method.isStatic()); // category methods are "non-static"
+                        contributions.add(new MethodContributionElement(name, params, NO_PARAMS, NO_PARAMS, returnType, declaringType,
+                                                staticMethod, provider, null, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+                        // add the associated property if applicable
+                        name = isAccessor(method, name, asCategory);
+                        if (name != null) {
+                            int modifiers = 0;
+                            if (staticMethod) modifiers |= Flags.AccStatic;
+                            if (type.getMethods(getSetterName(name)).isEmpty()) modifiers |= Flags.AccFinal;
+                            accessorContribs.add(new PropertyContributionElement(name, returnType, declaringType,
+                                                        modifiers, provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+                        }
                     }
                 }
             }
             contributions.addAll(accessorContribs);
-        }
-    }
-
-    // FIXADE TODO combine with #delegateToCategoryMethod
-    private void delegateToNonCategoryMethod(final boolean useNamedArgs, final boolean isStatic, final ClassNode type, final MethodNode method,
-            final ClassNode resolvedReturnType, final boolean isDeprecated, final List<IContributionElement> accessorContribs, final boolean noParens) {
-        String name = method.getName();
-        contributions.add(new MethodContributionElement(name, toParameterContribution(method.getParameters()), NO_PARAMS, NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), (method.isStatic() || isStatic), provider, null, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
-        // also add the associated property if applicable
-        if ((name = isAccessor(method, name, false)) != null) {
-            int modifiers = 0;
-            if (method.isStatic() || isStatic) modifiers |= Flags.AccStatic;
-            if (method.getDeclaringClass().getMethods(getSetterName(name)).isEmpty()) modifiers |= Flags.AccFinal;
-            accessorContribs.add(new PropertyContributionElement(name, getTypeName(resolvedReturnType), getTypeName(method.getDeclaringClass()), modifiers, provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
-        }
-    }
-
-    private void delegateToCategoryMethod(final boolean useNamedArgs, final boolean isStatic, final ClassNode type, final MethodNode method,
-            final ClassNode resolvedReturnType, final boolean isDeprecated, final List<IContributionElement> accessorContribs, final boolean noParens) {
-        String name = method.getName();
-        if (method.getParameters() != null && method.getParameters().length > 0) {
-            ClassNode firstType = method.getParameters()[0].getType();
-            if ((firstType.isInterface() && currentType.implementsInterface(firstType)) || currentType.isDerivedFrom(firstType)) {
-                contributions.add(new MethodContributionElement(name, toParameterContributionRemoveFirst(method.getParameters()), NO_PARAMS, NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), isStatic, provider, null, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
-                // also add the associated property if applicable
-                if ((name = isAccessor(method, name, true)) != null) {
-                    int modifiers = 0;
-                    if (method.isStatic() || isStatic) modifiers |= Flags.AccStatic;
-                    if (method.getDeclaringClass().getMethods(getSetterName(name)).isEmpty()) modifiers |= Flags.AccFinal;
-                    accessorContribs.add(new PropertyContributionElement(name, getTypeName(resolvedReturnType), getTypeName(method.getDeclaringClass()), modifiers, provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
-                }
-            }
         }
     }
 
@@ -375,43 +361,10 @@ public class DSLContributionGroup extends ContributionGroup {
     //--------------------------------------------------------------------------
     // methods available within contribution closure:
 
-    void provider(final Object value) {
-        provider = asString(value);
-    }
-
-    /**
-     * Adds a property to the augmented class reference.
-     */
-    void property(final Map<String, Object> args) {
-        boolean isStatic = isStatic(args);
-        if (!staticScope || (staticScope && isStatic)) {
-            String name = asString(args.get("name"));
-            if (name == null) name = NO_NAME;
-
-            String type = asString(args.get("type"));
-            if (type == null) type = NO_TYPE;
-
-            String declaringType = asString(args.get("declaringType"));
-            if (declaringType == null) declaringType = getTypeName(currentType);
-
-            int mods = 0;
-            if (isStatic) mods |= Flags.AccStatic;
-            if (isFinal(args)) mods |= Flags.AccFinal;
-
-            String theProvider = asString(args.get("provider"));
-            if (theProvider == null) theProvider = this.provider;
-
-            String doc = asString(args.get("doc"));
-            boolean isDeprecated = isDeprecated(args);
-
-            contributions.add(new PropertyContributionElement(name, type, declaringType, mods, theProvider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
-        }
-    }
-
     /**
      * Adds a method to the augmented class reference.
      */
-    void method(final Map<String, Object> args) {
+    public void method(final Map<String, Object> args) {
         boolean isStatic = isStatic(args);
         if (!staticScope || (staticScope && isStatic)) {
             String name = asString(args.get("name"));
@@ -440,13 +393,45 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     /**
-     * stub...will be used later to add templates
+     * Adds a property to the augmented class reference.
      */
-    void template(final Map<String, String> args) {
+    public void property(final Map<String, Object> args) {
+        boolean isStatic = isStatic(args);
+        if (!staticScope || (staticScope && isStatic)) {
+            String name = asString(args.get("name"));
+            if (name == null) name = NO_NAME;
+
+            String type = asString(args.get("type"));
+            if (type == null) type = NO_TYPE;
+
+            String declaringType = asString(args.get("declaringType"));
+            if (declaringType == null) declaringType = getTypeName(currentType);
+
+            int mods = 0;
+            if (isStatic) mods |= Flags.AccStatic;
+            if (isFinal(args)) mods |= Flags.AccFinal;
+
+            String theProvider = asString(args.get("provider"));
+            if (theProvider == null) theProvider = this.provider;
+
+            String doc = asString(args.get("doc"));
+            boolean isDeprecated = isDeprecated(args);
+
+            contributions.add(new PropertyContributionElement(name, type, declaringType, mods, theProvider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+        }
     }
 
+    /**
+     * TODO: will be used later to add templates
+     */
+    public void template(final Map<String, String> args) {
+    }
+
+    /**
+     * Adds all members of {@code args.type} to the augmented class reference.
+     */
     @SuppressWarnings("unchecked")
-    void delegatesTo(final Map<String, Object> args) {
+    public void delegatesTo(final Map<String, Object> args) {
         internalDelegatesTo(
             asClassNode(args.get("type")),
             asBoolean(args.get("useNamed")),
@@ -457,11 +442,14 @@ public class DSLContributionGroup extends ContributionGroup {
             asBoolean(args.get("noParens")));
     }
 
-    void delegatesTo(final String className) {
-        delegatesTo(asClassNode(className));
+    /**
+     * Adds all members of {@code node} type to the augmented class reference.
+     */
+    public void delegatesTo(final AnnotatedNode node) {
+        internalDelegatesTo(node, false, false, false, false, null, false);
     }
 
-    void delegatesTo(final Class<?> clazz) {
+    public void delegatesTo(final Class<?> clazz) {
         ClassNode resolved = asClassNode(clazz);
         if (resolved == VariableScope.OBJECT_CLASS_NODE && !clazz.getCanonicalName().equals(NO_TYPE)) {
             // likely that we are trying to resolve a class that is defined inside of a DSLD itself
@@ -474,62 +462,79 @@ public class DSLContributionGroup extends ContributionGroup {
         delegatesTo(resolved);
     }
 
+    public void delegatesTo(final String type) {
+        delegatesTo(asClassNode(type));
+    }
+
     /**
-     * Adds all members of {@code expr} type to the augmented class reference.
+     * Adds all members of {@code node} type to the augmented class reference.
      */
-    void delegatesTo(final AnnotatedNode expr) {
-        internalDelegatesTo(expr, false, false, false, false, null, false);
+    public void delegatesToUseNamedArgs(final AnnotatedNode node) {
+        internalDelegatesTo(node, true, false, false, false, null, false);
     }
 
-    void delegatesToUseNamedArgs(final String className) {
-        delegatesToUseNamedArgs(asClassNode(className));
-    }
-
-    void delegatesToUseNamedArgs(final Class<?> clazz) {
+    public void delegatesToUseNamedArgs(final Class<?> clazz) {
         delegatesToUseNamedArgs(asClassNode(clazz));
     }
 
+    public void delegatesToUseNamedArgs(final String type) {
+        delegatesToUseNamedArgs(asClassNode(type));
+    }
+
     /**
-     * Adds all members of {@code expr} type to the augmented class reference.
+     * Adds all members of {@code node} type to the augmented class reference.
      */
-    void delegatesToUseNamedArgs(final AnnotatedNode expr) {
-        internalDelegatesTo(expr, true, false, false, false, null, false);
+    public void delegatesToCategory(final AnnotatedNode node) {
+        internalDelegatesTo(node, false, false, true, false, null, false);
     }
 
-    void delegatesToCategory(final String className) {
-        delegatesToCategory(asClassNode(className));
-    }
-
-    void delegatesToCategory(final Class<?> clazz) {
+    public void delegatesToCategory(final Class<?> clazz) {
         delegatesToCategory(asClassNode(clazz));
     }
 
-    /**
-     * Adds all members of {@code expr} type to the augmented class reference.
-     */
-    void delegatesToCategory(final AnnotatedNode expr) {
-        internalDelegatesTo(expr, false, false, true, false, null, false);
+    public void delegatesToCategory(final String type) {
+        delegatesToCategory(asClassNode(type));
     }
 
-    void setDelegateType(final Object arg) {
-        ClassNode delegate = asClassNode(arg);
+    public void setDelegateType(final Object value) {
+        ClassNode delegate = asClassNode(value);
         if (delegate != null) {
             contributions.add(new EmptyContributionElement(currentType));
             scope.addVariable("delegate", delegate, VariableScope.CLOSURE_CLASS_NODE);
             scope.addVariable("getDelegate", delegate, VariableScope.CLOSURE_CLASS_NODE);
 
-            // also need to set targetType, but only if primary expression
+            // also need to set currentType, but only if primary expression
             if (isPrimaryExpression) {
-                // must save for later
                 currentType = delegate;
             }
         }
     }
 
+    public void setProvider(final String value) {
+        provider = value;
+    }
+
+    @Deprecated(since = "5.1.0")
+    public void provider(final Object value) {
+        setProvider(asString(value));
+    }
+
     /**
-     * Returns the parameter names and types of the given method node.
+     * Logs a message to the Groovy Event Console if it's open.
+     *
+     * @return the input (for inlining)
      */
-    Map<String, ClassNode> params(final MethodNode node) {
+    public Object log(final Object value) {
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "======== " + value);
+        }
+        return value;
+    }
+
+    /**
+     * Returns the parameter names and types of the given method.
+     */
+    public Map<String, ClassNode> params(final MethodNode node) {
         Parameter[] parameters = node.getParameters();
         if (parameters == null || parameters.length < 1) {
             return Collections.emptyMap();
@@ -569,15 +574,5 @@ public class DSLContributionGroup extends ContributionGroup {
             params.put(names != null ? names[i] : parameters[i].getName(), parameters[i].getType());
         }
         return params;
-    }
-
-    /**
-     * Logs a message to the Groovy Event Console log if it's open.
-     */
-    Object log(final Object msg) {
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + msg);
-        }
-        return msg;
     }
 }

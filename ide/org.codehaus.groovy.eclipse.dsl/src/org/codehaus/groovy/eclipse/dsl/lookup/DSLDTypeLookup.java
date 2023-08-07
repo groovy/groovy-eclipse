@@ -36,6 +36,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup;
+import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -53,7 +54,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     private Set<String> disabledScripts;
 
     @Override
-    public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+    public void setResolverInformation(final ModuleNode module, final JDTResolver resolver) {
         this.module = module;
         this.resolver = resolver;
     }
@@ -94,6 +95,17 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
                     TypeAndDeclaration td = contribution.resolve(name, declaringType, resolverCache, scope);
                     if (td != null) {
                         return td;
+                    }
+                }
+
+                if (scope.getWormhole().get("lhs") != null && !name.startsWith("get") &&
+                                    !name.startsWith("is") && !name.startsWith("set")) {
+                    String setterName = AccessorSupport.SETTER.createAccessorName(name);
+                    for (IContributionElement contribution : contributions) {
+                        TypeAndDeclaration td = contribution.resolve(setterName, declaringType, resolverCache, scope);
+                        if (td != null) {
+                            return td;
+                        }
                     }
                 }
             }
