@@ -658,17 +658,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private void visitMethodInternal(final MethodNode node) {
-        scopes.add(new VariableScope(scopes.getLast(), node, node.isStatic()));
         ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
         enclosingDeclarationNode = node;
         try {
-            visitConstructorOrMethod(node, node instanceof ConstructorNode || node.getName().equals("<clinit>"));
+            visitAnnotations(node); // annotations are in class scope
+            scopes.add(new VariableScope(scopes.getLast(), node, node.isStatic()));
+            try {
+                visitConstructorOrMethod(node, node instanceof ConstructorNode || node.getName().equals("<clinit>"));
+            } finally {
+                scopes.removeLast().bubbleUpdates();
+            }
         } catch (VisitCompleted vc) {
             if (vc.status == VisitStatus.STOP_VISIT) {
                 throw vc;
             }
         } finally {
-            scopes.removeLast().bubbleUpdates();
             enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
@@ -940,7 +944,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 scope.addVariable("owner", closureType, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getOwner", closureType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
-                ClassNode ownerType = scope.getThis();
+                ClassNode ownerType = parent.getThis();
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
                 VariableScope.VariableInfo info = scope.lookupName("owner");
                 if (info == null || info.type == null || info.scopeNode instanceof ClosureExpression) {
@@ -1115,7 +1119,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
             }
             if (handleParameters(node.getParameters())) {
-                visitAnnotations(node);
                 if (!isConstructor || !(node.getCode() instanceof BlockStatement)) {
                     visitClassCodeContainer(node.getCode());
                 } else {

@@ -151,4 +151,20 @@ public final class SpockInferencingTests extends InferencingTestSuite {
         assertType(source, offset, offset + 1, "java.lang.Object");
         assertDeclaringType(source, offset, offset + 1, "SpockTests");
     }
+
+    @Test
+    public void testRequiresCondition() {
+        //@formatter:off
+        String source =
+            "final class SpockTests extends spock.lang.Specification {\n" +
+            "  @spock.lang.Requires({ owner })\n" + // owner is static
+            "  void testSomething() {\n" +
+            "   expect:\n" +
+            "    true\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertType(source, "owner", "java.lang.Class<SpockTests>");
+    }
 }
