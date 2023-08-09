@@ -189,6 +189,25 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "class Foo");
     }
 
+    @Test
+    public void testTraits5a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait Introspector {\n" +
+            "  void whoAmI() { print this }\n" +
+            "}\n" +
+            "class Foo implements Introspector {\n" +
+            "  String toString() { 'Foo' }\n" +
+            "}\n" +
+            "def foo = new Foo()\n" +
+            "foo.whoAmI()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo");
+    }
+
     @Test // Interfaces
     public void testTraits6() {
         //@formatter:off
@@ -939,7 +958,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // Test @Trait annotation
+    @Test // @Trait annotation
     public void testTraits37() {
         //@formatter:off
         String[] sources = {
@@ -958,7 +977,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
-    @Test // Test @Trait annotation
+    @Test // @Trait annotation
     public void testTraits38() {
         //@formatter:off
         String[] sources = {
@@ -978,7 +997,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
-    @Test // Test @Trait annotation
+    @Test // @Trait annotation
     public void testTraits39() {
         //@formatter:off
         String[] sources = {
@@ -998,7 +1017,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
-    @Test // Negative test for @Trait annotation
+    @Test // @Trait annotation
     public void testTraits40() {
         //@formatter:off
         String[] sources = {
@@ -1022,7 +1041,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // Negative test for @Trait annotation
+    @Test // @Trait annotation
     public void testTraits41() {
         //@formatter:off
         String[] sources = {
@@ -1050,7 +1069,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // Negative test for @Trait annotation
+    @Test // @Trait annotation
     public void testTraits42() {
         //@formatter:off
         String[] sources = {
@@ -1076,7 +1095,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // Negative test for @Trait annotation
+    @Test // @Trait annotation
     public void testTraits43() {
         //@formatter:off
         String[] sources = {
@@ -1218,7 +1237,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
-    @Test // Test protected method of superclass overriding by trait method - different packages
+    @Test // protected method of superclass overriding by trait method - different packages
     public void testTraits49() {
         //@formatter:off
         String[] sources = {
@@ -1249,7 +1268,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
-    @Test // Test protected method of superclass and traits method overriding by class
+    @Test // protected method of superclass and traits method overriding by class
     public void testTraits50() {
         //@formatter:off
         String[] sources = {
@@ -1297,7 +1316,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // Test protected method of superclass and traits method overriding by class - positive test
+    @Test // protected method of superclass and traits method overriding by class - positive test
     public void testTraits52() {
         //@formatter:off
         String[] sources = {
@@ -2125,7 +2144,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "WORKS");
     }
 
-    @Ignore @Test // see also GROOVY-7950
+    @Test // see also GROOVY-7950
     public void testTraits8219() {
         //@formatter:off
         String[] sources = {
@@ -2142,7 +2161,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42");
+        runConformTest(sources, isAtLeastGroovy(50) ? "42" : "null");
     }
 
     @Test
@@ -3130,5 +3149,23 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTraits11142() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  def m() { print proxyTarget }\n" + // what about "this"
+            "}\n" +
+            "class C {\n" +
+            "  String toString() { 'C' }\n" +
+            "}\n" +
+            "(new C() as T).m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "C");
     }
 }
