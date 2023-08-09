@@ -8204,6 +8204,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic11010() {
+        assumeTrue(isParrotParser());
+
+        for (String xform : new String[] {"(String s) -> s.toInteger()", "{String s -> s.toInteger()}",
+            "(Function<String,Integer>) String::toInteger"/*, "String::toInteger", "this::m", "this.&m"*/}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "import java.util.function.*\n" +
+                "<K,V> V from(Function<K,V> f) { f.apply('42') }\n" +
+                "<V> V from(Supplier<V> s) { s.get() }\n" +
+                "int m(String str) { str.toInteger() }\n" +
+                "@groovy.transform.CompileStatic\n" +
+                "void test() {\n" +
+                "  print(from(" + xform + "))\n" +
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "42");
+        }
+    }
+
+    @Test
     public void testCompileStatic11029() {
         //@formatter:off
         String[] sources = {
