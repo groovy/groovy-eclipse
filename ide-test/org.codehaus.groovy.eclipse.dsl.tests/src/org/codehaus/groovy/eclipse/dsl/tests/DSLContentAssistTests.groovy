@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1067,11 +1067,47 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
+    void testNewifyTransform1a() {
+        String contents = '''\
+            |class Foo {
+            |  @Newify bar() {
+            |    List list = ArrayList.n
+            |    Map map = HashM
+            |  }
+            |}
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
+
+        proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HashM'))
+        proposalExists(proposals, 'HashMap', 0)
+    }
+
+    @Test
     void testNewifyTransform2() {
         String contents = '''\
             |@Newify(HashMap) class Foo {
             |  List list = ArrayList.n
             |  Map map = HashM
+            |}
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
+
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test
+    void testNewifyTransform2a() {
+        String contents = '''\
+            |class Foo {
+            |  @Newify(HashMap) bar() {
+            |    List list = ArrayList.n
+            |    Map map = HashM
+            |  }
             |}
             |'''.stripMargin()
 
@@ -1099,23 +1135,25 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNewifyTransform4() {
+    void testNewifyTransform3a() {
         String contents = '''\
-            |@Newify
-            |List list = ArrayList.n
-            |@Newify(HashMap)
-            |Map map = HashM
+            |class Foo {
+            |  @Newify(auto=false, value=HashMap) bar() {
+            |    List list = ArrayList.n
+            |    Map map = HashM
+            |  }
+            |}
             |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
-        proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
+        proposalExists(proposals, 'new', 0)
 
         proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
     @Test
-    void testNewifyTransform5() {
+    void testNewifyTransform4() {
         String contents = '''\
             |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
             |  List list = ArrayList.n
@@ -1131,7 +1169,25 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNewifyTransform5a() {
+    void testNewifyTransform4a() {
+        String contents = '''\
+            |class Foo {
+            |  @Newify(auto=false, pattern=/(Linked)?Hash.*/) bar() {
+            |    List list = ArrayList.n
+            |    Map map = HashM
+            |  }
+            |}
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 0)
+
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test
+    void testNewifyTransform5() {
         String contents = '''\
             |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
             |  Map map = LinkedH
@@ -1143,7 +1199,21 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNewifyTransform5b() {
+    void testNewifyTransform5a() {
+        String contents = '''\
+            |class Foo {
+            |  @Newify(auto=false, pattern=/(Linked)?Hash.*/) bar() {
+            |    Map map = LinkedH
+            |  }
+            |}
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedH'))
+        proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
+    }
+
+    @Test
+    void testNewifyTransform6() {
         String contents = '''\
             |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
             |  Map map = LinkedHashMap()
@@ -1152,6 +1222,54 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedHashMap'))
         proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
+    }
+
+    @Test
+    void testNewifyTransform6a() {
+        String contents = '''\
+            |class Foo {
+            | @Newify(auto=false, pattern=/(Linked)?Hash.*/) bar() {
+            |    Map map = LinkedHashMap()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedHashMap'))
+        proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
+    }
+
+    @Test // field/property annotations
+    void testNewifyTransform7() {
+        String contents = '''\
+            |class Foo {
+            |  @Newify
+            |  private List list = ArrayList.n
+            |  @Newify(HashMap)
+            |  Map map = HashM
+            |}
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
+
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test // local variable annotations
+    void testNewifyTransform8() {
+        String contents = '''\
+            |@Newify
+            |List list = ArrayList.n
+            |@Newify(HashMap)
+            |Map map = HashM
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
+
+        proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM'))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
     @Test

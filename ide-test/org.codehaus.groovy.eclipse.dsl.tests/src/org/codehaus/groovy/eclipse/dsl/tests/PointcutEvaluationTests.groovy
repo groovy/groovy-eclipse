@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import groovy.test.NotYetImplemented
 import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
@@ -90,21 +91,13 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         final String bindingToString
     }
 
-    private void doTestOfLastBindingSet(String cuContents, String pointcutText, BindingResult... results) {
-        doTestOfLastBindingSet('p', cuContents, pointcutText, results)
-    }
-
-    private void doTestOfLastBindingSet(String pkg, String cuContents, String pointcutText, BindingResult... results) {
+    private void doTestOfLastBindingSet(String pkg = 'p', String cuContents, String pointcutText, BindingResult... results) {
         GroovyCompilationUnit unit = addGroovySource(cuContents, nextUnitName(), pkg)
         BindingSet bindings = evaluateForBindings(unit, pointcutText)
         assertAllBindings(bindings, results)
     }
 
-    private void doTestOfLastMatch(String cuContents, String pointcutText, String name) {
-        doTestOfLastMatch('p', cuContents, pointcutText, name)
-    }
-
-    private void doTestOfLastMatch(String pkg, String cuContents, String pointcutText, String name) {
+    private void doTestOfLastMatch(String pkg = 'p', String cuContents, String pointcutText, String name) {
         GroovyCompilationUnit unit = addGroovySource(cuContents, nextUnitName(), pkg)
         Collection<?> match = evaluateForMatch(unit, pointcutText)
         assertSingleBinding(match, name)
@@ -398,12 +391,12 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
     @Test
     void testPackageFolder1() {
-        doTestOfLastMatch('p', '2', 'packageFolder("p")', 'p')
+        doTestOfLastMatch('2', 'packageFolder("p")', 'p')
     }
 
     @Test
     void testPackageFolder2() {
-        doTestOfLastMatch('p', '2', 'packageFolder("invalid")', null)
+        doTestOfLastMatch('2', 'packageFolder("invalid")', null)
     }
 
     @Test
@@ -421,37 +414,32 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
     @Test
     void testNamedBinding3() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | ' +
-            'bind( c : fileExtension("groovy") )',
+        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'org.eclipse.jdt.groovy.core.groovyNature'),
             new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
     @Test
     void testNamedBinding4() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) & ' +
-            'bind( c : fileExtension("groovy") )',
+        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) & bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'org.eclipse.jdt.groovy.core.groovyNature'),
             new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
     @Test
     void testNamedBinding5() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | ' +
-            'bind( c : fileExtension("invalid") )',
+        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | bind( c : fileExtension("invalid") )',
             new BindingResult('b', 'org.eclipse.jdt.groovy.core.groovyNature'))
     }
 
     @Test
     void testNamedBinding6() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) & ' +
-            'bind( c : fileExtension("groovy") )')
+        doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) & bind( c : fileExtension("groovy") )')
     }
 
     @Test
-    void testNamedBinding6a() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) | ' +
-            'bind( c : fileExtension("groovy") )',
+    void testNamedBinding7() {
+        doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) | bind( c : fileExtension("groovy") )',
             new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
@@ -463,16 +451,13 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
     @Test
     void testTypesNamedBinding2() {
-        doTestOfLastBindingSet('2', 'bind( b : currentType("java.lang.Integer") ) | ' +
-            'bind( c : fileExtension("invalid") )',
+        doTestOfLastBindingSet('2', 'bind( b : currentType("java.lang.Integer") ) | bind( c : fileExtension("invalid") )',
             new BindingResult('b', 'java.lang.Integer'))
     }
 
     @Test
     void testTypesNamedBinding3() {
-        doTestOfLastBindingSet('2',
-            'bind( b : currentType("java.lang.Integer") ) | ' +
-            'bind( c : fileExtension("groovy") )',
+        doTestOfLastBindingSet('2', 'bind( b : currentType("java.lang.Integer") ) | bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'java.lang.Integer'),
             new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
@@ -653,7 +638,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnotatedByBinding7Fail() {
+    void testAnnotatedByBinding7() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType( fields("g") & bind( b : annotatedBy("java.lang.Deprecated") ) )')
     }
@@ -682,6 +667,34 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
             |)
             |'''.stripMargin(),
             new BindingResult('b', '@java.lang.Deprecated, @java.lang.Deprecated'))
+    }
+
+    @NotYetImplemented @Test
+    void testEnclosingFieldBinding() {
+        addGroovySource('@interface Tag {\n Class<? extends Closure> value()\n}', 'Tag', 'p')
+
+        doTestOfLastBindingSet('''\
+            |class C {
+            |  @Tag({ x })
+            |  protected f
+            |}
+            |'''.stripMargin(),
+            'inClosure() & bind(f: enclosingField(annotatedBy("p.Tag")))',
+            new BindingResult('f', 'p.C.f'))
+    }
+
+    @Test
+    void testEnclosingMethodBinding() {
+        addGroovySource('@interface Tag {\n Class<? extends Closure> value()\n}', 'Tag', 'p')
+
+        doTestOfLastBindingSet('''\
+            |class C {
+            |  @Tag({ x })
+            |  void m() {}
+            |}
+            |'''.stripMargin(),
+            'inClosure() & bind(m: enclosingMethod(annotatedBy("p.Tag")))',
+            new BindingResult('m', 'p.C.m'))
     }
 
     @Test

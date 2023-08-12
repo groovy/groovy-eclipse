@@ -452,13 +452,18 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public MethodNode getEnclosingMethodDeclaration() {
-        if (scopeNode instanceof MethodNode) {
-            return (MethodNode) scopeNode;
-        } else if (parent != null) {
-            return parent.getEnclosingMethodDeclaration();
-        } else {
-            return null;
+        for (Iterator<ASTNode> it = shared.nodeStack.descendingIterator(); it.hasNext();) {
+            ASTNode node = it.next();
+            if (node instanceof MethodNode) {
+                return (MethodNode) node;
+            }
         }
+        for (VariableScope scope = this; scope != null; scope = scope.parent) {
+            if (scope.scopeNode instanceof MethodNode) {
+                return (MethodNode) scope.scopeNode;
+            }
+        }
+        return null;
     }
 
     public ClosureExpression getEnclosingClosure() {

@@ -661,8 +661,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
         enclosingDeclarationNode = node;
         try {
-            visitAnnotations(node); // annotations are in class scope
-            scopes.add(new VariableScope(scopes.getLast(), node, node.isStatic()));
+            VariableScope classScope = scopes.getLast();
+            if (isNotEmpty(node.getAnnotations())) {
+                // assert(!node.isScriptBody());
+                classScope.setCurrentNode(node);
+                try {
+                    visitAnnotations(node); // annotations are in class scope
+                } finally {
+                    classScope.forgetCurrentNode();
+                }
+            }
+
+            scopes.add(new VariableScope(classScope, node, node.isStatic()));
             try {
                 visitConstructorOrMethod(node, node instanceof ConstructorNode || node.getName().equals("<clinit>"));
             } finally {
