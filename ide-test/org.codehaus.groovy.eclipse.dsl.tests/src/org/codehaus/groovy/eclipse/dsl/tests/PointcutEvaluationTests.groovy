@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import groovy.test.NotYetImplemented
 import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
@@ -669,7 +668,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
             new BindingResult('b', '@java.lang.Deprecated, @java.lang.Deprecated'))
     }
 
-    @NotYetImplemented @Test
+    @Test
     void testEnclosingFieldBinding() {
         addGroovySource('@interface Tag {\n Class<? extends Closure> value()\n}', 'Tag', 'p')
 

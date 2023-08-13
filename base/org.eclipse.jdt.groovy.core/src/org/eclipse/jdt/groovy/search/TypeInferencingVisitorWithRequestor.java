@@ -440,11 +440,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         IJavaElement enclosingElement0 = enclosingElement;
         enclosingElement = field;
         try {
-            visitField(fieldNode);
-        } catch (VisitCompleted vc) {
-            if (vc.status == VisitStatus.STOP_VISIT) {
-                throw vc;
-            }
+            visitFieldInternal(fieldNode);
         } finally {
             enclosingElement = enclosingElement0;
         }
@@ -658,31 +654,22 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private void visitMethodInternal(final MethodNode node) {
+        scopes.add(new VariableScope(scopes.getLast(), node, true));
         ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
         enclosingDeclarationNode = node;
         try {
-            VariableScope classScope = scopes.getLast();
-            if (isNotEmpty(node.getAnnotations())) {
-                // assert(!node.isScriptBody());
-                classScope.setCurrentNode(node);
-                try {
-                    visitAnnotations(node); // annotations are in class scope
-                } finally {
-                    classScope.forgetCurrentNode();
-                }
+            visitAnnotations(node);
+            if (!node.isStatic()) {
+                scopes.removeLast();
+                scopes.add(new VariableScope(scopes.getLast(), node, false));
             }
-
-            scopes.add(new VariableScope(classScope, node, node.isStatic()));
-            try {
-                visitConstructorOrMethod(node, node instanceof ConstructorNode || node.getName().equals("<clinit>"));
-            } finally {
-                scopes.removeLast().bubbleUpdates();
-            }
+            visitConstructorOrMethod(node, node instanceof ConstructorNode || node.getName().equals("<clinit>"));
         } catch (VisitCompleted vc) {
             if (vc.status == VisitStatus.STOP_VISIT) {
                 throw vc;
             }
         } finally {
+            scopes.removeLast().bubbleUpdates();
             enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
@@ -1186,21 +1173,26 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitField(final FieldNode node) {
-        visitAnnotations(node);
-        if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
-            for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
-                if (anno.getStart() >= node.getStart() && anno.getEnd() < node.getEnd()) {
-                    visitAnnotation((AnnotationNode) anno);
-                }
-            }
-        }
-
-        VariableScope classScope = scopes.getLast(), fieldScope = new VariableScope(classScope, node, node.isStatic());
-        scopes.add(fieldScope);
-
         ASTNode enclosingDeclaration = enclosingDeclarationNode;
         enclosingDeclarationNode = node;
         try {
+            VariableScope classScope = scopes.getLast(), fieldScope = new VariableScope(classScope, node, true);
+            scopes.add(fieldScope);
+
+            visitAnnotations(node);
+            if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
+                for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
+                    if (anno.getStart() >= node.getStart() && anno.getEnd() < node.getEnd()) {
+                        visitAnnotation((AnnotationNode) anno);
+                    }
+                }
+            }
+
+            if (!node.isStatic()) {
+                scopes.removeLast();
+                scopes.add(fieldScope = new VariableScope(classScope, node, false));
+            }
+
             if (node.isDynamicTyped()) {
                 ClassNode type = node.getType();
                 if (node.hasInitialExpression()) {

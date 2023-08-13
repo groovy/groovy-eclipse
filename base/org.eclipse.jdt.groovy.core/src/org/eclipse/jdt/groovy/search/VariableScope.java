@@ -402,8 +402,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public boolean isOwnerStatic() {
-        VariableScope scope = this;
-        do {
+        for (VariableScope scope = this; scope != null; scope = scope.parent) {
             if (scope.isStatic()) {
                 return true;
             }
@@ -412,8 +411,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 scope.scopeNode instanceof MethodNode) {
                 break;
             }
-        } while ((scope = scope.parent) != null);
-
+        }
         return false;
     }
 
@@ -452,18 +450,13 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public MethodNode getEnclosingMethodDeclaration() {
-        for (Iterator<ASTNode> it = shared.nodeStack.descendingIterator(); it.hasNext();) {
-            ASTNode node = it.next();
-            if (node instanceof MethodNode) {
-                return (MethodNode) node;
-            }
+        if (scopeNode instanceof MethodNode) {
+            return (MethodNode) scopeNode;
+        } else if (parent != null) {
+            return parent.getEnclosingMethodDeclaration();
+        } else {
+            return null;
         }
-        for (VariableScope scope = this; scope != null; scope = scope.parent) {
-            if (scope.scopeNode instanceof MethodNode) {
-                return (MethodNode) scope.scopeNode;
-            }
-        }
-        return null;
     }
 
     public ClosureExpression getEnclosingClosure() {
