@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -147,9 +147,10 @@ public class GroovyParser {
             GroovyClassLoader[] classLoaders = loaderFactory.getGroovyClassLoaders(compilerConfiguration);
             // https://github.com/groovy/groovy-eclipse/issues/814
             if (allowTransforms && isReconcile) {
-                // disable Spock transform until inferencing supports it
                 Set<String> xforms = new HashSet<>();
+                // disable Spock transform until inferencing supports it
                 xforms.add("org.spockframework.compiler.SpockTransform");
+                xforms.add("org.apache.groovy.contracts.ast.ClosureExpressionEvaluationASTTransformation");
                 Optional.ofNullable(
                     compilerConfiguration.getDisabledGlobalASTTransformations()
                 ).ifPresent(xforms::addAll);
@@ -177,7 +178,6 @@ public class GroovyParser {
                 compilationUnit.getClassLoader().close();
             }
         } catch (Exception ignore) {
-            // e.printStackTrace();
         } finally {
             compilationUnit = null;
             resolver = null;

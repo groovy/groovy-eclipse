@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-   Copyright 2009-2021 the original author or authors.
+   Copyright 2009-2023 the original author or authors.
    
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
    
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
    
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -131,21 +131,13 @@
 
 <!-- GContracts -->
 
-<template name="Ensures"
-	description="GContracts postcondition(s)"
-	id="org.eclipse.jdt.ui.templates.ensures"
-	autoinsert="false"
-	context="groovy"
-	enabled="true"
->@${enclosing_type:newType(org.gcontracts.annotations.Ensures)}({ ${predicate} })</template>
-
 <template name="Invariant"
 	description="GContracts invariant(s)"
 	id="org.eclipse.jdt.ui.templates.invariant"
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->@${enclosing_type:newType(org.gcontracts.annotations.Invariant)}({ ${predicate} })</template>
+>@${enclosing_type:newType(groovy.contracts.Invariant)}({ ${predicate} })</template>
 
 <template name="Requires"
 	description="GContracts precondition(s)"
@@ -153,7 +145,15 @@
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->@${enclosing_type:newType(org.gcontracts.annotations.Requires)}({ ${predicate} })</template>
+>@${enclosing_type:newType(groovy.contracts.Requires)}({ ${predicate} })</template>
+
+<template name="Ensures"
+	description="GContracts postcondition(s)"
+	id="org.eclipse.jdt.ui.templates.ensures"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${enclosing_type:newType(groovy.contracts.Ensures)}({ ${predicate} })</template>
 
 <!-- JUnit -->
 

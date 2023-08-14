@@ -1031,7 +1031,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 } else {
                     visitClassReference(type.getInterfaces()[0]);
                 }
-            } else if (!node.isSpecialCall()) {
+            } else if (!node.isSpecialCall() && !type.isSynthetic()) {
                 visitClassReference(type);
             }
             if (node.getArguments() instanceof TupleExpression) {

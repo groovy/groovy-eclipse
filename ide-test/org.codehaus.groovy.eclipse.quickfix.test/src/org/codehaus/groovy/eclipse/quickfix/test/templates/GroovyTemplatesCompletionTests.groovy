@@ -56,9 +56,9 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         matches[0].apply(editor.viewer, 'x' as char, 0, offset)
         SynchronizationUtils.runEventQueue() // allow the change to show in the editor
 
-        String expect = expected.toString().replace('#', '').normalize()
+        String expect = expected.toString().replace('#','').normalize()
         String actual = editor.viewer.document.get().normalize()
-        assert actual == expect
+        org.junit.Assert.assertEquals(expect,actual)
     }
 
     //--------------------------------------------------------------------------
@@ -151,42 +151,38 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testGContractsEnsures() {
+    void testGContractsInvariant() {
         //@formatter:off
         String input = '''\
-            |final class SomeTest {
-            |  Ens
-            |  def meth() {
-            |  }
+            |Inv
+            |class Pogo {
             |}
             |'''.stripMargin()
         String output = '''\
-            |import org.gcontracts.annotations.Ensures
+            |import groovy.contracts.Invariant
             |
-            |final class SomeTest {
-            |  @Ensures({ predicate })
-            |  def meth() {
-            |  }
+            |@Invariant({ predicate })
+            |class Pogo {
             |}
             |'''.stripMargin()
         //@formatter:on
-        runTest(input, output, 'Ens', 'Ensures')
+        runTest(input, output, 'Inv', 'Invariant')
     }
 
     @Test
     void testGContractsRequires() {
         //@formatter:off
         String input = '''\
-            |final class SomeTest {
+            |class Pogo {
             |  Req
             |  def meth() {
             |  }
             |}
             |'''.stripMargin()
         String output = '''\
-            |import org.gcontracts.annotations.Requires
+            |import groovy.contracts.Requires
             |
-            |final class SomeTest {
+            |class Pogo {
             |  @Requires({ predicate })
             |  def meth() {
             |  }
@@ -194,5 +190,28 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
             |'''.stripMargin()
         //@formatter:on
         runTest(input, output, 'Req', 'Requires')
+    }
+
+    @Test
+    void testGContractsEnsures() {
+        //@formatter:off
+        String input = '''\
+            |class Pogo {
+            |  Ens
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import groovy.contracts.Ensures
+            |
+            |class Pogo {
+            |  @Ensures({ predicate })
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Ens', 'Ensures')
     }
 }
