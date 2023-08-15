@@ -190,8 +190,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         this.scopeNode = enclosingNode;
         this.shared = (parent != null ? parent.shared : new SharedState());
         this.enclosingCallStackDepth = this.shared.enclosingCallStack.size();
-        this.isStaticScope = (isStatic || (!(enclosingNode instanceof ClassNode) && parent != null && parent.isStaticScope)) &&
-            (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
+        this.isStaticScope = (isStatic || (parent != null && parent.isStaticScope && !(enclosingNode instanceof ClassNode)))
+                        && (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
 
         // determine if scope belongs to script body
         if (enclosingNode instanceof ClassNode || enclosingNode instanceof FieldNode) {
@@ -199,13 +199,13 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         } else if (enclosingNode instanceof MethodNode) {
             this.shared.isRunMethod = ((MethodNode) enclosingNode).isScriptBody();
         }
-        // TODO: When scope is popped, should the flag be restored to its previous value?
+        // TODO: Should the flag be restored to its previous value when scope is popped?
 
         // initialize type of "this" (and by extension "super"; see lookupName("super"))
         if (enclosingNode instanceof ClassNode) {
             ClassNode type = (ClassNode) enclosingNode;
             addVariable("this", newClassClassNode(type), type);
-        } else if (!isStatic && (parent != null && parent.scopeNode instanceof ClassNode)) {
+        } else if (!isStaticScope && !(enclosingNode instanceof ClosureExpression) && (parent != null && parent.scopeNode instanceof ClassNode)) {
             ClassNode type = (ClassNode) parent.scopeNode;
             addVariable("this", type, type); // switch from Class<T> to T
         }
@@ -412,7 +412,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 break;
             }
         }
-        return false;
+        return CLASS_CLASS_NODE.equals(getOwner());
     }
 
     public boolean isFieldAccessDirect() {

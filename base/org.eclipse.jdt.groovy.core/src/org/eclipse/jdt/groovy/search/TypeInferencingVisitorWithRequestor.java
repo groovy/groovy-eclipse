@@ -282,7 +282,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             return;
         }
 
-        scopes.add(new VariableScope(scopes.getLast(), node, false));
+        scopes.add(new VariableScope(scopes.getLast(), node, true));
         ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
         IJavaElement enclosingElement0 = enclosingElement;
         enclosingDeclarationNode = node;
@@ -316,6 +316,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 visitClassReference(face);
             }
 
+            scopes.removeLast();
+            scopes.add(new VariableScope(scopes.getLast(), node, false));
             try {
                 List<IMember> members = membersOf(type, node.isScript());
 

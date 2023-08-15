@@ -162,10 +162,46 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "      getDelegate()\n" +
             "      thisObject\n" +
             "      getThisObject()\n" +
+            "      this\n" + // lastIndexOf
             "    }\n" +
             "  }\n" +
             "}";
         //@formatter:on
+        assertType(contents, "this",            "java.lang.Class<Bar>");
+        assertType(contents, "owner",           "java.lang.Class<Bar>");
+        assertType(contents, "getOwner()",      "java.lang.Class<Bar>");
+        assertType(contents, "delegate",        "java.lang.Class<Bar>");
+        assertType(contents, "getDelegate()",   "java.lang.Class<Bar>");
+        assertType(contents, "thisObject",      "java.lang.Class<Bar>");
+        assertType(contents, "getThisObject()", "java.lang.Class<Bar>");
+    }
+
+    @Test // closure in static scope wrt owner
+    public void testClosure9a() {
+        createUnit("Foo",
+            "@interface Foo {\n" +
+            "  Class<? extends Closure> value()\n" +
+            "}\n");
+
+        //@formatter:off
+        String contents =
+            "@Foo({\n" +
+            "  baz\n" +
+            "  owner\n" +
+            "  getOwner()\n" +
+            "  delegate\n" +
+            "  getDelegate()\n" +
+            "  thisObject\n" +
+            "  getThisObject()\n" +
+            "  this\n" + // lastIndexOf
+            "})\n" +
+            "class Bar {\n" +
+            "  int baz\n" +
+            "}";
+        //@formatter:on
+        int offset = contents.indexOf("baz");
+        assertUnknownConfidence(contents, offset, offset + 3);
+        assertType(contents, "this",            "java.lang.Class<Bar>");
         assertType(contents, "owner",           "java.lang.Class<Bar>");
         assertType(contents, "getOwner()",      "java.lang.Class<Bar>");
         assertType(contents, "delegate",        "java.lang.Class<Bar>");
