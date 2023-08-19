@@ -279,12 +279,12 @@ public class GroovyUtils {
         } else if (resolved || node.getOuterClass() == null) {
             name = qualified ? node.getName() : node.getNameWithoutPackage();
         } else {
-            LinkedList<ClassNode> nodes = (LinkedList<ClassNode>) node.getOuterClasses();
-            nodes.addFirst(node);
-
-            StringBuilder sb = new StringBuilder(nodes.removeLast().getName());
-            while (!nodes.isEmpty()) {
-                sb.append('.').append(nodes.removeLast().getName().substring(sb.length()));
+            List<ClassNode> nodes = node.getOuterClasses();
+            nodes.add(0, node);
+            int i = nodes.size();
+            StringBuilder sb = new StringBuilder(nodes.get(--i).getName());
+            while (i != 0) {
+                sb.append('.').append(nodes.get(--i).getName().substring(sb.length()));
             }
             if (!qualified && node.getPackageName() != null) sb.delete(0, node.getPackageName().length() + 1);
 

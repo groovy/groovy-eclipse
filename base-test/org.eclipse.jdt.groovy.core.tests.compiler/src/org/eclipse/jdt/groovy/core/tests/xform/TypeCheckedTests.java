@@ -7045,7 +7045,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "1");
+        runConformTest(sources, isAtLeastGroovy(50) ? "2" : "1");
     }
 
     @Test

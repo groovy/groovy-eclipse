@@ -195,7 +195,7 @@ public class ClassHelper {
     }
     // GRECLIPSE end
 
-    protected static final ClassNode[] EMPTY_TYPE_ARRAY = {};
+    protected static final ClassNode[] EMPTY_TYPE_ARRAY = ClassNode.EMPTY_ARRAY;
 
     public static final String OBJECT = "java.lang.Object";
 

@@ -896,7 +896,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode outerClass = getClassOrScript(otherClass);
         String innerClassName = outerClass.getName() + "$" + (anonymousClassCount(outerClass) + 1);
         if (enumConstantBeingDef) {
-            classNode = new EnumConstantClassNode(outerClass, innerClassName, Opcodes.ACC_ENUM | Opcodes.ACC_FINAL, ClassHelper.OBJECT_TYPE);
+            classNode = new EnumConstantClassNode(outerClass, innerClassName, ClassHelper.OBJECT_TYPE);
         } else {
             classNode = new InnerClassNode(outerClass, innerClassName, Opcodes.ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         }
