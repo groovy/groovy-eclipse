@@ -61,7 +61,6 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
@@ -1247,6 +1246,73 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 */
 	protected WeakHashMap<AbstractSearchScope, ?> searchScopes = new WeakHashMap<>();
 
+	/**
+	 * Current secondary types cache and temporary indexing cache
+	 *
+	 * @param secondaryTypes
+	 *            the main cache containing known secondary types in a project, can be null to indicate no search were
+	 *            done. Note, the cache might be not complete if the search is still running.
+	 * @param indexingSecondaryCache
+	 *            the temporary structure used while indexing, previously known as INDEXED_SECONDARY_TYPES entry. If it
+	 *            is null, no cache updates are running now
+	 */
+	private static record SecondaryTypesCache(Hashtable<String, Map<String, IType>> secondaryTypes,
+			Map<IFile, Map<String, Map<String, IType>>> indexingSecondaryCache) {
+
+		boolean isIndexingDone() {
+			return this.secondaryTypes != null && this.indexingSecondaryCache == null;
+		}
+	}
+
+	/**
+	 * Secondary types cache management code for a {@link PerProjectInfo}
+	 */
+	private static class SecondaryTypes {
+		private volatile SecondaryTypesCache cache;
+
+		public SecondaryTypes() {
+			this.cache = new SecondaryTypesCache(null, null);
+		}
+
+		SecondaryTypesCache cache() {
+			return this.cache;
+		}
+
+		private synchronized SecondaryTypesCache getOrCreateCache() {
+			Hashtable<String, Map<String, IType>> secondaryTypes = this.cache.secondaryTypes;
+			Map<IFile, Map<String, Map<String, IType>>> indexingSecondaryCache = this.cache.indexingSecondaryCache;
+			if (secondaryTypes != null && indexingSecondaryCache != null) {
+				return this.cache;
+			}
+			if (secondaryTypes == null) {
+				secondaryTypes = new Hashtable<>(3);
+			}
+			if (indexingSecondaryCache == null) {
+				indexingSecondaryCache = Collections.synchronizedMap(new HashMap<>(3));
+			}
+			this.cache = new SecondaryTypesCache(secondaryTypes, indexingSecondaryCache);
+			return this.cache;
+		}
+
+		private synchronized SecondaryTypesCache startIndexing() {
+			this.cache = new SecondaryTypesCache(this.cache.secondaryTypes(), Collections.synchronizedMap(new HashMap<>(3)));
+			return this.cache;
+		}
+
+		private synchronized void indexingDone() {
+			this.cache = new SecondaryTypesCache(this.cache.secondaryTypes(), null);
+		}
+
+		private synchronized SecondaryTypesCache doneSearching(Hashtable<String, Map<String, IType>> newSecondaryTypes) {
+			this.cache = new SecondaryTypesCache(newSecondaryTypes, this.cache.indexingSecondaryCache());
+			return this.cache;
+		}
+
+		private synchronized void clearAllCaches() {
+			this.cache = new SecondaryTypesCache(null, null);
+		}
+	}
+
 	public static class PerProjectInfo {
 		private static final int JAVADOC_CACHE_INITIAL_SIZE = 10;
 
@@ -1269,12 +1335,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		public IEclipsePreferences preferences;
 		public Hashtable<String, String> options;
-		public Hashtable<String, Map<String, IType>> secondaryTypes;
-		/**
-		 * The temporary structure used while indexing, previously known as INDEXED_SECONDARY_TYPES entry
-		 */
-		volatile Map<IFile, Map<String, Map<String, IType>>> indexingSecondaryCache;
 
+		private final SecondaryTypes secondaryTypes;
 
 		// NB: PackageFragment#getAttachedJavadoc uses this map differently
 		// and stores String data, not JavadocContents as values
@@ -1286,6 +1348,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			this.savedState = null;
 			this.project = project;
 			this.javadocCache = new LRUCache<>(JAVADOC_CACHE_INITIAL_SIZE);
+			this.secondaryTypes = new SecondaryTypes();
 		}
 
 		public synchronized IClasspathEntry[] getResolvedClasspath() {
@@ -3572,7 +3635,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				StringReader reader = new StringReader(xmlString);
 				Element cpElement;
 				try {
-					DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+					@SuppressWarnings("restriction")
+					DocumentBuilder parser = org.eclipse.core.internal.runtime.XmlProcessorFactory.createDocumentBuilderWithErrorOnDOCTYPE();
 					cpElement = parser.parse(new InputSource(reader)).getDocumentElement();
 				} catch(SAXException | ParserConfigurationException e){
 					return;
@@ -4485,20 +4549,43 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		private void saveAttributes(IClasspathAttribute[] attributes)
 				throws IOException {
-			int count = attributes == null ? 0 : attributes.length;
+			int count = 0;
+			if (attributes != null) {
+				for (IClasspathAttribute attr : attributes) {
+					if (attr != null) {
+						count ++;
+					}
+				}
+			}
 
 			saveInt(count);
-			for (int i = 0; i < count; ++i)
-				saveAttribute(attributes[i]);
+
+			for (IClasspathAttribute attribute : attributes) {
+				if (attribute != null) {
+					saveAttribute(attribute);
+				}
+			}
 		}
 
 		private void saveClasspathEntries(IClasspathEntry[] entries)
 				throws IOException {
-			int count = entries == null ? 0 : entries.length;
+
+			int count = 0;
+			if (entries != null) {
+				for (IClasspathEntry entry : entries) {
+					if (entry != null) {
+						count ++;
+					}
+				}
+			}
 
 			saveInt(count);
-			for (int i = 0; i < count; ++i)
-				saveClasspathEntry(entries[i]);
+
+			for (IClasspathEntry entry : entries) {
+				if (entry != null) {
+					saveClasspathEntry(entry);
+				}
+			}
 		}
 
 		private void saveClasspathEntry(IClasspathEntry entry)
@@ -4763,18 +4850,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				try {
 					PerProjectInfo projectInfo = getPerProjectInfoCheckExistence(project);
 					// Get or create map to cache secondary types while indexing (can be not synchronized as indexing insure a non-concurrent usage)
-					Map<IFile, Map<String, Map<String, IType>>> indexedSecondaryTypes;
-					if (projectInfo.secondaryTypes == null) {
-						projectInfo.secondaryTypes = new Hashtable<>(3);
-						indexedSecondaryTypes = Collections.synchronizedMap(new HashMap<>(3));
-						projectInfo.indexingSecondaryCache = indexedSecondaryTypes;
-					} else {
-						indexedSecondaryTypes = projectInfo.indexingSecondaryCache;
-						if (indexedSecondaryTypes == null) {
-							indexedSecondaryTypes = Collections.synchronizedMap(new HashMap<>(3));
-							projectInfo.indexingSecondaryCache = indexedSecondaryTypes;
-						}
-					}
+					SecondaryTypesCache stCache = projectInfo.secondaryTypes.getOrCreateCache();
+					Map<IFile, Map<String, Map<String, IType>>> indexedSecondaryTypes = stCache.indexingSecondaryCache();
 					// Store the secondary type in temporary cache (these are just handles => no problem to create it now...)
 					Map<String, Map<String, IType>> allTypes = indexedSecondaryTypes.get(resource);
 					if (allTypes == null) {
@@ -4798,17 +4875,34 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					}
 					if (VERBOSE) {
 						Util.verbose("	- indexing cache:"); //$NON-NLS-1$
-						Iterator<Entry<IFile, Map<String, Map<String, IType>>>> entries = indexedSecondaryTypes.entrySet().iterator();
-						while (entries.hasNext()) {
-							Entry<IFile, Map<String, Map<String, IType>>> entry = entries.next();
-							IFile file = entry.getKey();
-							Util.verbose("		+ "+file.getFullPath()+':'+ entry.getValue()); //$NON-NLS-1$
-						}
+						dumpIndexingSecondaryTypes(indexedSecondaryTypes);
 					}
 				}
 				catch (JavaModelException jme) {
 					// do nothing
 				}
+			}
+		}
+	}
+
+	private void dumpIndexingSecondaryTypes(Map<IFile, Map<String, Map<String, IType>>> indexedSecondaryTypes) {
+		synchronized(indexedSecondaryTypes) {
+			Iterator<Entry<IFile, Map<String, Map<String, IType>>>> entries = indexedSecondaryTypes.entrySet().iterator();
+			while (entries.hasNext()) {
+				Entry<IFile, Map<String, Map<String, IType>>> entry = entries.next();
+				IFile file = entry.getKey();
+				Util.verbose("		+ "+file.getFullPath()+':'+ entry.getValue()); //$NON-NLS-1$
+			}
+		}
+	}
+
+	private static void dumpSecondaryTypes(Map<String, Map<String, IType>> secondaryTypes) {
+		synchronized (secondaryTypes) {
+			Iterator<Entry<String, Map<String, IType>>> entries = secondaryTypes.entrySet().iterator();
+			while (entries.hasNext()) {
+				Entry<String, Map<String, IType>> entry = entries.next();
+				String packName = entry.getKey();
+				Util.verbose("		+ " + packName + ':' + entry.getValue()); //$NON-NLS-1$
 			}
 		}
 	}
@@ -4837,22 +4931,20 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	public Map<String, Map<String, IType>> secondaryTypes(IJavaProject project, boolean waitForIndexes, IProgressMonitor monitor) throws JavaModelException {
 		if (VERBOSE) {
 			StringBuilder buffer = new StringBuilder("JavaModelManager.secondaryTypes("); //$NON-NLS-1$
-			buffer.append(project.getElementName());
-			buffer.append(',');
-			buffer.append(waitForIndexes);
-			buffer.append(')');
+			buffer.append(project.getElementName()).append(',').append(waitForIndexes).append(')');
 			Util.verbose(buffer.toString());
 		}
 
 		// Return cache if not empty and there's no new secondary types created during indexing
 		final PerProjectInfo projectInfo = getPerProjectInfoCheckExistence(project.getProject());
-		Map<IFile, Map<String, Map<String, IType>>> indexingSecondaryCache = projectInfo.secondaryTypes == null ? null : projectInfo.indexingSecondaryCache;
-		if (projectInfo.secondaryTypes != null && indexingSecondaryCache == null) {
-			return projectInfo.secondaryTypes;
+		SecondaryTypesCache secondaryTypesCache = projectInfo.secondaryTypes.cache();
+		Hashtable<String, Map<String, IType>> secondaryTypes = secondaryTypesCache.secondaryTypes();
+		if (secondaryTypesCache.isIndexingDone()) {
+			return secondaryTypes;
 		}
 
 		// Perform search request only if secondary types cache is not initialized yet (this will happen only once!)
-		if (projectInfo.secondaryTypes == null) {
+		if (secondaryTypes == null) {
 			return secondaryTypesSearching(project, waitForIndexes, monitor, projectInfo);
 		}
 
@@ -4862,7 +4954,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		if (indexing) {
 			if (!waitForIndexes)  {
 				// Indexing is running but caller cannot wait => return current cache
-				return projectInfo.secondaryTypes;
+				return secondaryTypes;
 			}
 
 			// Wait for the end of indexing or a cancel
@@ -4895,7 +4987,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 				}, IJob.WaitUntilReady, monitor);
 			} catch (OperationCanceledException oce) {
-				return projectInfo.secondaryTypes;
+				return secondaryTypes;
 			}
 		}
 
@@ -4903,29 +4995,25 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		return secondaryTypesMerging(projectInfo);
 	}
 
-	/*
-	 * Return secondary types cache merged with new secondary types created while indexing
-	 * Note that merge result is directly stored in given parameter map.
+	/**
+	 * Return secondary types cache merged with new secondary types created while indexing.
+	 * Note that merge result is directly stored in given {@link PerProjectInfo#secondaryTypes}
+	 * cache and that this method is synchronized on that cache object.
 	 */
-	private Map<String, Map<String, IType>> secondaryTypesMerging(PerProjectInfo projectInfo) {
-		Map<String, Map<String, IType>> secondaryTypes = projectInfo.secondaryTypes;
+	private static Map<String, Map<String, IType>> secondaryTypesMerging(PerProjectInfo projectInfo) {
+		synchronized (projectInfo.secondaryTypes) {
+		// Return current cache if there's no indexing cache (double check, this should not happen)
+		SecondaryTypesCache cache = projectInfo.secondaryTypes.cache();
+		Map<String, Map<String, IType>> secondaryTypes = cache.secondaryTypes();
+		if (cache.isIndexingDone()) {
+			return secondaryTypes;
+		}
 		if (VERBOSE) {
 			Util.verbose("JavaModelManager.getSecondaryTypesMerged()"); //$NON-NLS-1$
 			Util.verbose("	- current cache to merge:"); //$NON-NLS-1$
-			Iterator<Entry<String, Map<String, IType>>> entries = secondaryTypes.entrySet().iterator();
-			while (entries.hasNext()) {
-				Entry<String, Map<String, IType>> entry = entries.next();
-				String packName = entry.getKey();
-				Util.verbose("		+ "+packName+':'+ entry.getValue() ); //$NON-NLS-1$
-			}
+			dumpSecondaryTypes(secondaryTypes);
 		}
-
-		// Return current cache if there's no indexing cache (double check, this should not happen)
-		Map<IFile, Map<String, Map<String, IType>>> indexedSecondaryTypes = projectInfo.indexingSecondaryCache;
-		projectInfo.indexingSecondaryCache = null;
-		if (indexedSecondaryTypes == null) {
-			return secondaryTypes;
-		}
+		Map<IFile, Map<String, Map<String, IType>>> indexedSecondaryTypes = cache.indexingSecondaryCache();
 		Map<IFile, Map<String, Map<String, IType>>> indexedSecondaryTypesCopy;
 		synchronized (indexedSecondaryTypes) {
 			indexedSecondaryTypesCopy = new HashMap<>(indexedSecondaryTypes);
@@ -4962,14 +5050,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 		if (VERBOSE) {
 			Util.verbose("	- secondary types cache merged:"); //$NON-NLS-1$
-			Iterator<Entry<String, Map<String, IType>>> entries2 = secondaryTypes.entrySet().iterator();
-			while (entries.hasNext()) {
-				Entry<String, Map<String, IType>> entry = entries2.next();
-				String packName = entry.getKey();
-				Util.verbose("		+ "+packName+':'+ entry.getValue()); //$NON-NLS-1$
-			}
+			dumpSecondaryTypes(secondaryTypes);
 		}
+		projectInfo.secondaryTypes.indexingDone();
 		return secondaryTypes;
+		}
 	}
 
 	/*
@@ -5034,20 +5119,18 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 
 		// Store result in per project info cache if still null or there's still an indexing cache (may have been set by another thread...)
-		if (projectInfo.secondaryTypes == null || projectInfo.indexingSecondaryCache != null) {
-			projectInfo.secondaryTypes = secondaryTypes;
-			if (VERBOSE || BasicSearchEngine.VERBOSE) {
-				System.out.print(Thread.currentThread() + "	-> secondary paths stored in cache: ");  //$NON-NLS-1$
-				System.out.println();
-				Iterator<Entry<String, Map<String, IType>>> entries = secondaryTypes.entrySet().iterator();
-				while (entries.hasNext()) {
-					Entry<String, Map<String, IType>> entry = entries.next();
-					String qualifiedName = entry.getKey();
-					Util.verbose("		- "+qualifiedName+'-'+ entry.getValue()); //$NON-NLS-1$
+		synchronized(projectInfo.secondaryTypes) {
+			SecondaryTypesCache stCache = projectInfo.secondaryTypes.cache();
+			if (stCache.secondaryTypes() == null || stCache.indexingSecondaryCache() != null) {
+				stCache = projectInfo.secondaryTypes.doneSearching(secondaryTypes);
+
+				if (VERBOSE || BasicSearchEngine.VERBOSE) {
+					Util.verbose("	-> secondary paths stored in cache: ");  //$NON-NLS-1$
+					dumpSecondaryTypes(secondaryTypes);
 				}
 			}
+			return stCache.secondaryTypes();
 		}
-		return projectInfo.secondaryTypes;
 	}
 
 	/**
@@ -5067,21 +5150,29 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 		if (file != null) {
 			PerProjectInfo projectInfo = getPerProjectInfo(file.getProject(), false);
-			if (projectInfo != null && projectInfo.secondaryTypes != null) {
+			if (projectInfo == null) {
+				return;
+			}
+			synchronized (projectInfo.secondaryTypes) {
+				SecondaryTypesCache stCache = projectInfo.secondaryTypes.cache();
+				Hashtable<String, Map<String, IType>> secondaryTypes = stCache.secondaryTypes();
+				if (secondaryTypes == null) {
+					return;
+				}
 				if (VERBOSE) {
 					Util.verbose("-> remove file from cache of project: "+file.getProject().getName()); //$NON-NLS-1$
 				}
 
 				// Clean current cache
-				secondaryTypesRemoving(projectInfo.secondaryTypes, file);
+				secondaryTypesRemoving(secondaryTypes, file);
 
 				// Clean indexing cache if necessary
-				Map<IFile, Map<String, Map<String, IType>>> indexingCache = projectInfo.indexingSecondaryCache;
+				Map<IFile, Map<String, Map<String, IType>>> indexingCache = stCache.indexingSecondaryCache();
 				if (!cleanIndexCache) {
 					if (indexingCache == null) {
 						// Need to signify that secondary types indexing will happen before any request happens
 						// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=152841
-						projectInfo.indexingSecondaryCache = Collections.synchronizedMap(new HashMap<>());
+						projectInfo.secondaryTypes.startIndexing();
 					}
 					return;
 				}
@@ -5096,19 +5187,12 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * Remove from a given cache map all secondary types belonging to a given file.
 	 * Note that there can have several secondary types per file...
 	 */
-	private void secondaryTypesRemoving(Map<String, Map<String, IType>> secondaryTypesMap, IFile file) {
+	private static void secondaryTypesRemoving(Map<String, Map<String, IType>> secondaryTypesMap, IFile file) {
 		if (VERBOSE) {
 			StringBuilder buffer = new StringBuilder("JavaModelManager.removeSecondaryTypesFromMap("); //$NON-NLS-1$
-			Iterator<Entry<String, Map<String, IType>>> entries = secondaryTypesMap.entrySet().iterator();
-			while (entries.hasNext()) {
-				Entry<String, Map<String, IType>> entry = entries.next();
-				String qualifiedName = entry.getKey();
-				buffer.append(qualifiedName+':'+ entry.getValue());
-			}
-			buffer.append(',');
-			buffer.append(file.getFullPath());
-			buffer.append(')');
+			buffer.append(',').append(file.getFullPath()).append(')');
 			Util.verbose(buffer.toString());
+			dumpSecondaryTypes(secondaryTypesMap);
 		}
 		Set<Entry<String, Map<String, IType>>> packageEntries = secondaryTypesMap.entrySet();
 		int packagesSize = packageEntries.size(), removedPackagesCount = 0;
@@ -5150,12 +5234,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 		if (VERBOSE) {
 			Util.verbose("	- new secondary types map:"); //$NON-NLS-1$
-			Iterator<Entry<String, Map<String, IType>>> entries = secondaryTypesMap.entrySet().iterator();
-			while (entries.hasNext()) {
-				Entry<String, Map<String, IType>> entry = entries.next();
-				String qualifiedName = entry.getKey();
-				Util.verbose("		+ "+qualifiedName+':'+ entry.getValue()); //$NON-NLS-1$
-			}
+			dumpSecondaryTypes(secondaryTypesMap);
 		}
 	}
 
@@ -5592,7 +5671,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			IJavaProject project = projects[i];
 			final PerProjectInfo projectInfo = getPerProjectInfo(project.getProject(), false /* don't create info */);
 			if (projectInfo != null) {
-				projectInfo.secondaryTypes = null;
+				projectInfo.secondaryTypes.clearAllCaches();
 			}
 		}
 	}

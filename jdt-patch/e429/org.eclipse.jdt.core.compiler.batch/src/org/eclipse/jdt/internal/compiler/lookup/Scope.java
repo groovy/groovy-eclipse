@@ -4694,6 +4694,16 @@ public abstract class Scope {
 				return new ProblemMethodBinding(visible[0], visible[0].selector, visible[0].parameters, ProblemReasons.Ambiguous);
 			} else if (count == 1) {
 				MethodBinding candidate = moreSpecific[0];
+				if (visibleSize > 1 && candidate instanceof ParameterizedMethodBinding && invocationSite instanceof MessageSend) {
+					for (TypeBinding typeBinding : argumentTypes) {
+						if (!typeBinding.isProperType(true)) {
+							InferenceContext18 ic18 = ((MessageSend) invocationSite).getInferenceContext((ParameterizedMethodBinding) candidate);
+							if (ic18 != null)
+								ic18.prematureOverloadResolution = true;
+							break;
+						}
+					}
+				}
 				if (candidate != null)
 					compilationUnitScope().recordTypeReferences(candidate.thrownExceptions);
 				return candidate;

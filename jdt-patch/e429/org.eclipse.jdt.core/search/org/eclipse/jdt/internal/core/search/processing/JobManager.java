@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2022 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -237,9 +238,8 @@ public abstract class JobManager {
 	/**
 	 * When idle, give chance to do something
 	 */
-	protected void notifyIdle(long idlingTime) {
-		// do nothing
-	}
+	protected abstract void notifyIdle(long idlingMilliSeconds);
+
 	/**
 	 * This API is allowing to run one job in concurrence with background processing.
 	 * Indeed since other jobs are performed in background, resource sharing might be
@@ -434,7 +434,8 @@ public abstract class JobManager {
 	 */
 	void indexerLoop() {
 
-		long idlingStart = -1;
+		boolean cacheZipFiles = false;
+		Long idlingStart = null;
 		activateProcessing();
 		try {
 			class ProgressJob extends Job {
@@ -481,24 +482,31 @@ public abstract class JobManager {
 								pJob.cancel();
 								this.progressJob = null;
 							}
-							if (idlingStart < 0) {
-								idlingStart = System.currentTimeMillis();
+							if (idlingStart == null) {
+								idlingStart = System.nanoTime();
 							} else {
-								notifyIdle(System.currentTimeMillis() - idlingStart);
+								this.wait(); // wait until a new job is posted or disabled indexer is enabled again
 							}
-							this.wait(); // wait until a new job is posted (or reenabled:38901)
-						} else {
-							idlingStart = -1;
 						}
 					}
 					if (job == null) {
-						notifyIdle(System.currentTimeMillis() - idlingStart);
+						// don't call notifyIdle() within synchronized block or it may deadlock:
+						notifyIdle((System.nanoTime() - idlingStart) / 1_000_000);
+						if (currentJob() != null) {
+							// notifyIdle() may have requested new job
+							continue;
+						}
+						if (cacheZipFiles) {
+							JavaModelManager.getJavaModelManager().flushZipFiles(this);
+							cacheZipFiles = false;
+						}
 						// just woke up, delay before processing any new jobs, allow some time for the active thread to finish
 						synchronized (this.idleMonitor) {
 							this.idleMonitor.wait(500); // avoid sleep fixed time
 						}
 						continue;
 					}
+					idlingStart = null;
 					if (VERBOSE) {
 						Util.verbose(awaitingJobsCount() + " awaiting jobs"); //$NON-NLS-1$
 						Util.verbose("STARTING background job - " + job); //$NON-NLS-1$
@@ -512,8 +520,11 @@ public abstract class JobManager {
 							pJob.schedule();
 							this.progressJob = pJob;
 						}
-						/*boolean status = */job.execute(null);
-						//if (status == FAILED) request(job);
+						if (!cacheZipFiles) {
+							JavaModelManager.getJavaModelManager().cacheZipFiles(this);
+							cacheZipFiles = true;
+						}
+						job.execute(null); // may enqueue a new job
 					} finally {
 						this.executing = false;
 						if (VERBOSE)
@@ -547,6 +558,11 @@ public abstract class JobManager {
 				reset(); // this will fork a new thread with no waiting jobs, some indexes will be inconsistent
 			}
 			throw e;
+		} finally {
+			if (cacheZipFiles) {
+				JavaModelManager.getJavaModelManager().flushZipFiles(this);
+				cacheZipFiles = false;
+			}
 		}
 	}
 	/**

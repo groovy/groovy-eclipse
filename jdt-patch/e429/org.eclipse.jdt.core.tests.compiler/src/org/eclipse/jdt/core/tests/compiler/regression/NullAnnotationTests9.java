@@ -431,4 +431,21 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 			"The nullness annotation @NonNull is not applicable for the primitive type int\n" +
 			"----------\n");
 	}
+
+	public void testGH1152() {
+		Runner runner = getDefaultRunner();
+		runner.testFiles = new String[] {
+				"bug/NonNullBug.java",
+				"""
+				package bug;
+				import org.eclipse.jdt.annotation.NonNull;
+				public class NonNullBug {
+					interface Interface<@NonNull T> { }
+
+					class Class<T> implements Interface<@NonNull T> {} // 4.28 Null constraint mismatch: The type 'T' is not a valid substitute for the type parameter '@NonNull T'
+				}
+				"""
+			};
+		runner.runConformTest();
+	}
 }

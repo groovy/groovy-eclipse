@@ -635,4 +635,18 @@ private static boolean isSourceOrExported(PackageFragmentRoot root) {
 	}
 	return isExported;
 }
+
+static boolean isOnModulePath(PackageFragmentRoot root) {
+	boolean isOnModulePath;
+	try {
+		IJavaProject javaProject = root.getJavaProject();
+		IModuleDescription defaultModule = javaProject.getModuleDescription();
+		IModuleDescription moduleForRoot = computeModuleFor(root, defaultModule);
+		isOnModulePath = moduleForRoot != null;
+	} catch (JavaModelException e) {
+		isOnModulePath = true; // if an exception occurs, assume yes
+		Util.log(e, "Error checking whether PackageFragmentRoot is on module path!"); //$NON-NLS-1$
+	}
+	return isOnModulePath;
+}
 }

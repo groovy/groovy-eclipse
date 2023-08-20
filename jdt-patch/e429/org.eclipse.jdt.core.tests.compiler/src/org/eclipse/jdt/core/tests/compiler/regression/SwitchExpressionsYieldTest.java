@@ -6296,4 +6296,36 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"Continue out of switch expressions not permitted\n" +
 				"----------\n");
 	}
+
+	public void testGH520() throws Exception {
+		runNegativeTest(
+			new String[] {
+				"X.java",
+				"public class X {\n" +
+				"	void test(int i) {\n" +
+				"		foo(switch (i) {\n" +
+				"			case 0 -> m.call();\n" +
+				"			default -> null;\n" +
+				"		});\n" +
+				"	}\n" +
+				"	<T> void foo(T t) { }\n" +
+				"}\n"
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	foo(switch (i) {\n" +
+			"	^^^\n" +
+			"The method foo(T) in the type X is not applicable for the arguments (switch (i) {\n" +
+			"case 0 ->\n" +
+			" m.call();\n" +
+			"default ->\n" +
+			" null;\n" +
+			"})\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 4)\n" +
+			"	case 0 -> m.call();\n" +
+			"	          ^\n" +
+			"m cannot be resolved\n" +
+			"----------\n");
+	}
 }

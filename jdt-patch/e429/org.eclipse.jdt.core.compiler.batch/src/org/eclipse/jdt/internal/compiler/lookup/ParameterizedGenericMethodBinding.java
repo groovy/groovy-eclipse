@@ -302,10 +302,12 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 						}
 					} finally {
 						infCtx18.setInexactVarargsInference(isInexactVarargsInference);
-						if (invocationSite instanceof Invocation)
-							((Invocation) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
-						else if (invocationSite instanceof ReferenceExpression)
-							((ReferenceExpression) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
+						if (!infCtx18.hasPrematureOverloadResolution()) {
+							if (invocationSite instanceof Invocation)
+								((Invocation) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
+							else if (invocationSite instanceof ReferenceExpression)
+								((ReferenceExpression) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
+						}
 					}
 					return methodSubstitute;
 				}

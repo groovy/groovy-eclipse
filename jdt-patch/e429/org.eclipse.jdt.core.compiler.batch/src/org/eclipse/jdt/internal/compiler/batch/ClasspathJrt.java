@@ -41,6 +41,7 @@ import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
 import org.eclipse.jdt.internal.compiler.env.IMultiModuleEntry;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
+import org.eclipse.jdt.internal.compiler.util.CtSym;
 import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -404,5 +405,12 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 	@Override
 	public boolean servesModule(char[] moduleName) {
 		return getModule(moduleName) != null;
+	}
+
+	public static void clearCache(String path, String releaseVersion) {
+		if (releaseVersion != null) {
+			path += '|'+ CtSym.getReleaseCode(releaseVersion);
+		}
+		ModulesCache.remove(path);
 	}
 }

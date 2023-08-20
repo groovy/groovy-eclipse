@@ -4922,8 +4922,13 @@ class ASTConverter {
 				return InfixExpression.Operator.GREATER;
 			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.LESS :
 				return InfixExpression.Operator.LESS;
+			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.QUESTIONCOLON :
+			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.INSTANCEOF :
+			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.PLUS_PLUS :
+			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.MINUS_MINUS :
+				throw new IllegalArgumentException("Not an InfixExpression: operatorID="+operatorID); //$NON-NLS-1$
 		}
-		return null;
+		throw new IllegalArgumentException("unknown operatorID="+operatorID); //$NON-NLS-1$
 	}
 
 	protected PrimitiveType.Code getPrimitiveTypeCode(char[] name) {

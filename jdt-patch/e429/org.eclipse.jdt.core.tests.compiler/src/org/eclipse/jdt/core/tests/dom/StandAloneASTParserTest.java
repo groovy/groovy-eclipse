@@ -1881,4 +1881,82 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 			packDir.delete();
 		}
 	}
+
+	public void testGitHub316() throws JavaModelException {
+		String contents =
+				"public class X {\n" +
+						"void m() {"
+						+ " (1+2) = 3;"// was IllegalArgumentException in InfixExpression#setOperator
+						+ " }"+
+				"}";
+
+			ASTParser parser = ASTParser.newParser(AST_JLS_LATEST);
+			parser.setSource(contents.toCharArray());
+			parser.setEnvironment(null, null, null, true);
+			parser.setResolveBindings(true);
+			parser.setUnitName("X.java");
+
+			ASTNode node = parser.createAST(null);
+			assertTrue("Should be a compilation unit", node instanceof CompilationUnit);
+			CompilationUnit cu = (CompilationUnit) node;
+			assertEquals("Problems in compilation", 1,cu.getProblems().length);
+			assertEquals("The left-hand side of an assignment must be a variable",cu.getProblems()[0].getMessage());
+	}
+	public void testGitHub1122() throws JavaModelException {
+		String contents =
+				"public class X {\n" +
+						"void m() {"
+						+ ".a() >0);"// was IllegalArgumentException in InfixExpression#setOperator
+						+ " }"+
+				"}";
+
+			ASTParser parser = ASTParser.newParser(AST_JLS_LATEST);
+			parser.setSource(contents.toCharArray());
+			parser.setEnvironment(null, null, null, true);
+			parser.setResolveBindings(true);
+			parser.setUnitName("X.java");
+			parser.setStatementsRecovery(true);
+			parser.setBindingsRecovery(true);
+
+			ASTNode node = parser.createAST(null);
+			assertTrue("Should be a compilation unit", node instanceof CompilationUnit);
+			CompilationUnit cu = (CompilationUnit) node;
+			assertEquals("Problems in compilation", 3,cu.getProblems().length);
+			assertEquals("Syntax error on token \".\", invalid (",cu.getProblems()[0].getMessage());
+			// XXX BatchCompiler instead reports 'Syntax error, insert "AssignmentOperator Expression" to complete Expression':
+			assertEquals("The left-hand side of an assignment must be a variable",cu.getProblems()[1].getMessage());
+	}
+	public void testBug568629() throws JavaModelException {
+		String contents =
+				"public class X {\n" +
+						"void m() {"
+						+ "A.a-5a-a = true;"// was IllegalArgumentException in InfixExpression#setOperator
+						+ " for (int j = 0; j < 1; j++) {"
+						+ " \" \" + j );"// was IllegalArgumentException in InfixExpression#setOperator
+						+ " }"
+						+ " }"+
+				"}";
+
+			ASTParser parser = ASTParser.newParser(AST_JLS_LATEST);
+			parser.setSource(contents.toCharArray());
+			parser.setEnvironment(null, null, null, true);
+			parser.setResolveBindings(true);
+			parser.setUnitName("X.java");
+			parser.setStatementsRecovery(true);
+			parser.setBindingsRecovery(true);
+
+			ASTNode node = parser.createAST(null);
+			assertTrue("Should be a compilation unit", node instanceof CompilationUnit);
+			CompilationUnit cu = (CompilationUnit) node;
+			assertEquals("Problems in compilation", 7,cu.getProblems().length);
+			assertEquals("Syntax error on tokens, ( expected instead",cu.getProblems()[0].getMessage());
+			assertEquals("The left-hand side of an assignment must be a variable",cu.getProblems()[1].getMessage());
+			assertEquals("Syntax error on token \"a\", delete this token",cu.getProblems()[2].getMessage());
+			assertEquals("Syntax error, insert \")\" to complete Expression",cu.getProblems()[3].getMessage());
+			assertEquals("Syntax error on token \"{\", ( expected after this token",cu.getProblems()[4].getMessage());
+			assertEquals("The left-hand side of an assignment must be a variable",cu.getProblems()[5].getMessage());
+			assertEquals("Syntax error, insert \"AssignmentOperator Expression\" to complete Expression",cu.getProblems()[6].getMessage());
+	}
+
+
 }

@@ -452,7 +452,8 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 				for (int i = 0; i < resultExpressionsCount; i++) {
 					Expression resultExpr = this.resultExpressions.get(i);
 					TypeBinding origType = this.originalTypeMap.get(resultExpr);
-					if (origType == null || origType.kind() == Binding.POLY_TYPE) {
+					// NB: if origType == null we assume that initial resolving failed hard, rendering re-resolving impossible
+					if (origType != null &&  origType.kind() == Binding.POLY_TYPE) {
 						this.finalValueResultExpressionTypes[i] = this.originalValueResultExpressionTypes[i] =
 							resultExpr.resolveTypeExpecting(upperScope, this.expectedType);
 					}

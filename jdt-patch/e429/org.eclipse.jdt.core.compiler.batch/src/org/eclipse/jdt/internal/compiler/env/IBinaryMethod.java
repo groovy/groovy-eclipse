@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.env;
 
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.util.Util;
+
 // clinit methods (synthetics too?) can be returned from IBinaryType>>getMethods()
 // BUT do not have to be... the compiler will ignore them when building the binding.
 // The synthetic argument of a member type's constructor (i.e. the first arg of a non-static
@@ -101,4 +104,36 @@ boolean isClinit();
  * Answer the type annotations on this method.
  */
 IBinaryTypeAnnotation[] getTypeAnnotations();
+
+/**
+ * Answer the number of method parameters based on analysis of the method descriptor.
+ * @return the number of parameters or {@code -1} if the descriptor was malformed.
+ */
+default int getParameterCount() {
+	// copy-adjusted from org.eclipse.jdt.core.Signature.getParameterCount(char[])
+	char[] methodSignature = getMethodDescriptor();
+	try {
+		int count = 0;
+		int i = CharOperation.indexOf(Util.C_PARAM_START, methodSignature);
+		if (i < 0) {
+			return -1;
+		} else {
+			i++;
+		}
+		for (;;) {
+			if (methodSignature[i] == Util.C_PARAM_END) {
+				return count;
+			}
+			int e= Util.scanTypeSignature(methodSignature, i);
+			if (e < 0) {
+				return -1;
+			} else {
+				i = e + 1;
+			}
+			count++;
+		}
+	} catch (ArrayIndexOutOfBoundsException e) {
+		return -1;
+	}
+}
 }

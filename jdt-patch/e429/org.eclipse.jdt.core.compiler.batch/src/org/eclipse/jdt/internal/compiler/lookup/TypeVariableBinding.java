@@ -247,7 +247,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 					break;
 			}
 			return BoundCheckStatus.OK;
-		} else if (checkNullAnnotations && argumentType.kind() == Binding.TYPE_PARAMETER) {
+		} else if (checkNullAnnotations && argumentType.kind() == Binding.TYPE_PARAMETER && !argumentType.hasNullTypeAnnotations()) {
 			// refresh argumentType in case a nullness default(TYPE_PARAMETER) was applied late:
 			TypeVariableBinding tvb = (TypeVariableBinding) argumentType;
 			if (tvb.declaringElement instanceof SourceTypeBinding) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -831,6 +831,9 @@ public TypeBinding resolveType(BlockScope scope) {
 			return null;
 		}
 	}
+	if (this.argumentsHaveErrors) {
+		return null;
+	}
 
 	TypeBinding methodType = findMethodBinding(scope);
 	if (methodType != null && methodType.isPolyType()) {
@@ -1205,9 +1208,10 @@ public void registerResult(TypeBinding targetType, MethodBinding method) {
 
 @Override
 public InferenceContext18 getInferenceContext(ParameterizedMethodBinding method) {
-	if (this.inferenceContexts == null)
-		return null;
-	return (InferenceContext18) this.inferenceContexts.get(method);
+	InferenceContext18 context = null;
+	if (this.inferenceContexts != null)
+		context = (InferenceContext18) this.inferenceContexts.get(method);
+	return context;
 }
 @Override
 public void cleanUpInferenceContexts() {

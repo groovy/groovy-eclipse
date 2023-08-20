@@ -20,7 +20,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.eclipse.core.runtime.Assert;
@@ -148,7 +147,8 @@ public class UserLibrary {
 	public static UserLibrary createFromString(Reader reader) throws IOException {
 		Element cpElement;
 		try {
-			DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			@SuppressWarnings("restriction")
+			DocumentBuilder parser = org.eclipse.core.internal.runtime.XmlProcessorFactory.createDocumentBuilderWithErrorOnDOCTYPE();
 			cpElement = parser.parse(new InputSource(reader)).getDocumentElement();
 		} catch (SAXException | ParserConfigurationException e) {
 			throw new IOException(Messages.file_badFormat, e);

@@ -2127,6 +2127,7 @@ void initializeForStaticImports() {
 
 	if (this.superInterfaces == null)
 		this.scope.connectTypeHierarchy();
+	this.scope.buildComponents();
 	this.scope.buildFields();
 	this.scope.buildMethods();
 }

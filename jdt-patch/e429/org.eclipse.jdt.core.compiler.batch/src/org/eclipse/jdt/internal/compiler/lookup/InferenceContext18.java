@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2022 GK Software AG, and others.
+ * Copyright (c) 2013, 2023 GK Software AG, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -170,10 +170,12 @@ public class InferenceContext18 {
 	/** Not per JLS: inbox for emulation of how javac passes type bounds from inner to outer */
 	private BoundSet innerInbox;
 	/** Not per JLS: signal when current is ready to directly merge all bounds from inner. */
-	private boolean directlyAcceptingInnerBounds = false;
+	private boolean directlyAcceptingInnerBounds;
 	/** Not per JLS: pushing bounds from inner to outer may have to be deferred till after overload resolution, store here a runnable to perform the push. */
-	private Runnable pushToOuterJob = null;
-	private boolean isInexactVarargsInference = false;
+	private Runnable pushToOuterJob;
+	// the following two flags control to what degree we continue with incomplete information:
+	private boolean isInexactVarargsInference;
+			boolean prematureOverloadResolution;
 
 	public static boolean isSameSite(InvocationSite site1, InvocationSite site2) {
 		if (site1 == site2)
@@ -761,21 +763,39 @@ public class InferenceContext18 {
 	{
 		TypeBinding[] q = createBoundsForFunctionalInterfaceParameterizationInference(targetTypeWithWildCards);
 		if (q == null || q.length != lambda.arguments().length) {
-			// fail  TODO: can this still happen here?
+			return null;
 		} else {
 			if (reduceWithEqualityConstraints(lambda.argumentTypes(), q)) {
 				ReferenceBinding genericType = targetTypeWithWildCards.genericType();
 				TypeBinding[] a = targetTypeWithWildCards.arguments; // a is not-null by construction of parameterizedWithWildcard()
 				TypeBinding[] aprime = getFunctionInterfaceArgumentSolutions(a);
-				// If F<A'1, ..., A'm> is a well-formed type, ...
-				ParameterizedTypeBinding ptb = blockScope.environment().createParameterizedType(genericType, aprime, targetTypeWithWildCards.enclosingType());
-				TypeVariableBinding[] vars = ptb.genericType().typeVariables();
-				ParameterizedTypeBinding captured = ptb.capture(blockScope, lambda.sourceStart, lambda.sourceEnd);
+				// If F<A'1, ..., A'm> is not a well-formed type, ...
+				ParameterizedTypeBinding f_aprime = blockScope.environment().createParameterizedType(genericType, aprime, targetTypeWithWildCards.enclosingType());
+				TypeVariableBinding[] vars = f_aprime.genericType().typeVariables();
+				boolean hasWildcard = false;
 				for (int i = 0; i < vars.length; i++) {
-					if (vars[i].boundCheck(captured, aprime[i], blockScope, lambda) == BoundCheckStatus.MISMATCH)
-						return null;
+					if (vars[i].boundCheck(f_aprime, aprime[i], blockScope, lambda) == BoundCheckStatus.MISMATCH)
+						return null; // ... no valid parameterization exists
+					hasWildcard |= aprime[i].kind() == Binding.WILDCARD_TYPE;
 				}
-				return ptb;
+				/* as per spec we should do the following:
+				 *
+				 * // or if F<A'1, ..., A'm> is not a subtype of F<A1, ..., Am>
+				 * if (!f_aprime.isSubtypeOf(targetTypeWithWildCards, false))
+				 * 	return null; // ... no valid parameterization exists
+				 *
+				 * but that would surface as
+				 * "The target type of this expression is not a well formed parameterized type due to bound(s) mismatch"
+				 * whereas the ill-formed type only emerged during inference.
+				 * So let final checks detect the incompatibility for a better error message.
+				 */
+				// ... the inferred parameterization is either F<A'1, ..., A'm>, if all the type arguments are types,
+				// or the non-wildcard parameterization (§9.9) of F<A'1, ..., A'm>, if one or more type arguments are still wildcards.
+				if (hasWildcard) {
+					return f_aprime.getNonWildcardParameterization(blockScope);
+				} else {
+					return f_aprime;
+				}
 			}
 		}
 		return targetTypeWithWildCards;
@@ -792,38 +812,17 @@ public class InferenceContext18 {
 		TypeBinding[] a = functionalInterface.arguments;
 		if (a == null)
 			return null;
-		InferenceVariable[] alpha = addInitialTypeVariableSubstitutions(a);
+		addInitialTypeVariableSubstitutions(a);
 
-		createAdditionalBounds(a, alpha);
 		TypeBinding falpha = substitute(functionalInterface);
 		return falpha.getSingleAbstractMethod(this.scope, true).parameters;
 	}
 
-	private void createAdditionalBounds(TypeBinding[] a, InferenceVariable[] alpha) {
-		for (int i = 0; i < a.length; i++) {
-			TypeBound bound;
-			if (a[i].kind() == Binding.WILDCARD_TYPE) {
-				WildcardBinding wildcard = (WildcardBinding) a[i];
-				switch(wildcard.boundKind) {
-    				case Wildcard.EXTENDS :
-    					bound = new TypeBound(alpha[i], wildcard.allBounds(), ReductionResult.SUBTYPE);
-    					break;
-    				case Wildcard.SUPER :
-    					bound = new TypeBound(alpha[i], wildcard.bound, ReductionResult.SUPERTYPE);
-    					break;
-    				case Wildcard.UNBOUND :
-    					bound = new TypeBound(alpha[i], this.object, ReductionResult.SUBTYPE);
-    					break;
-    				default:
-    					continue; // cannot
-				}
-			} else {
-				bound = new TypeBound(alpha[i], a[i], ReductionResult.SAME);
-			}
-			this.currentBounds.addBound(bound, this.environment);
-		}
-	}
-
+	/**
+	 * from 18.5.3:
+	 * Otherwise, a set of constraint formulas is formed with, for all i (1 ≤ i ≤ n), ‹Pi = Qi›.
+	 * This constraint formula set is reduced to form the bound set B.
+	 */
 	public boolean reduceWithEqualityConstraints(TypeBinding[] p, TypeBinding[] q) {
 		if (p != null) {
 			for (int i = 0; i < p.length; i++) {
@@ -1823,6 +1822,13 @@ public class InferenceContext18 {
 		return null;
 	}
 
+	/**
+	 * From 18.5.3:
+	 * <ul>
+	 * <li>If B contains an instantiation (§18.1.3) for αi, T, then A'i = T.
+	 * <li>Otherwise, A'i = Ai.
+	 * </ul>
+	 */
 	public TypeBinding[] getFunctionInterfaceArgumentSolutions(TypeBinding[] a) {
 		int m = a.length;
 		TypeBinding[] aprime = new TypeBinding[m];
@@ -2194,5 +2200,17 @@ public class InferenceContext18 {
 
 	public void setInexactVarargsInference(boolean isInexactVarargsInference) {
 		this.isInexactVarargsInference = isInexactVarargsInference;
+	}
+
+	public boolean hasPrematureOverloadResolution() {
+		if (this.prematureOverloadResolution)
+			return true;
+		if (this.seenInnerContexts != null) {
+			for (InferenceContext18 inner : this.seenInnerContexts) {
+				if (inner.hasPrematureOverloadResolution())
+					return true;
+			}
+		}
+		return false;
 	}
 }

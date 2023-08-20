@@ -212,9 +212,12 @@ public char[] getModuleName() {
 	if (this.openable instanceof CompilationUnit) {
 		return ((CompilationUnit) this.openable).getModuleName();
 	} else if (this.openable instanceof ClassFile) {
-		IModuleDescription moduleDescription = this.openable.getPackageFragmentRoot().getModuleDescription();
-		if (moduleDescription != null) {
-			return moduleDescription.getElementName().toCharArray();
+		PackageFragmentRoot root = this.openable.getPackageFragmentRoot();
+		if (JavaSearchNameEnvironment.isOnModulePath(root)) {
+			IModuleDescription moduleDescription = root.getModuleDescription();
+			if (moduleDescription != null) {
+				return moduleDescription.getElementName().toCharArray();
+			}
 		}
 	}
 	return null;

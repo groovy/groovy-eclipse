@@ -162,7 +162,7 @@ public class SingleTypeReference extends TypeReference {
 	@Override
 	public void updateWithAnnotations(Scope scope, int location) {
 		super.updateWithAnnotations(scope, location);
-		if (this.resolvedType instanceof TypeVariableBinding) {
+		if (this.resolvedType instanceof TypeVariableBinding && !this.resolvedType.hasNullTypeAnnotations()) {
 			// refresh this binding in case a decorated binding was created during ClassScope.connectTypeVariables()
 			TypeVariableBinding tvb = (TypeVariableBinding) this.resolvedType;
 			Binding declaringElement = tvb.declaringElement;

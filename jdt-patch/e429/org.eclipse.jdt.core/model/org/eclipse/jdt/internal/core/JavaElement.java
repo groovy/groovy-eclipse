@@ -194,31 +194,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	 * Do not add new delimiters here
 	 */
 	protected void escapeMementoName(StringBuffer buffer, String mementoName) {
-		for (int i = 0, length = mementoName.length(); i < length; i++) {
-			char character = mementoName.charAt(i);
-			switch (character) {
-				case JEM_MODULE:
-				case JEM_ESCAPE:
-				case JEM_COUNT:
-				case JEM_JAVAPROJECT:
-				case JEM_PACKAGEFRAGMENTROOT:
-				case JEM_PACKAGEFRAGMENT:
-				case JEM_FIELD:
-				case JEM_METHOD:
-				case JEM_INITIALIZER:
-				case JEM_COMPILATIONUNIT:
-				case JEM_CLASSFILE:
-				case JEM_MODULAR_CLASSFILE:
-				case JEM_TYPE:
-				case JEM_PACKAGEDECLARATION:
-				case JEM_IMPORTDECLARATION:
-				case JEM_LOCALVARIABLE:
-				case JEM_TYPE_PARAMETER:
-				case JEM_ANNOTATION:
-					buffer.append(JEM_ESCAPE);
-			}
-			buffer.append(character);
-		}
+		MementoTokenizer.escape(buffer, mementoName);
 	}
 	/**
 	 * @see IJavaElement

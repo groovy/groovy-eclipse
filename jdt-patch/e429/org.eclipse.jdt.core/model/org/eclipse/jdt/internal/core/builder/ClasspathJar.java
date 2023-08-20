@@ -20,6 +20,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
@@ -90,15 +93,14 @@ protected SimpleSet findPackageSet() {
 			return cacheEntry;
 		}
 		long timestamp = this.lastModified();
-		long fileSize = new File(zipFileName).length();
-		if (cacheEntry != null && cacheEntry.lastModified == timestamp && cacheEntry.fileSize == fileSize) {
+		if (cacheEntry != null && cacheEntry.lastModified == timestamp && cacheEntry.fileSize == this.fileSize) {
 			cacheEntry.zipFile = new WeakReference<>(this.zipFile);
 			return cacheEntry;
 		}
 		final SimpleSet packageSet = new SimpleSet(41);
 		packageSet.add(""); //$NON-NLS-1$
 		readJarContent(packageSet);
-		return new PackageCacheEntry(this.zipFile, timestamp, fileSize, packageSet);
+		return new PackageCacheEntry(this.zipFile, timestamp, this.fileSize, packageSet);
 	});
 
 	return entry.packageSet;
@@ -157,6 +159,7 @@ String zipFilename; // keep for equals
 IFile resource;
 ZipFile zipFile;
 long lastModified;
+long fileSize;
 boolean closeZipFileAtEnd;
 private SimpleSet knownPackageNames;
 // Meant for ClasspathMultiReleaseJar, not used in here
@@ -346,8 +349,19 @@ private boolean scanContent() {
 }
 
 public long lastModified() {
-	if (this.lastModified == 0)
-		this.lastModified = new File(this.zipFilename).lastModified();
+	if (this.lastModified == 0) {
+		long lastMod=-1;
+		long size=-1;
+		try {
+			BasicFileAttributes attributes = Files.readAttributes(Path.of(this.zipFilename), BasicFileAttributes.class);
+			lastMod = attributes.lastModifiedTime().toMillis();
+			size = attributes.size();
+		} catch (IOException e) {
+			// ignore
+		}
+		this.lastModified = lastMod;
+		this.fileSize = size;
+	}
 	return this.lastModified;
 }
 

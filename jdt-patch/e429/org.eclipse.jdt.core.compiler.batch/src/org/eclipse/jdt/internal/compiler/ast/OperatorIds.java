@@ -14,6 +14,7 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 public interface OperatorIds {
+	/**  org.eclipse.jdt.core.dom.InfixExpression */
 	public static final int AND_AND = 0;
 	public static final int OR_OR = 1;
 	public static final int AND = 2;
@@ -33,14 +34,14 @@ public interface OperatorIds {
 	public static final int REMAINDER = 16;
 	public static final int RIGHT_SHIFT = 17;
 	public static final int EQUAL_EQUAL = 18;
-	public static final int UNSIGNED_RIGHT_SHIFT= 19;
-	public static final int NumberOfTables = 20;
+	public static final int UNSIGNED_RIGHT_SHIFT= 19; // last org.eclipse.jdt.internal.compiler.ast.OperatorExpression
 
-	public static final int QUESTIONCOLON = 23;
-
-	public static final int NOT_EQUAL = 29;
-	public static final int EQUAL = 30;
-	public static final int INSTANCEOF = 31;
-	public static final int PLUS_PLUS = 32;
-	public static final int MINUS_MINUS = 33;
+	public static final int NOT_EQUAL = 20;
+	public static final int EQUAL = 21;
+	/** others */
+	public static final int QUESTIONCOLON = 22;
+	public static final int INSTANCEOF = 23;
+	/** postfix */
+	public static final int PLUS_PLUS = 24;
+	public static final int MINUS_MINUS = 25;
 }

@@ -1044,7 +1044,7 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 			walker = binaryType.enrichWithExternalAnnotationsFor(walker, method, this.environment);
 		}
 		if (walker == ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER && this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-			walker = provideSyntheticEEA(method, argumentNames, walker);
+			walker = provideSyntheticEEA(method, walker);
 		}
 		methodModifiers |= ExtraCompilerModifiers.AccGenericSignature;
 		// MethodTypeSignature = ParameterPart(optional) '(' TypeSignatures ')' return_typeSignature ['^' TypeSignature (optional)]
@@ -1158,17 +1158,20 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 	return result;
 }
 
-protected ITypeAnnotationWalker provideSyntheticEEA(IBinaryMethod method, char[][] argumentNames, ITypeAnnotationWalker walker) {
+protected ITypeAnnotationWalker provideSyntheticEEA(IBinaryMethod method, ITypeAnnotationWalker walker) {
 	switch (this.id) {
 		case TypeIds.T_JavaUtilObjects:
 			if (this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_8
-					&& CharOperation.equals(method.getSelector(), TypeConstants.REQUIRE_NON_NULL)
-					&& argumentNames != null && argumentNames.length > 0)
+					&& CharOperation.equals(method.getSelector(), TypeConstants.REQUIRE_NON_NULL))
 			{
-				String eeaSource = argumentNames.length == 1
-						? "<TT;>(T0T;)T1T;" //$NON-NLS-1$
-						: "<TT;>(T0T;L0java/lang/String;)T1T;"; //$NON-NLS-1$
-				walker = ExternalAnnotationProvider.synthesizeForMethod(eeaSource.toCharArray(), this.environment);
+				String eeaSource = switch(method.getParameterCount()) {
+					case 1 -> "<TT;>(T0T;)T1T;"; //$NON-NLS-1$
+					case 2 -> "<TT;>(T0T;L0java/lang/String;)T1T;"; //$NON-NLS-1$
+					default -> null;
+				};
+				if (eeaSource != null) {
+					walker = ExternalAnnotationProvider.synthesizeForMethod(eeaSource.toCharArray(), this.environment);
+				}
 			}
 			break;
 	}

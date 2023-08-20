@@ -234,7 +234,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 													LambdaExpression lambda, ParameterizedTypeBinding targetTypeWithWildCards)
 	{
 		if (lambda.argumentsTypeElided()) {
-			return lambda.findGroundTargetTypeForElidedLambda(scope, targetTypeWithWildCards);
+			return targetTypeWithWildCards.getNonWildcardParameterization(scope);
 		} else {
 			SuspendedInferenceRecord previous = inferenceContext.enterLambda(lambda);
 			try {

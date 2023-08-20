@@ -51,6 +51,40 @@ public class MementoTokenizer {
 		return this.index < this.length;
 	}
 
+	public static String escape( String mementoName) {
+		StringBuffer sb = new StringBuffer();
+		escape(sb,mementoName);
+		return sb.toString();
+	}
+
+	public static void escape(StringBuffer buffer, String mementoName) {
+		for (int i = 0, length = mementoName.length(); i < length; i++) {
+			char character = mementoName.charAt(i);
+			switch (character) {
+				case JavaElement.JEM_MODULE:
+				case JavaElement.JEM_ESCAPE:
+				case JavaElement.JEM_COUNT:
+				case JavaElement.JEM_JAVAPROJECT:
+				case JavaElement.JEM_PACKAGEFRAGMENTROOT:
+				case JavaElement.JEM_PACKAGEFRAGMENT:
+				case JavaElement.JEM_FIELD:
+				case JavaElement.JEM_METHOD:
+				case JavaElement.JEM_INITIALIZER:
+				case JavaElement.JEM_COMPILATIONUNIT:
+				case JavaElement.JEM_CLASSFILE:
+				case JavaElement.JEM_MODULAR_CLASSFILE:
+				case JavaElement.JEM_TYPE:
+				case JavaElement.JEM_PACKAGEDECLARATION:
+				case JavaElement.JEM_IMPORTDECLARATION:
+				case JavaElement.JEM_LOCALVARIABLE:
+				case JavaElement.JEM_TYPE_PARAMETER:
+				case JavaElement.JEM_ANNOTATION:
+					buffer.append(JavaElement.JEM_ESCAPE);
+			}
+			buffer.append(character);
+		}
+	}
+
 	public String nextToken() {
 		int start = this.index;
 		StringBuilder buffer = null;

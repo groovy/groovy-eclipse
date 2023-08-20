@@ -58,7 +58,6 @@ public class JrtUtilTest extends TestCase {
 	}
 
 	@Test
-	@SuppressWarnings("deprecation")
 	public void testGetNewJrtFileSystem() throws Exception {
 		int majorVersionSegment = getMajorVersionSegment(this.jdkRelease);
 		Object jrtSystem = JRTUtil.getJrtSystem(this.image);

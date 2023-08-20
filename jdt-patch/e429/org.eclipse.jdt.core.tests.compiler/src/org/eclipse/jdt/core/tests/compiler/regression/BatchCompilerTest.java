@@ -13467,4 +13467,53 @@ public void testIssue89_5() {
 				"error: warnings found and -failOnWarning specified\n",
 				true);
 }
+
+public void testGitHub316(){
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+					"void m() { (1+2) = 3; }"+// was IllegalArgumentException in InfixExpression#setOperator
+			"}"},
+        "\"" + OUTPUT_DIR +  File.separator +
+        	"X.java\"",
+		"",
+		"----------\n"
+		+ "1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 2)\n"
+		+ "	void m() { (1+2) = 3; }}\n"
+		+ "	           ^^^^^\n"
+		+ "The left-hand side of an assignment must be a variable\n"
+		+ "----------\n"
+		+ "1 problem (1 error)\n"
+		+ "",
+		true);
+}
+public void testGitHub1122(){
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+					"void m() {"
+					+ ".a() >0);"// was IllegalArgumentException in InfixExpression#setOperator
+					+ " }"+
+			"}"},
+        "\"" + OUTPUT_DIR +  File.separator +
+        	"X.java\"",
+		"",
+		"----------\n"
+		+ "1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 2)\n"
+		+ "	void m() {.a() >0); }}\n"
+		+ "	          ^\n"
+		+ "Syntax error on token \".\", invalid (\n"
+		+ "----------\n"
+		+ "2. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 2)\n"
+		+ "	void m() {.a() >0); }}\n"
+		+ "	                 ^\n"
+		// XXX ASTParser instead reports "The left-hand side of an assignment must be a variable":
+		+ "Syntax error, insert \"AssignmentOperator Expression\" to complete Expression\n"
+		+ "----------\n"
+		+ "2 problems (2 errors)\n"
+		+ "",
+		true);
+}
 }

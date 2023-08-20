@@ -838,8 +838,8 @@ protected synchronized void moveToNextJob() {
  * No more job awaiting.
  */
 @Override
-protected void notifyIdle(long idlingTime){
-	if (idlingTime > INDEX_MANAGER_NOTIFY_IDLE_WAIT && this.needToSave) saveIndexes();
+protected void notifyIdle(long idlingMilliSeconds){
+	if (idlingMilliSeconds > INDEX_MANAGER_NOTIFY_IDLE_WAIT && this.needToSave) saveIndexes();
 }
 /**
  * Name of the background process
@@ -1744,13 +1744,9 @@ public Optional<MetaIndex> getMetaIndex() {
 
 void scheduleForMetaIndexUpdate(Index index) {
 	synchronized(this.metaIndexUpdates){
-		if (this.metaIndexUpdates.contains(index)) {
-			if (VERBOSE) {
-				Util.verbose("-> already waiting for meta-index update for " + index); //$NON-NLS-1$
-			}
-			return;
+		if (!this.metaIndexUpdates.add(index) && VERBOSE) {
+			Util.verbose("-> already waiting for meta-index update for " + index); //$NON-NLS-1$
 		}
-		this.metaIndexUpdates.add(index);
 	}
 	requestIfNotWaiting(new MetaIndexUpdateRequest());
 }

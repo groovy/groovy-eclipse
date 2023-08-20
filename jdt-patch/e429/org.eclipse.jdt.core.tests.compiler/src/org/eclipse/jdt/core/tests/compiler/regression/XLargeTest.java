@@ -15,9 +15,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Random;
 
+import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.core.util.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
@@ -2403,7 +2406,7 @@ public void test008() {
 		"	static public final int tMACROEXP = 138;\n" +
 		"	static public final int tPOUNDPOUND = 139;\n" +
 		"	static public final int tCOMPLETION = 140;\n" +
-		"	static public final int tEOC = 141; // End of Completion\\n\" + \n" +
+		"	static public final int tEOC = 141; // End of Completion\" + \n" +
 		"	static public final int tLAST = 141;\n" +
 		"}\n" +
 		"class Keywords {\n" +
@@ -2620,7 +2623,7 @@ public void test008() {
 		"	public static final char[] cpDIV = 	\"/\".toCharArray(); //$NON-NLS-1$\n" +
 		"	public static final char[] cpPOUND = \"#\".toCharArray(); //$NON-NLS-1$\n" +
 		"	public static final char[] cpPOUNDPOUND = \"##\".toCharArray(); //$NON-NLS-1$\n" +
-		"	// preprocessor keywords\\n\" + \n" +
+		"	// preprocessor keywords\" + \n" +
 		"	public static final char[] cIFDEF = \"ifdef\".toCharArray(); //$NON-NLS-1$\n" +
 		"	public static final char[] cIFNDEF = \"ifndef\".toCharArray(); //$NON-NLS-1$\n" +
 		"	public static final char[] cELIF = \"elif\".toCharArray(); //$NON-NLS-1$\n" +
@@ -3736,7 +3739,9 @@ public void test010() {
 // need to use a computed string (else this source file will get blown away
 // as well)
 public void test011() {
-	int length = 3 * 54 * 500;
+	if (this.complianceLevel >= ClassFileConstants.JDK9)
+		return;
+	int length = 3 * 54 * 1000;
 		// the longer the slower, but still needs to reach the limit...
 	StringBuilder veryLongString = new StringBuilder(length + 20);
 	veryLongString.append('"');
@@ -3746,20 +3751,6 @@ public void test011() {
 		veryLongString.append(random.nextLong());
 	}
 	veryLongString.append('"');
-	String expectedError = this.complianceLevel >= ClassFileConstants.JDK9 ?
-			"----------\n" +
-			"1. ERROR in X.java (at line 1)\n" +
-			"	public class X {\n" +
-			"	             ^\n" +
-			"The type generates a string that requires more than 65535 bytes to encode in Utf8 format in the constant pool\n" +
-			"----------\n" :
-				"----------\n" +
-				"1. ERROR in X.java (at line 2)\n" +
-				"	void foo(String a, String b, String c, String d, String e) {\n" +
-				"	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"The code of method foo(String, String, String, String, String) is " +
-					"exceeding the 65535 bytes limit\n" +
-				"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -3768,14 +3759,16 @@ public void test011() {
 			"    String s = \n" +
 			veryLongString.toString() +
 			"    	+ \"abcdef\" + a + b + c + d + e + \" ghiABCDEFGHIJKLMNOPQRSTUVWXYZjklmnopqrstuvwxyzabcdefghiABCDEFGHIJKLMNOPQRSTUVWXYZjklmnopqrstuvwxyzabcdefghiABCDEFGHIJKLMNOPQRSTUVWXYZjklmnopqrstuvwxyzabcdefghiABCDEFGHIJKLMNOPQRSTUVWXYZjklmnopqrstuvwxy12\";\n" +
-			"    for(int i = 0; i < 100; i++) {\n" +
-			"      s += " + veryLongString.toString() + ";\n" +
 			"    }\n" +
-			"  }\n" +
 			"}"
 		},
-		expectedError
-		);
+		"----------\n" +
+		"1. ERROR in X.java (at line 2)\n" +
+		"	void foo(String a, String b, String c, String d, String e) {\n" +
+		"	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"The code of method foo(String, String, String, String, String) is " +
+			"exceeding the 65535 bytes limit\n" +
+		"----------\n");
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=102728
@@ -3785,7 +3778,7 @@ public void test012() {
 			"public class X {\n" +
 			"  void foo(String a, String b, String c, String d, String e) {\n" +
 			"    String s = a + (\n");
-	for (int i = 0; i < 500; i++) {
+	for (int i = 0; i < 1000; i++) {
 		sourceCode.append(
 			"    	\"abcdef\" + a + b + c + d + e + " +
 			"\" ghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmno" +
@@ -20725,6 +20718,311 @@ public void testBug519070() {
 					sourceCode.toString()
 			},
 			"SUCCESS");
+}
+public void testIssue1164a() throws ClassFormatException, IOException {
+	if (this.complianceLevel < ClassFileConstants.JDK9)
+		return;
+	StringBuilder sourceCode = new StringBuilder(
+			"public class X {\n" +
+			"  void foo(String a, String b, String c, String d, String e, String f) {\n" +
+			"    String s = a + (\n");
+	for (int i = 0; i < 1000; i++) {
+		sourceCode.append(
+			"    	\"abcdef\" + a + b + c + d + e + f + " +
+			"\" ghijk" +
+			"pqrstu\" +\n");
+	}
+	sourceCode.append(
+			"    	\"abcdef\" + a + b + c + d + e + \" ghijk" +
+			"abcdefgh" +
+			"abcdefgh\");\n" +
+			"    }\n" +
+			"}");
+	this.runConformTest(
+		true,
+		new String[] {
+			"X.java",
+			sourceCode.toString()
+		},
+		null,
+		"",
+		null,
+		JavacTestOptions.JavacHasABug.JavacThrowsAnException /* stack overflow */); // transient, platform-dependent
+	String expectedOutput =
+			"  void foo(String a, String b, String c, String d, String e, String f);\n"
+			+ "       0  aload_1 [a]\n"
+			+ "       1  aload_1 [a]\n"
+			+ "       2  aload_2 [b]\n"
+			+ "       3  aload_3 [c]\n"
+			+ "       4  aload 4 [d]\n"
+			+ "       6  aload 5 [e]\n"
+			+ "       8  aload 6 [f]\n"
+			+ "      10  aload_1 [a]\n"
+			+ "      11  aload_2 [b]\n"
+			+ "      12  aload_3 [c]\n"
+			+ "      13  aload 4 [d]\n"
+			+ "      15  aload 5 [e]\n"
+			+ "      17  aload 6 [f]\n"
+			+ "      19  aload_1 [a]\n"
+			+ "      20  aload_2 [b]\n"
+			+ "      21  aload_3 [c]\n"
+			+ "      22  aload 4 [d]\n"
+			+ "      24  aload 5 [e]\n"
+			+ "      26  aload 6 [f]\n"
+			+ "      28  aload_1 [a]\n"
+			+ "      29  aload_2 [b]\n"
+			+ "      30  aload_3 [c]\n"
+			+ "      31  aload 4 [d]\n"
+			+ "      33  aload 5 [e]\n"
+			+ "      35  aload 6 [f]\n"
+			+ "      37  aload_1 [a]\n"
+			+ "      38  aload_2 [b]\n"
+			+ "      39  aload_3 [c]\n"
+			+ "      40  aload 4 [d]\n"
+			+ "      42  aload 5 [e]\n"
+			+ "      44  aload 6 [f]\n"
+			+ "      46  aload_1 [a]\n"
+			+ "      47  aload_2 [b]\n"
+			+ "      48  aload_3 [c]\n"
+			+ "      49  aload 4 [d]\n"
+			+ "      51  aload 5 [e]\n"
+			+ "      53  aload 6 [f]\n"
+			+ "      55  aload_1 [a]\n"
+			+ "      56  aload_2 [b]\n"
+			+ "      57  aload_3 [c]\n"
+			+ "      58  aload 4 [d]\n"
+			+ "      60  aload 5 [e]\n"
+			+ "      62  aload 6 [f]\n"
+			+ "      64  aload_1 [a]\n"
+			+ "      65  aload_2 [b]\n"
+			+ "      66  aload_3 [c]\n"
+			+ "      67  aload 4 [d]\n"
+			+ "      69  aload 5 [e]\n"
+			+ "      71  aload 6 [f]\n"
+			+ "      73  aload_1 [a]\n"
+			+ "      74  aload_2 [b]\n"
+			+ "      75  aload_3 [c]\n"
+			+ "      76  aload 4 [d]\n"
+			+ "      78  aload 5 [e]\n"
+			+ "      80  aload 6 [f]\n"
+			+ "      82  aload_1 [a]\n"
+			+ "      83  aload_2 [b]\n"
+			+ "      84  aload_3 [c]\n"
+			+ "      85  aload 4 [d]\n"
+			+ "      87  aload 5 [e]\n"
+			+ "      89  aload 6 [f]\n"
+			+ "      91  aload_1 [a]\n"
+			+ "      92  aload_2 [b]\n"
+			+ "      93  aload_3 [c]\n"
+			+ "      94  aload 4 [d]\n"
+			+ "      96  aload 5 [e]\n"
+			+ "      98  aload 6 [f]\n"
+			+ "     100  aload_1 [a]\n"
+			+ "     101  aload_2 [b]\n"
+			+ "     102  aload_3 [c]\n"
+			+ "     103  aload 4 [d]\n"
+			+ "     105  aload 5 [e]\n"
+			+ "     107  aload 6 [f]\n"
+			+ "     109  aload_1 [a]\n"
+			+ "     110  aload_2 [b]\n"
+			+ "     111  aload_3 [c]\n"
+			+ "     112  aload 4 [d]\n"
+			+ "     114  aload 5 [e]\n"
+			+ "     116  aload 6 [f]\n"
+			+ "     118  aload_1 [a]\n"
+			+ "     119  aload_2 [b]\n"
+			+ "     120  aload_3 [c]\n"
+			+ "     121  aload 4 [d]\n"
+			+ "     123  aload 5 [e]\n"
+			+ "     125  aload 6 [f]\n"
+			+ "     127  aload_1 [a]\n"
+			+ "     128  aload_2 [b]\n"
+			+ "     129  aload_3 [c]\n"
+			+ "     130  aload 4 [d]\n"
+			+ "     132  aload 5 [e]\n"
+			+ "     134  aload 6 [f]\n"
+			+ "     136  aload_1 [a]\n"
+			+ "     137  aload_2 [b]\n"
+			+ "     138  aload_3 [c]\n"
+			+ "     139  aload 4 [d]\n"
+			+ "     141  aload 5 [e]\n"
+			+ "     143  aload 6 [f]\n"
+			+ "     145  aload_1 [a]\n"
+			+ "     146  aload_2 [b]\n"
+			+ "     147  aload_3 [c]\n"
+			+ "     148  aload 4 [d]\n"
+			+ "     150  aload 5 [e]\n"
+			+ "     152  aload 6 [f]\n"
+			+ "     154  aload_1 [a]\n"
+			+ "     155  aload_2 [b]\n"
+			+ "     156  aload_3 [c]\n"
+			+ "     157  aload 4 [d]\n"
+			+ "     159  aload 5 [e]\n"
+			+ "     161  aload 6 [f]\n"
+			+ "     163  aload_1 [a]\n"
+			+ "     164  aload_2 [b]\n"
+			+ "     165  aload_3 [c]\n"
+			+ "     166  aload 4 [d]\n"
+			+ "     168  aload 5 [e]\n"
+			+ "     170  aload 6 [f]\n"
+			+ "     172  aload_1 [a]\n"
+			+ "     173  aload_2 [b]\n"
+			+ "     174  aload_3 [c]\n"
+			+ "     175  aload 4 [d]\n"
+			+ "     177  aload 5 [e]\n"
+			+ "     179  aload 6 [f]\n"
+			+ "     181  aload_1 [a]\n"
+			+ "     182  aload_2 [b]\n"
+			+ "     183  aload_3 [c]\n"
+			+ "     184  aload 4 [d]\n"
+			+ "     186  aload 5 [e]\n"
+			+ "     188  aload 6 [f]\n"
+			+ "     190  aload_1 [a]\n"
+			+ "     191  aload_2 [b]\n"
+			+ "     192  aload_3 [c]\n"
+			+ "     193  aload 4 [d]\n"
+			+ "     195  aload 5 [e]\n"
+			+ "     197  aload 6 [f]\n"
+			+ "     199  aload_1 [a]\n"
+			+ "     200  aload_2 [b]\n"
+			+ "     201  aload_3 [c]\n"
+			+ "     202  aload 4 [d]\n"
+			+ "     204  aload 5 [e]\n"
+			+ "     206  aload 6 [f]\n"
+			+ "     208  aload_1 [a]\n"
+			+ "     209  aload_2 [b]\n"
+			+ "     210  aload_3 [c]\n"
+			+ "     211  aload 4 [d]\n"
+			+ "     213  aload 5 [e]\n"
+			+ "     215  aload 6 [f]\n"
+			+ "     217  aload_1 [a]\n"
+			+ "     218  aload_2 [b]\n"
+			+ "     219  aload_3 [c]\n"
+			+ "     220  aload 4 [d]\n"
+			+ "     222  aload 5 [e]\n"
+			+ "     224  aload 6 [f]\n"
+			+ "     226  aload_1 [a]\n"
+			+ "     227  aload_2 [b]\n"
+			+ "     228  aload_3 [c]\n"
+			+ "     229  aload 4 [d]\n"
+			+ "     231  aload 5 [e]\n"
+			+ "     233  aload 6 [f]\n"
+			+ "     235  aload_1 [a]\n"
+			+ "     236  aload_2 [b]\n"
+			+ "     237  aload_3 [c]\n"
+			+ "     238  aload 4 [d]\n"
+			+ "     240  aload 5 [e]\n"
+			+ "     242  aload 6 [f]\n"
+			+ "     244  aload_1 [a]\n"
+			+ "     245  aload_2 [b]\n"
+			+ "     246  aload_3 [c]\n"
+			+ "     247  aload 4 [d]\n"
+			+ "     249  aload 5 [e]\n"
+			+ "     251  aload 6 [f]\n"
+			+ "     253  aload_1 [a]\n"
+			+ "     254  aload_2 [b]\n"
+			+ "     255  aload_3 [c]\n"
+			+ "     256  aload 4 [d]\n"
+			+ "     258  aload 5 [e]\n"
+			+ "     260  aload 6 [f]\n"
+			+ "     262  aload_1 [a]\n"
+			+ "     263  aload_2 [b]\n"
+			+ "     264  aload_3 [c]\n"
+			+ "     265  aload 4 [d]\n"
+			+ "     267  aload 5 [e]\n"
+			+ "     269  aload 6 [f]\n"
+			+ "     271  aload_1 [a]\n"
+			+ "     272  aload_2 [b]\n"
+			+ "     273  aload_3 [c]\n"
+			+ "     274  aload 4 [d]\n"
+			+ "     276  aload 5 [e]\n"
+			+ "     278  aload 6 [f]\n"
+			+ "     280  aload_1 [a]\n"
+			+ "     281  aload_2 [b]\n"
+			+ "     282  aload_3 [c]\n"
+			+ "     283  aload 4 [d]\n"
+			+ "     285  invokedynamic 0 makeConcatWithConstants(String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) : String [16]\n";
+	checkClassFile("X", sourceCode.toString(), expectedOutput, ClassFileBytesDisassembler.DETAILED | ClassFileBytesDisassembler.COMPACT);
+	expectedOutput = "  31 : # 69 invokestatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" +
+			"	Method arguments:\n" +
+			"		#78  ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkpqrstuabcdef ghijkabcdefghabcdefgh\n" +
+			"}";
+	checkClassFile("X", sourceCode.toString(), expectedOutput, ClassFileBytesDisassembler.DETAILED | ClassFileBytesDisassembler.COMPACT);
+}
+public void testIssue1164b() {
+	if (this.complianceLevel < ClassFileConstants.JDK9)
+		return;
+	StringBuilder sourceCode = new StringBuilder(
+			"public class X {\n" +
+			"  public static void main(String[] args) {\n" +
+			"    (new X()).foo(\"a\", \"b\", \"c\", \"d\", \"e\", \"fa\");\n" +
+			"  }\n" +
+			"  void foo(String a, String b, String c, String d, String e, String f) {\n" +
+			"    String s = a + (\n");
+	for (int i = 0; i < 200; i++) {
+		sourceCode.append(
+			"    	\"abcdef\" + a + b + c + d + e + f + " +
+			"\" ghijk" +
+			"pqrstu\" +\n");
+	}
+	sourceCode.append(
+			"    \"abcdef\" + a + b + c + d + e + \" ghijk" +
+			"abcdefgh" +
+			"abcdefgh\");\n" +
+			"  System.out.println(s);\n" +
+			"    }\n" +
+			"}");
+	String output = "aabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa ghijkpqrstuabcdefabcdefa "
+			+ "ghijkpqrstuabcdefabcde ghijkabcdefghabcdefgh";
+	this.runConformTest(
+		true,
+		new String[] {
+			"X.java",
+			sourceCode.toString()
+		},
+		null,
+		output,
+		null,
+		JavacTestOptions.JavacHasABug.JavacThrowsAnException /* stack overflow */); // transient, platform-dependent
 }
 public static Class testClass() {
 	return XLargeTest.class;

@@ -28,6 +28,7 @@ public class SelectionOnLambdaExpression extends LambdaExpression {
 		this.sourceEnd = expression.sourceEnd;
 		this.hasParentheses = expression.hasParentheses;
 		this.statementEnd = expression.statementEnd;
+		this.text = expression.text;
 		this.setBody(expression.body());
 		this.setArguments(expression.arguments());
 		this.setArrowPosition(expression.arrowPosition());

@@ -534,22 +534,13 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 						freshInferenceContext.cleanUp();
 					}
 				} else {
-					return findGroundTargetTypeForElidedLambda(blockScope, withWildCards);
+					return withWildCards.getNonWildcardParameterization(blockScope);
 				}
 			}
 			if (targetType instanceof ReferenceBinding)
 				return (ReferenceBinding) targetType;
 		}
 		return null;
-	}
-
-	public ReferenceBinding findGroundTargetTypeForElidedLambda(BlockScope blockScope, ParameterizedTypeBinding withWildCards) {
-		// non-wildcard parameterization (9.8) of the target type
-		TypeBinding[] types = withWildCards.getNonWildcardParameterization(blockScope);
-		if (types == null)
-			return null;
-		ReferenceBinding genericType = withWildCards.genericType();
-		return blockScope.environment().createParameterizedType(genericType, types, withWildCards.enclosingType());
 	}
 
 	@Override

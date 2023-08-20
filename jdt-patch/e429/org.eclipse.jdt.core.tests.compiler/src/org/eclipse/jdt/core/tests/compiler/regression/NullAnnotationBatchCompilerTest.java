@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.batch.ClasspathJrt;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 import junit.framework.Test;
 
@@ -127,6 +129,14 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 	protected void tearDown() throws Exception {
 		super.tearDown();
 		Util.delete(OUTPUT_DIR);
+	}
+
+	/** Call this to discard eea-superimposed JRE classes from the JRT cache. */
+	public void clearJrtCache(String releaseVersion) {
+		String[] javaClassLibs = Util.getJavaClassLibs();
+		if (javaClassLibs.length == 1 && javaClassLibs[0].endsWith("/lib/jrt-fs.jar")) {
+			ClasspathJrt.clearCache(javaClassLibs[0], releaseVersion);
+		}
 	}
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=325342
@@ -1138,42 +1148,79 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 	}
 
 	public void testGHTycho1641() throws IOException {
-		// tests external annotations with --release option
-		String annotDir = OUTPUT_DIR + File.separator + "eea";
-		String annotJavaUtilDir = annotDir + "/java/util".replace('/', File.separatorChar);
-		new File(annotJavaUtilDir).mkdirs();
-		Util.createFile(annotJavaUtilDir + File.separatorChar + "Objects.eea",
-				"class java/util/Objects\n" +
-				"requireNonNull\n" +
-				" <T:Ljava/lang/Object;>(TT;)TT;\n" +
-				" <T:Ljava/lang/Object;>(TT;)T1T;\n");
+		try {
+			// tests external annotations with --release option
+			String annotDir = OUTPUT_DIR + File.separator + "eea";
+			String annotJavaUtilDir = annotDir + "/java/util".replace('/', File.separatorChar);
+			new File(annotJavaUtilDir).mkdirs();
+			Util.createFile(annotJavaUtilDir + File.separatorChar + "Objects.eea",
+					"class java/util/Objects\n" +
+					"requireNonNull\n" +
+					" <T:Ljava/lang/Object;>(TT;)TT;\n" +
+					" <T:Ljava/lang/Object;>(TT;)T1T;\n");
+			runConformTest(
+				new String[] {
+					"org/eclipse/jdt/annotation/NonNull.java",
+					NONNULL_ANNOTATION_18_CONTENT,
+					"org/eclipse/jdt/annotation/Nullable.java",
+					NULLABLE_ANNOTATION_18_CONTENT,
+					"collectiontest/TestClass.java",
+					"package collectiontest;\n" +
+					"import java.util.Objects;\n" +
+					"import org.eclipse.jdt.annotation.Nullable;\n" +
+					"public class TestClass {\n" +
+					"\n" +
+					"    @Nullable String test;\n" +
+					"\n" +
+					"    public void concat(String suffix) {\n" +
+					"        test = Objects.requireNonNull(test).concat(suffix);\n" +
+					"    }\n" +
+					"}\n"
+				},
+				"--release 11 "+
+				" -sourcepath \"" + OUTPUT_DIR + "\"" +
+				" -annotationpath \""+annotDir+ "\"" +
+				" -err:+nullAnnot -err:+null -proc:none -d \"" + OUTPUT_DIR + "\"" +
+				" \"" + OUTPUT_DIR +  File.separator + "collectiontest" + File.separator + "TestClass.java\"",
+				"",
+				"",
+				false);
+		} finally {
+			clearJrtCache("11");
+		}
+	}
+
+	public void testGH703() {
+		// replicates NullTypeAnnotationTest.testBug456584() but with --release option
 		runConformTest(
 			new String[] {
+				"p/Test.java",
+				"package p;\n" +
+				"import java.util.*;\n" +
+				"import java.util.function.*;\n" +
+				"import org.eclipse.jdt.annotation.*;\n" +
+				"\n" +
+				"@NonNullByDefault\n" +
+				"public class Test {\n" +
+				"\n" +
+				"  public static final <T,R> @NonNull R applyRequired(final T input, final Function<? super T,? extends R> function) { // Warning on '@NonNull R': \"The nullness annotation is redundant with a default that applies to this location\"\n" +
+				"    return Objects.requireNonNull(function.apply(input));\n" +
+				"  }\n" +
+				"\n" +
+				"}\n",
 				"org/eclipse/jdt/annotation/NonNull.java",
 				NONNULL_ANNOTATION_18_CONTENT,
 				"org/eclipse/jdt/annotation/Nullable.java",
 				NULLABLE_ANNOTATION_18_CONTENT,
-				"collectiontest/TestClass.java",
-				"package collectiontest;\n" +
-				"import java.util.Objects;\n" +
-				"import org.eclipse.jdt.annotation.Nullable;\n" +
-				"public class TestClass {\n" +
-				"\n" +
-				"    @Nullable String test;\n" +
-				"\n" +
-				"    public void concat(String suffix) {\n" +
-				"        test = Objects.requireNonNull(test).concat(suffix);\n" +
-				"    }\n" +
-				"}\n"
+				"org/eclipse/jdt/annotation/NonNullByDefault.java",
+				NONNULL_BY_DEFAULT_ANNOTATION_CONTENT
 			},
-			"--release 11 "+
-			" -sourcepath \"" + OUTPUT_DIR + "\"" +
-			" -annotationpath \""+annotDir+ "\"" +
-			" -err:+nullAnnot -err:+null -proc:none -d \"" + OUTPUT_DIR + "\"" +
-			" \"" + OUTPUT_DIR +  File.separator + "collectiontest" + File.separator + "TestClass.java\"",
-			"",
-			"",
-			false);
+			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "Test.java\"" +
+					" --release " + CompilerOptions.VERSION_9 + " " +
+					" -sourcepath \"" + OUTPUT_DIR + "\"" +
+					" -warn:+nullAnnot -warn:+null ",
+					"",
+					"",
+					true);
 	}
-
 }

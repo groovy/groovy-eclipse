@@ -59,6 +59,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
@@ -931,6 +932,24 @@ public void generateOptimizedStringConcatenationCreation(BlockScope blockScope, 
 	}
 	codeStream.invokeStringConcatenationStringConstructor();
 }
+private void addArgumentToRecipe(BlockScope blockScope, CodeStream codeStream, StringBuilder recipe, TypeBinding argType, List<TypeBinding> args) {
+	recipe.append(STRING_CONCAT_MARKER_1);
+	args.add(argType);
+	if (args.size() > 190) {
+		// StringConcatFactory#makeConcatWithConstants() can take only 200 arguments
+		// Commit whatever we have accumulated so far
+		// Get the result pushed to the stack and to be used as an operand
+		// for the subsequent concat operation
+		codeStream.invokeDynamicForStringConcat(recipe, args);
+		// Clear the arguments for the next batch
+		args.clear();
+		recipe.delete(0, recipe.length());
+		recipe.append(TypeConstants.STRING_CONCAT_MARKER_1);
+		args.add(blockScope.getJavaLangString());
+		// We popped 190 and adding 1 for the invokeDynamic
+		codeStream.stackDepth -= 189;
+	}
+}
 public void buildStringForConcatation(BlockScope blockScope, CodeStream codeStream, int typeID, StringBuilder recipe, List<TypeBinding> argTypes) {
 	if (this.constant == Constant.NotAConstant) {
 		switch (typeID) {
@@ -944,27 +963,23 @@ public void buildStringForConcatation(BlockScope blockScope, CodeStream codeStre
 			case TypeIds.T_char :
 			case TypeIds.T_boolean :
 				generateCode(blockScope, codeStream, true);
-				argTypes.add(this.resolvedType);
-				recipe.append(STRING_CONCAT_MARKER_1);
+				addArgumentToRecipe(blockScope, codeStream, recipe, this.resolvedType, argTypes);
 				break;
 			default :
 				if (this.resolvedType.id == TypeIds.T_null) {
-					// Optimize it, avoid aconst_null, simply append the String Literal
-					recipe.append((String) null);
+					codeStream.aconst_null();
 				} else {
 					generateCode(blockScope, codeStream, true);
 					codeStream.invokeStringValueOf(typeID);
-					argTypes.add(blockScope.getJavaLangString());
-					recipe.append(STRING_CONCAT_MARKER_1);
 				}
+				addArgumentToRecipe(blockScope, codeStream, recipe, blockScope.getJavaLangString(), argTypes);
 				break;
 		}
 	} else {
 		// StringLiteral and CharLiteral may contain special characters
 		if (this.constant.stringValue().indexOf('\u0001') != -1 || this.constant.stringValue().indexOf('\u0002') != -1) {
 			codeStream.ldc(this.constant.stringValue());
-			recipe.append(STRING_CONCAT_MARKER_1);
-			argTypes.add(blockScope.getJavaLangString());
+			addArgumentToRecipe(blockScope, codeStream, recipe, blockScope.getJavaLangString(), argTypes);
 		} else {
 			recipe.append(this.constant.stringValue());
 		}

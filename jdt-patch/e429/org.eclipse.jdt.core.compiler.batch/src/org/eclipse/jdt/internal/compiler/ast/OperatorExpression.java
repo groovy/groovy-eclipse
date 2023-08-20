@@ -20,7 +20,7 @@ import org.eclipse.jdt.internal.compiler.util.Util;
 
 public abstract class OperatorExpression extends Expression implements OperatorIds {
 
-	public static int[][] OperatorSignatures = new int[NumberOfTables][];
+	public static int[][] OperatorSignatures = new int[UNSIGNED_RIGHT_SHIFT+1][];
 
 	static {classInitialize();}
 
@@ -1509,7 +1509,8 @@ public abstract class OperatorExpression extends Expression implements OperatorI
 	}
 
 	public String operatorToString() {
-		switch ((this.bits & OperatorMASK) >> OperatorSHIFT) {
+		int op = (this.bits & OperatorMASK) >> OperatorSHIFT;
+		switch (op) {
 			case EQUAL_EQUAL :
 				return "=="; //$NON-NLS-1$
 			case LESS_EQUAL :
@@ -1556,8 +1557,14 @@ public abstract class OperatorExpression extends Expression implements OperatorI
 				return "?:"; //$NON-NLS-1$
 			case EQUAL :
 				return "="; //$NON-NLS-1$
+			case INSTANCEOF :
+				return "instanceof"; //$NON-NLS-1$
+			case PLUS_PLUS :
+				return "++"; //$NON-NLS-1$
+			case MINUS_MINUS :
+				return "--"; //$NON-NLS-1$
 		}
-		return "unknown operator"; //$NON-NLS-1$
+		return "unknown operator " + op; //$NON-NLS-1$
 	}
 
 	@Override

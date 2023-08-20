@@ -9418,4 +9418,22 @@ public void testBug576719() {
 		// javac options
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
 }
+public void testGH1258() {
+	runConformTest(
+		new String[] {
+			"Main.java",
+			"""
+			public class Main {
+				public static void main(String[] args) {
+				MyRecord test = new MyRecord(0, 0);
+				System.out.println(test.field1());
+				}
+			}
+
+			@Deprecated(since = MyRecord.STATIC_VALUE)
+			record MyRecord(int field1, int field2) {
+				public static final String STATIC_VALUE = "test";
+			}
+			"""});
+}
 }

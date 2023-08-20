@@ -40,7 +40,6 @@ import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
@@ -1323,7 +1322,8 @@ public class JavaProject
 		StringReader reader = new StringReader(xmlClasspath);
 		Element cpElement;
 		try {
-			DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			@SuppressWarnings("restriction")
+			DocumentBuilder parser = org.eclipse.core.internal.runtime.XmlProcessorFactory.createDocumentBuilderWithErrorOnDOCTYPE();
 			cpElement = parser.parse(new InputSource(reader)).getDocumentElement();
 		} catch (SAXException | ParserConfigurationException e) {
 			throw new IOException(Messages.file_badFormat, e);
@@ -1384,8 +1384,9 @@ public class JavaProject
 			Element node;
 
 			try {
+				@SuppressWarnings("restriction")
 				DocumentBuilder parser =
-					DocumentBuilderFactory.newInstance().newDocumentBuilder();
+						org.eclipse.core.internal.runtime.XmlProcessorFactory.createDocumentBuilderWithErrorOnDOCTYPE();
 				node = parser.parse(new InputSource(reader)).getDocumentElement();
 			} catch (SAXException | ParserConfigurationException e) {
 				return null;
