@@ -267,11 +267,17 @@ public class MethodNode extends AnnotatedNode {
         /* GRECLIPSE edit
         return Boolean.TRUE.equals(getNodeMetaData("org.codehaus.groovy.ast.MethodNode.isScriptBody"));
         */
-        return getName().equals("run")
-            && getDeclaringClass() != null
-            && getDeclaringClass().isScript()
-            && (parameters == null || parameters.length == 0)
-            && (returnType != null && returnType.getName().equals(ClassHelper.OBJECT));
+        if ((modifiers & 0x144F) == ACC_PUBLIC) { // synthetic, abstract, bridge, static, protected, private, public
+            ClassNode declaringClass = getDeclaringClass();
+            if (declaringClass != null && !declaringClass.isAbstract() && declaringClass.isScript()
+                    && getAnnotations().stream().map(a -> a.getClassNode().getName()).anyMatch(t -> t.equals("java.lang.Override") || t.equals("groovy.transform.Generated"))) {
+                MethodNode sam = ClassHelper.findSAM(declaringClass.getSuperClass());
+                if (sam != null) {
+                    return sam.getName().equals(getName()) && org.codehaus.groovy.ast.tools.ParameterUtils.parametersEqual(sam.getParameters(), getParameters());
+                }
+            }
+        }
+        return false;
         // GRECLIPSE end
     }
 

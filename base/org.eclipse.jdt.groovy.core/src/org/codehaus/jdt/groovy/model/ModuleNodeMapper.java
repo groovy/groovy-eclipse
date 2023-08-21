@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
@@ -167,7 +168,7 @@ public class ModuleNodeMapper {
                     (module.getPackage() != null && !module.getPackage().getAnnotations().isEmpty())) {
                 return false;
             }
-            if (module.getClasses().isEmpty() || (module.getClasses().get(0).isScript() &&
+            if (module.getClasses().isEmpty() || (GroovyUtils.isScript(module.getClasses().get(0)) &&
                     module.getClasses().get(0).getFields().stream().noneMatch(f -> f.getEnd() > 0) &&
                     (module.getStatementBlock().isEmpty() || isNullReturn(module.getStatementBlock())))) {
                 return true;

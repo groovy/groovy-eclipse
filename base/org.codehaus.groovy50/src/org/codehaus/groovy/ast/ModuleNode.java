@@ -407,9 +407,6 @@ public class ModuleNode extends ASTNode {
             existingMain.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
             methods.forEach(result::addMethod);
             fields.forEach(result::addField);
-            // GRECLIPSE add
-            result.setScriptBody(true);
-            // GRECLIPSE end
             return result;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.refactoring.Checks;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
@@ -335,7 +336,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
         MethodNode containingMethod = getContainingMethodNode();
         if (containingMethod != null && containingMethod.isScriptBody() && getContainingClosureExpression() == null) {
             textEdit = new InsertEdit(getDeclarationOffset(), "@groovy.transform.Field ");
-        } else if (containingClass != null && containingClass.isScript()) {
+        } else if (containingClass != null && GroovyUtils.isScript(containingClass)) {
             textEdit = new InsertEdit(containingClass.getStart(), createFieldText(0) + ASTTools.getLineDelimeter(unit));
         } else {
             char[] contents = unit.getContents();
@@ -366,7 +367,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
         String indentation = CodeFormatterUtil.createIndentString(indentLevel, unit.getJavaProject());
         sb.append(indentation);
 
-        if (getContainingClassNode().isScript()) {
+        if (GroovyUtils.isScript(getContainingClassNode())) {
             sb.append("@groovy.transform.Field ");
         } else {
             String visibility = JdtFlags.getVisibilityString(getVisibility());

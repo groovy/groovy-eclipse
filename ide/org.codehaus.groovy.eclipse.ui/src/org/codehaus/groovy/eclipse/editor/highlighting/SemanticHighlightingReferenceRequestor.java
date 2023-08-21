@@ -127,8 +127,9 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 }
             }
         } else if (node instanceof ClassNode) {
-            // visit "Map" of "Map.Entry" separately
-            if (((ClassNode) node).getNameEnd() < 1) {
+            var classNode = (ClassNode) node;
+            if (classNode.getNameEnd() < 1) {
+                // visit "Map" of "Map.Entry" separately
                 checkOuterClass(result.type, outer -> {
                     acceptASTNode(outer, new TypeLookupResult(outer, outer, outer, TypeLookupResult.TypeConfidence.EXACT, result.scope), enclosingElement);
                 });
@@ -136,9 +137,10 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 Iterable<ASTNode> words = node.getNodeMetaData("special.keyword");
                 words.forEach(word -> typedPositions.add(new HighlightedTypedPosition(word.getStart(), word.getLength(), HighlightKind.KEYWORD)));
             }
-            if (!(enclosingElement.getElementType() == IMPORT_DECLARATION || ((ClassNode) node).isScriptBody() ||
-                    (ClassHelper.isPrimitiveType((ClassNode) node) && !lastGString.includes(node.getStart())))) {
-                pos = handleClassReference((ClassNode) node, result.type);
+            if (enclosingElement.getElementType() != IMPORT_DECLARATION &&
+                    !(ClassHelper.isPrimitiveType(classNode) && !lastGString.includes(node.getStart())) &&
+                    !(classNode.isPrimaryClassNode() && !classNode.isRedirectNode() && classNode.getNameEnd() < 1)) {
+                pos = handleClassReference(classNode, result.type);
             }
         } else if (result.declaration instanceof FieldNode) {
             pos = handleFieldOrProperty((AnnotatedNode) node, result.declaration);

@@ -582,14 +582,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             }
 
             if (node instanceof ClassNode) {
-                ClassNode clazz = (ClassNode) node;
-                if (clazz.redirect() == clazz && clazz.isScript()) {
+                if (GroovyUtils.isScript((ClassNode) node)) {
                     return VisitStatus.CONTINUE;
                 }
             } else if (node instanceof MethodNode && !(node instanceof ConstructorNode)) {
-                MethodNode meth = (MethodNode) node;
-                if (meth.getName().equals("run") && meth.getDeclaringClass().isScript() &&
-                        (meth.getParameters() == null || meth.getParameters().length == 0)) {
+                if (((MethodNode) node).isScriptBody()) {
                     return VisitStatus.CONTINUE;
                 }
             } else if (node == lhsNode) {

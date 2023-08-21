@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode.VisitKind;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jface.text.BadLocationException;
@@ -256,7 +257,7 @@ public class ASTTools {
     public static ClassNode getContainingClassNode(ModuleNode moduleNode, int offset) {
         ClassNode containingClassNode = null, scriptClass = null;
         for (ClassNode classNode : moduleNode.getClasses()) {
-            if (classNode.isScript()) {
+            if (GroovyUtils.isScript(classNode)) {
                 scriptClass = classNode;
             } else if (classNode.getStart() <= offset && classNode.getEnd() >= offset) {
                 containingClassNode = classNode;

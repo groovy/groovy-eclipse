@@ -537,6 +537,10 @@ public class GroovyUtils {
         return getAnnotations((AnnotatedNode) node, "java.lang.Deprecated").anyMatch(x -> true);
     }
 
+    public static boolean isScript(ClassNode node) {
+        return !node.isAbstract() && node.isScript();
+    }
+
     public static boolean isSynthetic(FieldNode node) {
         return Flags.isSynthetic(node.getModifiers());
     }

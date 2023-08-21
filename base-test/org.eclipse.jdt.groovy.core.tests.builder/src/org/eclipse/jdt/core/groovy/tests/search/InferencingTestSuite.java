@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.isScript;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -348,7 +349,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
                         (visitorNode instanceof AnnotatedNode && ((AnnotatedNode) visitorNode).getNameStart() == start && ((AnnotatedNode) visitorNode).getNameEnd() + 1 == end)
                     ) &&
                     !(visitorNode instanceof MethodNode /* ignore run() method */) &&
-                    !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */) &&
+                    !(visitorNode instanceof ClassNode && isScript((ClassNode) visitorNode) /* ignore the script */) &&
                     !(visitorNode instanceof Statement || visitorNode instanceof ImportNode /* ignore any statement */) &&
                     !(visitorNode instanceof ArrayExpression || visitorNode instanceof TupleExpression /* ignore wrapper */)) {
                 if (visitorResult.type != null && ClassHelper.isPrimitiveType(visitorResult.type)) {

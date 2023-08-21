@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,6 +105,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ImportResolver;
 import org.codehaus.groovy.syntax.Types;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
@@ -228,7 +229,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         //write the classes
         List<ClassNode> classes = root.getClasses();
         for (ClassNode classNode : classes) {
-            if (!classNode.isScript()) {
+            if (!GroovyUtils.isScript(classNode)) {
                 visitClass(classNode);
             } else {
                 List<MethodNode> methods = root.getMethods();
@@ -737,7 +738,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
     private boolean shouldIgnoreReturn() {
         if (root.getClasses().size() == 1) {
             ClassNode clazz = root.getClasses().get(0);
-            if (clazz.isScript()) {
+            if (GroovyUtils.isScript(clazz)) {
                 MethodNode runMethod = clazz.getMethod("run", Parameter.EMPTY_ARRAY);
                 if (runMethod != null) {
                     Statement s = runMethod.getCode();

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -76,6 +76,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Finds the AST node that completely encloses the selection that is passed in.
@@ -160,7 +161,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
     public void visitClass(ClassNode node) {
         nodeStack.push(factory.createFragment(node));
         super.visitClass(node);
-        if (!node.isScript()) {
+        if (!GroovyUtils.isScript(node)) {
             check(node);
         }
         nodeStack.pop();

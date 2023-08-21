@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,30 @@ final class CodeSelectVariablesTests extends BrowsingTestSuite {
         String contents = 'def cal = domain.Calendar.instance()'
         def elem = assertCodeSelect([contents], 'cal')
         assert elem.typeSignature =~ 'domain.Calendar'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1503
+    void testSelectLocalVar6() {
+        String contents = 'abstract class S extends Script { }\n int x; x'
+        def elem = assertCodeSelect([contents], 'x')
+        assert elem.typeSignature == 'I'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1503
+    void testSelectLocalVar7() {
+        String contents = '''\
+            |abstract class S extends Script {
+            |  abstract m()
+            |  def run() {
+            |    m()
+            |  }
+            |}
+            |@groovy.transform.BaseScript S s
+            |int x = 0
+            |x
+            |'''.stripMargin()
+        def elem = assertCodeSelect([contents], 'x')
+        assert elem.typeSignature == 'I'
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1170

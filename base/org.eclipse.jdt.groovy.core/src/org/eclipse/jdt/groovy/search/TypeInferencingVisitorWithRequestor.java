@@ -319,7 +319,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             scopes.removeLast();
             scopes.add(new VariableScope(scopes.getLast(), node, false));
             try {
-                List<IMember> members = membersOf(type, node.isScript());
+                boolean isScript = GroovyUtils.isScript(node);
+                List<IMember> members = membersOf(type, isScript);
 
                 for (IMember member : members) {
                     if (member.getElementType() == IJavaElement.FIELD) {
@@ -328,7 +329,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
 
                 if (!node.isEnum()) {
-                    if (node.isScript()) {
+                    if (isScript) {
                         // visit fields created by @Field
                         for (FieldNode field : node.getFields()) {
                             if (field.getEnd() > 0) {
@@ -394,7 +395,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                 // TODO: Should all methods w/o peer in JDT model have their bodies visited?  Below are two cases in particular.
 
-                if (!node.isEnum() && !node.isScript()) {
+                if (!node.isEnum() && !isScript) {
                     // visit methods relocated by @Trait
                     List<MethodNode> traitMethods = node.redirect().getNodeMetaData("trait.methods");
                     if (isNotEmpty(traitMethods)) {
@@ -697,11 +698,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             ClosureExpression test = node.getNodeMetaData(org.codehaus.groovy.transform.ASTTestTransformation.class);
             if (test != null) {
                 Deque<VariableScope> saved = new java.util.ArrayDeque<>(scopes);
+                ClassNode stub = new ClassNode("dummy", 0, ClassHelper.SCRIPT_TYPE); stub.setModule(enclosingModule);
+                MethodNode run = org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod(stub,
+                    "run", 1, ClassHelper.OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, test.getCode());
 
                 scopes.clear();
                 scopes.add(new VariableScope(null, enclosingModule, true));
-                scopes.add(new VariableScope(scopes.getLast(), ClassHelper.SCRIPT_TYPE, false));
-                scopes.add(scope = new VariableScope(scopes.getLast(), ClassHelper.SCRIPT_TYPE.getMethod("run", Parameter.EMPTY_ARRAY), false));
+                scopes.add(new VariableScope(scopes.getLast(), stub, false));
+                scopes.add(scope = new VariableScope(scopes.getLast(), run, false));
                 try {
                     scope.addVariable("compilationUnit", ClassHelper.make(org.codehaus.groovy.control.CompilationUnit.class), ClassHelper.BINDING_TYPE);
                     scope.addVariable("compilePhase", ClassHelper.make(org.codehaus.groovy.control.CompilePhase.class), ClassHelper.BINDING_TYPE);
@@ -1182,7 +1186,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             scopes.add(fieldScope);
 
             visitAnnotations(node);
-            if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
+            if (node.getEnd() > 0 && GroovyUtils.isScript(node.getDeclaringClass())) {
                 for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
                     if (anno.getStart() >= node.getStart() && anno.getEnd() < node.getEnd()) {
                         visitAnnotation((AnnotationNode) anno);

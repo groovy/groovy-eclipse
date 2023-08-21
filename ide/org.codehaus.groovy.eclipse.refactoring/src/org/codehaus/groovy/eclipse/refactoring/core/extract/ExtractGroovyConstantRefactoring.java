@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.core.refactoring.descriptors.ExtractConstantDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory;
 import org.eclipse.jdt.internal.corext.refactoring.Checks;
@@ -163,7 +164,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         if (targetType == null) {
             status.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing Class declaration."));
         }
-        if (targetType.isScript()) {
+        if (GroovyUtils.isScript(targetType)) {
             status.merge(RefactoringStatus.createFatalErrorStatus("Cannot extract a constant to a Script."));
         }
 
@@ -252,7 +253,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     private int findInsertLocation() {
         if (insertFirst()) {
             ClassNode node = getContainingClassNode();
-            if (node.isScript()) {
+            if (GroovyUtils.isScript(node)) {
                 int statementStart = node.getModule().getStatementBlock().getStart();
                 int methodStart;
                 if (!node.getModule().getMethods().isEmpty()) {

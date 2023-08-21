@@ -65,6 +65,7 @@ import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Finds the completion node for an offset and calculates the content assist context.
@@ -177,7 +178,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         super.visitClass(node);
         blockStack.removeLast();
 
-        if (!node.isScript()) { // script body handled by visitMethod
+        if (!GroovyUtils.isScript(node)) { // script body handled by visitMethod
             createContext(null, node, ContentAssistLocation.CLASS_BODY);
         }
 

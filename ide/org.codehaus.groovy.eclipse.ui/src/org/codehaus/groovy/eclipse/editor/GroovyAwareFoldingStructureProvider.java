@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,7 +183,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
 
     protected final boolean isScriptMethod(final IJavaElement element) {
         if (element instanceof IMethod && "run".equals(element.getElementName()) && ((IMethod) element).getNumberOfParameters() == 0) {
-            return findType(((IMethod) element).getDeclaringType()).filter(ClassNode::isScript).isPresent();
+            return findType(((IMethod) element).getDeclaringType()).filter(GroovyUtils::isScript).isPresent();
         }
         return false;
     }

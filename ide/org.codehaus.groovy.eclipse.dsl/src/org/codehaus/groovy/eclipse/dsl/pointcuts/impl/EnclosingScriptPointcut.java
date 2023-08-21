@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Tests that the type being analyzed matches.  The match can
@@ -39,7 +40,7 @@ public class EnclosingScriptPointcut extends AbstractPointcut {
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         ClassNode enclosing = pattern.getCurrentScope().getEnclosingTypeDeclaration();
-        if (enclosing == null || !enclosing.isScript()) {
+        if (enclosing == null || !GroovyUtils.isScript(enclosing)) {
             return null;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class GroovyProjectFacade {
@@ -87,7 +88,7 @@ public class GroovyProjectFacade {
         if (module != null) {
             for (ClassNode classNode : module.getClasses()) {
                 if (classNode.getNameWithoutPackage().equals(type.getElementName())) {
-                    return classNode.isScript();
+                    return GroovyUtils.isScript(classNode);
                 }
             }
         }

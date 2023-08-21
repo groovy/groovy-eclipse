@@ -536,7 +536,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private boolean existsOnlyInGroovyModel(final FieldNode node, final String name, final ClassNode declaringType, final IType jdtDeclaringType)
             throws JavaModelException {
         // check for @Field field
-        if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
+        if (node.getEnd() > 0 && GroovyUtils.isScript(node.getDeclaringClass())) {
             return true;
         }
         // check for @Trait field
