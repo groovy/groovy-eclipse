@@ -3257,7 +3257,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(50)) {
+        if (isAtLeastGroovy(40)) {
             runNegativeTest(sources,
                 "----------\n" +
                 "1. ERROR in Main.groovy (at line 3)\n" +
