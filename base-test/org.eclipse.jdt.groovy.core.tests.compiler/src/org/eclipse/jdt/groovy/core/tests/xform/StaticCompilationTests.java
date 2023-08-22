@@ -3257,17 +3257,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(40)) {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Main.groovy (at line 3)\n" +
-                "\t[0].each { -> }\n" +
-                "\t         ^^^^^^\n" +
-                "Groovy:Incorrect number of parameters. Expected 1 but found 0\n" +
-                "----------\n");
-        } else {
-            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Main$_test_closure1.doCall() is applicable for argument types: (Integer) values: [0]");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\t[0].each { -> }\n" +
+            "\t         ^^^^^^\n" +
+            "Groovy:Incorrect number of parameters. Expected 1 but found 0\n" +
+            "----------\n");
     }
 
     @Test
