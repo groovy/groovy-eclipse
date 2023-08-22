@@ -8,7 +8,7 @@ Bundle-Version: 5.0.0.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
  groovy-parser2.jar,
- lib/ivy-2.5.1.jar,
+ lib/ivy-2.5.2.jar,
  lib/groovy-5.0.0.jar,
  lib/groovy-test-5.0.0.jar
 Export-Package: groovy.beans;version="5.0.0",
