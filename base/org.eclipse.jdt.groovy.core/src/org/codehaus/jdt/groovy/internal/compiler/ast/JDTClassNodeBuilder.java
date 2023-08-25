@@ -165,7 +165,7 @@ class JDTClassNodeBuilder {
             cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
 
             if (tv.firstBound != null && tv.firstBound.id != TypeIds.T_JavaLangObject) {
-                setRedirect(cn, configureType(tv.firstBound));
+                setRedirect(cn, configureType(tv.firstBound)); // GRECLIPSE-1563
             } else {
                 cn.setRedirect(ClassHelper.OBJECT_TYPE);
             }
