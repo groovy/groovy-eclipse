@@ -6998,6 +6998,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10975() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Collection<Integer> c = [1]\n" +
+            "  Map<Integer,Integer> m = [1:1]\n" +
+            "  new Hashtable(Collections.min(c, m::put))\n" + // Cannot find matching constructor Hashtable(Object)
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked10981() {
         //@formatter:off
         String[] sources = {

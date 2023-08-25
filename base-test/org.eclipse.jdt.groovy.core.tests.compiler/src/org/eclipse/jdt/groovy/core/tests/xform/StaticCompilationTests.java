@@ -7307,12 +7307,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 5)\n" +
-              "\tprint(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), List::size)))\n" + (isAtLeastGroovy(50)
-            ? "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-              "Groovy:[Static type checking] - Cannot call <R,A> java.util.stream.Stream#collect(java.util.stream.Collector<? super java.lang.String, A, R>) with arguments [java.util.stream.Collector<java.util.List, ?, java.util.Map<java.lang.String, java.lang.Integer>>]\n"
-            : "\t                                                                           ^^^^^^^^^^\n" +
-              "Groovy:Failed to find class method 'size(java.lang.String)' or instance method 'size()' for the type: java.util.List\n"
-            ) +
+            "\tprint(['a','bc','def'].stream().collect(toMap(Function.<String>identity(), List::size)))\n" +
+            "\t                                                                           ^^^^^^^^^^\n" +
+            "Groovy:Failed to find class method 'size(java.lang.String)' or instance method 'size()' for the type: java.util.List\n" +
             "----------\n");
     }
 
