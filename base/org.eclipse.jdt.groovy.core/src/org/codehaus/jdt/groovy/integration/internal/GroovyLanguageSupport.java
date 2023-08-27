@@ -250,7 +250,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
             ic.addStarImports("org.codehaus.groovy.ast.expr");
             if (GroovyUtils.getGroovyVersion().compareTo(new Version(4, 0, 6)) >= 0) ic.addStarImports("org.codehaus.groovy.ast");
             ic.addStaticStars("org.codehaus.groovy.ast.ClassHelper","org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport");
-            config.addCompilationCustomizers(ic).setScriptBaseClass("org.codehaus.groovy.transform.stc.GroovyTypeCheckingExtensionSupport.TypeCheckingDSL");
+            config.addCompilationCustomizers(ic).setScriptBaseClass("org.codehaus.groovy.transform.stc.GroovyTypeCheckingExtensionSupport$TypeCheckingDSL");
 
             return config;
         }

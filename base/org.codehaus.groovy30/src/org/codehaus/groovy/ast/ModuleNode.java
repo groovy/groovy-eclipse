@@ -344,7 +344,16 @@ public class ModuleNode extends ASTNode implements Opcodes {
         }
         if (baseClassName != null) {
             if (!cn.getSuperClass().getName().equals(baseClassName)) {
+                /* GRECLIPSE edit -- GROOVY-8096
                 cn.setSuperClass(ClassHelper.make(baseClassName));
+                */
+                ClassLoader cl = unit != null ? unit.getClassLoader() : context.getClassLoader();
+                try {
+                    cn.setSuperClass(ClassHelper.make(cl.loadClass(baseClassName)));
+                } catch (ReflectiveOperationException | RuntimeException e) {
+                    cn.setSuperClass(ClassHelper.make(baseClassName));
+                }
+                // GRECLIPSE end
                 AnnotationNode annotationNode = new AnnotationNode(BaseScriptASTTransformation.MY_TYPE);
                 cn.addAnnotation(annotationNode);
             }
