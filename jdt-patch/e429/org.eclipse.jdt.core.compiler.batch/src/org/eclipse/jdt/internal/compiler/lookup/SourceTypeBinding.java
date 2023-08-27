@@ -3668,8 +3668,8 @@ public void tagIndirectlyAccessibleMembers() {
 			memberType.modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 	}
 	if (this.superclass.isPrivate())
-		if (this.superclass instanceof SourceTypeBinding)  // should always be true because private super type can only be accessed in same CU
-			((SourceTypeBinding) this.superclass).tagIndirectlyAccessibleMembers();
+		if (this.superclass instanceof SourceTypeBinding theSuperClass) // should always be true because private super type can only be accessed in same CU
+			theSuperClass.tagIndirectlyAccessibleMembers();
 }
 
 @Override
