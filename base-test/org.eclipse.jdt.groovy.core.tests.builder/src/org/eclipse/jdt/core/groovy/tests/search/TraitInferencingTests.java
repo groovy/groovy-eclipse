@@ -814,6 +814,26 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         }
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1509
+    public void testPublicStaticMethod6() {
+        //@formatter:off
+        String contents =
+            "trait T {\n" +
+            "  static getX() {}\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "T.x\n" +
+            "C.x\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("T.x") + 2;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+            offset = contents.indexOf("C.x") + 2;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-8272
     public void testPublicStaticSuperMethod1() {
         //@formatter:off

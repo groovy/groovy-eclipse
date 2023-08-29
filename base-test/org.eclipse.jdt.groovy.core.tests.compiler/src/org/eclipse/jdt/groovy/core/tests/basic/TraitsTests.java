@@ -825,17 +825,19 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Script.groovy",
             "trait TestHelper {\n" +
             "  public static boolean called = false\n" +
+            "  static boolean getState() { called }\n" +
             "  static void init() {\n" +
             "    called = true\n" +
             "  }\n" +
             "}\n" +
             "class Foo implements TestHelper {}\n" +
             "Foo.init()\n" +
+            "print Foo.state\n" +
             "print Foo.TestHelper__called\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "true");
+        runConformTest(sources, "truetrue");
     }
 
     @Test // Static methods, properties and fields
