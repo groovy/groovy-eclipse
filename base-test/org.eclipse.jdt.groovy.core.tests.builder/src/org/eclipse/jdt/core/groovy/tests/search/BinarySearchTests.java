@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.List;
 
@@ -29,7 +28,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -96,9 +94,11 @@ public final class BinarySearchTests extends SearchTestSuite {
     @Before
     public void setUp() throws Exception {
         Path libDir = new Path(FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib")).getFile());
-        env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null));
+        env.addLibrary(project.getFullPath(), libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null);
 
         javaProject = env.getJavaProject(project.getName());
+        waitUntilReady(javaProject);
+
         // overwrite the contents vars with the actual contents
         groovyClassContents = javaProject.findType("pack.AGroovyClass").getTypeRoot().getBuffer().getContents();
         groovyClassContents2 = javaProject.findType("pack.AnotherGroovyClass").getTypeRoot().getBuffer().getContents();
@@ -111,16 +111,15 @@ public final class BinarySearchTests extends SearchTestSuite {
 
     private List<SearchMatch> performSearch(final IJavaElement javaElement) throws Exception {
         assertTrue("Expected binary member, but got: " + (javaElement == null ? null : javaElement.getClass().getName()), javaElement instanceof BinaryMember);
-        SearchPattern pattern  = SearchPattern.createPattern(javaElement, IJavaSearchConstants.REFERENCES);
+        SearchPattern pattern = SearchPattern.createPattern(javaElement, IJavaSearchConstants.REFERENCES);
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
         return search(pattern, scope);
     }
 
     private void assertMatches(final String toFind, final List<SearchMatch> matches, final int allMatches, final int firstMatches) {
         String matchesString = toString(matches);
-        if (matches.size() != allMatches) {
-            fail("Expecting " + allMatches + " matches, but found " + matches.size() + "\n" + matchesString);
-        }
+        assertEquals("Expecting " + allMatches + " matches, but found " + matches.size() + "\n" + matchesString, allMatches, matches.size());
+
         int currIndex = groovyClassContents.indexOf("def doit") + "def doit".length();
         for (int i = 0; i < firstMatches; i += 1) {
             SearchMatch match = matches.get(i);

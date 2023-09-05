@@ -305,7 +305,7 @@
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.29"/>
         <repository
-            url="https://download.eclipse.org/eclipse/updates/4.29-I-builds/I20230824-0400"/>
+            url="https://download.eclipse.org/eclipse/updates/4.29-I-builds/I20230903-1000"/>
       </repositoryList>
       <repositoryList
           name="2023-06">

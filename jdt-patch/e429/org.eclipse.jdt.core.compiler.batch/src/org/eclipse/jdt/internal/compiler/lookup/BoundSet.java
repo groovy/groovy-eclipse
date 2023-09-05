@@ -983,8 +983,9 @@ class BoundSet {
 	 */
 	public boolean reduceOneConstraint(InferenceContext18 context, ConstraintFormula currentConstraint) throws InferenceFailureException {
 		Object result = currentConstraint.reduce(context);
-		if (result == ReductionResult.FALSE)
+		if (result == ReductionResult.FALSE) {
 			return false;
+		}
 		if (result == ReductionResult.TRUE)
 			return true;
 		if (result == currentConstraint) {
