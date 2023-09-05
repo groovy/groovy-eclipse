@@ -48,7 +48,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 
@@ -379,8 +378,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (superClass != null) {
             usesGenerics = superClass.isUsingGenerics();
         }
-        if (!usesGenerics && interfaces != null) {
-            usesGenerics = stream(interfaces).anyMatch(ClassNode::isUsingGenerics);
+        if (interfaces != null) {
+            for (int i = 0; i < interfaces.length && !usesGenerics; ) {
+                 usesGenerics = interfaces[i++].isUsingGenerics();
+            }
         }
         methods = new MapOfLists();
         methodsList = Collections.emptyList();
