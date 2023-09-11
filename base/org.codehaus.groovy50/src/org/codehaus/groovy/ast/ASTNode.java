@@ -18,6 +18,8 @@
  */
 package org.codehaus.groovy.ast;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -140,7 +142,12 @@ public class ASTNode implements NodeMetaDataHandler {
     public Map getMetaDataMap() {
         return metaDataMap;
     }
-
+    // GRECLIPSE add
+    @Override
+    public Map newMetaDataMap() {
+        return Collections.synchronizedMap(new HashMap(8));
+    }
+    // GRECLISPE end
     @Override
     public void setMetaDataMap(final Map metaDataMap) {
         this.metaDataMap = metaDataMap;

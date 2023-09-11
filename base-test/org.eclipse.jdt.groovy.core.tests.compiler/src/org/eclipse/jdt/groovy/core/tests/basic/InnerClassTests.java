@@ -483,13 +483,6 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "hi!");
 
         checkGCUDeclaration("A.groovy",
-            "public class A extends groovy.lang.Script {\n" +
-            "  public A() {\n" +
-            "  }\n" +
-            "  public A(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    java.lang.Object foo;\n" +
             "    new Runnable() {\n" +
@@ -500,7 +493,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "      }\n" +
             "    };\n" +
             "  }\n" +
-            "}");
+            "}\n");
     }
 
     @Test

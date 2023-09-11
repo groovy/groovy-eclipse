@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.ast;
 
+import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -342,25 +343,20 @@ public class ModuleNode extends ASTNode {
 
     private void setScriptBaseClassFromConfig(final ClassNode cn) {
         String baseClassName = null;
+        ClassLoader bcLoader = null;
         if (unit != null) {
+            bcLoader = unit.getClassLoader();
             baseClassName = unit.getConfig().getScriptBaseClass();
         } else if (context != null) {
+            bcLoader = context.getClassLoader();
             baseClassName = context.getConfiguration().getScriptBaseClass();
         }
-        if (baseClassName != null) {
-            if (!cn.getSuperClass().getName().equals(baseClassName)) {
-                /* GRECLIPSE edit -- GROOVY-8096
+        if (baseClassName != null && !cn.getSuperClass().getName().equals(baseClassName)) {
+            cn.addAnnotation(new AnnotationNode(BaseScriptASTTransformation.MY_TYPE));
+            try { // GROOVY-8096
+                cn.setSuperClass(ClassHelper.make(bcLoader.loadClass(baseClassName)));
+            } catch (ReflectiveOperationException | RuntimeException e) {
                 cn.setSuperClass(ClassHelper.make(baseClassName));
-                */
-                ClassLoader cl = unit != null ? unit.getClassLoader() : context.getClassLoader();
-                try {
-                    cn.setSuperClass(ClassHelper.make(cl.loadClass(baseClassName)));
-                } catch (ReflectiveOperationException | RuntimeException e) {
-                    cn.setSuperClass(ClassHelper.make(baseClassName));
-                }
-                // GRECLIPSE end
-                AnnotationNode annotationNode = new AnnotationNode(BaseScriptASTTransformation.MY_TYPE);
-                cn.addAnnotation(annotationNode);
             }
         }
     }
@@ -409,9 +405,10 @@ public class ModuleNode extends ASTNode {
             }
         }
 
-        if (existingMain != null && !hasUncontainedStatements) {
+        if (existingMain != null && !hasUncontainedStatements) { // JEP 445 main
             ClassNode result = new ClassNode(classNode.getName(), 0, ClassHelper.OBJECT_TYPE);
             result.addAnnotations(existingMain.getAnnotations());
+            result.setScriptBody(false);
             result.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
             existingMain.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
             methods.forEach(result::addMethod);
@@ -419,22 +416,22 @@ public class ModuleNode extends ASTNode {
             return result;
         }
 
-        classNode.addMethod(
-            new MethodNode(
-                "main",
-                ACC_PUBLIC | ACC_STATIC,
-                ClassHelper.VOID_TYPE,
-                finalParam(ClassHelper.STRING_TYPE.makeArray(), "args"),
-                ClassNode.EMPTY_ARRAY,
-                stmt(
-                    callX(
-                        ClassHelper.make(InvokerHelper.class),
-                        "runScript",
-                        args(classX(classNode), varX("args"))
-                    )
+        MethodNode main = new MethodNode(
+            "main",
+            ACC_PUBLIC | ACC_STATIC,
+            ClassHelper.VOID_TYPE,
+            finalParam(ClassHelper.STRING_TYPE.makeArray(), "args"),
+            ClassNode.EMPTY_ARRAY,
+            stmt(
+                callX(
+                    ClassHelper.make(InvokerHelper.class),
+                    "runScript",
+                    args(classX(classNode), varX("args"))
                 )
             )
         );
+        main.setIsScriptBody();
+        ClassNodeUtils.addGeneratedMethod(classNode, main, true);
 
         // we add the run method unless we find a no-arg instance run method
         // and there are no uncontained statements
@@ -445,7 +442,10 @@ public class ModuleNode extends ASTNode {
             if (existingMain != null) {
                 methodNode.addAnnotations(existingMain.getAnnotations());
             }
-            classNode.addMethod(methodNode);
+            // GRECLIPSE add
+            if (!statementBlock.isEmpty()) classNode.addMethod(methodNode); else
+            // GRECLIPSE end
+            ClassNodeUtils.addGeneratedMethod(classNode, methodNode, true);
         } else {
             fields.forEach(classNode::addField);
             classNode.addAnnotations(existingRun.getAnnotations());
@@ -488,7 +488,9 @@ public class ModuleNode extends ASTNode {
     }
 
     /*
-     * If a main method is provided by user, account for it under run() as scripts generate their own 'main' so they can run.
+     * We retain the 'main' method if a compatible one is found.
+     * A compatible one has no parameters or 1 (Object or String[]) parameter.
+     * The return type must be void or Object.
      */
     private MethodNode handleMainMethodIfPresent(final List<MethodNode> methods) {
         boolean foundInstance = false;
@@ -502,10 +504,10 @@ public class ModuleNode extends ASTNode {
                     ClassNode argType = numParams > 0 ? node.getParameters()[0].getType() : null;
                     ClassNode retType = node.getReturnType();
 
-                    boolean argTypeMatches = argType == null || ClassHelper.isObjectType(argType) || argType.getName().contains("String[]");
-                    boolean retTypeMatches = ClassHelper.isPrimitiveVoid(retType) || ClassHelper.isObjectType(retType);
+                    boolean argTypeMatches = argType == null || argType.getNameWithoutPackage().equals("Object") || (argType.isArray() && argType.getComponentType().getNameWithoutPackage().equals("String"));
+                    boolean retTypeMatches = ClassHelper.isPrimitiveVoid(retType) || retType.getNameWithoutPackage().equals("Object");
                     if (retTypeMatches && argTypeMatches) {
-                        if ((foundStatic && node.isStatic()) || (foundInstance && !node.isStatic())) {
+                        if (node.isStatic() ? foundStatic : foundInstance) {
                             throw new RuntimeException("Repetitive main method found.");
                         }
                         if (!foundStatic) { // static trumps instance

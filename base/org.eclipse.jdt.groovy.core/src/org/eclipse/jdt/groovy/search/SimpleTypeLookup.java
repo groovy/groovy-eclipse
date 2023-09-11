@@ -561,7 +561,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (variableInfo != null) {
             type = Optional.ofNullable(variableInfo.type).orElseGet(ClassHelper::dynamicType);
             resolvedDeclaringType = getMorePreciseType(declaringType, variableInfo);
-            if (VariableScope.isThisOrSuper(var)) decl = type;
+            if ("this".equals(var.getName()) && Traits.isTrait(type)) {
+                type = Traits.findHelper(type); // GROOVY-8854
+            } else if ("super".equals(var.getName())) {
+                decl = type; // for code select
+            }
             confidence = TypeConfidence.INFERRED;
         }
 
@@ -774,9 +778,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         Set<ClassNode> types = new LinkedHashSet<>();
         types.add(declaringType);
+        if (isTraitHelper(declaringType) && GroovyUtils.getGroovyVersion().getMajor() >= 5) { // GROOVY-8272, GROOVY-8587
+            Traits.findTraits(declaringType.getOuterClass()).stream().map(Traits::findHelper).forEachOrdered(types::add);
+        }
         types.addAll(interfaces);
-        if (!implementsTrait(declaringType))
-            types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super type
+        if (declaringType.isInterface() && !implementsTrait(declaringType))
+            types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super class
 
         MethodNode outerCandidate = null;
         for (ClassNode type : types) {

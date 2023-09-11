@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,7 +135,8 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.test.actions.SaveParticipantRegistryTests,
     org.codehaus.groovy.eclipse.test.adapters.GroovyFileAdapterFactoryTests,
     org.codehaus.groovy.eclipse.test.adapters.GroovyIFileEditorInputAdapterFactoryTests,
-    org.codehaus.groovy.eclipse.test.adapters.IsMainTesterTests,
+    org.codehaus.groovy.eclipse.test.adapters.HasMainTesterTests,
+    org.codehaus.groovy.eclipse.test.adapters.IsScriptTesterTests,
     org.codehaus.groovy.eclipse.test.core.util.ArrayUtilsTests,
     org.codehaus.groovy.eclipse.test.core.util.ExpressionFinderTests,
     org.codehaus.groovy.eclipse.test.core.util.StringSourceBufferTests,

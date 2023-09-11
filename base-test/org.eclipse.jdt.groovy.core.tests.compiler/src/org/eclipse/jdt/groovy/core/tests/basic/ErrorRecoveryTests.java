@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,16 +107,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "package p;\n" +
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
-            "  public @java.lang.Override java.lang.Object run() {\n" +
-            "  }\n" +
-            "}\n");
+            "public class X extends groovy.lang.Script {\n");
     }
 
     @Test
@@ -138,16 +129,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "import java.lang.Object;\n" +
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
-            "  public @java.lang.Override java.lang.Object run() {\n" +
-            "  }\n" +
-            "}\n");
+            "public class X extends groovy.lang.Script {\n");
     }
 
     @Test
@@ -173,17 +155,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int x;\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
     }
 
     @Test
@@ -510,17 +484,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int err;\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -551,17 +517,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int err;\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -593,17 +551,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int err;\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
     }
 
     @Test
@@ -625,17 +575,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int err;\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
     }
 
     @Test
@@ -920,16 +862,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -953,16 +887,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -987,16 +913,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -1021,16 +939,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -1055,16 +965,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -1089,16 +991,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
         assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -1841,17 +1735,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    java.lang.Object a;\n" +
-            "  }\n" +
-            "}\n");
+            "  }\n");
     }
 
     @Test
@@ -2027,17 +1913,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "import javax.swing.text.html.HTML;\n" +
-            "public class X extends groovy.lang.Script {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public X(final groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(final java.lang.String... args) {\n" +
-            "  }\n" +
-            "  public @java.lang.Override java.lang.Object run() {\n" +
-            "    HTML h;\n" +
-            "  }\n" +
-            "}\n");
+            "public class X extends groovy.lang.Script {\n");
     }
 
     @Test // missing end curly, but that shouldn't cause us to discard what we successfully parsed
@@ -2189,16 +2065,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
                 "----------\n");
 
             checkGCUDeclaration("X.groovy",
-                "public class X extends groovy.lang.Script {\n" +
-                "  public X() {\n" +
-                "  }\n" +
-                "  public X(final groovy.lang.Binding context) {\n" +
-                "  }\n" +
-                "  public static void main(final java.lang.String... args) {\n" +
-                "  }\n" +
-                "  public @java.lang.Override java.lang.Object run() {\n" +
-                "  }\n" +
-                "}\n");
+                "package java.lang;\n" +
+                "public class X extends groovy.lang.Script {\n");
 
             ModuleNode moduleNode = getModuleNode("X.groovy");
             assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -2226,6 +2094,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
                 "----------\n");
 
             checkGCUDeclaration("X.groovy",
+                "package java.lang;\n" +
                 "public class X {\n" +
                 "  public @groovy.transform.Generated X() {\n" +
                 "  }\n" +
@@ -2256,6 +2125,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
+            "package java.lang;\n" +
             "public class X {\n" +
             "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
@@ -2287,6 +2157,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
+            "package java.lang;\n" +
+            "import java.lang.Object;\n" +
             "public class X {\n" +
             "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
@@ -2315,16 +2187,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
                 "----------\n");
 
             checkGCUDeclaration("X.groovy",
-                "public class X extends groovy.lang.Script {\n" +
-                "  public X() {\n" +
-                "  }\n" +
-                "  public X(final groovy.lang.Binding context) {\n" +
-                "  }\n" +
-                "  public static void main(final java.lang.String... args) {\n" +
-                "  }\n" +
-                "  public @java.lang.Override java.lang.Object run() {\n" +
-                "  }\n" +
-                "}\n");
+                "import java.lang.Object;\n" +
+                "public class X extends groovy.lang.Script {\n");
 
             ModuleNode moduleNode = getModuleNode("X.groovy");
             assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -2356,6 +2220,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
                 "----------\n");
 
             checkGCUDeclaration("X.groovy",
+                "import java.lang.Object;\n" +
                 "public class X {\n" +
                 "  public @groovy.transform.Generated X() {\n" +
                 "  }\n" +
@@ -2389,16 +2254,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
                 "----------\n");
 
             checkGCUDeclaration("X.groovy",
-                "public class X extends groovy.lang.Script {\n" +
-                "  public X() {\n" +
-                "  }\n" +
-                "  public X(final groovy.lang.Binding context) {\n" +
-                "  }\n" +
-                "  public static void main(final java.lang.String... args) {\n" +
-                "  }\n" +
-                "  public @java.lang.Override java.lang.Object run() {\n" +
-                "  }\n" +
-                "}\n");
+                "import java.lang.Object;\n" +
+                "public class X extends groovy.lang.Script {\n");
 
             ModuleNode moduleNode = getModuleNode("X.groovy");
             assertFalse(moduleNode.encounteredUnrecoverableError());
@@ -2430,6 +2287,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
                 "----------\n");
 
             checkGCUDeclaration("X.groovy",
+                "import java.lang.Object;\n" +
                 "public class X {\n" +
                 "  public @groovy.transform.Generated X() {\n" +
                 "  }\n" +
@@ -2464,6 +2322,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
+            "import java.lang.Object;\n" +
             "public class X {\n" +
             "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
@@ -2499,6 +2358,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
+            "import java.lang.Object;\n" +
             "public class X {\n" +
             "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +

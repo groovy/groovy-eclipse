@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,10 +81,8 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference8() throws Exception {
-        String contents = "for (xxx in 0..7)\n {\n xxx\n}\n";
-        int nameStart = contents.indexOf("xxx", contents.indexOf('('));
-        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
-        doTestForReferencesInScript(contents, createRegions(nameStart, nameStart2));
+        String contents = "for (xxx in 0..7) {\n xxx\n}\n";
+        doTestForReferencesInScript(contents, createRegions(contents.indexOf("xxx"), contents.lastIndexOf("xxx")));
     }
 
     @Test

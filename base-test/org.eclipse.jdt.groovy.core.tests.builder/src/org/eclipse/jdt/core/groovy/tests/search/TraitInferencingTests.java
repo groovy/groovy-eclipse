@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import org.junit.Test;
 
 public final class TraitInferencingTests extends InferencingTestSuite {
@@ -311,7 +313,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "number", "java.lang.Number");
     }
 
-    @Test // GROOVY-9255
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9255
     public void testProperty17() {
         //@formatter:off
         String source =
@@ -664,8 +666,34 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "method", "java.lang.Void");
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8587
     public void testPublicMethod5() {
+        //@formatter:off
+        String contents =
+            "trait A {\n" +
+            "  void method() {}\n" +
+            "}\n" +
+            "trait B extends A {\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "  @Override\n" +
+            "  void method() {\n" +
+            "    B.super.method()\n" + // B$Trait$Helper.method(this)
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        if (isAtLeastGroovy(50)) {
+            assertDeclType(contents, "method", "A");
+            assertExprType(contents, "method", "java.lang.Void");
+        } else {
+            int offset = contents.lastIndexOf("method");
+            assertUnknownConfidence(contents, offset, offset + 6);
+        }
+    }
+
+    @Test
+    public void testPublicMethod6() {
         //@formatter:off
         String contents =
             "trait A {\n" +
@@ -691,7 +719,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPublicMethod6() {
+    public void testPublicMethod7() {
         //@formatter:off
         String source =
             "trait A<B> {\n" +
@@ -725,7 +753,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("T.m()") + 2;
         assertUnknownConfidence(contents, offset, offset + 1);
 
-            offset = contents.lastIndexOf("m()");
+        /**/offset = contents.lastIndexOf("m()");
         assertDeclaringType(contents, offset, offset + 1, "T");
     }
 
@@ -748,10 +776,10 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("T.m()") + 2;
         assertUnknownConfidence(contents, offset, offset + 1);
 
-            offset = contents.indexOf("C.m()") + 2;
+        /**/offset = contents.indexOf("C.m()") + 2;
         assertDeclaringType(contents, offset, offset + 1, "T");
 
-            offset = contents.lastIndexOf("m()");
+        /**/offset = contents.lastIndexOf("m()");
         assertDeclaringType(contents, offset, offset + 1, "T");
     }
 
@@ -771,7 +799,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("T.m()") + 2;
         assertUnknownConfidence(contents, offset, offset + 1);
 
-            offset = contents.indexOf("C.m()") + 2;
+        /**/offset = contents.indexOf("C.m()") + 2;
         assertDeclaringType(contents, offset, offset + 1, "T");
     }
 
@@ -793,7 +821,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertDeclType(contents, "m", "T");
     }
 
-    @Test // GROOVY-10106
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10106
     public void testPublicStaticMethod5() {
         for (String mods : new String[] {"", "@groovy.transform.TypeChecked ", "@groovy.transform.CompileStatic "}) {
             //@formatter:off
@@ -830,7 +858,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("T.x") + 2;
         assertUnknownConfidence(contents, offset, offset + 1);
 
-            offset = contents.indexOf("C.x") + 2;
+        /**/offset = contents.indexOf("C.x") + 2;
         assertDeclaringType(contents, offset, offset + 1, "T");
     }
 
@@ -845,7 +873,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n" +
             "trait Auditable extends Checkable {\n" +
             "  boolean audit() {\n" +
-            "    if (check()) {\n" +
+            "    if (check()) {\n" + // this.check((Class)$self.getClass())
             "      ;\n" +
             "    }\n" +
             "  }\n" +
@@ -970,7 +998,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    true\n" +
             "  }\n" +
             "  boolean audit() {\n" +
-            "    if (check()) {\n" +
+            "    if (check()) {\n" + // this.check((Class)$self.getClass())
             "      ;\n" +
             "    }\n" +
             "  }\n" +

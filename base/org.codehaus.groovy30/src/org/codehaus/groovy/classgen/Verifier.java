@@ -890,12 +890,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     @Override
     public void visitMethod(final MethodNode node) {
-        // GROOVY-3712: if it's an MOP method, it's an error as they aren't supposed to exist before ACG is invoked
+        // GROOVY-3712: if it's a MOP method, it's an error as they aren't supposed to exist before ACG is invoked
         if (MopWriter.isMopMethod(node.getName())) {
             throw new RuntimeParserException("Found unexpected MOP methods in the class node for " + classNode.getName() + "(" + node.getName() + ")", classNode);
         }
 
-        adjustTypesIfStaticMainMethod(node);
+        adjustTypesIfPublicStaticMainMethod(node);
         this.methodNode = node;
         addReturnIfNeeded(node);
 
@@ -905,15 +905,14 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
     }
 
-    private static void adjustTypesIfStaticMainMethod(final MethodNode node) {
-        if (node.getName().equals("main") && node.isStatic()) {
+    private static void adjustTypesIfPublicStaticMainMethod(final MethodNode node) { // GRECLIPSE edit
+        if (node.isPublic() && node.isStatic() && node.getName().equals("main")) {
             Parameter[] params = node.getParameters();
             if (params.length == 1) {
                 Parameter param = params[0];
-                if (param.getType() == null || ClassHelper.OBJECT_TYPE.equals(param.getType())) {
+                if (param.getType() == null || (param.getType().equals(ClassHelper.OBJECT_TYPE) && !param.getType().isGenericsPlaceHolder())) {
                     param.setType(ClassHelper.STRING_TYPE.makeArray());
-                    ClassNode returnType = node.getReturnType();
-                    if (ClassHelper.OBJECT_TYPE.equals(returnType)) {
+                    if (ClassHelper.OBJECT_TYPE.equals(node.getReturnType())) {
                         node.setReturnType(ClassHelper.VOID_TYPE);
                     }
                 }

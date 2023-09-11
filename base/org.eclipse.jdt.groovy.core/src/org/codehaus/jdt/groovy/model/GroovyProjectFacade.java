@@ -49,9 +49,7 @@ public class GroovyProjectFacade {
     //--------------------------------------------------------------------------
 
     private static boolean hasAppropriateArgsForMain(final String[] params) {
-        if (params == null || params.length != 1) {
-            return false;
-        }
+        if (params == null || params.length != 1) return false;
         int array = Signature.getArrayCount(params[0]);
         String typeName;
         if (array == 1) {
@@ -61,7 +59,6 @@ public class GroovyProjectFacade {
         } else {
             return false;
         }
-
         String sigNoArray = Signature.getElementType(params[0]);
         String name = Signature.getSignatureSimpleName(sigNoArray);
         String qual = Signature.getSignatureQualifier(sigNoArray);
@@ -71,9 +68,12 @@ public class GroovyProjectFacade {
     public static boolean hasGroovyMainMethod(final IType type) {
         try {
             for (IMethod method : type.getMethods()) {
-                if (method.getElementName().equals("main") && Flags.isStatic(method.getFlags()) && // void or Object are valid return types
-                    (method.getReturnType().equals("V") || method.getReturnType().endsWith("java.lang.Object;")) && hasAppropriateArgsForMain(method.getParameterTypes())) {
-
+                if (method.isMainMethod()) {
+                    return true;
+                }
+                if (method.getElementName().equals("main") && !Flags.isPrivate(method.getFlags()) &&
+                        (method.getReturnType().equals("V") || method.getReturnType().endsWith("java.lang.Object;")) &&
+                        (method.getNumberOfParameters() == 0 || hasAppropriateArgsForMain(method.getParameterTypes()))) {
                     return true;
                 }
             }
