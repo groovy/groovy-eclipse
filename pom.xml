@@ -105,11 +105,6 @@
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.29</url>
 				</repository>
-				<repository>
-					<id>milestone</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.29-I-builds/I20230903-1000</url>
-				</repository>
 			</repositories>
 			<modules>
 				<module>jdt-patch/e429/org.eclipse.jdt.core</module>
