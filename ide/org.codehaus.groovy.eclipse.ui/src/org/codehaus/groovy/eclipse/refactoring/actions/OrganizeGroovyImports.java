@@ -634,6 +634,7 @@ public class OrganizeGroovyImports {
                 if (generic.getStart() < 1) {
                     continue;
                 }
+                visitAnnotations(generic.getType().getTypeAnnotations());
                 if (!generic.isPlaceholder() && !generic.isWildcard()) {
                     handleTypeReference(generic.getType(), false);
                 }
@@ -668,6 +669,7 @@ public class OrganizeGroovyImports {
          * that the import will be retained if the type is resolved.
          */
         private void handleTypeReference(ClassNode node, boolean isAnnotation) {
+            if (!isAnnotation) visitAnnotations(node.getTypeAnnotations());
             ClassNode type = GroovyUtils.getBaseType(node);
             if (ClassHelper.isPrimitiveType(type)) {
                 return;

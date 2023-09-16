@@ -333,7 +333,7 @@ class ASTView extends ViewPart {
                 }
                 if (outer.redirectNode && label ==~ /annotations|compileUnit|declaredConstructors|enclosingMethod|fields|hasInconsistentHierarchy|/ +
                         /innerClasses|interfaces|is(?!GenericsPlaceHolder|Synthetic(Public)?|UsingGenerics)\w+|methods|mixins|modifiers|/ +
-                        /outerClasses|package|permittedSubclasses|properties|superClass|typeAnnotations/) {
+                        /outerClasses|package|permittedSubclasses|properties|superClass/) {
                     return false
                 }
                 if (!outer.redirectNode && label ==~ /unresolved(Name|Interfaces|SuperClass)/) {

@@ -15,9 +15,12 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
 
@@ -500,6 +503,32 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         match = matches.get(1);
         assertEquals("p.First".length(), match.getLength());
         assertEquals(secondContents.lastIndexOf("p.First"), match.getOffset());
+    }
+
+    @Test // GROOVY-11178
+    public void testTypeAnnotations() throws Exception {
+        assumeTrue(isParrotParser());
+
+        String firstContents =
+            "package p\n" +
+            "import java.lang.annotation.*\n" +
+            "@Target(ElementType.TYPE_USE)\n" +
+            "public @interface First {\n" +
+            "}\n";
+        String secondContents =
+            "package q\n" +
+            "import p.*\n" +
+            "Object o = new @First Object()\n";
+
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "q");
+        if (!isAtLeastGroovy(50)) {
+            assertTrue(matches.isEmpty());
+        } else {
+            assertEquals(1, matches.size());
+            SearchMatch match = matches.get(0);
+            assertEquals("First".length(), match.getLength());
+            assertEquals(secondContents.indexOf("First"), match.getOffset());
+        }
     }
 
     @Test

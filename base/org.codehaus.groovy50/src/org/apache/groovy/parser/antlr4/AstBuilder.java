@@ -3852,7 +3852,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             throw createParsingFailedException("Unsupported created name: " + ctx.getText(), ctx);
         }
 
-        classNode.addAnnotations(this.visitAnnotationsOpt(ctx.annotationsOpt()));
+        classNode.addTypeAnnotations(this.visitAnnotationsOpt(ctx.annotationsOpt())); // GROOVY-11178
 
         return classNode;
     }

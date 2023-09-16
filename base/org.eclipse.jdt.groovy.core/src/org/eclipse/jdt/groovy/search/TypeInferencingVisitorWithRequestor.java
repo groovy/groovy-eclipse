@@ -293,6 +293,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 // visit relocated @AnnotationCollector annotations
                 visitAnnotations(AnnotationCollectorTransform.getMeta(node));
             }
+            visitAnnotations(node.getTypeAnnotations()); // declaration TYPE_USE
 
             // visit name "node"
             TypeLookupResult result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scopes.getLast());

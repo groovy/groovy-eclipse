@@ -354,6 +354,7 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
             tokens = splitName(type, useQualifiedName);
             requestor.acceptAnnotationTypeReference(tokens, type.getStart(), type.getEnd());
         } else {
+            if (useQualifiedName) visitAnnotations(type.getTypeAnnotations());
             tokens = splitName(GroovyUtils.getBaseType(type), useQualifiedName);
             requestor.acceptTypeReference(tokens, type.getStart(), type.getEnd());
             visitTypeParameters(type);

@@ -159,6 +159,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     @Override
     public void visitClass(ClassNode node) {
         visitAnnotations(node.getAnnotations());
+        visitAnnotations(node.getTypeAnnotations());
 
         // visit "<clinit>" statements before visitContents
         MethodNode clinit = node.getMethod("<clinit>", Parameter.EMPTY_ARRAY);

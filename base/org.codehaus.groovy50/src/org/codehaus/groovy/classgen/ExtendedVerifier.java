@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.RecordComponentNode;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
@@ -156,7 +157,20 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             visitTypeAnnotations(type);
             extractTypeUseAnnotations(expression.getAnnotations(), type, LOCAL_VARIABLE_TARGET);
         }
+        // GRECLIPSE add
+        expression.getRightExpression().visit(this);
+        // GRECLIPSE end
     }
+
+    // GRECLIPSE add -- GROOVY-11178
+    @Override
+    public void visitConstructorCallExpression(ConstructorCallExpression expression) {
+        if (!expression.isSpecialCall()) {
+            visitTypeAnnotations(expression.getType());
+        }
+        super.visitConstructorCallExpression(expression);
+    }
+    // GRECLIPSE end
 
     @Override
     public void visitConstructor(ConstructorNode node) {
