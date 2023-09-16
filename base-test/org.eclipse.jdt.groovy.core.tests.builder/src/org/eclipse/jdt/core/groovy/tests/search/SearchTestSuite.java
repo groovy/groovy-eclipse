@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.ILocalVariable;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
@@ -46,8 +44,6 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
-import org.eclipse.jdt.internal.core.JavaElement;
-import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.search.JavaSearchDocument;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
@@ -75,7 +71,6 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
     protected IProject createGroovyProject() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addGroovyJars(projectPath);
-        env.fullBuild(projectPath);
 
         return env.getProject("Project");
     }
@@ -131,102 +126,17 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
 
     //--------------------------------------------------------------------------
 
-    protected static final String FIRST_CONTENTS_CLASS = "class First {}";
-    protected static final String FIRST_CONTENTS_INTERFACE = "interface First {}";
-    protected static final String FIRST_CONTENTS_CLASS_FOR_METHODS = "class First { def xxx() {}}";
-    protected static final String FIRST_CONTENTS_CLASS_FOR_METHODS2 = "class First { def xxx() {} \n def xxx(arg) {}}";
-
-    protected void doTestForTwoTypeReferences(final String firstContents, final String secondContents, final boolean secondIsScript,
-            final int memberIndex) throws JavaModelException {
-        String firstClassName = "First";
-        String secondClassName = "Second";
-        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
-        IJavaElement firstMatchEnclosingElement;
-        IJavaElement secondMatchEnclosingElement;
-        if (secondIsScript) {
-            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
-        } else {
-            // if not a script, then the first match is always enclosed in the type
-            firstMatchEnclosingElement = findType(secondClassName, second);
-        }
-        // match is enclosed in run method (for script), or nth method for class
-        secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
-
-        IType firstType = findType(firstClassName, first);
-        SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
-        checkMatches(secondContents, firstClassName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
-    }
-
-    protected void doTestForTwoMethodReferences(final String firstContents, final String secondContents, final boolean secondIsScript,
-            final int memberIndex, final String matchName) throws JavaModelException {
-        String firstClassName = "First";
-        String secondClassName = "Second";
-        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
-
-        IJavaElement firstMatchEnclosingElement;
-        IJavaElement secondMatchEnclosingElement;
-        if (secondIsScript) {
-            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
-            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
-        } else {
-            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
-            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex + 2];
-        }
-        // match is enclosed in run method (for script), or x method for class
-
-        IMethod firstMethod = (IMethod) findType(firstClassName, first).getChildren()[0];
-        SearchPattern pattern = SearchPattern.createPattern(firstMethod, IJavaSearchConstants.REFERENCES);
-        checkMatches(secondContents, matchName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
-    }
-
     protected void checkMatches(final String secondContents, final String matchText, final SearchPattern pattern, final GroovyCompilationUnit second,
             final IJavaElement firstEnclosingElement, final IJavaElement secondEnclosingElement) {
-        search(pattern, second);
+        List<SearchMatch> searchMatches = search(pattern, second);
 
-        Assert.assertEquals("Should have found 2 matches, but found: " + toString(matches), 2, matches.size());
+        Assert.assertEquals("Should have found 2 matches, but found: " + toString(searchMatches), 2, searchMatches.size());
 
-        Assert.assertEquals("Incorrect match in " + toString(matches), firstEnclosingElement, matches.get(0).getElement());
-        assertLocation(matches.get(0), secondContents.indexOf(matchText), matchText.length());
+        Assert.assertEquals("Incorrect match in " + toString(searchMatches), firstEnclosingElement, searchMatches.get(0).getElement());
+        assertLocation(searchMatches.get(0), secondContents.indexOf(matchText), matchText.length());
 
-        Assert.assertEquals("Incorrect match in " + toString(matches), secondEnclosingElement, matches.get(1).getElement());
-        assertLocation(matches.get(1), secondContents.lastIndexOf(matchText), matchText.length());
-    }
-
-    protected List<SearchMatch> getAllMatches(final String firstContents, final String secondContents) {
-        return getAllMatches(firstContents, secondContents, "", "");
-    }
-
-    protected List<SearchMatch> getAllMatches(final String firstContents, final String secondContents, final String firstPackage, final String secondPackage) {
-        String firstClassName = "First";
-        String secondClassName = "Second";
-        GroovyCompilationUnit first = createUnit(firstPackage, firstClassName, firstContents);
-        GroovyCompilationUnit second = createUnit(secondPackage, secondClassName, secondContents);
-        SearchPattern pattern = SearchPattern.createPattern(findType(firstClassName, first), IJavaSearchConstants.REFERENCES);
-
-        search(pattern, first);
-        search(pattern, second);
-
-        return matches;
-    }
-
-    protected void doTestForVarReferences(final String contents, final int memberIndex, final int start, final MatchRegion[] matchRegions)
-            throws JavaModelException {
-        String className = "First";
-        String matchedVarName = "xxx";
-        int until = start + matchedVarName.length() - 1;
-        GroovyCompilationUnit unit = createUnit(className, contents);
-        JavaElement parent = (JavaElement) findType(className, unit).getChildren()[memberIndex];
-        ILocalVariable var = new LocalVariable(parent, matchedVarName, start, until, start, until, "I", null, 0, false);
-
-        search(SearchPattern.createPattern(var, IJavaSearchConstants.REFERENCES), unit);
-
-        Assert.assertEquals("Should have found " + matchRegions.length + " matches, but found: " + toString(matches), matchRegions.length, matches.size());
-
-        for (int i = 0, n = matchRegions.length; i < n; i += 1) {
-            assertLocation(matches.get(i), matchRegions[i].offset, matchRegions[i].length);
-        }
+        Assert.assertEquals("Incorrect match in " + toString(searchMatches), secondEnclosingElement, searchMatches.get(1).getElement());
+        assertLocation(searchMatches.get(1), secondContents.lastIndexOf(matchText), matchText.length());
     }
 
     protected static void assertLocation(final SearchMatch match, final int offset, final int length) {

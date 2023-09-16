@@ -1001,15 +1001,37 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     //--------------------------------------------------------------------------
 
+    private void doTestForTwoMethodReferencesInClass(String secondContents) throws Exception {
+        doTestForTwoMethodReferences("class First {\n def xxx() {}\n}", secondContents, false, 0, "xxx");
+    }
+
     private void doTestForTwoMethodReferencesInScript(String secondContents) throws Exception {
-        doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, true, 3, "xxx");
+        doTestForTwoMethodReferences("class First {\n def xxx() {}\n}", secondContents, true, 3, "xxx");
     }
 
     private void doTestForTwoMethodReferencesInScriptWithQuotes(String secondContents) throws Exception {
-        doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, true, 3, "'xxx'");
+        doTestForTwoMethodReferences("class First {\n def xxx() {}\n}", secondContents, true, 3, "'xxx'");
     }
 
-    private void doTestForTwoMethodReferencesInClass(String secondContents) throws Exception {
-        doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, false, 0, "xxx");
+    private void doTestForTwoMethodReferences(String firstContents, String secondContents, boolean secondIsScript, int index, String match) throws Exception {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
+        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+
+        IJavaElement firstMatchEnclosingElement;
+        IJavaElement secondMatchEnclosingElement;
+        if (secondIsScript) {
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[index];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[index];
+        } else {
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[index];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[index + 2];
+        }
+        // match is enclosed in run method (for script), or x method for class
+
+        IMethod firstMethod = (IMethod) findType(firstClassName, first).getChildren()[0];
+        SearchPattern pattern = SearchPattern.createPattern(firstMethod, IJavaSearchConstants.REFERENCES);
+        checkMatches(secondContents, match, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
 }

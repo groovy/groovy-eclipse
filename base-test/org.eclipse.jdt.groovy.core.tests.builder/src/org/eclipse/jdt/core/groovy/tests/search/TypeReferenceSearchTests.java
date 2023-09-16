@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,12 +113,12 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesClass6() throws Exception {
-        doTestForTwoTypeReferences(FIRST_CONTENTS_INTERFACE, "class Second implements First { def x(First y) {}\n}", false, 0);
+        doTestForTwoTypeReferences("class First {}", "class Second implements First { def x(First y) {}\n}", false, 0);
     }
 
     @Test
     public void testSearchForTypesClass7() throws Exception {
-        createUnit("other", "First", FIRST_CONTENTS_INTERFACE);
+        createUnit("other", "First", "class First {}");
         doTestForTwoInClass("class Second extends First {\n" + // yes
             "  def x() {\n" +
             "    y = new other.First()\n" + // no
@@ -133,11 +133,12 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test // GRECLIPSE-650
-    public void testFindClassDeclaration() {
+    public void testFindClassDeclaration() throws Exception {
         String firstContents = "class First {\n First x\n}";
         String secondContents = "class Second extends First {}";
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "", "");
         assertEquals("Should find First 2 times", 2, matches.size());
+
         SearchMatch match = matches.get(0);
         int start = match.getOffset();
         int end = start + match.getLength();
@@ -198,18 +199,18 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test // GRECLIPSE-628
-    public void testShouldntFindClassDeclarationInScript() {
+    public void testShouldntFindClassDeclarationInScript() throws Exception {
         String firstContents = "print 'me'";
         String secondContents = "print 'me'";
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "", "");
         assertEquals("Should find no matches", 0, matches.size());
     }
 
     @Test
-    public void testImport1() {
+    public void testImport1() throws Exception {
         String secondContents = "import First\n new First()";
 
-        List<SearchMatch> matches = getAllMatches(FIRST_CONTENTS_CLASS, secondContents, "", "");
+        List<SearchMatch> matches = searchForFirst("class First {}", secondContents, "", "");
         assertEquals(2, matches.size());
 
         SearchMatch match = matches.get(0);
@@ -222,10 +223,10 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testImport2() {
+    public void testImport2() throws Exception {
         String secondContents = "import First as Alpha\n new Alpha()";
 
-        List<SearchMatch> matches = getAllMatches(FIRST_CONTENTS_CLASS, secondContents, "", "");
+        List<SearchMatch> matches = searchForFirst("class First {}", secondContents, "", "");
         assertEquals(1, matches.size());
 
         SearchMatch match = matches.get(0);
@@ -233,16 +234,39 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         assertEquals(secondContents.indexOf("First"), match.getOffset());
     }
 
+    @Test
+    public void testImport3() throws Exception {
+        String secondContents = "package q\n import p.*\n First.class";
+
+        List<SearchMatch> matches = searchForFirst("package p\nclass First {}", secondContents, "p", "q");
+        assertEquals(1, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
+    }
+
+    @Test
+    public void testNoImport() throws Exception {
+        String secondContents = "package q\n p.First.class";
+
+        List<SearchMatch> matches = searchForFirst("package p\nclass First {}", secondContents, "p", "q");
+        assertEquals(1, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("p.First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("p.First"), match.getOffset());
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/468
-    public void testCoercion1() {
+    public void testCoercion1() throws Exception {
         String firstContents =
-            "package a\n" +
+            "package p\n" +
             "interface First {\n" +
             "  void meth();\n" +
             "}\n";
-
         String secondContents =
-            "package a\n" +
+            "package p\n" +
             "class Second {\n" +
             "  def m() {\n" +
             "    return {->\n" +
@@ -250,52 +274,69 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
             "  }\n" +
             "}\n";
 
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "a", "a");
-        assertEquals("Wrong count", 1, matches.size());
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "p");
+        assertEquals(1, matches.size());
 
         SearchMatch match = matches.get(0);
-        assertEquals("Wrong length", "First".length(), match.getLength());
-        assertEquals("Wrong offset", secondContents.indexOf("First"), match.getOffset());
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/442
-    public void testGenerics1() {
+    public void testGenerics1() throws Exception {
         String firstContents =
-            "package a\n" +
+            "package p\n" +
             "class First {\n" +
             "}\n";
-
         String secondContents =
-            "package a\n" +
+            "package p\n" +
             "class Second {\n" +
             "  List<First> firsts\n" +
             "}\n";
 
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "a", "a");
-        assertEquals("Wrong count", 1, matches.size());
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "p");
+        assertEquals(1, matches.size());
 
         SearchMatch match = matches.get(0);
-        assertEquals("Wrong length", "First".length(), match.getLength());
-        assertEquals("Wrong offset", secondContents.indexOf("First"), match.getOffset());
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
     }
 
     @Test
-    public void testInnerTypes1() {
+    public void testGenerics2() throws Exception {
+        String firstContents =
+            "package p\n" +
+            "class First {\n" +
+            "}\n";
+        String secondContents =
+            "package p\n" +
+            "class Second<T extends First> {\n" +
+            "}\n";
+
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "p");
+        assertEquals(1, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
+    }
+
+    @Test
+    public void testInnerTypes1() throws Exception {
         String firstContents =
             "class Other {\n" +
             "  class First {}\n" +
-            "}";
-
+            "}\n";
         String secondContents =
             "import Other.First\n" +
             "Map<First, ? extends First> h\n" +
             "Other.First j\n" +
-            "First i";
+            "First i\n";
 
         String name = "First";
         int len = name.length();
 
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "", "");
         assertEquals("Wrong number of matches found:\n" + matches, 5, matches.size());
 
         int start = secondContents.indexOf("First");
@@ -325,24 +366,23 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testInnerTypes2() {
+    public void testInnerTypes2() throws Exception {
         String firstContents =
             "package p\n" +
             "class Other {\n" +
             "  class First {}\n" +
-            "}";
-
+            "}\n";
         String secondContents =
             "package q\n" +
             "import p.Other.First\n" +
             "Map<First, ? extends First> h\n" +
             "p.Other.First j\n" +
-            "First i";
+            "First i\n";
 
         String name = "First";
         int len = name.length();
 
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "p", "q");
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "q");
         assertEquals("Wrong number of matches found:\n" + matches, 5, matches.size());
 
         int start = secondContents.indexOf("First");
@@ -372,24 +412,23 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testInnerTypes3() {
+    public void testInnerTypes3() throws Exception {
         String firstContents =
             "package p\n" +
             "class Other {\n" +
             "  class First {}\n" +
-            "}";
-
+            "}\n";
         String secondContents =
             "package q\n" +
             "import p.Other\n" +
             "Map<Other.First, ? extends Other.First> h\n" +
             "p.Other.First j\n" +
-            "Other.First i";
+            "Other.First i\n";
 
         String name = "First";
         int len = name.length();
 
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "p", "q");
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "q");
         assertEquals("Wrong number of matches found:\n" + matches, 4, matches.size());
 
         int start = secondContents.indexOf("First");
@@ -414,11 +453,61 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testConstructorWithDefaultArgsInCompileStatic() {
+    public void testInnerTypes4() throws Exception {
+        String firstContents =
+            "package p\n" +
+            "class Other {\n" +
+            "  static class First {}\n" +
+            "}\n";
+        String secondContents =
+            "package q\n" +
+            "import p.*\n" +
+            "new Other.First()" +
+            "new p.Other.First()\n";
+
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "q");
+        assertEquals(2, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
+
+        match = matches.get(1);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.lastIndexOf("First"), match.getOffset());
+    }
+
+    @Test
+    public void testInnerTypes5() throws Exception {
+        String firstContents =
+            "package p\n" +
+            "class First {\n" +
+            "  static class Other {}\n" +
+            "}\n";
+        String secondContents =
+            "package q\n" +
+            "import p.*\n" +
+            "new First.Other()\n" +
+            "new p.First.Other()\n";
+
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "q");
+        assertEquals(2, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
+
+        match = matches.get(1);
+        assertEquals("p.First".length(), match.getLength());
+        assertEquals(secondContents.lastIndexOf("p.First"), match.getOffset());
+    }
+
+    @Test
+    public void testConstructorWithDefaultArgsInCompileStatic() throws Exception {
         String firstContents =
                 "package p\n" +
                 "class First {\n" +
-                "    Class name\n" +
+                "  Class name\n" +
                 "}\n";
         String secondContents =
                 "package q\n" +
@@ -428,10 +517,11 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
                 "@CompileStatic\n" +
                 "class Foo {\n" +
                 "  void apply() {\n" +
-                "      new First([name: First])\n" +
+                "    new First([name: First])\n" +
                 "  }\n" +
-                "}";
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "p", "q");
+                "}\n";
+
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "q");
         int lastMatch = 0;
         for (SearchMatch searchMatch : matches) {
             int start = secondContents.indexOf("First", lastMatch);
@@ -444,11 +534,55 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     //--------------------------------------------------------------------------
 
-    private void doTestForTwoInScript(String secondContents) throws Exception {
-        doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, true, 3);
+    private void doTestForTwoInClass(String secondContents) throws Exception {
+        doTestForTwoTypeReferences("class First {}", secondContents, false, 0);
     }
 
-    private void doTestForTwoInClass(String secondContents) throws Exception {
-        doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, false, 0);
+    private void doTestForTwoInScript(String secondContents) throws Exception {
+        doTestForTwoTypeReferences("class First {}", secondContents, true, 3);
+    }
+
+    private void doTestForTwoTypeReferences(String firstContents, String secondContents, boolean secondIsScript, int childIndex) throws Exception {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        var firstUnit = createUnit(firstClassName, firstContents);
+        var secondUnit = createUnit(secondClassName, secondContents);
+
+        IJavaElement firstMatchEnclosingElement;
+        IJavaElement secondMatchEnclosingElement;
+        if (secondIsScript) {
+            firstMatchEnclosingElement = findType(secondClassName, secondUnit).getChildren()[childIndex];
+        } else {
+            // if not a script, then the first match is always enclosed in the type
+            firstMatchEnclosingElement = findType(secondClassName, secondUnit);
+        }
+        // match is enclosed in run method (for script), or nth method for class
+        secondMatchEnclosingElement = findType(secondClassName, secondUnit).getChildren()[childIndex];
+
+        IType firstType = findType(firstClassName, firstUnit);
+        SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
+        checkMatches(secondContents, firstClassName, pattern, secondUnit, firstMatchEnclosingElement, secondMatchEnclosingElement);
+    }
+
+    private List<SearchMatch> searchForFirst(String firstContents, String secondContents, String firstPackageName, String secondPackageName) throws Exception {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        var firstUnit = createUnit(firstPackageName, firstClassName, firstContents);
+        // create second compilation unit in another project to test index selection
+        var project1 = project;
+        try {
+            var projectPath =
+                env.addProject("Project2");
+            env.addGroovyJars(projectPath);
+            env.addRequiredProject(projectPath, project1.getFullPath());
+
+            project = env.getProject("Project2");
+            createUnit(secondPackageName, secondClassName, secondContents);
+        } finally {
+            project = project1;
+        }
+
+        SearchPattern pattern = SearchPattern.createPattern(findType(firstClassName, firstUnit), IJavaSearchConstants.REFERENCES);
+        return search(pattern, SearchEngine.createWorkspaceScope());
     }
 }
