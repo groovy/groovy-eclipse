@@ -789,6 +789,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         for (ClassNode type : types) {
             MethodNode innerCandidate = null;
             List<MethodNode> candidates = getMethods(name, type);
+            candidates.removeIf(m -> m.isPrivate() && !m.getDeclaringClass().equals(declaringType)); // GROOVY-8859
             if (!candidates.isEmpty()) {
                 innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
                 if (innerCandidate != null) {
@@ -1179,7 +1180,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected static boolean isNotThisOrOuterClass(final ClassNode thisType, final ClassNode declaringClass) {
-        return (!thisType.equals(declaringClass) && !thisType.getOuterClasses().contains(declaringClass) && !(implementsTrait(thisType) && thisType.implementsInterface(declaringClass)));
+        return !thisType.equals(declaringClass) && !thisType.getOuterClasses().contains(declaringClass) && !(implementsTrait(thisType) && thisType.implementsInterface(declaringClass));
     }
 
     /**

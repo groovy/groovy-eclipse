@@ -926,7 +926,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "check", "java.lang.Boolean");
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8859
     public void testPrivateMethod2() {
         //@formatter:off
         String contents =
@@ -943,8 +943,8 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}";
         //@formatter:on
 
-        assertDeclType(contents, "method", "B");
-        assertExprType(contents, "method", "java.lang.Void");
+        int offset = contents.lastIndexOf("method");
+        assertUnknownConfidence(contents, offset, offset + 6);
     }
 
     @Test
