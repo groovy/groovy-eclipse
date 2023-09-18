@@ -1673,6 +1673,11 @@ public class ClassNode extends AnnotatedNode {
     }
 
     public void addTypeAnnotation(AnnotationNode annotation) {
+        // GRECLIPSE add -- GROOVY-10937
+        if (!isRedirectNode() && (isResolved() || isPrimaryClassNode())) {
+            throw new GroovyBugError("Adding type annotation @" + annotation.getClassNode().getNameWithoutPackage() + " to non-redirect node: " + getName());
+        }
+        // GRECLIPSE end
         if (annotation != null) {
             if (typeAnnotations == Collections.EMPTY_LIST) {
                 typeAnnotations = new ArrayList<>(3);

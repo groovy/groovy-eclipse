@@ -467,8 +467,11 @@ public class OrganizeGroovyImports {
                         visitTypeParameters(node.getGenericsTypes(), node.getName());
                     }
                     handleTypeReference(node.getUnresolvedSuperClass(), false);
-                    for (ClassNode impls : node.getUnresolvedInterfaces()) {
-                        handleTypeReference(impls, false);
+                    for (ClassNode ui : node.getUnresolvedInterfaces()) {
+                        handleTypeReference(ui, false);
+                    }
+                    for (ClassNode ps : node.getPermittedSubclasses()) {
+                        handleTypeReference(ps, false);
                     }
                 }
                 super.visitClass(node);
@@ -634,9 +637,10 @@ public class OrganizeGroovyImports {
                 if (generic.getStart() < 1) {
                     continue;
                 }
-                visitAnnotations(generic.getType().getTypeAnnotations());
                 if (!generic.isPlaceholder() && !generic.isWildcard()) {
                     handleTypeReference(generic.getType(), false);
+                } else {
+                    visitAnnotations(generic.getType().getTypeAnnotations());
                 }
                 if (generic.getLowerBound() != null) {
                     handleTypeReference(generic.getLowerBound(), false);

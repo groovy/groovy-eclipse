@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.eclipse.jdt.groovy.core.util.JavaConstants.AST_LEVEL
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
@@ -50,12 +52,16 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
             |'''.stripMargin(), 'A'
 
         String source = '''\
-            |@A(one='1')
+            |@A(one='1', two=C.D)
             |class C {
+            |  public static final String D = ""
             |}
             |'''.stripMargin()
 
         def elem = assertCodeSelect([source], 'one')
+        assert elem.inferredElement instanceof MethodNode
+
+        /**/elem = assertCodeSelect([source], 'two')
         assert elem.inferredElement instanceof MethodNode
     }
 
@@ -103,6 +109,33 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
             assert inferredElement instanceof MethodNode
             assert inferredElement.declaringClass.name == 'groovy.transform.ASTTest'
         }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1512
+    void testCodeSelectOnAttributeName5() {
+        assumeTrue(isParrotParser())
+
+        addJavaSource '''\
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE_USE)
+            |@interface A {
+            |  String one();
+            |  String two();
+            |}
+            |'''.stripMargin(), 'A'
+
+        String source = '''\
+            |@A(one=C.VALUE)
+            |class C {
+            |  public static final @A(two=C.VALUE) String VALUE = ""
+            |}
+            |'''.stripMargin()
+
+        def elem = assertCodeSelect([source], 'one')
+        assert elem.inferredElement instanceof MethodNode
+
+        /**/elem = assertCodeSelect([source], 'two')
+        assert elem.inferredElement instanceof MethodNode
     }
 
     @Test

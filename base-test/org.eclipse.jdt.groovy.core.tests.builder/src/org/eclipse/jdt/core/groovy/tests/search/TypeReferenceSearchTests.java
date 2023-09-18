@@ -532,6 +532,26 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
+    public void testPermittedSubclasses() throws Exception {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40));
+
+        String firstContents =
+            "package p\n" +
+            "class First {}\n";
+        String secondContents =
+            "package q\n" +
+            "import p.*\n" +
+            "sealed class Second permits First {}\n";
+
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "q");
+        assertEquals(1, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
+    }
+
+    @Test
     public void testConstructorWithDefaultArgsInCompileStatic() throws Exception {
         String firstContents =
                 "package p\n" +

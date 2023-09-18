@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,11 @@ public enum ContentAssistLocation {
      * Types for implements clauses.
      */
     IMPLEMENTS,
+
+    /**
+     * Types for permits clauses.
+     */
+    PERMITS,
 
     /**
      * Exception types.

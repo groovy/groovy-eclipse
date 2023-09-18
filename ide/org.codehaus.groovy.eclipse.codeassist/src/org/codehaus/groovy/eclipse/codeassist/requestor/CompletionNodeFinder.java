@@ -174,6 +174,12 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             }
         }
 
+        for (ClassNode permit : node.getPermittedSubclasses()) {
+            if (check(permit)) {
+                createContext(null, node, ContentAssistLocation.PERMITS); // JEP 409
+            }
+        }
+
         blockStack.add(node);
         super.visitClass(node);
         blockStack.removeLast();
@@ -385,11 +391,13 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         if (isNotEmpty(gts) && gts[0].getStart() <= completionOffset && completionOffset <= gts[gts.length - 1].getEnd()) {
             for (GenericsType gt : gts) {
                 if (gt.getStart() <= completionOffset && completionOffset <= gt.getEnd()) {
-                    if (!gt.isPlaceholder()) {
+                    if (!gt.isPlaceholder() && !gt.isWildcard()) {
                         ClassNode type = gt.getType();
                         if (check(type)) {
                             createContext(type, node, ContentAssistLocation.GENERICS);
                         }
+                    } else {
+                        visitAnnotations(gt.getType().getTypeAnnotations());
                     }
                     if (gt.getLowerBound() != null) {
                         ClassNode type = gt.getLowerBound();
@@ -771,13 +779,16 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     //--------------------------------------------------------------------------
 
     private boolean check(ASTNode node) {
+        boolean nodeIsType = (node instanceof ClassNode);
+        if (nodeIsType) visitAnnotations(((ClassNode) node).getTypeAnnotations());
         if (node.getEnd() > 0) {
             boolean containsCompletionOffset = (completionOffset > node.getStart() && completionOffset <= node.getEnd());
             boolean containsSupportingOffset = (supportingNodeEnd > node.getStart() && supportingNodeEnd <= node.getEnd());
 
-            if (!containsCompletionOffset && !containsSupportingOffset && node instanceof ClassNode) {
+            if (!containsCompletionOffset && !containsSupportingOffset && nodeIsType) {
                 ClassNode type = (ClassNode) node;
-                if (type.isUsingGenerics()) {
+                if (!type.isGenericsPlaceHolder() && (type.isRedirectNode() ||
+                        (!type.isResolved() && !type.isPrimaryClassNode()))) {
                     visitGenerics(type.getGenericsTypes(), type);
                 }
             }

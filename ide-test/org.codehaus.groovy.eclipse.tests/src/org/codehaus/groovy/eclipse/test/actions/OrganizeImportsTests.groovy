@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.test.actions
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
+import static org.junit.Assume.assumeTrue
 
 import groovy.test.NotYetImplemented
 
@@ -585,17 +586,24 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // JSR 308
     void testRetainImport14() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
         String contents = '''\
             |import p.T
             |def m(List<@T ?> list) {}
             |'''
-        if (!isParrotParser() || isAtLeastGroovy(40)) {
-            doContentsCompareTest(contents)
-        } else { // parses but annotation missed
-            doContentsCompareTest(contents, '''\
-                |def m(List<@T ?> list) {}
-                |''')
-        }
+        doContentsCompareTest(contents)
+    }
+
+    @Test // JEP 409
+    void testRetainImport15() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |import p.T
+            |sealed class C permits T {}
+            |'''
+        doContentsCompareTest(contents)
     }
 
     @Test

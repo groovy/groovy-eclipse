@@ -376,8 +376,10 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     private void visitTypeParameters(final GenericsType[] generics, final String typeName) {
         for (GenericsType generic : generics) {
-            if (generic.getType() != null && generic.getType().getName().charAt(0) != '?') {
+            if (!generic.isPlaceholder() && !generic.isWildcard()) {
                 visitTypeReference(generic.getType(), generic.getType().isAnnotationDefinition(), true);
+            } else {
+                visitAnnotations(generic.getType().getTypeAnnotations());
             }
             if (generic.getLowerBound() != null) {
                 visitTypeReference(generic.getLowerBound(), generic.getLowerBound().isAnnotationDefinition(), true);

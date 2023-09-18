@@ -293,7 +293,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 // visit relocated @AnnotationCollector annotations
                 visitAnnotations(AnnotationCollectorTransform.getMeta(node));
             }
-            visitAnnotations(node.getTypeAnnotations()); // declaration TYPE_USE
 
             // visit name "node"
             TypeLookupResult result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scopes.getLast());
@@ -601,7 +600,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VisitStatus status = notifyRequestor(type, requestor, result);
         switch (status) {
         case CONTINUE:
-            if (!type.isGenericsPlaceHolder()) {
+            if (!type.isGenericsPlaceHolder() && (type.isRedirectNode() ||
+                    (!type.isResolved() && !type.isPrimaryClassNode()))) {
                 visitGenericTypes(type.getGenericsTypes());
             }
             visitAnnotations(type.getTypeAnnotations());
@@ -1282,8 +1282,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         if (generics != null) {
             for (GenericsType gt : generics) {
                 ClassNode type = gt.getType();
-                if (type != null && !type.getUnresolvedName().startsWith("?")) {
+                if (!gt.isWildcard()) {
                     visitClassReference(type);
+                } else {
+                    visitAnnotations(type.getTypeAnnotations());
                 }
                 if (gt.getLowerBound() != null) {
                     visitClassReference(gt.getLowerBound());

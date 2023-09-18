@@ -220,6 +220,7 @@ class ASTView extends ViewPart {
                     String name = method.name
                     if (name.startsWith('get')) {
                         name = decapitalize(name.substring(3))
+                        if (name == 'declaredConstructors') name = 'constructors'
                     }
                     try {
                         def value
@@ -292,6 +293,8 @@ class ASTView extends ViewPart {
                 def descriptor = ((MethodNode) value).typeDescriptor.replace(
                     '<init>', ((MethodNode) value).declaringClass.nameWithoutPackage)
                 return "$label : ${descriptor.substring(descriptor.indexOf(' ') + 1)}"
+            case AnnotationNode:
+                return "$label : ${value['classNode']['nameWithoutPackage']}"
             case ClassNode:
                 return "$label : ${value['unresolvedName']}"
             case Variable:
@@ -327,17 +330,26 @@ class ASTView extends ViewPart {
 
             // filter redundant properties
             if (outer instanceof ClassNode) {
-                if (label ==~ /abstractMethods|allDeclaredMethods|allInterfaces|declaredMethodsMap|fieldIndex|hasMultiRedirect|(hasP|p)ackageName|/ +
+                if (label ==~ /abstractMethods|allDeclaredMethods|allInterfaces|compileUnit|declaredMethodsMap|fieldIndex|hasMultiRedirect|(hasP|p)ackageName|/ +
                         /is(Array|DerivedFromGroovyObject|RedirectNode)|length|module|name(WithoutPackage)?|outer(Most)?Class|plainNodeReference|text/) {
                     return false
                 }
-                if (outer.redirectNode && label ==~ /annotations|compileUnit|declaredConstructors|enclosingMethod|fields|hasInconsistentHierarchy|/ +
+                if (outer.redirectNode) { // type reference
+                    if (label ==~ /annotations|constructors|declaredConstructors|declaringClass|enclosingMethod|fields|hasInconsistentHierarchy|/ +
                         /innerClasses|interfaces|is(?!GenericsPlaceHolder|Synthetic(Public)?|UsingGenerics)\w+|methods|mixins|modifiers|/ +
                         /outerClasses|package|permittedSubclasses|properties|superClass/) {
-                    return false
+                        return false
+                    }
+                } else { // type declaration or synthetic reference
+                    if (outer.primaryClassNode && label ==~ /componentType|superClass/) {
+                        return false
+                    }
+                    if (label ==~ /unresolved(Interfaces|Name)/) {
+                        return false
+                    }
                 }
-                if (!outer.redirectNode && label ==~ /unresolved(Name|Interfaces|SuperClass)/) {
-                    return false
+                if (label == 'unresolvedSuperClass') {
+                    return (value != null && !value.is(ClassHelper.OBJECT_TYPE))
                 }
             } else if (outer instanceof Variable) { // FieldNode, PropertyNode, etc.
                 if (label ==~ /name|hasInitialExpression|initialValueExpression|is(Enum|Final|Private|Protected|Public|Static|Volatile)/) {
