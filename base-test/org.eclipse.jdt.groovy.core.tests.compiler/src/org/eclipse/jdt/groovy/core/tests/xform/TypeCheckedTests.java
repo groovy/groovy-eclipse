@@ -7122,4 +7122,23 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Groovy:[Static type checking] - Cannot assign value of type java.util.Date to variable of type java.lang.Number\n" +
             "----------\n");
     }
+
+    @Test
+    public void testTypeChecked11168() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <T> T m(@DelegatesTo(type='T',strategy=Closure.DELEGATE_FIRST) Closure c) {\n" +
+            "  'WORKS'.with(c)\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  this.<String>m { print toLowerCase() }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }

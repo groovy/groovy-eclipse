@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.junit.Test;
 public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test
-    public void testDelegatesToValue() {
+    public void testDelegatesToValue1() {
         //@formatter:off
         String contents =
             "class Other { }\n" +
@@ -136,7 +136,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // uses constant instead of literal for target
-    public void testDelegatesToTarget2a() {
+    public void testDelegatesToTarget3() {
         createUnit("C",
             "class C {\n" +
             "  private static final String SELF = 'self'\n" +
@@ -164,7 +164,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesToTarget3() {
+    public void testDelegatesToTarget4() {
         createUnit("C", "class C { static def cat(\n" +
             "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) {}\n}");
         //@formatter:off
@@ -187,7 +187,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesToTarget4() {
+    public void testDelegatesToTarget5() {
         createUnit("C", "class C { static def cat(\n" +
             "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) {}\n}");
         //@formatter:off
@@ -211,7 +211,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesToTarget5() {
+    public void testDelegatesToTarget6() {
         createUnit("C", "class C { static def cat(\n" +
             "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) {}\n}");
         //@formatter:off
@@ -233,7 +233,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // seemingly invalid combination
-    public void testDelegatesToTarget6() {
+    public void testDelegatesToTarget7() {
         createUnit("C", "class C { static def cat(\n" +
             "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) {}\n}");
         //@formatter:off
@@ -257,7 +257,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1147
-    public void testDelegatesToTarget7() {
+    public void testDelegatesToTarget8() {
         //@formatter:off
         String contents =
             "abstract class A {\n" +
@@ -329,7 +329,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/966
-    public void testDelegatesToTypeName3a() {
+    public void testDelegatesToTypeName4() {
         //@formatter:off
         createUnit("p", "A",
             "package p\n" +
@@ -352,7 +352,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/966
-    public void testDelegatesToTypeName3b() {
+    public void testDelegatesToTypeName5() {
         //@formatter:off
         createUnit("p", "A",
             "package p\n" +
@@ -378,8 +378,18 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assertType(contents, "number", "java.lang.Number");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11168
+    public void testDelegatesToTypeName6() {
+        //@formatter:off
+        String contents =
+            "def <T> T m(int i, @DelegatesTo(type='T') Closure block) { }\n" +
+            "this.<String>m(2) { delegate }";
+        //@formatter:on
+        assertType(contents, "delegate", "java.lang.String");
+    }
+
     @Test
-    public void testDelegatesToResolveStrategy2() {
+    public void testDelegatesToResolveStrategy1() {
         //@formatter:off
         String contents =
             "class A {}\n" +
@@ -399,7 +409,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/657
-    public void testDelegatesToResolveStrategy3() {
+    public void testDelegatesToResolveStrategy2() {
         //@formatter:off
         String contents =
             "class A {}\n" +
@@ -419,7 +429,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesToResolveStrategy4() {
+    public void testDelegatesToResolveStrategy3() {
         //@formatter:off
         String contents =
             "class A {}\n" +
@@ -519,7 +529,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1100
-    public void testEnumOverrides4a() {
+    public void testEnumOverrides5() {
         //@formatter:off
         String contents =
             "@groovy.transform.CompileStatic\n" +
@@ -539,7 +549,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1100
-    public void testEnumOverrides4b() {
+    public void testEnumOverrides6() {
         //@formatter:off
         String contents =
             "@groovy.transform.CompileStatic\n" +

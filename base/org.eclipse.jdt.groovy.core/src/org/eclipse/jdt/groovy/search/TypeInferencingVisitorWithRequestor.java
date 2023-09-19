@@ -738,7 +738,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 attr = meth; // no Groovy AST node exists for name
                 noLookup = new TypeLookupResult(meth.getReturnType(), meth.getDeclaringClass(), meth, TypeConfidence.EXACT, scope);
             } else {
-                attr = new ConstantExpression(name);
+                attr = GeneralUtils.constX(name);
                 ClassNode type = node.getClassNode();
                 // this is very rough; it only works for an attribute that directly follows '('
                 attr.setStart(type.getEnd() + 1);
@@ -838,7 +838,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     scopes.getLast().setMethodCallArgumentTypes(Arrays.asList(dependentExprType, node.getNodeMetaData("rhsType")));
                 }
                 // there is an overloadable method associated with this operation; convert to a constant expression and look it up
-                TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryExprType, false, scopes.getLast());
+                TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(associatedMethod), primaryExprType, false, scopes.getLast());
                 if (result.confidence != TypeConfidence.UNKNOWN) completeExprType = result.type;
                 // special case DefaultGroovyMethods.getAt -- the problem is that DGM has too many variants of getAt
                 if ("getAt".equals(associatedMethod) && VariableScope.DGM_CLASS_NODE.equals(result.declaringType)) {
@@ -1931,7 +1931,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             String associatedMethod = findUnaryOperatorName(operation);
             if (associatedMethod != null && !operandType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
                 scope.setMethodCallArgumentTypes(Collections.emptyList());
-                TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), operandType, false, scope);
+                TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(associatedMethod), operandType, false, scope);
 
                 exprType = result.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED) ? result.type : operandType;
             } else if (node instanceof BooleanExpression) {
@@ -2529,7 +2529,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             Parameter methodParam = findTargetParameter(node, cat.call, methodNode, !methodNode.getDeclaringClass().equals(cat.getPerceivedDeclaringType()));
             if (methodParam != null) {
                 if (VariableScope.CLOSURE_CLASS_NODE.equals(methodParam.getType())) {
-                    GroovyUtils.getAnnotations(methodParam, VariableScope.CLOSURE_PARAMS.getName()).findFirst().ifPresent(cp -> {
+                    GroovyUtils.getAnnotations(methodParam, ClosureParams.class.getName()).findFirst().ifPresent(cp -> {
                         SourceUnit sourceUnit = enclosingModule.getContext();
                         CompilationUnit compilationUnit = resolver.compilationUnit;
                         try {

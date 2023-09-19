@@ -66,6 +66,7 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCall;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
@@ -1300,6 +1301,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                                 compilationUnit = ((org.codehaus.jdt.groovy.control.EclipseSourceUnit) enclosingModule.getContext()).resolver.compilationUnit;
                                             }
                                             ClassNode[] resolved = parseClassNodesFromString(typeName, enclosingModule.getContext(), compilationUnit, methodNode, delegatesToType);
+                                            if (GenericsUtils.hasUnresolvedGenerics(resolved[0])) { // @DelegatesTo(type="T") or @DelegatesTo(type="List<T>")
+                                                GenericsMapper mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(methodNode.getParameters()), declaringType,
+                                                    methodNode.getOriginal(), (call instanceof MethodCallExpression ? ((MethodCallExpression) call).getGenericsTypes() : null));
+                                                resolved[0] = resolveTypeParameterization(mapper, resolved[0]);
+                                            }
                                             addDelegatesToClosure(closure, resolved[0], strategy);
 
                                         } else if (delegatesToValue == null || (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target"))) {

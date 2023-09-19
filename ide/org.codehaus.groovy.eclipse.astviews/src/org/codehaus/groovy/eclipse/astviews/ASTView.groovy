@@ -24,6 +24,7 @@ import static org.eclipse.swt.widgets.Display.getDefault as getDisplay
 import groovy.transform.*
 
 import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.expr.MethodCall
 import org.codehaus.groovy.control.*
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
@@ -353,6 +354,10 @@ class ASTView extends ViewPart {
                 }
             } else if (outer instanceof Variable) { // FieldNode, PropertyNode, etc.
                 if (label ==~ /name|hasInitialExpression|initialValueExpression|is(Enum|Final|Private|Protected|Public|Static|Volatile)/) {
+                    return false
+                }
+            } else if (outer instanceof MethodCall) { // MethodCallExpression, ConstructorCallExpression, etc.
+                if (label ==~ /methodAsString|receiver/) {
                     return false
                 }
             } else if (outer instanceof MethodNode) {
