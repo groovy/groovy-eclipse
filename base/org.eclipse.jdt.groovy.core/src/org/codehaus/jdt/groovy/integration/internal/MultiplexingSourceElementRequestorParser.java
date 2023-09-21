@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,9 +87,9 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
             boolean disableGlobalXforms = !fullParse || optimizeStringLiterals;
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one.
             // FIXASC ought to reuse to ensure types end up in same groovy CU
-            GroovyParser groovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, !disableGlobalXforms, true);
+            GroovyParser aGroovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, !disableGlobalXforms, true);
             CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 1, options.maxProblemsPerUnit);
-            GroovyCompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(contents, fileName, compilationResult);
+            GroovyCompilationUnitDeclaration compUnitDecl = aGroovyParser.dietParse(contents, fileName, compilationResult);
 
             scanner.setSource(contents);
 

@@ -296,7 +296,7 @@ public class GroovyUtils {
         builder.append(Signature.createTypeSignature(name, resolved));
         if (resolved && node.isGenericsPlaceHolder()) {
             if (node.getDeclaringClass() != null) // type parameter provenance
-                return getTypeSignatureWithoutGenerics(node.getDeclaringClass(),qualified,true) +
+                return getTypeSignatureWithoutGenerics(node.getDeclaringClass(), qualified, true) +
                             Signature.C_COLON + Signature.C_TYPE_VARIABLE + builder.substring(1);
             builder.setCharAt(pos, Signature.C_TYPE_VARIABLE); // replace the "L" or "Q" with "T"
         }
@@ -377,13 +377,13 @@ public class GroovyUtils {
         // concrete types (without mixins/traits) return all methods from getMethod(String, Parameter[])
         if (declaringType.isAbstract() || declaringType.isInterface() || implementsTrait(declaringType)) {
             Set<ClassNode> done = new HashSet<>(Collections.singleton(declaringType));
-            LinkedList<ClassNode> todo = new LinkedList<>();
+            java.util.Queue<ClassNode> todo = new LinkedList<>();
             ClassNode type = declaringType;
             do {
-                ClassNode supa = type.getSuperClass();
-                if (supa != null) {
-                    if (!done.contains(supa)) {
-                        todo.add(supa);
+                ClassNode base = type.getSuperClass();
+                if (base != null) {
+                    if (!done.contains(base)) {
+                        todo.add(base);
                     }
                 }
                 for (ClassNode face : type.getInterfaces()) {

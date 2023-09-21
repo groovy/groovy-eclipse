@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public class DelegatingCleanUpPostSaveListener extends org.eclipse.jdt.internal.
                     (org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener) descriptor.getPostSaveListener();
                 GroovyCleanUpPostSaveListener groovyCleanUp = new GroovyCleanUpPostSaveListener();
                 IPostSaveListener delegatingCleanUp = new DelegatingCleanUpPostSaveListener(jdtCleanUp, groovyCleanUp);
-                ReflectionUtils.setPrivateField(SaveParticipantDescriptor.class, "fPostSaveListener", descriptor, delegatingCleanUp);
+                ReflectionUtils.throwableSetPrivateField(SaveParticipantDescriptor.class, "fPostSaveListener", descriptor, delegatingCleanUp);
             }
         } catch (Exception e) {
             // if an exception is thrown, then the groovy post save listener will not be used.

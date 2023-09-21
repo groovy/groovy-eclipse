@@ -142,7 +142,8 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                 for (TypeAndScope pair : declaringTypes) {
                     ClassNode declaringType = pair.declaringType;
                     if (declaringType.isUsingGenerics() && declaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
-                        declaringType = declaringType.getGenericsTypes()[0].getType(); isStatic = Boolean.TRUE;
+                        declaringType = declaringType.getGenericsTypes()[0].getType();
+                        isStatic = Boolean.TRUE;
                     } else {
                         isStatic = Boolean.valueOf(isStaticObjectExpression);
                     }
@@ -154,7 +155,8 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                     }
                 }
             } finally {
-                currentExpression = null; isStatic = null;
+                currentExpression = null;
+                isStatic = null;
             }
         }
         return null;

@@ -95,7 +95,6 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.runtime.GeneratedClosure;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.transform.ASTTestTransformation;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.LazyASTTransformation;
@@ -226,7 +225,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), LazyASTTransformation.class)) {
             if (node.getAnnotations().contains(anno)) {
                 MethodNode init = node.getDeclaringClass().getDeclaredMethod(
-                    "get" + MetaClassHelper.capitalize(node.getName().substring(1)), Parameter.EMPTY_ARRAY);
+                    "get" + org.apache.groovy.util.BeanUtils.capitalize(node.getName().substring(1)), Parameter.EMPTY_ARRAY);
                 if (init != null && init.getEnd() < 1) {
                     visitMethod(init);
                 }

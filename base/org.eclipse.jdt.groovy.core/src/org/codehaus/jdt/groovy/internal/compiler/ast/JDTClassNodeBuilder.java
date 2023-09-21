@@ -261,7 +261,7 @@ class JDTClassNodeBuilder {
         case TypeIds.T_void:
             return ClassHelper.VOID_TYPE;
         case TypeIds.T_null:
-            return ClassHelper.DYNAMIC_TYPE;
+            return ClassHelper.OBJECT_TYPE;
         default:
             throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + tb + "(type.id=" + tb.id + ")");
         }

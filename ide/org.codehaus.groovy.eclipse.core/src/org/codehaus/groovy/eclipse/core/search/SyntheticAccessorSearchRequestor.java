@@ -20,7 +20,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -128,7 +127,7 @@ public class SyntheticAccessorSearchRequestor {
             return null;
         }
 
-        String name = prefix + MetaClassHelper.capitalize(field.getElementName());
+        String name = prefix + org.apache.groovy.util.BeanUtils.capitalize(field.getElementName());
         String[] params = !setter ? CharOperation.NO_STRINGS : new String[] {field.getTypeSignature()};
 
         final IMethod method = ((IType) field.getParent()).getMethod(name, params);

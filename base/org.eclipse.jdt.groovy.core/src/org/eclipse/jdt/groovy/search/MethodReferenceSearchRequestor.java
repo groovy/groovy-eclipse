@@ -124,40 +124,41 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     protected static String[] getParameterTypeNames(MethodPattern pattern, String[] parameterTypeSignatures, IType declaringType) {
         int n = parameterTypeSignatures.length;
         String[] typeNames = new String[n];
-        if (declaringType != null) // TODO: Should searches like "main(String[])", which have null declaring type, check param types?
-        try {
-            int candidates = 0;
-            if (n > 0) { // check for method overloads
-                for (IMethod m : declaringType.getMethods()) {
-                    if (equal(pattern.selector, m.getElementName()) && n == m.getNumberOfParameters()) { // TODO: What about variadic methods?
-                        candidates += 1;
+        if (declaringType != null) { // TODO: Should searches like "main(String[])", which have null declaring type, check param types?
+            try {
+                int candidates = 0;
+                if (n > 0) { // check for method overloads
+                    for (IMethod m : declaringType.getMethods()) {
+                        if (equal(pattern.selector, m.getElementName()) && n == m.getNumberOfParameters()) { // TODO: What about variadic methods?
+                            candidates += 1;
+                        }
                     }
                 }
-            }
-            if (candidates > 1) {
-                for (int i = 0; i < n; i += 1) {
-                    if (pattern.parameterQualifications[i] != null || isPrimitiveType(pattern.parameterSimpleNames[i])) {
-                        typeNames[i] = String.valueOf(CharOperation.concat(pattern.parameterQualifications[i], pattern.parameterSimpleNames[i], '.'));
-                    } else {
-                        int arrayCount = Signature.getArrayCount(parameterTypeSignatures[i]);
-                        String[][] resolved = declaringType.resolveType(String.valueOf(pattern.parameterSimpleNames[i], 0, pattern.parameterSimpleNames[i].length - (2*arrayCount)));
-                        if (resolved != null) {
-                            typeNames[i] = Signature.toQualifiedName(resolved[0]);
-                            if (typeNames[i].charAt(0) == '.') { // default pkg
-                                typeNames[i] = typeNames[i].substring(1);
-                            }
+                if (candidates > 1) {
+                    for (int i = 0; i < n; i += 1) {
+                        if (pattern.parameterQualifications[i] != null || isPrimitiveType(pattern.parameterSimpleNames[i])) {
+                            typeNames[i] = String.valueOf(CharOperation.concat(pattern.parameterQualifications[i], pattern.parameterSimpleNames[i], '.'));
                         } else {
-                            // something unresolvable like a parameterized type
-                            typeNames[i] = String.valueOf(pattern.parameterSimpleNames[i]);
-                        }
-                        while (arrayCount-- > 0) {
-                            typeNames[i] += "[]";
+                            int arrayCount = Signature.getArrayCount(parameterTypeSignatures[i]);
+                            String[][] resolved = declaringType.resolveType(String.valueOf(pattern.parameterSimpleNames[i], 0, pattern.parameterSimpleNames[i].length - (2*arrayCount)));
+                            if (resolved != null) {
+                                typeNames[i] = Signature.toQualifiedName(resolved[0]);
+                                if (typeNames[i].charAt(0) == '.') { // default pkg
+                                    typeNames[i] = typeNames[i].substring(1);
+                                }
+                            } else {
+                                // something unresolvable like a parameterized type
+                                typeNames[i] = String.valueOf(pattern.parameterSimpleNames[i]);
+                            }
+                            while (arrayCount-- > 0) {
+                                typeNames[i] += "[]";
+                            }
                         }
                     }
                 }
+            } catch (Exception e) {
+                Util.log(e);
             }
-        } catch (Exception e) {
-            Util.log(e);
         }
         return typeNames;
     }

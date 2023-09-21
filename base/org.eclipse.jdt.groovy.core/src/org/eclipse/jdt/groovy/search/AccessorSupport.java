@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 
 /**
  * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
@@ -100,7 +99,7 @@ public enum AccessorSupport {
         Stream<MethodNode> methods = Stream.empty();
 
         if (name != null && name.length() > 0 && kinds != null && kinds.length > 0) {
-            String suffix = MetaClassHelper.capitalize(name);
+            String suffix = org.apache.groovy.util.BeanUtils.capitalize(name);
             for (AccessorSupport kind : kinds) {
                 if (kind == NONE) continue;
                 String methodName = kind.prefix + suffix;

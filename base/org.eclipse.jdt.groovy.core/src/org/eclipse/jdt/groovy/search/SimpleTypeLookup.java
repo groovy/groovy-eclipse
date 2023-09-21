@@ -346,7 +346,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected TypeLookupResult findTypeForNameWithKnownObjectExpression(final String name, final ClassNode type, final ClassNode declaringType, final VariableScope scope, final boolean isLhsExpression, final boolean isStaticObjectExpression) {
-
         TypeConfidence confidence = TypeConfidence.EXACT;
         int fieldAccessPolicy = (!scope.isFieldAccessDirect() || !(isThisObjectExpression(scope) || isSuperObjectExpression(scope)) ? 0 : isThisObjectExpression(scope) ? 1 : 2);
         // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations; StatementAndExpressionCompletionProcessor circa line 275 has similar check for proposals
@@ -423,7 +422,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         }
                     } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 4) {
                         // GROOVY-1736, GROOVY-6097: "super.name" => "super.getName()" in AsmClassGenerator
-                        String newName = "get" + MetaClassHelper.capitalize(name);
+                        String newName = "get" + org.apache.groovy.util.BeanUtils.capitalize(name);
                         scope.setMethodCallArgumentTypes(Collections.emptyList());
                         return findTypeForNameWithKnownObjectExpression(newName, type, declaringType, scope, isLhsExpression, isStaticObjectExpression);
                     } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters()) &&

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
@@ -54,7 +53,7 @@ public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionPro
             try {
                 for (IField field : enclosingType.getFields()) {
                     if (field.getSourceRange().getLength() > 0 && !field.isEnumConstant() && !isRecordComponent(field) && ProposalUtils.matches(
-                            context.completionExpression, MetaClassHelper.capitalize(field.getElementName()), options.camelCaseMatch, options.substringMatch)) {
+                            context.completionExpression, org.apache.groovy.util.BeanUtils.capitalize(field.getElementName()), options.camelCaseMatch, options.substringMatch)) {
                         IMethod getter = GetterSetterUtil.getGetter(field);
                         if (getter == null || !getter.exists()) {
                             proposals.add(new GetterSetterCompletionProposal(field, offset, length, true, Relevance.HIGH.getRelevance()));

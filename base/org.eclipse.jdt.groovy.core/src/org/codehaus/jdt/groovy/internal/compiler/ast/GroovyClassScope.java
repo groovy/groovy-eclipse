@@ -127,7 +127,7 @@ public class GroovyClassScope extends ClassScope {
                 int modifiers = getModifiers(property);
                 if (Flags.isPackageDefault(modifiers)) continue;
 
-                String capitalizedName = org.codehaus.groovy.runtime.MetaClassHelper.capitalize(property.getName());
+                String capitalizedName = org.apache.groovy.util.BeanUtils.capitalize(property.getName());
 
                 if (!isRecord && ClassHelper.boolean_TYPE.equals(property.getType())) {
                     if (!createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings).isPresent()) {

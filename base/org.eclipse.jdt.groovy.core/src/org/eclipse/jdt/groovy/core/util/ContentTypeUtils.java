@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -238,7 +238,7 @@ public class ContentTypeUtils {
     private static final String GRADLE_SCRIPT_CONTENT_TYPE = "org.eclipse.jdt.groovy.core.gradleScript";
     private static final String GROOVY_SOURCE_CONTENT_TYPE = "org.eclipse.jdt.groovy.core.groovySource";
 
-    private static boolean noGroovyContentTypesErrorLogged = false; // To avoid spamming error into the log repeatedly.
+    private static boolean noGroovyContentTypesErrorLogged; // to avoid spamming error into the log repeatedly
 
     private static Set<String> loadGroovyFileNames() {
         IContentTypeManager contentTypeManager = Platform.getContentTypeManager();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
@@ -760,7 +759,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             }
 
             if (name != null && name.length() > 0) {
-                name = MetaClassHelper.capitalize(name);
+                name = org.apache.groovy.util.BeanUtils.capitalize(name);
             }
             return name;
         }

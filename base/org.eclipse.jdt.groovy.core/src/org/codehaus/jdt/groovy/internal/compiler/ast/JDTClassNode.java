@@ -40,7 +40,6 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -304,7 +303,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
             if (groovyTypeDecl != null && isTrait()) {
                 for (PropertyNode pNode : getProperties()) {
-                    String pName = pNode.getName(), capitalizedName = MetaClassHelper.capitalize(pName);
+                    String pName = pNode.getName(), capitalizedName = org.apache.groovy.util.BeanUtils.capitalize(pName);
                     int mMods = Flags.AccPublic | (pNode.getModifiers() & Flags.AccStatic);
                     if (pNode.getType().equals(ClassHelper.boolean_TYPE)) {
                         // only generate accessor method(s) if one or both are not explicitly declared
@@ -373,7 +372,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 }
             }
 
-            ClassNode returnType = (methodBinding.returnType != null ? resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE);
+            ClassNode returnType = (methodBinding.returnType != null ? resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.dynamicType());
 
             Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames, methodBinding.getParameterAnnotations());
 

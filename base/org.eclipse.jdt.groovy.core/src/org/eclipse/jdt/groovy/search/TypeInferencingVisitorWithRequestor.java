@@ -105,7 +105,6 @@ import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
@@ -2312,7 +2311,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     private MethodNode findLazyMethod(final String fieldName) {
         ClassNode classNode = (ClassNode) enclosingDeclarationNode;
-        return classNode.getDeclaredMethod("get" + MetaClassHelper.capitalize(fieldName), NO_PARAMETERS);
+        return classNode.getDeclaredMethod("get" + org.apache.groovy.util.BeanUtils.capitalize(fieldName), NO_PARAMETERS);
     }
 
     private Expression findLeafNode(final Expression expression) {
