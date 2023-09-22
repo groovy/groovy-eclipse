@@ -377,7 +377,7 @@ public abstract class TraitComposer {
             GenericsType[] newGt = GenericsUtils.applyGenericsContextToPlaceHolders(genericsSpec, originalMethod.getGenericsTypes());
             newGt = removeNonPlaceHolders(newGt);
             forwarder.setGenericsTypes(newGt);
-        } else {
+        } else { forwarder.setOriginal(helperMethod.getOriginal()); // GRECLIPSE add
             // null indicates a static method which may still need generics correction
             GenericsType[] genericsTypes = helperMethod.getGenericsTypes();
             if (genericsTypes != null) {

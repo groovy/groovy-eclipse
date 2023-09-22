@@ -784,6 +784,35 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testPublicStaticMethod2a() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n");
+        incrementalBuild();
+
+        //@formatter:off
+        String contents =
+            "class C implements T {\n" +
+            "  void x() {\n" +
+            "    T.m()\n" +
+            "    C.m()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("T.m()") + 2;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+        /**/offset = contents.indexOf("C.m()") + 2;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+
+        /**/offset = contents.lastIndexOf("m()");
+        assertDeclaringType(contents, offset, offset + 1, "T");
+    }
+
+    @Test
     public void testPublicStaticMethod3() {
         //@formatter:off
         String contents =
@@ -804,18 +833,62 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testPublicStaticMethod3a() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n");
+        incrementalBuild();
+
+        //@formatter:off
+        String contents =
+            "class C implements T {\n" +
+            "}\n" +
+            "T.m()\n" +
+            "C.m()\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("T.m()") + 2;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+        /**/offset = contents.indexOf("C.m()") + 2;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+    }
+
+    @Test
     public void testPublicStaticMethod4() {
         //@formatter:off
         String contents =
             "trait T {\n" +
-            "  static m() { 'T' }\n" +
+            "  static m() {'T'}\n" +
             "}\n" +
             "class C {\n" +
-            "  def m() { 'C' }\n" +
+            "  def m() {'C'}\n" +
             "}\n" +
             "class D extends C implements T {\n" +
             "}\n" +
-            "print new D().m()\n";
+            "new D().m()\n";
+        //@formatter:on
+
+        assertDeclType(contents, "m", "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod4a() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static m() {'T'}\n" +
+            "}\n");
+        incrementalBuild();
+
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  def m() {'C'}\n" +
+            "}\n" +
+            "class D extends C implements T {\n" +
+            "}\n" +
+            "new D().m()\n";
         //@formatter:on
 
         assertDeclType(contents, "m", "T");

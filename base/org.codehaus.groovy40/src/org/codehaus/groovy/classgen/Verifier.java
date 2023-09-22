@@ -1882,6 +1882,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         for (MethodNode toOverride : methods) {
             MethodNode bridgeMethod = getCovariantImplementation(toOverride, method, genericsSpec, ignoreError);
             if (bridgeMethod != null) {
+                // GRECLIPSE add
+                bridgeMethod.setOriginal(method.getOriginal());
+                // GRECLIPSE end
                 methodsToAdd.put(bridgeMethod.getTypeDescriptor(), bridgeMethod);
                 return;
             }

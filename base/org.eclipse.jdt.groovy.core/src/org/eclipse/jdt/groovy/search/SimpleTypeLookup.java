@@ -431,7 +431,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         // if arguments and parameters are mismatched, a category method may make a better match
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if (isTraitHelper(resolvedDeclaringType) && method.getOriginal() != method) {
+                    if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(resolvedDeclaringType))) {
                         resolvedDeclaringType = method.getOriginal().getDeclaringClass();
                         declaration = method.getOriginal(); // the trait method
                     }
@@ -528,6 +528,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                     if (method.isPrivate() && isNotThisOrOuterClass(implicitThisType, method.getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
+                    }
+                    if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(resolvedDeclaringType))) {
+                        candidate = method.getOriginal(); // the trait method
                     }
                 } else if (candidate instanceof PropertyNode) {
                     if (((PropertyNode) candidate).isSynthetic()) {
@@ -791,13 +794,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             candidates.removeIf(m -> m.isPrivate() && !m.getDeclaringClass().equals(declaringType)); // GROOVY-8859
             if (!candidates.isEmpty()) {
                 innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
-                if (innerCandidate != null) {
-                    if (isTraitBridge(innerCandidate)) {
-                        continue;
-                    }
-                    if (outerCandidate == null) {
-                        outerCandidate = innerCandidate;
-                    }
+                if (innerCandidate != null && outerCandidate == null) {
+                    outerCandidate = innerCandidate;
                 }
             }
             if (innerCandidate != null && argumentTypes != null) {
