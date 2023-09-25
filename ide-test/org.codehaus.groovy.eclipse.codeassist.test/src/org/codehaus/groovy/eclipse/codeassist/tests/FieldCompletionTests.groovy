@@ -590,8 +590,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
 
         proposalExists(proposals, 'zzz', 2)
-        def one = indexOfProposal(proposals, 'zzz')
-        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        int one = indexOfProposal(proposals, 'zzz')
+        int two = indexOfProposal(proposals, 'zzz', one + 1)
         applyProposalAndCheck(proposals[one].displayString == 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'owner.zzz //'))
     }
 
@@ -614,8 +614,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
 
         proposalExists(proposals, 'zzz', 2)
-        def one = indexOfProposal(proposals, 'zzz')
-        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        int one = indexOfProposal(proposals, 'zzz')
+        int two = indexOfProposal(proposals, 'zzz', one + 1)
         applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A'
             ? proposals[one] : proposals[two], contents.replace('zz //', 'zzz //')) // no qualifier
     }
@@ -639,8 +639,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
 
         proposalExists(proposals, 'zzz', 2)
-        def one = indexOfProposal(proposals, 'zzz')
-        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        int one = indexOfProposal(proposals, 'zzz')
+        int two = indexOfProposal(proposals, 'zzz', one + 1)
         applyProposalAndCheck(proposals[one].displayString == 'zzz : String - B'
             ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
     }
@@ -664,8 +664,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
 
         proposalExists(proposals, 'zzz', 2)
-        def one = indexOfProposal(proposals, 'zzz')
-        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        int one = indexOfProposal(proposals, 'zzz')
+        int two = indexOfProposal(proposals, 'zzz', one + 1)
         applyProposalAndCheck(proposals[one].displayString != 'zzz : String - B'
             ? proposals[one] : proposals[two], contents.replace('zz //', 'zzz //')) // no qualifier
     }
@@ -689,8 +689,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
 
         proposalExists(proposals, 'zzz', 2)
-        def one = indexOfProposal(proposals, 'zzz')
-        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        int one = indexOfProposal(proposals, 'zzz')
+        int two = indexOfProposal(proposals, 'zzz', one + 1)
         applyProposalAndCheck(proposals[one].displayString == 'zzz : String - A'
             ? proposals[one] : proposals[two], contents.replace('zz //', 'owner.zzz //'))
     }
@@ -714,8 +714,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
 
         proposalExists(proposals, 'zzz', 2)
-        def one = indexOfProposal(proposals, 'zzz')
-        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        int one = indexOfProposal(proposals, 'zzz')
+        int two = indexOfProposal(proposals, 'zzz', one + 1)
         applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A'
             ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
     }
@@ -1198,7 +1198,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testFavoriteStaticField() {
+    void testFavoriteStaticField1() {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.DOTALL')
 
         String contents = '''\
@@ -1304,73 +1304,81 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testTraitFields1() {
-        String contents = '''\
-            |trait T {
-            |  def m() {
-            |    #
-            |  }
-            |  private String field1
-            |  private static String field2
-            |}
-            |'''.stripMargin()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
-        proposalExists(proposals, 'field1', 1)
-        proposalExists(proposals, 'field2', 1)
+        for (mods in [['private','public',''], ['','final']].combinations()) {
+            String contents = """\
+                |trait T {
+                |  ${mods.join(' ')}        String field1
+                |  ${mods.join(' ')} static String field2
+                |  def m() {
+                |    #
+                |  }
+                |}
+                |""".stripMargin()
+            ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
+            proposalExists(proposals, 'field1', 1)
+            proposalExists(proposals, 'field2', 1)
+        }
     }
 
     @Test
     void testTraitFields2() {
-        String contents = '''\
-            |trait T {
-            |  static def m() {
-            |    #
-            |  }
-            |  private String field1
-            |  private static String field2
-            |}
-            |'''.stripMargin()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
-        proposalExists(proposals, 'field1', 0)
-        proposalExists(proposals, 'field2', 1)
+        for (mods in [['private','public',''], ['','final']].combinations()) {
+            String contents = """\
+                |trait T {
+                |  ${mods.join(' ')}        String field1
+                |  ${mods.join(' ')} static String field2
+                |  static def m() {
+                |    #
+                |  }
+                |}
+                |""".stripMargin()
+            ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
+            proposalExists(proposals, 'field1', 0)
+            proposalExists(proposals, 'field2', 1)
+        }
     }
 
     @Test
     void testTraitFields3() {
-        String contents = '''\
-            |trait T {
-            |  private String field1
-            |  private static String field2
-            |}
-            |class C implements T {
-            |  def m() {
-            |    #
-            |  }
-            |}
-            |'''.stripMargin()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
-        proposalExists(proposals, 'T__field1', 1)
-        proposalExists(proposals, 'T__field2', 1)
-        proposalExists(proposals, 'field1', 0)
-        proposalExists(proposals, 'field2', 0)
+        for (mods in [['private','public',''], ['','final']].combinations()) {
+            String contents = """\
+                |trait T {
+                |  ${mods.join(' ')}        String field1
+                |  ${mods.join(' ')} static String field2
+                |}
+                |class C implements T {
+                |  def m() {
+                |    #
+                |  }
+                |}
+                |""".stripMargin()
+            ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
+            proposalExists(proposals, 'T__field1', 1)
+            proposalExists(proposals, 'T__field2', 1)
+            proposalExists(proposals, 'field1', mods[0] ? 0 : 2)
+            proposalExists(proposals, 'field2', mods[0] ? 0 : 1)
+        }
     }
 
     @Test
     void testTraitFields4() {
-        String contents = '''\
-            |trait T {
-            |  private String field1
-            |  private static String field2
-            |}
-            |class C implements T {
-            |  static def m() {
-            |    #
-            |  }
-            |}
-            |'''.stripMargin()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
-        proposalExists(proposals, 'T__field1', 0)
-        proposalExists(proposals, 'T__field2', 1)
-        proposalExists(proposals, 'field1', 0)
-        proposalExists(proposals, 'field2', 0)
+        for (mods in [['private','public',''], ['','final']].combinations()) {
+            String contents = """\
+                |trait T {
+                |  ${mods.join(' ')}        String field1
+                |  ${mods.join(' ')} static String field2
+                |}
+                |class C implements T {
+                |  static def m() {
+                |    #
+                |  }
+                |}
+                |""".stripMargin()
+            ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
+            proposalExists(proposals, 'T__field1', 0)
+            proposalExists(proposals, 'T__field2', 1)
+            proposalExists(proposals, 'field1', 0)
+            proposalExists(proposals, 'field2', mods[0] ? 0 : 1)
+        }
     }
 }

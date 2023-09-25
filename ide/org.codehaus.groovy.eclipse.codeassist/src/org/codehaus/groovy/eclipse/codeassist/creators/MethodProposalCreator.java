@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.MemberProposalInfo;
@@ -80,7 +81,11 @@ public class MethodProposalCreator extends AbstractProposalCreator {
 
             String methodName = method.getName();
             String[] traitAndMethodNames = decomposeSuperCallName(methodName);
-            if (traitAndMethodNames != null) methodName = traitAndMethodNames[1];
+            if (traitAndMethodNames != null) {
+                // requires implicit this
+                if (!isPrimary) continue;
+                methodName = traitAndMethodNames[1];
+            }
 
             if (!isStatic || method.isStatic() || declaringClass.equals(VariableScope.OBJECT_CLASS_NODE)) {
                 if (matcher.test(prefix, methodName) && !"<clinit>".equals(methodName)) {
@@ -283,6 +288,8 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                 typeProposal.setSignature(proposal.getDeclarationSignature());
 
                 proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
+                // a method reference adds type qualifier with base completion characters (ImportCompletionProposal#computeReplacementString)
+                ReflectionUtils.setPrivateField(InternalCompletionProposal.class, "completionKind", proposal, CompletionProposal.METHOD_REF);
             }
             return javaProposal;
         }

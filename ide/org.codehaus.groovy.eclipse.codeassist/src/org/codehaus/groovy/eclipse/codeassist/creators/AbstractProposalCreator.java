@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,11 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     protected static FieldNode createMockField(final MethodNode method) {
         String fieldName = ProposalUtils.createMockFieldName(method.getName());
         int fieldModifiers = (method.getModifiers() & 0xF) | (GroovyUtils.isDeprecated(method) ? Flags.AccDeprecated : 0);
-        ClassNode fieldType = AccessorSupport.isSetter(method) ? DefaultGroovyMethods.last(method.getParameters()).getType() : method.getReturnType();
+        if (!method.getName().startsWith("set") && AccessorSupport.findAccessorMethodsForPropertyName(fieldName, method.getDeclaringClass(),
+                                                            method.getParameters().length > 0, AccessorSupport.SETTER).noneMatch(x -> true)) {
+            fieldModifiers |= Flags.AccFinal;
+        }
+        ClassNode fieldType = method.getName().startsWith("set") ? DefaultGroovyMethods.last(method.getParameters()).getType() : method.getReturnType();
 
         FieldNode fieldNode = new FieldNode(fieldName, fieldModifiers, fieldType, method.getDeclaringClass(), null);
         fieldNode.setDeclaringClass(method.getDeclaringClass());
@@ -174,13 +178,13 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
 
         Set<ClassNode> types = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(type, types, true);
+        if (type.isInterface()) types.add(ClassHelper.OBJECT_TYPE);
         for (ClassNode cn : types) {
-            if ((exclude != null && exclude.contains(cn)) ||
-                Flags.isSynthetic(cn.getModifiers())) continue;
-
-            Map<String, ClassNode> spec = GenericsUtils.createGenericsSpec(cn);
-            for (MethodNode mn : cn.getMethods()) {
-                mapper.accept(mn, spec);
+            if (!(exclude != null && exclude.contains(cn)) && !Flags.isSynthetic(cn.getModifiers())) {
+                Map<String, ClassNode> spec = GenericsUtils.createGenericsSpec(cn);
+                for (MethodNode mn : cn.getMethods()) {
+                    mapper.accept(mn, spec);
+                }
             }
         }
 

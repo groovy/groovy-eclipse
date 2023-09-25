@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -171,7 +171,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/946
-    void testObjectExpr7a() {
+    void testObjectExpr8() {
         String contents = '''\
             |class C {
             |  static Date date(whatever) {
@@ -186,7 +186,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testObjectExpr8() {
+    void testObjectExpr9() {
         String contents = '''\
             |class C {
             |  Date date(whatever) {
@@ -201,7 +201,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testObjectExpr8a() {
+    void testObjectExpr10() {
         String contents = '''\
             |class C {
             |  Date date(whatever) {
@@ -216,7 +216,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1129
-    void testObjectExpr9() {
+    void testObjectExpr11() {
         String contents = '''\
             |class C {
             |  void meth(Number n) {
@@ -231,7 +231,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1129
-    void testObjectExpr9a() {
+    void testObjectExpr12() {
         String contents = '''\
             |class C {
             |  void meth(Number n) {
@@ -246,7 +246,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1129
-    void testObjectExpr9b() {
+    void testObjectExpr13() {
         String contents = '''\
             |class C {
             |  void meth(Number n) {
@@ -258,6 +258,18 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'byteValue()', 1)
         proposalExists(proposals, 'intValue()', 1)
+    }
+
+    @Test
+    void testObjectExpr14() {
+        String contents = '''\
+            |void meth(Serializable s) {
+            |  s.
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'finalize', 1)
+        proposalExists(proposals, 'wait', 3)
     }
 
     @Test // GRECLIPSE-1374
@@ -368,7 +380,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testOverride3a() {
+    void testOverride4() {
         addGroovySource '''\
             |interface I<T extends CharSequence> {
             |  void m(T chars)
@@ -384,7 +396,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testOverride3b() {
+    void testOverride5() {
         addGroovySource '''\
             |interface I<T extends CharSequence & Serializable> {
             |  void m(T chars)
@@ -400,7 +412,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testOverride4() {
+    void testOverride6() {
         String contents = '''\
             |import java.util.concurrent.Callable
             |class A implements Callable<String> {
@@ -412,7 +424,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testOverride5() {
+    void testOverride7() {
         String contents = '''\
             |// Comparator redeclares equals(Object)
             |class A implements Comparator<String> {
@@ -424,7 +436,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testOverride6() {
+    void testOverride8() {
         addGroovySource '''\
             |trait T {
             |  String getFoo() { 'foo' }
@@ -441,13 +453,12 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/705
-    void testOverride6a() {
+    void testOverride9() {
         addGroovySource '''\
             |trait T {
             |  String getFoo() { 'foo' }
             |}
             |'''.stripMargin()
-        buildProject()
 
         String contents = '''\
             |class A implements T {
@@ -1200,7 +1211,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'm1', 2)
         proposalExists(proposals, 'm2', 0)
         proposalExists(proposals, 'm3', 1)
-        proposalExists(proposals, 'm4', 1)
+        proposalExists(proposals, 'm4', isAtLeastGroovy(50) ? 0 : 1) // GROOVY-8859
     }
 
     @Test
@@ -1222,7 +1233,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'm1', 0)
         proposalExists(proposals, 'm2', 0)
         proposalExists(proposals, 'm3', 1)
-        proposalExists(proposals, 'm4', 1)
+        proposalExists(proposals, 'm4', isAtLeastGroovy(50) ? 0 : 1) // GROOVY-8859
     }
 
     @Test
@@ -1285,37 +1296,21 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'm1', 0)
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/760
+    @Test
     void testTraitMethods11() {
-        addGroovySource '''\
-            |package p
+        String contents = '''\
             |trait T {
             |  def m1() {}
             |}
-            |'''.stripMargin(), 'T', 'p'
-        buildProject()
-
-        String contents = '''\
-            |class C implements p.T {
-            |  def m1() {}
-            |  void test() {
-            |    x
+            |class C implements T {
+            |  static m(C that) {
+            |    that.x
             |  }
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
-        proposalExists(proposals, 'm1', 2)
-
-        applyProposalAndCheck(findFirstProposal(proposals, 'm1() : Object - p.T'), '''\
-            |import p.T
-            |
-            |class C implements p.T {
-            |  def m1() {}
-            |  void test() {
-            |    T.super.m1()
-            |  }
-            |}
-            |'''.stripMargin())
+        proposalExists(proposals, 'm1() : Object - C', 1)
+        proposalExists(proposals, 'm1() : Object - T', 0)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/760
@@ -1323,14 +1318,14 @@ final class MethodCompletionTests extends CompletionTestSuite {
         addGroovySource '''\
             |package p
             |trait T {
-            |  static m1() {}
+            |  def m1() {}
             |}
             |'''.stripMargin(), 'T', 'p'
         buildProject()
 
         String contents = '''\
             |class C implements p.T {
-            |  static m1() {}
+            |  def m1() {}
             |  void test() {
             |    x
             |  }
@@ -1343,7 +1338,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |import p.T
             |
             |class C implements p.T {
-            |  static m1() {}
+            |  def m1() {}
             |  void test() {
             |    T.super.m1()
             |  }
@@ -1353,6 +1348,39 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/760
     void testTraitMethods13() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  static m1() {}
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        String contents = '''\
+            |class C implements p.T {
+            |  static m1() {}
+            |  void test() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 2)
+
+        applyProposalAndCheck(findFirstProposal(proposals, 'm1() : Object - p.T'), '''\
+            |import p.T
+            |
+            |class C implements p.T {
+            |  static m1() {}
+            |  void test() {
+            |    T.super.m1()
+            |  }
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/760
+    void testTraitMethods14() {
         addGroovySource '''\
             |package p
             |trait T {

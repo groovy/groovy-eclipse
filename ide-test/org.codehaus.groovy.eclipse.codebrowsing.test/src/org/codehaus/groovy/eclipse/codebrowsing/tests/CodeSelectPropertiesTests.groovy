@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -589,6 +589,57 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
             |'''.stripMargin()], 'p')
         assert elem.declaringType.fullyQualifiedName == 'T'
         assert elem.elementInfo.nameSourceStart == 16
+    }
+
+    @Test
+    void testCodeSelectTraitProperty3() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  final p
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 18
+    }
+
+    @Test
+    void testCodeSelectTraitProperty4() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  static p
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 19
+    }
+
+    @Test
+    void testCodeSelectTraitProperty5() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  static final p = null
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 25
     }
 
     // TODO: unknown properties

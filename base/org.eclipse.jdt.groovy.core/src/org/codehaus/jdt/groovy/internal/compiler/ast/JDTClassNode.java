@@ -302,6 +302,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
 
             if (groovyTypeDecl != null && isTrait()) {
+                putNodeMetaData("trait.fields", groovyTypeDecl.getClassNode().getFields());
+
                 for (PropertyNode pNode : getProperties()) {
                     String pName = pNode.getName(), capitalizedName = org.apache.groovy.util.BeanUtils.capitalize(pName);
                     int mMods = Flags.AccPublic | (pNode.getModifiers() & Flags.AccStatic);
@@ -366,9 +368,13 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             int modifiers = methodBinding.modifiers;
             if (isInterface()) {
                 if ((modifiers & (Flags.AccStatic | Flags.AccPrivate | Flags.AccSynthetic | Flags.AccDefaultMethod)) == 0 && !isTrait()) {
-                    modifiers |= Flags.AccAbstract;
+                    modifiers |=  Flags.AccAbstract;
                 } else if (methodBinding.isAbstract() && isNotReallyAbstract(methodBinding)) {
                     modifiers &= ~Flags.AccAbstract;
+                }
+                if ((modifiers & Flags.AccStatic) != 0 && isTrait()) {
+                    modifiers &= ~Flags.AccPrivate;
+                    modifiers |=  Flags.AccPublic;
                 }
             }
 
@@ -608,7 +614,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         for (PropertyNode node : groovyTypeDecl.getClassNode().getProperties()) {
                             FieldNode field = getField(node.getName());
                             if (field == null) {
-                                field = new FieldNode(node.getName(), Flags.AccPrivate | (node.getModifiers() & Flags.AccStatic), resolver.resolve(node.getType().getName()), this, null);
+                                field = new FieldNode(node.getName(), Flags.AccPrivate | (node.getModifiers() & Flags.AccStatic + Flags.AccFinal), resolver.resolve(node.getType().getName()), this, null);
                                 field.setDeclaringClass(this);
                                 field.setSourcePosition(node.getField());
                                 field.setSynthetic(true);
@@ -630,7 +636,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                                 // check for field with same name/type
                                 FieldNode fn = getField(propertyName);
                                 if (fn != null && fn.isPrivate() && fn.getType().equals(mn.getReturnType())) {
-                                    PropertyNode pn = new PropertyNode(fn, fn.getModifiers() & (Flags.AccFinal | Flags.AccStatic), null, null);
+                                    PropertyNode pn = new PropertyNode(fn, fn.getModifiers() & Flags.AccStatic + Flags.AccFinal, null, null);
                                     pn.addAnnotations(fn.getAnnotations());
                                     pn.setDeclaringClass(this);
 

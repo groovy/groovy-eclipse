@@ -1095,7 +1095,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static Optional<FieldNode> findTraitField(final String name, final ClassNode type) {
         String[] parts = name.split("__");
         for (ClassNode face : type.getInterfaces()) {
-            if (face.getName().equals(parts[0].replace('_', '.'))) {
+            if (face.getName().replace('.', '_').equals(parts[0])) {
                 List<FieldNode> traitFields = face.redirect().getNodeMetaData("trait.fields");
                 return Optional.ofNullable(traitFields).flatMap(fields ->
                     fields.stream().filter(f -> f.getName().equals(parts[1])).findFirst());

@@ -540,7 +540,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             return true;
         }
         // check for @Trait field
-        if (!node.isFinal() && !node.isStatic() && Traits.isTrait(node.getDeclaringClass())) {
+        if (node.getEnd() > 0 &&       Traits.isTrait(node.getDeclaringClass())) {
             return true;
         }
         List<FieldNode> traitFields = declaringType.redirect().getNodeMetaData("trait.fields");

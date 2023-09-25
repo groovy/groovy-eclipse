@@ -215,7 +215,7 @@ class ASTView extends ViewPart {
             if (nodeValue instanceof ASTNode || nodeValue instanceof DynamicVariable || nodeValue instanceof VariableScope ||
                     nodeValue instanceof SourceUnit || nodeValue instanceof CompileUnit || nodeValue instanceof CompilerConfiguration) {
                 def methods = nodeValue.class.methods.findAll { method ->
-                    method.parameterCount == 0 && method.name =~ /^(is|has(?!hCode$)|get(?!(Type)?Class$|(Static)?(Star)?Imports$)|redirect$)/
+                    !method.isBridge() && method.parameterCount == 0 && method.name =~ /^(is|has(?!hCode$)|get(?!(Type)?Class$|(Static)?(Star)?Imports$)|redirect$)/
                 }
                 def results = methods.findResults { method ->
                     String name = method.name

@@ -450,6 +450,72 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testProperty24() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  def m() {\n" +
+            "    number\n" +
+            "  }\n" +
+            "  static sm(C c, T t) {\n" +
+            "    c.number\n" +
+            "    t.number\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("number");
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+
+        /**/offset = source.indexOf("c.number") + 2;
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+
+        /**/offset = source.indexOf("t.number") + 2;
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty25() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static final Number number = 1\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  def m() {\n" +
+            "    number\n" +
+            "  }\n" +
+            "  static sm(C c, T t) {\n" +
+            "    c.number\n" +
+            "    t.number\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("number");
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+
+        /**/offset = source.indexOf("c.number") + 2;
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+
+        /**/offset = source.indexOf("t.number") + 2;
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+    }
+
+    @Test
     public void testPublicField1() {
         //@formatter:off
         String source =

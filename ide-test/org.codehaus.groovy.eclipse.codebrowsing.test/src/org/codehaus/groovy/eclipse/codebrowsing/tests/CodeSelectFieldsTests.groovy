@@ -96,7 +96,6 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |  }
             |}'''.stripMargin()
         ], 'log')
-
         assert elem instanceof IField
     }
 
@@ -202,10 +201,32 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()], 'T__f', 'f')
         assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 27
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/756
     void testCodeSelectFieldFromTrait2() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  private String f
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        def elem = assertCodeSelect(['''\
+            |class C implements p.T {
+            |  def m() {
+            |    p_T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'p_T__f', 'f')
+        assert elem.declaringType.fullyQualifiedName == 'p.T'
+        assert elem.elementInfo.nameSourceStart == 37
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait3() {
         def elem = assertCodeSelect(['''\
             |trait T {
             |  private static String f
@@ -217,10 +238,32 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()], 'T__f', 'f')
         assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 34
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/756
-    void testCodeSelectFieldFromTrait3() {
+    void testCodeSelectFieldFromTrait4() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  private static String f
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        def elem = assertCodeSelect(['''\
+            |class C implements p.T {
+            |  def m() {
+            |    p_T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'p_T__f', 'f')
+        assert elem.declaringType.fullyQualifiedName == 'p.T'
+        assert elem.elementInfo.nameSourceStart == 44
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait5() {
         def elem = assertCodeSelect(['''\
             |trait T {
             |  private static final String f = ""
@@ -232,5 +275,27 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()], 'T__f', 'f')
         assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 40
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait6() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  private static final String f = ""
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        def elem = assertCodeSelect(['''\
+            |class C implements p.T {
+            |  def m() {
+            |    p_T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'p_T__f', 'f')
+        assert elem.declaringType.fullyQualifiedName == 'p.T'
+        assert elem.elementInfo.nameSourceStart == 50
     }
 }
