@@ -351,8 +351,9 @@ public class ClassScope extends Scope {
 						continue nextMember;
 					}
 				}
-				// GROOVY edit
-				//ClassScope memberScope = new ClassScope(this, this.referenceContext.memberTypes[i]);
+				/* GROOVY edit
+				ClassScope memberScope = new ClassScope(this, this.referenceContext.memberTypes[i]);
+				*/
 				ClassScope memberScope = this.referenceContext.memberTypes[i].newClassScope(this);
 				// GROOVY end
 				LocalTypeBinding memberBinding = memberScope.buildLocalType(localType, packageBinding);
@@ -423,8 +424,9 @@ public class ClassScope extends Scope {
 						continue nextMember;
 					}
 				}
-				// GROOVY edit
-				//ClassScope memberScope = new ClassScope(this, memberContext);
+				/* GROOVY edit
+				ClassScope memberScope = new ClassScope(this, memberContext);
+				*/
 				ClassScope memberScope = memberContext.newClassScope(this);
 				// GROOVY end
 				memberTypeBindings[count++] = memberScope.buildType(sourceType, sourceType.fPackage, accessRestriction);

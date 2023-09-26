@@ -68,18 +68,41 @@ public class GroovyClassScope extends ClassScope {
     }
 
     /**
+     * Ensures classes implement {@code groovy.lang.GroovyObject}.
+     */
+    @Override
+    protected boolean connectSuperInterfaces() {
+        boolean noProblems = super.connectSuperInterfaces();
+        SourceTypeBinding sourceType = referenceContext.binding;
+        if (!sourceType.isInterface() && !sourceType.isAnnotationType()) { // TODO: @POGO
+            ReferenceBinding groovyObject = getGroovyLangGroovyObject();
+            if (!sourceType.implementsInterface(groovyObject, true)) {
+                int n = sourceType.superInterfaces.length;
+                if (n == 0) {
+                    sourceType.superInterfaces = new ReferenceBinding[1];
+                } else {
+                    ReferenceBinding[] types = sourceType.superInterfaces;
+                    sourceType.superInterfaces = new ReferenceBinding[n + 1];
+                    System.arraycopy(types, 0, sourceType.superInterfaces, 0, n);
+                }
+                sourceType.superInterfaces[n] = groovyObject;
+            }
+        }
+        return noProblems;
+    }
+
+    /**
      * Adds any Groovy-specific method bindings to the set determined by the compiler.
      */
     @Override
     protected MethodBinding[] augmentMethodBindings(final MethodBinding[] methodBindings) {
-        SourceTypeBinding typeBinding = referenceContext.binding;
-        if (typeBinding == null || typeBinding.isInterface() || typeBinding.isAnnotationType()) {
+        SourceTypeBinding sourceType = referenceContext.binding;
+        if (sourceType == null || sourceType.isInterface() || sourceType.isAnnotationType()) {
             return methodBindings;
         }
 
-        ReferenceBinding[] superInterfaces = typeBinding.superInterfaces();
-        if (superInterfaces == null) superInterfaces = Binding.NO_SUPERINTERFACES;
-        else if (superInterfaces.length > 1) Collections.reverse(Arrays.asList(superInterfaces));
+        ReferenceBinding[] superInterfaces = sourceType.superInterfaces();
+        if (superInterfaces.length > 1) Collections.reverse(Arrays.asList(superInterfaces));
 
         boolean implementsGroovyObject = false;
         for (ReferenceBinding face : superInterfaces) {
@@ -174,7 +197,7 @@ public class GroovyClassScope extends ClassScope {
         if (!traitMethods.isEmpty()) {
             Set<String> canBeOverridden = new HashSet<>();
 
-            ReferenceBinding superclass = typeBinding;
+            ReferenceBinding superclass = sourceType;
             while ((superclass = superclass.superclass()) != null) {
                 for (MethodBinding method : superclass.availableMethods()) {
                     if (!method.isConstructor() && !method.isPrivate() && !method.isStatic() && !method.isFinal()) {
@@ -194,7 +217,7 @@ public class GroovyClassScope extends ClassScope {
                 MethodBinding method = traitMethods.remove(key);
                 if (method != null) {
                     // the trait method overrides a superclass method
-                    method = new MethodBinding(method, typeBinding);
+                    method = new MethodBinding(method, sourceType);
                     method.modifiers &= ~Flags.AccAbstract;
                     method.modifiers &= ~Flags.AccPrivate;
                     groovyMethods.add(method);
@@ -203,7 +226,7 @@ public class GroovyClassScope extends ClassScope {
 
             for (MethodBinding method : traitMethods.values()) {
                 if (method.isStatic()) {
-                    method = new MethodBinding(method, typeBinding);
+                    method = new MethodBinding(method, sourceType);
                     method.modifiers &= ~Flags.AccPrivate;
                     groovyMethods.add(method);
                 }
@@ -222,6 +245,12 @@ public class GroovyClassScope extends ClassScope {
         CompilationUnitScope unitScope = compilationUnitScope();
         unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS);
         return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS, this);
+    }
+
+    private ReferenceBinding getGroovyLangGroovyObject() {
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT);
+        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT, this);
     }
 
     private ReferenceBinding getGroovyTransformInternal() {

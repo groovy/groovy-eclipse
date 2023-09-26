@@ -111,7 +111,6 @@ protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration u
 	problemReporter().packageIsNotExpectedPackage(unitDecl);
 	return true;
 }
-protected
 // GROOVY end
 void buildTypeBindings(AccessRestriction accessRestriction) {
 	this.topLevelTypes = new SourceTypeBinding[0]; // want it initialized if the package cannot be resolved
@@ -127,8 +126,9 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 			if (this.referenceContext.currentPackage != null
 					|| this.referenceContext.types != null
 					|| this.referenceContext.imports != null) {
-				// GROOVY edit
-				//problemReporter().packageIsNotExpectedPackage(this.referenceContext);
+				/* GROOVY edit
+				problemReporter().packageIsNotExpectedPackage(this.referenceContext);
+				*/
 				errorReported = reportPackageIsNotExpectedPackage(this.referenceContext);
 				// GROOVY end
 			}
@@ -207,8 +207,9 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 		checkPublicTypeNameMatchesFilename(typeDecl);
 		// GROOVY end
 
-		// GROOVY edit
-		//ClassScope child = new ClassScope(this, typeDecl);
+		/* GROOVY edit
+		ClassScope child = new ClassScope(this, typeDecl);
+		*/
 		ClassScope child = buildClassScope(this, typeDecl);
 		// GROOVY end
 		SourceTypeBinding type = child.buildType(null, this.fPackage, accessRestriction);
@@ -277,10 +278,11 @@ void checkAndSetImports() {
 			break;
 		}
 	}
-	// GROOVY edit
-	//ImportBinding[] resolvedImports = new ImportBinding[numberOfImports];
-	//resolvedImports[0] = getDefaultImports()[0];
-	//int index = 1;
+	/* GROOVY edit
+	ImportBinding[] resolvedImports = new ImportBinding[numberOfImports];
+	resolvedImports[0] = getDefaultImports()[0];
+	int index = 1;
+	*/
 	ImportBinding[] defaultImports = getDefaultImports();
 	int index = defaultImports.length;
 	ImportBinding[] resolvedImports = new ImportBinding[numberOfImports + defaultImports.length-1];
@@ -289,8 +291,9 @@ void checkAndSetImports() {
 
 	nextImport : for (int i = 0; i < numberOfStatements; i++) {
 		ImportReference importReference = this.referenceContext.imports[i];
-		// GROOVY edit
-		//char[][] compoundName = importReference.tokens;
+		/* GROOVY edit
+		char[][] compoundName = importReference.tokens;
+		*/
 		char[][] compoundName = importReference.getImportName();
 		// GROOVY end
 
@@ -298,8 +301,9 @@ void checkAndSetImports() {
 		for (int j = 0; j < index; j++) {
 			ImportBinding resolved = resolvedImports[j];
 			if (resolved.onDemand == ((importReference.bits & ASTNode.OnDemand) != 0) && resolved.isStatic() == importReference.isStatic())
-				// GROOVY edit
-				//if (CharOperation.equals(compoundName, resolvedImports[j].compoundName))
+				/* GROOVY edit
+				if (CharOperation.equals(compoundName, resolvedImports[j].compoundName))
+				*/
 				if (CharOperation.equals(compoundName, resolvedImports[j].compoundName) && CharOperation.equals(importReference.getSimpleName(), resolvedImports[j].getSimpleName()))
 				// GROOVY end
 					continue nextImport;
@@ -459,10 +463,11 @@ void faultInImports() {
 			break;
 		}
 	}
-	// GROOVY edit
-	//this.tempImports = new ImportBinding[numberOfImports];
-	//this.tempImports[0] = getDefaultImports()[0];
-	//this.importPtr = 1;
+	/* GROOVY edit
+	this.tempImports = new ImportBinding[numberOfImports];
+	this.tempImports[0] = getDefaultImports()[0];
+	this.importPtr = 1;
+	*/
 	ImportBinding[] defaultImports = getDefaultImports();
 	this.importPtr = defaultImports.length;
 	this.tempImports = new ImportBinding[numberOfImports + this.importPtr-1];
@@ -477,8 +482,9 @@ void faultInImports() {
 	// single imports change from being just types to types or fields
 	nextImport : for (int i = 0; i < numberOfStatements; i++) {
 		ImportReference importReference = this.referenceContext.imports[i];
-		// GROOVY edit
-		//char[][] compoundName = importReference.tokens;
+		/* GROOVY edit
+		char[][] compoundName = importReference.tokens;
+		*/
 		char[][] compoundName = importReference.getImportName();
 		// GROOVY end
 
@@ -486,8 +492,9 @@ void faultInImports() {
 		for (int j = 0; j < this.importPtr; j++) {
 			ImportBinding resolved = this.tempImports[j];
 			if (resolved.onDemand == ((importReference.bits & ASTNode.OnDemand) != 0) && resolved.isStatic() == importReference.isStatic()) {
-				// GROOVY edit
-				//if (CharOperation.equals(compoundName, resolved.compoundName)) {
+				/* GROOVY edit
+				if (CharOperation.equals(compoundName, resolved.compoundName)) {
+				*/
 				if (CharOperation.equals(compoundName, resolved.compoundName) && CharOperation.equals(importReference.getSimpleName(), resolved.getSimpleName())) {
 				// GROOVY end
 					problemReporter().unusedImport(importReference); // since skipped, must be reported now
@@ -498,8 +505,9 @@ void faultInImports() {
 		if ((importReference.bits & ASTNode.OnDemand) != 0) {
 			Binding importBinding = findImport(compoundName, compoundName.length);
 			if (!importBinding.isValidBinding()) {
-				// GROOVY edit
-				//problemReporter().importProblem(importReference, importBinding);
+				/* GROOVY edit
+				problemReporter().importProblem(importReference, importBinding);
+				*/
 				reportImportProblem(importReference, importBinding);
 				// GROOVY end
 				continue nextImport;
@@ -531,8 +539,9 @@ void faultInImports() {
 				} else {
 					unresolvedFound = true;
 					if (reportUnresolved) {
-						// GROOVY edit
-						//problemReporter().importProblem(importReference, importBinding);
+						/* GROOVY edit
+						problemReporter().importProblem(importReference, importBinding);
+						*/
 						reportImportProblem(importReference, importBinding);
 						// GROOVY end
 					}
@@ -589,8 +598,9 @@ void faultInImports() {
 	for (int i = 0; i < length; i++) {
 		ImportBinding binding = this.imports[i];
 		if (!binding.onDemand && binding.resolvedImport instanceof ReferenceBinding || binding instanceof ImportConflictBinding)
-			// GROOVY edit
-			//this.typeOrPackageCache.put(binding.compoundName[binding.compoundName.length - 1], binding);
+			/* GROOVY edit
+			this.typeOrPackageCache.put(binding.compoundName[binding.compoundName.length - 1], binding);
+			*/
 			this.typeOrPackageCache.put(binding.getSimpleName(), binding);
 			// GROOVY end
 	}
@@ -677,8 +687,9 @@ private Binding findImport(char[][] compoundName, int length) {
 		if (type == null)
 			return new ProblemReferenceBinding(CharOperation.subarray(compoundName, 0, i), null, ProblemReasons.NotFound);
 	}
-	// GROOVY edit
-	//if (!type.canBeSeenBy(this.fPackage))
+	/* GROOVY edit
+	if (!type.canBeSeenBy(this.fPackage))
+	*/
 	if (!canBeSeenBy(type, this.fPackage))
 	// GROOVY end
 		return new ProblemReferenceBinding(compoundName, type, ProblemReasons.NotVisible);
@@ -1205,9 +1216,6 @@ public void cleanUpInferenceContexts() {
 	this.inferredInvocations = null;
 }
 // GROOVY add
-public void augmentTypeHierarchy() {
-	// nothing to do for Java
-}
 public boolean checkTargetCompatibility() {
 	return true;
 }

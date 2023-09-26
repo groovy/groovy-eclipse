@@ -2082,15 +2082,40 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
                 "}\n" +
                 "class One {\n" +
                 "}\n",
+
                 "Two.java",
-                "class Two extends One {}\n",
+                "class Two extends One {\n" +
+                "}\n",
             };
             //@formatter:on
 
             runConformTest(sources, "abc");
-            assertEventCount(2, GroovyClassScope.debugListener);
+            assertEventCount(1, GroovyClassScope.debugListener);
             assertEvent("augment: type One having GroovyObject methods added", GroovyClassScope.debugListener);
+        } finally {
+            GroovyClassScope.debugListener = null;
+        }
+    }
+
+    @Test
+    public void testClassHierarchiesAndGroovyObjectMethods4() {
+        try {
+            GroovyClassScope.debugListener = new EventListener();
+            //@formatter:off
+            String[] sources = {
+                "Foo.groovy",
+                "class Foo {\n" +
+                "  static main(args) { print 'works' }\n"+
+                "  class Bar {\n" +
+                "  }\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "works");
+            assertEventCount(2, GroovyClassScope.debugListener);
             assertEvent("augment: type Foo having GroovyObject methods added", GroovyClassScope.debugListener);
+            assertEvent("augment: type Bar having GroovyObject methods added", GroovyClassScope.debugListener);
         } finally {
             GroovyClassScope.debugListener = null;
         }

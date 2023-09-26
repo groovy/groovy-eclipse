@@ -472,8 +472,9 @@ public void buildTypeBindings(CompilationUnitDeclaration unit, AccessRestriction
 		if (this.globalOptions.sourceLevel >= ClassFileConstants.JDK9) {
 			unitModule = unit.module(this);
 		}
-		// GROOVY edit
-		//scope = new CompilationUnitScope(unit, unitModule != null ? unitModule.environment : this);
+		/* GROOVY edit
+		scope = new CompilationUnitScope(unit, unitModule != null ? unitModule.environment : this);
+		*/
 		scope = unit.buildCompilationUnitScope(unitModule != null ? unitModule.environment : this);
 		// GROOVY end
 	}
@@ -521,9 +522,6 @@ public void completeTypeBindings() {
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
 	    (this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy();
-		// GROOVY add -- augment type hierarchy may bring in GroovyObject as source (if in groovycore) and that will then need its type hierarchy connecting
-		(this.unitBeingCompleted = this.units[i]).scope.augmentTypeHierarchy();
-		// GROOVY end
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY;
 

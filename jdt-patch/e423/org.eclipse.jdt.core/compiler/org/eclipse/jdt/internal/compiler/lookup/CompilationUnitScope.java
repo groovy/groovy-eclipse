@@ -111,7 +111,6 @@ protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration u
 	problemReporter().packageIsNotExpectedPackage(unitDecl);
 	return true;
 }
-protected
 // GROOVY end
 void buildTypeBindings(AccessRestriction accessRestriction) {
 	this.topLevelTypes = new SourceTypeBinding[0]; // want it initialized if the package cannot be resolved
@@ -1205,9 +1204,6 @@ public void cleanUpInferenceContexts() {
 	this.inferredInvocations = null;
 }
 // GROOVY add
-public void augmentTypeHierarchy() {
-	// nothing to do for Java
-}
 public boolean checkTargetCompatibility() {
 	return true;
 }

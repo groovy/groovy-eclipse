@@ -24,7 +24,6 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
@@ -118,38 +117,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     @Override
     protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
         return new GroovyClassScope(parent, typeDecl);
-    }
-
-    @Override
-    protected void buildTypeBindings(AccessRestriction accessRestriction) {
-        super.buildTypeBindings(accessRestriction);
-    }
-
-    /**
-     * Ensures classes implement {@code groovy.lang.GroovyObject}.
-     */
-    @Override
-    public void augmentTypeHierarchy() {
-        ReferenceBinding groovyObjectType = null;
-        for (SourceTypeBinding topLevelType : topLevelTypes) {
-            if (!topLevelType.isInterface() && topLevelType.superInterfaces != null) {
-                if (groovyObjectType == null) {
-                    groovyObjectType = environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
-                }
-                if (!topLevelType.implementsInterface(groovyObjectType, true)) {
-                    int n = topLevelType.superInterfaces.length;
-                    if (n == 0) {
-                        topLevelType.superInterfaces = new ReferenceBinding[1];
-                    } else {
-                        ReferenceBinding[] types = topLevelType.superInterfaces;
-                        topLevelType.superInterfaces = new ReferenceBinding[n + 1];
-                        System.arraycopy(types, 0, topLevelType.superInterfaces, 0, n);
-                    }
-                    topLevelType.superInterfaces[n] = groovyObjectType;
-                    recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
-                }
-            }
-        }
     }
 
     @Override

@@ -526,9 +526,6 @@ public void completeTypeBindings() {
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
 		(this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy1();
-		// GROOVY add -- augment type hierarchy may bring in GroovyObject as source and that will then need its type hierarchy connecting
-		(this.unitBeingCompleted = this.units[i]).scope.augmentTypeHierarchy();
-		// GROOVY end
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY1;
 
