@@ -105,8 +105,8 @@ public class GroovyClassScope extends ClassScope {
         if (superInterfaces.length > 1) Collections.reverse(Arrays.asList(superInterfaces));
 
         boolean implementsGroovyObject = false;
-        for (ReferenceBinding face : superInterfaces) {
-            if (CharOperation.equals(face.compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
+        for (ReferenceBinding superInterface : superInterfaces) {
+            if (CharOperation.equals(superInterface.compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
                 implementsGroovyObject = true;
                 break;
             }
@@ -228,6 +228,7 @@ public class GroovyClassScope extends ClassScope {
                 if (method.isStatic()) {
                     method = new MethodBinding(method, sourceType);
                     method.modifiers &= ~Flags.AccPrivate;
+                    method.modifiers |=  Flags.AccPublic;
                     groovyMethods.add(method);
                 }
             }

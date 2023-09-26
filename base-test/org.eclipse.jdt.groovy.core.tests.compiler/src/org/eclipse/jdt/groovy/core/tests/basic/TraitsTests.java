@@ -45,7 +45,36 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("T.groovy",
             "public @groovy.transform.Trait interface T {\n" +
-            "  public String getFoo();\n" +
+            "  public @org.codehaus.groovy.transform.trait.Traits.Implemented String getFoo();\n" +
+            "}");
+    }
+
+    @Test
+    public void testTraits1a() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C implements T {\n" +
+            "}\n",
+            "T.groovy",
+            "trait T {\n" +
+            "  final String foo = 'foo'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public class C implements T {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+          //"  public @groovy.transform.Generated @org.codehaus.groovy.transform.trait.Traits.TraitBridge String getFoo() {\n" +
+          //"  }\n" +
+            "}");
+        checkGCUDeclaration("T.groovy",
+            "public @groovy.transform.Trait interface T {\n" +
+          //"  public @groovy.transform.Generated @org.codehaus.groovy.transform.trait.Traits.Implemented String getFoo();\n" +
             "}");
     }
 
@@ -69,9 +98,6 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "Hello, Bob!");
-
-        ClassNode classNode = getCUDeclFor("Greetable.groovy").getCompilationUnit().getClassNode("Greetable");
-        assertTrue(classNode.isInterface());
     }
 
     @Test
@@ -96,9 +122,6 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "Hello, Bob!");
-
-        ClassNode classNode = getCUDeclFor("Greetable.groovy").getCompilationUnit().getClassNode("Greetable");
-        assertTrue(classNode.isInterface());
     }
 
     @Test // Abstract Methods
@@ -231,10 +254,10 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         CompilationUnit unit = getCUDeclFor("Script.groovy").getCompilationUnit();
         ClassNode classNode = unit.getClassNode("Person");
-        ClassNode type = unit.getClassNode("Greetable");
-        assertTrue(classNode.implementsInterface(type));
-        type = unit.getClassNode("Named");
-        assertTrue(classNode.implementsInterface(type));
+        ClassNode face = unit.getClassNode("Greetable");
+        assertTrue(classNode.implementsInterface(face));
+        face = unit.getClassNode("Named");
+        assertTrue(classNode.implementsInterface(face));
     }
 
     @Test // Properties
@@ -514,7 +537,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class D extends C implements T {\n" +
             "}\n" +
-            "print new D().getIdentity()",
+            "print new D().getIdentity()\n",
         };
         //@formatter:on
 

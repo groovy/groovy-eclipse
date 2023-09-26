@@ -1563,13 +1563,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         if (!variables.isEmpty()) methodDecl.statements = createStatements(variables.values());
                     }
 
-                    if (isTrait && methodNode.isFinal()) {
-                        methodDecl.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
-                    } else if (isTrait && methodNode.isStatic()) {
-                        if (unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
-                            methodDecl.modifiers ^= Flags.AccPublic | Flags.AccPrivate; // hide from JDT
-                        } else if (unitDeclaration.compilerOptions.targetJDK < ClassFileConstants.JDK1_8) {
-                            methodDecl.modifiers ^= Flags.AccStatic | ExtraCompilerModifiers.AccModifierProblem;
+                    if (isTrait) {
+                        if (methodNode.isFinal()) {
+                            methodDecl.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
+                        } else if (methodNode.isStatic()) {
+                            if (unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
+                                methodDecl.modifiers ^= Flags.AccPublic | Flags.AccPrivate; // hide from JDT
+                            } else if (unitDeclaration.compilerOptions.targetJDK < ClassFileConstants.JDK1_8) {
+                                methodDecl.modifiers ^= Flags.AccStatic | ExtraCompilerModifiers.AccModifierProblem;
+                            }
+                        }
+                        if (methodNode.isPublic() && !methodNode.isAbstract()) {
+                            Annotation[] implemented = createAnnotations(org.codehaus.groovy.transform.trait.Traits.IMPLEMENTED_CLASSNODE);
+                            methodDecl.annotations = methodDecl.annotations == null ? implemented : ArrayUtils.concat(methodDecl.annotations, implemented);
                         }
                     }
 
@@ -2610,7 +2616,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(MethodNode node) {
             int modifiers = node.getModifiers() & ~(Flags.AccSynthetic | Flags.AccTransient); // GRECLIPSE-370, GROOVY-10140
             if (node.isDefault()) {
-                modifiers |= Flags.AccDefaultMethod;
+                modifiers |= ExtraCompilerModifiers.AccDefaultMethod;
             }
             if (node.getCode() == null) {
                 modifiers |= ExtraCompilerModifiers.AccSemicolonBody;
