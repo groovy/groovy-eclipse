@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<!--
+    Copyright (c) 2002, 2009 IBM Corporation and others.
+
+    This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License 2.0
+    which accompanies this distribution, and is available at
+    https://www.eclipse.org/legal/epl-2.0/
+
+    SPDX-License-Identifier: EPL-2.0
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<plugin>
+     <extension point="org.eclipse.jdt.core.compilationParticipant">
+      <compilationParticipant
+            class="org.eclipse.jdt.core.tests.builder.participants.TestCompilationParticipant1"
+            createsProblems="true"
+            id="org.eclipse.jdt.core.tests.builder.participants.testCompilationParticipant1"
+            modifiesEnvironment="true">
+          <managedMarker markerType="org.eclipse.jdt.core.tests.compile.problem"/>
+          <requires id="org.eclipse.jdt.core.tests.builder.participants.testCompilationParticipant3"/>
+       </compilationParticipant>
+
+       <compilationParticipant
+            class="org.eclipse.jdt.core.tests.builder.participants.TestCompilationParticipant2"
+            createsProblems="true"
+            id="org.eclipse.jdt.core.tests.builder.participants.testCompilationParticipant2"
+            modifiesEnvironment="true">
+          <managedMarker markerType="org.eclipse.jdt.core.tests.compile.problem"/>
+       </compilationParticipant>
+
+       <compilationParticipant
+            class="org.eclipse.jdt.core.tests.builder.participants.TestCompilationParticipant3"
+            createsProblems="true"
+            id="org.eclipse.jdt.core.tests.builder.participants.testCompilationParticipant3"
+            modifiesEnvironment="true">
+          <managedMarker markerType="org.eclipse.jdt.core.tests.compile.problem"/>
+          <requires id="org.eclipse.jdt.core.tests.builder.participants.testCompilationParticipant2"/>
+       </compilationParticipant>
+   </extension>
+</plugin>

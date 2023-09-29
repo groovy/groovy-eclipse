@@ -1,0 +1,13 @@
+# To force a version qualifier update, add the bug here
+Bug 403352 - Update all parent versions to match our build stream
+Bug 407853 - ECJ download misses legal file (about.html)
+Bug 407852 - ECJ source download is not correct
+Bug 408447 - compiler (log message) needs updating for copyright and bundle_qualifier
+Several bundles changed and need to be touched
+Bug 418646 - org.eclipse.jdt.core does not provide an artifact with classifier 'antadapter'
+Bug 436266 - Use RC3 (plus) version of JDT compiler to build RC4
+Bug 551547 - The library org.eclipse.jdt.core.compiler.batch_*.jar should be signed
+Bug 549687 - Local ecj build has a SHA-256 digest error for org/eclipse/jdt/internal/compiler/apt/model/PackageElementImpl.class
+Bug 566471 - I20200828-0150 - Comparator Errors Found
+Bug 573283 - don't include javax15api.jar in jdt binaries
+https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/issues/1184

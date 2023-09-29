@@ -1093,7 +1093,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
-        proposalExists(proposals, 'forName', Float.parseFloat(System.getProperty('java.specification.version')) < 9 ? 2 : 3)
+        float javaVersion = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'forName', javaVersion < 9 ? 2 : (javaVersion < 21 ? 3 : 6))
     }
 
     @Test
