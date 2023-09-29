@@ -150,6 +150,7 @@ import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Receiver;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
@@ -1471,9 +1472,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 fixupSourceLocationsForConstructorDeclaration(constructorDecl, constructorNode);
                 constructorDecl.annotations = createAnnotations(constructorNode.getAnnotations());
                 constructorDecl.arguments = createArguments(constructorNode.getParameters());
-                if (constructorDecl.arguments != null && constructorDecl.arguments.length > 0
-                     && constructorNode.getParameters()[0].getName().equals("__namedArgs")) {
-                    constructorDecl.arguments[0].type.bits |= ASTNode.IgnoreRawTypeCheck;
+                if (constructorDecl.arguments != null && constructorDecl.arguments.length > 0) {
+                    if (new String(constructorDecl.arguments[0].name).equals("__namedArgs")) {
+                        constructorDecl.arguments[0].type.bits |= ASTNode.IgnoreRawTypeCheck;
+                    }
+                    for (Argument argument : constructorDecl.arguments) {
+                        constructorDecl.bits |= (argument.type.bits & ASTNode.HasTypeAnnotations);
+                    }
+                    if (constructorDecl.arguments[0] instanceof Receiver) {
+                        constructorDecl.receiver = (Receiver) constructorDecl.arguments[0];
+                        constructorDecl.arguments = Arrays.copyOfRange(constructorDecl.arguments, 1, constructorDecl.arguments.length);
+                        if (classNode.getOuterClass() != null) // TODO QualifiedNameReference
+                            constructorDecl.receiver.qualifyingName = new SingleNameReference(classNode.getOuterClass().getNameWithoutPackage().toCharArray(), NON_EXISTENT_POSITION);
+                    }
                 }
                 constructorDecl.modifiers = isEnum ? Flags.AccPrivate : getModifiers(constructorNode);
                 constructorDecl.selector = ctorName;
@@ -1505,12 +1516,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (!variables.isEmpty()) constructorDecl.statements = createStatements(variables.values());
                 }
                 if (constructorNode.hasDefaultValue()) {
+                    Annotation[] generated = createAnnotations(ClassHelper.make(groovy.transform.Generated.class));
                     for (Argument[] variantArgs : getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments)) {
                         ConstructorDeclaration variantDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                        variantDecl.annotations = constructorDecl.annotations;
+                        variantDecl.annotations = constructorDecl.annotations == null ? generated : ArrayUtils.concat(constructorDecl.annotations, generated);
                         variantDecl.arguments = variantArgs;
+                        variantDecl.bits = constructorDecl.bits;
                         variantDecl.javadoc = constructorDecl.javadoc;
                         variantDecl.modifiers = constructorDecl.modifiers;
+                        variantDecl.receiver = constructorDecl.receiver;
                         variantDecl.selector = constructorDecl.selector;
                         variantDecl.sourceEnd = constructorDecl.sourceEnd;
                         variantDecl.sourceStart = constructorDecl.sourceStart;
@@ -1580,8 +1594,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                     if (methodNode.hasDefaultValue()) {
+                        Annotation[] generated = createAnnotations(ClassHelper.make(groovy.transform.Generated.class));
                         for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
                             AbstractMethodDeclaration variantDecl = createMethodDeclaration(classNode, methodNode);
+                            variantDecl.annotations = variantDecl.annotations == null ? generated : ArrayUtils.concat(variantDecl.annotations, generated);
                             variantDecl.arguments = variantArgs;
 
                             variantDecl.declarationSourceStart = 0;
@@ -1632,6 +1648,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int modifiers = getModifiers(methodNode);
                 Parameter[] params = methodNode.getParameters();
                 ClassNode returnType = methodNode.getReturnType();
+
                 if (Flags.isStatic(modifiers)) {
                     // present 'static main(args)' as 'static void main(String[] args)' to JDT model
                     if ("main".equals(methodNode.getName()) && params != null && params.length == 1) {
@@ -1666,8 +1683,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 methodDeclaration.modifiers = modifiers;
-                methodDeclaration.arguments = createArguments(params);
                 if (methodDeclaration instanceof MethodDeclaration) {
+                    methodDeclaration.arguments = createArguments(params);
+                    if (methodDeclaration.arguments != null && methodDeclaration.arguments.length > 0) {
+                        for (Argument argument : methodDeclaration.arguments) {
+                            methodDeclaration.bits |= (argument.type.bits & ASTNode.HasTypeAnnotations);
+                        }
+                        if (methodDeclaration.arguments[0] instanceof Receiver) {
+                            methodDeclaration.receiver = (Receiver) methodDeclaration.arguments[0];
+                            methodDeclaration.arguments = Arrays.copyOfRange(methodDeclaration.arguments, 1, methodDeclaration.arguments.length);
+                        }
+                    }
                     GenericsType[] generics = methodNode.getGenericsTypes();
                     if (generics != null && generics.length > 0) {
                         ((MethodDeclaration) methodDeclaration).typeParameters = createTypeParametersForGenerics(generics);
@@ -1907,8 +1933,22 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     pt.setRedirect(parameterType);
                     parameterType = pt;
                 }
-                arguments[i] = new Argument(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1), createTypeReferenceForClassNode(parameterType), parameter.getModifiers());
-                arguments[i].annotations = createAnnotations(parameter.getAnnotations());
+                if (i == 0 && parameter.getName().equals("this")) { // JSR 308
+                    arguments[i] = new Receiver(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1), createTypeReferenceForClassNode(parameterType), null, parameter.getModifiers());
+                    List<AnnotationNode> annotations = new ArrayList<>();
+                    annotations.addAll(parameter.getAnnotations());
+                    annotations.addAll(parameter.getOriginType().getAnnotations());
+                    annotations.addAll(parameter.getOriginType().getTypeAnnotations());
+                    if (!annotations.isEmpty()) {
+                        Annotation[][] thisTypeAnnotations = new Annotation[arguments[i].type.getAnnotatableLevels()][];
+                        thisTypeAnnotations[thisTypeAnnotations.length - 1] = createAnnotations(annotations);
+                        arguments[i].type.annotations = thisTypeAnnotations;
+                        arguments[i].type.bits |= ASTNode.HasTypeAnnotations;
+                    }
+                } else {
+                    arguments[i] = new Argument(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1), createTypeReferenceForClassNode(parameterType), parameter.getModifiers());
+                    arguments[i].annotations = createAnnotations(parameter.getAnnotations());
+                }
                 arguments[i].declarationSourceStart = arguments[i].sourceStart;
             }
             if (isVargs(parameters)) {
@@ -3098,6 +3138,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          */
         private List<Argument[]> getVariantsAllowingForDefaulting(Parameter[] groovyParameters, Argument[] javaArguments) {
             List<Argument[]> variants = new ArrayList<>();
+
+            if (groovyParameters[0].getName().equals("this"))
+                groovyParameters = Arrays.copyOfRange(groovyParameters, 1, groovyParameters.length);
 
             final int nParams = groovyParameters.length;
             Parameter[] wipableParameters = groovyParameters.clone();

@@ -16,6 +16,8 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
+import static org.junit.Assume.assumeTrue;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -1879,9 +1881,9 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        checkGCUDeclaration("X.groovy", "public @Anno void foo() {");
-
         checkGCUDeclaration("X.groovy", "public @Anno void foo(String s) {");
+
+        checkGCUDeclaration("X.groovy", "public @Anno @groovy.transform.Generated void foo() {");
     }
 
     @Test
@@ -2013,12 +2015,12 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
+            "package p\n" +
+            "class X {\n" +
             "  @Anno(Target.class)\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
+            "  public int foo = 42\n" +
+            "  static main(args) {\n" +
+            "    print 'works'\n" +
             "  }\n" +
             "}\n",
 
@@ -2030,13 +2032,123 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Target.java",
             "package p;\n" +
-            "class Target {}",
+            "class Target {}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "success");
+        runConformTest(sources, "works");
 
         checkGCUDeclaration("X.groovy", "public @Anno(Target.class) int foo");
+    }
+
+    @Test
+    public void testFieldLevelAnnotations_SingleMember2() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class X {\n" +
+            "  @Anno(p.Target.class)\n" +
+            "  public int foo = 42\n" +
+            "  static main(args) {\n" +
+            "    print 'works'\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<?> value(); }\n",
+
+            "p/Target.java",
+            "package p;\n" +
+            "class Target {}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+
+        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) int foo");
+    }
+
+    @Test
+    public void testFieldLevelAnnotations_SingleMember3() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class X {\n" +
+            "  @Anno(IDontExist.class)\n" +
+            "  public int foo = 42\n" +
+            "  static main(args) {\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<?> value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@Anno(IDontExist.class)\n" +
+            "\t      ^^^^^^^^^^\n" +
+            "Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
+            "----------\n" +
+            "2. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@Anno(IDontExist.class)\n" +
+            "\t      ^^^^^^^^^^^^^^^^\n" +
+            "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testFieldLevelAnnotations_SingleMember4() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class X {\n" +
+            "  @SuppressWarnings(DoesNot.EXIST)\n" +
+            "  static main(args) {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "DoesNot cannot be resolved\n" +
+            "----------\n" +
+            "2. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "Groovy:unable to find class 'DoesNot.EXIST' for annotation attribute constant\n" +
+            "----------\n" +
+            "3. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "Groovy:Apparent variable 'DoesNot' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "----------\n" +
+            "4. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^^^^^^^\n" +
+            "Groovy:Expected 'DoesNot.EXIST' to be an inline constant of type java.lang.String not a property expression in @java.lang.SuppressWarnings\n" +
+            "----------\n" +
+            // this error was associated with line -1
+            "5. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^^^^^^^\n" +
+            "Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @java.lang.SuppressWarnings\n" +
+            "----------\n");
     }
 
     @Test
@@ -2105,115 +2217,144 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
-    public void testAnnotations_singleMemberAnnotationField1() {
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11184
+    public void testExplicitThisTypeAnnotations1() {
+        assumeTrue(isParrotParser());
+
         //@formatter:off
         String[] sources = {
-            "p/X.groovy",
+            "C.groovy",
+            "class C {\n" +
+            "  def m(@p.Anno('') C this, that) {}\n" +
+            "}\n",
+
+            "p/Anno.java",
             "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(p.Target.class)\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Target({ElementType.TYPE_USE})\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public java.lang.Object m(@p.Anno(\"\") C this, java.lang.Object that) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11184
+    public void testExplicitThisTypeAnnotations2() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  def m(@Anno('') p.C this, that) {}\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Target({ElementType.TYPE_USE})\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public java.lang.Object m(p.@Anno(\"\") C this, java.lang.Object that) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11184
+    public void testExplicitThisTypeAnnotations3() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  def m(@Anno('') C this, that = null) {}\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Target({ElementType.TYPE_USE})\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public java.lang.Object m(@Anno(\"\") C this, java.lang.Object that) {\n" +
+            "  }\n" +
+            "  public @groovy.transform.Generated java.lang.Object m(@Anno(\"\") C this) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11184
+    public void testExplicitThisTypeAnnotations4() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  class D {\n" +
+            "    D(@Anno('') C this, that" + (isAtLeastGroovy(50) ? " = null" : "") + ") {}\n" +
             "  }\n" +
             "}\n",
 
             "p/Anno.java",
             "package p;\n" +
             "import java.lang.annotation.*;\n" +
+            "@Target({ElementType.TYPE_USE})\n" +
             "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<?> value(); }\n",
-
-            "p/Target.java",
-            "package p;\n" +
-            "class Target {}",
+            "@interface Anno { String value(); }\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "success");
+        runNegativeTest(sources, "");
 
-        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) int foo");
-    }
-
-    @Test
-    public void testAnnotations_singleMemberAnnotationFailure1() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.groovy",
+        checkGCUDeclaration("C.groovy",
             "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(IDontExist.class)\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
+            "public class C {\n" +
+            "  public class D {\n" +
+            "    public D(@Anno(\"\") C C.this, java.lang.Object that) {\n" +
+            "    }\n" + (isAtLeastGroovy(50)
+            ?
+            "    public @groovy.transform.Generated D(@Anno(\"\") C C.this) {\n" +
+            "    }\n"
+            : "") +
             "  }\n" +
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<?> value(); }\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@Anno(IDontExist.class)\n" +
-            "\t      ^^^^^^^^^^\n" +
-            "Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
-            "----------\n" +
-            "2. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@Anno(IDontExist.class)\n" +
-            "\t      ^^^^^^^^^^^^^^^^\n" +
-            "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testAnnotations_singleMemberAnnotationFailure2() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @SuppressWarnings(DoesNot.EXIST)\n" +
-            "  static void main(String... args) {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
             "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^\n" +
-            "DoesNot cannot be resolved\n" +
-            "----------\n" +
-            "2. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^\n" +
-            "Groovy:unable to find class 'DoesNot.EXIST' for annotation attribute constant\n" +
-            "----------\n" +
-            "3. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^\n" +
-            "Groovy:Apparent variable 'DoesNot' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
-            "----------\n" +
-            "4. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^^^^^^^\n" +
-            "Groovy:Expected 'DoesNot.EXIST' to be an inline constant of type java.lang.String not a property expression in @java.lang.SuppressWarnings\n" +
-            "----------\n" +
-            // this error was associated with line -1
-            "5. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^^^^^^^\n" +
-            "Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @java.lang.SuppressWarnings\n" +
-            "----------\n");
+            "}\n");
     }
 
     @Test // All types in groovy with TYPE specified for Target and obeyed

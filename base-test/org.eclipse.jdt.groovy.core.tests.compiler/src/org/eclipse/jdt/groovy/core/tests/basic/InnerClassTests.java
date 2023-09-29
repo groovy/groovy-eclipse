@@ -643,7 +643,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "      }\n" +
             "    };\n" +
             "  }\n" +
-            "  public java.lang.Object foo(int bar) {\n" +
+            "  public @groovy.transform.Generated java.lang.Object foo(int bar) {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +

@@ -6097,7 +6097,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public void m(String s, Integer i) {\n" +
             "  }\n" +
-            "  public void m(String s) {\n" +
+            "  public @groovy.transform.Generated void m(String s) {\n" +
             "  }\n" +
             "}\n");
 
@@ -6148,11 +6148,11 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public void m(String s, Integer i, String j, String k, float f, String l) {\n" +
             "  }\n" +
-            "  public void m(String s, Integer i, String j, String k, String l) {\n" +
+            "  public @groovy.transform.Generated void m(String s, Integer i, String j, String k, String l) {\n" +
             "  }\n" +
-            "  public void m(String s, Integer i, String k, String l) {\n" +
+            "  public @groovy.transform.Generated void m(String s, Integer i, String k, String l) {\n" +
             "  }\n" +
-            "  public void m(String s, String k, String l) {\n" +
+            "  public @groovy.transform.Generated void m(String s, String k, String l) {\n" +
             "  }\n" +
             "}\n");
 
@@ -6214,11 +6214,11 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  private java.lang.Object msg;\n" +
             "  public G(Integer i, String m) {\n" +
             "  }\n" +
-            "  public G(Integer i) {\n" +
+            "  public @groovy.transform.Generated G(Integer i) {\n" +
             "  }\n" +
             "  public void print(int i) {\n" +
             "  }\n" +
-            "  public void print() {\n" +
+            "  public @groovy.transform.Generated void print() {\n" +
             "  }\n" +
             "}\n");
 
