@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.ui;singleton:=true
 Bundle-Name: Groovy UI
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 5.1.0.qualifier
+Bundle-Version: 5.2.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse,
  org.codehaus.groovy.eclipse.actions,
  org.codehaus.groovy.eclipse.adapters,
@@ -25,9 +25,9 @@ Export-Package: org.codehaus.groovy.eclipse,
 Import-Package: org.codehaus.groovy.frameworkadapter.util,
  org.eclipse.eclemma.ui.launching;resolution:=optional,
  org.eclipse.equinox.bidi
-Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="5.1.0",
- org.codehaus.groovy.eclipse.core;bundle-version="5.1.0";visibility:=reexport,
- org.codehaus.groovy.eclipse.refactoring;bundle-version="5.1.0",
+Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="5.2.0",
+ org.codehaus.groovy.eclipse.core;bundle-version="5.2.0";visibility:=reexport,
+ org.codehaus.groovy.eclipse.refactoring;bundle-version="5.2.0",
  org.eclipse.debug.ui,
  org.eclipse.jdt.debug,
  org.eclipse.jdt.debug.ui,
