@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -56,6 +56,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
+import org.eclipse.jdt.internal.compiler.parser.SourceTypeConverter;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -168,19 +169,38 @@ public class CompilationUnitResolver extends Compiler {
 		boolean fromJavaProject) {
 
 		super(environment, policy, compilerOptions, requestor, problemFactory);
-		this.hasCompilationAborted = false;
-		this.monitor =monitor;
+		this.monitor = monitor;
 		this.fromJavaProject = fromJavaProject;
 	}
 
-	/*
-	 * Add additional source types
-	 */
 	@Override
 	public void accept(ISourceType[] sourceTypes, PackageBinding packageBinding, AccessRestriction accessRestriction) {
 		// Need to reparse the entire source of the compilation unit so as to get source positions
 		// (case of processing a source that was not known by beginToCompile (e.g. when asking to createBinding))
 		SourceTypeElementInfo sourceType = (SourceTypeElementInfo) sourceTypes[0];
+		// GROOVY add -- ASTParser#createAST <https://github.com/groovy/groovy-eclipse/issues/1515>
+		if (LanguageSupportFactory.isInterestingSourceFile(new String(sourceType.getFileName()))) {
+			while (sourceTypes[0].getEnclosingType() != null) sourceTypes[0] = sourceTypes[0].getEnclosingType();
+			var environment = packageBinding.environment; if (environment == null) environment = this.lookupEnvironment;
+			CompilationResult result = new CompilationResult(sourceType.getFileName(), 1, 1, this.options.maxProblemsPerUnit);
+			CompilationUnitDeclaration unit =
+				SourceTypeConverter.buildCompilationUnit(
+					sourceTypes,
+					SourceTypeConverter.FIELD_AND_METHOD | SourceTypeConverter.MEMBER_TYPE,
+					environment.problemReporter,
+					result);
+			if (unit != null) {
+				environment.buildTypeBindings(unit, accessRestriction);
+				var previousUnitBeingCompleted = this.lookupEnvironment.unitBeingCompleted;
+				try {
+					environment.completeTypeBindings(unit);
+				} finally {
+					this.lookupEnvironment.unitBeingCompleted = previousUnitBeingCompleted;
+				}
+			}
+		}
+		else
+		// GROOVY end
 		accept((org.eclipse.jdt.internal.compiler.env.ICompilationUnit) sourceType.getHandle().getCompilationUnit(), accessRestriction);
 	}
 
@@ -375,8 +395,9 @@ public class CompilationUnitResolver extends Compiler {
 
 	@Override
 	public void initializeParser() {
-		// GROOVY edit
-		//this.parser = new CommentRecorderParser(this.problemReporter, false);
+		/* GROOVY edit
+		this.parser = new CommentRecorderParser(this.problemReporter, false);
+		*/
 		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment == null ? null : this.lookupEnvironment.globalOptions, this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant + 1);
 		// GROOVY end
 	}

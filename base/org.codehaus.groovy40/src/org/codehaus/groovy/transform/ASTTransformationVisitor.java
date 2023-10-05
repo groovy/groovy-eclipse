@@ -166,7 +166,8 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             for (Map.Entry<Class<? extends ASTTransformation>, Set<ASTNode>> entry : baseTransforms.entrySet()) {
                 for (ASTNode node : entry.getValue()) {
                     List<ASTTransformation> list = transforms.computeIfAbsent(node, k -> new ArrayList<>());
-                    list.add(transformInstances.get(entry.getKey()));
+                    ASTTransformation aTransform = transformInstances.get(entry.getKey());
+                    if (aTransform != null) list.add(aTransform); // GRECLIPSE null test
                 }
             }
 
