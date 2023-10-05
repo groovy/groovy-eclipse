@@ -206,10 +206,10 @@ public class GroovyLanguageSupport implements LanguageSupport {
             }
 
             CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, problemReporter);
-            GroovyClassLoader classLoader = new GroovyClassLoaderFactory(problemReporter.options, null).getGroovyClassLoaders(compilerConfig)[0];
-            SourceUnit sourceUnit = new SourceUnit(unitName, unitSource, compilerConfig, null, new GroovyErrorCollectorForJDT(compilerConfig)  );
+            GroovyClassLoader[] classLoaders = new GroovyClassLoaderFactory(problemReporter.options, null).getGroovyClassLoaders(compilerConfig);
+            SourceUnit sourceUnit = new SourceUnit(unitName, unitSource, compilerConfig, null, new GroovyErrorCollectorForJDT(compilerConfig));
 
-            org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig, null, classLoader, null, /*allowTransforms:*/false, null);
+            org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig, null, classLoaders[0], classLoaders[1], false, null);
             JDTResolver resolver = new JDTResolver(gcu);
             gcu.setResolveVisitor(resolver);
             gcu.addSource(sourceUnit);
