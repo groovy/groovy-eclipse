@@ -70,24 +70,27 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
     @Override
     protected void computeFoldingStructure(final IJavaElement element, final FoldingStructureComputationContext context) {
         // NOTE: be sure to call super.computeFoldingStructure when editor is null to preserve Java behavior
-        if (editor != null && editor.getModuleNode() != null) {
-            if (isMainType(element)) {
-                // add folding for multi-line closures
-                computeClosureFoldingStructure(element, context);
+        try {
+            if (editor != null && editor.getModuleNode() != null) {
+                if (isMainType(element)) {
+                    // add folding for multi-line closures
+                    computeClosureFoldingStructure(element, context);
 
-                // TODO: add folding for multi-line strings or array/list/map literals?
-            } else if (isScriptMethod(element)) {
-                // add folding for multi-line comments
-                computeCommentFoldingStructure(element, context);
+                    // TODO: add folding for multi-line strings or array/list/map literals?
+                } else if (isScriptMethod(element)) {
+                    // add folding for multi-line comments
+                    computeCommentFoldingStructure(element, context);
 
-                // TODO: add folding for top-level types?
+                    // TODO: add folding for top-level types?
 
-                return; // prevent folding of entire script body
+                    return; // prevent folding of entire script body
+                }
+
+                if (element instanceof IType) {
+                    computeTraitMethodFoldingStructure((IType) element, context);
+                }
             }
-
-            if (element instanceof IType) {
-                computeTraitMethodFoldingStructure((IType) element, context);
-            }
+        } catch (Exception | LinkageError | AssertionError ignore) {
         }
         super.computeFoldingStructure(element, context);
     }

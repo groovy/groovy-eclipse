@@ -347,7 +347,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST || getJavaProject().exists()) {
                     Util.log(e, "Problem with build structure for " + this.name);
                 }
-            } catch (Exception e) {
+            } catch (Exception | LinkageError | AssertionError e) {
                 // The groovy compiler doesn't handle broken code well in many situations
                 // use this general catch clause so that exceptions thrown by broken code
                 // do not bubble up the stack.

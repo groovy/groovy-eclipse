@@ -258,8 +258,8 @@ public class OrganizeGroovyImports {
                 TextEdit rewrite = rewriter.rewriteImports(monitor.split(1));
                 trace("%s", rewrite);
                 return rewrite;
-            } catch (Exception e) {
-                GroovyPlugin.getDefault().logError("Exception thrown when organizing imports for " + unit.getElementName(), e);
+            } catch (Exception | LinkageError | AssertionError e) {
+                GroovyPlugin.getDefault().logError("Organize imports failed for " + unit.getElementName(), e);
             } finally {
                 importsSlatedForRemoval = null;
                 missingTypes = null;

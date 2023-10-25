@@ -299,7 +299,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getMessage());
             }
-            if (!alreadyHasErrors) {
+            if (!alreadyHasErrors && compilationUnit.allowTransforms) {
                 Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", e));
             }
             // probably an AST transform compiled against a different Groovy
