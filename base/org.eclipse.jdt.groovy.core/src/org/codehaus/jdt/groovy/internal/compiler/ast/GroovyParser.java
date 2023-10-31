@@ -220,10 +220,8 @@ public class GroovyParser {
             compilationUnit = unitFactory.get();
         }
 
-        SourceUnit sourceUnit = new EclipseSourceUnit(eclipseFile, fileName, contents,
-            compilationUnit.getConfiguration(), null, new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver);
-
-        sourceUnit = compilationUnit.addSource(sourceUnit);
+        SourceUnit sourceUnit = compilationUnit.addSource(new EclipseSourceUnit(eclipseFile, fileName, contents,
+            compilationUnit.getConfiguration(), null, new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver));
 
         if (requestor instanceof Compiler) {
             Compiler compiler = (Compiler) requestor;

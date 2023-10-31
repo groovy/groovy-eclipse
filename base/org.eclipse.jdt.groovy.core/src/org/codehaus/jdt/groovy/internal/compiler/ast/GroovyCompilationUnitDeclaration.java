@@ -330,9 +330,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         populator.populate(this);
     }
 
-    // FIXASC are costly regens being done for all the classes???
     @Override
     public void generateCode() {
+        char[][] actualPackage = currentPackage != null
+                               ? currentPackage.tokens : CharOperation.NO_CHAR_CHAR;
+        char[][] expectPackage = compilationResult.compilationUnit.getPackageName();
+        if (expectPackage != null && !CharOperation.equals(actualPackage, expectPackage)) {
+            char[] folder = expectPackage.length == 0 ? new char[] {'.'} : CharOperation.concatWith(expectPackage, '/');
+            getModuleNode().putNodeMetaData("source.folder", new StringBuilder().append(folder).append('/').toString());
+        }
+
         boolean successful = processToPhase(Phases.ALL);
         if (successful) {
             // At the end of this method we want to make this call for each of the classes generated during processing
