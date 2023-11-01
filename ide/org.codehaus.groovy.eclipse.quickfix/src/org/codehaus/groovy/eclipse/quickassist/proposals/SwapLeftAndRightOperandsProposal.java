@@ -17,6 +17,8 @@ package org.codehaus.groovy.eclipse.quickassist.proposals;
 
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.classgen.asm.InvocationWriter;
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal2;
 import org.codehaus.groovy.syntax.Types;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -46,8 +48,9 @@ public class SwapLeftAndRightOperandsProposal extends GroovyQuickAssistProposal2
 
     @Override
     public int getRelevance() {
-        if (context.getCoveredNode() instanceof BinaryExpression) {
-            switch (((BinaryExpression) context.getCoveredNode()).getOperation().getType()) {
+        var coveredNode = context.getCoveredNode();
+        if (coveredNode instanceof BinaryExpression) {
+            switch (((BinaryExpression) coveredNode).getOperation().getType()) {
             case Types.PLUS:
             case Types.MINUS:
             case Types.MULTIPLY:
@@ -68,19 +71,46 @@ public class SwapLeftAndRightOperandsProposal extends GroovyQuickAssistProposal2
                 return 10;
             }
         }
+        if (coveredNode instanceof MethodCallExpression && ((MethodCallExpression) coveredNode).getMethodTarget() != null) {
+            switch (((MethodCallExpression) coveredNode).getMethodAsString()) {
+            case "compare":
+            case "compareTo":
+            case "compareEqual":
+            case "compareNotEqual":
+            case "compareLessThan":
+            case "compareLessThanEqual":
+            case "compareGreaterThan":
+            case "compareGreaterThanEqual":
+                return 10;
+            }
+        }
         return 0;
     }
 
     @Override
     protected TextChange getTextChange(IProgressMonitor monitor) {
-        Expression lhs = ((BinaryExpression) context.getCoveredNode()).getLeftExpression();
-        Expression rhs = ((BinaryExpression) context.getCoveredNode()).getRightExpression();
-        String lhsText = context.getNodeText(lhs).trim();
-        String rhsText = context.getNodeText(rhs).trim();
+        Expression lhs;
+        Expression rhs;
+        var expression = context.getCoveredNode();
+        if (expression instanceof BinaryExpression) {
+            lhs = ((BinaryExpression) expression).getLeftExpression();
+            rhs = ((BinaryExpression) expression).getRightExpression();
+        } else { // ScriptBytecodeAdapter.compare[xxx](lhs,rhs)
+            var arguments = ((MethodCallExpression) expression).getArguments();
+            lhs = InvocationWriter.makeArgumentList(arguments).getExpression(0);
+            rhs = InvocationWriter.makeArgumentList(arguments).getExpression(1);
+        }
+
+        String lhsText = lhs.getEnd() > 0 ? context.getNodeText(lhs).trim() : lhs.getText();
+        String rhsText = rhs.getEnd() > 0 ? context.getNodeText(rhs).trim() : rhs.getText();
+
+        int lhsOffset = lhs.getEnd() > 0 ? lhs.getStart() : expression.getStart() + context.getNodeText(expression).indexOf(lhsText);
+        int rhsOffset = rhs.getEnd() > 0 ? rhs.getStart() : expression.getStart() + context.getNodeText(expression).lastIndexOf(rhsText);
 
         TextEdit edit = new MultiTextEdit();
-        edit.addChild(new ReplaceEdit(rhs.getStart(), rhsText.length(), lhsText));
-        edit.addChild(new ReplaceEdit(lhs.getStart(), lhsText.length(), rhsText));
+        edit.addChild(new ReplaceEdit(lhsOffset, lhsText.length(), rhsText));
+        edit.addChild(new ReplaceEdit(rhsOffset, rhsText.length(), lhsText));
+
         return toTextChange(edit);
     }
 }

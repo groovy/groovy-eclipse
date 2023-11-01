@@ -578,6 +578,41 @@ final class QuickAssistTests extends QuickFixTestSuite {
             '!==', new SwapLeftAndRightOperandsProposal())
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1518
+    void testSwapOperands10() {
+        for (mode in ['','@groovy.transform.TypeChecked ','@groovy.transform.CompileStatic ']) {
+            assertConversion(
+                mode + 'def m(p) { if (p == null) { } }',
+                mode + 'def m(p) { if (null == p) { } }',
+                '==', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(p) { if (p != null) { } }',
+                mode + 'def m(p) { if (null != p) { } }',
+                '!=', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(p) { if (null != p) { } }',
+                mode + 'def m(p) { if (p != null) { } }',
+                '!=', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(p) { if (p == true) { } }',
+                mode + 'def m(p) { if (true == p) { } }',
+                '==', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(p,q) { if (p === q) { } }',
+                mode + 'def m(p,q) { if (q === p) { } }',
+                '===', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(int p) { if (p <=> 0) { } }',
+                mode + 'def m(int p) { if (0 <=> p) { } }',
+                '<=>', new SwapLeftAndRightOperandsProposal())
+        }
+    }
+
     @Test
     void testSplitAssignment1() {
         assertConversion(
