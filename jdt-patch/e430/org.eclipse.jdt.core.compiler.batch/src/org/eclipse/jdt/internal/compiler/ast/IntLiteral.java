@@ -30,7 +30,7 @@ public class IntLiteral extends NumberLiteral {
 	private static final char[] DECIMAL_MIN_VALUE     = "2147483648".toCharArray(); //$NON-NLS-1$
 	private static final char[] DECIMAL_MAX_VALUE     = "2147483647".toCharArray(); //$NON-NLS-1$
 
-	private char[] reducedForm; // no underscores
+	private final char[] reducedForm; // no underscores
 
 	public int value;
 

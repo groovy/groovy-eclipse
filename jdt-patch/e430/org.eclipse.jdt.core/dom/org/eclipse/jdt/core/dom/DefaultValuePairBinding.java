@@ -21,7 +21,7 @@ package org.eclipse.jdt.core.dom;
  */
 class DefaultValuePairBinding extends MemberValuePairBinding {
 
-	private org.eclipse.jdt.internal.compiler.lookup.MethodBinding method;
+	private final org.eclipse.jdt.internal.compiler.lookup.MethodBinding method;
 
 	DefaultValuePairBinding(org.eclipse.jdt.internal.compiler.lookup.MethodBinding binding, BindingResolver resolver) {
 		super(null, resolver);

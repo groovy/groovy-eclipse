@@ -145,7 +145,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	public int defaultNullness = NO_NULL_DEFAULT;
 	ModuleBinding[] requiredModules = null;
 	boolean isAuto = false;
-	private boolean[] isComplete = new boolean[UpdateKind.values().length];
+	private final boolean[] isComplete = new boolean[UpdateKind.values().length];
 	private Set<ModuleBinding> transitiveRequires;
 	SimpleLookupTable storedAnnotations = null;
 

@@ -111,7 +111,7 @@ public class ForStatement extends Statement {
 	 * The list of initializer expressions (element type:
 	 * {@link Expression}). Defaults to an empty list.
 	 */
-	private ASTNode.NodeList initializers =
+	private final ASTNode.NodeList initializers =
 		new ASTNode.NodeList(INITIALIZERS_PROPERTY);
 
 	/**
@@ -123,7 +123,7 @@ public class ForStatement extends Statement {
 	 * The list of update expressions (element type:
 	 * {@link Expression}). Defaults to an empty list.
 	 */
-	private ASTNode.NodeList updaters =
+	private final ASTNode.NodeList updaters =
 		new ASTNode.NodeList(UPDATERS_PROPERTY);
 
 	/**

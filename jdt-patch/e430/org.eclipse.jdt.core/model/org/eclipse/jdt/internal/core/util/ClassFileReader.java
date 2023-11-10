@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.util.IPermittedSubclassesAttribute;
 import org.eclipse.jdt.core.util.IRecordAttribute;
 import org.eclipse.jdt.core.util.ISourceAttribute;
 import org.eclipse.jdt.internal.compiler.util.Util;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 public class ClassFileReader extends ClassFileStruct implements IClassFileReader {
 	private static final IFieldInfo[] NO_FIELD_INFOS = new IFieldInfo[0];
@@ -337,7 +338,9 @@ public class ClassFileReader extends ClassFileStruct implements IClassFileReader
 		} catch(ClassFormatException e) {
 			throw e;
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (JavaModelManager.VERBOSE) {
+				JavaModelManager.trace("", e); //$NON-NLS-1$
+			}
 			throw new ClassFormatException(ClassFormatException.ERROR_TRUNCATED_INPUT);
 		}
 	}

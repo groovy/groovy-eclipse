@@ -15,7 +15,7 @@ package org.eclipse.jdt.internal.compiler.impl;
 
 public class ByteConstant extends Constant {
 
-	private byte value;
+	private final byte value;
 
 	public static Constant fromValue(byte value) {
 		return new ByteConstant(value);

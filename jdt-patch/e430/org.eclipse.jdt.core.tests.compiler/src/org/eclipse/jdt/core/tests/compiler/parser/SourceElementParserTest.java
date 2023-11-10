@@ -5197,7 +5197,6 @@ public void test76() {
 /**
  * Bug 99662:[1.5] JavaModel returns inexistent IType for package-info ICompilationUnits
  * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=99662"
- *
  */
 public void testBug99662() {
 

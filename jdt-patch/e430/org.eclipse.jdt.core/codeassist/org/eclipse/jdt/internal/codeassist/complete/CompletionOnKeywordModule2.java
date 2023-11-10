@@ -17,8 +17,8 @@ package org.eclipse.jdt.internal.codeassist.complete;
 import org.eclipse.jdt.internal.compiler.ast.ModuleReference;
 
 public class CompletionOnKeywordModule2 extends ModuleReference implements CompletionOnKeyword {
-	private char[] token;
-	private char[][] possibleKeywords;
+	private final char[] token;
+	private final char[][] possibleKeywords;
 
 	public CompletionOnKeywordModule2(char[] token, long pos, char[][] possibleKeywords) {
 		super(new char[][] {token}, new long[] {pos}); // dummy

@@ -38,9 +38,6 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 
-/**
- *
- */
 public class TypeParameterElementImpl extends ElementImpl implements TypeParameterElement
 {
 	private final Element _declaringElement;

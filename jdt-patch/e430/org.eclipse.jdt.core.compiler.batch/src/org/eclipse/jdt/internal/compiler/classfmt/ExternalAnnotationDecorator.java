@@ -39,7 +39,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
  * result of {@link #enrichWithExternalAnnotationsFor} or {@link #getExternalAnnotationStatus}.
  */
 public class ExternalAnnotationDecorator implements IBinaryType {
-	private IBinaryType inputType;
+	private final IBinaryType inputType;
 	private ExternalAnnotationProvider annotationProvider;
 	private boolean isFromSource;
 

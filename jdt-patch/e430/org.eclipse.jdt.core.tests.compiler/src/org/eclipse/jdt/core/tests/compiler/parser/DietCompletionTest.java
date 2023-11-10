@@ -1308,7 +1308,6 @@ public void test35() {
 }
 /*
  * Invalid completion inside a comment
- *
  */
 public void test36() {
 
@@ -1342,7 +1341,6 @@ public void test36() {
 }
 /*
  * Invalid completion inside a string literal
- *
  */
 public void test37() {
 
@@ -1378,7 +1376,6 @@ public void test37() {
 }
 /*
  * Invalid completion inside a number literal
- *
  */
 public void test38() {
 

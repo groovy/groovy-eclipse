@@ -40,11 +40,6 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 	public TypeReference[][] typeArguments;
 	ReferenceBinding[] typesPerToken;
 
-	/**
-	 * @param tokens
-	 * @param dim
-	 * @param positions
-	 */
 	public ParameterizedQualifiedTypeReference(char[][] tokens, TypeReference[][] typeArguments, int dim, long[] positions) {
 
 		super(tokens, dim, positions);

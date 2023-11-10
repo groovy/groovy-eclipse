@@ -28,7 +28,6 @@ public class SelectionScanner extends Scanner {
 /*
  * Truncate the current identifier if it is containing the cursor location. Since completion is performed
  * on an identifier prefix.
- *
  */
 
 public SelectionScanner(long sourceLevel, boolean previewEnabled) {

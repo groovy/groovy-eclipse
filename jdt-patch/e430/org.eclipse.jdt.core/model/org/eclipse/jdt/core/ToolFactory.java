@@ -358,7 +358,7 @@ public class ToolFactory {
 		ZipFile zipFile = null;
 		try {
 			if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-				System.out.println("(" + Thread.currentThread() + ") [ToolFactory.createDefaultClassFileReader()] Creating ZipFile on " + zipFileName); //$NON-NLS-1$	//$NON-NLS-2$
+				JavaModelManager.trace("(" + Thread.currentThread() + ") [ToolFactory.createDefaultClassFileReader()] Creating ZipFile on " + zipFileName); //$NON-NLS-1$	//$NON-NLS-2$
 			}
 			zipFile = new ZipFile(zipFileName);
 			ZipEntry zipEntry = zipFile.getEntry(zipEntryName);

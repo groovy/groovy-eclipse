@@ -22,9 +22,9 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
  */
 public class ConstantPool extends ClassFileStruct implements IConstantPool {
 
-	private int constantPoolCount;
-	private int[] constantPoolOffset;
-	private byte[] classFileBytes;
+	private final int constantPoolCount;
+	private final int[] constantPoolOffset;
+	private final byte[] classFileBytes;
 
 	ConstantPool(byte[] reference, int[] constantPoolOffset) {
 		this.constantPoolCount = constantPoolOffset.length;

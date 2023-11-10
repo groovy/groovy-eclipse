@@ -94,7 +94,6 @@ boolean isResolved();
  * Returns whether this field represents a record component.
  *
  * @return whether this field represents a record component.
- * @throws JavaModelException
  * @since 3.26
  */
 boolean isRecordComponent() throws JavaModelException;

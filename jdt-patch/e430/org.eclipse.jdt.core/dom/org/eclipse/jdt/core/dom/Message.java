@@ -25,12 +25,12 @@ public class Message {
 	/**
 	 * The message.
 	 */
-	private String message;
+	private final String message;
 
 	/**
 	 * The character index into the original source string, or -1 if none.
 	 */
-	private int startPosition;
+	private final int startPosition;
 
 	/**
 	 * The length in characters of the original source file indicating

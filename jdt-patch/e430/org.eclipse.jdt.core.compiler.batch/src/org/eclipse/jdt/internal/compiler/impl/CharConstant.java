@@ -15,7 +15,7 @@ package org.eclipse.jdt.internal.compiler.impl;
 
 public class CharConstant extends Constant {
 
-	private char value;
+	private final char value;
 
 	public static Constant fromValue(char value) {
 		return new CharConstant(value);

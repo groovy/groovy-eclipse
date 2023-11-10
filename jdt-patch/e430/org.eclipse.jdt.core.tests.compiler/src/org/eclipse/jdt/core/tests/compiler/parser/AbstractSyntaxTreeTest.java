@@ -62,8 +62,8 @@ public class AbstractSyntaxTreeTest extends AbstractCompilerTest implements IDoc
 												CHECK_DOCUMENT_ELEMENT_PARSER | CHECK_COMMENT_RECORDER_PARSER |
 												CHECK_SOURCE_ELEMENT_PARSER | CHECK_INDEXING_PARSER);
 	public static boolean optimizeStringLiterals = false;
-	private String referenceCompiler;
-	private String referenceCompilerTestsScratchArea;
+	private final String referenceCompiler;
+	private final String referenceCompilerTestsScratchArea;
 
 	public AbstractSyntaxTreeTest(String name, String referenceCompiler, String referenceCompilerTestsScratchArea) {
 		super(name);

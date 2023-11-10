@@ -117,7 +117,7 @@ public class Javadoc extends Comment {
 	 * Defaults to an empty list.
 	 * @since 3.0
 	 */
-	private ASTNode.NodeList tags =
+	private final ASTNode.NodeList tags =
 		new ASTNode.NodeList(TAGS_PROPERTY);
 
 	/**

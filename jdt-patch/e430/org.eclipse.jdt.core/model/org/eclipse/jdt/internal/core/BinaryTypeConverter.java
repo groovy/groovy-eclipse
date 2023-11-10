@@ -48,8 +48,8 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class BinaryTypeConverter extends TypeConverter {
 
-	private CompilationResult compilationResult;
-	private HashSetOfCharArrayArray typeNames;
+	private final CompilationResult compilationResult;
+	private final HashSetOfCharArrayArray typeNames;
 
 	public BinaryTypeConverter(ProblemReporter problemReporter, CompilationResult compilationResult, HashSetOfCharArrayArray typeNames) {
 		super(problemReporter, Signature.C_DOLLAR);

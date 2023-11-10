@@ -26,7 +26,6 @@ import org.eclipse.jdt.internal.compiler.env.IModulePathEntry;
 
 /**
  * Represents a project
- *
  */
 public class ProjectEntry implements IModulePathEntry {
 
@@ -38,9 +37,9 @@ public class ProjectEntry implements IModulePathEntry {
 	}
 
 	JavaProject project;
-	
+
 	public ProjectEntry(JavaProject project) {
-		// 
+		//
 		this.project = project;
 	}
 	@Override

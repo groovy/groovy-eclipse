@@ -281,7 +281,6 @@ public void addChild(IDOMNode child) throws IllegalArgumentException, DOMExcepti
  * using the original document and indicies as a form for the current
  * attribute values of this node. If this node not fragmented, the
  * contents can be obtained from the document.
- *
  */
 protected void appendContents(CharArrayBuffer buffer) {
 	if (isFragmented()) {
@@ -296,7 +295,6 @@ protected void appendContents(CharArrayBuffer buffer) {
  *
  * <p>This algorithm used minimizes String generation by merging
  * adjacent unfragmented children into one substring operation.
- *
  */
 protected void appendContentsOfChildren(CharArrayBuffer buffer) {
 	DOMNode child= this.fFirstChild;

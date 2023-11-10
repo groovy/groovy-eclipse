@@ -62,11 +62,6 @@ public abstract class SubRoutineStatement extends Statement {
 
 	/**
 	 * Generate an invocation of a subroutine (e.g. jsr finally) in current context.
-	 * @param currentScope
-	 * @param codeStream
-	 * @param targetLocation
-	 * @param stateIndex
-	 * @param secretLocal
 	 * @return boolean, <code>true</code> if the generated code will abrupt completion
 	 */
 	public abstract boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream codeStream, Object targetLocation, int stateIndex, LocalVariableBinding secretLocal);

@@ -79,7 +79,7 @@ public class HierarchyResolver implements ITypeRequestor {
 	private CompilerOptions options;
 	HierarchyBuilder builder;
 	private ReferenceBinding[] typeBindings;
-	private BindingMap<IGenericType> bindingMap = new BindingMap<>();
+	private final BindingMap<IGenericType> bindingMap = new BindingMap<>();
 
 	private int typeIndex;
 	private IGenericType[] typeModels;
@@ -109,8 +109,6 @@ public HierarchyResolver(LookupEnvironment lookupEnvironment, HierarchyBuilder b
 
 /**
  * Add an additional binary type
- * @param binaryType
- * @param packageBinding
  */
 @Override
 public void accept(IBinaryType binaryType, PackageBinding packageBinding, AccessRestriction accessRestriction) {
@@ -137,7 +135,6 @@ private void sanitizeBinaryType(IGenericType binaryType) {
 
 /**
  * Add an additional compilation unit.
- * @param sourceUnit
  */
 @Override
 public void accept(ICompilationUnit sourceUnit, AccessRestriction accessRestriction) {
@@ -169,8 +166,6 @@ private Parser basicParser() {
 
 /**
  * Add additional source types
- * @param sourceTypes
- * @param packageBinding
  */
 @Override
 public void accept(ISourceType[] sourceTypes, PackageBinding packageBinding, AccessRestriction accessRestriction) {
@@ -625,7 +620,6 @@ private void reset(){
  * Resolve the supertypes for the supplied source type.
  * Inform the requestor of the resolved supertypes using:
  *    connect(ISourceType suppliedType, IGenericType superclass, IGenericType[] superinterfaces)
- * @param suppliedType
  */
 public void resolve(IGenericType suppliedType) {
 	try {
@@ -687,9 +681,6 @@ public void resolve(IGenericType suppliedType) {
  * Also inform the requestor of the supertypes of each
  * additional requested super type which is also a source type
  * instead of a binary type.
- * @param openables
- * @param localTypes
- * @param monitor
  */
 public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor monitor) {
 	SubMonitor subMonitor = SubMonitor.convert(monitor, 3);
@@ -913,8 +904,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 
 	} catch (ClassCastException e){ // work-around for 1GF5W1S - can happen in case duplicates are fed to the hierarchy with binaries hiding sources
 	} catch (AbortCompilation e) { // ignore this exception for now since it typically means we cannot find java.lang.Object
-		if (TypeHierarchy.DEBUG)
-			e.printStackTrace();
+		if (TypeHierarchy.DEBUG) {
+			JavaModelManager.trace("", e); //$NON-NLS-1$
+		}
 	} finally {
 		reset();
 	}

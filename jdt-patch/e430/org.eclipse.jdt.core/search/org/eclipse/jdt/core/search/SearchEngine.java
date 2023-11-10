@@ -110,7 +110,7 @@ public class SearchEngine {
 	}
 
 	// Search engine now uses basic engine functionalities
-	private BasicSearchEngine basicEngine;
+	private final BasicSearchEngine basicEngine;
 
 	/**
 	 * Creates a new search engine.
@@ -382,7 +382,6 @@ public class SearchEngine {
 	 * files of this package fragment will be included. Subpackages will NOT be
 	 * included.</p>
 	 *
-	 * @param excludeTestCode
 	 * @param elements the Java elements the scope is limited to
 	 * @param includeMask the bit-wise OR of all include types of interest
 	 * @return a new Java search scope

@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -634,16 +636,16 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 */
 	protected void postAction(IPostAction action, int insertionMode) {
 		if (POST_ACTION_VERBOSE) {
-			System.out.print("(" + Thread.currentThread() + ") [JavaModelOperation.postAction(IPostAction, int)] Posting action " + action.getID()); //$NON-NLS-1$ //$NON-NLS-2$
+			trace("(" + Thread.currentThread() + ") [JavaModelOperation.postAction(IPostAction, int)] Posting action " + action.getID()); //$NON-NLS-1$ //$NON-NLS-2$
 			switch(insertionMode) {
 				case REMOVEALL_APPEND:
-					System.out.println(" (REMOVEALL_APPEND)"); //$NON-NLS-1$
+					trace(" (REMOVEALL_APPEND)"); //$NON-NLS-1$
 					break;
 				case KEEP_EXISTING:
-					System.out.println(" (KEEP_EXISTING)"); //$NON-NLS-1$
+					trace(" (KEEP_EXISTING)"); //$NON-NLS-1$
 					break;
 				case APPEND:
-					System.out.println(" (APPEND)"); //$NON-NLS-1$
+					trace(" (APPEND)"); //$NON-NLS-1$
 					break;
 			}
 		}
@@ -700,7 +702,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 */
 	protected void removeAllPostAction(String actionID) {
 		if (POST_ACTION_VERBOSE) {
-			System.out.println("(" + Thread.currentThread() + ") [JavaModelOperation.removeAllPostAction(String)] Removing actions " + actionID); //$NON-NLS-1$ //$NON-NLS-2$
+			trace("(" + Thread.currentThread() + ") [JavaModelOperation.removeAllPostAction(String)] Removing actions " + actionID); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		JavaModelOperation topLevelOp = (JavaModelOperation)getCurrentOperationStack().get(0);
@@ -828,7 +830,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		while (this.actionsStart <= this.actionsEnd) {
 			IPostAction postAction = this.actions[this.actionsStart++];
 			if (POST_ACTION_VERBOSE) {
-				System.out.println("(" + Thread.currentThread() + ") [JavaModelOperation.runPostActions()] Running action " + postAction.getID()); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("(" + Thread.currentThread() + ") [JavaModelOperation.runPostActions()] Running action " + postAction.getID()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			postAction.run();
 		}

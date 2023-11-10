@@ -37,7 +37,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 
 	private VariableDeclaration variableDeclaration;
 	private Type currentType;
-	private BindingResolver resolver;
+	private final BindingResolver resolver;
 	private int dimensions;
 	private RecoveredTypeBinding innerTypeBinding;
 	private ITypeBinding[] typeArguments;

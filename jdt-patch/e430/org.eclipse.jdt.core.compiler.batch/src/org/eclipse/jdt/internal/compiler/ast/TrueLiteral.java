@@ -21,9 +21,9 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class TrueLiteral extends MagicLiteral {
-	
+
 	static final char[] source = {'t' , 'r' , 'u' , 'e'};
-	
+
 public TrueLiteral(int s , int e) {
 	super(s,e);
 }
@@ -67,9 +67,6 @@ public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStr
 public TypeBinding literalType(BlockScope scope) {
 	return TypeBinding.BOOLEAN;
 }
-/**
- *
- */
 @Override
 public char[] source() {
 	return source;

@@ -532,8 +532,8 @@ class MethodBinding implements IMethodBinding {
 	 */
 	static class LambdaMethod extends MethodBinding {
 
-		private MethodBinding implementation;
-		private IBinding declaringMember;
+		private final MethodBinding implementation;
+		private final IBinding declaringMember;
 		private IVariableBinding[] syntheticOuterLocalVariables;
 
 		public LambdaMethod(DefaultBindingResolver resolver,

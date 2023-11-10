@@ -14,6 +14,7 @@
 package org.eclipse.jdt.internal.core.search.matching;
 
 import static java.util.stream.Collectors.joining;
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ import org.eclipse.jdt.internal.core.JrtPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.builder.ClasspathLocation;
+import org.eclipse.jdt.internal.core.search.processing.JobManager;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /*
@@ -86,9 +88,9 @@ public JavaSearchNameEnvironment(IJavaProject javaProject, org.eclipse.jdt.core.
 
 	long start = 0;
 	if (NameLookup.VERBOSE) {
-		Util.verbose(" BUILDING JavaSearchNameEnvironment");  //$NON-NLS-1$
-		Util.verbose(" -> project: " + javaProject);  //$NON-NLS-1$
-		Util.verbose(" -> working copy size: " + (copies == null ? 0 : copies.length));  //$NON-NLS-1$
+		trace(" BUILDING JavaSearchNameEnvironment");  //$NON-NLS-1$
+		trace(" -> project: " + javaProject);  //$NON-NLS-1$
+		trace(" -> working copy size: " + (copies == null ? 0 : copies.length));  //$NON-NLS-1$
 		start = System.currentTimeMillis();
 	}
 
@@ -109,7 +111,7 @@ public JavaSearchNameEnvironment(IJavaProject javaProject, org.eclipse.jdt.core.
 			 */
 			//throw new IllegalArgumentException("Missing source folder for searching working copies: " + javaProject); //$NON-NLS-1$
 		    if (NameLookup.VERBOSE) {
-				Util.verbose(" -> ignoring working copies; no ClasspathSourceDirectory on project classpath ");  //$NON-NLS-1$
+				trace(" -> ignoring working copies; no ClasspathSourceDirectory on project classpath ");  //$NON-NLS-1$
 		    }
 		} else {
 			for (String qualifiedMainTypeName : this.workingCopies.keySet()) {
@@ -126,9 +128,9 @@ public JavaSearchNameEnvironment(IJavaProject javaProject, org.eclipse.jdt.core.
 
 
     if (NameLookup.VERBOSE) {
-		Util.verbose(" -> pkg roots size: " + (this.locationSet == null ? 0 : this.locationSet.size()));  //$NON-NLS-1$
-		Util.verbose(" -> pkgs size: " + this.packageNameToClassPathLocations.size());  //$NON-NLS-1$
-        Util.verbose(" -> spent: " + (System.currentTimeMillis() - start) + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> pkg roots size: " + (this.locationSet == null ? 0 : this.locationSet.size()));  //$NON-NLS-1$
+		trace(" -> pkgs size: " + this.packageNameToClassPathLocations.size());  //$NON-NLS-1$
+        trace(" -> spent: " + (System.currentTimeMillis() - start) + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
     }
 }
 
@@ -168,8 +170,8 @@ protected /* visible for testing only */ void addProjectClassPath(JavaProject ja
 void addProjectClassPath(JavaProject javaProject, boolean onlyExported) {
 	long start = 0;
 	if (NameLookup.VERBOSE) {
-		Util.verbose(" EXTENDING JavaSearchNameEnvironment");  //$NON-NLS-1$
-		Util.verbose(" -> project: " + javaProject);  //$NON-NLS-1$
+		trace(" EXTENDING JavaSearchNameEnvironment");  //$NON-NLS-1$
+		trace(" -> project: " + javaProject);  //$NON-NLS-1$
 		start = System.currentTimeMillis();
 	}
 
@@ -177,9 +179,9 @@ void addProjectClassPath(JavaProject javaProject, boolean onlyExported) {
 	if (locations != null) this.locationSet.addAll(locations);
 
     if (NameLookup.VERBOSE) {
-		Util.verbose(" -> pkg roots size: " + (this.locationSet == null ? 0 : this.locationSet.size()));  //$NON-NLS-1$
-		Util.verbose(" -> pkgs size: " + this.packageNameToClassPathLocations.size());  //$NON-NLS-1$
-        Util.verbose(" -> spent: " + (System.currentTimeMillis() - start) + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> pkg roots size: " + (this.locationSet == null ? 0 : this.locationSet.size()));  //$NON-NLS-1$
+		trace(" -> pkgs size: " + this.packageNameToClassPathLocations.size());  //$NON-NLS-1$
+        trace(" -> spent: " + (System.currentTimeMillis() - start) + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
     }
 }
 
@@ -199,7 +201,9 @@ private LinkedHashSet<ClasspathLocation> computeClasspathLocations(JavaProject j
 	try {
 		projectModule = javaProject.getModuleDescription();
 	} catch (JavaModelException e) {
-		// e.printStackTrace(); // ignore
+		if (JobManager.VERBOSE) {
+			trace("", e); //$NON-NLS-1$
+		}
 	}
 
 	LinkedHashSet<ClasspathLocation> locations = new LinkedHashSet<ClasspathLocation>();
@@ -399,9 +403,9 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 			if (!answer.ignoreIfBetter()) {
 				if (answer.isBetter(suggestedAnswer)) {
 					if(NameLookup.VERBOSE) {
-						Util.verbose(" Result for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-						Util.verbose(" -> answer: " + answer); //$NON-NLS-1$
-						Util.verbose(" -> location: " + location); //$NON-NLS-1$
+						trace(" Result for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+						trace(" -> answer: " + answer); //$NON-NLS-1$
+						trace(" -> location: " + location); //$NON-NLS-1$
 					}
 					return answer;
 				}
@@ -409,9 +413,9 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 				// remember suggestion and keep looking
 				suggestedAnswer = answer;
 				if(NameLookup.VERBOSE) {
-					Util.verbose(" Potential answer for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-					Util.verbose(" -> answer: " + answer); //$NON-NLS-1$
-					Util.verbose(" -> location: " + location); //$NON-NLS-1$
+					trace(" Potential answer for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+					trace(" -> answer: " + answer); //$NON-NLS-1$
+					trace(" -> location: " + location); //$NON-NLS-1$
 				}
 			}
 		}
@@ -420,7 +424,7 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		// no better answer was found
 		return suggestedAnswer;
 	if(NameLookup.VERBOSE) {
-		Util.verbose(" NO result for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		trace(" NO result for JavaSearchNameEnvironment#findClass( " + qualifiedTypeName + ", " + CharOperation.charToString(typeName) + ", " + strategy + ", " + moduleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	}
 	return null;
 }
@@ -436,18 +440,18 @@ protected /* visible for testing only */ Iterable<ClasspathLocation> getLocation
 		LinkedHashSet<ClasspathLocation> cpls = this.packageNameToClassPathLocations.get(qualifiedPackageName);
 		if(cpls == null) {
 			if(NameLookup.VERBOSE) {
-				Util.verbose(" No result for JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				trace(" No result for JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 			return Collections.emptySet();
 		}
 		if(NameLookup.VERBOSE) {
-			Util.verbose(" Result for JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			Util.verbose(" -> " + cpls.stream().map(Object::toString).collect(joining(" | "))); //$NON-NLS-1$ //$NON-NLS-2$
+			trace(" Result for JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			trace(" -> " + cpls.stream().map(Object::toString).collect(joining(" | "))); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return cpls;
 	}
 	if(NameLookup.VERBOSE) {
-		Util.verbose(" Potentially expensive search in JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		trace(" Potentially expensive search in JavaSearchNameEnvironment#getLocationsFor( " + moduleName + ", " + qualifiedPackageName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	return this.locationSet;
 }
@@ -502,8 +506,8 @@ public char[][] getModulesDeclaringPackage(char[][] packageName, char[] moduleNa
 		}
 	}
 	if(NameLookup.VERBOSE) {
-		Util.verbose(" Result for JavaSearchNameEnvironment#getModulesDeclaringPackage( " + qualifiedPackageName + ", " + CharOperation.charToString(moduleName) + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		Util.verbose(" -> " + CharOperation.toString(moduleNames)); //$NON-NLS-1$
+		trace(" Result for JavaSearchNameEnvironment#getModulesDeclaringPackage( " + qualifiedPackageName + ", " + CharOperation.charToString(moduleName) + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		trace(" -> " + CharOperation.toString(moduleNames)); //$NON-NLS-1$
 	}
 	return moduleNames == CharOperation.NO_CHAR_CHAR ? null : moduleNames;
 }
@@ -540,8 +544,8 @@ public boolean hasCompilationUnit(char[][] qualifiedPackageName, char[] moduleNa
 			if (strategy.matches(location, ClasspathLocation::hasModule) )
 				if (location.hasCompilationUnit(qualifiedPackageNameString, moduleNameString)) {
 					if(NameLookup.VERBOSE) {
-						Util.verbose(" Result for JavaSearchNameEnvironment#hasCompilationUnit( " + qualifiedPackageNameString + ", " + moduleNameString + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						Util.verbose(" -> " + location); //$NON-NLS-1$
+						trace(" Result for JavaSearchNameEnvironment#hasCompilationUnit( " + qualifiedPackageNameString + ", " + moduleNameString + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						trace(" -> " + location); //$NON-NLS-1$
 					}
 					return true;
 				}
@@ -592,7 +596,6 @@ private static boolean isComplianceJava9OrHigher(IJavaProject javaProject) {
 
 /**
  * Computes matching module for given {@link PackageFragmentRoot}
- * @param root
  * @param defaultModule project module or {@code null}
  * @return may return {@code null}
  */

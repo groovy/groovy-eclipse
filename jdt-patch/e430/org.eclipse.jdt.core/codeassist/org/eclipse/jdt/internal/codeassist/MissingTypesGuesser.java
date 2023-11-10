@@ -45,7 +45,7 @@ public class MissingTypesGuesser extends ASTVisitor {
 	}
 
 	private static class ResolutionCleaner extends ASTVisitor {
-		private HashtableOfObjectToInt bitsMap = new HashtableOfObjectToInt();
+		private final HashtableOfObjectToInt bitsMap = new HashtableOfObjectToInt();
 		private boolean firstCall = true;
 
 		public ResolutionCleaner(){
@@ -167,8 +167,8 @@ public class MissingTypesGuesser extends ASTVisitor {
 
 	}
 
-	private CompletionEngine.CompletionProblemFactory problemFactory ;
-	private  SearchableEnvironment nameEnvironment;
+	private final CompletionEngine.CompletionProblemFactory problemFactory ;
+	private final  SearchableEnvironment nameEnvironment;
 
 	private HashMap substituedTypes;
 	private HashMap originalTypes;

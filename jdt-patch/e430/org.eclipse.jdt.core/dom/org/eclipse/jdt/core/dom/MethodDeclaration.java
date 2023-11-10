@@ -343,7 +343,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * (element type: {@link SingleVariableDeclaration}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList parameters =
+	private final ASTNode.NodeList parameters =
 		new ASTNode.NodeList(PARAMETERS_PROPERTY);
 
 	/**

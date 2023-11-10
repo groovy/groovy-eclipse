@@ -26,8 +26,8 @@ import org.eclipse.jdt.core.JavaModelException;
 @SuppressWarnings("rawtypes")
 public class ExternalFolderChange {
 
-	private JavaProject project;
-	private IClasspathEntry[] oldResolvedClasspath;
+	private final JavaProject project;
+	private final IClasspathEntry[] oldResolvedClasspath;
 
 	public ExternalFolderChange(JavaProject project, IClasspathEntry[] oldResolvedClasspath) {
 		this.project = project;

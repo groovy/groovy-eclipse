@@ -638,7 +638,6 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * @return the {@link IModuleDescription} this project owns.
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource
-	 * @throws JavaModelException
 	 * @since 3.20
 	 */
 	IModuleDescription getOwnModuleDescription() throws JavaModelException;
@@ -1150,7 +1149,6 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * {@link #setRawClasspath(IClasspathEntry[], IClasspathEntry[], IPath, IProgressMonitor)}
 	 * If the client has not stored any referenced entries for this project, an empty array is returned.
 	 *
-	 * @throws JavaModelException
 	 * @return an array of referenced classpath entries stored for this java project or an empty array if none
 	 * 			stored earlier.
 	 * @since 3.6
@@ -1248,7 +1246,6 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * @param path
 	 *            IPath
 	 * @return the classpath entry or <code>null</code>.
-	 * @throws JavaModelException
 	 * @since 3.14
 	 */
 	IClasspathEntry getClasspathEntryFor(IPath path) throws JavaModelException;

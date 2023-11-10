@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -25,7 +27,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.core.index.DiskIndex;
 import org.eclipse.jdt.internal.core.search.processing.JobManager;
-import org.eclipse.jdt.internal.core.util.Util;
 
 public class IndexNamesRegistry {
 	private final File savedIndexNamesFile;
@@ -83,7 +84,7 @@ public class IndexNamesRegistry {
 			}
 		} catch (IOException ignored) {
 			if (JobManager.VERBOSE)
-				Util.verbose("Failed to read saved index file names"); //$NON-NLS-1$
+				trace("Failed to read saved index file names"); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -100,7 +101,7 @@ public class IndexNamesRegistry {
 		}
 
 		subMonitor.setWorkRemaining(newContents.length);
-		
+
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.savedIndexNamesFile))) {
 			writer.write(DiskIndex.SIGNATURE);
 			writer.write('+');
@@ -113,7 +114,7 @@ public class IndexNamesRegistry {
 			}
 		} catch (IOException ignored) {
 			if (JobManager.VERBOSE)
-				Util.verbose("Failed to write saved index file names", System.err); //$NON-NLS-1$
+				trace("Failed to write saved index file names"); //$NON-NLS-1$
 		}
 
 		synchronized (this.queueMutex) {
@@ -136,6 +137,6 @@ public class IndexNamesRegistry {
 		synchronized (this.queueMutex) {
 			this.pendingWrite = null;
 		}
-		this.savedIndexNamesFile.delete(); 
+		this.savedIndexNamesFile.delete();
 	}
 }

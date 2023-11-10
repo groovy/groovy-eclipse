@@ -335,7 +335,7 @@ public class ExternalAnnotationProvider {
 	 */
 	class DispatchingAnnotationWalker implements ITypeAnnotationWalker {
 
-		private LookupEnvironment environment;
+		private final LookupEnvironment environment;
 		private TypeParametersAnnotationWalker typeParametersWalker;
 
 		public DispatchingAnnotationWalker(LookupEnvironment environment) {

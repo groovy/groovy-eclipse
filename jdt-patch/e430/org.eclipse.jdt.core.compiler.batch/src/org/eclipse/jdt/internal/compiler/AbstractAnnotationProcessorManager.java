@@ -38,7 +38,6 @@ public abstract class AbstractAnnotationProcessorManager {
 	 * @param compiler the given compiler
 	 * @param compilationUnitLocator the given compilation unit locator
 	 * @param javaProject the given java project
-	 * @param isTestCode 
 	 */
 	public abstract void configureFromPlatform(Compiler compiler, Object compilationUnitLocator, Object javaProject, boolean isTestCode);
 

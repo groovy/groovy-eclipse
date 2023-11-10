@@ -15,6 +15,7 @@ package org.eclipse.jdt.internal.core;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -22,6 +23,7 @@ import org.eclipse.jdt.core.compiler.IScanner;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.JavaFeature;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.core.util.MementoTokenizer;
 
@@ -394,20 +396,47 @@ public boolean isBinary() {
 }
 protected boolean isMainMethod(IMethod method) throws JavaModelException {
 	if ("main".equals(method.getElementName()) && Signature.SIG_VOID.equals(method.getReturnType())) { //$NON-NLS-1$
-		int flags= method.getFlags();
+		int flags = method.getFlags();
 		IType declaringType = null;
 		if (Flags.isStatic(flags) &&
 				(Flags.isPublic(flags) ||
 						((declaringType = getDeclaringType()) != null && declaringType.isInterface()))) {
-			String[] paramTypes= method.getParameterTypes();
+			String[] paramTypes = method.getParameterTypes();
 			if (paramTypes.length == 1) {
-				String typeSignature=  Signature.toString(paramTypes[0]);
-				return "String[]".equals(Signature.getSimpleName(typeSignature)); //$NON-NLS-1$
+				return isStringArrayParameter(paramTypes[0]);
 			}
 		}
 	}
 	return false;
 }
+
+protected boolean isMainMethodCandidate(IMethod method) throws JavaModelException {
+	Map<String, String> options = method.getJavaProject().getOptions(true);
+	if (JavaFeature.UNNAMMED_CLASSES_AND_INSTANCE_MAIN_METHODS.isSupported(
+				options.get(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM),
+				JavaCore.ENABLED.equals(options.get(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES)))) {
+		if ("main".equals(method.getElementName()) && Signature.SIG_VOID.equals(method.getReturnType())) { //$NON-NLS-1$
+			int flags = method.getFlags();
+			if (!Flags.isPrivate(flags)) {
+				String[] paramTypes = method.getParameterTypes();
+				if (paramTypes.length == 1) {
+					return isStringArrayParameter(paramTypes[0]);
+				} else if (paramTypes.length == 0) {
+					return true;
+				}
+			}
+		}
+		return false;
+	} else {
+		return isMainMethod(method);
+	}
+}
+
+private boolean isStringArrayParameter(String paramType) {
+	String typeSignature = Signature.toString(paramType);
+    return "String[]".equals(Signature.getSimpleName(typeSignature)); //$NON-NLS-1$
+}
+
 /**
  * @see IJavaElement
  */
@@ -415,8 +444,6 @@ protected boolean isMainMethod(IMethod method) throws JavaModelException {
 public boolean isReadOnly() {
 	return getClassFile() != null;
 }
-/**
- */
 @Override
 public String readableName() {
 

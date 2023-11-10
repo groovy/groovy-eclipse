@@ -21,7 +21,7 @@ import org.eclipse.jdt.core.util.IVerificationTypeInfo;
 
 public class VerificationInfo extends ClassFileStruct implements IVerificationTypeInfo {
 
-	private int tag;
+	private final int tag;
 	private int offset;
 	private int constantPoolIndex;
 	private char[] classTypeName;

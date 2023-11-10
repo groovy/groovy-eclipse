@@ -144,7 +144,7 @@ public class VariableDeclarationExpression extends Expression {
 	 * The list of variable declaration fragments (element type:
 	 * {@link VariableDeclarationFragment}).  Defaults to an empty list.
 	 */
-	private ASTNode.NodeList variableDeclarationFragments =
+	private final ASTNode.NodeList variableDeclarationFragments =
 		new ASTNode.NodeList(FRAGMENTS_PROPERTY);
 
 	/**

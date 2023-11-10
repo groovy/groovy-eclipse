@@ -257,7 +257,6 @@ public interface ICodeAssist {
 	 *  <li> The range specified is not within this element's
 	 *      source range (INDEX_OUT_OF_BOUNDS)
 	 * </ul>
-	 *
 	 */
 	IJavaElement[] codeSelect(int offset, int length) throws JavaModelException;
 	/**

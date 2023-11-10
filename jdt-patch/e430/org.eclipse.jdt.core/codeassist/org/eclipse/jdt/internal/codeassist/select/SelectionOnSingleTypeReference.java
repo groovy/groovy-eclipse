@@ -22,7 +22,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *	class X extends [start]Object[end]
  *
  *	---> class X extends <SelectOnType:Object>
- *
  */
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;

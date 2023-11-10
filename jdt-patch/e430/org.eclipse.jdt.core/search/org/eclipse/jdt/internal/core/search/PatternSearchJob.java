@@ -14,6 +14,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -122,11 +124,11 @@ public boolean execute(IProgressMonitor progressMonitor) {
 		if (JobManager.VERBOSE) {
 			if (this.parallel) {
 				long wallClockTime = System.currentTimeMillis() - startTime;
-				Util.verbose("-> execution time: " + wallClockTime + "ms - " + this);//$NON-NLS-1$//$NON-NLS-2$
-				Util.verbose("-> cumulative execution time (" + ForkJoinPool.getCommonPoolParallelism() + "): " //$NON-NLS-1$//$NON-NLS-2$
+				trace("-> execution time: " + wallClockTime + "ms - " + this);//$NON-NLS-1$//$NON-NLS-2$
+				trace("-> cumulative execution time (" + ForkJoinPool.getCommonPoolParallelism() + "): " //$NON-NLS-1$//$NON-NLS-2$
 						+ this.executionTime.get() + "ms - " + this);//$NON-NLS-1$
 			} else {
-				Util.verbose("-> execution time: " + this.executionTime.get() + "ms - " + this);//$NON-NLS-1$//$NON-NLS-2$
+				trace("-> execution time: " + this.executionTime.get() + "ms - " + this);//$NON-NLS-1$//$NON-NLS-2$
 			}
 		}
 		return isComplete;
@@ -243,7 +245,9 @@ public boolean search(Index index, IndexQueryRequestor queryRequestor, IProgress
 		return COMPLETE;
 	} catch (IOException e) {
 		if (e instanceof java.io.EOFException) {
-			e.printStackTrace();
+			if(JavaModelManager.VERBOSE) {
+				trace("", e); //$NON-NLS-1$
+			}
 		} else {
 			Throwable cause = e.getCause();
 			if (cause != null) {
@@ -336,7 +340,7 @@ static class IndexMatch {
 
 static class ParallelSearchMonitor extends NullProgressMonitor {
 	private volatile boolean canceled;
-	private IProgressMonitor original;
+	private final IProgressMonitor original;
 
 	public ParallelSearchMonitor(IProgressMonitor original) {
 		this.original = original;

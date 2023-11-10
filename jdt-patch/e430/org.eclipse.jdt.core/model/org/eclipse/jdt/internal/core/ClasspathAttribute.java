@@ -18,8 +18,8 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 public class ClasspathAttribute implements IClasspathAttribute {
 
-	private String name;
-	private String value;
+	private final String name;
+	private final String value;
 
 	public ClasspathAttribute(String name, String value) {
 		this.name = name;

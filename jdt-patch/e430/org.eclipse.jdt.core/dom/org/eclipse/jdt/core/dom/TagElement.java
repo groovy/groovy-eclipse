@@ -308,7 +308,7 @@ public final class TagElement extends AbstractTagElement {
 	 * The list of doc elements (element type: {@link TagProperty}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList tagProperties =
+	private final ASTNode.NodeList tagProperties =
 		new ASTNode.NodeList(TAG_PROPERTIES_PROPERTY);
 
 	/**

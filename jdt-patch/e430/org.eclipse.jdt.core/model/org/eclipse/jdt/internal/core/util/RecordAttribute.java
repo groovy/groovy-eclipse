@@ -23,7 +23,7 @@ import org.eclipse.jdt.core.util.IRecordAttribute;
 public class RecordAttribute extends ClassFileAttribute implements IRecordAttribute {
 	private static final IComponentInfo[] NO_ENTRIES = new IComponentInfo[0];
 
-	private int nComponents;
+	private final int nComponents;
 	private IComponentInfo[] entries;
 
 	public RecordAttribute(

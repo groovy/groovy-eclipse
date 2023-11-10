@@ -38,13 +38,13 @@ public class CompilationUnit implements ICompilationUnit {
 		// == Main.NONE: absorbent element, do not output class files;
 		// else: use as the path of the directory into which class files must
 		//       be written.
-	private boolean ignoreOptionalProblems;
+	private final boolean ignoreOptionalProblems;
 	private ModuleBinding moduleBinding;
 	/**
 	 * annotation path can only be retrieved once the qualified type name is known.
 	 * This is the provided function for computing the annotation path from that type name.
 	 */
-	private Function<String,String> annotationPathProvider;
+	private final Function<String,String> annotationPathProvider;
 
 public CompilationUnit(char[] contents, String fileName, String encoding) {
 	this(contents, fileName, encoding, null);

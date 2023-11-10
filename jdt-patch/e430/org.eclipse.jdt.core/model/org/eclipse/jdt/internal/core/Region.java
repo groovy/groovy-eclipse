@@ -90,7 +90,7 @@ public class Region implements IRegion {
 		}
 	}
 
-	private Node root = new Node();
+	private final Node root = new Node();
 
 	@Override
 	public void add(IJavaElement element) {

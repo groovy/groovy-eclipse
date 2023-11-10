@@ -595,8 +595,8 @@ static class JavacCompiler {
 	}
 }
 static class JavaRuntime {
-	private String rootDirectoryPath;
-	private String javaPathName;
+	private final String rootDirectoryPath;
+	private final String javaPathName;
 	String version; // not intended to be modified - one of JavaCore.VERSION_1_*
 	String rawVersion; // not intended to be modified - more complete version name
 	int minor;

@@ -14,6 +14,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -51,7 +53,6 @@ import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
 import org.eclipse.jdt.internal.core.search.matching.ModulePattern;
 import org.eclipse.jdt.internal.core.search.processing.JobManager;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Selects the indexes that correspond to projects in a given search scope
@@ -323,7 +324,7 @@ public IndexLocation[] getIndexLocations() {
 					.toArray(IndexLocation[]::new);
 			if (filtered.length == 0) {
 				if (JobManager.VERBOSE) {
-					Util.verbose(String.format(
+					trace(String.format(
 							"-> current index selection and qualifying indexes has no intersection, " + //$NON-NLS-1$
 									"to keep search backward compatible using selected index locations - %s", //$NON-NLS-1$
 							this.toString()));
@@ -333,7 +334,7 @@ public IndexLocation[] getIndexLocations() {
 		}
 	}
 	if (JobManager.VERBOSE) {
-		Util.verbose(String.format("-> selected %s indexes out of total indexes %s after qualify filtering - %s",  //$NON-NLS-1$
+		trace(String.format("-> selected %s indexes out of total indexes %s after qualify filtering - %s",  //$NON-NLS-1$
 				filtered.length, this.indexLocations.length, this.toString()));
 	}
 	return filtered;

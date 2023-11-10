@@ -257,8 +257,6 @@ public abstract class AbstractMethodDeclaration
 
 	/**
 	 * Bytecode generation for a method
-	 * @param classScope
-	 * @param classFile
 	 */
 	public void generateCode(ClassScope classScope, ClassFile classFile) {
 
@@ -487,8 +485,6 @@ public abstract class AbstractMethodDeclaration
 
 	/**
 	 * Fill up the method body with statement
-	 * @param parser
-	 * @param unit
 	 */
 	public abstract void parseStatements(Parser parser, CompilationUnitDeclaration unit);
 
@@ -651,14 +647,15 @@ public abstract class AbstractMethodDeclaration
 			// Set javadoc visibility
 			int javadocVisibility = this.binding.modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
 			ClassScope classScope = this.scope.classScope();
-			ProblemReporter reporter = this.scope.problemReporter();
-			int severity = reporter.computeSeverity(IProblem.JavadocMissing);
-			if (severity != ProblemSeverities.Ignore) {
-				if (classScope != null) {
-					javadocVisibility = Util.computeOuterMostVisibility(classScope.referenceType(), javadocVisibility);
+			try (ProblemReporter reporter = this.scope.problemReporter()) {
+				int severity = reporter.computeSeverity(IProblem.JavadocMissing);
+				if (severity != ProblemSeverities.Ignore) {
+					if (classScope != null) {
+						javadocVisibility = Util.computeOuterMostVisibility(classScope.referenceType(), javadocVisibility);
+					}
+					int javadocModifiers = (this.binding.modifiers & ~ExtraCompilerModifiers.AccVisibilityMASK) | javadocVisibility;
+					reporter.javadocMissing(this.sourceStart, this.sourceEnd, severity, javadocModifiers);
 				}
-				int javadocModifiers = (this.binding.modifiers & ~ExtraCompilerModifiers.AccVisibilityMASK) | javadocVisibility;
-				reporter.javadocMissing(this.sourceStart, this.sourceEnd, severity, javadocModifiers);
 			}
 		}
 	}

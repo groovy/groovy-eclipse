@@ -45,13 +45,12 @@ import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
  * IJavaSearchScope scope,
  * MethodNameRequestor methodRequestor,
  * int waitingPolicy,
- * IProgressMonitor progressMonitor)}.  
- *
+ * IProgressMonitor progressMonitor)}.
  */
 public class MethodNameRequestorWrapper implements IRestrictedAccessMethodRequestor {
-	
+
 	MethodNameRequestor requestor;
-	
+
 	public MethodNameRequestorWrapper(MethodNameRequestor requestor) {
 		this.requestor = requestor;
 	}
@@ -61,7 +60,7 @@ public class MethodNameRequestorWrapper implements IRestrictedAccessMethodReques
 			char[] simpleTypeName, int typeModifiers, char[] packageName, char[] signature, char[][] parameterTypes,
 			char[][] parameterNames, char[] returnType, int modifiers, String path,
 			AccessRestriction access, int methodIndex) {
-		this.requestor.acceptMethod(methodName, parameterCount, declaringQualification, simpleTypeName, typeModifiers, 
+		this.requestor.acceptMethod(methodName, parameterCount, declaringQualification, simpleTypeName, typeModifiers,
 				packageName, signature, parameterTypes, parameterNames, returnType, modifiers, path, methodIndex);
 	}
 }

@@ -57,9 +57,9 @@ import java.util.stream.Stream;
 public class ClasspathDirectory extends ClasspathLocation {
 
 private Hashtable directoryCache;
-private String[] missingPackageHolder = new String[1];
-private int mode; // ability to only consider one kind of files (source vs. binaries), by default use both
-private String encoding; // only useful if referenced in the source path
+private final String[] missingPackageHolder = new String[1];
+private final int mode; // ability to only consider one kind of files (source vs. binaries), by default use both
+private final String encoding; // only useful if referenced in the source path
 private Hashtable<String, Hashtable<String, String>> packageSecondaryTypes = null;
 Map options;
 
@@ -80,6 +80,9 @@ ClasspathDirectory(File directory, String encoding, int mode,
 	this.encoding = encoding;
 }
 String[] directoryList(String qualifiedPackageName) {
+	if (File.separatorChar != '/' && qualifiedPackageName.indexOf('/') != -1) {
+		qualifiedPackageName = qualifiedPackageName.replace('/', File.separatorChar);
+	}
 	String[] dirList = (String[]) this.directoryCache.get(qualifiedPackageName);
 	if (dirList == this.missingPackageHolder) return null; // package exists in another classpath directory or jar
 	if (dirList != null) return dirList;
@@ -146,7 +149,7 @@ private NameEnvironmentAnswer findClassInternal(char[] typeName, String qualifie
 		try {
 			ClassFileReader reader = ClassFileReader.read(this.path + qualifiedBinaryFileName);
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=321115, package names are to be treated case sensitive.
-			String typeSearched = qualifiedPackageName.length() > 0 ? 
+			String typeSearched = qualifiedPackageName.length() > 0 ?
 					qualifiedPackageName.replace(File.separatorChar, '/') + "/" + fileName //$NON-NLS-1$
 					: fileName;
 			if (!CharOperation.equals(reader.getName(), typeSearched.toCharArray())) {
@@ -205,8 +208,8 @@ private Hashtable<String, String> getSecondaryTypes(String qualifiedPackageName)
 	Hashtable<String, String> packageEntry = new Hashtable<>();
 
 	String[] dirList = (String[]) this.directoryCache.get(qualifiedPackageName);
-	if (dirList == this.missingPackageHolder // package exists in another classpath directory or jar 
-			|| dirList == null) 
+	if (dirList == this.missingPackageHolder // package exists in another classpath directory or jar
+			|| dirList == null)
 		return packageEntry;
 
 	File dir = new File(this.path + qualifiedPackageName);
@@ -221,7 +224,7 @@ private Hashtable<String, String> getSecondaryTypes(String qualifiedPackageName)
 		if (!(s.endsWith(SUFFIX_STRING_java) || s.endsWith(SUFFIX_STRING_JAVA))) continue;
 		CompilationUnit cu = new CompilationUnit(null, s, this.encoding, this.destinationPath);
 		CompilationResult compilationResult = new CompilationResult(s.toCharArray(), 1, 1, 10);
-		ProblemReporter problemReporter = 
+		ProblemReporter problemReporter =
 				new ProblemReporter(
 					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 					new CompilerOptions(this.options),
@@ -235,14 +238,14 @@ private Hashtable<String, String> getSecondaryTypes(String qualifiedPackageName)
 		for (int j = 0, k = types.length; j < k; j++) {
 			TypeDeclaration type = types[j];
 			char[] name = type.isSecondary() ? type.name : null;  // add only secondary types
-			if (name != null) 
+			if (name != null)
 				packageEntry.put(new String(name), s);
 		}
 	}
 	return packageEntry;
 }
 private NameEnvironmentAnswer findSourceSecondaryType(String typeName, String qualifiedPackageName, String qualifiedBinaryFileName) {
-	
+
 	if (this.packageSecondaryTypes == null) this.packageSecondaryTypes = new Hashtable<>();
 	Hashtable<String, String> packageEntry = this.packageSecondaryTypes.get(qualifiedPackageName);
 	if (packageEntry == null) {

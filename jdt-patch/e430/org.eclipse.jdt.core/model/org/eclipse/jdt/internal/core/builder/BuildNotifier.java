@@ -46,9 +46,9 @@ private static final int millisecondsBeforeCancelAutoBuild = Integer
 		.getInteger("org.eclipse.jdt.MillisecondsBeforeCancelAutoBuild", 1000); //$NON-NLS-1$
 private static final int millisecondsBeforeInterruptAutoBuild = Integer
 		.getInteger("org.eclipse.jdt.MillisecondsBeforeInterruptAutoBuild", 3000); //$NON-NLS-1$
-private BooleanSupplier interruptSupplier;
-private long startTimeNanos;
-private int buildKind;
+private final BooleanSupplier interruptSupplier;
+private final long startTimeNanos;
+private final int buildKind;
 
 public static void resetProblemCounters() {
 	NewErrorCount = 0;

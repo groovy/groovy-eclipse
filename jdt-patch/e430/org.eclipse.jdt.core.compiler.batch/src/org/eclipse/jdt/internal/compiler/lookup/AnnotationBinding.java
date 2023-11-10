@@ -31,8 +31,6 @@ public class AnnotationBinding {
  * Add the standard annotations encoded in the tag bits to the recorded annotations.
  *
  * @param recordedAnnotations existing annotations already created
- * @param annotationTagBits
- * @param env
  * @return the combined list of annotations
  */
 public static AnnotationBinding[] addStandardAnnotations(AnnotationBinding[] recordedAnnotations, long annotationTagBits, LookupEnvironment env) {

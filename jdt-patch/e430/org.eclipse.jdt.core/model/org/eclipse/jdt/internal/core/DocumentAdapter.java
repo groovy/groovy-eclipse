@@ -22,7 +22,7 @@ import org.eclipse.jface.text.Document;
  */
 public class DocumentAdapter extends Document {
 
-	private IBuffer buffer;
+	private final IBuffer buffer;
 
 	public DocumentAdapter(IBuffer buffer) {
 		super(buffer.getContents());

@@ -68,8 +68,6 @@ protected char getHandleMementoDelimiter() {
 public int hashCode() {
 	return Util.combineHashCodes(this.getParent().hashCode(), this.occurrenceCount);
 }
-/**
- */
 @Override
 public String readableName() {
 

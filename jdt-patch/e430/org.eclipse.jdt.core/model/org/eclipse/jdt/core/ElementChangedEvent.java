@@ -95,7 +95,7 @@ public class ElementChangedEvent extends EventObject {
 	 *  - PRE_AUTO_BUILD
 	 *  - POST_RECONCILE
 	 */
-	private int type;
+	private final int type;
 
 	/**
 	 * Creates an new element changed event (based on a <code>IJavaElementDelta</code>).

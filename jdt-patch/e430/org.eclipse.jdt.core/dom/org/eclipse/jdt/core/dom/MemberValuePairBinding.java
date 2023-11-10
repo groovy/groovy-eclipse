@@ -31,7 +31,7 @@ class MemberValuePairBinding implements IMemberValuePairBinding {
 	private static final Object NoValue = new Object();
 	private static final Object[] EmptyArray = new Object[0];
 
-	private ElementValuePair internalPair;
+	private final ElementValuePair internalPair;
 	protected Object value = null;
 	protected BindingResolver bindingResolver;
 

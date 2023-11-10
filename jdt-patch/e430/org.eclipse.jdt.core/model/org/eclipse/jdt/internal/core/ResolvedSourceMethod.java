@@ -19,7 +19,7 @@ package org.eclipse.jdt.internal.core;
  */
 public class ResolvedSourceMethod extends SourceMethod {
 
-	private String uniqueKey;
+	private final String uniqueKey;
 
 	/*
 	 * See class comments.

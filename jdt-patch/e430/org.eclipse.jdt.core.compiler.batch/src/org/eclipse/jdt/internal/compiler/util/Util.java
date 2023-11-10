@@ -554,7 +554,6 @@ public class Util implements SuffixConstants {
 
 	/**
 	 * Returns a one line summary for an exception (extracted from its stacktrace: name + first frame)
-	 * @param exception
 	 * @return one line summary for an exception
 	 */
 	public static String getExceptionSummary(Throwable exception) {
@@ -984,7 +983,6 @@ public class Util implements SuffixConstants {
 	 * @param outputPath the given output directory
 	 * @param relativeFileName the given relative file name
 	 * @param classFile the given classFile to write
-	 *
 	 */
 	public static void writeToDisk(boolean generatePackagesStructure, String outputPath, String relativeFileName, ClassFile classFile) throws IOException {
 		FileOutputStream file = getFileOutputStream(generatePackagesStructure, outputPath, relativeFileName);

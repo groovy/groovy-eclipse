@@ -190,9 +190,6 @@ public IDOMField createField(char[] sourceCode) {
 	this.fNode.normalize(this);
 	return (IDOMField)this.fNode;
 }
-/**
- *
- */
 public IDOMField[] createFields(char[] sourceCode) {
 	initializeBuild(sourceCode, false, false, false);
 	this.fFields= new ArrayList();

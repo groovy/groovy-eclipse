@@ -105,7 +105,7 @@ public class ConstructorInvocation extends Statement {
 	 * The list of argument expressions (element type:
 	 * {@link Expression}). Defaults to an empty list.
 	 */
-	private ASTNode.NodeList arguments =
+	private final ASTNode.NodeList arguments =
 		new ASTNode.NodeList(ARGUMENTS_PROPERTY);
 
 	/**

@@ -696,18 +696,18 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 	}
 	@Override
 	protected void reportTypeArgumentRedundancyProblem(ParameterizedTypeBinding allocationType, final BlockScope scope) {
-		if (checkDiamondOperatorCanbeRemoved(scope)) {
+		if (diamondOperatorCanbeDeployed(scope)) {
 			scope.problemReporter().redundantSpecificationOfTypeArguments(this.type, allocationType.arguments);
 		}
 	}
-	private boolean checkDiamondOperatorCanbeRemoved(final BlockScope scope) {
+	private boolean diamondOperatorCanbeDeployed(final BlockScope scope) {
 		if (this.anonymousType != null &&
 				this.anonymousType.methods != null &&
 				this.anonymousType.methods.length > 0) {
 			//diamond operator is allowed for anonymous types only from java 9
 			if (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK9) return false;
 			for (AbstractMethodDeclaration method : this.anonymousType.methods) {
-				if ( method.binding != null && (method.binding.modifiers & ExtraCompilerModifiers.AccOverriding) == 0)
+				if (method.binding != null && !method.binding.isConstructor() && !method.binding.isPrivate() && (method.binding.modifiers & (ExtraCompilerModifiers.AccOverriding | ExtraCompilerModifiers.AccImplementing)) == 0)
 					return false;
 			}
 		}

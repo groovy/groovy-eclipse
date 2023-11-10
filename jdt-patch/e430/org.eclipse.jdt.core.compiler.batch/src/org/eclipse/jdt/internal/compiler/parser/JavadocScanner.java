@@ -19,9 +19,9 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 public class JavadocScanner extends Scanner{
 
 	public boolean tokenizeSingleQuotes = false;
-	
+
 	public boolean considerRegexInStringLiteral = false;
-	
+
 	public JavadocScanner() {
 		this(false /*comment*/, false /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3 /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
 	}
@@ -71,7 +71,7 @@ public class JavadocScanner extends Scanner{
 			taskPriorities,
 			isTaskCaseSensitive,
 			isPreviewEnabled);
-		
+
 	}
 
 	public JavadocScanner(
@@ -94,7 +94,7 @@ public class JavadocScanner extends Scanner{
 			isTaskCaseSensitive,
 			false);
 	}
-	
+
 	public JavadocScanner(
 			boolean tokenizeComments,
 			boolean tokenizeWhiteSpace,
@@ -144,7 +144,7 @@ public class JavadocScanner extends Scanner{
 				while (this.currentCharacter != '"') {
 					boolean isRegex = false;
 					if (this.currentPosition >= this.eofPosition) {
-						throw new InvalidInputException(UNTERMINATED_STRING);
+						throw unterminatedString();
 					}
 					/**** \r and \n are not valid in string literals ****/
 					if ((this.currentCharacter == '\n') || (this.currentCharacter == '\r')) {
@@ -167,13 +167,13 @@ public class JavadocScanner extends Scanner{
 									break;
 								}
 								if (this.currentCharacter == '\"') {
-									throw new InvalidInputException(INVALID_CHAR_IN_STRING);
+									throw invalidCharInString();
 								}
 							}
 						} else {
 							this.currentPosition--; // set current position on new line character
 						}
-						throw new InvalidInputException(INVALID_CHAR_IN_STRING);
+						throw invalidCharInString();
 					}
 					if (this.currentCharacter == '\\') {
 						if (this.unicodeAsBackSlash) {
@@ -225,7 +225,7 @@ public class JavadocScanner extends Scanner{
 				}
 			} catch (IndexOutOfBoundsException e) {
 				this.currentPosition--;
-				throw new InvalidInputException(UNTERMINATED_STRING);
+				throw unterminatedString();
 			} catch (InvalidInputException e) {
 				if (e.getMessage().equals(INVALID_ESCAPE)) {
 					// relocate if finding another quote fairly close: thus unicode '/u000D' will be fully consumed
@@ -246,9 +246,9 @@ public class JavadocScanner extends Scanner{
 			return TokenNameStringLiteral;
 		} else {
 			return super.scanForStringLiteral();
-		}		
+		}
 	}
-	
+
 	@Override
 	protected int processSingleQuotes(boolean checkIfUnicode) throws InvalidInputException{
 		if (this.tokenizeSingleQuotes) {
@@ -278,7 +278,7 @@ public class JavadocScanner extends Scanner{
 			while (this.currentCharacter != '\'') {
 				boolean isRegex = false;
 				if (this.currentPosition >= this.eofPosition) {
-					throw new InvalidInputException(UNTERMINATED_STRING);
+					throw unterminatedString();
 				}
 				/**** \r and \n are not valid in string literals ****/
 				if ((this.currentCharacter == '\n') || (this.currentCharacter == '\r')) {
@@ -301,13 +301,13 @@ public class JavadocScanner extends Scanner{
 								break;
 							}
 							if (this.currentCharacter == '\'') {
-								throw new InvalidInputException(INVALID_CHAR_IN_STRING);
+								throw invalidCharInString();
 							}
 						}
 					} else {
 						this.currentPosition--; // set current position on new line character
 					}
-					throw new InvalidInputException(INVALID_CHAR_IN_STRING);
+					throw invalidCharInString();
 				}
 				if (this.currentCharacter == '\\') {
 					if (this.unicodeAsBackSlash) {
@@ -361,7 +361,7 @@ public class JavadocScanner extends Scanner{
 			}
 		} catch (IndexOutOfBoundsException e) {
 			this.currentPosition--;
-			throw new InvalidInputException(UNTERMINATED_STRING);
+			throw unterminatedString();
 		} catch (InvalidInputException e) {
 			if (e.getMessage().equals(INVALID_ESCAPE)) {
 				// relocate if finding another quote fairly close: thus unicode '/u000D' will be fully consumed
@@ -379,7 +379,7 @@ public class JavadocScanner extends Scanner{
 			}
 			throw e; // rethrow
 		}
-		return TokenNameSingleQuoteStringLiteral;		
+		return TokenNameSingleQuoteStringLiteral;
 	}
 
 	protected boolean scanRegexCharacter() {

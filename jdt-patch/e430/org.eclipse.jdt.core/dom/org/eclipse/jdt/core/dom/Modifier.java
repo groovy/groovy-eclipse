@@ -187,12 +187,12 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 		/**
 		 * The flag value for the modifier.
 		 */
-		private int flagValue;
+		private final int flagValue;
 
 		/**
 		 * The keyword modifier string.
 		 */
-		private String keyword;
+		private final String keyword;
 
 		/**
 		 * Creates a new modifier with the given keyword.

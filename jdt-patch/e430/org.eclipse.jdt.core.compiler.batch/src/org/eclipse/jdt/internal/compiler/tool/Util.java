@@ -29,7 +29,6 @@ import javax.tools.FileObject;
 
 /**
  * Util class that defines helper methods to read class contents with handling of wrong encoding
- *
  */
 public final class Util {
 	public static String LINE_SEPARATOR = System.getProperty("line.separator"); //$NON-NLS-1$

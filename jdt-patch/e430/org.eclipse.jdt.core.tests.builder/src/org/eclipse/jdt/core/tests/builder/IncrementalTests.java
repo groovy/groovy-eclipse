@@ -31,6 +31,9 @@ import org.eclipse.jdt.core.tests.util.Util;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class IncrementalTests extends BuilderTests {
 
+	static {
+//		TESTS_NAMES = new String [] { "testBinaryInnerRecordClass" };
+	}
 	public IncrementalTests(String name) {
 		super(name);
 	}
@@ -606,22 +609,22 @@ public class IncrementalTests extends BuilderTests {
 	public void testMemberTypeOfOtherProject() throws JavaModelException {
 		IPath projectPath1 = env.addProject("Project1", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
 		env.addExternalJars(projectPath1, Util.getJavaClassLibs());
-		
+
 		IPath projectPath2 = env.addProject("Project2", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
 		env.addExternalJars(projectPath2, Util.getJavaClassLibs());
-	
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath1, ""); //$NON-NLS-1$
 
 		IPath root1 = env.addPackageFragmentRoot(projectPath1, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath1, "bin"); //$NON-NLS-1$
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath2, ""); //$NON-NLS-1$
 
 		IPath root2 = env.addPackageFragmentRoot(projectPath2, "src"); //$NON-NLS-1$
 		IPath output2 = env.setOutputFolder(projectPath2, "bin"); //$NON-NLS-1$
-		
+
 		env.addClassFolder(projectPath1, output2, true);
 		env.addRequiredProject(projectPath2, projectPath1);
 
@@ -633,14 +636,14 @@ public class IncrementalTests extends BuilderTests {
 			"    }\n" + //$NON-NLS-1$
 			"  }\n" + //$NON-NLS-1$
 			"}\n");//$NON-NLS-1$
-		
+
 		env.addClass(root1, "pR", "ReferencingClass", //$NON-NLS-1$ //$NON-NLS-2$
 				"package pR; \n"+ //$NON-NLS-1$
 				"import pD.DerivedClass.Builder;\n"+ //$NON-NLS-1$
 				"public class ReferencingClass {\n" + //$NON-NLS-1$
 				"   Builder<String> builder = new Builder<String>(null);\n" + //$NON-NLS-1$
 				"}\n"); //$NON-NLS-1$
-		
+
 		env.addClass(root2, "pD", "DerivedClass", //$NON-NLS-1$ //$NON-NLS-2$
 				"package pD; \n"+ //$NON-NLS-1$
 				"public class DerivedClass extends pB.BaseClass {\n" + //$NON-NLS-1$
@@ -667,22 +670,22 @@ public class IncrementalTests extends BuilderTests {
 	public void test$InTypeName() throws JavaModelException {
 		IPath projectPath1 = env.addProject("Project1", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
 		env.addExternalJars(projectPath1, Util.getJavaClassLibs());
-		
+
 		IPath projectPath2 = env.addProject("Project2", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
 		env.addExternalJars(projectPath2, Util.getJavaClassLibs());
-	
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath1, ""); //$NON-NLS-1$
 
 		IPath root1 = env.addPackageFragmentRoot(projectPath1, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath1, "bin"); //$NON-NLS-1$
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath2, ""); //$NON-NLS-1$
 
 		IPath root2 = env.addPackageFragmentRoot(projectPath2, "src"); //$NON-NLS-1$
 		IPath output2 = env.setOutputFolder(projectPath2, "bin"); //$NON-NLS-1$
-		
+
 		env.addClassFolder(projectPath1, output2, true);
 		env.addRequiredProject(projectPath2, projectPath1);
 
@@ -692,14 +695,14 @@ public class IncrementalTests extends BuilderTests {
 			"    public Builder$a(T t) {\n" + //$NON-NLS-1$
 			"    }\n" + //$NON-NLS-1$
 			"}\n");//$NON-NLS-1$
-		
+
 		env.addClass(root1, "pR", "ReferencingClass", //$NON-NLS-1$ //$NON-NLS-2$
 				"package pR; \n"+ //$NON-NLS-1$
 				"import pD.DerivedClass$a;\n"+ //$NON-NLS-1$
 				"public class ReferencingClass {\n" + //$NON-NLS-1$
 				"   DerivedClass$a<String> builder = new DerivedClass$a<String>(null);\n" + //$NON-NLS-1$
 				"}\n"); //$NON-NLS-1$
-		
+
 		env.addClass(root2, "pD", "DerivedClass$a", //$NON-NLS-1$ //$NON-NLS-2$
 				"package pD; \n"+ //$NON-NLS-1$
 				"public class DerivedClass$a<T> extends pB.Builder$a<T> {\n" + //$NON-NLS-1$
@@ -1149,13 +1152,13 @@ public class IncrementalTests extends BuilderTests {
 			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-			env.addClass(root, "", "Upper", 
+			env.addClass(root, "", "Upper",
 				"public abstract class Upper<T>  {\n" +
 				"    public static enum Mode {IN,OUT;}\n" +
 				"}\n");
-			env.addClass(root, "", "Lower", 
+			env.addClass(root, "", "Lower",
 				"public class Lower extends Upper<Lower> {};\n");
-			env.addClass(root, "", "Bug", 
+			env.addClass(root, "", "Bug",
 					"public class Bug {\n" +
 					"    Upper.Mode m1;\n" +
 					"    void usage(){\n" +
@@ -1173,7 +1176,7 @@ public class IncrementalTests extends BuilderTests {
 
 			fullBuild(projectPath);
 			expectingNoProblems();
-			env.addClass(root, "", "Bug", 
+			env.addClass(root, "", "Bug",
 					"public class Bug {\n" +
 					"    Upper.Mode m1;\n" +
 					"    void usage(){\n" +
@@ -1197,7 +1200,7 @@ public class IncrementalTests extends BuilderTests {
 			JavaCore.setOptions(options);
 		}
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=364450
 	// Incremental build should not generate buildpath error
 	// NOT generated by full build.
@@ -1237,28 +1240,28 @@ public class IncrementalTests extends BuilderTests {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=520640
 	public void testRemovePackageInDependencyProject() throws JavaModelException {
-		IPath projectPath1 = env.addProject("Project1"); 
+		IPath projectPath1 = env.addProject("Project1");
 		env.addExternalJars(projectPath1, Util.getJavaClassLibs());
-		
-		IPath projectPath2 = env.addProject("Project2"); 
+
+		IPath projectPath2 = env.addProject("Project2");
 		env.addExternalJars(projectPath2, Util.getJavaClassLibs());
-	
-		
+
+
 		env.addRequiredProject(projectPath1, projectPath2);
-		
-		env.addPackage(projectPath2, "emptypackage"); 
+
+		env.addPackage(projectPath2, "emptypackage");
 
 		fullBuild();
 		expectingNoProblems();
-		
-		env.removePackage(projectPath2, "emptypackage"); 
+
+		env.removePackage(projectPath2, "emptypackage");
 		incrementalBuild();
 		expectingNoProblems();
-		
+
 		env.removeProject(projectPath2);
 		env.removeProject(projectPath1);
 	}
-	
+
 	public void testBug526376() throws JavaModelException {
 		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1285,4 +1288,111 @@ public class IncrementalTests extends BuilderTests {
 		env.removeProject(projectPath);
 	}
 
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1497
+	public void testBinaryRecordClass() throws JavaModelException {
+		IPath projectPath = env.addProject("Project", "16");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "", "R",
+			"public record R(int x, int y) {}\n");
+
+		fullBuild(projectPath);
+		expectingNoProblems();
+
+		IPath aPath = env.addClass(root, "", "X",
+			"public class X extends R {}\n");
+
+		incrementalBuild(projectPath);
+		expectingSpecificProblemFor(aPath, new Problem("X", "The record R cannot be the superclass of X; a record is final and cannot be extended", aPath, 23, 24, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		env.removeProject(projectPath);
+	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1497
+	public void testBinaryRecordClassWithGenericSuper() throws JavaModelException {
+		IPath projectPath = env.addProject("Project", "16");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "", "R",
+			"interface I<T> {}\n" +
+			"public record R(int x, int y) implements I<String> {}\n");
+
+		fullBuild(projectPath);
+		expectingNoProblems();
+
+		IPath aPath = env.addClass(root, "", "X",
+			"public class X extends R {}\n");
+
+		incrementalBuild(projectPath);
+		expectingSpecificProblemFor(aPath, new Problem("X", "The record R cannot be the superclass of X; a record is final and cannot be extended", aPath, 23, 24, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		env.removeProject(projectPath);
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1497
+	public void testBinaryInnerRecordClass() throws JavaModelException {
+		IPath projectPath = env.addProject("Project", "16");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "", "O",
+				"public class O {\n" +
+			    "    public static record R(int x, int y) {}\n" +
+				"}\n");
+
+		fullBuild(projectPath);
+		expectingNoProblems();
+
+		IPath aPath = env.addClass(root, "", "X",
+			"public class X extends O.R {}\n");
+
+		incrementalBuild(projectPath);
+		expectingSpecificProblemFor(aPath, new Problem("X", "The record O.R cannot be the superclass of X; a record is final and cannot be extended", aPath, 23, 26, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		env.removeProject(projectPath);
+	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1497
+	public void testBinaryInnerRecordClassWithGenericSuper() throws JavaModelException {
+		IPath projectPath = env.addProject("Project", "16");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "", "O",
+				"public class O {\n" +
+		        "    interface I<T> {}\n" +
+		        "    public static record R(int x, int y) implements I<String> {}\n" +
+				"}\n");
+
+		fullBuild(projectPath);
+		expectingNoProblems();
+
+		IPath aPath = env.addClass(root, "", "X",
+			"public class X extends O.R {}\n");
+
+		incrementalBuild(projectPath);
+		expectingSpecificProblemFor(aPath, new Problem("X", "The record O.R cannot be the superclass of X; a record is final and cannot be extended", aPath, 23, 26, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		env.removeProject(projectPath);
+	}
 }

@@ -48,9 +48,9 @@ class PackageBinding implements IPackageBinding {
 	private static final String UNNAMED = Util.EMPTY_STRING;
 	private static final char PACKAGE_NAME_SEPARATOR = '.';
 
-	private org.eclipse.jdt.internal.compiler.lookup.PackageBinding binding;
+	private final org.eclipse.jdt.internal.compiler.lookup.PackageBinding binding;
 	private String name;
-	private BindingResolver resolver;
+	private final BindingResolver resolver;
 	private String[] components;
 
 	PackageBinding(org.eclipse.jdt.internal.compiler.lookup.PackageBinding binding, BindingResolver resolver) {

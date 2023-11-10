@@ -1478,7 +1478,8 @@ public RecordComponentBinding[] components() {
 		for (MethodBinding method : this.methods) {
 			if (method instanceof SyntheticMethodBinding) {
 				SyntheticMethodBinding smb = (SyntheticMethodBinding) method;
-				if (smb.purpose == SyntheticMethodBinding.RecordCanonicalConstructor) {
+				if (smb.purpose == SyntheticMethodBinding.RecordCanonicalConstructor
+						&& smb.parameters.length == this.components.length) {
 					for (int i = 0, l = smb.parameters.length; i < l; ++i) {
 						smb.parameters[i] = this.components[i].type;
 					}
@@ -1705,6 +1706,17 @@ public long getAnnotationTagBits() {
 			this.modifiers |= ClassFileConstants.AccDeprecated;
 	}
 	return this.tagBits;
+}
+@Override
+public boolean isReadyForAnnotations() {
+	if ((this.tagBits & TagBits.AnnotationResolved) != 0)
+		return true;
+	TypeDeclaration type;
+	if (this.scope != null && (type = this.scope.referenceType()) != null) {
+		if (type.annotations == null)
+			return true; // nothing here to resolve
+	}
+	return false;
 }
 public MethodBinding[] getDefaultAbstractMethods() {
 	if (!isPrototype())
@@ -2271,7 +2283,7 @@ public boolean hasMemberTypes() {
 
 private int getImplicitCanonicalConstructor() {
 	if (this.methods != null && this.scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK14) {
-		for (int i = 0, n = this.methods.length; i < n; i += 1) {
+		for (int i = 0, l = this.methods.length; i < l; ++i) {
 			MethodBinding method = this.methods[i];
 			if (method.isCanonicalConstructor() && method.isImplicit())
 				return i;
@@ -2805,7 +2817,7 @@ public FieldBinding resolveTypeFor(FieldBinding field) {
 public MethodBinding resolveTypesFor(MethodBinding method) {
 	ProblemReporter problemReporter = this.scope.problemReporter();
 	IErrorHandlingPolicy suspendedPolicy = problemReporter.suspendTempErrorHandlingPolicy();
-	try {
+	try (problemReporter) {
 		return resolveTypesWithSuspendedTempErrorHandlingPolicy(method);
 	} finally {
 		problemReporter.resumeTempErrorHandlingPolicy(suspendedPolicy);

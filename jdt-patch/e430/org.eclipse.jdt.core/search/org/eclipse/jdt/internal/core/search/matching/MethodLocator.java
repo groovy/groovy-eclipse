@@ -11,10 +11,12 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Samrat Dhillon samrat.dhillon@gmail.com - Search for method references is
- *               returning methods as overriden even if the superclass's method is 
+ *               returning methods as overriden even if the superclass's method is
  *               only package-visible - https://bugs.eclipse.org/357547
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
+
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,7 +44,7 @@ public char[][][] allSuperDeclaringTypeNames;
 
 // This is set only if focus is null. In these cases
 // it will be hard to determine if the super class is of the same package
-// at a latter point. Hence, this array is created with all the super class 
+// at a latter point. Hence, this array is created with all the super class
 // names of the same package name as of the matching class name.
 // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=357547
 private char[][][] samePkgSuperDeclaringTypeNames;
@@ -117,7 +119,7 @@ public void initializePolymorphicSearch(MatchLocator locator) {
 		start = System.currentTimeMillis();
 	}
 	try {
-		SuperTypeNamesCollector namesCollector = 
+		SuperTypeNamesCollector namesCollector =
 			new SuperTypeNamesCollector(
 				this.pattern,
 				this.pattern.declaringSimpleName,
@@ -127,12 +129,12 @@ public void initializePolymorphicSearch(MatchLocator locator) {
 				locator.progressMonitor);
 		this.allSuperDeclaringTypeNames = namesCollector.collect();
 		this.samePkgSuperDeclaringTypeNames = namesCollector.getSamePackageSuperTypeNames();
-		this.matchLocator = locator;	
+		this.matchLocator = locator;
 	} catch (JavaModelException e) {
 		// inaccurate matches will be found
 	}
 	if (BasicSearchEngine.VERBOSE) {
-		System.out.println("Time to initialize polymorphic search: "+(System.currentTimeMillis()-start)); //$NON-NLS-1$
+		trace("Time to initialize polymorphic search: "+(System.currentTimeMillis()-start)); //$NON-NLS-1$
 	}
 }
 /*
@@ -154,13 +156,13 @@ private boolean isTypeInSuperDeclaringTypeNames(char[][] typeName) {
  */
 protected boolean isVirtualInvoke(MethodBinding method, MessageSend messageSend) {
 		return !method.isStatic() && !method.isPrivate() && !messageSend.isSuperAccess()
-			&& !(method.isDefault() && this.pattern.focus != null 
+			&& !(method.isDefault() && this.pattern.focus != null
 			&& !CharOperation.equals(this.pattern.declaringPackageName, method.declaringClass.qualifiedPackageName()));
 }
 protected ReferenceBinding checkMethodRef(MethodBinding method, ReferenceExpression referenceExpression) {
 	boolean result = (!method.isStatic() && !method.isPrivate()
-		&&	referenceExpression.isMethodReference()  
-		&& !(method.isDefault() && this.pattern.focus != null 
+		&&	referenceExpression.isMethodReference()
+		&& !(method.isDefault() && this.pattern.focus != null
 		&& !CharOperation.equals(this.pattern.declaringPackageName, method.declaringClass.qualifiedPackageName())));
 	if (result) {
 		Expression lhs = referenceExpression.lhs;
@@ -170,7 +172,7 @@ protected ReferenceBinding checkMethodRef(MethodBinding method, ReferenceExpress
 				return (ReferenceBinding) binding;
 		}
 	}
-	
+
 	return null;
 }
 @Override
@@ -360,7 +362,7 @@ protected int matchMethod(MethodBinding method, boolean skipImpossibleArg) {
 				if (focusMethodBinding != null) {// textual comparison insufficient
 					TypeBinding[] parameters = focusMethodBinding.parameters;
 					if (parameters.length >= parameterCount) {
-						newLevel = (isBinary ? argType.erasure().isEquivalentTo((parameters[i].erasure())) :argType.isEquivalentTo((parameters[i]))) ? 
+						newLevel = (isBinary ? argType.erasure().isEquivalentTo((parameters[i].erasure())) :argType.isEquivalentTo((parameters[i]))) ?
 								ACCURATE_MATCH : IMPOSSIBLE_MATCH;
 						foundLevel = true;
 					}
@@ -390,7 +392,7 @@ protected int matchMethod(MethodBinding method, boolean skipImpossibleArg) {
 		}
 		if (foundTypeVariable) {
 			if (!method.isStatic() && !method.isPrivate()) {
-				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=123836, No point in textually comparing type variables, captures etc with concrete types. 
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=123836, No point in textually comparing type variables, captures etc with concrete types.
 				if (!checkedFocus)
 					focusMethodBinding = this.matchLocator.getMethodBinding(this.pattern);
 				if (focusMethodBinding != null) {
@@ -398,7 +400,7 @@ protected int matchMethod(MethodBinding method, boolean skipImpossibleArg) {
 						return ACCURATE_MATCH;
 					}
 				}
-			} 
+			}
 			return IMPOSSIBLE_MATCH;
 		}
 	}
@@ -674,7 +676,7 @@ protected void reportDeclaration(MethodBinding methodBinding, MatchLocator locat
 		}
 		method = locator.createBinaryMethodHandle(type, methodBinding.selector, parameterTypes);
 		if (method == null || knownMethods.addIfNotIncluded(method) == null) return;
-	
+
 		IResource resource = type.getResource();
 		if (resource == null)
 			resource = type.getJavaProject().getProject();

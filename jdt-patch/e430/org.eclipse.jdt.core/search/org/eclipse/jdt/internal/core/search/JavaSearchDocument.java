@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -50,7 +52,7 @@ public class JavaSearchDocument extends SearchDocument {
 			return Util.getResourceContentsAsByteArray(getFile());
 		} catch (JavaModelException e) {
 			if (BasicSearchEngine.VERBOSE || JobManager.VERBOSE) { // used during search and during indexing
-				e.printStackTrace();
+				trace("", e); //$NON-NLS-1$
 			}
 			return null;
 		}
@@ -62,7 +64,7 @@ public class JavaSearchDocument extends SearchDocument {
 			return Util.getResourceContentsAsCharArray(getFile());
 		} catch (JavaModelException e) {
 			if (BasicSearchEngine.VERBOSE || JobManager.VERBOSE) { // used during search and during indexing
-				e.printStackTrace();
+				trace("", e); //$NON-NLS-1$
 			}
 			return null;
 		}

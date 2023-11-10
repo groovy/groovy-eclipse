@@ -17,7 +17,7 @@ public class AptSourceLocalVariableBinding extends LocalVariableBinding {
 
 	// enclosing element
 	public MethodBinding methodBinding;
-	private LocalVariableBinding local;
+	private final LocalVariableBinding local;
 
 	public AptSourceLocalVariableBinding(LocalVariableBinding localVariableBinding, MethodBinding methodBinding) {
 		super(localVariableBinding.name, localVariableBinding.type, localVariableBinding.modifiers, true);

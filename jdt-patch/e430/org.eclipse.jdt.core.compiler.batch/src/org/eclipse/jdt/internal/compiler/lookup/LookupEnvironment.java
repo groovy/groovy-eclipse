@@ -98,10 +98,7 @@ public class LookupEnvironment implements ProblemReasons, TypeConstants {
 	public ProblemReporter problemReporter; 	// SHARED
 	public ClassFilePool classFilePool; 		// SHARED
 	// indicate in which step on the compilation we are.
-	// step 1 : build the reference binding
-	// step 2 : conect the hierarchy (connect bindings)
-	// step 3 : build fields and method bindings.
-	private int stepCompleted; 					// ROOT_ONLY
+	private CompleteTypeBindingsSteps stepCompleted = CompleteTypeBindingsSteps.NONE; // ROOT_ONLY
 	public ITypeRequestor typeRequestor;		// SHARED
 
 	private SimpleLookupTable uniqueParameterizedGenericMethodBindings;
@@ -149,11 +146,37 @@ public class LookupEnvironment implements ProblemReasons, TypeConstants {
 
 	public String moduleVersion; 	// ROOT_ONLY
 
-	static final int BUILD_TYPE_HIERARCHY     = 1;
-	static final int CHECK_AND_SET_IMPORTS    = 2;
-	static final int CONNECT_TYPE_HIERARCHY1  = 3;
-	static final int CONNECT_TYPE_HIERARCHY2  = 4;
-	static final int BUILD_FIELDS_AND_METHODS = 5;
+	static enum CompleteTypeBindingsSteps {
+		NONE,
+		CHECK_AND_SET_IMPORTS,
+		CONNECT_TYPE_HIERARCHY,
+		BUILD_FIELDS_AND_METHODS,
+		INTEGRATE_ANNOTATIONS_IN_HIERARCHY,
+		CHECK_PARAMETERIZED_TYPES;
+
+		/** Answer the next step in sequence or {@code this} when we are at the last step already. */
+		CompleteTypeBindingsSteps next() {
+			CompleteTypeBindingsSteps[] values = values();
+			int nextOrdinal = ordinal() + 1;
+			if (nextOrdinal < values.length)
+				return values[nextOrdinal];
+			return this; // no-change to signal "at end"
+		}
+
+		/** values without NONE */
+		static final CompleteTypeBindingsSteps[] realValues = Arrays.copyOfRange(values(), 1, values().length-1);
+
+		void perform(CompilationUnitScope scope) {
+			switch (this) {
+				case CHECK_AND_SET_IMPORTS -> scope.checkAndSetImports();
+				case CONNECT_TYPE_HIERARCHY -> scope.connectTypeHierarchy();
+				case BUILD_FIELDS_AND_METHODS -> scope.buildFieldsAndMethods();
+				case INTEGRATE_ANNOTATIONS_IN_HIERARCHY -> scope.integrateAnnotationsInHierarchy();
+				case CHECK_PARAMETERIZED_TYPES -> scope.checkParameterizedTypes();
+				default -> throw new IllegalArgumentException("No implementation for: " + this); //$NON-NLS-1$
+			}
+		}
+	}
 
 	static final ProblemPackageBinding TheNotFoundPackage = new ProblemPackageBinding(CharOperation.NO_CHAR, NotFound, null/*not perfect*/);
 	static final ProblemReferenceBinding TheNotFoundType = new ProblemReferenceBinding(CharOperation.NO_CHAR_CHAR, null, NotFound);
@@ -517,34 +540,18 @@ public void completeTypeBindings() {
 		this.root.completeTypeBindings();
 		return;
 	}
-	this.stepCompleted = BUILD_TYPE_HIERARCHY;
 
-	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		(this.unitBeingCompleted = this.units[i]).scope.checkAndSetImports();
-	}
-	this.stepCompleted = CHECK_AND_SET_IMPORTS;
-
-	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		(this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy1();
-	}
-	this.stepCompleted = CONNECT_TYPE_HIERARCHY1;
-
-	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		(this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy2();
-	}
-	this.stepCompleted = CONNECT_TYPE_HIERARCHY2;
-
-	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		var unit = (this.unitBeingCompleted = this.units[i]); // GROOVY null test
-		if (unit != null) {
-			CompilationUnitScope unitScope = unit.scope;
-			unitScope.checkParameterizedTypes();
-			unitScope.buildFieldsAndMethods();
-			this.units[i] = null; // release
+	this.stepCompleted = CompleteTypeBindingsSteps.NONE;
+	for (CompleteTypeBindingsSteps step : CompleteTypeBindingsSteps.values()) {
+		CompleteTypeBindingsSteps next = step.next();
+		for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
+			if (next != step)
+				next.perform((this.unitBeingCompleted = this.units[i]).scope);
+			else
+				this.units[i] = null; // at last step clean up
 		}
+		this.stepCompleted = next;
 	}
-	this.stepCompleted = BUILD_FIELDS_AND_METHODS;
-
 	this.lastCompletedUnitIndex = this.lastUnitIndex;
 	this.unitBeingCompleted = null;
 }
@@ -566,7 +573,7 @@ public void completeTypeBindings(CompilationUnitDeclaration parsedUnit) {
 		this.root.completeTypeBindings(parsedUnit);
 		return;
 	}
-	if (this.stepCompleted == BUILD_FIELDS_AND_METHODS) {
+	if (this.stepCompleted == this.stepCompleted.next()) {
 		// This can only happen because the original set of units are completely built and
 		// are now being processed, so we want to treat all the additional units as a group
 		// until they too are completely processed.
@@ -574,15 +581,10 @@ public void completeTypeBindings(CompilationUnitDeclaration parsedUnit) {
 	} else {
 		if (parsedUnit.scope == null) return; // parsing errors were too severe
 
-		if (this.stepCompleted >= CHECK_AND_SET_IMPORTS)
-			(this.unitBeingCompleted = parsedUnit).scope.checkAndSetImports();
-
-		if (this.stepCompleted >= CONNECT_TYPE_HIERARCHY1)
-			(this.unitBeingCompleted = parsedUnit).scope.connectTypeHierarchy1();
-
-		if (this.stepCompleted >= CONNECT_TYPE_HIERARCHY2)
-			(this.unitBeingCompleted = parsedUnit).scope.connectTypeHierarchy2();
-
+		for (CompleteTypeBindingsSteps step : CompleteTypeBindingsSteps.realValues) {
+			if (this.stepCompleted.compareTo(step) >= 0)
+				step.perform((this.unitBeingCompleted = parsedUnit).scope);
+		}
 		this.unitBeingCompleted = null;
 	}
 }
@@ -604,12 +606,11 @@ public void completeTypeBindings(CompilationUnitDeclaration parsedUnit, boolean 
 	if (parsedUnit.scope == null) return; // parsing errors were too severe
 	LookupEnvironment rootEnv = this.root;
 	CompilationUnitDeclaration previousUnitBeingCompleted = rootEnv.unitBeingCompleted;
-	(rootEnv.unitBeingCompleted = parsedUnit).scope.checkAndSetImports();
-	parsedUnit.scope.connectTypeHierarchy1();
-	parsedUnit.scope.connectTypeHierarchy2();
-	parsedUnit.scope.checkParameterizedTypes();
-	if (buildFieldsAndMethods)
-		parsedUnit.scope.buildFieldsAndMethods();
+	for (CompleteTypeBindingsSteps step : CompleteTypeBindingsSteps.realValues) {
+		if (step != CompleteTypeBindingsSteps.BUILD_FIELDS_AND_METHODS || buildFieldsAndMethods)
+			step.perform((rootEnv.unitBeingCompleted = parsedUnit).scope);
+	}
+
 	rootEnv.unitBeingCompleted = previousUnitBeingCompleted;
 }
 
@@ -623,29 +624,13 @@ public void completeTypeBindings(CompilationUnitDeclaration parsedUnit, boolean 
 */
 public void completeTypeBindings(CompilationUnitDeclaration[] parsedUnits, boolean[] buildFieldsAndMethods, int unitCount) {
 	LookupEnvironment rootEnv = this.root;
-	for (int i = 0; i < unitCount; i++) {
-		CompilationUnitDeclaration parsedUnit = parsedUnits[i];
-		if (parsedUnit.scope != null)
-			(rootEnv.unitBeingCompleted = parsedUnit).scope.checkAndSetImports();
-	}
-
-	for (int i = 0; i < unitCount; i++) {
-		CompilationUnitDeclaration parsedUnit = parsedUnits[i];
-		if (parsedUnit.scope != null)
-			(rootEnv.unitBeingCompleted = parsedUnit).scope.connectTypeHierarchy1();
-	}
-	for (int i = 0; i < unitCount; i++) {
-		CompilationUnitDeclaration parsedUnit = parsedUnits[i];
-		if (parsedUnit.scope != null)
-			(rootEnv.unitBeingCompleted = parsedUnit).scope.connectTypeHierarchy2();
-	}
-
-	for (int i = 0; i < unitCount; i++) {
-		CompilationUnitDeclaration parsedUnit = parsedUnits[i];
-		if (parsedUnit.scope != null) {
-			(rootEnv.unitBeingCompleted = parsedUnit).scope.checkParameterizedTypes();
-			if (buildFieldsAndMethods[i])
-				parsedUnit.scope.buildFieldsAndMethods();
+	for (CompleteTypeBindingsSteps step : CompleteTypeBindingsSteps.realValues) {
+		for (int i = 0; i < unitCount; i++) {
+			CompilationUnitDeclaration parsedUnit = parsedUnits[i];
+			if (parsedUnit.scope != null)
+				if (step != CompleteTypeBindingsSteps.BUILD_FIELDS_AND_METHODS || buildFieldsAndMethods[i]) {
+					step.perform((rootEnv.unitBeingCompleted = parsedUnit).scope);
+			}
 		}
 	}
 
@@ -2212,7 +2197,7 @@ public void reset() {
 		this.root.reset();
 		return;
 	}
-	this.stepCompleted = 0;
+	this.stepCompleted = CompleteTypeBindingsSteps.NONE;
 	this.knownModules = new HashtableOfModule();
 	this.UnNamedModule = new ModuleBinding.UnNamedModule(this);
 	this.module = this.UnNamedModule;

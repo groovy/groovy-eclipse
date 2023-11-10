@@ -20,7 +20,7 @@ import java.io.*;
  * redirects it to a file or to the stdout if "con" is the name of the file.
  */
 class ProxyConsoleReader extends AbstractReader {
-	private InputStream input;
+	private final InputStream input;
 	private OutputStream output;
 /*
  * Creates a new proxy console reader that will read from the given input stream

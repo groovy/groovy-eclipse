@@ -42,7 +42,7 @@ import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 
 public class CompletionElementNotifier extends SourceElementNotifier {
 
-	private ASTNode assistNode;
+	private final ASTNode assistNode;
 
 	public CompletionElementNotifier(
 			CompletionUnitStructureRequestor requestor,

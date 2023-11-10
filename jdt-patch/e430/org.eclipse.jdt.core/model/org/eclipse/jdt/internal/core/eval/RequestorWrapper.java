@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.eval.ICodeSnippetRequestor;
 import org.eclipse.jdt.internal.compiler.ClassFile;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.JavaBuilder;
 import org.eclipse.jdt.internal.eval.IRequestor;
 
@@ -72,7 +73,9 @@ public void acceptProblem(CategorizedProblem problem, char[] fragmentSource, int
 		IMarker marker = ResourcesPlugin.getWorkspace().getRoot().createMarker(IJavaModelMarker.TRANSIENT_PROBLEM, attributes);
 		this.requestor.acceptProblem(marker, new String(fragmentSource), fragmentKind);
 	} catch (CoreException e) {
-		e.printStackTrace();
+		if (JavaModelManager.VERBOSE) {
+			JavaModelManager.trace("", e); //$NON-NLS-1$
+		}
 	}
 }
 }

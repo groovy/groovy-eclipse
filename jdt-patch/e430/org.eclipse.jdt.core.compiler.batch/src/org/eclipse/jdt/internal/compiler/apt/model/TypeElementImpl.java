@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2021 IBM Corporation and others.
+ * Copyright (c) 2005, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -56,7 +56,6 @@ public class TypeElementImpl extends ElementImpl implements TypeElement {
 	/**
 	 * Compares Element instances possibly returned by
 	 * {@link TypeElement#getEnclosedElements()} based on their source location, if available.
-	 *
 	 */
 	private static final class SourceLocationComparator implements Comparator<Element> {
 		private final IdentityHashMap<ElementImpl, Integer> sourceStartCache = new IdentityHashMap<>();
@@ -128,7 +127,8 @@ public class TypeElementImpl extends ElementImpl implements TypeElement {
 	private final ElementKind _kindHint;
 
 	/**
-	 * In general, clients should call {@link Factory#newElement(Binding)} to create new instances.
+	 * In general, clients should call {@link Factory#newElement(org.eclipse.jdt.internal.compiler.lookup.Binding)}
+	 * to create new instances.
 	 */
 	TypeElementImpl(BaseProcessingEnvImpl env, ReferenceBinding binding, ElementKind kindHint) {
 		super(env, binding);

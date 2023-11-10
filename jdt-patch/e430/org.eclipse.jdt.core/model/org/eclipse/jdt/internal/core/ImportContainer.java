@@ -92,8 +92,6 @@ public ISourceRange getSourceRange() throws JavaModelException {
 	SourceRange range= new SourceRange(firstRange.getOffset(), lastRange.getOffset() + lastRange.getLength() - firstRange.getOffset());
 	return range;
 }
-/**
- */
 @Override
 public String readableName() {
 

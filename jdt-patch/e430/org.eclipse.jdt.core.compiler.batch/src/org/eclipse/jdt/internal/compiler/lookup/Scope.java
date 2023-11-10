@@ -892,8 +892,6 @@ public abstract class Scope {
 
 	/**
 	 * Connect type variable supertypes, and returns true if no problem was detected
-	 * @param typeParameters
-	 * @param checkForErasedCandidateCollisions
 	 */
 	protected boolean connectTypeVariables(TypeParameter[] typeParameters, boolean checkForErasedCandidateCollisions) {
 		/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=305259 - We used to not bother with connecting
@@ -2247,7 +2245,12 @@ public abstract class Scope {
 										if (importReference != null && needResolve) {
 											importReference.bits |= ASTNode.Used;
 										}
-										invocationSite.setActualReceiverType(foundField.declaringClass);
+										TypeBinding importedType = this.getType(importBinding.compoundName, importBinding.compoundName.length-1);
+										if (importedType instanceof ReferenceBinding && importBinding.isValidBinding()) {
+											invocationSite.setActualReceiverType((ReferenceBinding) importedType);
+										} else {
+											invocationSite.setActualReceiverType(foundField.declaringClass);
+										}
 										if (foundField.isValidBinding()) {
 											return foundField;
 										}
@@ -2259,12 +2262,14 @@ public abstract class Scope {
 						}
 						// check on demand imports
 						boolean foundInImport = false;
+						ReferenceBinding sourceCodeReceiver = null;
 						for (int i = 0, length = imports.length; i < length; i++) {
 							ImportBinding importBinding = imports[i];
 							if (importBinding.isStatic() && importBinding.onDemand) {
 								Binding resolvedImport = importBinding.resolvedImport;
 								if (resolvedImport instanceof ReferenceBinding) {
-									FieldBinding temp = findField((ReferenceBinding) resolvedImport, name, invocationSite, needResolve);
+									ReferenceBinding importedReferenceBinding = (ReferenceBinding) resolvedImport;
+									FieldBinding temp = findField(importedReferenceBinding, name, invocationSite, needResolve);
 									if (temp != null) {
 										if (!temp.isValidBinding()) {
 											if (problemField == null)
@@ -2283,6 +2288,7 @@ public abstract class Scope {
 														name,
 														ProblemReasons.Ambiguous);
 											foundField = temp;
+											sourceCodeReceiver = importedReferenceBinding;
 											foundInImport = true;
 										}
 									}
@@ -2290,7 +2296,10 @@ public abstract class Scope {
 							}
 						}
 						if (foundField != null) {
-							invocationSite.setActualReceiverType(foundField.declaringClass);
+							if (sourceCodeReceiver != null)
+								invocationSite.setActualReceiverType(sourceCodeReceiver);
+							else
+								invocationSite.setActualReceiverType(foundField.declaringClass);
 							return foundField;
 						}
 					}
@@ -2726,6 +2735,7 @@ public abstract class Scope {
 			scope = scope.parent;
 		}
 
+		Map<MethodBinding,ReferenceBinding> method2sourceDeclaring = new HashMap<>();
 		if (insideStaticContext && options.sourceLevel >= ClassFileConstants.JDK1_5) {
 			if (foundProblem != null) {
 				if (foundProblem.declaringClass != null && foundProblem.declaringClass.id == TypeIds.T_JavaLangObject)
@@ -2748,15 +2758,25 @@ public abstract class Scope {
 						Binding resolvedImport = importBinding.resolvedImport;
 						MethodBinding possible = null;
 						if (importBinding.onDemand) {
-							if (!skipOnDemand && resolvedImport instanceof ReferenceBinding)
+							if (!skipOnDemand && resolvedImport instanceof ReferenceBinding) {
 								// answers closest approximation, may not check argumentTypes or visibility
-								possible = findMethod((ReferenceBinding) resolvedImport, selector, argumentTypes, invocationSite, true);
+								ReferenceBinding resolvedImportReferenceBinding = (ReferenceBinding) resolvedImport;
+								possible = findMethod(resolvedImportReferenceBinding, selector, argumentTypes, invocationSite, true);
+								if (possible != null && possible.isValidBinding())
+									method2sourceDeclaring.put(possible, resolvedImportReferenceBinding);
+							}
 						} else {
 							if (resolvedImport instanceof MethodBinding) {
 								MethodBinding staticMethod = (MethodBinding) resolvedImport;
-								if (CharOperation.equals(staticMethod.selector, selector))
+								if (CharOperation.equals(staticMethod.selector, selector)) {
 									// answers closest approximation, may not check argumentTypes or visibility
 									possible = findMethod(staticMethod.declaringClass, selector, argumentTypes, invocationSite, true);
+									if (possible != null && possible.isValidBinding()) {
+										TypeBinding importedType = getType(importBinding.compoundName, importBinding.compoundName.length-1);
+										if (importedType instanceof ReferenceBinding && importedType.isValidBinding())
+											method2sourceDeclaring.put(possible, (ReferenceBinding) importedType);
+									}
+								}
 							} else if (resolvedImport instanceof FieldBinding) {
 								// check to see if there are also methods with the same name
 								FieldBinding staticField = (FieldBinding) resolvedImport;
@@ -2778,6 +2798,7 @@ public abstract class Scope {
 								MethodBinding compatibleMethod = computeCompatibleMethod(possible, argumentTypes, invocationSite);
 								if (compatibleMethod != null) {
 									if (compatibleMethod.isValidBinding()) {
+										method2sourceDeclaring.put(compatibleMethod, method2sourceDeclaring.get(possible));
 										if (compatibleMethod.canBeSeenBy(unitScope.fPackage)) {
 											if (!skipOnDemand && !importBinding.onDemand) {
 												visible = null; // forget previous matches from on demand imports
@@ -2818,7 +2839,12 @@ public abstract class Scope {
 		}
 
 		if (foundMethod != null) {
-			invocationSite.setActualReceiverType(foundMethod.declaringClass);
+			ReferenceBinding sourceDeclaring = method2sourceDeclaring.get(foundMethod);
+			if (sourceDeclaring != null) {
+				invocationSite.setActualReceiverType(sourceDeclaring);
+			} else {
+				invocationSite.setActualReceiverType(foundMethod.declaringClass);
+			}
 			return foundMethod;
 		}
 		if (foundProblem != null)
@@ -5177,6 +5203,7 @@ public abstract class Scope {
 		return NOT_COMPATIBLE;
 	}
 
+	/** See also the contract of {@link ProblemReporter#close()}. */
 	public abstract ProblemReporter problemReporter();
 
 	public final CompilationUnitDeclaration referenceCompilationUnit() {
@@ -5457,7 +5484,6 @@ public abstract class Scope {
 	/**
 	 * Check whether the given null default is redundant at the given position inside this scope.
 	 * @param nullBits locally defined nullness default, see Binding.NullnessDefaultMASK
-	 * @param sourceStart
 	 * @return enclosing binding that already has a matching NonNullByDefault annotation,
 	 * 		or the special binding {@link #NOT_REDUNDANT}, indicating that a different enclosing nullness default was found,
 	 * 		or null to indicate that no enclosing nullness default was found.

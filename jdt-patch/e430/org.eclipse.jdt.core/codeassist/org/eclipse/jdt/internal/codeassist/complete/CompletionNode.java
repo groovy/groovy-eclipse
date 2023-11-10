@@ -12,10 +12,9 @@
  *     Gayan Perera - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.complete;
-
 /**
  * Marker interface for all completion nodes
  */
 public interface CompletionNode {
-	// marker interface
+	// Nothing to declare
 }

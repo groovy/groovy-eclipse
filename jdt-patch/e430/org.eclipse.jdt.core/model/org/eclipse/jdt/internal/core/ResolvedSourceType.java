@@ -21,7 +21,7 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class ResolvedSourceType extends SourceType {
 
-	private String uniqueKey;
+	private final String uniqueKey;
 
 	/*
 	 * See class comments.

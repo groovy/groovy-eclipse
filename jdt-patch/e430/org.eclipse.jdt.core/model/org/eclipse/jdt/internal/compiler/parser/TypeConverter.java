@@ -41,7 +41,7 @@ public abstract class TypeConverter {
 	protected ProblemReporter problemReporter;
 	protected boolean has1_5Compliance;
 	protected boolean has14_Compliance;
-	private char memberTypeSeparator;
+	private final char memberTypeSeparator;
 
 	protected TypeConverter(ProblemReporter problemReporter, char memberTypeSeparator) {
 		this.problemReporter = problemReporter;

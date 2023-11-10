@@ -22,9 +22,9 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class EfficiencyCompilerRequestor implements IDebugRequestor {
 	private boolean isActive = false;
 
-	private ArrayList<String> compiledClasses = new ArrayList<>();
-	private ArrayList<String> compiledFiles = new ArrayList<>();
-	private ArrayList<ClassFile> classes = new ArrayList<>();
+	private final ArrayList<String> compiledClasses = new ArrayList<>();
+	private final ArrayList<String> compiledFiles = new ArrayList<>();
+	private final ArrayList<ClassFile> classes = new ArrayList<>();
 
 
 	public void acceptDebugResult(CompilationResult result){

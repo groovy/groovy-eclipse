@@ -33,18 +33,18 @@ import org.eclipse.jdt.core.util.IModifierConstants;
  * Default implementation of IMethodInfo.
  */
 public class MethodInfo extends ClassFileStruct implements IMethodInfo {
-	private int accessFlags;
-	private int attributeBytes;
+	private final int accessFlags;
+	private final int attributeBytes;
 	private IClassFileAttribute[] attributes;
-	private int attributesCount;
+	private final int attributesCount;
 	private ICodeAttribute codeAttribute;
-	private char[] descriptor;
-	private int descriptorIndex;
+	private final char[] descriptor;
+	private final int descriptorIndex;
 	private IExceptionAttribute exceptionAttribute;
 	private boolean isDeprecated;
 	private boolean isSynthetic;
-	private char[] name;
-	private int nameIndex;
+	private final char[] name;
+	private final int nameIndex;
 
 	/**
 	 * @param classFileBytes byte[]

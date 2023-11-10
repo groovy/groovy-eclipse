@@ -399,7 +399,6 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 
 	/**
 	 * @deprecated
-	 * @throws IOException
 	 */
 	public void testBug415066_001() throws IOException {
 		File rootDir = new File(System.getProperty("java.io.tmpdir"));
@@ -488,7 +487,6 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 	/**
 	 * Negative test case
 	 * @deprecated
-	 * @throws IOException
 	 */
 	public void testBug415066_002() throws IOException {
 		File rootDir = new File(System.getProperty("java.io.tmpdir"));

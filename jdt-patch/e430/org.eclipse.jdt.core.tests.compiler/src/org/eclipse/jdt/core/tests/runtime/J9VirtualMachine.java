@@ -21,7 +21,7 @@ package org.eclipse.jdt.core.tests.runtime;
 class J9VirtualMachine extends LocalVirtualMachine {
 	private Process proxyProcess;
 	private AbstractReader proxyConsoleReader;
-	private String proxyOutputFile;
+	private final String proxyOutputFile;
 /**
  * Creates a new J9VirtualMachine from the Processes that runs this VM
  * and its J9 Proxy and with the given info.

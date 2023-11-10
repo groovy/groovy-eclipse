@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2020 BEA Systems, Inc. and others
+ * Copyright (c) 2007, 2023 BEA Systems, Inc. and others
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -57,6 +57,7 @@ public class BaseMessagerImpl {
 	 * @param e the element against which to report the message.  If the element is not
 	 * in the set of elements being compiled in the current round, the reference context
 	 * and filename will be set to null.
+	 * @return a new {@link AptProblem}
 	 */
 	public static AptProblem createProblem(Kind kind, CharSequence msg, Element e,
 			AnnotationMirror a, AnnotationValue v) {

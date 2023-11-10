@@ -241,7 +241,7 @@ protected void generateInfos(Object info, HashMap newElements, IProgressMonitor 
 			default:
 				element = "element"; //$NON-NLS-1$
 		}
-		System.out.println(Thread.currentThread() +" OPENING " + element + " " + this.toStringWithAncestors()); //$NON-NLS-1$//$NON-NLS-2$
+		JavaModelManager.trace(Thread.currentThread() +" OPENING " + element + " " + this.toStringWithAncestors()); //$NON-NLS-1$//$NON-NLS-2$
 	}
 
 	// open its ancestors if needed
@@ -274,7 +274,7 @@ protected void generateInfos(Object info, HashMap newElements, IProgressMonitor 
 	JavaModelManager.getJavaModelManager().getElementsOutOfSynchWithBuffers().remove(this);
 
 	if (JavaModelCache.VERBOSE) {
-		System.out.println(JavaModelManager.getJavaModelManager().cacheToString("-> ")); //$NON-NLS-1$
+		JavaModelManager.trace(JavaModelManager.getJavaModelManager().cacheToString("-> ")); //$NON-NLS-1$
 	}
 }
 protected boolean ignoreErrorStatus(IStatus status) {

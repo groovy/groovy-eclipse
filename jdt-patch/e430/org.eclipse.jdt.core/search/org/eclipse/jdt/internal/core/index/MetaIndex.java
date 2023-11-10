@@ -26,7 +26,7 @@ import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.core.search.indexing.ReadWriteMonitor;
 
 public class MetaIndex {
-	private Index decoratee;
+	private final Index decoratee;
 	private Set<String> indexesNotInMeta = null;
 
 	public MetaIndex(Index decoratee) {
@@ -68,7 +68,6 @@ public class MetaIndex {
 	 *
 	 * @param indexes all indexes as a {@link SimpleLookupTable} where key is {@link IndexLocation} and value is {@link Index}
 	 * @return index names which are not part of or empty.
-	 * @throws IOException
 	 */
 	public Set<String> getIndexesNotInMeta(SimpleLookupTable indexes) throws IOException {
 		// this method is accessed in a single thread

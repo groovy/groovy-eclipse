@@ -44,7 +44,6 @@ public interface IProcessorProvider {
 	 * unchecked exception, etc; the caller should not assume that this method will return.
 	 *
 	 * @param p the processor, if known, or null if not.
-	 * @param e
 	 */
 	void reportProcessorException(Processor p, Exception e);
 }

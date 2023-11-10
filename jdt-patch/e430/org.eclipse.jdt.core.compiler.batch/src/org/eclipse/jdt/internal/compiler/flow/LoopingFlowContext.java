@@ -59,7 +59,7 @@ public class LoopingFlowContext extends SwitchFlowContext {
 
 	public BranchLabel continueLabel;
 	public UnconditionalFlowInfo initsOnContinue = FlowInfo.DEAD_END;
-	private UnconditionalFlowInfo upstreamNullFlowInfo;
+	private final UnconditionalFlowInfo upstreamNullFlowInfo;
 	private LoopingFlowContext innerFlowContexts[] = null;
 	private UnconditionalFlowInfo innerFlowInfos[] = null;
 	private int innerFlowContextsCount = 0;

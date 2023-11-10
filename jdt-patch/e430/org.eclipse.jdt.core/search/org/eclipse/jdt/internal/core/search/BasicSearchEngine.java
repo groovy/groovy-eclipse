@@ -15,6 +15,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -37,7 +39,6 @@ import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.search.indexing.*;
 import org.eclipse.jdt.internal.core.search.matching.*;
 import org.eclipse.jdt.internal.core.util.Messages;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Search basic engine. Public search engine (see {@link org.eclipse.jdt.core.search.SearchEngine}
@@ -210,11 +211,13 @@ public class BasicSearchEngine {
 	void findMatches(SearchPattern pattern, SearchParticipant[] participants, IJavaSearchScope scope, SearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
 		try {
 			if (VERBOSE) {
-				Util.verbose("Searching for pattern: " + pattern.toString()); //$NON-NLS-1$
-				Util.verbose(scope.toString());
+				trace("Searching for pattern: " + pattern.toString()); //$NON-NLS-1$
+				trace(scope.toString());
 			}
 			if (participants == null) {
-				if (VERBOSE) Util.verbose("No participants => do nothing!"); //$NON-NLS-1$
+				if (VERBOSE) {
+					trace("No participants => do nothing!"); //$NON-NLS-1$
+				}
 				return;
 			}
 
@@ -272,9 +275,6 @@ public class BasicSearchEngine {
 		return new JavaSearchParticipant();
 	}
 
-	/**
-	 * @param matchRule
-	 */
 	public static String getMatchRuleString(final int matchRule) {
 		if (matchRule == 0) {
 			return "R_EXACT_MATCH"; //$NON-NLS-1$
@@ -318,8 +318,6 @@ public class BasicSearchEngine {
 
 	/**
 	 * Return kind of search corresponding to given value.
-	 *
-	 * @param searchFor
 	 */
 	public static String getSearchForString(final int searchFor) {
 		switch (searchFor) {
@@ -597,7 +595,7 @@ public class BasicSearchEngine {
 	 */
 	public void search(SearchPattern pattern, SearchParticipant[] participants, IJavaSearchScope scope, SearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
 		if (VERBOSE) {
-			Util.verbose("BasicSearchEngine.search(SearchPattern, SearchParticipant[], IJavaSearchScope, SearchRequestor, IProgressMonitor)"); //$NON-NLS-1$
+			trace("BasicSearchEngine.search(SearchPattern, SearchParticipant[], IJavaSearchScope, SearchRequestor, IProgressMonitor)"); //$NON-NLS-1$
 		}
 		findMatches(pattern, participants, scope, requestor, monitor);
 	}
@@ -647,14 +645,14 @@ public class BasicSearchEngine {
 
 			// Debug
 			if (VERBOSE) {
-				Util.verbose("BasicSearchEngine.searchAllConstructorDeclarations(char[], char[], int, IJavaSearchScope, IRestrictedAccessConstructorRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
-				Util.verbose("	- package name: "+(packageName==null?"null":new String(packageName))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- type name: "+(typeName==null?"null":new String(typeName))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- type match rule: "+getMatchRuleString(typeMatchRule)); //$NON-NLS-1$
+				trace("BasicSearchEngine.searchAllConstructorDeclarations(char[], char[], int, IJavaSearchScope, IRestrictedAccessConstructorRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
+				trace("	- package name: "+(packageName==null?"null":new String(packageName))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- type name: "+(typeName==null?"null":new String(typeName))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- type match rule: "+getMatchRuleString(typeMatchRule)); //$NON-NLS-1$
 				if (validatedTypeMatchRule != typeMatchRule) {
-					Util.verbose("	- validated type match rule: "+getMatchRuleString(validatedTypeMatchRule)); //$NON-NLS-1$
+					trace("	- validated type match rule: "+getMatchRuleString(validatedTypeMatchRule)); //$NON-NLS-1$
 				}
-				Util.verbose("	- scope: "+scope); //$NON-NLS-1$
+				trace("	- scope: "+scope); //$NON-NLS-1$
 			}
 			if (validatedTypeMatchRule == -1) return; // invalid match rule => return no results
 
@@ -993,15 +991,15 @@ public class BasicSearchEngine {
 			final int validatedMethodMatchRule = SearchPattern.validateMatchRule(methodName == null ? null : new String (methodName), methodMatchRule);
 			// Debug
 			if (VERBOSE) {
-				Util.verbose("BasicSearchEngine.searchAllMethodDeclarations(char[] qualifier,  "//$NON-NLS-1$
+				trace("BasicSearchEngine.searchAllMethodDeclarations(char[] qualifier,  "//$NON-NLS-1$
 						+ "char[] methodName, int methodMatchRule, IJavaSearchScope, IRestrictedAccessConstructorRequestor, int waitingPolicy, IProgressMonitor)"); //$NON-NLS-1$
-				Util.verbose("	- qualifier name: "+(qualifier==null?"null":new String(qualifier))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- method name: "+(methodName==null?"null":new String(methodName))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- method match rule: "+getMatchRuleString(methodMatchRule)); //$NON-NLS-1$
+				trace("	- qualifier name: "+(qualifier==null?"null":new String(qualifier))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- method name: "+(methodName==null?"null":new String(methodName))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- method match rule: "+getMatchRuleString(methodMatchRule)); //$NON-NLS-1$
 				if (validatedMethodMatchRule != methodMatchRule) {
-					Util.verbose("	- validated method match rule: "+getMatchRuleString(validatedMethodMatchRule)); //$NON-NLS-1$
+					trace("	- validated method match rule: "+getMatchRuleString(validatedMethodMatchRule)); //$NON-NLS-1$
 				}
-				Util.verbose("	- scope: "+scope); //$NON-NLS-1$
+				trace("	- scope: "+scope); //$NON-NLS-1$
 			}
 			if (validatedMethodMatchRule == -1) return; // invalid match rule => return no results
 
@@ -1261,17 +1259,17 @@ public class BasicSearchEngine {
 			final int validatedMethodMatchRule = SearchPattern.validateMatchRule(methodName == null ? null : new String (methodName), methodMatchRule);
 			// Debug
 			if (VERBOSE) {
-				Util.verbose("BasicSearchEngine.searchAllMethodDeclarations(char[] packageName, char[] declaringQualification, char[] declaringSimpleName, "//$NON-NLS-1$
+				trace("BasicSearchEngine.searchAllMethodDeclarations(char[] packageName, char[] declaringQualification, char[] declaringSimpleName, "//$NON-NLS-1$
 						+ "char[] methodName, int methodMatchRule, IJavaSearchScope, IRestrictedAccessConstructorRequestor, int waitingPolicy, IProgressMonitor)"); //$NON-NLS-1$
-				Util.verbose("	- package name: "+(packageName==null?"null":new String(packageName))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- declaringQualification name: "+(declaringQualification==null?"null":new String(declaringQualification))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- declaringSimple name: "+(declaringSimpleName==null?"null":new String(declaringSimpleName))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- method name: "+(methodName==null?"null":new String(methodName))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- method match rule: "+getMatchRuleString(methodMatchRule)); //$NON-NLS-1$
+				trace("	- package name: "+(packageName==null?"null":new String(packageName))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- declaringQualification name: "+(declaringQualification==null?"null":new String(declaringQualification))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- declaringSimple name: "+(declaringSimpleName==null?"null":new String(declaringSimpleName))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- method name: "+(methodName==null?"null":new String(methodName))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- method match rule: "+getMatchRuleString(methodMatchRule)); //$NON-NLS-1$
 				if (validatedMethodMatchRule != methodMatchRule) {
-					Util.verbose("	- validated method match rule: "+getMatchRuleString(validatedMethodMatchRule)); //$NON-NLS-1$
+					trace("	- validated method match rule: "+getMatchRuleString(validatedMethodMatchRule)); //$NON-NLS-1$
 				}
-				Util.verbose("	- scope: "+scope); //$NON-NLS-1$
+				trace("	- scope: "+scope); //$NON-NLS-1$
 			}
 			if (validatedMethodMatchRule == -1) return; // invalid match rule => return no results
 
@@ -1616,7 +1614,7 @@ public class BasicSearchEngine {
 
 		try {
 			if (VERBOSE) {
-				Util.verbose("BasicSearchEngine.searchAllSecondaryTypeNames(IPackageFragmentRoot[], IRestrictedAccessTypeRequestor, boolean, IProgressMonitor)"); //$NON-NLS-1$
+				trace("BasicSearchEngine.searchAllSecondaryTypeNames(IPackageFragmentRoot[], IRestrictedAccessTypeRequestor, boolean, IProgressMonitor)"); //$NON-NLS-1$
 				StringBuilder buffer = new StringBuilder("	- source folders: "); //$NON-NLS-1$
 				int length = sourceFolders.length;
 				for (int i=0; i<length; i++) {
@@ -1629,7 +1627,7 @@ public class BasicSearchEngine {
 				}
 				buffer.append("]\n	- waitForIndexes: "); //$NON-NLS-1$
 				buffer.append(waitForIndexes);
-				Util.verbose(buffer.toString());
+				trace(buffer.toString());
 			}
 
 			IndexManager indexManager = JavaModelManager.getIndexManager();
@@ -1790,16 +1788,16 @@ public class BasicSearchEngine {
 
 			// Debug
 			if (VERBOSE) {
-				Util.verbose("BasicSearchEngine.searchAllTypeNames(char[], char[], int, int, IJavaSearchScope, IRestrictedAccessTypeRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
-				Util.verbose("	- package name: "+(packageName==null?"null":new String(packageName))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- package match rule: "+getMatchRuleString(packageMatchRule)); //$NON-NLS-1$
-				Util.verbose("	- type name: "+(typeName==null?"null":new String(typeName))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- type match rule: "+getMatchRuleString(typeMatchRule)); //$NON-NLS-1$
+				trace("BasicSearchEngine.searchAllTypeNames(char[], char[], int, int, IJavaSearchScope, IRestrictedAccessTypeRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
+				trace("	- package name: "+(packageName==null?"null":new String(packageName))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- package match rule: "+getMatchRuleString(packageMatchRule)); //$NON-NLS-1$
+				trace("	- type name: "+(typeName==null?"null":new String(typeName))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- type match rule: "+getMatchRuleString(typeMatchRule)); //$NON-NLS-1$
 				if (validatedTypeMatchRule != typeMatchRule) {
-					Util.verbose("	- validated type match rule: "+getMatchRuleString(validatedTypeMatchRule)); //$NON-NLS-1$
+					trace("	- validated type match rule: "+getMatchRuleString(validatedTypeMatchRule)); //$NON-NLS-1$
 				}
-				Util.verbose("	- search for: "+searchFor); //$NON-NLS-1$
-				Util.verbose("	- scope: "+scope); //$NON-NLS-1$
+				trace("	- search for: "+searchFor); //$NON-NLS-1$
+				trace("	- scope: "+scope); //$NON-NLS-1$
 			}
 			if (validatedTypeMatchRule == -1) return; // invalid match rule => return no results
 
@@ -2059,12 +2057,12 @@ public class BasicSearchEngine {
 		try {
 			// Debug
 			if (VERBOSE) {
-				Util.verbose("BasicSearchEngine.searchAllTypeNames(char[][], char[][], int, int, IJavaSearchScope, IRestrictedAccessTypeRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
-				Util.verbose("	- package name: "+(qualifications==null?"null":new String(CharOperation.concatWith(qualifications, ',')))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- type name: "+(typeNames==null?"null":new String(CharOperation.concatWith(typeNames, ',')))); //$NON-NLS-1$ //$NON-NLS-2$
-				Util.verbose("	- match rule: "+getMatchRuleString(matchRule)); //$NON-NLS-1$
-				Util.verbose("	- search for: "+searchFor); //$NON-NLS-1$
-				Util.verbose("	- scope: "+scope); //$NON-NLS-1$
+				trace("BasicSearchEngine.searchAllTypeNames(char[][], char[][], int, int, IJavaSearchScope, IRestrictedAccessTypeRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
+				trace("	- package name: "+(qualifications==null?"null":new String(CharOperation.concatWith(qualifications, ',')))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- type name: "+(typeNames==null?"null":new String(CharOperation.concatWith(typeNames, ',')))); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("	- match rule: "+getMatchRuleString(matchRule)); //$NON-NLS-1$
+				trace("	- search for: "+searchFor); //$NON-NLS-1$
+				trace("	- scope: "+scope); //$NON-NLS-1$
 			}
 			IndexManager indexManager = JavaModelManager.getIndexManager();
 
@@ -2278,7 +2276,7 @@ public class BasicSearchEngine {
 	public void searchDeclarations(IJavaElement enclosingElement, SearchRequestor requestor, SearchPattern pattern, IProgressMonitor monitor) throws JavaModelException {
 		try {
 			if (VERBOSE) {
-				Util.verbose("	- java element: "+enclosingElement); //$NON-NLS-1$
+				trace("	- java element: "+enclosingElement); //$NON-NLS-1$
 			}
 			IJavaSearchScope scope = createJavaSearchScope(new IJavaElement[] {enclosingElement});
 			IResource resource = ((JavaElement) enclosingElement).resource();
@@ -2298,7 +2296,7 @@ public class BasicSearchEngine {
 					try {
 						requestor.beginReporting();
 						if (VERBOSE) {
-							Util.verbose("Searching for " + pattern + " in " + resource.getFullPath()); //$NON-NLS-1$//$NON-NLS-2$
+							trace("Searching for " + pattern + " in " + resource.getFullPath()); //$NON-NLS-1$//$NON-NLS-2$
 						}
 						SearchParticipant participant = getDefaultSearchParticipant();
 						SearchDocument[] documents = MatchLocator.addWorkingCopies(
@@ -2345,7 +2343,7 @@ public class BasicSearchEngine {
 	 */
 	public void searchDeclarationsOfAccessedFields(IJavaElement enclosingElement, SearchRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
 		if (VERBOSE) {
-			Util.verbose("BasicSearchEngine.searchDeclarationsOfAccessedFields(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$
+			trace("BasicSearchEngine.searchDeclarationsOfAccessedFields(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$
 		}
 		// Do not accept other kind of element type than those specified in the spec
 		switch (enclosingElement.getElementType()) {
@@ -2372,7 +2370,7 @@ public class BasicSearchEngine {
 	 */
 	public void searchDeclarationsOfReferencedTypes(IJavaElement enclosingElement, SearchRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
 		if (VERBOSE) {
-			Util.verbose("BasicSearchEngine.searchDeclarationsOfReferencedTypes(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$
+			trace("BasicSearchEngine.searchDeclarationsOfReferencedTypes(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$
 		}
 		// Do not accept other kind of element type than those specified in the spec
 		switch (enclosingElement.getElementType()) {
@@ -2399,7 +2397,7 @@ public class BasicSearchEngine {
 	 */
 	public void searchDeclarationsOfSentMessages(IJavaElement enclosingElement, SearchRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
 		if (VERBOSE) {
-			Util.verbose("BasicSearchEngine.searchDeclarationsOfSentMessages(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$
+			trace("BasicSearchEngine.searchDeclarationsOfSentMessages(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$
 		}
 		// Do not accept other kind of element type than those specified in the spec
 		switch (enclosingElement.getElementType()) {

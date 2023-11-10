@@ -56,7 +56,7 @@ public class Assignment extends Expression {
 		/**
 		 * The name of the operator
 		 */
-		private String op;
+		private final String op;
 
 		/**
 		 * Creates a new assignment operator with the given name.

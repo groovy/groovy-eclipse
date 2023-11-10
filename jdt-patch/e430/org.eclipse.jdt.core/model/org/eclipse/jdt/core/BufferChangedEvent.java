@@ -48,17 +48,17 @@ public class BufferChangedEvent extends EventObject {
 	/**
 	 * The length of text that has been modified in the buffer.
 	 */
-	private int length;
+	private final int length;
 
 	/**
 	 * The offset into the buffer where the modification took place.
 	 */
-	private int offset;
+	private final int offset;
 
 	/**
 	 * The text that was modified.
 	 */
-	private String text;
+	private final String text;
 
 	private static final long serialVersionUID = 655379473891745999L; // backward compatible
 

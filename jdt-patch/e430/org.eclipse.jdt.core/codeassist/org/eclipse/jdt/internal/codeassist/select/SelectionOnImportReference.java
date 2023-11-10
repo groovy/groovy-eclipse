@@ -29,7 +29,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *         void foo() {
  *         }
  *       }
- *
  */
 
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;

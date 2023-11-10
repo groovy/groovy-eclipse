@@ -30,7 +30,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testIssueExhaustiveness_005"};
+//		TESTS_NAMES = new String[] { "testIssue1466_02"};
 	}
 
 	private static String previewLevel = "21";
@@ -2886,12 +2886,20 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"	}\n"+
 				"}",
 			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 4)\n" +
-			"	case (String s) -> 0;\n" +
-			"	                   ^\n" +
-			"Syntax error, insert \":\" to complete SwitchLabel\n" +
-			"----------\n");
+			"""
+			----------
+			1. ERROR in X.java (at line 4)
+				case (String s) -> 0;
+				^^^^
+			Syntax error on token "case", ( expected after this token
+			----------
+			2. ERROR in X.java (at line 4)
+				case (String s) -> 0;
+				                   ^
+			Syntax error, insert ":" to complete SwitchLabel
+			----------
+			"""
+				);
 	}
 	public void testBug575249_04() {
 		runConformTest(
@@ -4490,22 +4498,29 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					+ "	}\n"
 					+ "}",
 				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	      ^^^^\n" +
-				"Syntax error on token(s), misplaced construct(s)\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	              ^^^^\n" +
-				"Syntax error on token \"RestrictedIdentifierWhen\", delete this token\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	                                          ^\n" +
-				"Syntax error on token \")\", -> expected after this token\n" +
-				"----------\n");
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					           ^
+				Syntax error on token "l", delete this token
+				----------
+				2. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					              ^^^^
+				Syntax error, insert ":: IdentifierOrNew" to complete ReferenceExpression
+				----------
+				3. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					              ^^^^
+				Syntax error, insert ":" to complete SwitchLabel
+				----------
+				4. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					                                            ^^
+				Syntax error on token "->", ; expected
+				----------
+				""");
 	}
 	public void testBug578553_2() {
 		runNegativeTest(
@@ -4530,22 +4545,34 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					+ "	}\n"
 					+ "}",
 				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	      ^^^^\n" +
-				"Syntax error on token(s), misplaced construct(s)\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	              ^^^^\n" +
-				"Syntax error on token \"RestrictedIdentifierWhen\", delete this token\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	                                          ^\n" +
-				"Syntax error on token \")\", -> expected after this token\n" +
-				"----------\n");
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					           ^
+				Syntax error on token "l", delete this token
+				----------
+				2. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					              ^^^^
+				Syntax error, insert ":: IdentifierOrNew" to complete ReferenceExpression
+				----------
+				3. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					              ^^^^
+				Syntax error, insert ":" to complete SwitchLabel
+				----------
+				4. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					                                            ^^
+				Syntax error on token "->", ; expected
+				----------
+				5. ERROR in X.java (at line 6)
+					case Long l1 when l1.toString().equals(l1.toString()) -> {
+					             ^^^^
+				Syntax error on token "when", , expected
+				----------
+				""");
 	}
 	public void testBug578553_3() {
 		runNegativeTest(
@@ -4567,22 +4594,34 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					+ "	}\n"
 					+ "}",
 				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	      ^^^^\n" +
-				"Syntax error on token(s), misplaced construct(s)\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	              ^^^^\n" +
-				"Syntax error on token \"RestrictedIdentifierWhen\", delete this token\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 4)\n" +
-				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
-				"	                                          ^\n" +
-				"Syntax error on token \")\", -> expected after this token\n" +
-				"----------\n");
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					           ^
+				Syntax error on token "l", delete this token
+				----------
+				2. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					              ^^^^
+				Syntax error, insert ":: IdentifierOrNew" to complete ReferenceExpression
+				----------
+				3. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					              ^^^^
+				Syntax error, insert ":" to complete SwitchLabel
+				----------
+				4. ERROR in X.java (at line 4)
+					case (Long l) when l.toString().equals("0") -> {
+					                                            ^^
+				Syntax error on token "->", ; expected
+				----------
+				5. ERROR in X.java (at line 6)
+					case Long l1 when l.toString().equals(l1.toString()) -> {
+					             ^^^^
+				Syntax error on token "when", , expected
+				----------
+				""");
 	}
 	public void testBug578553_4() {
 		runNegativeTest(
@@ -6778,5 +6817,153 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 			"	     ^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Cannot mix pattern with other case labels\n" +
 			"----------\n");
+	}
+
+	public void testDisambiguatedRestrictedIdentifierWhenAsFirstMethodInvokation() {
+		runConformTest(
+				new String[] {
+					"X.java",
+					"public class X {\n"
+					+ "	public static void main(String argv[]) {\n"
+					+ "		when(\"Pass\");\n"
+					+ "	}\n"
+					+ "	static void when(String arg) {\n"
+					+ "		System.out.println(arg);\n"
+					+ "	}\n"
+					+ "}"
+				},
+				"Pass");
+	}
+
+	public void testDisambiguatedRestrictedIdentifierWhenAsFirstVariableDeclaration() {
+		runConformTest(
+				new String[] {
+					"when.java",
+					"public class when {\n"
+					+ "	public static void main(String argv[]) {\n"
+					+ "		when x = new when();\n"
+					+ "		System.out.println(x);\n"
+					+ "	}\n"
+					+ "	public String toString() {\n"
+					+ "		return \"Pass\";\n"
+					+ "	}\n"
+					+ "}"
+				},
+				"Pass");
+	}
+
+	public void testDisambiguatedRestrictedIdentifierWhenAsTypeInACase() {
+		runConformTest(
+				new String[] {
+					"when.java",
+					"public class when {\n"
+					+ "	public String toString() {\n"
+					+ "		return switch((Object) this) {\n"
+					+ "			case when x -> \"Pass\";\n"
+					+ "			default -> \"Fail\";\n"
+					+ "		};\n"
+					+ "	}\n"
+					+ "	public static void main(String argv[]) {\n"
+					+ "		System.out.println(new when());\n"
+					+ "	}\n"
+					+ "}"
+				},
+				"Pass");
+	}
+
+	public void testDisambiguatedRestrictedIdentifierWhenAfterAParenthesis() {
+		runConformTest(
+				new String[] {
+					"X.java",
+					"public class X {\n"
+					+ "	public static void main(String argv[]) {\n"
+					+ "		System.out.println( (Boolean) when(true) );\n"
+					+ "	}\n"
+					+ "	static Object when(Object arg) {\n"
+					+ "		return arg;\n"
+					+ "	}\n"
+					+ "}"
+				},
+				"true");
+	}
+
+	public void testValidCodeWithVeryAmbiguousUsageOfWhen() {
+		runConformTest(
+				new String[] {
+					"when.java",
+					"class when {\n"
+					+ "  boolean when = true;\n"
+					+ "  static boolean when(when arg) {\n"
+					+ "    return switch(arg) {\n"
+					+ "      case when when when when.when && when.when(null) -> when.when;\n"
+					+ "      case null -> true;\n"
+					+ "      default -> false;\n"
+					+ "    };\n"
+					+ "  }\n"
+					+ "  public static void main(String[] args) {\n"
+					+ "    System.out.println(when(new when()));\n"
+					+ "  }\n"
+					+ "}"
+				},
+				"true");
+	}
+	public void testIssue1466_01() {
+		this.runConformTest(
+				new String[] {
+					"X.java",
+					"""
+					public class X {
+
+						  private static String foo(Integer i) {
+						    return switch (i) {
+						      case null -> "null";
+						      case Integer value when value > 0 -> value.toString();
+						      default -> i.toString();
+						    };
+						  }
+
+						  public static void main(String[] args) {
+						    System.out.println(foo(0));
+						  }
+						}
+
+					""",
+				},
+				"0");
+	}
+	public void testIssue1466_02() {
+		this.runConformTest(
+				new String[] {
+					"X.java",
+					"""
+					public class X {
+					  public static void main(String[] args) {
+					    constantLabelMustAppearBeforePatternInteger(-1);
+					    constantLabelMustAppearBeforePatternInteger(0);
+					    constantLabelMustAppearBeforePatternInteger(42);
+					    constantLabelMustAppearBeforePatternInteger(-99);
+					    constantLabelMustAppearBeforePatternInteger(Integer.valueOf(123));
+					    constantLabelMustAppearBeforePatternInteger(null);
+					  }
+					  static String constantLabelMustAppearBeforePatternInteger(Integer i) {
+					    switch (i) {
+					      case null -> System.out.println("value unavailable: " + i);
+					      case -1, 1 -> System.out.println("absolute value 1: " + i);
+					      case Integer value when value > 0 -> System.out.println("positive integer: " + i);
+					      default -> System.out.println("other integer: " + i);
+					    }
+					    return i == null ? "null" : i.toString();
+					  }
+					}
+
+					""",
+				},
+				"absolute value 1: -1\n" +
+				"other integer: 0\n" +
+				"positive integer: 42\n" +
+				"other integer: -99\n" +
+				"positive integer: 123\n" +
+				"value unavailable: null"
+);
 	}
 }

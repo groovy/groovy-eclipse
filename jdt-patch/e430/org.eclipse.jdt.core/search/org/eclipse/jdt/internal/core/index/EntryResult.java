@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 
 public class EntryResult {
 
-private char[] word;
+private final char[] word;
 private Object[] documentTables;
 private SimpleSet documentNames;
 

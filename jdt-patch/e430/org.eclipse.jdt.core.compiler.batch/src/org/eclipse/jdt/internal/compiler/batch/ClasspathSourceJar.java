@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class ClasspathSourceJar extends ClasspathJar {
-	private String encoding;
+	private final String encoding;
 
 	public ClasspathSourceJar(File file, boolean closeZipFileAtEnd,
 			AccessRuleSet accessRuleSet, String encoding,

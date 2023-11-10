@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.core.ImportDeclaration;
 
 @SuppressWarnings("rawtypes")
 public class AssistImportContainer extends ImportContainer {
-	private Map infoCache;
+	private final Map infoCache;
 	public AssistImportContainer(CompilationUnit parent, Map infoCache) {
 		super(parent);
 		this.infoCache = infoCache;

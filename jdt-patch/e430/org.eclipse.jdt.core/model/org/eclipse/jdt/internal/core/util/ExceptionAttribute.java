@@ -24,7 +24,7 @@ import org.eclipse.jdt.core.util.IExceptionAttribute;
  * Default implementation of IExceptionAttribute.
  */
 public class ExceptionAttribute extends ClassFileAttribute implements IExceptionAttribute {
-	private int exceptionsNumber;
+	private final int exceptionsNumber;
 	private char[][] exceptionNames;
 	private int[] exceptionIndexes;
 

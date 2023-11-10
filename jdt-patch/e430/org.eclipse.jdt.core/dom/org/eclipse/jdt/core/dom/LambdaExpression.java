@@ -24,14 +24,14 @@ import java.util.List;
  *    <b>(</b> [ Identifier { <b>,</b> Identifier } ] <b>)</b> <b>-></b> Body
  *    <b>(</b> [ FormalParameter { <b>,</b> FormalParameter } ] <b>)</b> <b>-></b> Body
  * </pre>
- * 
- *<p> 
+ *
+ *<p>
  * The first two forms use {@link VariableDeclarationFragment} for the parameter or parameters,
  * while the third form uses {@link SingleVariableDeclaration}.</p>
  *<p>The Body can be either a {@link Block} or an {@link Expression}.</p>
  *
  * @since 3.10
- * @noinstantiate This class is not intended to be instantiated by clients 
+ * @noinstantiate This class is not intended to be instantiated by clients
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class LambdaExpression extends Expression {
@@ -55,7 +55,7 @@ public class LambdaExpression extends Expression {
 	 */
 	public static final ChildListPropertyDescriptor PARAMETERS_PROPERTY =
 		new ChildListPropertyDescriptor(LambdaExpression.class, "parameters", VariableDeclaration.class, CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * The "body" structural property of this node type (child type: {@link ASTNode},
 	 * must be either a {@link Block} or an {@link Expression}).
@@ -69,7 +69,7 @@ public class LambdaExpression extends Expression {
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS_8_0;
-	
+
 	static {
 		List propertyList = new ArrayList(4);
 		createPropertyList(LambdaExpression.class, propertyList);
@@ -78,7 +78,7 @@ public class LambdaExpression extends Expression {
 		addProperty(BODY_PROPERTY, propertyList);
 		PROPERTY_DESCRIPTORS_8_0 = reapPropertyList(propertyList);
 	}
-	
+
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
@@ -93,7 +93,7 @@ public class LambdaExpression extends Expression {
 
 	/**
 	 * Indicates whether parentheses are present or not.
-	 * Defaults to <code>true</code>. 
+	 * Defaults to <code>true</code>.
 	 */
 	private boolean hasParentheses = true;
 
@@ -102,7 +102,7 @@ public class LambdaExpression extends Expression {
 	 * (element type: {@link VariableDeclaration}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList parameters =
+	private final ASTNode.NodeList parameters =
 		new ASTNode.NodeList(PARAMETERS_PROPERTY);
 
 	/**
@@ -208,7 +208,7 @@ public class LambdaExpression extends Expression {
 	 * just a single {@link VariableDeclarationFragment}.
 	 * ASTRewrite may ignore this property if necessary.
 	 * </p>
-	 * 
+	 *
 	 * @return <code>true</code> if this lambda expression has parentheses around
 	 * its parameters and <code>false</code> otherwise
 	 */
@@ -250,7 +250,7 @@ public class LambdaExpression extends Expression {
 
 	/**
 	 * Returns the body of this lambda expression.
-	 * 
+	 *
 	 * @return the lambda expression body, which can be either a {@link Block} or an {@link Expression}
 	 */
 	public ASTNode getBody() {

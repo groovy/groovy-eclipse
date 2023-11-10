@@ -33,11 +33,11 @@ public final class QualifierQuery {
 	}
 
 
-	private QueryCategory[] categories;
+	private final QueryCategory[] categories;
 
-	private char[] simpleKey;
+	private final char[] simpleKey;
 
-	private char[] qualifiedKey;
+	private final char[] qualifiedKey;
 
 	private QualifierQuery(QueryCategory[] categories, char[] simpleKey, char[] qualifiedKey) {
 		this.categories = categories;

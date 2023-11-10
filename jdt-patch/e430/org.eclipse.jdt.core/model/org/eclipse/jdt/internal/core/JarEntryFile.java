@@ -67,7 +67,7 @@ public class JarEntryFile  extends JarEntryResource {
 			try {
 				zipFile = getZipFile();
 				if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-					System.out.println("(" + Thread.currentThread() + ") [JarEntryFile.getContents()] Creating ZipFile on " +zipFile.getName()); //$NON-NLS-1$	//$NON-NLS-2$
+					JavaModelManager.trace("(" + Thread.currentThread() + ") [JarEntryFile.getContents()] Creating ZipFile on " +zipFile.getName()); //$NON-NLS-1$	//$NON-NLS-2$
 				}
 				String entryName = getEntryName();
 				ZipEntry zipEntry = zipFile.getEntry(entryName);

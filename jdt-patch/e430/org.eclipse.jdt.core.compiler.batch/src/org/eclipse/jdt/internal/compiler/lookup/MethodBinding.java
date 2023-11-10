@@ -501,8 +501,6 @@ public final char[] constantPoolName() {
 
 /**
  * After method verifier has finished, fill in missing @NonNull specification from the applicable default.
- * @param needToApplyParameterNonNullDefault
- * @param needToApplyReturnNonNullDefault
  */
 protected void fillInDefaultNonNullness(AbstractMethodDeclaration sourceMethod, boolean needToApplyReturnNonNullDefault, ParameterNonNullDefaultProvider needToApplyParameterNonNullDefault) {
 	if (this.parameterNonNullness == null)
@@ -1474,7 +1472,6 @@ public void updateTypeVariableBinding(TypeVariableBinding previousBinding, TypeV
  *  <li> It has a single variable arity parameter (§8.4.1) whose declared type is Object[]. </li>
  *  <li> It is native. </li>
  * <br/>
- * @param  scope
  * @return true if the method has Polymorphic Signature
  */
 public boolean hasPolymorphicSignature(Scope scope) {

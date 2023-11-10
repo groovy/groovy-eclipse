@@ -225,7 +225,6 @@ public class CtSym {
 	 *
 	 * @param releaseCode release number encoded (7,8,9,A,B...)
 	 * @param qualifiedSignatureFileName signature file name (without module)
-	 * @param moduleName
 	 * @return corresponding path in ct.sym file system or null if not found
 	 */
 	public Path getFullPath(String releaseCode, String qualifiedSignatureFileName, String moduleName) {

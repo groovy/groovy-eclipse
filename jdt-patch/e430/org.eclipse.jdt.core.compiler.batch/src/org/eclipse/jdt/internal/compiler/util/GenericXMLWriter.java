@@ -58,7 +58,7 @@ public class GenericXMLWriter extends PrintWriter {
 		}
 		return null;
 	}
-	private String lineSeparator;
+	private final String lineSeparator;
 	private int tab;
 	public GenericXMLWriter(OutputStream stream, String lineSeparator, boolean printXmlVersion) {
 		this(new PrintWriter(stream), lineSeparator, printXmlVersion);

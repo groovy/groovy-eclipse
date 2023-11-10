@@ -234,6 +234,7 @@ public static Test suite() {
 	 ArrayList since_21 = new ArrayList();
 	 since_21.add(SwitchPatternTest.class);
 	 since_21.add(RecordPatternTest.class);
+//	 since_21.add(UnnammedPatternsAndVarsTest.class); Enable after implementation.
 	 since_21.add(NullAnnotationTests18.class);
 
 	 // Build final test suite

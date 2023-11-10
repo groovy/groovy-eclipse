@@ -26,7 +26,7 @@ public final class TypeVector {
 	int maxSize;
 	IType[] elements;
 	/**
-	 * {@link HashMap} that contains the same elements as the {@link #elements}. Used to speed up {@link #contains} 
+	 * {@link HashMap} that contains the same elements as the {@link #elements}. Used to speed up {@link #contains}
 	 * for large lists. It is lazily constructed the first time it is needed for vectors larger than
 	 * {@link #MIN_ELEMENTS_FOR_HASHSET}. Set to null if not constructed yet. The keys and values are the same
 	 */
@@ -79,14 +79,11 @@ public boolean contains(IType element) {
 		return this.elementSet.containsKey(element);
 	}
 
-	for (int i = this.size; --i >= 0;) 
+	for (int i = this.size; --i >= 0;)
 		if (element.equals(this.elements[i]))
 			return true;
 	return false;
 }
-/**
- * 
- */
 private void constructElementSetIfNecessary() {
 	if (this.elementSet == null && this.size >= MIN_ELEMENTS_FOR_HASHSET) {
 		this.elementSet = new HashMap<>();

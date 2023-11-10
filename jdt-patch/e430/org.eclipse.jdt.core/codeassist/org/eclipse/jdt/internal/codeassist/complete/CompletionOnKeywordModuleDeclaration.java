@@ -7,10 +7,10 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     
+ *
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.complete;
 
@@ -18,8 +18,8 @@ import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
 
 public class CompletionOnKeywordModuleDeclaration extends ModuleDeclaration implements CompletionOnKeyword {
 
-	private char[] token;
-	private char[][] possibleKeywords;
+	private final char[] token;
+	private final char[][] possibleKeywords;
 
 	public CompletionOnKeywordModuleDeclaration(char[] token, long pos, char[][] possibleKeywords) {
 		super(null, new char[][]{token}, new long[]{pos});

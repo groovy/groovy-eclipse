@@ -598,7 +598,9 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 		if (resourceCount > 0) {
 			for (int i = resourceCount; i >= 0; i--) {
 				BranchLabel exitLabel = new BranchLabel(codeStream);
-				this.resourceExceptionLabels[i].placeEnd(); // outer handler if any is the one that should catch exceptions out of close()
+				if (this.resourceExceptionLabels[i].getCount() % 2 != 0) {
+					this.resourceExceptionLabels[i].placeEnd(); // outer handler if any is the one that should catch exceptions out of close()
+				}
 
 				Statement stmt = i > 0 ? this.resources[i - 1] : null;
 				if ((this.bits & ASTNode.IsTryBlockExiting) == 0) {

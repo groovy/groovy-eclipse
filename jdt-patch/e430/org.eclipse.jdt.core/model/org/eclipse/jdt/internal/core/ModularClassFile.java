@@ -145,7 +145,7 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 		} catch (ClassFormatException cfe) {
 			//the structure remains unknown
 			if (JavaCore.getPlugin().isDebugging()) {
-				cfe.printStackTrace(System.err);
+				JavaModelManager.trace("", cfe); //$NON-NLS-1$
 			}
 			return null;
 		} catch (IOException ioe) {

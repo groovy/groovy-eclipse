@@ -19,8 +19,8 @@ import java.util.Set;
 
 public class WorkQueue {
 
-private Set<SourceFile> needsCompileList;
-private Set<SourceFile> compiledList;
+private final Set<SourceFile> needsCompileList;
+private final Set<SourceFile> compiledList;
 
 public WorkQueue() {
 	this.needsCompileList = new HashSet<>();

@@ -17,17 +17,17 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ISourceMethod;
 
 public class SourceMethod implements ISourceMethod {
-	private int modifiers;
-	private int declarationStart;
+	private final int modifiers;
+	private final int declarationStart;
 	private int declarationEnd;
-	private char[] returnTypeName;
-	private char[] selector;
-	private int nameSourceStart;
-	private int nameSourceEnd;
-	private char[][] argumentTypeNames;
-	private char[][] argumentNames;
-	private char[][] exceptionTypeNames;
-	private char[] source;
+	private final char[] returnTypeName;
+	private final char[] selector;
+	private final int nameSourceStart;
+	private final int nameSourceEnd;
+	private final char[][] argumentTypeNames;
+	private final char[][] argumentNames;
+	private final char[][] exceptionTypeNames;
+	private final char[] source;
 	private String explicitConstructorCall;
 	char[][] typeParameterNames;
 	char[][][] typeParameterBounds;

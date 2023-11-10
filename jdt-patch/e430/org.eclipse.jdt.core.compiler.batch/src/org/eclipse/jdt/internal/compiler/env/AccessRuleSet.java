@@ -21,7 +21,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
  */
 public class AccessRuleSet {
 
-	private AccessRule[] accessRules;
+	private final AccessRule[] accessRules;
 	public byte classpathEntryType; // one of AccessRestriction#COMMAND_LINE, LIBRARY, PROJECT
 	public String classpathEntryName;
 

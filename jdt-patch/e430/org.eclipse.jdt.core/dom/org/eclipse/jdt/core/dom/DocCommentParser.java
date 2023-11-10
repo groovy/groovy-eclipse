@@ -35,7 +35,7 @@ import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 class DocCommentParser extends AbstractCommentParser {
 
 	private Javadoc docComment;
-	private AST ast;
+	private final AST ast;
 
 	DocCommentParser(AST ast, Scanner scanner, boolean check) {
 		super(null);
@@ -155,7 +155,7 @@ class DocCommentParser extends AbstractCommentParser {
 			return argument;
 		}
 		catch (ClassCastException ex) {
-				throw new InvalidInputException();
+				throw Scanner.invalidInput();
 		}
 	}
 
@@ -182,7 +182,7 @@ class DocCommentParser extends AbstractCommentParser {
 			return fieldRef;
 		}
 		catch (ClassCastException ex) {
-				throw new InvalidInputException();
+				throw Scanner.invalidInput();
 		}
 	}
 
@@ -219,7 +219,7 @@ class DocCommentParser extends AbstractCommentParser {
 			return methodRef;
 		}
 		catch (ClassCastException ex) {
-				throw new InvalidInputException();
+				throw Scanner.invalidInput();
 		}
 	}
 

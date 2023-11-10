@@ -20,9 +20,6 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.rewrite.ITrackedNodePosition;
 import org.eclipse.jface.text.IRegion;
 
-/**
- *
- */
 public class TrackedNodePosition implements ITrackedNodePosition {
 
 	private final TextEditGroup group;

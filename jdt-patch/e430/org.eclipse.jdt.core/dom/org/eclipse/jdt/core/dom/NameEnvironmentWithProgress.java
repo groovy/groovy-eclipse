@@ -15,6 +15,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.dom;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -31,7 +33,7 @@ import org.eclipse.jdt.internal.core.NameLookup;
  */
 class NameEnvironmentWithProgress extends FileSystem implements INameEnvironmentWithProgress {
 	IProgressMonitor monitor;
-	
+
 	public NameEnvironmentWithProgress(Classpath[] paths, String[] initialFileNames, IProgressMonitor monitor) {
 		super(paths, initialFileNames, false);
 		setMonitor(monitor);
@@ -39,7 +41,7 @@ class NameEnvironmentWithProgress extends FileSystem implements INameEnvironment
 	private void checkCanceled() {
 		if (this.monitor != null && this.monitor.isCanceled()) {
 			if (NameLookup.VERBOSE) {
-				System.out.println(Thread.currentThread() + " CANCELLING LOOKUP "); //$NON-NLS-1$
+				trace(Thread.currentThread() + " CANCELLING LOOKUP "); //$NON-NLS-1$
 			}
 			throw new AbortCompilation(true/*silent*/, new OperationCanceledException());
 		}
@@ -90,7 +92,7 @@ class NameEnvironmentWithProgress extends FileSystem implements INameEnvironment
 		checkCanceled();
 		return super.isPackage(compoundName, packageName);
 	}
-	
+
 	@Override
 	public void setMonitor(IProgressMonitor monitor) {
 		this.monitor = monitor;

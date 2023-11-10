@@ -18,7 +18,7 @@ package org.eclipse.jdt.internal.compiler.classfmt;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 
 class MethodInfoWithParameterAnnotations extends MethodInfoWithAnnotations {
-	private AnnotationInfo[][] parameterAnnotations;
+	private final AnnotationInfo[][] parameterAnnotations;
 
 MethodInfoWithParameterAnnotations(MethodInfo methodInfo, AnnotationInfo[] annotations, AnnotationInfo[][] parameterAnnotations) {
 	super(methodInfo, annotations);

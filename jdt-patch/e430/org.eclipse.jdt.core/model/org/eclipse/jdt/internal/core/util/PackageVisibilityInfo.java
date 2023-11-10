@@ -23,10 +23,10 @@ import org.eclipse.jdt.core.util.IPackageVisibilityInfo;
 
 public class PackageVisibilityInfo extends ClassFileStruct implements IPackageVisibilityInfo {
 
-	private int index;
-	private char[] packageName;
-	private int flags;
-	private int targetsCount;
+	private final int index;
+	private final char[] packageName;
+	private final int flags;
+	private final int targetsCount;
 	private int[] targetModuleIndices;
 	private char[][] targetModuleNames;
 

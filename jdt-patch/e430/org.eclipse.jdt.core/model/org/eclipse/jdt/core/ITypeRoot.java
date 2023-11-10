@@ -41,7 +41,6 @@ IType findPrimaryType();
  * in this type root.
  * <p>Only subtype {@link IModularClassFile} promises to return non-null.</p>
  *
- * @throws JavaModelException 
  * @since 3.14
  * @return the module description contained in the type root or null.
  */

@@ -23,10 +23,10 @@ import org.eclipse.jdt.core.util.IRequiresInfo;
 
 public class RequiresInfo extends ClassFileStruct implements IRequiresInfo {
 
-	private int index;
-	private char[] moduleName;
-	private int flags;
-	private int versionIndex;
+	private final int index;
+	private final char[] moduleName;
+	private final int flags;
+	private final int versionIndex;
 	private char[] versionName;
 
 	public RequiresInfo(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException{

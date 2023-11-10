@@ -25,7 +25,7 @@ import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 
 public class EclipseDiagnostic implements Diagnostic<EclipseFileObject> {
 
-    private Kind kind;
+    private final Kind kind;
     private final int problemId;
     private final String[] problemArguments;
     private final char[] originatingFileName;

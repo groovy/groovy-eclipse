@@ -76,6 +76,7 @@ public class SwitchStatement extends Expression {
 
 	public boolean containsPatterns;
 	public boolean containsNull;
+	private boolean nullProcessed;
 	/* package */ BranchLabel switchPatternRestartTarget;
 	public Pattern totalPattern;
 
@@ -970,6 +971,7 @@ public class SwitchStatement extends Expression {
 			Pattern pattern = (Pattern) caseStatement.constantExpressions[caseStatement.patternIndex];
 			pattern.elseTarget.place();
 			pattern.suspendVariables(codeStream, this.scope);
+			caseIndex = this.nullProcessed ? caseIndex - 1 : caseIndex;
 			if (!pattern.isAlwaysTrue()) {
 				codeStream.loadInt(caseIndex);
 				codeStream.store(this.restartIndexLocal, false);
@@ -977,6 +979,8 @@ public class SwitchStatement extends Expression {
 			}
 			pattern.thenTarget.place();
 			pattern.resumeVariables(codeStream, this.scope);
+		} else if (this.containsNull && caseStatement != null) {
+			this.nullProcessed |= caseStatement.patternIndex == -1;
 		}
 	}
 	private void generateCodeSwitchPatternPrologue(BlockScope currentScope, CodeStream codeStream) {

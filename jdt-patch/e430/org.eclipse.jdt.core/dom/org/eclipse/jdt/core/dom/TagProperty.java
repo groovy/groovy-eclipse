@@ -240,7 +240,6 @@ public class TagProperty extends ASTNode implements IDocElement{
 	/**
 	 * Sets the name of this tag property.
 	 *
-	 * @param name
 	 * @exception UnsupportedOperationException if this operation is used below JLS18
 	 */
 	public void setName(String name) {
@@ -252,7 +251,6 @@ public class TagProperty extends ASTNode implements IDocElement{
 
 	/**
 	 * Sets the string value of this tag property.
-	 * @param value
 	 * @exception UnsupportedOperationException if this operation is used below JLS18
 	 */
 	public void setStringValue(String value) {
@@ -264,7 +262,6 @@ public class TagProperty extends ASTNode implements IDocElement{
 
 	/**
 	 * Sets the node value of this tag property.
-	 * @param value
 	 * @exception UnsupportedOperationException if this operation is used below JLS18
 	 */
 	public void setNodeValue(ASTNode value) {

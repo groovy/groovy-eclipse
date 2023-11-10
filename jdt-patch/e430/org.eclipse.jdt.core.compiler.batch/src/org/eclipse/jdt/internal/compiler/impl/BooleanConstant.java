@@ -15,7 +15,7 @@ package org.eclipse.jdt.internal.compiler.impl;
 
 public class BooleanConstant extends Constant {
 
-	private boolean value;
+	private final boolean value;
 
 	private static final BooleanConstant TRUE = new BooleanConstant(true);
 	private static final BooleanConstant FALSE = new BooleanConstant(false);

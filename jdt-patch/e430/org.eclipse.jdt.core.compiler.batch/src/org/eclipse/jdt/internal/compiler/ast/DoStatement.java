@@ -155,7 +155,6 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 /**
  * Do statement code generation
- *
  */
 @Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {

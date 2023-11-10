@@ -25,8 +25,8 @@ import org.eclipse.jdt.internal.core.ResolvedSourceField;
 
 @SuppressWarnings("rawtypes")
 public class AssistSourceField extends ResolvedSourceField {
-	private Map bindingCache;
-	private Map infoCache;
+	private final Map bindingCache;
+	private final Map infoCache;
 
 	private String uniqueKey;
 	private boolean isResolved;

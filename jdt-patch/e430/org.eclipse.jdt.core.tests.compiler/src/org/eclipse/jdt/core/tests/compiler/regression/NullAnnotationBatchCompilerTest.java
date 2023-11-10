@@ -1223,4 +1223,159 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 					"",
 					true);
 	}
+	public void testGH1452_src() throws IOException {
+		String annotationPath = "/annotations";
+		new File(OUTPUT_DIR+annotationPath+"/some/sillyPackage").mkdirs();
+		Util.createFile(OUTPUT_DIR+annotationPath+"/some/sillyPackage/Foo.eea",
+				"class some/sillyPackage/Foo\n" +
+				"get\n" +
+				" (Ljava/lang/String;)Ljava/lang/String;\n" +
+				" (L1java/lang/String;)L0java/lang/String;\n");
+
+		String[] testFiles = new String[] {
+				"java/lang/annotation/ElementType.java",
+				ELEMENT_TYPE_18_CONTENT,
+				"org/eclipse/jdt/annotation/NonNull.java",
+				NONNULL_ANNOTATION_18_CONTENT,
+				"org/eclipse/jdt/annotation/Nullable.java",
+				NULLABLE_ANNOTATION_18_CONTENT,
+				"org/eclipse/jdt/annotation/DefaultLocation.java",
+				DEFAULT_LOCATION_CONTENT,
+				"org/eclipse/jdt/annotation/NonNullByDefault.java",
+				NONNULL_BY_DEFAULT_ANNOTATION_18_CONTENT,
+				"sillyPackage/Foo.java",
+				"package some.sillyPackage;\n" +
+				"public class Foo {\n" +
+				"	public String get(String s) { return null; }\n" +
+				"}\n",
+				"test1/Test1.java",
+				"package test1;\n" +
+				"\n" +
+				"import some.sillyPackage.Foo;\n" +
+				"import org.eclipse.jdt.annotation.*;\n" +
+				"\n" +
+				"@NonNullByDefault\n" +
+				"public class Test1 {\n" +
+				"	void test(Foo f) {\n" +
+				"		System.out.print(f.get(null).toUpperCase());\n" +
+				"	}\n" +
+				"}\n"
+			};
+
+		String o_e_j_annotation_dir = OUTPUT_DIR + File.separator +
+				"org" + File.separator + "eclipse" + File.separator + "jdt" + File.separator + "annotation";
+		String j_l_annotation_dir = OUTPUT_DIR +  File.separator +
+				"java" + File.separator + "lang" + File.separator + "annotation";
+
+		String commandLine = " -1.8 -proc:none -d none -err:+nullAnnot,null -annotationpath CLASSPATH " +
+				" -classpath \"" + OUTPUT_DIR + annotationPath +"\" " +
+				// explicitly mention all files to ensure a good order, cannot pull in source of NNBD on demand
+				"\"" + j_l_annotation_dir   +  File.separator + "ElementType.java\" " +
+				"\"" + o_e_j_annotation_dir +  File.separator + "NonNull.java\" " +
+				"\"" + o_e_j_annotation_dir +  File.separator + "Nullable.java\" " +
+				"\"" + o_e_j_annotation_dir +  File.separator + "DefaultLocation.java\" " +
+				"\"" + o_e_j_annotation_dir +  File.separator + "NonNullByDefault.java\" " +
+				"\"" + OUTPUT_DIR +  File.separator + "sillyPackage" + File.separator + "Foo.java\" " +
+				"\"" + OUTPUT_DIR +  File.separator + "test1" + File.separator + "Test1.java\"";
+
+		String expectedCompilerMessage =
+				"----------\n" +
+				"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" +
+				"	System.out.print(f.get(null).toUpperCase());\n" +
+				"	                 ^^^^^^^^^^^\n" +
+				"Potential null pointer access: The method get(String) may return null\n" +
+				"----------\n" +
+				"2. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" +
+				"	System.out.print(f.get(null).toUpperCase());\n" +
+				"	                       ^^^^\n" +
+				"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" +
+				"----------\n" +
+				"2 problems (2 errors)\n";
+		try {
+			this.runNegativeTest(testFiles, commandLine, "", expectedCompilerMessage, false);
+		} finally {
+			Util.delete(Util.getOutputDirectory());
+		}
+	}
+	public void testGH1452_bin() throws IOException {
+		String jarPath = OUTPUT_DIR+"/lib.jar";
+		String annotationZip = OUTPUT_DIR+"/annotations.zip";
+		Util.createJar(new String[] {
+				"some/sillyPackage/Foo.java",
+				"package some.sillyPackage;\n" +
+				"public class Foo {\n" +
+				"	public String get(String s) { return null; }\n" +
+				"}\n"
+			},
+			jarPath,
+			"1.8");
+		Util.createSourceZip(
+				new String[] {
+					"some/sillyPackage/Foo.eea",
+					"class some/sillyPackage/Foo\n" +
+					"get\n" +
+					" (Ljava/lang/String;)Ljava/lang/String;\n" +
+					" (L1java/lang/String;)L0java/lang/String;\n"
+				},
+				annotationZip);
+
+		String[] testFiles = new String[] {
+					"java/lang/annotation/ElementType.java",
+					ELEMENT_TYPE_18_CONTENT,
+					"org/eclipse/jdt/annotation/NonNull.java",
+					NONNULL_ANNOTATION_18_CONTENT,
+					"org/eclipse/jdt/annotation/Nullable.java",
+					NULLABLE_ANNOTATION_18_CONTENT,
+					"org/eclipse/jdt/annotation/DefaultLocation.java",
+					DEFAULT_LOCATION_CONTENT,
+					"org/eclipse/jdt/annotation/NonNullByDefault.java",
+					NONNULL_BY_DEFAULT_ANNOTATION_18_CONTENT,
+					"test1/Test1.java",
+					"package test1;\n" +
+					"\n" +
+					"import some.sillyPackage.Foo;\n" +
+					"import org.eclipse.jdt.annotation.*;\n" +
+					"\n" +
+					"@NonNullByDefault\n" +
+					"public class Test1 {\n" +
+					"	void test(Foo f) {\n" +
+					"		System.out.print(f.get(null).toUpperCase());\n" +
+					"	}\n" +
+					"}\n"
+				};
+
+		String o_e_j_annotation_dir = OUTPUT_DIR + File.separator +
+				"org" + File.separator + "eclipse" + File.separator + "jdt" + File.separator + "annotation";
+		String j_l_annotation_dir = OUTPUT_DIR +  File.separator +
+				"java" + File.separator + "lang" + File.separator + "annotation";
+
+		String commandLine = " -1.8 -proc:none -d none -err:+nullAnnot,null  -annotationpath CLASSPATH " +
+				" -classpath \"" + annotationZip +"\""+ File.pathSeparator + "\"" + jarPath + "\" " +
+				// explicitly mention all files to ensure a good order, cannot pull in source of NNBD on demand
+				"\"" + j_l_annotation_dir   +  File.separator + "ElementType.java\" " +
+				"\"" + o_e_j_annotation_dir +  File.separator + "NonNull.java\" " +
+				"\"" + o_e_j_annotation_dir +  File.separator + "Nullable.java\" " +
+				"\"" + o_e_j_annotation_dir +  File.separator + "DefaultLocation.java\" " +
+				"\"" + o_e_j_annotation_dir +  File.separator + "NonNullByDefault.java\" " +
+				"\"" + OUTPUT_DIR +  File.separator + "test1" + File.separator + "Test1.java\"";
+
+		String expectedCompilerMessage =
+				"----------\n" +
+				"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" +
+				"	System.out.print(f.get(null).toUpperCase());\n" +
+				"	                 ^^^^^^^^^^^\n" +
+				"Potential null pointer access: The method get(String) may return null\n" +
+				"----------\n" +
+				"2. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/test1/Test1.java (at line 9)\n" +
+				"	System.out.print(f.get(null).toUpperCase());\n" +
+				"	                       ^^^^\n" +
+				"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" +
+				"----------\n" +
+				"2 problems (2 errors)\n";
+		try {
+			this.runNegativeTest(testFiles, commandLine, "", expectedCompilerMessage, false);
+		} finally {
+			Util.delete(Util.getOutputDirectory());
+		}
+	}
 }

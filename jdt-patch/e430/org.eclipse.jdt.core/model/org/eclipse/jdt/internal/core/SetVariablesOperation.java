@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -24,7 +26,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.util.Util;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class SetVariablesOperation extends ChangeClasspathOperation {
@@ -158,8 +159,7 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 					}
 				} catch (CoreException e) {
 					if (JavaModelManager.CP_RESOLVE_VERBOSE || JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE){
-						verbose_failure(dbgVariableNames);
-						e.printStackTrace();
+						verbose_failure(dbgVariableNames, e);
 					}
 					if (e instanceof JavaModelException) {
 						throw (JavaModelException)e;
@@ -173,23 +173,22 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 		}
 	}
 
-	private void verbose_failure(String[] dbgVariableNames) {
-		Util.verbose(
+	private void verbose_failure(String[] dbgVariableNames, CoreException e) {
+		trace(
 			"CPVariable SET  - FAILED DUE TO EXCEPTION\n" + //$NON-NLS-1$
-			"	variables: " + org.eclipse.jdt.internal.compiler.util.Util.toString(dbgVariableNames), //$NON-NLS-1$
-			System.err);
+			"	variables: " + org.eclipse.jdt.internal.compiler.util.Util.toString(dbgVariableNames), e); //$NON-NLS-1$
 	}
 
 	private void verbose_update_project(String[] dbgVariableNames,
 			JavaProject affectedProject) {
-		Util.verbose(
+		trace(
 			"CPVariable SET  - updating affected project due to setting variables\n" + //$NON-NLS-1$
 			"	project: " + affectedProject.getElementName() + '\n' + //$NON-NLS-1$
 			"	variables: " + org.eclipse.jdt.internal.compiler.util.Util.toString(dbgVariableNames)); //$NON-NLS-1$
 	}
 
 	private void verbose_set_variables() {
-		Util.verbose(
+		trace(
 			"CPVariable SET  - setting variables\n" + //$NON-NLS-1$
 			"	variables: " + org.eclipse.jdt.internal.compiler.util.Util.toString(this.variableNames) + '\n' +//$NON-NLS-1$
 			"	values: " + org.eclipse.jdt.internal.compiler.util.Util.toString(this.variablePaths)); //$NON-NLS-1$

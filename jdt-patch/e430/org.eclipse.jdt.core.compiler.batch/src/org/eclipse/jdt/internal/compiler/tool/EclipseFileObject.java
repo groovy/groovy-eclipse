@@ -46,7 +46,7 @@ import org.eclipse.jdt.internal.compiler.util.JRTUtil;
  */
 public class EclipseFileObject extends SimpleJavaFileObject {
 	File f;
-	private Charset charset;
+	private final Charset charset;
 	private boolean parentsExist; // parent directories exist
 
 	public EclipseFileObject(String className, URI uri, Kind kind, Charset charset) {

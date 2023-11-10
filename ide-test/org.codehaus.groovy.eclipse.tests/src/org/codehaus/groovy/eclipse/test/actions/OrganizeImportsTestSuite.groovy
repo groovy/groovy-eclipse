@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.ISourceRange
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.core.tests.util.Util
@@ -78,10 +77,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         withProject { IProject project ->
             Util.delete(project.getFile('config.groovy'))
         }
-
-        JavaCore.options = JavaCore.options.tap {
-            remove(OPTIONG_GroovyCompilerConfigScript)
-        }
+        setJavaPreference(OPTIONG_GroovyCompilerConfigScript, null)
     }
 
     protected void addConfigScript(CharSequence contents) {

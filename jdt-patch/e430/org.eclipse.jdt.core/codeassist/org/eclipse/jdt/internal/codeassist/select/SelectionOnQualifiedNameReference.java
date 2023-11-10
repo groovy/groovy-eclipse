@@ -31,7 +31,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *           <SelectOnName:y.fred.ba>
  *         }
  *       }
- *
  */
 
 import org.eclipse.jdt.core.compiler.CharOperation;

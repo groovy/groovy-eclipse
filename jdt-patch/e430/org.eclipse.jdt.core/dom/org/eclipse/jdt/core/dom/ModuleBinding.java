@@ -30,11 +30,11 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment;
 class ModuleBinding implements IModuleBinding {
 
 	protected static final ITypeBinding[] NO_TYPE_BINDINGS = new ITypeBinding[0];
-	private String name = null;
+	private final String name = null;
 	private volatile String key;
 	private boolean isOpen = false;
 
-	private org.eclipse.jdt.internal.compiler.lookup.ModuleBinding binding;
+	private final org.eclipse.jdt.internal.compiler.lookup.ModuleBinding binding;
 	protected BindingResolver resolver;
 
 	private IAnnotationBinding[] annotations;
@@ -86,7 +86,7 @@ class ModuleBinding implements IModuleBinding {
 	@Override
 	public String getName() {
 		if (this.name == null) {
-			char[] tmp = this.binding.moduleName;	
+			char[] tmp = this.binding.moduleName;
 			return tmp != null && tmp.length != 0 ? new String(tmp) : Util.EMPTY_STRING;
 		}
 		return this.name;
@@ -113,7 +113,7 @@ class ModuleBinding implements IModuleBinding {
 		// TODO Auto-generated method stub
 		// TODO Java 9 no reference seen in jvms draft - only in sotm
 		// check on version change and after compiler ast implements isSynthetic return this.binding.isSynthetic();
-		
+
 		return false;
 	}
 

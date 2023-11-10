@@ -25,8 +25,8 @@ public class ConstantValueAttribute
 	extends ClassFileAttribute
 	implements IConstantValueAttribute {
 
-	private int constantValueIndex;
-	private IConstantPoolEntry constantPoolEntry;
+	private final int constantValueIndex;
+	private final IConstantPoolEntry constantPoolEntry;
 
 
 	ConstantValueAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {

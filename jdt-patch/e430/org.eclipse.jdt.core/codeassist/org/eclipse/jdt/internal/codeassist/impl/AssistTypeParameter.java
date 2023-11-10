@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.core.TypeParameter;
 
 @SuppressWarnings("rawtypes")
 public class AssistTypeParameter extends TypeParameter {
-	private Map infoCache;
+	private final Map infoCache;
 	public AssistTypeParameter(JavaElement parent, String name, Map infoCache) {
 		super(parent, name);
 		this.infoCache = infoCache;

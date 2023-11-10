@@ -118,7 +118,7 @@ public IPath[] enclosingProjectsAndJars() {
 		if (BasicSearchEngine.VERBOSE) {
 			long time = System.currentTimeMillis() - start;
 			int length = result == null ? 0 : result.length;
-			Util.verbose("JavaWorkspaceScope.enclosingProjectsAndJars: "+length+" paths computed in "+time+"ms."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			JavaModelManager.trace("JavaWorkspaceScope.enclosingProjectsAndJars: "+length+" paths computed in "+time+"ms."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
 }

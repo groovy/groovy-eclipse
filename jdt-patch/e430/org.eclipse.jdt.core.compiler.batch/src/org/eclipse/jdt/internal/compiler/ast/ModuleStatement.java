@@ -7,16 +7,15 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     
+ *
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
 /**
  * Just a marker class to represent statements that can occur in a module declaration
- *
  */
 public abstract class ModuleStatement extends ASTNode {
 

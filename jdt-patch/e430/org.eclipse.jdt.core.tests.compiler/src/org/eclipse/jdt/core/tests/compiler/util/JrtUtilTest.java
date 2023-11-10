@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022 Andrey Loskutov, and others.
+ * Copyright (c) 2022, 2023 Andrey Loskutov, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -60,14 +60,14 @@ public class JrtUtilTest extends TestCase {
 	@Test
 	public void testGetNewJrtFileSystem() throws Exception {
 		int majorVersionSegment = getMajorVersionSegment(this.jdkRelease);
-		Object jrtSystem = JRTUtil.getJrtSystem(this.image);
+		Object jrtSystem = JRTUtil.getJrtSystem(this.image, null);
 		Object jrtSystem2 = JRTUtil.getJrtSystem(this.image, String.valueOf(majorVersionSegment));
 		assertSame(jrtSystem, jrtSystem2);
 
 		jrtSystem2 = JRTUtil.getJrtSystem(this.image, String.valueOf(majorVersionSegment-2));
 		assertNotSame(jrtSystem, jrtSystem2);
 
-		Object jrtSystem3 = JRTUtil.getJrtSystem(this.image);
+		Object jrtSystem3 = JRTUtil.getJrtSystem(this.image, null);
 		assertSame(jrtSystem, jrtSystem3);
 	}
 

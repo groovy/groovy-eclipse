@@ -62,11 +62,11 @@ import org.eclipse.jdt.internal.core.TypeParameter;
 
 @SuppressWarnings({"rawtypes"})
 public class CompletionUnitStructureRequestor extends CompilationUnitStructureRequestor {
-	private ASTNode assistNode;
+	private final ASTNode assistNode;
 
-	private Map<JavaElement, Binding> bindingCache;
-	private Map<Binding, JavaElement> elementCache;
-	private Map<ASTNode, JavaElement> elementWithProblemCache;
+	private final Map<JavaElement, Binding> bindingCache;
+	private final Map<Binding, JavaElement> elementCache;
+	private final Map<ASTNode, JavaElement> elementWithProblemCache;
 
 	public CompletionUnitStructureRequestor(
 			ICompilationUnit unit,

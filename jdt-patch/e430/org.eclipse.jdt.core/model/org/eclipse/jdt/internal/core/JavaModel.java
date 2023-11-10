@@ -410,7 +410,7 @@ static private boolean isExternalFile(IPath path) {
 		return true;
 	}
 	if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-		System.out.println("(" + Thread.currentThread() + ") [JavaModel.isExternalFile(...)] Checking existence of " + path.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+		JavaModelManager.trace("(" + Thread.currentThread() + ") [JavaModel.isExternalFile(...)] Checking existence of " + path.toString()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	boolean isFile = path.toFile().isFile();
 	if (isFile) {

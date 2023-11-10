@@ -51,13 +51,13 @@ public class TargetSourceRangeComputer {
 		 * 0-based character index, or <code>-1</code>
 		 * if no source position information is known.
 		 */
-		private int startPosition;
+		private final int startPosition;
 
 		/**
 		 * (possibly 0) length, or <code>0</code>
 		 * if no source position information is known.
 		 */
-		private int length;
+		private final int length;
 
 		/**
 		 * Creates a new source range.

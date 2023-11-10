@@ -27,19 +27,14 @@ public class Annotation extends ClassFileStruct implements IAnnotation {
 
 	private static final IAnnotationComponent[] NO_ENTRIES = new IAnnotationComponent[0];
 
-	private int typeIndex;
+	private final int typeIndex;
 	private char[] typeName;
-	private int componentsNumber;
+	private final int componentsNumber;
 	private IAnnotationComponent[] components;
 	private int readOffset;
 
 	/**
 	 * Constructor for Annotation.
-	 *
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public Annotation(
 			byte[] classFileBytes,

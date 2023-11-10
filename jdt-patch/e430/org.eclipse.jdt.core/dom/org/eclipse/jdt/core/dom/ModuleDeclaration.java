@@ -104,9 +104,8 @@ public class ModuleDeclaration extends ASTNode {
 	/**
 	 * The annotations (element type: {@link Annotation}).
 	 * Defaults to an empty list.
-	 *
 	 */
-	private ASTNode.NodeList annotations = new ASTNode.NodeList(ANNOTATIONS_PROPERTY);
+	private final ASTNode.NodeList annotations = new ASTNode.NodeList(ANNOTATIONS_PROPERTY);
 
 	/**
 	 * open versus normal; defaults to normal module.
@@ -123,7 +122,7 @@ public class ModuleDeclaration extends ASTNode {
 	 * The list of statements (element type: {@link ModuleDirective}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList moduleStatements = new ASTNode.NodeList(MODULE_DIRECTIVES_PROPERTY);
+	private final ASTNode.NodeList moduleStatements = new ASTNode.NodeList(MODULE_DIRECTIVES_PROPERTY);
 
 	ModuleDeclaration(AST ast) {
 		super(ast);

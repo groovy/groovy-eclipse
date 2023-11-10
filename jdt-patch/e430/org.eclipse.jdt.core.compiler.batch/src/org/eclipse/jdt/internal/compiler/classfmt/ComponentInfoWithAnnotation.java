@@ -13,7 +13,7 @@
 package org.eclipse.jdt.internal.compiler.classfmt;
 
 public class ComponentInfoWithAnnotation extends RecordComponentInfo {
-	private AnnotationInfo[] annotations;
+	private final AnnotationInfo[] annotations;
 
 	ComponentInfoWithAnnotation(RecordComponentInfo info, AnnotationInfo[] annos) {
 	super(info.reference, info.constantPoolOffsets, info.structOffset, info.version);

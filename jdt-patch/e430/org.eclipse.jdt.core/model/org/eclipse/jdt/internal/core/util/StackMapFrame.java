@@ -25,7 +25,7 @@ public class StackMapFrame extends ClassFileStruct implements IStackMapFrame {
 	private static final IVerificationTypeInfo[] EMPTY_LOCALS_OR_STACK_ITEMS = new IVerificationTypeInfo[0];
 
 	private int readOffset;
-	private int frameType;
+	private final int frameType;
 	private int numberOfLocals;
 	private int numberOfStackItems;
 	private IVerificationTypeInfo[] locals;
@@ -34,11 +34,6 @@ public class StackMapFrame extends ClassFileStruct implements IStackMapFrame {
 
 	/**
 	 * Constructor for StackMapFrame.
-	 *
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public StackMapFrame(
 			byte[] classFileBytes,

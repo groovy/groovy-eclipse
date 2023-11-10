@@ -25,7 +25,6 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Set;
 
-import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
@@ -69,7 +68,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 	}
 
 	@Override
-	protected MethodBinding[] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards, boolean filterDefaultMethods) throws InvalidInputException {
+	protected MethodBinding[] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards, boolean filterDefaultMethods) throws InvalidBindingException {
 		int typesLength = this.intersectingTypes.length;
 		MethodBinding[][] methods = new MethodBinding[typesLength][];
 		int contractsLength = 0;

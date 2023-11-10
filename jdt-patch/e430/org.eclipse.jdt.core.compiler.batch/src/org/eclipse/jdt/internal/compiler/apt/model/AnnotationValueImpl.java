@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2017 IBM Corporation and others.
+ * Copyright (c) 2005, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -124,6 +124,7 @@ public class AnnotationValueImpl implements AnnotationValue, TypeIds {
 	 * BaseTypeBinding, this is ignored and the value is inspected to determine type.
 	 * @param kind an int array whose first element will be set to the type of the
 	 * converted object, represented with T_* values from TypeIds or from this class.
+	 * @return converted mirror type
 	 */
 	private Object convertToMirrorType(Object value, TypeBinding type, int kind[]) {
 		if (type == null) {

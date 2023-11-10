@@ -27,7 +27,7 @@ import org.eclipse.jface.text.Position;
  */
 public class SimpleDocument implements IDocument {
 
-	private StringBuffer buffer;
+	private final StringBuffer buffer;
 
 
 	public SimpleDocument(String source) {

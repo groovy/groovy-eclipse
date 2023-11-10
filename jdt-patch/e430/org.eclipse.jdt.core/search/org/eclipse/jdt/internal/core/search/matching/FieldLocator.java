@@ -260,7 +260,6 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, IJa
 /* (non-Javadoc)
  * Overridden to reject unexact matches.
  * @see org.eclipse.jdt.internal.core.search.matching.PatternLocator#updateMatch(org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding, char[][][], org.eclipse.jdt.internal.core.search.matching.MatchLocator)
- *
  */
 @Override
 protected void updateMatch(ParameterizedTypeBinding parameterizedBinding, char[][][] patternTypeArguments, MatchLocator locator) {

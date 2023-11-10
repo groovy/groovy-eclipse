@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2023 GK Software AG, and others.
+ * Copyright (c) 2013, 2022 GK Software AG, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1079,7 +1079,6 @@ public class InferenceContext18 {
 
 	/**
 	 * JLS 18.2. reduce all initial constraints
-	 * @throws InferenceFailureException
 	 */
 	private boolean reduce() throws InferenceFailureException {
 		// Caution: This can be reentered recursively even as an earlier call is munching through the constraints !
@@ -1110,7 +1109,6 @@ public class InferenceContext18 {
 
 	/**
 	 * Retrieve the resolved solutions for all given type variables.
-	 * @param typeParameters
 	 * @param boundSet where instantiations are to be found
 	 * @return array containing the substituted types or <code>null</code> elements for any type variable that could not be substituted.
 	 */
@@ -1146,7 +1144,6 @@ public class InferenceContext18 {
 	 /** <b>JLS 18.4 </b> Resolution
 	  * @param isRecordPatternTypeInference for 18.5.5_item_3_bullet_5
 	 * @return answer null if some constraint resolved to FALSE, otherwise the boundset representing the solution
-	 * @throws InferenceFailureException
 	 */
 	private /*@Nullable*/ BoundSet resolve(
 			InferenceVariable[] toResolve,
@@ -1299,7 +1296,6 @@ public class InferenceContext18 {
 	/**
 	 * <b>JLS 18.4</b> Resolution
 	 * @return answer null if some constraint resolved to FALSE, otherwise the boundset representing the solution
-	 * @throws InferenceFailureException
 	 */
 	private /*@Nullable*/ BoundSet resolve(InferenceVariable[] toResolve) throws InferenceFailureException {
 		return resolve(toResolve, false);

@@ -34,8 +34,8 @@ public final class NodeFinder {
 	 * This class defines the actual visitor that finds the node.
 	 */
 	private static class NodeFinderVisitor extends ASTVisitor {
-		private int fStart;
-		private int fEnd;
+		private final int fStart;
+		private final int fEnd;
 		private ASTNode fCoveringNode;
 		private ASTNode fCoveredNode;
 
@@ -181,8 +181,8 @@ public final class NodeFinder {
 		}
 		return finder.getCoveringNode();
 	}
-	private ASTNode fCoveringNode;
-	private ASTNode fCoveredNode;
+	private final ASTNode fCoveringNode;
+	private final ASTNode fCoveredNode;
 
 	/**
 	 * Instantiate a new node finder using the given root node, the given start and the given length.

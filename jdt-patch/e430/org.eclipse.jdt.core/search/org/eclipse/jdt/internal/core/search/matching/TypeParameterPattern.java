@@ -49,12 +49,6 @@ public class TypeParameterPattern extends JavaSearchPattern {
 	protected char[] methodDeclaringClassName;
 	protected char[][] methodArgumentTypes;
 
-	/**
-	 * @param findDeclarations
-	 * @param findReferences
-	 * @param typeParameter
-	 * @param matchRule
-	 */
 	public TypeParameterPattern(boolean findDeclarations, boolean findReferences, ITypeParameter typeParameter, int matchRule) {
 		super(TYPE_PARAM_PATTERN, matchRule);
 

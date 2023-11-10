@@ -29,7 +29,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 public abstract class AbstractIndexer implements IIndexConstants {
 
-	SearchDocument document;
+	final SearchDocument document;
 
 	public AbstractIndexer(SearchDocument document) {
 		this.document = document;

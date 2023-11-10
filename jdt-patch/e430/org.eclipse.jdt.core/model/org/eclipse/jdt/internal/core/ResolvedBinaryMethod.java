@@ -22,7 +22,7 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class ResolvedBinaryMethod extends BinaryMethod {
 
-	private String uniqueKey;
+	private final String uniqueKey;
 
 	/**
 	 * The parameter type signatures are expected to be dot-based.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2022 Mateusz Matela and others.
+ * Copyright (c) 2014, 2023 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -18,6 +18,7 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameC
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameNotAToken;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameStringLiteral;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameTextBlock;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameIdentifier;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.InfixExpression.Operator;
+import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 import org.eclipse.jdt.internal.formatter.Token.WrapMode;
 import org.eclipse.jdt.internal.formatter.linewrap.CommentWrapExecutor;
 
@@ -52,7 +54,7 @@ public class TokenManager implements Iterable<Token> {
 	final CommentWrapExecutor commentWrapper;
 
 	private HashMap<Integer, Integer> tokenIndexToNLSAlign;
-	private List<Token[]> formatOffTagPairs = new ArrayList<>();
+	private final List<Token[]> formatOffTagPairs = new ArrayList<>();
 	private int headerEndIndex = 0;
 
 	public TokenManager(List<Token> tokens, String source, DefaultCodeFormatterOptions options) {
@@ -167,7 +169,12 @@ public class TokenManager implements Iterable<Token> {
 			index--;
 		if (forward && get(index).originalEnd < positionInSource)
 			index++;
-		while (tokenType >= 0 && get(index).tokenType != tokenType) {
+		Token t;
+		while (tokenType >= 0 && (t = get(index)).tokenType != tokenType) {
+			if (TerminalTokens.isRestrictedKeyword(tokenType) && t.tokenType == TokenNameIdentifier) {
+				if (tokenType == TerminalTokens.getRestrictedKeyword(toString(t)))
+					break;
+			}
 			index += forward ? 1 : -1;
 		}
 		return index;
@@ -243,7 +250,7 @@ public class TokenManager implements Iterable<Token> {
 		return result;
 	}
 
-	private TokenTraverser positionInLineCounter = new TokenTraverser() {
+	private final TokenTraverser positionInLineCounter = new TokenTraverser() {
 		private boolean isNLSTagInLine = false;
 
 		@Override
@@ -253,7 +260,7 @@ public class TokenManager implements Iterable<Token> {
 				return false;
 			}
 			if (traversed.hasNLSTag()) {
-				assert traversed.tokenType == TokenNameStringLiteral;
+				assert traversed.tokenType == TokenNameStringLiteral || traversed.tokenType == TokenNameTextBlock;
 				this.isNLSTagInLine = true;
 			}
 			if (traversed.getAlign() > 0)

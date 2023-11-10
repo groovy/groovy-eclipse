@@ -40,7 +40,6 @@ public abstract class MethodNameMatch {
 	 * 		{@link IAccessRule#K_ACCESSIBLE}, {@link IAccessRule#K_DISCOURAGED}
 	 * 		or {@link IAccessRule#K_NON_ACCESSIBLE}.
 	 * 		The default returned value is {@link IAccessRule#K_ACCESSIBLE}.
-	 *
 	 */
 	public abstract int getAccessibility();
 

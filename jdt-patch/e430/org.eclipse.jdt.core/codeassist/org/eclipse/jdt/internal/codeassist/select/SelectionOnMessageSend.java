@@ -29,7 +29,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *           <SelectOnMessageSend:this.bar(1, 2)>
  *         }
  *       }
- *
  */
 
 import org.eclipse.jdt.internal.compiler.ast.MessageSend;

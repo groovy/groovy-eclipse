@@ -19,13 +19,12 @@ import org.eclipse.jdt.core.search.MethodNameMatch;
 
 /**
  * Java Search concrete class for a method name match.
- *
  */
 public class JavaSearchMethodNameMatch extends MethodNameMatch {
-	
+
 	IMethod method = null;
 	int modifiers = -1;
-	
+
 	private int accessibility = IAccessRule.K_ACCESSIBLE; // TODO: this pertains to class/type - need to revisit whether this is required in method name match
 	public JavaSearchMethodNameMatch(IMethod method, int modifiers) {
 		this.method = method;
@@ -46,11 +45,11 @@ public class JavaSearchMethodNameMatch extends MethodNameMatch {
 	public IMethod getMethod() {
 		return this.method;
 	}
-	
+
 	public void setAccessibility(int accessibility) {
 		this.accessibility = accessibility;
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.method == null ? super.toString() : this.method.toString();

@@ -1741,7 +1741,7 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 				"----------\n");
 	}
 	public void testEnhancedForWithRecordPattern_001() {
-		runConformTest(new String[] {
+		runNegativeTest(new String[] {
 			"X.java",
 			"import java.util.ArrayList;\n" +
 			"import java.util.List;\n" +
@@ -1760,11 +1760,15 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 			"}\n" +
 			"record R(Integer i) {}"
 			},
-			"1\n" +
-			"2");
+			"----------\n" +
+			"1. ERROR in X.java (at line 5)\n" +
+			"	for (R(Integer a) : rList) { \n" +
+			"	     ^^^^^^^^^^^^\n" +
+			"Syntax error, record patterns are not allowed here\n" +
+			"----------\n");
 	}
 	public void testEnhancedForWithRecordPattern_002() {
-		runConformTest(new String[] {
+		runNegativeTest(new String[] {
 			"X.java",
 			"public class X {\n" +
 			"    public static boolean foo() {\n" +
@@ -1781,7 +1785,12 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 			"}\n" +
 			"record R(int i) {}"
 			},
-			"true");
+			"----------\n" +
+			"1. ERROR in X.java (at line 5)\n" +
+			"	for (R(int x) : recArray) {\n" +
+			"	     ^^^^^^^^\n" +
+			"Syntax error, record patterns are not allowed here\n" +
+			"----------\n");
 	}
 	public void testRecordPatternTypeInference_001() {
 		runNegativeTest(new String[] {
@@ -2029,7 +2038,12 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 				+ "}"
 				},
 				"----------\n" +
-				"1. ERROR in X.java (at line 8)\n" +
+				"1. ERROR in X.java (at line 5)\n" +
+				"	for(R(Integer abcs):rList) {\n" +
+				"	    ^^^^^^^^^^^^^^^\n" +
+				"Syntax error, record patterns are not allowed here\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 8)\n" +
 				"	zork();\n" +
 				"	^^^^\n" +
 				"The method zork() is undefined for the type X\n" +
@@ -2292,10 +2306,15 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 				"	R99[] array = {new R99(new R98(new R97(new R96(new R95(new R94(new R93(new R92(new R91(new R90(new R89(new R88(new R87(new R86(new R85(new R84(new R83(new R82(new R81(new R80(new R79(new R78(new R77(new R76(new R75(new R74(new R73(new R72(new R71(new R70(new R69(new R68(new R67(new R66(new R65(new R64(new R63(new R62(new R61(new R60(new R59(new R58(new R57(new R56(new R55(new R54(new R53(new R52(new R51(new R50(new R49(new R48(new R47(new R46(new R45(new R44(new R43(new R42(new R41(new R40(new R39(new R38(new R37(new R36(new R35(new R34(new R33(new R32(new R31(new R30(new R29(new R28(new R27(new R26(new R25(new R24(new R23(new R22(new R21(new R20(new R19(new R18(new R17(new R16(new R15(new R14(new R13(new R12(new R11(new R10(new R9(new R8(new R7(new R6(new R5(new R4(new R3(new R2(new R1(new R0(\"\"), 1), 2), 3), 4), 5), 6), 7), 8), 9), 10), 11), 12), 13), 14), 15), 16), 17), 18), 19), 20), 21), 22), 23), 24), 25), 26), 27), 28), 29), 30), 31), 32), 33), 34), 35), 36), 37), 38), 39), 40), 41), 42), 43), 44), 45), 46), 47), 48), 49), 50), 51), 52), 53), 54), 55), 56), 57), 58), 59), 60), 61), 62), 63), 64), 65), 66), 67), 68), 69), 70), 71), 72), 73), 74), 75), 76), 77), 78), 79), 80), 81), 82), 83), 84), 85), 86), 87), 88), 89), 90), 91), 92), 93), 94), 95), 96), 97), 98), 99)};\n" +
 				"	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ^^^^^^^^^^\n" +
 				"The constructor X.R0(String) is undefined\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 105)\n" +
+				"	for (R99(R98(R97(R96(R95(R94(R93(R92(R91(R90(R89(R88(R87(R86(R85(R84(R83(R82(R81(R80(R79(R78(R77(R76(R75(R74(R73(R72(R71(R70(R69(R68(R67(R66(R65(R64(R63(R62(R61(R60(R59(R58(R57(R56(R55(R54(R53(R52(R51(R50(R49(R48(R47(R46(R45(R44(R43(R42(R41(R40(R39(R38(R37(R36(R35(R34(R33(R32(R31(R30(R29(R28(R27(R26(R25(R24(R23(R22(R21(R20(R19(R18(R17(R16(R15(R14(R13(R12(R11(R10(R9(R8(R7(R6(R5(R4(R3(R2(R1(R0(int i0), int i1), int i2), int i3), int i4), int i5), int i6), int i7), int i8), int i9), int i10), int i11), int i12), int i13), int i14), int i15), int i16), int i17), int i18), int i19), int i20), int i21), int i22), int i23), int i24), int i25), int i26), int i27), int i28), int i29), int i30), int i31), int i32), int i33), int i34), int i35), int i36), int i37), int i38), int i39), int i40), int i41), int i42), int i43), int i44), int i45), int i46), int i47), int i48), int i49), int i50), int i51), int i52), int i53), int i54), int i55), int i56), int i57), int i58), int i59), int i60), int i61), int i62), int i63), int i64), int i65), int i66), int i67), int i68), int i69), int i70), int i71), int i72), int i73), int i74), int i75), int i76), int i77), int i78), int i79), int i80), int i81), int i82), int i83), int i84), int i85), int i86), int i87), int i88), int i89), int i90), int i91), int i92), int i93), int i94), int i95), int i96), int i97), int i98), int i99) : array) {\n" +
+				"	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Syntax error, record patterns are not allowed here\n" +
 				"----------\n");
 	}
 	public void testIssue945_2() {
-		runConformTest(new String[] {
+		runNegativeTest(new String[] {
 				"X.java",
 				"public class X {\n"
 				+ "    record R0(int x) {}\n"
@@ -2409,7 +2428,12 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 				+ "    }\n"
 				+ "} "
 				},
-				"true");
+				"----------\n" +
+				"1. ERROR in X.java (at line 106)\n" +
+				"	for (R99(R98(R97(R96(R95(R94(R93(R92(R91(R90(R89(R88(R87(R86(R85(R84(R83(R82(R81(R80(R79(R78(R77(R76(R75(R74(R73(R72(R71(R70(R69(R68(R67(R66(R65(R64(R63(R62(R61(R60(R59(R58(R57(R56(R55(R54(R53(R52(R51(R50(R49(R48(R47(R46(R45(R44(R43(R42(R41(R40(R39(R38(R37(R36(R35(R34(R33(R32(R31(R30(R29(R28(R27(R26(R25(R24(R23(R22(R21(R20(R19(R18(R17(R16(R15(R14(R13(R12(R11(R10(R9(R8(R7(R6(R5(R4(R3(R2(R1(R0(int i0), int i1), int i2), int i3), int i4), int i5), int i6), int i7), int i8), int i9), int i10), int i11), int i12), int i13), int i14), int i15), int i16), int i17), int i18), int i19), int i20), int i21), int i22), int i23), int i24), int i25), int i26), int i27), int i28), int i29), int i30), int i31), int i32), int i33), int i34), int i35), int i36), int i37), int i38), int i39), int i40), int i41), int i42), int i43), int i44), int i45), int i46), int i47), int i48), int i49), int i50), int i51), int i52), int i53), int i54), int i55), int i56), int i57), int i58), int i59), int i60), int i61), int i62), int i63), int i64), int i65), int i66), int i67), int i68), int i69), int i70), int i71), int i72), int i73), int i74), int i75), int i76), int i77), int i78), int i79), int i80), int i81), int i82), int i83), int i84), int i85), int i86), int i87), int i88), int i89), int i90), int i91), int i92), int i93), int i94), int i95), int i96), int i97), int i98), int i99) : array) {\n" +
+				"	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Syntax error, record patterns are not allowed here\n" +
+				"----------\n");
 	}
 	public void testRecordPatternMatchException_001() {
 		runConformTest(new String[] {

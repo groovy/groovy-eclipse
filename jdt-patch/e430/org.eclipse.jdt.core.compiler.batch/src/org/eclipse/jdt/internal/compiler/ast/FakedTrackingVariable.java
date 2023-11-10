@@ -174,7 +174,6 @@ public class FakedTrackingVariable extends LocalDeclaration {
 	 * <li>value is a local variable reference, create tracking variable it if needed.
 	 * <li>value is an allocation expression, return a preliminary tracking variable if set.
 	 * </ul>
-	 * @param expression
 	 * @return a new {@link FakedTrackingVariable} or null.
 	 */
 	public static FakedTrackingVariable getCloseTrackingVariable(Expression expression, FlowInfo flowInfo, FlowContext flowContext) {
@@ -535,7 +534,6 @@ public class FakedTrackingVariable extends LocalDeclaration {
 	 * @param scope scope containing the assignment
 	 * @param upstreamInfo info without analysis of the rhs, use this to determine the status of a resource being disconnected
 	 * @param flowInfo info with analysis of the rhs, use this for recording resource status because this will be passed downstream
-	 * @param flowContext
 	 * @param location where to report warnigs/errors against
 	 * @param rhs the right hand side of the assignment, this expression is to be analyzed.
 	 *			The caller has already checked that the rhs is either of a closeable type or null.
@@ -796,8 +794,6 @@ public class FakedTrackingVariable extends LocalDeclaration {
 
 	/**
 	 * Get the null status looking even into unreachable flows
-	 * @param local
-	 * @param flowInfo
 	 * @return one of the constants FlowInfo.{NULL,POTENTIALLY_NULL,POTENTIALLY_NON_NULL,NON_NULL}.
 	 */
 	private int getNullStatusAggressively(LocalVariableBinding local, FlowInfo flowInfo) {

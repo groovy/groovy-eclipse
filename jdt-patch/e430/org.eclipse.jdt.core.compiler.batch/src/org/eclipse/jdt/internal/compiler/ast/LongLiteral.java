@@ -30,7 +30,7 @@ public class LongLiteral extends NumberLiteral {
 	private static final char[] DECIMAL_MIN_VALUE     = "9223372036854775808L".toCharArray(); //$NON-NLS-1$
 	private static final char[] DECIMAL_MAX_VALUE     = "9223372036854775807L".toCharArray(); //$NON-NLS-1$
 
-	private char[] reducedForm; // no underscores
+	private final char[] reducedForm; // no underscores
 
 	public static LongLiteral buildLongLiteral(char[] token, int s, int e) {
 		// remove '_' and prefix '0' first

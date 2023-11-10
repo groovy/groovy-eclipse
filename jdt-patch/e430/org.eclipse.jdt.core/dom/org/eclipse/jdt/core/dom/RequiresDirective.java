@@ -75,7 +75,7 @@ public class RequiresDirective extends ModuleDirective {
 	 * The extended modifiers (element type: {@link ModuleModifier}).
 	 * defaults to an empty list
 	 */
-	private ASTNode.NodeList modifiers = new ASTNode.NodeList(MODIFIERS_PROPERTY);
+	private final ASTNode.NodeList modifiers = new ASTNode.NodeList(MODIFIERS_PROPERTY);
 
 	/**
 	 * The referenced module name; lazily initialized; defaults to a unspecified,

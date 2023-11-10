@@ -21,7 +21,7 @@ import org.eclipse.jdt.core.util.IPermittedSubclassesAttributeEntry;
 
 public class PermittedSubclassesAttributeEntry extends ClassFileStruct implements IPermittedSubclassesAttributeEntry {
 
-	private int permittedClassNameIndex;
+	private final int permittedClassNameIndex;
 	private char[] permittedClassName;
 
 	public PermittedSubclassesAttributeEntry(byte[] classFileBytes, IConstantPool constantPool, int offset)

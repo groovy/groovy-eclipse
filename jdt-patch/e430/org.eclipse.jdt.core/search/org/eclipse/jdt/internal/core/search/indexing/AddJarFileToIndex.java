@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -106,20 +108,20 @@ class AddJarFileToIndex extends BinaryContainer {
 			Index index = this.manager.getIndexForUpdate(this.containerPath, false, /*do not reuse index file*/ false /*do not create if none*/);
 			if (index != null) {
 				if (JobManager.VERBOSE)
-					org.eclipse.jdt.internal.core.util.Util.verbose("-> no indexing required (index already exists) for " + this.containerPath); //$NON-NLS-1$
+					trace("-> no indexing required (index already exists) for " + this.containerPath); //$NON-NLS-1$
 				return true;
 			}
 
 			index = this.manager.getIndexForUpdate(this.containerPath, true, /*reuse index file*/ true /*create if none*/);
 			if (index == null) {
 				if (JobManager.VERBOSE)
-					org.eclipse.jdt.internal.core.util.Util.verbose("-> index could not be created for " + this.containerPath); //$NON-NLS-1$
+					trace("-> index could not be created for " + this.containerPath); //$NON-NLS-1$
 				return true;
 			}
 			ReadWriteMonitor monitor = index.monitor;
 			if (monitor == null) {
 				if (JobManager.VERBOSE)
-					org.eclipse.jdt.internal.core.util.Util.verbose("-> index for " + this.containerPath + " just got deleted"); //$NON-NLS-1$//$NON-NLS-2$
+					trace("-> index for " + this.containerPath + " just got deleted"); //$NON-NLS-1$//$NON-NLS-2$
 				return true; // index got deleted since acquired
 			}
 			index.separator = JAR_SEPARATOR;
@@ -134,29 +136,28 @@ class AddJarFileToIndex extends BinaryContainer {
 					URI location = this.resource.getLocationURI();
 					if (location == null) return false;
 					if (JavaModelManager.ZIP_ACCESS_VERBOSE)
-						System.out.println("(" + Thread.currentThread() + ") [AddJarFileToIndex.execute()] Creating ZipFile on " + location.getPath()); //$NON-NLS-1$	//$NON-NLS-2$
+						trace("(" + Thread.currentThread() + ") [AddJarFileToIndex.execute()] Creating ZipFile on " + location.getPath()); //$NON-NLS-1$	//$NON-NLS-2$
 					File file = null;
 					try {
 						file = org.eclipse.jdt.internal.core.util.Util.toLocalFile(location, progressMonitor);
 					} catch (CoreException e) {
 						if (JobManager.VERBOSE) {
-							org.eclipse.jdt.internal.core.util.Util.verbose("-> failed to index " + location.getPath() + " because of the following exception:"); //$NON-NLS-1$ //$NON-NLS-2$
-							e.printStackTrace();
+							trace("-> failed to index " + location.getPath() + " because of the following exception:", e); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 					}
 					if (file == null) {
 						if (JobManager.VERBOSE)
-							org.eclipse.jdt.internal.core.util.Util.verbose("-> failed to index " + location.getPath() + " because the file could not be fetched"); //$NON-NLS-1$ //$NON-NLS-2$
+							trace("-> failed to index " + location.getPath() + " because the file could not be fetched"); //$NON-NLS-1$ //$NON-NLS-2$
 						return false;
 					}
 					if (JavaModelManager.ZIP_ACCESS_VERBOSE)
-						System.out.println("(" + Thread.currentThread() + ") [AddJarFileToIndex.execute()] Creating ZipFile on " + this.containerPath); //$NON-NLS-1$	//$NON-NLS-2$
+						trace("(" + Thread.currentThread() + ") [AddJarFileToIndex.execute()] Creating ZipFile on " + this.containerPath); //$NON-NLS-1$	//$NON-NLS-2$
 					zip = new ZipFile(file);
 					zipFilePath = (Path) this.resource.getFullPath().makeRelative();
 					// absolute path relative to the workspace
 				} else {
 					if (JavaModelManager.ZIP_ACCESS_VERBOSE)
-						System.out.println("(" + Thread.currentThread() + ") [AddJarFileToIndex.execute()] Creating ZipFile on " + this.containerPath); //$NON-NLS-1$	//$NON-NLS-2$
+						trace("(" + Thread.currentThread() + ") [AddJarFileToIndex.execute()] Creating ZipFile on " + this.containerPath); //$NON-NLS-1$	//$NON-NLS-2$
 					// external file -> it is ok to use toFile()
 					zip = new ZipFile(this.containerPath.toFile());
 					zipFilePath = (Path) this.containerPath;
@@ -165,12 +166,12 @@ class AddJarFileToIndex extends BinaryContainer {
 
 				if (this.isCancelled) {
 					if (JobManager.VERBOSE)
-						org.eclipse.jdt.internal.core.util.Util.verbose("-> indexing of " + zip.getName() + " has been cancelled"); //$NON-NLS-1$ //$NON-NLS-2$
+						trace("-> indexing of " + zip.getName() + " has been cancelled"); //$NON-NLS-1$ //$NON-NLS-2$
 					return false;
 				}
 
 				if (JobManager.VERBOSE)
-					org.eclipse.jdt.internal.core.util.Util.verbose("-> indexing " + zip.getName()); //$NON-NLS-1$
+					trace("-> indexing " + zip.getName()); //$NON-NLS-1$
 				long initialTime = System.currentTimeMillis();
 
 				String[] paths = index.queryDocumentNames(""); // all file names //$NON-NLS-1$
@@ -205,7 +206,7 @@ class AddJarFileToIndex extends BinaryContainer {
 						}
 						if (!needToReindex) {
 							if (JobManager.VERBOSE)
-								org.eclipse.jdt.internal.core.util.Util.verbose("-> no indexing required (index is consistent with library) for " //$NON-NLS-1$
+								trace("-> no indexing required (index is consistent with library) for " //$NON-NLS-1$
 								+ zip.getName() + " (" //$NON-NLS-1$
 								+ (System.currentTimeMillis() - initialTime) + "ms)"); //$NON-NLS-1$
 							this.manager.saveIndex(index); // to ensure its placed into the saved state
@@ -232,7 +233,7 @@ class AddJarFileToIndex extends BinaryContainer {
 				for (Enumeration e = zip.entries(); e.hasMoreElements();) {
 					if (this.isCancelled) {
 						if (JobManager.VERBOSE)
-							org.eclipse.jdt.internal.core.util.Util.verbose("-> indexing of " + zip.getName() + " has been cancelled"); //$NON-NLS-1$ //$NON-NLS-2$
+							trace("-> indexing of " + zip.getName() + " has been cancelled"); //$NON-NLS-1$ //$NON-NLS-2$
 						return false;
 					}
 
@@ -260,8 +261,9 @@ class AddJarFileToIndex extends BinaryContainer {
 						JavaSearchDocument entryDocument = new JavaSearchDocument(ze, zipFilePath, new String(contents).getBytes(Charset.defaultCharset()), participant);
 						this.manager.indexDocument(entryDocument, participant, index, indexPath);
 					} catch (CoreException e) {
-						// TODO Auto-generated catch block
-//						e.printStackTrace();
+						if (JobManager.VERBOSE) {
+							JavaModelManager.trace("", e); //$NON-NLS-1$
+						}
 					}
 				}
 				if(this.forceIndexUpdate) {
@@ -271,13 +273,14 @@ class AddJarFileToIndex extends BinaryContainer {
 					this.manager.saveIndex(index);
 				}
 				if (JobManager.VERBOSE)
-					org.eclipse.jdt.internal.core.util.Util.verbose("-> done indexing of " //$NON-NLS-1$
+					trace("-> done indexing of " //$NON-NLS-1$
 						+ zip.getName() + " (" //$NON-NLS-1$
 						+ (System.currentTimeMillis() - initialTime) + "ms)"); //$NON-NLS-1$
 			} finally {
 				if (zip != null) {
-					if (JavaModelManager.ZIP_ACCESS_VERBOSE)
-						System.out.println("(" + Thread.currentThread() + ") [AddJarFileToIndex.execute()] Closing ZipFile " + this.containerPath); //$NON-NLS-1$	//$NON-NLS-2$
+					if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
+						trace("(" + Thread.currentThread() + ") [AddJarFileToIndex.execute()] Closing ZipFile " + this.containerPath); //$NON-NLS-1$	//$NON-NLS-2$
+					}
 					zip.close();
 				}
 				monitor.exitWrite(); // free write lock

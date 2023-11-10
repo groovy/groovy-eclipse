@@ -242,10 +242,10 @@ public abstract class FunctionalExpression extends Expression {
 
 	static class VisibilityInspector extends TypeBindingVisitor {
 
-		private Scope scope;
-		private boolean shouldChatter;
+		private final Scope scope;
+		private final boolean shouldChatter;
         private boolean visible = true;
-		private FunctionalExpression expression;
+		private final FunctionalExpression expression;
 
 		public VisibilityInspector(FunctionalExpression expression, Scope scope, boolean shouldChatter) {
 			this.scope = scope;

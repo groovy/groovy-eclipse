@@ -22,6 +22,7 @@ import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.parser.JavadocParser;
+import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 
@@ -581,7 +582,7 @@ public class CompletionJavadocParser extends JavadocParser {
 			}
 
 			// Something wrong happened => Invalid input
-			throw new InvalidInputException();
+			throw Scanner.invalidInput();
 		} finally {
 			// we have to make sure that this is reset to the previous value even if an exception occurs
 			this.scanner.tokenizeWhiteSpace = tokenWhiteSpace;

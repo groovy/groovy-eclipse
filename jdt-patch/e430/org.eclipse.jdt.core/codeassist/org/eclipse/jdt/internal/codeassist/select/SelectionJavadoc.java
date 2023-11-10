@@ -72,8 +72,6 @@ public class SelectionJavadoc extends Javadoc {
 	/**
 	 * Resolve selected node if not null and throw exception to let clients know
 	 * that it has been found.
-	 *
-	 * @throws SelectionNodeFound
 	 */
 	private void internalResolve(Scope scope) {
 		if (this.selectedNode != null) {
@@ -125,8 +123,6 @@ public class SelectionJavadoc extends Javadoc {
 	/**
 	 * Resolve selected node if not null and throw exception to let clients know
 	 * that it has been found.
-	 *
-	 * @throws SelectionNodeFound
 	 */
 	@Override
 	public void resolve(ClassScope scope) {
@@ -136,8 +132,6 @@ public class SelectionJavadoc extends Javadoc {
 	/**
 	 * Resolve selected node if not null and throw exception to let clients know
 	 * that it has been found.
-	 *
-	 * @throws SelectionNodeFound
 	 */
 	@Override
 	public void resolve(MethodScope scope) {

@@ -35,7 +35,7 @@ public class JavadocSingleTypeReference extends SingleTypeReference implements I
 	public int tagSourceStart, tagSourceEnd;
 	public PackageBinding packageBinding;
 	public ModuleBinding moduleBinding;
-	private boolean canBeModule;
+	private final boolean canBeModule;
 
 	public JavadocSingleTypeReference(char[] source, long pos, int tagStart, int tagEnd) {
 		this(source, pos, tagStart, tagEnd, false);

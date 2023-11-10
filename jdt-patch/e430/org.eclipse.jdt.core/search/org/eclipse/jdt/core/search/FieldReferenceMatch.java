@@ -27,8 +27,8 @@ import org.eclipse.jdt.core.IJavaElement;
  */
 public class FieldReferenceMatch extends ReferenceMatch {
 
-private boolean isReadAccess;
-private boolean isWriteAccess;
+private final boolean isReadAccess;
+private final boolean isWriteAccess;
 
 /**
  * Creates a new field reference match.

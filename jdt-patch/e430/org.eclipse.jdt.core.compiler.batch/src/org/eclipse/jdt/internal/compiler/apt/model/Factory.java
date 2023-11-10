@@ -585,7 +585,6 @@ public class Factory {
      *
      * @param value the current value from the annotation instance.
      * @param expectedType the expected type of the value.
-     *
      */
     public static Object performNecessaryPrimitiveTypeConversion(
     		final Class<?> expectedType,
@@ -776,9 +775,6 @@ public class Factory {
 
     /**
      * Set an element of an array to the appropriate dummy value type
-     * @param array
-     * @param i
-     * @param expectedLeafType
      */
 	public static void setArrayMatchingDummyValue(Object array, int i, Class<?> expectedLeafType)
 	{

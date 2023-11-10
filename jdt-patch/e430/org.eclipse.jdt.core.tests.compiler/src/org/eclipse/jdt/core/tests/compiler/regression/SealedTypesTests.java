@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2022 IBM Corporation and others.
+ * Copyright (c) 2020, 2023 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,7 @@ public class SealedTypesTests extends AbstractRegressionTest9 {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testBug564638_056"};
+//		TESTS_NAMES = new String[] { "testBug564498_6"};
 	}
 
 	public static Class<?> testClass() {
@@ -1611,12 +1611,7 @@ public class SealedTypesTests extends AbstractRegressionTest9 {
 					"}",
 				},
 				"----------\n" +
-				"1. ERROR in p1\\X.java (at line 6)\n" +
-				"	sealed class Y extends X permits SubInnerY {\n" +
-				"	                                 ^^^^^^^^^\n" +
-				"SubInnerY cannot be resolved to a type\n" +
-				"----------\n" +
-				"2. ERROR in p1\\X.java (at line 7)\n" +
+				"1. ERROR in p1\\X.java (at line 7)\n" +
 				"	final class SubInnerY extends Y {}\n" +
 				"	                              ^\n" +
 				"The type SubInnerY extending a sealed class A.Y should be a permitted subtype of A.Y\n" +
@@ -5711,12 +5706,7 @@ public class SealedTypesTests extends AbstractRegressionTest9 {
 					"}"
 				},
 				"----------\n"
-				+ "1. ERROR in X.java (at line 1)\n"
-				+ "	public sealed class X permits Y {\n"
-				+ "	                              ^\n"
-				+ "Y cannot be resolved to a type\n"
-				+ "----------\n"
-				+ "2. ERROR in X.java (at line 2)\n"
+				+ "1. ERROR in X.java (at line 2)\n"
 				+ "	final class Y extends X {}\n"
 				+ "	                      ^\n"
 				+ "The type Y extending a sealed class X should be a permitted subtype of X\n"

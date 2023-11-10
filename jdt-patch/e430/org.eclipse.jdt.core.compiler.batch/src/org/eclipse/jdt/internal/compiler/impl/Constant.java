@@ -22,7 +22,7 @@ public abstract class Constant implements TypeIds, OperatorIds {
 
 	public static final Constant NotAConstant = DoubleConstant.fromValue(Double.NaN);
 	public static final Constant[] NotAConstantList = new Constant[] {DoubleConstant.fromValue(Double.NaN)};
-	
+
 	public boolean booleanValue() {
 		throw new ShouldNotImplement(Messages.bind(Messages.constant_cannotCastedInto, new String[] { typeName(), "boolean" })); //$NON-NLS-1$
 	}
@@ -1469,10 +1469,9 @@ public abstract class Constant implements TypeIds, OperatorIds {
 	public float floatValue() {
 		throw new ShouldNotImplement(Messages.bind(Messages.constant_cannotCastedInto, new String[] { typeName(), "float" })); //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * Returns true if both constants have the same type and the same actual value
-	 * @param otherConstant
 	 */
 	public boolean hasSameValue(Constant otherConstant) {
 		if (this == otherConstant)

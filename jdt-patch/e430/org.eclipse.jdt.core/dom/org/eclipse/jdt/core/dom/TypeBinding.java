@@ -1323,7 +1323,7 @@ class TypeBinding implements ITypeBinding {
 
 	static class LocalTypeBinding extends TypeBinding {
 
-		private IBinding declaringMember;
+		private final IBinding declaringMember;
 
 		public LocalTypeBinding(BindingResolver resolver,
 									org.eclipse.jdt.internal.compiler.lookup.TypeBinding binding,

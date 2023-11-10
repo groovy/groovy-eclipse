@@ -33,7 +33,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *           }
  *         }
  *       }
- *
  */
 
 import org.eclipse.jdt.internal.compiler.ast.SuperReference;

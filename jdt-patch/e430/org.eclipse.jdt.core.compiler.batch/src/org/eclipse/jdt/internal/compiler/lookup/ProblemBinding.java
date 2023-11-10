@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 public class ProblemBinding extends Binding {
 	public char[] name;
 	public ReferenceBinding searchType;
-	private int problemId;
+	private final int problemId;
 // NOTE: must only answer the subset of the name related to the problem
 
 public ProblemBinding(char[][] compoundName, int problemId) {

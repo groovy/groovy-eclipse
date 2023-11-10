@@ -245,7 +245,7 @@ public Constant constant(Scope scope) {
 		return this.constant;
 	ProblemReporter problemReporter = scope.problemReporter();
 	IErrorHandlingPolicy suspendedPolicy = problemReporter.suspendTempErrorHandlingPolicy();
-	try {
+	try (problemReporter) {
 		return constant();
 	} finally {
 		problemReporter.resumeTempErrorHandlingPolicy(suspendedPolicy);

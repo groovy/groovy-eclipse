@@ -27,6 +27,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * A code snippet evaluator compiles and returns class file for a code snippet.
@@ -150,7 +151,10 @@ Compiler getCompiler(ICompilerRequestor compilerRequestor) {
 				try {
 					binaryType = new ClassFileReader(globalClassFiles[i].getBytes(), null);
 				} catch (ClassFormatException e) {
-					e.printStackTrace(); // Should never happen since we compiled this type
+					if (JavaModelManager.VERBOSE) {
+						JavaModelManager.trace("", e); //$NON-NLS-1$
+					}
+					// Should never happen since we compiled this type
 				}
 				compiler.lookupEnvironment.cacheBinaryType(binaryType, null /*no access restriction*/);
 			}

@@ -54,7 +54,7 @@ class MemberDeclarationVisitor extends ASTVisitor {
 	IJavaElement[][] allOtherElements;
 	int ptr = -1;
 	int[] ptrs;
-	private boolean typeInHierarchy;
+	private final boolean typeInHierarchy;
 
 public MemberDeclarationVisitor(IJavaElement element, ASTNode[] nodes, MatchingNodeSet set, MatchLocator locator, boolean typeInHierarchy) {
 	this.enclosingElement = element;
@@ -226,7 +226,7 @@ public boolean visit(LambdaExpression lambdaExpression, BlockScope scope) {
 		if (lambdaExpression.resolvedType != null && lambdaExpression.resolvedType.isValidBinding() &&
 				!(lambdaExpression.descriptor instanceof ProblemMethodBinding))
 			this.locator.reportMatching(lambdaExpression, this.enclosingElement, level != null ? level.intValue() : -1, this.nodeSet, this.typeInHierarchy);
-		else 
+		else
 			return true;
 	} catch (CoreException e) {
 		throw new WrappedCoreException(e);

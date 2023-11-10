@@ -26,15 +26,11 @@ public class LocalVariableTypeAttribute
 	implements ILocalVariableTypeTableAttribute {
 
 	private static final ILocalVariableTypeTableEntry[] NO_ENTRIES = new ILocalVariableTypeTableEntry[0];
-	private int localVariableTypeTableLength;
+	private final int localVariableTypeTableLength;
 	private ILocalVariableTypeTableEntry[] localVariableTypeTableEntries;
 
 	/**
 	 * Constructor for LocalVariableTypeAttribute.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public LocalVariableTypeAttribute(
 		byte[] classFileBytes,

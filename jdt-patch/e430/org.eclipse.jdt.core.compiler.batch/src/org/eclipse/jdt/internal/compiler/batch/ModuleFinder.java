@@ -154,7 +154,6 @@ public class ModuleFinder {
 	 * element, first being the source module and second being the target module.
 	 * The expected format is:
 	 *  --add-reads <source-module>=<target-module>
-	 * @param option
 	 * @return a String[] with source and target module of the "reads" clause.
 	 */
 	protected static String[] extractAddonRead(String option) {

@@ -20,7 +20,7 @@ package org.eclipse.jdt.internal.core;
  */
 public class ResolvedBinaryField extends BinaryField {
 
-	private String uniqueKey;
+	private final String uniqueKey;
 
 	/*
 	 * See class comments.

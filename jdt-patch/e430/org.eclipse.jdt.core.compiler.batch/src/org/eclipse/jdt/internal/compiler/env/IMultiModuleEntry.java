@@ -18,12 +18,11 @@ import java.util.Collection;
 /**
  * Represents a module path entry that represents a collection of modules
  * like a jimage or an exploded module directory structure
- *
  */
 public interface IMultiModuleEntry extends IModulePathEntry {
 
 	/**
-	 * Get the module named name that this entry contributes to the module path 
+	 * Get the module named name that this entry contributes to the module path
 	 */
 
 	@Override

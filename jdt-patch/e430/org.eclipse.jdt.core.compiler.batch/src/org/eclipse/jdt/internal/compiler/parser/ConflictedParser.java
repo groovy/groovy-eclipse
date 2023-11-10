@@ -21,6 +21,13 @@ public interface ConflictedParser {
 	   we treat the type annotation as a declarative annotation.
 	*/
 	boolean atConflictScenario(int token);
+
+	/* Return true if at the configuration the parser finds itself in, it would shift the token.
+	   It is axiomatic of the push down automaton that corresponds to the LALR grammar that it
+	   will never shift on invalid input.
+	*/
+	boolean automatonWillShift(int token);
+
 	/*
 	 * Return true if the parser is parsing a module declaration. In Java 9, module, requires, exports,
 	 * to, uses, provides, and with are restricted keywords (i.e. they are keywords solely where they

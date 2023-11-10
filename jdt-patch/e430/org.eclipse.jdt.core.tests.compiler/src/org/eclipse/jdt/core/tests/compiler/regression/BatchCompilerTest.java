@@ -89,8 +89,8 @@ public class BatchCompilerTest extends AbstractBatchCompilerTest {
 		return BatchCompilerTest.class;
 	}
 	static class StringMatcher extends Matcher {
-		private String expected;
-		private Normalizer normalizer;
+		private final String expected;
+		private final Normalizer normalizer;
 		StringMatcher(String expected, Normalizer normalizer) {
 			this.expected = expected;
 			this.normalizer = normalizer;
@@ -111,7 +111,7 @@ public class BatchCompilerTest extends AbstractBatchCompilerTest {
 		}
 	}
 	static class SubstringMatcher extends Matcher {
-		private String substring;
+		private final String substring;
 		SubstringMatcher(String substring) {
 			this.substring = substring;
 		}
@@ -169,7 +169,8 @@ public class BatchCompilerTest extends AbstractBatchCompilerTest {
 	 * This normalizer removes a selected range of lines from a log file.
 	 */
 	private static class LinesRangeNormalizer extends Normalizer {
-		private int first, number;
+		private final int first;
+		private int number;
 
 		LinesRangeNormalizer() {
 			super(null);

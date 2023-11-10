@@ -24,9 +24,9 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
  */
 public class ClassFileAttribute extends ClassFileStruct implements IClassFileAttribute {
 	public static final IClassFileAttribute[] NO_ATTRIBUTES = new IClassFileAttribute[0];
-	private long attributeLength;
-	private int attributeNameIndex;
-	private char[] attributeName;
+	private final long attributeLength;
+	private final int attributeNameIndex;
+	private final char[] attributeName;
 
 	public ClassFileAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {
 		this.attributeNameIndex = u2At(classFileBytes, 0, offset);

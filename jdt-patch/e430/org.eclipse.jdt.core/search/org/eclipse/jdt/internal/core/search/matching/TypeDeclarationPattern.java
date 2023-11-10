@@ -21,7 +21,6 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.core.index.*;
-import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 
 public class TypeDeclarationPattern extends JavaSearchPattern {
 
@@ -29,7 +28,6 @@ public char[] simpleName;
 public char[] pkg;
 public char[][] enclosingTypeNames;
 public char[][] moduleNames = null;
-private boolean allowModuleRegex = false; // enable to try experimental Module Regex Match
 /* package */ Pattern[] modulePatterns = null;
 public boolean moduleGraph = false;
 /* package */ char[][] moduleGraphElements = null;
@@ -186,19 +184,10 @@ protected void addModuleNames(char[] modNames) {
 	final String explicit_unnamed = new String(IJavaSearchConstants.ALL_UNNAMED);
 	String[] names = new String(modNames).split(String.valueOf(CharOperation.COMMA_SEPARATOR));
 	int len = names.length;
-	if (this.allowModuleRegex && len > 0 && names[0] != null && names[0].length() > 0
-			&& names[0].charAt(0) == IIndexConstants.ZERO_CHAR) { //pattern
-		names[0] = names[0].substring(1);
-		this.modulePatterns = new Pattern[len];
-		for (int i = 0; i < len; ++i) {
-			this.modulePatterns[i] = Pattern.compile(names[i]);
-		}
-	} else { // 'normal' matching - flag if don't care conditions are passed
-		for (int i = 0; i < len; ++i) {
-			names[i] = names[i].trim();
-			if (explicit_unnamed.equals(names[i]))
-				names[i] = ""; //$NON-NLS-1$
-		}
+	for (int i = 0; i < len; ++i) {
+		names[i] = names[i].trim();
+		if (explicit_unnamed.equals(names[i]))
+			names[i] = ""; //$NON-NLS-1$
 	}
 	this.moduleNames = new char[len][];
 	for (int i = 0; i < len; ++i) {

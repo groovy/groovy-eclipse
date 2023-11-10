@@ -43,14 +43,14 @@ public class LexStream implements TerminalTokens {
 
 	private int tokenCacheIndex;
 	private int tokenCacheEOFIndex;
-	private Token[] tokenCache;
+	private final Token[] tokenCache;
 
 	private int currentIndex = -1;
 
-	private Scanner scanner;
-	private int[] intervalStartToSkip;
-	private int[] intervalEndToSkip;
-	private int[] intervalFlagsToSkip;
+	private final Scanner scanner;
+	private final int[] intervalStartToSkip;
+	private final int[] intervalEndToSkip;
+	private final int[] intervalFlagsToSkip;
 
 	private int previousInterval = -1;
 	private int currentInterval = -1;

@@ -72,7 +72,7 @@ public interface IModuleAwareNameEnvironment extends INameEnvironment {
 		public <T> boolean matches(T elem, Predicate<T> isNamed) {
 			return matchesWithName(elem, isNamed, t -> true);
 		}
-		
+
 		/** Get the lookup strategy corresponding to the given module name. */
 		public static LookupStrategy get(char[] moduleName) {
 			if (moduleName == ModuleBinding.ANY)
@@ -91,7 +91,7 @@ public interface IModuleAwareNameEnvironment extends INameEnvironment {
 			}
 		}
 	}
-	
+
 	@Override
 	default NameEnvironmentAnswer findType(char[][] compoundTypeName) {
 		return findType(compoundTypeName, ModuleBinding.ANY);
@@ -121,15 +121,14 @@ public interface IModuleAwareNameEnvironment extends INameEnvironment {
 		return allNames;
 	}
 
-	
+
 	/**
 	 * Answer whether the given package (within the given module) contains any compilation unit.
-	 * @param qualifiedPackageName
 	 * @param checkCUs - if true, check contained Compilation Units for a matching package declaration
 	 * @return true iff the package contains at least one compilation unit.
 	 */
 	boolean hasCompilationUnit(char[][] qualifiedPackageName, char[] moduleName, boolean checkCUs);
-	
+
 	/** Get the module with the given name, which must denote a named module. */
 	IModule getModule(char[] moduleName);
 	char[][] getAllAutomaticModules();
@@ -142,9 +141,8 @@ public interface IModuleAwareNameEnvironment extends INameEnvironment {
 	default void applyModuleUpdates(IUpdatableModule module, IUpdatableModule.UpdateKind kind) { /* default: do nothing */ }
 
 	/**
-	 * Lists all packages in the module identified by the given, real module name 
+	 * Lists all packages in the module identified by the given, real module name
 	 * (i.e., this method is implemented only for {@link LookupStrategy#Named}).
-	 * @param moduleName
 	 * @return array of flat, dot-separated package names
 	 */
 	char[][] listPackages(char[] moduleName);

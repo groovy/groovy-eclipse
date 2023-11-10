@@ -430,9 +430,6 @@ public AnnotationContext[] getAllAnnotationContexts(int targetType) {
 }
 /**
  * info can be either a type index (superclass/superinterfaces) or a pc into the bytecode
- * @param targetType
- * @param info
- * @param allAnnotationContexts
  */
 public void getAllAnnotationContexts(int targetType, int info, List<AnnotationContext> allAnnotationContexts) {
 	AnnotationCollector collector = new AnnotationCollector(this, targetType, info, allAnnotationContexts);
@@ -485,7 +482,6 @@ public TypeReference [][] getTypeArguments() {
  * view since extended dimensions bind more readily than type components that precede the identifier. This is how it ought
  * to be encoded in bindings and how it ought to be persisted in class files. However for DOM/AST construction, we need the
  * dimensions in source order, so we provide a way for the clients to ask what they want.
- *
  */
 public Annotation[][] getAnnotationsOnDimensions(boolean useSourceOrder) {
 	return null;

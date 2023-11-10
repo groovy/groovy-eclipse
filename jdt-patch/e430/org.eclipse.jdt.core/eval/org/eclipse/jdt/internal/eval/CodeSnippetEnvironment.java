@@ -20,6 +20,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * An environment that wraps the client's name environment.
@@ -63,7 +64,10 @@ public NameEnvironmentAnswer findType(char[][] compoundTypeName) {
 			try {
 				binary = new ClassFileReader(classFile.getBytes(), null);
 			} catch (ClassFormatException e) {
-				e.printStackTrace();  // Should never happen since we compiled this type
+				if (JavaModelManager.VERBOSE) {
+					JavaModelManager.trace("", e); //$NON-NLS-1$
+				}
+				// Should never happen since we compiled this type
 				return null;
 			}
 			return new NameEnvironmentAnswer(binary, null /*no access restriction*/);

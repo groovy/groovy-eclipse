@@ -25,15 +25,11 @@ public class LineNumberAttribute
 	implements ILineNumberAttribute {
 
 	private static final int[][] NO_ENTRIES = new int[0][0];
-	private int lineNumberTableLength;
+	private final int lineNumberTableLength;
 	private int[][] lineNumberTable;
 
 	/**
 	 * Constructor for LineNumberAttribute.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public LineNumberAttribute(
 		byte[] classFileBytes,

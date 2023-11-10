@@ -209,8 +209,6 @@ public void remove(String containerRelativePath) {
 }
 /**
  * Reset memory and disk indexes.
- *
- * @throws IOException
  */
 public void reset() throws IOException {
 	this.memoryIndex = new MemoryIndex();

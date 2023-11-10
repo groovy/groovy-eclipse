@@ -41,11 +41,11 @@ class VariableBinding implements IVariableBinding {
 	private static final int VALID_MODIFIERS = Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE |
 		Modifier.STATIC | Modifier.FINAL | Modifier.TRANSIENT | Modifier.VOLATILE;
 
-	private org.eclipse.jdt.internal.compiler.lookup.VariableBinding binding;
+	private final org.eclipse.jdt.internal.compiler.lookup.VariableBinding binding;
 	private ITypeBinding declaringClass;
 	private String key;
 	private String name;
-	private BindingResolver resolver;
+	private final BindingResolver resolver;
 	private ITypeBinding type;
 	private IAnnotationBinding[] annotations;
 

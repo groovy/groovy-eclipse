@@ -24,7 +24,7 @@ import org.eclipse.jdt.internal.core.util.LRUCache;
  */
 public class BufferCache<K> extends OverflowingLRUCache<K, IBuffer> {
 
-	private ThreadLocal<List<IBuffer>> buffersToClose = new ThreadLocal<>();
+	private final ThreadLocal<List<IBuffer>> buffersToClose = new ThreadLocal<>();
 
 	/**
 	 * Constructs a new buffer cache of the given size.

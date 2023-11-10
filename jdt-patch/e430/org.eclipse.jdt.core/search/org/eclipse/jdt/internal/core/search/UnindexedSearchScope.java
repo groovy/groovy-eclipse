@@ -25,7 +25,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 
 public class UnindexedSearchScope extends AbstractSearchScope {
-	private IJavaSearchScope searchScope;
+	private final IJavaSearchScope searchScope;
 
 	private UnindexedSearchScope(IJavaSearchScope scope) {
 		this.searchScope = scope;

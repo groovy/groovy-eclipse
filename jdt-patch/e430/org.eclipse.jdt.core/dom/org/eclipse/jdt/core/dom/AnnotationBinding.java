@@ -31,8 +31,8 @@ import org.eclipse.jdt.internal.compiler.util.*;
  */
 class AnnotationBinding implements IAnnotationBinding {
 	static final AnnotationBinding[] NoAnnotations = new AnnotationBinding[0];
-	private org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding binding;
-	private BindingResolver bindingResolver;
+	private final org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding binding;
+	private final BindingResolver bindingResolver;
 	private String key;
 
 	AnnotationBinding(org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding annotation, BindingResolver resolver) {

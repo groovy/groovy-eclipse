@@ -120,7 +120,7 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 	 * The superinterface types (element type: {@link Type}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList superInterfaceTypes =
+	private final ASTNode.NodeList superInterfaceTypes =
 		new ASTNode.NodeList(SUPER_INTERFACE_TYPES_PROPERTY);
 
 	/**
@@ -128,7 +128,7 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 	 * (element type: {@link EnumConstantDeclaration}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList enumConstants =
+	private final ASTNode.NodeList enumConstants =
 		new ASTNode.NodeList(ENUM_CONSTANTS_PROPERTY);
 
 	/**

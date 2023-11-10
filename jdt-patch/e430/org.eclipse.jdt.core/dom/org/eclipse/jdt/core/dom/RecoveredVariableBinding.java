@@ -20,8 +20,8 @@ import org.eclipse.jdt.core.IJavaElement;
  */
 class RecoveredVariableBinding implements IVariableBinding {
 
-	private VariableDeclaration variableDeclaration;
-	private BindingResolver resolver;
+	private final VariableDeclaration variableDeclaration;
+	private final BindingResolver resolver;
 
 	RecoveredVariableBinding(BindingResolver resolver, VariableDeclaration variableDeclaration) {
 		this.resolver = resolver;

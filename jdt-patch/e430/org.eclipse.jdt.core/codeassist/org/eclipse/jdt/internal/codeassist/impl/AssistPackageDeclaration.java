@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.core.PackageDeclaration;
 
 @SuppressWarnings("rawtypes")
 public class AssistPackageDeclaration extends PackageDeclaration {
-	private Map infoCache;
+	private final Map infoCache;
 	public AssistPackageDeclaration(CompilationUnit parent, String name, Map infoCache) {
 		super(parent, name);
 		this.infoCache = infoCache;

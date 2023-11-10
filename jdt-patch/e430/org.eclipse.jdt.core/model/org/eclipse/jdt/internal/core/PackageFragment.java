@@ -67,7 +67,7 @@ public class PackageFragment extends Openable implements IPackageFragment, Suffi
 
 	public String[] names;
 
-	private boolean isValidPackageName;
+	private final boolean isValidPackageName;
 
 protected PackageFragment(PackageFragmentRoot root, String[] names) {
 	super(root);

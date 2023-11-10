@@ -70,7 +70,7 @@ public class Block extends Statement {
 	 * The list of statements (element type: {@link Statement}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList statements =
+	private final ASTNode.NodeList statements =
 		new ASTNode.NodeList(STATEMENTS_PROPERTY);
 
 	/**

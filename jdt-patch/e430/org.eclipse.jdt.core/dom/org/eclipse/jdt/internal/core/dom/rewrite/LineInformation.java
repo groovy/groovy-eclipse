@@ -18,9 +18,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
-/**
- *
- */
 public abstract class LineInformation {
 
 	public static LineInformation create(final IDocument doc) {

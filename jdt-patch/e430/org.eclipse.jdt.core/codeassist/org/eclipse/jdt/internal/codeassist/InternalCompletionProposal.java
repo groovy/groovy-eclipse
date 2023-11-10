@@ -69,13 +69,13 @@ public class InternalCompletionProposal extends CompletionProposal {
 	/**
 	 * Kind of completion request.
 	 */
-	private int completionKind;
+	private final int completionKind;
 
 	/**
 	 * Offset in original buffer where ICodeAssist.codeComplete() was
 	 * requested.
 	 */
-	private int completionLocation;
+	private final int completionLocation;
 
 	/**
 	 * Start position (inclusive) of source range in original buffer
@@ -135,7 +135,6 @@ public class InternalCompletionProposal extends CompletionProposal {
 	 * in the context.
 	 *
 	 * Defaults to null if not set.
-	 *
 	 */
 	private char[][] declarationTypeVariables = null;
 

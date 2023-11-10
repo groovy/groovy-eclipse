@@ -48,6 +48,7 @@ import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
+import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
@@ -1334,40 +1335,70 @@ public class ClassScope extends Scope {
 	void connectPermittedTypes() {
 		SourceTypeBinding sourceType = this.referenceContext.binding;
 		sourceType.setPermittedTypes(Binding.NO_PERMITTEDTYPES);
-		if (this.referenceContext.permittedTypes == null) {
-			return;
-		}
 		if (sourceType.id == TypeIds.T_JavaLangObject || sourceType.isEnum()) // already handled
 			return;
 
-		int length = this.referenceContext.permittedTypes.length;
-		ReferenceBinding[] permittedTypeBindings = new ReferenceBinding[length];
-		int count = 0;
-		nextPermittedType : for (int i = 0; i < length; i++) {
-			TypeReference permittedTypeRef = this.referenceContext.permittedTypes[i];
-			ReferenceBinding permittedType = findPermittedtype(permittedTypeRef);
-			if (permittedType == null) { // detected cycle
-				continue nextPermittedType;
-			}
-			// check for simple interface collisions
-			// Check for a duplicate interface once the name is resolved, otherwise we may be confused (i.e. a.b.I and c.d.I)
-			for (int j = 0; j < i; j++) {
-				if (TypeBinding.equalsEquals(permittedTypeBindings[j], permittedType)) {
-					problemReporter().sealedDuplicateTypeInPermits(sourceType, permittedTypeRef, permittedType);
+		if (this.referenceContext.permittedTypes != null) {
+			int length = this.referenceContext.permittedTypes.length;
+			ReferenceBinding[] permittedTypeBindings = new ReferenceBinding[length];
+			int count = 0;
+			nextPermittedType : for (int i = 0; i < length; i++) {
+				TypeReference permittedTypeRef = this.referenceContext.permittedTypes[i];
+				ReferenceBinding permittedType = findPermittedtype(permittedTypeRef);
+				if (permittedType == null) { // detected cycle
 					continue nextPermittedType;
 				}
+				if (!isPermittedTypeInAllowedFormat(sourceType, permittedTypeRef, permittedType))
+					continue nextPermittedType;
+
+				// check for simple interface collisions
+				// Check for a duplicate interface once the name is resolved, otherwise we may be confused (i.e. a.b.I and c.d.I)
+				for (int j = 0; j < i; j++) {
+					if (TypeBinding.equalsEquals(permittedTypeBindings[j], permittedType)) {
+						problemReporter().sealedDuplicateTypeInPermits(sourceType, permittedTypeRef, permittedType);
+						continue nextPermittedType;
+					}
+				}
+				// only want to reach here when no errors are reported
+				permittedTypeBindings[count++] = permittedType;
 			}
-			// only want to reach here when no errors are reported
-			permittedTypeBindings[count++] = permittedType;
+			// hold onto all correctly resolved superinterfaces
+			if (count > 0) {
+				if (count != length)
+					System.arraycopy(permittedTypeBindings, 0, permittedTypeBindings = new ReferenceBinding[count], 0, count);
+				sourceType.setPermittedTypes(permittedTypeBindings);
+			} else {
+				sourceType.setPermittedTypes(Binding.NO_PERMITTEDTYPES);
+			}
 		}
-		// hold onto all correctly resolved superinterfaces
-		if (count > 0) {
-			if (count != length)
-				System.arraycopy(permittedTypeBindings, 0, permittedTypeBindings = new ReferenceBinding[count], 0, count);
-			sourceType.setPermittedTypes(permittedTypeBindings);
-		} else {
-			sourceType.setPermittedTypes(Binding.NO_PERMITTEDTYPES);
+		ReferenceBinding[] memberTypes = sourceType.memberTypes;
+		if (memberTypes != null && memberTypes != Binding.NO_MEMBER_TYPES) {
+			for (int j = 0, size = memberTypes.length; j < size; j++)
+				 ((SourceTypeBinding) memberTypes[j]).scope.connectPermittedTypes();
 		}
+	}
+
+	private boolean isPermittedTypeInAllowedFormat(SourceTypeBinding sourceType, TypeReference permittedTypeRef,
+			ReferenceBinding permittedType) {
+		if (!(permittedType.isMemberType() && permittedTypeRef instanceof SingleTypeReference))
+			return true;
+		ReferenceBinding enclosingType = permittedType.enclosingType();
+		while (enclosingType != null) {
+			if (TypeBinding.equalsEquals(sourceType, enclosingType)) {
+				CompilationUnitScope cu = this.compilationUnitScope();
+				if (cu.imports != null || cu.imports.length > 0) {
+					for (ImportBinding ib : cu.imports) {
+						Binding resolvedImport = cu.resolveSingleImport(ib, Binding.TYPE);
+						if (resolvedImport instanceof TypeBinding &&
+						  TypeBinding.equalsEquals(permittedType, (TypeBinding) resolvedImport))
+							return true;
+					}
+				}
+				return false;
+			}
+			enclosingType = enclosingType.enclosingType();
+		}
+		return true;
 	}
 
 	private boolean connectRecordSuperclass() {
@@ -1473,7 +1504,7 @@ public class ClassScope extends Scope {
 			noProblems &= connectSuperInterfaces();
 			environment().typesBeingConnected.remove(sourceType);
 			sourceType.tagBits |= TagBits.EndHierarchyCheck;
-			connectPermittedTypes();
+//			connectPermittedTypes();
 			noProblems &= connectTypeVariables(this.referenceContext.typeParameters, false);
 			sourceType.tagBits |= TagBits.TypeVariablesAreConnected;
 			if (noProblems && sourceType.isHierarchyInconsistent())

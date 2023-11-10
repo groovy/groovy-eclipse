@@ -109,12 +109,12 @@ public final class ModuleModifier extends ASTNode {
 		/**
 		 * The flag value for the module modifier.
 		 */
-		private int flagValue;
+		private final int flagValue;
 
 		/**
 		 * The keyword module modifier string.
 		 */
-		private String keyword;
+		private final String keyword;
 
 		/**
 		 * Creates a new module modifier with the given keyword.

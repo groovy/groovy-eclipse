@@ -33,21 +33,21 @@ public class ModuleAttribute extends ClassFileAttribute implements IModuleAttrib
 	static final IPackageVisibilityInfo[] NO_PACKAGE_VISIBILITY_INFOS = new IPackageVisibilityInfo[0];
 	static final int[] NO_USES = new int[0];
 	static final IProvidesInfo[] NO_PROVIDES_INFOS = new IProvidesInfo[0];
-	private int moduleNameIndex;
-	private char[] moduleName;
-	private int moduleFlags;
-	private int moduleVersionIndex;
+	private final int moduleNameIndex;
+	private final char[] moduleName;
+	private final int moduleFlags;
+	private final int moduleVersionIndex;
 	private char[] moduleVersionValue;
-	private int requiresCount;
+	private final int requiresCount;
 	private IRequiresInfo[] requiresInfo;
-	private int exportsCount;
+	private final int exportsCount;
 	private IPackageVisibilityInfo[] exportsInfo;
-	private int opensCount;
+	private final int opensCount;
 	private IPackageVisibilityInfo[] opensInfo;
-	private int usesCount;
+	private final int usesCount;
 	private int[] usesIndices;
 	private char[][] usesNames;
-	private int providesCount;
+	private final int providesCount;
 	private IProvidesInfo[] providesInfo;
 
 	ModuleAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {

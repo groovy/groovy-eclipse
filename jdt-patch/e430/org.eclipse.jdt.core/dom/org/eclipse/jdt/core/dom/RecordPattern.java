@@ -80,7 +80,7 @@ public class RecordPattern extends Pattern {
 	 * (element type: {@link Pattern}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList patterns =
+	private final ASTNode.NodeList patterns =
 		new ASTNode.NodeList(PATTERNS_PROPERTY);
 
 	/**

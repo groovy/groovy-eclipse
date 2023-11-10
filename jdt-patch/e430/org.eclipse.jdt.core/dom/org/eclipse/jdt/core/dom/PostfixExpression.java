@@ -46,7 +46,7 @@ public class PostfixExpression extends Expression {
 		/**
 		 * The token for the operator.
 		 */
-		private String token;
+		private final String token;
 
 		/**
 		 * Creates a new postfix operator with the given token.

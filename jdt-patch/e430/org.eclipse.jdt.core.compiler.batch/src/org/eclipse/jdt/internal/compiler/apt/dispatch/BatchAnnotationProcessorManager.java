@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2017 IBM Corporation and others.
+ * Copyright (c) 2005, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -34,7 +34,7 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 /**
  * Java 6 annotation processor manager used when compiling from the command line
- * or via the {@link javax.tools.JavaCompiler} interface.
+ * or via the javax.tools.JavaCompiler interface.
  */
 public class BatchAnnotationProcessorManager extends BaseAnnotationProcessorManager
 {

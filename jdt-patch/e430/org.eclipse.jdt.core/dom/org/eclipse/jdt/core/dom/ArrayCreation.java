@@ -104,7 +104,7 @@ public class ArrayCreation extends Expression {
 	 * The list of dimension expressions (element type:
 	 * {@link Expression}). Defaults to an empty list.
 	 */
-	private ASTNode.NodeList dimensions =
+	private final ASTNode.NodeList dimensions =
 		new ASTNode.NodeList(DIMENSIONS_PROPERTY);
 
 	/**

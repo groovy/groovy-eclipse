@@ -67,9 +67,6 @@ public class SortElementsOperation extends JavaModelOperation {
 	 * Constructor for SortElementsOperation.
      *
      * @param level the AST API level; one of the AST LEVEL constants
-	 * @param elements
-	 * @param positions
-	 * @param comparator
 	 */
 	public SortElementsOperation(int level, IJavaElement[] elements, int[] positions, Comparator comparator) {
 		super(elements);
@@ -122,7 +119,6 @@ public class SortElementsOperation extends JavaModelOperation {
 
 	/**
 	 * Calculates the required text edits to sort the <code>unit</code>
-	 * @param group
 	 * @return the edit or null if no sorting is required
 	 */
 	public TextEdit calculateEdit(org.eclipse.jdt.core.dom.CompilationUnit unit, TextEditGroup group) throws JavaModelException {
@@ -151,8 +147,6 @@ public class SortElementsOperation extends JavaModelOperation {
 
 	/**
 	 * Method processElement.
-	 * @param unit
-	 * @param source
 	 */
 	private String processElement(ICompilationUnit unit, char[] source) {
 		Document document = new Document(new String(source));

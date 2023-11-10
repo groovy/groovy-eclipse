@@ -386,6 +386,12 @@ protected void classInstanceCreation(boolean hasClassBody) {
 		this.isOrphanCompletionNode = true;
 	} else {
 		super.classInstanceCreation(hasClassBody);
+		if (this.assistNode != null) {
+			QualifiedAllocationExpression alloc = (QualifiedAllocationExpression) this.expressionStack[this.expressionPtr];
+			if (this.assistNode.sourceStart >= alloc.sourceStart && this.assistNode.sourceEnd <= alloc.sourceEnd)
+				this.selectionNodeFoundLevel = 1; // continue to parse until containing block statement is reduced, so as to
+			    // ensure the type declaration makes it to the astStack (possibly as a subexpression or as an expression statement)
+		}
 	}
 }
 @Override
@@ -1852,9 +1858,25 @@ public CompilationUnitDeclaration parse(ICompilationUnit sourceUnit, Compilation
 
 @Override
 protected boolean restartRecovery() {
-	return requireExtendedRecovery() || this.selectionNodeFoundLevel > 0 ?
-			false :
-			super.restartRecovery();
+	if (requireExtendedRecovery() || this.selectionNodeFoundLevel > 0)
+		return false;
+	boolean deferRestartOnLocalType = false;
+	for (int i = 0; i <= this.elementPtr; i++) {
+		switch (this.elementKindStack[i]) {
+			case K_INSIDE_STATEMENT_SWITCH:
+			case K_INSIDE_EXPRESSION_SWITCH:
+			case K_INSIDE_IF:
+			case K_INSIDE_WHILE:
+				deferRestartOnLocalType = true;
+				break;
+			case K_TYPE_DELIMITER:
+				if (deferRestartOnLocalType)
+					return false;
+				break;
+		}
+	}
+
+	return super.restartRecovery();
 }
 
 @Override

@@ -21,7 +21,7 @@ import java.io.InputStream;
  */
 
 public class NullConsoleReader extends AbstractReader {
-	private InputStream input;
+	private final InputStream input;
 /*
  * Creates a new console reader that will read from the given input stream.
  */

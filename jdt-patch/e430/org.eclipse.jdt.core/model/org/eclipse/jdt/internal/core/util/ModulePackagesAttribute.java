@@ -26,16 +26,12 @@ import org.eclipse.jdt.core.util.IModulePackagesAttribute;
  */
 public class ModulePackagesAttribute extends ClassFileAttribute implements IModulePackagesAttribute {
 
-	private int packagesCount;
+	private final int packagesCount;
 	private int[] packageIndices;
 	private char[][] packageNames;
 
 	/**
 	 * Constructor for ModulePackagesAttribute.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public ModulePackagesAttribute(	byte[] classFileBytes,	IConstantPool constantPool,	int offset)	throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);

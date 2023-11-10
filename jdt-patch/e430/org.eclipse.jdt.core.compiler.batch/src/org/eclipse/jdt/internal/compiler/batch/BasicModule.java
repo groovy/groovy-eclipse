@@ -102,7 +102,7 @@ public class BasicModule implements ISourceModule {
 	char[][] uses;
 	Service[] provides;
 	IModule.IPackageExport[] opens;
-	private ICompilationUnit compilationUnit;
+	private final ICompilationUnit compilationUnit;
 
 	public BasicModule(ModuleDeclaration descriptor, IModulePathEntry root) {
 		this.compilationUnit = descriptor.compilationResult().compilationUnit;

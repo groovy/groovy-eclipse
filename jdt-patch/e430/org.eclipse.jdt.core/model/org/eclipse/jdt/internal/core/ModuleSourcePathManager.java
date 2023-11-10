@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,7 +28,7 @@ import org.eclipse.jdt.internal.compiler.env.IModulePathEntry;
 
 public class ModuleSourcePathManager {
 
-	private Map<String, IModulePathEntry> knownModules = new HashMap<String, IModulePathEntry>(11);
+	private final Map<String, IModulePathEntry> knownModules = new HashMap<String, IModulePathEntry>(11);
 
 	private IModulePathEntry getModuleRoot0(String name) {
 		return this.knownModules.get(name);
@@ -37,8 +39,9 @@ public class ModuleSourcePathManager {
 			try {
 				seekModule(name.toCharArray(),false, new JavaElementRequestor());
 			} catch (JavaModelException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (JavaModelManager.VERBOSE) {
+					trace("", e); //$NON-NLS-1$
+				}
 			}
 		}
 		root = this.knownModules.get(name);
@@ -94,15 +97,19 @@ public class ModuleSourcePathManager {
 		if (root != null)
 			try {
 				return root.getModule();
-			} catch (Exception e1) {
-				//
+			} catch (Exception e) {
+				if (JavaModelManager.VERBOSE) {
+					trace("", e); //$NON-NLS-1$
+				}
 				return null;
 			}
 		JavaElementRequestor requestor = new JavaElementRequestor();
 		try {
 			seekModule(name, false, requestor);
 		} catch (JavaModelException e) {
-			// 
+			if (JavaModelManager.VERBOSE) {
+				trace("", e); //$NON-NLS-1$
+			}
 		}
 		IModuleDescription[] modules = requestor.getModules();
 		if (modules.length > 0) {
@@ -110,24 +117,12 @@ public class ModuleSourcePathManager {
 			try {
 				return (IModule) ((JavaElement) module).getElementInfo();
 			} catch (JavaModelException e) {
-				e.printStackTrace();
+				if (JavaModelManager.VERBOSE) {
+					trace("", e); //$NON-NLS-1$
+				}
 			}
 		}
-		return null; 
+		return null;
 	}
-//	public IModuleDeclaration[] getModules() {
-//		if (this.knownModules.size() == 0) {
-//			return new IModuleDeclaration[0];
-//		}
-//		List<IModuleDeclaration> modules = new ArrayList<IModuleDeclaration>();
-//		for (IModulePathEntry val : this.knownModules.values()) {
-//			try {
-//				modules.add(val.getModule());
-//			} catch (Exception e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-//		return modules.toArray(new IModuleDeclaration[modules.size()]);
-//	}
+
 }

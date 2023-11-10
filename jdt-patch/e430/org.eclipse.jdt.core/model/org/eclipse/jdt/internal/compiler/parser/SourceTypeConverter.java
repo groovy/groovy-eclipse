@@ -27,7 +27,6 @@ package org.eclipse.jdt.internal.compiler.parser;
  * | not take advantage of remote field constant inlining.
  * | Given the intended purpose of the conversion is to resolve references, this is not
  * | a problem.
- *
  */
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
@@ -73,7 +72,7 @@ public class SourceTypeConverter extends TypeConverter {
 	public static final int LOCAL_TYPE = 0x20;
 	public static final int NONE = 0;
 
-	private int flags;
+	private final int flags;
 	private CompilationUnitDeclaration unit;
 	private Parser parser;
 	private ICompilationUnit cu;

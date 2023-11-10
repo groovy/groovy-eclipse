@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019, 2022 IBM Corporation and others.
+ * Copyright (c) 2019, 2023 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,7 @@ public class RecordsRestrictedClassTest extends AbstractRegressionTest {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testBug577251_001"};
+//		TESTS_NAMES = new String[] { "testIssue1218_001"};
 	}
 
 	public static Class<?> testClass() {
@@ -9435,5 +9435,25 @@ public void testGH1258() {
 				public static final String STATIC_VALUE = "test";
 			}
 			"""});
+}
+public void testIssue1218_001() {
+	runNegativeTest(
+			new String[] {
+				"X.java",
+				"public class X<T> {\n"+
+				" record R(T x);\n"+
+				"}"
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	record R(T x);\n" +
+			"	         ^\n" +
+			"Cannot make a static reference to the non-static type T\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 2)\n" +
+			"	record R(T x);\n" +
+			"	            ^\n" +
+			"Syntax error, insert \"RecordBody\" to complete ClassBodyDeclarations\n" +
+			"----------\n");
 }
 }

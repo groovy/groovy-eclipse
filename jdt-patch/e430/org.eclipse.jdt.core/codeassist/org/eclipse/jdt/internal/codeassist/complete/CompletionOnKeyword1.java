@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class CompletionOnKeyword1 extends SingleTypeReference implements CompletionOnKeyword {
-	private char[][] possibleKeywords;
+	private final char[][] possibleKeywords;
 
 	public CompletionOnKeyword1(char[] token, long pos, char[] possibleKeyword) {
 		this(token, pos, new char[][]{possibleKeyword});

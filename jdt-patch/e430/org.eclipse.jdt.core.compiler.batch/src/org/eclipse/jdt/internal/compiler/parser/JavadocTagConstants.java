@@ -15,6 +15,7 @@
 package org.eclipse.jdt.internal.compiler.parser;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 /**
  * Javadoc tag constants.
@@ -180,97 +181,69 @@ public interface JavadocTagConstants {
 
 	// href tag
 	public final static char[] HREF_TAG = {'h', 'r', 'e', 'f'};
+
+	/**
+	 * A record class representing additional tags to be made
+	 * available at specific java version levels.
+	 *
+	 * This class is intended to prevent maintainers from having to add
+	 * empty arrays for each new java version that is released.
+	 */
+	record LevelTags(int level, char[][] tags) { }
+	/**
+	 * Convert an array of LevelTags into the char[][][] structure that is currently used to
+	 * discover the additional tags available at a given java version.
+	 *
+	 * @param input A LevelTags array representing additional tags available for each java version
+	 * @return a char[][][] array representing newly available tags for all java class version
+	 */
+	public static char[][][] levelTagsToChar3d(LevelTags[] input) {
+		int expectedLength = ClassFileConstants.MAJOR_LATEST_VERSION - ClassFileConstants.MAJOR_VERSION_0 + 1;
+		char[][][] ret = new char[expectedLength][][];
+		for( int i = 0; i < ret.length; i++ ) {
+			ret[i] = new char[][] {};
+		}
+		for( int i = 0; i < input.length; i++ ) {
+			int nextLevel = input[i].level - ClassFileConstants.MAJOR_VERSION_0;
+			ret[nextLevel] = input[i].tags;
+		}
+		return ret;
+	}
+
 	/*
 	 * Tags versions
+	 *
+	 * Maintainers should add a new LevelTag only for versions in which new tags are made available
 	 */
-	public static final char[][][] BLOCK_TAGS = {
-		// since 1.0
-		{ TAG_AUTHOR, TAG_DEPRECATED, TAG_EXCEPTION, TAG_PARAM, TAG_RETURN, TAG_SEE, TAG_VERSION, TAG_CATEGORY /* 1.6 tag but put here as we support it for all compliances */ },
-		// since 1.1
-		{ TAG_SINCE },
-		// since 1.2
-		{ TAG_SERIAL, TAG_SERIAL_DATA, TAG_SERIAL_FIELD , TAG_THROWS },
-		// since 1.3
-		{},
-		// since 1.4
-		{},
-		// since 1.5
-		{},
-		// since 1.6
-		{},
-		// since 1.7
-		{},
-		// since 1.8
-		{TAG_API_NOTE, TAG_IMPL_SPEC, TAG_IMPL_NOTE},
-		// since 9
-		{ TAG_HIDDEN, TAG_USES, TAG_PROVIDES },
-		// since 10
-		{},
-		// since 11
-		{},
-		// since 12
-		{},
-		// since 13
-		{},
-		// since 14
-		{},
-		// since 15
-		{},
-		// since 16
-		{},
-		// since 17
-		{},
-		// since 18
-		{},
-		// since 19
-		{},
-		// since 20
-		{},
+	public static final LevelTags[] BLOCK_TAGS_RAW = {
+		new LevelTags(ClassFileConstants.MAJOR_VERSION_0, new char[][]{ TAG_AUTHOR, TAG_DEPRECATED, TAG_EXCEPTION, TAG_PARAM, TAG_RETURN, TAG_SEE, TAG_VERSION, TAG_CATEGORY /* 1.6 tag but put here as we support it for all compliances */ }),
+		new LevelTags(ClassFileConstants.MAJOR_VERSION_1_1, new char[][]{ TAG_SINCE }),
+		new LevelTags(ClassFileConstants.MAJOR_VERSION_1_2, new char[][]{ TAG_SERIAL, TAG_SERIAL_DATA, TAG_SERIAL_FIELD , TAG_THROWS }),
+		new LevelTags(ClassFileConstants.MAJOR_VERSION_1_8, new char[][]{TAG_API_NOTE, TAG_IMPL_SPEC, TAG_IMPL_NOTE}),
+		new LevelTags(ClassFileConstants.MAJOR_VERSION_9, new char[][]{ TAG_HIDDEN, TAG_USES, TAG_PROVIDES })
 	};
-	public static final char[][][] INLINE_TAGS = {
-		// since 1.0
-		{},
-		// since 1.1
-		{},
-		// since 1.2
-		{ TAG_LINK },
-		// since 1.3
-		{ TAG_DOC_ROOT },
-		// since 1.4
-		{ TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE },
-		// since 1.5
-		{ TAG_CODE, TAG_LITERAL },
-		// since 1.6
-		{},
-		// since 1.7
-		{},
-		// since 1.8
-		{},
-		// since 9
-		{ TAG_INDEX },
-		// since 10
-		{ TAG_SUMMARY },
-		// since 11
-		{},
-		// since 12
-		{TAG_SYSTEM_PROPERTY},
-		// since 13
-		{},
-		// since 14
-		{},
-		// since 15
-		{},
-		// since 16
-		{TAG_RETURN},
-		// since 17
-		{},
-		// since 18
-		{ TAG_SNIPPET },
-		// since 19
-		{},
-		// since 20
-		{},
-	};
+	public static final char[][][] BLOCK_TAGS = levelTagsToChar3d(BLOCK_TAGS_RAW);
+
+	/*
+	 * Inline Tags versions
+	 *
+	 * Maintainers should add a new LevelTag only for versions in which new tags are made available
+	 */
+	public static final LevelTags[] INLINE_TAGS_RAW = {
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_1_2, new char[][]{ TAG_LINK }),
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_1_3, new char[][]{ TAG_DOC_ROOT }),
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_1_4, new char[][]{ TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE }),
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_1_5, new char[][]{ TAG_CODE, TAG_LITERAL }),
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_9, new char[][]{ TAG_INDEX }),
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_10, new char[][]{ TAG_SUMMARY }),
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_12, new char[][]{ TAG_SYSTEM_PROPERTY }),
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_16, new char[][]{ TAG_RETURN }),
+			new LevelTags(ClassFileConstants.MAJOR_VERSION_18, new char[][]{ TAG_SNIPPET }),
+		};
+	public static final char[][][] INLINE_TAGS = levelTagsToChar3d(INLINE_TAGS_RAW);
+
+
+
 	public static final char[][][] IN_SNIPPET_TAGS = {
 		// since 18
 		{ TAG_HIGHLIGHT, TAG_REPLACE, TAG_LINK }

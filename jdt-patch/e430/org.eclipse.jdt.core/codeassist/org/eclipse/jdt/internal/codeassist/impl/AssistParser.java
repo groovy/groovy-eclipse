@@ -18,7 +18,6 @@ import java.util.Arrays;
 
 /*
  * Parser extension for code assist task
- *
  */
 
 import java.util.HashSet;
@@ -197,7 +196,6 @@ public Object becomeSimpleParser() {
 }
 /**
  * Restore the parser as an assist parser
- * @param parserState
  */
 public void restoreAssistParser(Object parserState) {
 	//Do nothing

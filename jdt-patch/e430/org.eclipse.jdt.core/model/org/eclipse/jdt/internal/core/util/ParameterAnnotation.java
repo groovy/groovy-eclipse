@@ -25,17 +25,12 @@ public class ParameterAnnotation extends ClassFileStruct implements IParameterAn
 
 	private static final IAnnotation[] NO_ENTRIES = new IAnnotation[0];
 
-	private int annotationsNumber;
+	private final int annotationsNumber;
 	private IAnnotation[] annotations;
 	private int readOffset;
 
 	/**
 	 * Constructor for Annotation.
-	 *
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public ParameterAnnotation(
 			byte[] classFileBytes,

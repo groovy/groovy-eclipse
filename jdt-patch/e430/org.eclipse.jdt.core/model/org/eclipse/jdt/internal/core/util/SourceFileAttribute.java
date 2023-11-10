@@ -26,15 +26,11 @@ public class SourceFileAttribute
 	extends ClassFileAttribute
 	implements ISourceAttribute {
 
-	private int sourceFileIndex;
-	private char[] sourceFileName;
+	private final int sourceFileIndex;
+	private final char[] sourceFileName;
 
 	/**
 	 * Constructor for SourceFileAttribute.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public SourceFileAttribute(
 		byte[] classFileBytes,

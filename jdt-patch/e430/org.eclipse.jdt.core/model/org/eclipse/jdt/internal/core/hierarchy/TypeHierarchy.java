@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.hierarchy;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -54,6 +56,7 @@ import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaModelStatus;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.Openable;
@@ -375,12 +378,12 @@ public void fireChange() {
 		return;
 	}
 	if (DEBUG) {
-		System.out.println("FIRING hierarchy change ["+Thread.currentThread()+"]"); //$NON-NLS-1$ //$NON-NLS-2$
+		trace("FIRING hierarchy change ["+Thread.currentThread()+"]"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (this.focusType != null) {
-			System.out.println("    for hierarchy focused on " + ((JavaElement)this.focusType).toStringWithAncestors()); //$NON-NLS-1$
+			trace("    for hierarchy focused on " + ((JavaElement)this.focusType).toStringWithAncestors()); //$NON-NLS-1$
 		}
 	}
-	
+
 	for (int i= 0; i < listeners.size(); i++) {
 		final ITypeHierarchyChangedListener listener= listeners.get(i);
 		SafeRunner.run(new ISafeRunnable() {
@@ -448,8 +451,6 @@ private IType[] getAllSubtypesForType(IType type) {
 	subTypes.toArray(subClasses);
 	return subClasses;
 }
-/**
- */
 private void getAllSubtypesForType0(IType type, ArrayList<IType> subs) {
 	IType[] subTypes = getSubtypesForType(type);
 	if (subTypes.length != 0) {
@@ -1041,7 +1042,7 @@ private boolean isAffectedByPackageFragmentRoot(IJavaElementDelta delta, IJavaEl
 protected boolean isAffectedByOpenable(IJavaElementDelta delta, IJavaElement element, int eventType) {
 	if (element instanceof CompilationUnit) {
 		CompilationUnit cu = (CompilationUnit)element;
-		ICompilationUnit focusCU = 
+		ICompilationUnit focusCU =
 			this.focusType != null ? this.focusType.getCompilationUnit() : null;
 		if (focusCU != null && focusCU.getOwner() != cu.getOwner())
 			return false;
@@ -1056,8 +1057,9 @@ protected boolean isAffectedByOpenable(IJavaElementDelta delta, IJavaElement ele
 		try {
 			collector.addChange(cu, delta);
 		} catch (JavaModelException e) {
-			if (DEBUG)
-				e.printStackTrace();
+			if (DEBUG) {
+				JavaModelManager.trace("", e); //$NON-NLS-1$
+			}
 		}
 		if (cu.isWorkingCopy() && eventType == ElementChangedEvent.POST_RECONCILE) {
 			// changes to working copies are batched
@@ -1307,12 +1309,12 @@ public synchronized void refresh(IProgressMonitor monitor) throws JavaModelExcep
 		if (DEBUG) {
 			start = System.currentTimeMillis();
 			if (this.computeSubtypes) {
-				System.out.println("CREATING TYPE HIERARCHY [" + Thread.currentThread() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("CREATING TYPE HIERARCHY [" + Thread.currentThread() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			} else {
-				System.out.println("CREATING SUPER TYPE HIERARCHY [" + Thread.currentThread() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("CREATING SUPER TYPE HIERARCHY [" + Thread.currentThread() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			if (this.focusType != null) {
-				System.out.println("  on type " + ((JavaElement)this.focusType).toStringWithAncestors()); //$NON-NLS-1$
+				trace("  on type " + ((JavaElement)this.focusType).toStringWithAncestors()); //$NON-NLS-1$
 			}
 		}
 
@@ -1323,11 +1325,11 @@ public synchronized void refresh(IProgressMonitor monitor) throws JavaModelExcep
 
 		if (DEBUG) {
 			if (this.computeSubtypes) {
-				System.out.println("CREATED TYPE HIERARCHY in " + (System.currentTimeMillis() - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("CREATED TYPE HIERARCHY in " + (System.currentTimeMillis() - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 			} else {
-				System.out.println("CREATED SUPER TYPE HIERARCHY in " + (System.currentTimeMillis() - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("CREATED SUPER TYPE HIERARCHY in " + (System.currentTimeMillis() - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-			System.out.println(this.toString());
+			trace(this.toString());
 		}
 	} catch (JavaModelException e) {
 		throw e;
@@ -1509,7 +1511,7 @@ boolean subtypesIncludeSupertypeOf(IType type) {
 		superclassName = type.getSuperclassName();
 	} catch (JavaModelException e) {
 		if (DEBUG) {
-			e.printStackTrace();
+			trace("", e); //$NON-NLS-1$
 		}
 		return false;
 	}
@@ -1525,8 +1527,9 @@ boolean subtypesIncludeSupertypeOf(IType type) {
 	try {
 		interfaceNames = type.getSuperInterfaceNames();
 	} catch (JavaModelException e) {
-		if (DEBUG)
-			e.printStackTrace();
+		if (DEBUG) {
+			trace("", e); //$NON-NLS-1$
+		}
 		return false;
 	}
 	for (int i = 0, length = interfaceNames.length; i < length; i++) {

@@ -134,9 +134,6 @@ public void test003() {
 		"SUCCESS"
 	);
 }
-/**
- *
- */
 public void test004() {
 	this.runConformTest(
 		new String[] {
@@ -174,9 +171,6 @@ public void test004() {
 		"SUCCESS"
 	);
 }
-/**
- *
- */
 public void test005() {
 	this.runConformTest(
 		new String[] {
@@ -359,9 +353,6 @@ public void test010() {
 		"Cannot make a static reference to the non-static field A.success\n" +
 		"----------\n");
 }
-/**
- *
- */
 public void test011() {
 	this.runNegativeTest(
 		new String[] {
@@ -399,9 +390,6 @@ public void test011() {
 		"----------\n"
 	);
 }
-/**
- *
- */
 public void test012() {
 	this.runConformTest(
 		new String[] {
@@ -428,9 +416,6 @@ public void test012() {
 		"SUCCESS"
 	);
 }
-/**
- *
- */
 public void test013() {
 	this.runNegativeTest(
 		new String[] {
@@ -485,9 +470,6 @@ public void test013() {
 		"----------\n"
 	);
 }
-/**
- *
- */
 public void test014() {
 	this.runNegativeTest(
 		new String[] {
@@ -512,9 +494,6 @@ public void test014() {
 		"----------\n"
 	);
 }
-/**
- *
- */
 public void test015() {
 	this.runConformTest(
 		new String[] {
@@ -535,9 +514,6 @@ public void test015() {
 		"SUCCESS"
 	);
 }
-/**
- *
- */
 public void test016() {
 	this.runConformTest(
 		new String[] {
@@ -583,9 +559,6 @@ public void test016() {
 		}
 	);
 }
-/**
- *
- */
 public void test017() {
 	this.runConformTest(
 		new String[] {
@@ -751,9 +724,6 @@ public void test021() {
 		}
 	);
 }
-/**
- *
- */
 public void test022() {
 	this.runConformTest(
 		new String[] {
@@ -791,9 +761,6 @@ public void test022() {
 		}
 	);
 }
-/**
- *
- */
 public void test023() {
 	this.runConformTest(
 		new String[] {
@@ -820,9 +787,6 @@ public void test023() {
 		}
 	);
 }
-/**
- *
- */
 public void test024() {
 	this.runConformTest(
 		new String[] {
@@ -847,9 +811,6 @@ public void test024() {
 		}
 	);
 }
-/**
- *
- */
 public void test025() {
 	this.runConformTest(
 		new String[] {
@@ -887,9 +848,6 @@ public void test025() {
 		"SUCCESS"
 	);
 }
-/**
- *
- */
 public void test026() {
 	this.runNegativeTest(
 		new String[] {
@@ -930,9 +888,6 @@ public void test026() {
 		"The field A.B.B is not visible\n" +
 		"----------\n");
 }
-/**
- *
- */
 public void test027() {
 	this.runNegativeTest(
 		new String[] {
@@ -974,9 +929,6 @@ public void test027() {
 		"----------\n"
 	);
 }
-/**
- *
- */
 public void test028() {
 	this.runConformTest(
 		new String[] {

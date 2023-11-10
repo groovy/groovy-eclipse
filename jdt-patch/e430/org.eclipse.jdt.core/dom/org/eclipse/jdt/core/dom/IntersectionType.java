@@ -69,12 +69,12 @@ public class IntersectionType extends Type {
 	/**
 	 * The list of types (element type: {@link Type}).  Defaults to an empty list.
 	 */
-	private ASTNode.NodeList types = new ASTNode.NodeList(TYPES_PROPERTY);
+	private final ASTNode.NodeList types = new ASTNode.NodeList(TYPES_PROPERTY);
 
 	/**
 	 * Creates a new unparented node for an intersection type owned by the given AST.
 	 * By default, it has no types.<p>
-	 * 
+	 *
 	 * N.B. This constructor is package-private.
 	 * </p>
 	 *

@@ -10732,7 +10732,7 @@ public void testBug376590a() {
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 // https://bugs.eclipse.org/376590 - Private fields with @Inject are ignored by unused field validation
-// using javax.inject.Inject - slight variation
+// using jakarta.inject.Inject - slight variation
 public void testBug376590b() {
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
@@ -10744,17 +10744,17 @@ public void testBug376590b() {
 			JAVAX_INJECT_CONTENT,
 			"Example.java",
 			"class Example {\n" +
-			"  private @javax.inject.Inject Object o;\n" +
+			"  private @jakarta.inject.Inject Object o;\n" +
 			"  private Example() {} // also warn here: no @Inject\n" +
 			"  public Example(Object o) { this.o = o; }\n" +
-			"  private @javax.inject.Inject void setO(Object o) { this.o = o;}\n" +
+			"  private @jakarta.inject.Inject void setO(Object o) { this.o = o;}\n" +
 			"}\n"
 		},
 		null, customOptions,
 		"----------\n" +
 		"1. ERROR in Example.java (at line 2)\n" +
-		"	private @javax.inject.Inject Object o;\n" +
-		"	                                    ^\n" +
+		"	private @jakarta.inject.Inject Object o;\n" +
+		"	                                      ^\n" +
 		"The value of the field Example.o is not used\n" +
 		"----------\n" +
 		"2. ERROR in Example.java (at line 3)\n" +
@@ -10765,7 +10765,7 @@ public void testBug376590b() {
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 // https://bugs.eclipse.org/376590 - Private fields with @Inject are ignored by unused field validation
-// using javax.inject.Inject, combined with standard as well as custom annotations
+// using jakarta.inject.Inject, combined with standard as well as custom annotations
 public void testBug376590c() {
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
@@ -10778,7 +10778,7 @@ public void testBug376590c() {
 			JAVAX_INJECT_NAME,
 			JAVAX_INJECT_CONTENT,
 			"Example.java",
-			"import javax.inject.Inject;\n" +
+			"import jakarta.inject.Inject;\n" +
 			"class Example {\n" +
 			"  private @Inject @p.NonNull Object o; // do warn, annotations don't signal a read\n" +
 			"  private @Deprecated @Inject String old; // do warn, annotations don't signal a read\n" +

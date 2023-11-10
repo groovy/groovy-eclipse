@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -103,8 +105,7 @@ class AddFolderToIndex extends IndexRequest {
 			}
 		} catch (CoreException e) {
 			if (JobManager.VERBOSE) {
-				Util.verbose("-> failed to add " + this.folderPath + " to index because of the following exception:", System.err); //$NON-NLS-1$ //$NON-NLS-2$
-				e.printStackTrace();
+				trace("-> failed to add " + this.folderPath + " to index because of the following exception:", e); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			return false;
 		} finally {

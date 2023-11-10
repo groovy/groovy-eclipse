@@ -35,7 +35,7 @@ public class KeyToSignature extends BindingKeyParser {
 	public static final int THROWN_EXCEPTIONS = 3;
 
 	public StringBuffer signature = new StringBuffer();
-	private int kind;
+	private final int kind;
 	private boolean asBinarySignature = false; // '.' vs. '/' and '$'
 	private ArrayList arguments = new ArrayList();
 	private ArrayList typeArguments = new ArrayList();

@@ -163,6 +163,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
 import org.eclipse.osgi.service.debug.DebugOptions;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
+import org.eclipse.osgi.service.debug.DebugTrace;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.prefs.BackingStoreException;
@@ -202,7 +203,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * Define a zip cache object.
 	 */
 	static class ZipCache {
-		private Map<Object, ZipFile> map;
+		private final Map<Object, ZipFile> map;
 		Object owner;
 
 		ZipCache(Object owner) {
@@ -217,7 +218,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				ZipFile zipFile = iterator.next();
 				try {
 					if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-						System.out.println("(" + currentThread + ") [ZipCache[" + this.owner //$NON-NLS-1$//$NON-NLS-2$
+						trace("(" + currentThread + ") [ZipCache[" + this.owner //$NON-NLS-1$//$NON-NLS-2$
 								+ "].flush()] Closing ZipFile on " + zipFile.getName()); //$NON-NLS-1$
 					}
 					zipFile.close();
@@ -237,12 +238,14 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				if (old != null) {
 					if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
 						Thread currentThread = Thread.currentThread();
-						System.out.println("(" + currentThread + ") [ZipCache[" + this.owner //$NON-NLS-1$//$NON-NLS-2$
+						trace("(" + currentThread + ") [ZipCache[" + this.owner //$NON-NLS-1$//$NON-NLS-2$
 								+ "].setCache()] leaked ZipFile on " + old.getName() + " for path: " + path); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				if (VERBOSE) {
+					trace("", e); //$NON-NLS-1$
+				}
 			}
 		}
 	}
@@ -259,14 +262,14 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	public HashMap<String, String> deprecatedVariables = new HashMap<>(5);
 	public HashSet<String> readOnlyVariables = new HashSet<>(5);
 	public HashMap<String, IPath> previousSessionVariables = new HashMap<>(5);
-	private ThreadLocal<Set<String>> variableInitializationInProgress = new ThreadLocal<>();
+	private final ThreadLocal<Set<String>> variableInitializationInProgress = new ThreadLocal<>();
 
 	/**
 	 * Classpath containers pool
 	 */
 	public HashMap<IJavaProject, Map<IPath, IClasspathContainer>> containers = new HashMap<>(5);
 	public HashMap<IJavaProject, Map<IPath, IClasspathContainer>> previousSessionContainers = new HashMap<>(5);
-	private ThreadLocal<Map<IJavaProject, Set<IPath>>> containerInitializationInProgress = new ThreadLocal<>();
+	private final ThreadLocal<Map<IJavaProject, Set<IPath>>> containerInitializationInProgress = new ThreadLocal<>();
 	ThreadLocal<Map<IJavaProject, Map<IPath, IClasspathContainer>>> containersBeingInitialized = new ThreadLocal<>();
 
 	public static final int NO_BATCH_INITIALIZATION = 0;
@@ -282,7 +285,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/*
 	 * A HashSet that contains the IJavaProject whose classpath is being resolved.
 	 */
-	private ThreadLocal<Set<IJavaProject>> classpathsBeingResolved = new ThreadLocal<>();
+	private final ThreadLocal<Set<IJavaProject>> classpathsBeingResolved = new ThreadLocal<>();
 
 	/*
 	 * The unique workspace scope
@@ -419,6 +422,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	static final int PREF_DEFAULT = 1;
 
 	static final Object[][] NO_PARTICIPANTS = new Object[0][];
+
+	private static DebugTrace DEBUG_TRACE;
 
 	public static class CompilationParticipants {
 
@@ -594,7 +599,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/* whether an AbortCompilationUnit should be thrown when the source of a compilation unit cannot be retrieved */
 	public ThreadLocal<Boolean> abortOnMissingSource = new ThreadLocal<>();
 
-	private ExternalFoldersManager externalFoldersManager = ExternalFoldersManager.getExternalFoldersManager();
+	private final ExternalFoldersManager externalFoldersManager = ExternalFoldersManager.getExternalFoldersManager();
 
 	/**
 	 * Returns whether the given full path (for a package) conflicts with the output location
@@ -818,7 +823,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			final IClasspathContainer container,
 			final IClasspathEntry[] newEntries,
 			final IClasspathEntry[] oldEntries) {
-		Util.verbose(
+		trace(
 			"CPContainer SET  - missbehaving container\n" + //$NON-NLS-1$
 			"	container path: " + containerPath + '\n' + //$NON-NLS-1$
 			"	projects: {" +//$NON-NLS-1$
@@ -881,7 +886,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	void verbose_missbehaving_container(IJavaProject project, IPath containerPath, IClasspathEntry[] classpathEntries) {
-		Util.verbose(
+		trace(
 			"CPContainer GET - missbehaving container (returning null classpath entry)\n" + //$NON-NLS-1$
 			"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 			"	container path: " + containerPath + '\n' + //$NON-NLS-1$
@@ -905,7 +910,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	void verbose_missbehaving_container_null_entries(IJavaProject project, IPath containerPath) {
-		Util.verbose(
+		trace(
 			"CPContainer GET - missbehaving container (returning null as classpath entries)\n" + //$NON-NLS-1$
 			"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 			"	container path: " + containerPath + '\n' + //$NON-NLS-1$
@@ -1100,7 +1105,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			pkg = root.getPackageFragment(CharOperation.NO_STRINGS);
 
 			if (VERBOSE){
-				System.out.println("WARNING : creating unit element outside classpath ("+ Thread.currentThread()+"): " + file.getFullPath()); //$NON-NLS-1$//$NON-NLS-2$
+				trace("WARNING : creating unit element outside classpath ("+ Thread.currentThread()+"): " + file.getFullPath()); //$NON-NLS-1$//$NON-NLS-2$
 			}
 		}
 		return pkg.getCompilationUnit(file.getName());
@@ -1215,7 +1220,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/*
 	 * Temporary cache of newly opened elements
 	 */
-	private ThreadLocal<HashMap<IJavaElement, Object>> temporaryCache = new ThreadLocal<>();
+	private final ThreadLocal<HashMap<IJavaElement, Object>> temporaryCache = new ThreadLocal<>();
 
 	/**
 	 * Set of elements which are out of sync with their buffers.
@@ -1405,12 +1410,12 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		private ClasspathChange setClasspath(IClasspathEntry[] newRawClasspath, IClasspathEntry[] referencedEntries, IPath newOutputLocation, IJavaModelStatus newRawClasspathStatus, IClasspathEntry[] newResolvedClasspath, Map<IPath, IClasspathEntry> newRootPathToRawEntries, Map<IPath, IClasspathEntry> newRootPathToResolvedEntries, IJavaModelStatus newUnresolvedEntryStatus, boolean addClasspathChange) {
 			if (DEBUG_CLASSPATH) {
-				System.out.println("Setting resolved classpath for " + this.project.getFullPath()); //$NON-NLS-1$
+				trace("Setting resolved classpath for " + this.project.getFullPath()); //$NON-NLS-1$
 				if (newResolvedClasspath == null) {
-					System.out.println("New classpath = null"); //$NON-NLS-1$
+					trace("New classpath = null"); //$NON-NLS-1$
 				} else {
 					for (IClasspathEntry next : newResolvedClasspath) {
-						System.out.println("    " + next); //$NON-NLS-1$
+						trace("    " + next); //$NON-NLS-1$
 					}
 				}
 			}
@@ -1465,7 +1470,6 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		 * Reads the classpath and caches the entries. Returns a two-dimensional array, where the number of elements in the row is fixed to 2.
 		 * The first element is an array of raw classpath entries and the second element is an array of referenced entries that may have been stored
 		 * by the client earlier. See {@link IJavaProject#getReferencedClasspathEntries()} for more details.
-		 *
 		 */
 		public synchronized IClasspathEntry[][] readAndCacheClasspath(JavaProject javaProject) {
 			// read file entries and update status
@@ -1657,7 +1661,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * A cache of opened zip files per thread.
 	 * (for a given thread, the object value is a HashMap from IPath to java.io.ZipFile)
 	 */
-	private ThreadLocal<ZipCache> zipFiles = new ThreadLocal<>();
+	private final ThreadLocal<ZipCache> zipFiles = new ThreadLocal<>();
 
 	private UserLibraryManager userLibraryManager;
 
@@ -1863,7 +1867,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 	public void addInvalidArchive(IPath path, ArchiveValidity reason) {
 		if (DEBUG_INVALID_ARCHIVES) {
-			System.out.println("JAR cache: adding " + reason + " " + path);  //$NON-NLS-1$//$NON-NLS-2$
+			trace("JAR cache: adding " + reason + " " + path);  //$NON-NLS-1$//$NON-NLS-2$
 		}
 		synchronized (this.invalidArchives) {
 			this.invalidArchives.put(path, new InvalidArchiveInfo(System.currentTimeMillis() + INVALID_ARCHIVE_TTL_MILLISECONDS, reason));
@@ -1901,13 +1905,13 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		if (zipFile == null) return;
 		if (this.zipFiles.get() != null) {
 			if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-				System.out.println("(" + Thread.currentThread() + ") [JavaModelManager.closeZipFile(ZipFile)] NOT closed ZipFile (cache exist!) on " +zipFile.getName()); //$NON-NLS-1$	//$NON-NLS-2$
+				trace("(" + Thread.currentThread() + ") [JavaModelManager.closeZipFile(ZipFile)] NOT closed ZipFile (cache exist!) on " +zipFile.getName()); //$NON-NLS-1$	//$NON-NLS-2$
 			}
 			return; // zip file will be closed by call to flushZipFiles
 		}
 		try {
 			if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-				System.out.println("(" + Thread.currentThread() + ") [JavaModelManager.closeZipFile(ZipFile)] Closing ZipFile on " +zipFile.getName()); //$NON-NLS-1$	//$NON-NLS-2$
+				trace("(" + Thread.currentThread() + ") [JavaModelManager.closeZipFile(ZipFile)] Closing ZipFile on " +zipFile.getName()); //$NON-NLS-1$	//$NON-NLS-2$
 			}
 			zipFile.close();
 		} catch (IOException e) {
@@ -1921,8 +1925,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		Hashtable<String, String> properties = new Hashtable<>(2);
 		properties.put(DebugOptions.LISTENER_SYMBOLICNAME, JavaCore.PLUGIN_ID);
 		DEBUG_REGISTRATION = context.registerService(DebugOptionsListener.class, new DebugOptionsListener() {
+
+
 			@Override
 			public void optionsChanged(DebugOptions options) {
+				DEBUG_TRACE = options.newDebugTrace(JavaCore.PLUGIN_ID, JavaModelManager.class);
 				boolean debug = options.getBooleanOption(DEBUG, false);
 				BufferManager.VERBOSE = debug && options.getBooleanOption(BUFFER_MANAGER_DEBUG, false);
 				JavaBuilder.DEBUG = debug && options.getBooleanOption(BUILDER_DEBUG, false);
@@ -2091,7 +2098,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		ZipCache zipCache = this.zipFiles.get();
 		if (zipCache == null) {
 			if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-				System.out.println("(" + Thread.currentThread() + ") [JavaModelManager.flushZipFiles(String)] NOT found cache for " + owner); //$NON-NLS-1$	//$NON-NLS-2$
+				trace("(" + Thread.currentThread() + ") [JavaModelManager.flushZipFiles(String)] NOT found cache for " + owner); //$NON-NLS-1$	//$NON-NLS-2$
 			}
 			return;
 		}
@@ -2102,7 +2109,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			zipCache.flush();
 		} else {
 			if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-				System.out.println("(" + Thread.currentThread() //$NON-NLS-1$
+				trace("(" + Thread.currentThread() //$NON-NLS-1$
 						+ ") [JavaModelManager.flushZipFiles(String)] NOT closed cache, wrong owner, expected: " //$NON-NLS-1$
 						+ zipCache.owner + ", got: " + owner); //$NON-NLS-1$
 			}
@@ -2317,8 +2324,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 */
 	public Object getLastBuiltState(IProject project, IProgressMonitor monitor) {
 		if (!JavaProject.hasJavaNature(project)) {
-			if (JavaBuilder.DEBUG)
-				System.out.println(project + " is not a Java project"); //$NON-NLS-1$
+			if (JavaBuilder.DEBUG) {
+				trace(project + " is not a Java project"); //$NON-NLS-1$
+			}
 			return null; // should never be requested on non-Java projects
 		}
 		PerProjectInfo info = getPerProjectInfo(project, true/*create if missing*/);
@@ -2634,8 +2642,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			}
 		}
 		buffer.append(" 	}"); //$NON-NLS-1$
-		Util.verbose(buffer.toString());
-		new Exception("<Fake exception>").printStackTrace(System.out); //$NON-NLS-1$
+		trace(buffer.toString(), new Exception("<Fake exception>")); //$NON-NLS-1$
 	}
 
 	/**
@@ -2652,11 +2659,10 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	private void verbose_reentering_variable_access(String variableName, IPath previousPath) {
-		Util.verbose(
+		trace(
 			"CPVariable INIT - reentering access to variable during its initialization, will see previous value\n" + //$NON-NLS-1$
 			"	variable: "+ variableName + '\n' + //$NON-NLS-1$
-			"	previous value: " + previousPath); //$NON-NLS-1$
-		new Exception("<Fake exception>").printStackTrace(System.out); //$NON-NLS-1$
+			"	previous value: " + previousPath, new Exception("<Fake exception>")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -2960,7 +2966,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		try {
 			if (ZIP_ACCESS_VERBOSE) {
-				System.out.println("(" + Thread.currentThread() + ") [JavaModelManager.getZipFile(IPath)] Creating ZipFile on " + localFile ); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("(" + Thread.currentThread() + ") [JavaModelManager.getZipFile(IPath)] Creating ZipFile on " + localFile ); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			if (throwIoExceptionsInGetZipFile) {
 				throw new IOException();
@@ -3181,7 +3187,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	private void verbose_batching_containers_initialization(IJavaProject javaProjectToInit, IPath containerToInit) {
-		Util.verbose(
+		trace(
 			"CPContainer INIT - batching containers initialization\n" + //$NON-NLS-1$
 			"	project to init: " + (javaProjectToInit == null ? "null" : javaProjectToInit.getElementName()) + '\n' + //$NON-NLS-1$ //$NON-NLS-2$
 			"	container path to init: " + containerToInit); //$NON-NLS-1$
@@ -3240,8 +3246,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					throw new JavaModelException(e);
 				}
 			} catch (RuntimeException | Error e) {
-				if (JavaModelManager.CP_RESOLVE_VERBOSE || CP_RESOLVE_VERBOSE_FAILURE)
-					e.printStackTrace();
+				if (JavaModelManager.CP_RESOLVE_VERBOSE || CP_RESOLVE_VERBOSE_FAILURE) {
+					trace("", new Exception(e)); //$NON-NLS-1$
+				}
 				throw e;
 			} finally {
 				if(JavaModelManager.PERF_CONTAINER_INITIALIZER) {
@@ -3272,7 +3279,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	private void verbose_no_container_initializer_found(IJavaProject project, IPath containerPath) {
-		Util.verbose(
+		trace(
 			"CPContainer INIT - no initializer found\n" + //$NON-NLS-1$
 			"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 			"	container path: " + containerPath); //$NON-NLS-1$
@@ -3295,19 +3302,19 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		} else {
 			buffer.append("	container: {unbound}");//$NON-NLS-1$
 		}
-		Util.verbose(buffer.toString());
+		trace(buffer.toString());
 	}
 
 	private void verbose_container_initialization_failed(IJavaProject project, IPath containerPath, IClasspathContainer container, ClasspathContainerInitializer initializer) {
 		if (container == CONTAINER_INITIALIZATION_IN_PROGRESS) {
-			Util.verbose(
+			trace(
 				"CPContainer INIT - FAILED (initializer did not initialize container)\n" + //$NON-NLS-1$
 				"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 				"	container path: " + containerPath + '\n' + //$NON-NLS-1$
 				"	initializer: " + initializer); //$NON-NLS-1$
 
 		} else {
-			Util.verbose(
+			trace(
 				"CPContainer INIT - FAILED (see exception above)\n" + //$NON-NLS-1$
 				"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 				"	container path: " + containerPath + '\n' + //$NON-NLS-1$
@@ -3316,7 +3323,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	private void verbose_container_null_failure_container(IJavaProject project, IPath containerPath,  ClasspathContainerInitializer initializer) {
-		Util.verbose(
+		trace(
 			"CPContainer INIT - FAILED (and failure container is null)\n" + //$NON-NLS-1$
 			"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 			"	container path: " + containerPath + '\n' + //$NON-NLS-1$
@@ -3324,7 +3331,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	private void verbose_container_using_failure_container(IJavaProject project, IPath containerPath,  ClasspathContainerInitializer initializer) {
-		Util.verbose(
+		trace(
 			"CPContainer INIT - FAILED (using failure container)\n" + //$NON-NLS-1$
 			"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 			"	container path: " + containerPath + '\n' + //$NON-NLS-1$
@@ -3332,7 +3339,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	private void verbose_triggering_container_initialization(IJavaProject project, IPath containerPath,  ClasspathContainerInitializer initializer) {
-		Util.verbose(
+		trace(
 			"CPContainer INIT - triggering initialization\n" + //$NON-NLS-1$
 			"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 			"	container path: " + containerPath + '\n' + //$NON-NLS-1$
@@ -3340,10 +3347,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	private void verbose_triggering_container_initialization_invocation_trace() {
-		Util.verbose(
+		trace(
 			"CPContainer INIT - triggering initialization\n" + //$NON-NLS-1$
-			"	invocation trace:"); //$NON-NLS-1$
-		new Exception("<Fake exception>").printStackTrace(System.out); //$NON-NLS-1$
+			"	invocation trace:", new Exception("<Fake exception>")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -3403,7 +3409,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				SubMonitor subMonitor = SubMonitor.convert(monitor, projectsToTouch.length);
 				for (IProject iProject : projectsToTouch) {
 					if (JavaBuilder.DEBUG) {
-						System.out.println("Touching project " + iProject.getName()); //$NON-NLS-1$
+						trace("Touching project " + iProject.getName()); //$NON-NLS-1$
 					}
 					if (iProject.isAccessible()) {
 						iProject.touch(subMonitor.split(1));
@@ -3452,7 +3458,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 		if (invalidArchiveInfo == null) {
 			if (DEBUG_INVALID_ARCHIVES) {
-				System.out.println("JAR cache: UNKNOWN validity for " + path);  //$NON-NLS-1$
+				trace("JAR cache: UNKNOWN validity for " + path);  //$NON-NLS-1$
 			}
 			return null;
 		}
@@ -3473,7 +3479,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			return ArchiveValidity.INVALID;
 		}
 		if (DEBUG_INVALID_ARCHIVES) {
-			System.out.println("JAR cache: " + invalidArchiveInfo.reason + " " + path);  //$NON-NLS-1$ //$NON-NLS-2$
+			trace("JAR cache: " + invalidArchiveInfo.reason + " " + path);  //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return invalidArchiveInfo.reason;
 	}
@@ -3483,14 +3489,14 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			InvalidArchiveInfo entry = this.invalidArchives.get(path);
 			if (entry != null && entry.reason == ArchiveValidity.VALID) {
 				if (DEBUG_INVALID_ARCHIVES) {
-					System.out.println("JAR cache: keep VALID " + path);  //$NON-NLS-1$
+					trace("JAR cache: keep VALID " + path);  //$NON-NLS-1$
 				}
 				return; // do not remove the VALID information
 			}
 			// If it transitioned to being valid then force an update to project caches.
 			if (this.invalidArchives.remove(path) != null) {
 				if (DEBUG_INVALID_ARCHIVES) {
-					System.out.println("JAR cache: removed INVALID " + path);  //$NON-NLS-1$
+					trace("JAR cache: removed INVALID " + path);  //$NON-NLS-1$
 				}
 				try {
 					// Bug 455042: Force an update of the JavaProjectElementInfo project caches.
@@ -4173,7 +4179,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		Object result = readStateTimed(project);
 		if (JavaBuilder.DEBUG) {
 			long stopTime = System.currentTimeMillis();
-			System.out.println("readState took " + (stopTime - startTime) + "ms:" + project.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+			trace("readState took " + (stopTime - startTime) + "ms:" + project.getName()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return result;
 	}
@@ -4190,17 +4196,21 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					throw new IOException(Messages.build_wrongFileFormat);
 				if (in.readBoolean())
 					return JavaBuilder.readState(project, in);
-				if (JavaBuilder.DEBUG)
-					System.out.println("Saved state thinks last build failed for " + project.getName()); //$NON-NLS-1$
+				if (JavaBuilder.DEBUG) {
+					trace("Saved state thinks last build failed for " + project.getName()); //$NON-NLS-1$
+				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				if (JavaBuilder.DEBUG) {
+					trace("", e); //$NON-NLS-1$
+				}
 				throw new CoreException(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, Platform.PLUGIN_ERROR, "Error reading last build state for project "+ project.getName(), e)); //$NON-NLS-1$
 			}
 		} else if (JavaBuilder.DEBUG) {
-			if (file == null)
-				System.out.println("Project does not exist: " + project); //$NON-NLS-1$
-			else
-				System.out.println("Build state file " + file.getPath() + " does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
+			if (file == null) {
+				trace("Project does not exist: " + project); //$NON-NLS-1$
+			} else {
+				trace("Build state file " + file.getPath() + " does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 		}
 		return null;
 	}
@@ -4288,7 +4298,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			try {
 				if (JavaModelCache.VERBOSE) {
 					String elementType = JavaModelCache.getElementType(element);
-					System.out.println(Thread.currentThread() + " CLOSING "+ elementType + " " + element.toStringWithAncestors());  //$NON-NLS-1$//$NON-NLS-2$
+					trace(Thread.currentThread() + " CLOSING "+ elementType + " " + element.toStringWithAncestors());  //$NON-NLS-1$//$NON-NLS-2$
 					wasVerbose = true;
 					JavaModelCache.VERBOSE = false;
 				}
@@ -4298,7 +4308,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				}
 				this.cache.removeInfo(element);
 				if (wasVerbose) {
-					System.out.println(this.cache.toStringFillingRation("-> ")); //$NON-NLS-1$
+					trace(this.cache.toStringFillingRation("-> ")); //$NON-NLS-1$
 				}
 			} finally {
 				JavaModelCache.VERBOSE = wasVerbose;
@@ -4400,7 +4410,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			saveBuiltState(info);
 			if (JavaBuilder.DEBUG) {
 				long stopTime = System.currentTimeMillis();
-				System.out.println("saveState took " + (stopTime - startTime) + "ms:" + info.project.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("saveState took " + (stopTime - startTime) + "ms:" + info.project.getName()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 	}
@@ -4409,8 +4419,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * Saves the built state for the project.
 	 */
 	private void saveBuiltState(PerProjectInfo info) throws CoreException {
-		if (JavaBuilder.DEBUG)
-			System.out.println(Messages.bind(Messages.build_saveStateProgress, info.project.getName()));
+		if (JavaBuilder.DEBUG) {
+			trace(Messages.bind(Messages.build_saveStateProgress, info.project.getName()));
+		}
 		File file = getSerializationFile(info.project);
 		if (file == null) return;
 		long t = System.currentTimeMillis();
@@ -4437,7 +4448,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 		if (JavaBuilder.DEBUG) {
 			t = System.currentTimeMillis() - t;
-			System.out.println(Messages.bind(Messages.build_saveStateComplete, String.valueOf(t)));
+			trace(Messages.bind(Messages.build_saveStateComplete, String.valueOf(t)));
 		}
 	}
 
@@ -4722,7 +4733,19 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		String pattern = "{0} {1} bytes in variablesAndContainers.dat in {2}ms"; //$NON-NLS-1$
 		String message = MessageFormat.format(pattern, new Object[]{action, length, delta});
 
-		System.out.println(message);
+		trace(message);
+	}
+
+	public static void trace(String msg) {
+		DEBUG_TRACE.trace(null, msg);
+	}
+
+	public static void trace(String msg, Exception e) {
+		DEBUG_TRACE.trace(null, msg, e);
+	}
+
+	public static void traceDumpStack() {
+		DEBUG_TRACE.traceDumpStack(null);
 	}
 
 	/**
@@ -4734,7 +4757,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		savingTimed(context);
 		if (JavaBuilder.DEBUG) {
 			long stopTime = System.currentTimeMillis();
-			System.out.println("saving took " + (stopTime - startTime) + "ms:" + this.perProjectInfos.values().size()); //$NON-NLS-1$ //$NON-NLS-2$
+			trace("saving took " + (stopTime - startTime) + "ms:" + this.perProjectInfos.values().size()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -4841,7 +4864,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			buffer.append(new String(typeName));
 			buffer.append(']');
 			buffer.append(')');
-			Util.verbose(buffer.toString());
+			trace(buffer.toString());
 		}
 		IWorkspaceRoot wRoot = ResourcesPlugin.getWorkspace().getRoot();
 		IResource resource = wRoot.findMember(path);
@@ -4875,7 +4898,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 						packageTypes.put(typeString, type);
 					}
 					if (VERBOSE) {
-						Util.verbose("	- indexing cache:"); //$NON-NLS-1$
+						trace("	- indexing cache:"); //$NON-NLS-1$
 						dumpIndexingSecondaryTypes(indexedSecondaryTypes);
 					}
 				}
@@ -4892,7 +4915,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			while (entries.hasNext()) {
 				Entry<IFile, Map<String, Map<String, IType>>> entry = entries.next();
 				IFile file = entry.getKey();
-				Util.verbose("		+ "+file.getFullPath()+':'+ entry.getValue()); //$NON-NLS-1$
+				trace("		+ "+file.getFullPath()+':'+ entry.getValue()); //$NON-NLS-1$
 			}
 		}
 	}
@@ -4903,7 +4926,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			while (entries.hasNext()) {
 				Entry<String, Map<String, IType>> entry = entries.next();
 				String packName = entry.getKey();
-				Util.verbose("		+ " + packName + ':' + entry.getValue()); //$NON-NLS-1$
+				trace("		+ " + packName + ':' + entry.getValue()); //$NON-NLS-1$
 			}
 		}
 	}
@@ -4933,7 +4956,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		if (VERBOSE) {
 			StringBuilder buffer = new StringBuilder("JavaModelManager.secondaryTypes("); //$NON-NLS-1$
 			buffer.append(project.getElementName()).append(',').append(waitForIndexes).append(')');
-			Util.verbose(buffer.toString());
+			trace(buffer.toString());
 		}
 
 		// Return cache if not empty and there's no new secondary types created during indexing
@@ -5010,8 +5033,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			return secondaryTypes;
 		}
 		if (VERBOSE) {
-			Util.verbose("JavaModelManager.getSecondaryTypesMerged()"); //$NON-NLS-1$
-			Util.verbose("	- current cache to merge:"); //$NON-NLS-1$
+			trace("JavaModelManager.getSecondaryTypesMerged()"); //$NON-NLS-1$
+			trace("	- current cache to merge:"); //$NON-NLS-1$
 			dumpSecondaryTypes(secondaryTypes);
 		}
 		Map<IFile, Map<String, Map<String, IType>>> indexedSecondaryTypes = cache.indexingSecondaryCache();
@@ -5050,7 +5073,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			}
 		}
 		if (VERBOSE) {
-			Util.verbose("	- secondary types cache merged:"); //$NON-NLS-1$
+			trace("	- secondary types cache merged:"); //$NON-NLS-1$
 			dumpSecondaryTypes(secondaryTypes);
 		}
 		projectInfo.secondaryTypes.indexingDone();
@@ -5069,7 +5092,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			buffer.append(',');
 			buffer.append(waitForIndexes);
 			buffer.append(')');
-			Util.verbose(buffer.toString());
+			trace(buffer.toString());
 		}
 
 		final Hashtable<String, Map<String, String>> secondaryTypesSearch = new Hashtable<>(3);
@@ -5126,7 +5149,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				stCache = projectInfo.secondaryTypes.doneSearching(secondaryTypes);
 
 				if (VERBOSE || BasicSearchEngine.VERBOSE) {
-					Util.verbose("	-> secondary paths stored in cache: ");  //$NON-NLS-1$
+					trace("	-> secondary paths stored in cache: ");  //$NON-NLS-1$
 					dumpSecondaryTypes(secondaryTypes);
 				}
 			}
@@ -5147,7 +5170,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			StringBuilder buffer = new StringBuilder("JavaModelManager.removeFromSecondaryTypesCache("); //$NON-NLS-1$
 			buffer.append(file.getName());
 			buffer.append(')');
-			Util.verbose(buffer.toString());
+			trace(buffer.toString());
 		}
 		if (file != null) {
 			PerProjectInfo projectInfo = getPerProjectInfo(file.getProject(), false);
@@ -5161,7 +5184,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					return;
 				}
 				if (VERBOSE) {
-					Util.verbose("-> remove file from cache of project: "+file.getProject().getName()); //$NON-NLS-1$
+					trace("-> remove file from cache of project: "+file.getProject().getName()); //$NON-NLS-1$
 				}
 
 				// Clean current cache
@@ -5192,7 +5215,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		if (VERBOSE) {
 			StringBuilder buffer = new StringBuilder("JavaModelManager.removeSecondaryTypesFromMap("); //$NON-NLS-1$
 			buffer.append(',').append(file.getFullPath()).append(')');
-			Util.verbose(buffer.toString());
+			trace(buffer.toString());
 			dumpSecondaryTypes(secondaryTypesMap);
 		}
 		Set<Entry<String, Map<String, IType>>> packageEntries = secondaryTypesMap.entrySet();
@@ -5234,7 +5257,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			}
 		}
 		if (VERBOSE) {
-			Util.verbose("	- new secondary types map:"); //$NON-NLS-1$
+			trace("	- new secondary types map:"); //$NON-NLS-1$
 			dumpSecondaryTypes(secondaryTypesMap);
 		}
 	}

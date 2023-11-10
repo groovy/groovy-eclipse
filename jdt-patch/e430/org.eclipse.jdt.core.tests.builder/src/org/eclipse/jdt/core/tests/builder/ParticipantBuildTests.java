@@ -380,7 +380,6 @@ public class ParticipantBuildTests extends BuilderTests {
 
 	/**
 	 * Test that a build participant can inspect the declared annotations by name
-	 * @throws JavaModelException
 	 */
 	public void testProcessAnnotationHasAnnotation() throws JavaModelException {
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$

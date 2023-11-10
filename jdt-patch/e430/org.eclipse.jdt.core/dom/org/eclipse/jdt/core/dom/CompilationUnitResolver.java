@@ -121,7 +121,7 @@ public class CompilationUnitResolver extends Compiler {
 	boolean hasCompilationAborted;
 	CategorizedProblem abortProblem;
 
-	private IProgressMonitor monitor;
+	private final IProgressMonitor monitor;
 
 	/**
 	 * Set to <code>true</code> if the receiver was initialized using a java project name environment

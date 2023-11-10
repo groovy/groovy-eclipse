@@ -45,9 +45,9 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 
 	private UnresolvedReferenceNameRequestor requestor;
 
-	private CompletionEngine completionEngine;
-	private CompletionParser parser;
-	private CompletionScanner completionScanner;
+	private final CompletionEngine completionEngine;
+	private final CompletionParser parser;
+	private final CompletionScanner completionScanner;
 
 	private int parentsPtr;
 	private ASTNode[] parents;
@@ -56,7 +56,7 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 	private char[][] potentialVariableNames;
 	private int[] potentialVariableNameStarts;
 
-	private SimpleSetOfCharArray acceptedNames = new SimpleSetOfCharArray();
+	private final SimpleSetOfCharArray acceptedNames = new SimpleSetOfCharArray();
 
 	public UnresolvedReferenceNameFinder(CompletionEngine completionEngine) {
 		this.completionEngine = completionEngine;

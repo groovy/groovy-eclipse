@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -55,7 +55,7 @@ public class ASTMatcher {
 	 * Indicates whether doc tags should be matched.
 	 * @since 3.0
 	 */
-	private boolean matchDocTags;
+	private final boolean matchDocTags;
 
 	/**
 	 * Creates a new AST matcher instance.
@@ -1976,15 +1976,19 @@ public class ASTMatcher {
 	 *   different node type or is <code>null</code>
 	 * @since 3.26
 	 */
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation") // GROOVY add
 	public boolean match(PatternInstanceofExpression node, Object other) {
 		if (!(other instanceof PatternInstanceofExpression)) {
 			return false;
 		}
 		PatternInstanceofExpression o = (PatternInstanceofExpression) other;
-		return
-			safeSubtreeMatch(node.getLeftOperand(), o.getLeftOperand())
-			&& safeSubtreeMatch(node.getRightOperand(), o.getRightOperand());
+		AST ast = node.getAST();
+		if (ast.apiLevel() <= 20) {
+			return safeSubtreeMatch(node.getLeftOperand(), o.getLeftOperand())
+				&& safeSubtreeMatch(node.getRightOperand(), o.getRightOperand());
+		}
+		return safeSubtreeMatch(node.getLeftOperand(), o.getLeftOperand())
+			&& safeSubtreeMatch(node.getPattern(), o.getPattern());
 	}
 
 	/**

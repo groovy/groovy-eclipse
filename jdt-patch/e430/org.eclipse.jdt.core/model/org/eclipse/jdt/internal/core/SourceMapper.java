@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -549,7 +551,7 @@ public class SourceMapper
 		final HashSet tempRoots = new HashSet();
 		long time = 0;
 		if (VERBOSE) {
-			System.out.println("compute all root paths for " + root.getElementName()); //$NON-NLS-1$
+			trace("compute all root paths for " + root.getElementName()); //$NON-NLS-1$
 			time = System.currentTimeMillis();
 		}
 		final HashSet firstLevelPackageNames = new HashSet();
@@ -570,7 +572,7 @@ public class SourceMapper
 			} catch (IOException e) {
 				// We are not reading any specific file, so, move on for now
 				if (VERBOSE) {
-					e.printStackTrace();
+					trace("", e); //$NON-NLS-1$
 				}
 			}
 		} else if (root.isArchive()) {
@@ -710,11 +712,11 @@ public class SourceMapper
 		}
 		this.areRootPathsComputed = true;
 		if (VERBOSE) {
-			System.out.println("Spent " + (System.currentTimeMillis() - time) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
-			System.out.println("Found " + size + " root paths");	//$NON-NLS-1$ //$NON-NLS-2$
+			trace("Spent " + (System.currentTimeMillis() - time) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
+			trace("Found " + size + " root paths");	//$NON-NLS-1$ //$NON-NLS-2$
 			int i = 0;
 			for (Iterator iterator = this.rootPaths.iterator(); iterator.hasNext();) {
-				System.out.println("root[" + i + "]=" + ((String) iterator.next()));//$NON-NLS-1$ //$NON-NLS-2$
+				trace("root[" + i + "]=" + ((String) iterator.next()));//$NON-NLS-1$ //$NON-NLS-2$
 				i++;
 			}
 		}
@@ -754,8 +756,9 @@ public class SourceMapper
 				}
 			}
 		} catch (CoreException e) {
-			// ignore
-			e.printStackTrace();
+			if (VERBOSE) {
+				trace("", e); //$NON-NLS-1$
+			}
 		}
 	}
 

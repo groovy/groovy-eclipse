@@ -15,7 +15,7 @@ package org.eclipse.jdt.internal.compiler.env;
 
 public class AccessRestriction {
 
-	private AccessRule accessRule;
+	private final AccessRule accessRule;
 	public byte classpathEntryType;
 	public static final byte
 		COMMAND_LINE = 0,

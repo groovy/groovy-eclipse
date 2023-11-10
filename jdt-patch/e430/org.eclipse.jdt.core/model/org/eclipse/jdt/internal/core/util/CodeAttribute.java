@@ -34,18 +34,18 @@ import org.eclipse.jdt.core.util.IOpcodeMnemonics;
 public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute {
 	private static final IExceptionTableEntry[] NO_EXCEPTION_TABLE = new IExceptionTableEntry[0];
 	private IClassFileAttribute[] attributes;
-	private int attributesCount;
+	private final int attributesCount;
 	private byte[] bytecodes;
-	private byte[] classFileBytes;
-	private long codeLength;
-	private int codeOffset;
-	private IConstantPool constantPool;
+	private final byte[] classFileBytes;
+	private final long codeLength;
+	private final int codeOffset;
+	private final IConstantPool constantPool;
 	private IExceptionTableEntry[] exceptionTableEntries;
-	private int exceptionTableLength;
+	private final int exceptionTableLength;
 	private ILineNumberAttribute lineNumberAttribute;
 	private ILocalVariableAttribute localVariableAttribute;
-	private int maxLocals;
-	private int maxStack;
+	private final int maxLocals;
+	private final int maxStack;
 
 	CodeAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);

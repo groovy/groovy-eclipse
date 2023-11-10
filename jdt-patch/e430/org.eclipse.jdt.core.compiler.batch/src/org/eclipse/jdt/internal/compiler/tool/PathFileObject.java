@@ -38,8 +38,8 @@ import org.eclipse.jdt.internal.compiler.util.JRTUtil;
  */
 public class PathFileObject implements JavaFileObject {
 	Path path;
-	private Charset charset;
-	private Kind kind;
+	private final Charset charset;
+	private final Kind kind;
 
 	public PathFileObject(Path path, Kind kind, Charset charset) {
 		this.path = path;

@@ -255,8 +255,8 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 		this.visitIfNeeded(methodDeclaration);
 		return;
 	}
-	if ((methodDeclaration.bits & org.eclipse.jdt.internal.compiler.ast.ASTNode.IsImplicit) != 0)
-		return;
+
+	final boolean isImplicit = (methodDeclaration.bits & org.eclipse.jdt.internal.compiler.ast.ASTNode.IsImplicit) != 0;
 
 	if (methodDeclaration.isDefaultConstructor()) {
 		if (this.reportReferenceInfo) {
@@ -329,7 +329,11 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 			methodInfo.declaringTypeModifiers = declaringType.modifiers;
 			methodInfo.extraFlags = ExtraFlags.getExtraFlags(declaringType);
 			methodInfo.node = methodDeclaration;
-			this.requestor.enterConstructor(methodInfo);
+			if(isImplicit) {
+				this.requestor.enterCompactConstructor(methodInfo);
+			} else {
+				this.requestor.enterConstructor(methodInfo);
+			}
 		}
 		if (this.reportReferenceInfo) {
 			ConstructorDeclaration constructorDeclaration = (ConstructorDeclaration) methodDeclaration;
@@ -354,7 +358,11 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 		}
 		this.visitIfNeeded(methodDeclaration);
 		if (isInRange){
-			this.requestor.exitConstructor(methodDeclaration.declarationSourceEnd);
+			if(isImplicit) {
+				this.requestor.exitCompactConstructor(methodDeclaration.declarationSourceEnd);
+			} else {
+				this.requestor.exitConstructor(methodDeclaration.declarationSourceEnd);
+			}
 		}
 		return;
 	}

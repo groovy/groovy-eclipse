@@ -105,8 +105,6 @@ public JavaElement getPrimaryElement(boolean checkOwner) {
 public boolean isOnDemand() {
 	return this.isOnDemand;
 }
-/**
- */
 @Override
 public String readableName() {
 

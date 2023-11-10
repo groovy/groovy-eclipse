@@ -33,11 +33,11 @@ import org.eclipse.jdt.internal.core.*;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class JavaElementFinder extends BindingKeyParser {
 
-	private JavaProject project;
-	private WorkingCopyOwner owner;
+	private final JavaProject project;
+	private final WorkingCopyOwner owner;
 	public IJavaElement element;
 	public JavaModelException exception;
-	private ArrayList types = new ArrayList();
+	private final ArrayList types = new ArrayList();
 
 	public JavaElementFinder(String key, JavaProject project, WorkingCopyOwner owner) {
 		super(key);

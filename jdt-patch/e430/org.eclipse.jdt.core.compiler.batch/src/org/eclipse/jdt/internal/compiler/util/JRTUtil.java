@@ -40,7 +40,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -76,6 +75,8 @@ public class JRTUtil {
 	 * Map from JDK home path to ct.sym file (located in /lib in the JDK)
 	 */
 	private static final Map<Path, CtSym> ctSymFiles = new ConcurrentHashMap<>();
+
+	static final SoftClassCache classCache = new SoftClassCache();
 
 	public interface JrtFileVisitor<T> {
 
@@ -141,8 +142,8 @@ public class JRTUtil {
 	 * @param release <code>--release</code> version
 	 */
 	public static JrtFileSystem getJrtSystem(File image, String release) throws IOException {
-		String key = image.toString();
 		Jdk jdk = new Jdk(image);
+		String key = jdk.path;
 
 		if (release != null && !jdk.sameRelease(release)) {
 			key = key + "|" + release; //$NON-NLS-1$
@@ -175,7 +176,6 @@ public class JRTUtil {
 	 * @param path
 	 *            absolute file path to a jar archive
 	 * @return never null
-	 * @throws IOException
 	 */
 	public static FileSystem getJarFileSystem(Path path) throws IOException {
 		URI uri = URI.create("jar:file:" + path.toUri().getRawPath()); //$NON-NLS-1$
@@ -216,6 +216,7 @@ public class JRTUtil {
 	/** TEST ONLY (use when changing the "modules.to.load" property). */
 	public static void reset() {
 		images.clear();
+		classCache.clear();
 		MODULE_TO_LOAD = System.getProperty("modules.to.load"); //$NON-NLS-1$
 	}
 
@@ -234,7 +235,6 @@ public class JRTUtil {
 	 * @param image a java.io.File handle to the JRT image.
 	 * @param visitor an instance of JrtFileVisitor to be notified of the entries in the JRT image.
 	 * @param notify flag indicating the notifications the client is interested in.
-	 * @throws IOException
 	 */
 	public static void walkModuleImage(File image, final JRTUtil.JrtFileVisitor<java.nio.file.Path> visitor, int notify) throws IOException {
 		JrtFileSystem system = getJrtSystem(image, null);
@@ -314,7 +314,6 @@ public class JRTUtil {
 	/**
 	 * Tries to read all bytes of the file denoted by path,
 	 * returns null if the file could not be found or if the read was interrupted.
-	 * @param path
 	 * @return bytes or null
 	 * @throws IOException any IO exception other than NoSuchFileException
 	 */
@@ -350,15 +349,14 @@ public class JRTUtil {
 
 class JrtFileSystemWithOlderRelease extends JrtFileSystem {
 
-	private List<Path> releaseRoots;
-	private CtSym ctSym;
+	private final List<Path> releaseRoots;
+	private final CtSym ctSym;
 
 	/**
 	 * The jrt file system is based on the location of the JRE home whose libraries
 	 * need to be loaded.
 	 *
 	 * @param release the older release where classes and modules should be searched for.
-	 * @throws IOException
 	 */
 	JrtFileSystemWithOlderRelease(Jdk jdkHome, String release) throws IOException {
 		super(jdkHome, release);
@@ -510,9 +508,6 @@ class JrtFileSystem {
 
 	private final Map<String, List<String>> packageToModules = new HashMap<String, List<String>>();
 
-
-	private final Map<Path, Optional<byte[]>> classCache = new ConcurrentHashMap<>(10007);
-
 	FileSystem fs;
 	Path modRoot;
 	Jdk jdk;
@@ -529,9 +524,6 @@ class JrtFileSystem {
 	/**
 	 * The jrt file system is based on the location of the JRE home whose libraries
 	 * need to be loaded.
-	 *
-	 * @param jdkHome
-	 * @throws IOException
 	 */
 	JrtFileSystem(Jdk jdkHome, String release) throws IOException {
 		this.jdk = jdkHome;
@@ -663,18 +655,7 @@ class JrtFileSystem {
 		if(JRTUtil.DISABLE_CACHE) {
 			return JRTUtil.safeReadBytes(path);
 		} else {
-			try {
-				Optional<byte[]> bytes = this.classCache.computeIfAbsent(path, key -> {
-					try {
-						return Optional.ofNullable(JRTUtil.safeReadBytes(key));
-					} catch (IOException e) {
-						throw new RuntimeIOException(e);
-					}
-				});
-				return bytes.orElse(null);
-			} catch (RuntimeIOException rio) {
-				throw rio.getCause();
-			}
+			return JRTUtil.classCache.getClassBytes(this.jdk, path);
 		}
 	}
 
@@ -684,18 +665,7 @@ class JrtFileSystem {
 		if(JRTUtil.DISABLE_CACHE) {
 			content = JRTUtil.safeReadBytes(path);
 		} else {
-			try {
-				Optional<byte[]> bytes = this.classCache.computeIfAbsent(path, key -> {
-					try {
-						return Optional.ofNullable(JRTUtil.safeReadBytes(key));
-					} catch (IOException e) {
-						throw new RuntimeIOException(e);
-					}
-				});
-				content = bytes.orElse(null);
-			} catch (RuntimeIOException rio) {
-				throw rio.getCause();
-			}
+			content = JRTUtil.classCache.getClassBytes(this.jdk, path);
 		}
 		if (content != null) {
 			ClassFileReader reader = new ClassFileReader(path.toUri(), content, fileName.toCharArray());

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2018 Mateusz Matela and others.
+ * Copyright (c) 2014, 2023 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -136,7 +136,7 @@ public class TextEditsBuilder extends TokenTraverser {
 			}
 		}
 
-		if (token.tokenType == TokenNameStringLiteral)
+		if (token.tokenType == TokenNameStringLiteral || token.tokenType == TokenNameTextBlock)
 			this.stringLiteralsInLine.add(token);
 
 		if (getNext() == null) {

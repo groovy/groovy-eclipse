@@ -23,7 +23,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
 final class ReferenceBindingSetWrapper {
 
 	final ReferenceBinding referenceBinding;
-	private int hashCode;
+	private final int hashCode;
 
 	ReferenceBindingSetWrapper(ReferenceBinding referenceBinding) {
 		this.referenceBinding = referenceBinding;

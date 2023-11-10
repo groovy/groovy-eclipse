@@ -30,12 +30,9 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import org.eclipse.jdt.internal.core.dom.rewrite.RewriteEventStore.CopySourceInfo;
 
-/**
- *
- */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class NodeInfoStore {
-	private AST ast;
+	private final AST ast;
 
 	private Map placeholderNodes;
 	private Set collapsedNodes;
@@ -159,9 +156,6 @@ public final class NodeInfoStore {
 		}
 	}
 
-	/**
-	 *
-	 */
 	public void clear() {
 		this.placeholderNodes= null;
 		this.collapsedNodes= null;

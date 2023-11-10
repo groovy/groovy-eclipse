@@ -785,9 +785,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 		final private Scope scope;
 
 		/**
-		 * @param variables
 		 * @param substitutes when null, substitute type variable by unbounded wildcard
-		 * @param scope
 		 */
 		public LingeringTypeVariableEliminator(TypeVariableBinding [] variables, TypeBinding [] substitutes, Scope scope) {
 			this.variables = variables;

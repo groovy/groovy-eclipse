@@ -53,7 +53,6 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 /**
  * Dump the suitable return bytecode for a return statement
- *
  */
 @Override
 public void generateReturnBytecode(CodeStream codeStream) {

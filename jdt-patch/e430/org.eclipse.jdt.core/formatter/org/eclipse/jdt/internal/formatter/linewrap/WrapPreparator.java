@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2022 Mateusz Matela and others.
+ * Copyright (c) 2014, 2023 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -40,6 +40,7 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNamei
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNamenew;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameRestrictedIdentifierpermits;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNamesuper;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameTextBlock;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNamethis;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNamethrows;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameto;
@@ -239,10 +240,10 @@ public class WrapPreparator extends ASTVisitor {
 	 * temporary values used when calling {@link #handleWrap(int)} to avoid ArrayList initialization and long lists of
 	 * parameters
 	 */
-	private List<Integer> wrapIndexes = new ArrayList<>();
+	private final List<Integer> wrapIndexes = new ArrayList<>();
 	/** Indexes for wraps that shouldn't happen but should be indented if cannot be removed */
-	private List<Integer> secondaryWrapIndexes = new ArrayList<>();
-	private List<Float> wrapPenalties = new ArrayList<>();
+	private final List<Integer> secondaryWrapIndexes = new ArrayList<>();
+	private final List<Float> wrapPenalties = new ArrayList<>();
 	private int wrapParentIndex = -1;
 	private int wrapGroupEnd = -1;
 
@@ -1566,7 +1567,7 @@ public class WrapPreparator extends ASTVisitor {
 			if (token.getLineBreaksBefore() > 0 || token.getLineBreaksAfter() > 0)
 				isNLSTagInLine = false;
 			if (token.hasNLSTag()) {
-				assert token.tokenType == TokenNameStringLiteral;
+				assert token.tokenType == TokenNameStringLiteral || token.tokenType == TokenNameTextBlock;
 				isNLSTagInLine = true;
 			}
 			List<Token> structure = token.getInternalStructure();

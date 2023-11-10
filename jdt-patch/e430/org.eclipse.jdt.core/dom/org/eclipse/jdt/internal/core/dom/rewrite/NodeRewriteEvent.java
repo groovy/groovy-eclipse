@@ -15,12 +15,9 @@ package org.eclipse.jdt.internal.core.dom.rewrite;
 
 
 
-/**
- *
- */
 public class NodeRewriteEvent extends RewriteEvent {
 
-	private Object originalValue;
+	private final Object originalValue;
 	private Object newValue;
 
 	public NodeRewriteEvent(Object originalValue, Object newValue) {

@@ -79,7 +79,7 @@ public class DeltaProcessingState implements IResourceChangeListener {
 	/*
 	 * The delta processor for the current thread.
 	 */
-	private ThreadLocal<DeltaProcessor> deltaProcessors = new ThreadLocal<>();
+	private final ThreadLocal<DeltaProcessor> deltaProcessors = new ThreadLocal<>();
 
 	public void doNotUse() {
 		// reset the delta processor of the current thread to avoid to keep it in memory
@@ -113,7 +113,7 @@ public class DeltaProcessingState implements IResourceChangeListener {
 	public boolean rootsAreStale = true;
 
 	/* Threads that are currently running initializeRoots() */
-	private Set<Thread> initializingThreads = Collections.synchronizedSet(new HashSet<>());
+	private final Set<Thread> initializingThreads = Collections.synchronizedSet(new HashSet<>());
 
 	/* A table from file system absoulte path (String) to timestamp (Long) */
 	public Hashtable<IPath, Long> externalTimeStamps;
@@ -126,13 +126,13 @@ public class DeltaProcessingState implements IResourceChangeListener {
 	private Map<IProject, ClasspathChange> classpathChanges = new LinkedHashMap<>();
 
 	/* A table from JavaProject to ClasspathValidation */
-	private Map<JavaProject, ClasspathValidation> classpathValidations = new LinkedHashMap<>();
+	private final Map<JavaProject, ClasspathValidation> classpathValidations = new LinkedHashMap<>();
 
 	/* A table from JavaProject to ProjectReferenceChange */
 	private Set<IJavaProject> projectReferenceChanges = new LinkedHashSet<>();
 
 	/* A table from JavaProject to ExternalFolderChange */
-	private Map<JavaProject, ExternalFolderChange> externalFolderChanges = new LinkedHashMap<>();
+	private final Map<JavaProject, ExternalFolderChange> externalFolderChanges = new LinkedHashMap<>();
 
 	/**
 	 * Workaround for bug 15168 circular errors not reported
@@ -373,7 +373,9 @@ public class DeltaProcessingState implements IResourceChangeListener {
 				try {
 					propertyString = Util.getSourceAttachmentProperty(path);
 				} catch (JavaModelException e) {
-					e.printStackTrace();
+					if (JavaModelManager.VERBOSE) {
+						JavaModelManager.trace("", e); //$NON-NLS-1$
+					}
 				}
 				IPath sourceAttachmentPath;
 				if (propertyString != null) {

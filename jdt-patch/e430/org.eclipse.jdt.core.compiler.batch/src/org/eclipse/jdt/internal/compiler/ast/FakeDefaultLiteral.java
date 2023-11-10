@@ -20,7 +20,6 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
  * Sole purpose of {@link FakeDefaultLiteral} is to appear
  * in case 'default' of switch patterns (JEP 406 at the time
  * of writing this comment)
- *
  */
 public class FakeDefaultLiteral extends MagicLiteral {
 

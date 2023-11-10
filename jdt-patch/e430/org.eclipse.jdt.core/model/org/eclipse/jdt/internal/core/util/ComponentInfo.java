@@ -24,13 +24,13 @@ import org.eclipse.jdt.core.util.IComponentInfo;
  * Default implementation of IComponentInfo.
  */
 public class ComponentInfo extends ClassFileStruct implements IComponentInfo {
-	private int attributeBytes;
+	private final int attributeBytes;
 	private IClassFileAttribute[] attributes;
-	private int attributesCount;
-	private char[] descriptor;
-	private int descriptorIndex;
-	private char[] name;
-	private int nameIndex;
+	private final int attributesCount;
+	private final char[] descriptor;
+	private final int descriptorIndex;
+	private final char[] name;
+	private final int nameIndex;
 
 	/**
 	 * @param classFileBytes byte[]

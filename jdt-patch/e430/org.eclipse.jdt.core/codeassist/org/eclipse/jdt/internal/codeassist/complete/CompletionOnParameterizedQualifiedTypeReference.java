@@ -44,21 +44,10 @@ public class CompletionOnParameterizedQualifiedTypeReference extends Parameteriz
 
 	private int kind = K_TYPE;
 	public char[] completionIdentifier;
-	/**
-	 * @param tokens
-	 * @param typeArguments
-	 * @param positions
-	 */
 	public CompletionOnParameterizedQualifiedTypeReference(char[][] tokens,	TypeReference[][] typeArguments, char[] completionIdentifier, long[] positions) {
 		this(tokens, typeArguments, completionIdentifier, positions, K_TYPE);
 	}
 
-	/**
-	 * @param tokens
-	 * @param typeArguments
-	 * @param positions
-	 * @param kind
-	 */
 	public CompletionOnParameterizedQualifiedTypeReference(char[][] tokens,	TypeReference[][] typeArguments, char[] completionIdentifier, long[] positions, int kind) {
 		super(tokens, typeArguments, 0, positions);
 		this.completionIdentifier = completionIdentifier;

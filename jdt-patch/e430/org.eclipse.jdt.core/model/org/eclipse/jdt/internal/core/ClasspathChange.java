@@ -15,6 +15,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -290,7 +292,7 @@ public class ClasspathChange {
 			deltaProcessor.projectCachesToReset.add(this.project);
 		} catch (JavaModelException e) {
 			if (DeltaProcessor.VERBOSE) {
-				e.printStackTrace();
+				trace("", e); //$NON-NLS-1$
 			}
 			// project no longer exist
 			return result;
@@ -459,8 +461,9 @@ public class ClasspathChange {
 					delta.removed(frag);
 				}
 			} catch (JavaModelException e) {
-				if (DeltaProcessor.VERBOSE)
-					e.printStackTrace();
+				if (DeltaProcessor.VERBOSE) {
+					trace("", e); //$NON-NLS-1$
+				}
 			}
 		}
 

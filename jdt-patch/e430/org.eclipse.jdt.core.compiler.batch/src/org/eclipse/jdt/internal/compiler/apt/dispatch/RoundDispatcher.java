@@ -49,7 +49,6 @@ public class RoundDispatcher {
 	 * avoid modifying the set passed in.
 	 * @param traceProcessorInfo a PrintWriter that processor trace output will be sent
 	 * to, or null if tracing is not desired.
-	 * @param traceRounds
 	 */
 	public RoundDispatcher(
 			IProcessorProvider provider,

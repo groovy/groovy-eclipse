@@ -17,7 +17,6 @@ package org.eclipse.jdt.internal.compiler.ast;
  * Interface to allow Javadoc parser to collect both JavaSingleTypeReference and JavaQualifiedTypeReferences
  *
  * @author jjohnstn
- *
  */
 public interface IJavadocTypeReference {
 

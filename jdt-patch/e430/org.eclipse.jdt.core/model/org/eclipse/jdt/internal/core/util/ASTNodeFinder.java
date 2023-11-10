@@ -31,7 +31,7 @@ import org.eclipse.jdt.internal.core.SourceType;
  * Finds an ASTNode given an IJavaElement in a CompilationUnitDeclaration
  */
 public class ASTNodeFinder {
-	private CompilationUnitDeclaration unit;
+	private final CompilationUnitDeclaration unit;
 
 	public ASTNodeFinder(CompilationUnitDeclaration unit) {
 		this.unit = unit;

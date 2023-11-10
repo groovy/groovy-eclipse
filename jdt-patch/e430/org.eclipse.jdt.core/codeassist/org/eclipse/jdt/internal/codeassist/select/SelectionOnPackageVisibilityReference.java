@@ -29,7 +29,6 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
  *	module myModule {
  *	---> <SelectionOnExport:packageo>
  *  }
- *
  */
 public class SelectionOnPackageVisibilityReference extends ImportReference {
 

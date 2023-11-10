@@ -473,12 +473,6 @@ private String[] determinePossibleSubTypes(final HashSet localTypes, IProgressMo
  * hierarchy.
  * The match locator is not used here to narrow down the results, the type hierarchy
  * resolver is rather used to compute the whole hierarchy at once.
- * @param type
- * @param scope
- * @param binariesFromIndexMatches
- * @param pathRequestor
- * @param waitingPolicy
- * @param monitor
  */
 public static void searchAllPossibleSubTypes(
 	IType type,
@@ -596,7 +590,7 @@ private static void legacySearchAllPossibleSubTypes(
 		job.finished();
 		if (JobManager.VERBOSE) {
 			long wallClockTime = System.currentTimeMillis() - startTime;
-			Util.verbose("-> execution time: " + wallClockTime + "ms - " + IndexBasedHierarchyBuilder.class.getSimpleName());//$NON-NLS-1$//$NON-NLS-2$
+			JavaModelManager.trace("-> execution time: " + wallClockTime + "ms - " + IndexBasedHierarchyBuilder.class.getSimpleName());//$NON-NLS-1$//$NON-NLS-2$
 		}
 	}
 }

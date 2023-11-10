@@ -162,11 +162,13 @@ private HashSet<String> getModuleGraph(String mName, TypeDeclarationPattern type
 			}
 		}
 	};
-	final SearchRequestor requestor = new SearchRequestor() {	
+	final SearchRequestor requestor = new SearchRequestor() {
 		@Override
 		public void acceptSearchMatch(SearchMatch searchMatch) throws CoreException {
-			System.out.println(searchMatch.toString());
 			// do nothing
+			if (JavaModelManager.VERBOSE) {
+				JavaModelManager.trace(searchMatch.toString());
+			}
 		}
 	};
 	try {
@@ -198,13 +200,13 @@ private char[][] getModuleList(TypeDeclarationPattern typePattern) {
 		char[][] tmp = new char[sz][];
 		for (int i = 0; i < sz; ++i) {
 			tmp[i] = ar[i].toCharArray();
-		}	
+		}
 		typePattern.moduleGraphElements = tmp;
 	}
 	return typePattern.moduleGraphElements;
 }
 private int matchModule(TypeDeclarationPattern typePattern, TypeBinding type) {
-	if (!(type instanceof ReferenceBinding)) 
+	if (!(type instanceof ReferenceBinding))
 		return INACCURATE_MATCH; // a safety net, should not come here for error free code.
 	ReferenceBinding reference = (ReferenceBinding) type;
 	ModuleBinding module = reference.module();

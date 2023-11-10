@@ -67,7 +67,6 @@ public class JavaCorePreferenceModifyListener extends PreferenceModifyListener {
 	 * Returns whether a java project referenced in property key
 	 * is still longer accessible or not.
 	 *
-	 * @param propertyName
 	 * @return true if a project is referenced in given key and this project
 	 * 	is still accessible, false otherwise.
 	 */

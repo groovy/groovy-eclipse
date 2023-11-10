@@ -28,7 +28,7 @@ import org.eclipse.jdt.internal.compiler.env.IModulePathEntry;
 
 public class ModulePathContainer implements IClasspathContainer{
 
-	private IJavaProject project;
+	private final IJavaProject project;
 
 	public ModulePathContainer(IJavaProject project) {
 		this.project = project;
@@ -64,19 +64,19 @@ public class ModulePathContainer implements IClasspathContainer{
 
 	@Override
 	public String getDescription() {
-		// 
+		//
 		return "Module path"; //$NON-NLS-1$
 	}
 
 	@Override
 	public int getKind() {
-		// 
+		//
 		return K_APPLICATION;
 	}
 
 	@Override
 	public IPath getPath() {
-		// 
+		//
 		return new Path(JavaCore.MODULE_PATH_CONTAINER_ID);
 	}
 

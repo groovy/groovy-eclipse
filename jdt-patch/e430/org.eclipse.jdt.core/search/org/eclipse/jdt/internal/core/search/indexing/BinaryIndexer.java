@@ -15,6 +15,8 @@
 package org.eclipse.jdt.internal.core.search.indexing;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IStatus;
@@ -657,6 +659,23 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 		int utf8Offset = constantPoolOffsets[reader.u2At(constantPoolOffsets[constantPoolIndex] + 3)];
 		return reader.utf8At(utf8Offset + 3, reader.u2At(utf8Offset + 1));
 	}
+
+	/**
+	 * same as <code>new java.io.File(absoluteNormalFilePath).toURI()</code> if absoluteNormalFilePath is not a
+	 * directory but faster because it avoid IO for the isDirectory check.
+	 **/
+	private URI toUri(final String absoluteNormalFilePath) {
+		String p = absoluteNormalFilePath.replace(File.separatorChar, '/');
+		if (!p.startsWith("/")) { //$NON-NLS-1$
+			p = "/" + p; //$NON-NLS-1$
+		}
+		try {
+			return new URI("file", null, p, null); //$NON-NLS-1$
+		} catch (URISyntaxException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
 	@Override
 	public void indexDocument() {
 		try {
@@ -665,7 +684,8 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			// contents can potentially be null if a IOException occurs while retrieving the contents
 			if (contents == null) return;
 			final String path = this.document.getPath();
-			ClassFileReader reader = new ClassFileReader((new File(path)).toURI(), contents, path == null ? null : path.toCharArray());
+			 // Here we know the path of a .class file is absolute and not a directory
+			ClassFileReader reader = new ClassFileReader(toUri(path) , contents, path == null ? null : path.toCharArray());
 
 			IModule module = reader.getModuleDeclaration();
 			if (module != null) {

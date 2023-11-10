@@ -89,7 +89,7 @@ public class SwitchExpression extends Expression {
 	 * (element type: {@link Statement}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList statements =
+	private final ASTNode.NodeList statements =
 		new ASTNode.NodeList(STATEMENTS_PROPERTY);
 
 	/**

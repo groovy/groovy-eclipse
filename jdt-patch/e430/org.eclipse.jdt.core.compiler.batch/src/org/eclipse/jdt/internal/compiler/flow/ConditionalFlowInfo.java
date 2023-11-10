@@ -22,7 +22,6 @@ import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 
 /**
  * Record conditional initialization status during definite assignment analysis
- *
  */
 public class ConditionalFlowInfo extends FlowInfo {
 
@@ -121,7 +120,7 @@ public boolean isDefinitelyUnknown(LocalVariableBinding local) {
 
 @Override
 public boolean hasNullInfoFor(LocalVariableBinding local) {
-	return this.initsWhenTrue.hasNullInfoFor(local) 
+	return this.initsWhenTrue.hasNullInfoFor(local)
 			|| this.initsWhenFalse.hasNullInfoFor(local);
 }
 

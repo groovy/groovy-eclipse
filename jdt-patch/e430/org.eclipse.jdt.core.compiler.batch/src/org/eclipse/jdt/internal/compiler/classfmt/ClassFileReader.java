@@ -53,7 +53,7 @@ import org.eclipse.jdt.internal.compiler.util.Util;
 public class ClassFileReader extends ClassFileStruct implements IBinaryType {
 
 	private int accessFlags;
-	private char[] classFileName;
+	private final char[] classFileName;
 	private char[] className;
 	private int classNameIndex;
 	private int constantPoolCount;

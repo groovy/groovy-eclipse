@@ -14,6 +14,7 @@
 package org.eclipse.jdt.internal.core.search.indexing;
 
 import static org.eclipse.jdt.internal.compiler.util.Util.isClassFileName;
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.io.File;
 import java.io.IOException;
@@ -166,22 +167,25 @@ public class AddJrtToIndex extends BinaryContainer {
 			// if index is already cached, then do not perform any check
 			// MUST reset the IndexManager if a jar file is changed
 			if (this.manager.getIndexForUpdate(this.containerPath, false, /*do not reuse index file*/ false /*do not create if none*/) != null) {
-				if (JobManager.VERBOSE)
-					Util.verbose("-> no indexing required (index already exists) for " + this.containerPath); //$NON-NLS-1$
+				if (JobManager.VERBOSE) {
+					trace("-> no indexing required (index already exists) for " + this.containerPath); //$NON-NLS-1$
+				}
 				return true;
 			}
 
 			final Index index = this.manager.getIndexForUpdate(this.containerPath, true, /*reuse index file*/ true /*create if none*/);
 			if (index == null) {
-				if (JobManager.VERBOSE)
-					Util.verbose("-> index could not be created for " + this.containerPath); //$NON-NLS-1$
+				if (JobManager.VERBOSE) {
+					trace("-> index could not be created for " + this.containerPath); //$NON-NLS-1$
+				}
 				return true;
 			}
 			index.separator = JAR_SEPARATOR;
 			ReadWriteMonitor monitor = index.monitor;
 			if (monitor == null) {
-				if (JobManager.VERBOSE)
-					Util.verbose("-> index for " + this.containerPath + " just got deleted"); //$NON-NLS-1$//$NON-NLS-2$
+				if (JobManager.VERBOSE) {
+					trace("-> index for " + this.containerPath + " just got deleted"); //$NON-NLS-1$//$NON-NLS-2$
+				}
 				return true; // index got deleted since acquired
 			}
 			try {
@@ -192,20 +196,21 @@ public class AddJrtToIndex extends BinaryContainer {
 				if (this.resource != null) {
 					URI location = this.resource.getLocationURI();
 					if (location == null) return false;
-					if (JavaModelManager.JRT_ACCESS_VERBOSE)
-						System.out.println("(" + Thread.currentThread() + ") [AddJrtFileToIndex.execute()] Creating ZipFile on " + location.getPath()); //$NON-NLS-1$	//$NON-NLS-2$
+					if (JavaModelManager.JRT_ACCESS_VERBOSE) {
+						trace("(" + Thread.currentThread() + ") [AddJrtFileToIndex.execute()] Creating ZipFile on " + location.getPath()); //$NON-NLS-1$	//$NON-NLS-2$
+					}
 					File file = null;
 					try {
 						file = Util.toLocalFile(location, progressMonitor);
 					} catch (CoreException e) {
 						if (JobManager.VERBOSE) {
-							Util.verbose("-> failed to index " + location.getPath() + " because of the following exception:"); //$NON-NLS-1$ //$NON-NLS-2$
-							e.printStackTrace();
+							trace("-> failed to index " + location.getPath() + " because of the following exception:", e); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 					}
 					if (file == null) {
-						if (JobManager.VERBOSE)
-							Util.verbose("-> failed to index " + location.getPath() + " because the file could not be fetched"); //$NON-NLS-1$ //$NON-NLS-2$
+						if (JobManager.VERBOSE) {
+							trace("-> failed to index " + location.getPath() + " because the file could not be fetched"); //$NON-NLS-1$ //$NON-NLS-2$
+						}
 						return false;
 					}
 					fileName = file.getAbsolutePath();
@@ -218,8 +223,9 @@ public class AddJrtToIndex extends BinaryContainer {
 				}
 
 
-				if (JobManager.VERBOSE)
-					Util.verbose("-> indexing " + fileName); //$NON-NLS-1$
+				if (JobManager.VERBOSE) {
+					trace("-> indexing " + fileName); //$NON-NLS-1$
+				}
 				long initialTime = System.currentTimeMillis();
 				String[] paths = index.queryDocumentNames(""); // all file names //$NON-NLS-1$
 				if (paths != null) {
@@ -248,7 +254,7 @@ public class AddJrtToIndex extends BinaryContainer {
 						}
 						if (!needToReindex) {
 							if (JobManager.VERBOSE)
-								Util.verbose("-> no indexing required (index is consistent with library) for " //$NON-NLS-1$
+								trace("-> no indexing required (index is consistent with library) for " //$NON-NLS-1$
 								+ fileName + " (" //$NON-NLS-1$
 								+ (System.currentTimeMillis() - initialTime) + "ms)"); //$NON-NLS-1$
 							this.manager.saveIndex(index); // to ensure its placed into the saved state
@@ -276,7 +282,7 @@ public class AddJrtToIndex extends BinaryContainer {
 					this.manager.saveIndex(index);
 				}
 				if (JobManager.VERBOSE)
-					Util.verbose("-> done indexing of " //$NON-NLS-1$
+					trace("-> done indexing of " //$NON-NLS-1$
 						+ fileName + " (" //$NON-NLS-1$
 						+ (System.currentTimeMillis() - initialTime) + "ms)"); //$NON-NLS-1$
 			} finally {

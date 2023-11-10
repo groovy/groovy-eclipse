@@ -124,6 +124,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortMethod;
 import org.eclipse.jdt.internal.compiler.problem.AbortType;
+import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.compiler.problem.ShouldNotImplement;
 import org.eclipse.jdt.internal.compiler.util.Messages;
@@ -2038,9 +2039,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 	}
 
 
-	/**
-	 *
-	 */
 	public void completeCodeAttributeForMissingAbstractProblemMethod(
 			MethodBinding binding,
 			int codeAttributeOffset,
@@ -2277,9 +2275,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 				if (exceptionLabel != null) {
 					int iRange = 0, maxRange = exceptionLabel.getCount();
 					if ((maxRange & 1) != 0) {
-						this.referenceBinding.scope.problemReporter().abortDueToInternalError(
+						ProblemReporter problemReporter = this.referenceBinding.scope.problemReporter();
+						problemReporter.abortDueToInternalError(
 								Messages.bind(Messages.abort_invalidExceptionAttribute, new String(binding.selector),
-										this.referenceBinding.scope.problemReporter().referenceContext));
+										problemReporter.referenceContext));
 					}
 					while  (iRange < maxRange) {
 						int start = exceptionLabel.ranges[iRange++]; // even ranges are start positions
@@ -3309,9 +3308,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 		}
 	}
-	/**
-	 * @param attributeOffset
-	 */
 	private void generateElementValue(int attributeOffset, Expression defaultValue, Constant constant, TypeBinding binding) {
 		if (this.contentsOffset + 3 >= this.contents.length) {
 			resizeContents(3);
@@ -4702,7 +4698,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 		return false;
 	}
 	/**
-	 * @param annotations
 	 * @param targetMask allowed targets
 	 * @return the number of attributes created while dumping the annotations in the .class file
 	 */

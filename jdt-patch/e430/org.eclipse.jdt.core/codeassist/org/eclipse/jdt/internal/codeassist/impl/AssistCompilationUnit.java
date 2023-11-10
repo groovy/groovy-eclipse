@@ -28,8 +28,8 @@ import org.eclipse.jdt.internal.core.PackageFragment;
 
 @SuppressWarnings("rawtypes")
 public class AssistCompilationUnit extends CompilationUnit {
-	private Map infoCache;
-	private Map bindingCache;
+	private final Map infoCache;
+	private final Map bindingCache;
 	public AssistCompilationUnit(ICompilationUnit compilationUnit, WorkingCopyOwner owner, Map bindingCache, Map infoCache) {
 		super((PackageFragment)compilationUnit.getParent(), compilationUnit.getElementName(), owner);
 		this.bindingCache = bindingCache;

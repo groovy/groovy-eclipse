@@ -110,7 +110,7 @@ public abstract class ASTVisitor {
 	 * Indicates whether doc tags should be visited by default.
 	 * @since 3.0
 	 */
-	private boolean visitDocTags;
+	private final boolean visitDocTags;
 
 	/**
 	 * Creates a new AST visitor instance.

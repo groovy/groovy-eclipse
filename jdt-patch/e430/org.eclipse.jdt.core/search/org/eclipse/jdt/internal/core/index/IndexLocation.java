@@ -30,7 +30,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  *
  * This is an abstract class to allow different implementation for a jar entry and a file
  * on the disk. Some of these functions could mean different for a jar entry or a file
- *
  */
 public abstract class IndexLocation {
 
@@ -104,7 +103,6 @@ public abstract class IndexLocation {
 	/**
 	 * Creates a new file for the given index location
 	 * @return true if the file is created
-	 * @throws IOException
 	 */
 	public abstract boolean createNewFile() throws IOException;
 

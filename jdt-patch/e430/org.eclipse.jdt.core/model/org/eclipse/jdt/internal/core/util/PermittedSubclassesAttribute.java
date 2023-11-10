@@ -24,15 +24,11 @@ import org.eclipse.jdt.core.util.IPermittedSubclassesAttribute;
 public class PermittedSubclassesAttribute extends ClassFileAttribute implements IPermittedSubclassesAttribute {
 	private static final IPermittedSubclassesAttributeEntry[] NO_ENTRIES = new IPermittedSubclassesAttributeEntry[0];
 
-	private int permittedSubclasses;
+	private final int permittedSubclasses;
 	private IPermittedSubclassesAttributeEntry[] entries;
 
 	/**
 	 * Constructor for PermittedSubclassesAttribute.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public PermittedSubclassesAttribute(
 		byte[] classFileBytes,

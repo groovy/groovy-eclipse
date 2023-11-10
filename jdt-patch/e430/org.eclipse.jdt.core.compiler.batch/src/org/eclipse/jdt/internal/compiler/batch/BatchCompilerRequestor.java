@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 
 public class BatchCompilerRequestor implements ICompilerRequestor {
 
-    private Main compiler;
+    private final Main compiler;
     private int lineDelta = 0;
 
     public BatchCompilerRequestor(Main compiler) {

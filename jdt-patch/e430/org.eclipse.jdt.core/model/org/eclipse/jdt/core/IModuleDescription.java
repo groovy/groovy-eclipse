@@ -36,21 +36,19 @@ public interface IModuleDescription extends IMember, IAnnotatable {
 	 * @since 3.14
 	 */
 	String[] getRequiredModuleNames() throws JavaModelException;
-	
+
 	/**
 	 * Get provided service names for this module.
 	 *
 	 * @return a non-null array of provided service names
-	 * @throws JavaModelException
 	 * @since 3.18
 	 */
 	String[] getProvidedServiceNames() throws JavaModelException;
-	
+
 	/**
 	 * Get used service names for this module.
 	 *
 	 * @return a non-null array of used service names
-	 * @throws JavaModelException
 	 * @since 3.18
 	 */
 	String[] getUsedServiceNames() throws JavaModelException;
@@ -60,7 +58,6 @@ public interface IModuleDescription extends IMember, IAnnotatable {
 	 *
 	 * @param targetModule filter the result to include only packages exported to the given module, unless {@code null}.
 	 * @return a non-null array of exported package names
-	 * @throws JavaModelException
 	 * @since 3.18
 	 */
 	String[] getExportedPackageNames(IModuleDescription targetModule) throws JavaModelException;
@@ -70,13 +67,12 @@ public interface IModuleDescription extends IMember, IAnnotatable {
 	 *
 	 * @param targetModule filter the result to include only packages opened to the given module, unless {@code null}.
 	 * @return a non-null array of opened package names
-	 * @throws JavaModelException
 	 * @since 3.18
 	 */
 	String[] getOpenedPackageNames(IModuleDescription targetModule) throws JavaModelException;
 
 	/**
-	 * 
+	 *
 	 * @return true if automatic module, else false
 	 * @since 3.14
 	 */

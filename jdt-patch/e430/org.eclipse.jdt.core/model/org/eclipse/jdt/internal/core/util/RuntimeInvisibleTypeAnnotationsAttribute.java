@@ -28,15 +28,11 @@ public class RuntimeInvisibleTypeAnnotationsAttribute
 	implements IRuntimeInvisibleTypeAnnotationsAttribute {
 
 	private static final IExtendedAnnotation[] NO_ENTRIES = new IExtendedAnnotation[0];
-	private int extendedAnnotationsNumber;
+	private final int extendedAnnotationsNumber;
 	private IExtendedAnnotation[] extendedAnnotations;
 
 	/**
 	 * Constructor for RuntimeInvisibleTypeAnnotations.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public RuntimeInvisibleTypeAnnotationsAttribute(
 			byte[] classFileBytes,

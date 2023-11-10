@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.util.INestMemberAttributeEntry;
 
 public class NestMembersAttributeEntry extends ClassFileStruct implements INestMemberAttributeEntry {
 
-	private int memberClassNameIndex;
+	private final int memberClassNameIndex;
 	private char[] memberClassName;
 
 	public NestMembersAttributeEntry(byte[] classFileBytes, IConstantPool constantPool, int offset)
@@ -43,7 +43,7 @@ public class NestMembersAttributeEntry extends ClassFileStruct implements INestM
 	public int getNestMemberIndex() {
 		return this.memberClassNameIndex;
 	}
-	
+
 	@Override
 	public String toString() {
 		return new String(this.memberClassName);

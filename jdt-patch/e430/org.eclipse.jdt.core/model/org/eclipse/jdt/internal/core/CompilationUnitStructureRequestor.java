@@ -83,13 +83,13 @@ public class CompilationUnitStructureRequestor extends ReferenceInfoAdapter impl
 	/*
 	 * A table from a handle (with occurenceCount == 1) to the current occurence count for this handle
 	 */
-	private HashMap<Object, Integer> occurenceCounts;
+	private final HashMap<Object, Integer> occurenceCounts;
 
 	/*
 	 * A table to store the occurrence count of anonymous types. The key will be the handle to the
 	 * enclosing type of the anonymous.
 	 */
-	private HashMap<Object, Integer> localOccurrenceCounts;
+	private final HashMap<Object, Integer> localOccurrenceCounts;
 
 	/**
 	 * Stack of parent scope info objects. The info on the
@@ -179,7 +179,6 @@ public void acceptImport(int declarationStart, int declarationEnd, int nameSourc
  * of the parse action, so as to allow computation of normalized ranges.
  *
  * A line separator might corresponds to several characters in the source,
- *
  */
 @Override
 public void acceptLineSeparatorPositions(int[] positions) {

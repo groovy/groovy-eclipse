@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.core.JavaElement;
 
 @SuppressWarnings("rawtypes")
 public class AssistAnnotation extends Annotation {
-	private Map infoCache;
+	private final Map infoCache;
 	public AssistAnnotation(JavaElement parent, String name, Map infoCache) {
 		super(parent, name);
 		this.infoCache = infoCache;

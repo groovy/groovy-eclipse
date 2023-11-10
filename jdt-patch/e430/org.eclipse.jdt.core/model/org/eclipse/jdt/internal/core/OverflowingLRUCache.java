@@ -107,7 +107,6 @@ public OverflowingLRUCache(int size, int overflow) {
  *
  * <p>NOTE: this triggers an external remove from the cache
  * by closing the object.
- *
  */
 protected abstract boolean close(LRUCacheEntry<K, V> entry);
 	/**

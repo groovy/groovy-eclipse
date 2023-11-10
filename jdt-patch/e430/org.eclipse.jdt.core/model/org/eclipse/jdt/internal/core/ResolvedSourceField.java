@@ -19,7 +19,7 @@ package org.eclipse.jdt.internal.core;
  */
 public class ResolvedSourceField extends SourceField {
 
-	private String uniqueKey;
+	private final String uniqueKey;
 
 	/*
 	 * See class comments.

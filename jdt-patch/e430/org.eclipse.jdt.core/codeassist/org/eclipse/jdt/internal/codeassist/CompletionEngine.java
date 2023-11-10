@@ -22,6 +22,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -865,7 +867,6 @@ public final class CompletionEngine
 	 * all elements found matches the expected type, the completion proposals will not contains the calculated expected type
 	 * relevance. This is done to keep the overloaded method suggestions always on top in this mode as a fix for
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=575149
-	 *
 	 */
 	private boolean strictMatchForExtepectedType = false;
 
@@ -1902,7 +1903,7 @@ public final class CompletionEngine
 		buildTokenLocationContext(context, scope, astNode, astNodeParent);
 
 		if(DEBUG) {
-			System.out.println(context.toString());
+			trace(context.toString());
 		}
 		this.requestor.acceptContext(context);
 	}
@@ -2122,12 +2123,8 @@ public final class CompletionEngine
 	public void complete(ICompilationUnit sourceUnit, int completionPosition, int pos, ITypeRoot root) {
 
 		if(DEBUG) {
-			System.out.print("COMPLETION IN "); //$NON-NLS-1$
-			System.out.print(sourceUnit.getFileName());
-			System.out.print(" AT POSITION "); //$NON-NLS-1$
-			System.out.println(completionPosition);
-			System.out.println("COMPLETION - Source :"); //$NON-NLS-1$
-			System.out.println(sourceUnit.getContents());
+			trace("COMPLETION IN " + new String(sourceUnit.getFileName()) + " AT POSITION " + completionPosition);  //$NON-NLS-1$//$NON-NLS-2$
+			trace("COMPLETION - Source :" + new String(sourceUnit.getContents())); //$NON-NLS-1$
 		}
 		if (this.monitor != null) this.monitor.beginTask(Messages.engine_completing, IProgressMonitor.UNKNOWN);
 		this.requestor.beginReporting();
@@ -2148,8 +2145,8 @@ public final class CompletionEngine
 			//		boolean completionNodeFound = false;
 			if (parsedUnit != null) {
 				if(DEBUG) {
-					System.out.println("COMPLETION - Diet AST :"); //$NON-NLS-1$
-					System.out.println(parsedUnit.toString());
+					trace("COMPLETION - Diet AST :"); //$NON-NLS-1$
+					trace(parsedUnit.toString());
 				}
 
 				if (parsedUnit.isModuleInfo()) {
@@ -2235,11 +2232,9 @@ public final class CompletionEngine
 						if (e.astNode != null) {
 							// if null then we found a problem in the completion node
 							if(DEBUG) {
-								System.out.print("COMPLETION - Completion node : "); //$NON-NLS-1$
-								System.out.println(e.astNode.toString());
+								trace("COMPLETION - Completion node : " + e.astNode.toString()); //$NON-NLS-1$
 								if(this.parser.assistNodeParent != null) {
-									System.out.print("COMPLETION - Parent Node : ");  //$NON-NLS-1$
-									System.out.println(this.parser.assistNodeParent);
+									trace("COMPLETION - Parent Node : " + this.parser.assistNodeParent); //$NON-NLS-1$
 								}
 							}
 							this.lookupEnvironment.unitBeingCompleted = parsedUnit; // better resilient to further error reporting
@@ -2343,8 +2338,8 @@ public final class CompletionEngine
 							this.unitScope.throwDeferredException();
 							parseBlockStatements(parsedUnit, this.actualCompletionPosition);
 							if(DEBUG) {
-								System.out.println("COMPLETION - AST :"); //$NON-NLS-1$
-								System.out.println(parsedUnit.toString());
+								trace("COMPLETION - AST :"); //$NON-NLS-1$
+								trace(parsedUnit.toString());
 							}
 							parsedUnit.resolve();
 						}
@@ -2353,11 +2348,9 @@ public final class CompletionEngine
 						if (e.astNode != null) {
 							// if null then we found a problem in the completion node
 							if(DEBUG) {
-								System.out.print("COMPLETION - Completion node : "); //$NON-NLS-1$
-								System.out.println(e.astNode.toString());
+								trace("COMPLETION - Completion node : " + e.astNode.toString()); //$NON-NLS-1$
 								if(this.parser.assistNodeParent != null) {
-									System.out.print("COMPLETION - Parent Node : ");  //$NON-NLS-1$
-									System.out.println(this.parser.assistNodeParent);
+									trace("COMPLETION - Parent Node : " + this.parser.assistNodeParent); //$NON-NLS-1$
 								}
 							}
 							this.lookupEnvironment.unitBeingCompleted = parsedUnit; // better resilient to further error reporting
@@ -2407,8 +2400,7 @@ public final class CompletionEngine
 			*/
 		} catch (IndexOutOfBoundsException | InvalidCursorLocation | AbortCompilation | CompletionNodeFound e){ // internal failure - bugs 5618
 			if(DEBUG) {
-				System.out.println("Exception caught by CompletionEngine:"); //$NON-NLS-1$
-				e.printStackTrace(System.out);
+				trace("Exception caught by CompletionEngine:", e); //$NON-NLS-1$
 			}
 		} finally {
 			if(!contextAccepted) {
@@ -2440,11 +2432,9 @@ public final class CompletionEngine
 				if (e.astNode != null) {
 					// if null then we found a problem in the completion node
 					if(DEBUG) {
-						System.out.print("COMPLETION - Completion node : "); //$NON-NLS-1$
-						System.out.println(e.astNode.toString());
+						trace("COMPLETION - Completion node : " + e.astNode.toString()); //$NON-NLS-1$
 						if(this.parser.assistNodeParent != null) {
-							System.out.print("COMPLETION - Parent Node : ");  //$NON-NLS-1$
-							System.out.println(this.parser.assistNodeParent);
+							trace("COMPLETION - Parent Node : " + this.parser.assistNodeParent); //$NON-NLS-1$
 						}
 					}
 					this.lookupEnvironment.unitBeingCompleted = parsedUnit; // better resilient to further error reporting
@@ -2605,8 +2595,8 @@ public final class CompletionEngine
 				typeDeclaration.fields = newFields;
 
 				if(DEBUG) {
-					System.out.println("SNIPPET COMPLETION AST :"); //$NON-NLS-1$
-					System.out.println(compilationUnit.toString());
+					trace("SNIPPET COMPLETION AST :"); //$NON-NLS-1$
+					trace(compilationUnit.toString());
 				}
 
 				if (compilationUnit.types != null) {
@@ -2649,8 +2639,7 @@ public final class CompletionEngine
 			}
 		}  catch (IndexOutOfBoundsException | InvalidCursorLocation | AbortCompilation | CompletionNodeFound e){ // internal failure - bugs 5618 (added with fix of 99629)
 			if(DEBUG) {
-				System.out.println("Exception caught by CompletionEngine:"); //$NON-NLS-1$
-				e.printStackTrace(System.out);
+				trace("Exception caught by CompletionEngine:", e); //$NON-NLS-1$
 			}
 		} catch(JavaModelException e) {
 			// Do nothing
@@ -12012,8 +12001,7 @@ public final class CompletionEngine
 			);
 		} catch (CoreException e) {
 			if(DEBUG) {
-				System.out.println("Exception caught by CompletionEngine:"); //$NON-NLS-1$
-				e.printStackTrace(System.out);
+				trace("Exception caught by CompletionEngine:", e); //$NON-NLS-1$
 			}
 		}
 
@@ -12990,8 +12978,9 @@ public final class CompletionEngine
 				acceptTypes(scope);
 			}
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (JavaModelManager.VERBOSE) {
+				trace("", e); //$NON-NLS-1$
+			}
 		}
 		if(!this.requestor.isIgnored(CompletionProposal.PACKAGE_REF)) {
 			checkCancel();
@@ -13758,7 +13747,6 @@ public final class CompletionEngine
 	}
 	/**
 	 * Returns completion string inserted inside a specified inline tag.
-	 * @param completionName
 	 * @return char[] Completion text inclunding specified inline tag
 	 */
 	private char[] inlineTagCompletion(char[] completionName, char[] inlineTag) {
@@ -14004,15 +13992,13 @@ public final class CompletionEngine
 	}
 	protected void printDebug(CategorizedProblem error) {
 		if(CompletionEngine.DEBUG) {
-			System.out.print("COMPLETION - completionFailure("); //$NON-NLS-1$
-			System.out.print(error);
-			System.out.println(")"); //$NON-NLS-1$
+			trace("COMPLETION - completionFailure(" + error + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	protected void printDebug(CompletionProposal proposal){
 		StringBuffer buffer = new StringBuffer();
 		printDebug(proposal, 0, buffer);
-		System.out.println(buffer.toString());
+		trace(buffer.toString());
 	}
 
 	private void printDebug(CompletionProposal proposal, int tab, StringBuffer buffer){

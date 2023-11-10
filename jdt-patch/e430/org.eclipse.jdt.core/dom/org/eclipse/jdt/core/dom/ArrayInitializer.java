@@ -71,7 +71,7 @@ public class ArrayInitializer extends Expression {
 	 * The list of expressions (element type:
 	 * {@link Expression}). Defaults to an empty list.
 	 */
-	private ASTNode.NodeList expressions =
+	private final ASTNode.NodeList expressions =
 		new ASTNode.NodeList(EXPRESSIONS_PROPERTY);
 
 	/**

@@ -31,7 +31,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *           <SelectOnAllocationExpression:new Bar(1, 2)>
  *         }
  *       }
- *
  */
 
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;

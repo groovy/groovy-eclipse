@@ -65,7 +65,7 @@ public class ExceptionHandlingFlowContext extends FlowContext {
 	private static final Argument[] NO_ARGUMENTS = new Argument[0];
 	public  Argument [] catchArguments;
 
-	private int[] exceptionToCatchBlockMap;
+	private final int[] exceptionToCatchBlockMap;
 
 public ExceptionHandlingFlowContext(
 			FlowContext parent,

@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 class OnDemandComputer {
-	private int typeOnDemandThreshold;
-	private int staticOnDemandThreshold;
+	private final int typeOnDemandThreshold;
+	private final int staticOnDemandThreshold;
 
 	OnDemandComputer(int typeOnDemandThreshold, int staticOnDemandThreshold) {
 		this.typeOnDemandThreshold = typeOnDemandThreshold;

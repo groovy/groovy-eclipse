@@ -27,7 +27,6 @@ import junit.framework.Test;
  * strategy is to keep this one updated and when the time comes, move this over
  * to the other bundle after synch-up of tests from both.
  * @author jay
- *
  */
 public class TextBlockTest extends AbstractRegressionTest {
 

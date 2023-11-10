@@ -342,7 +342,7 @@ class BoundSet {
 	private TypeBound[] incorporatedBounds = Binding.NO_TYPE_BOUNDS;
 	private TypeBound[] unincorporatedBounds = new TypeBound[8];
 	private int unincorporatedBoundsCount = 0;
-	private TypeBound[] mostRecentBounds = new TypeBound[4]; // for quick & dirty duplicate elimination
+	private final TypeBound[] mostRecentBounds = new TypeBound[4]; // for quick & dirty duplicate elimination
 
 	public BoundSet() {}
 

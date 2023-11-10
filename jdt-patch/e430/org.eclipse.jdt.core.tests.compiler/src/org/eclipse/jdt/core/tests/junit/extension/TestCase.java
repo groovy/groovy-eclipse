@@ -653,7 +653,6 @@ public static List buildTestsList(Class evaluationTestClass, int inheritedDepth,
  *
  * Note that this lis maybe reduced using some mechanisms detailed in {@link #buildTestsList(Class)} method.
  *
- * @param evaluationTestClass
  * @return a {@link Test test suite}
  */
 public static Test buildTestSuite(Class evaluationTestClass) {
@@ -667,8 +666,6 @@ public static Test buildTestSuite(Class evaluationTestClass) {
  *
  * Note that this lis maybe reduced using some mechanisms detailed in {@link #buildTestsList(Class)} method.
  *
- * @param evaluationTestClass
- * @param suiteName
  * @return a test suite ({@link Test})
  */
 public static Test buildTestSuite(Class evaluationTestClass, String suiteName) {

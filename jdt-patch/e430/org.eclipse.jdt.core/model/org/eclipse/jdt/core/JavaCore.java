@@ -114,6 +114,8 @@
 
 package org.eclipse.jdt.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -3878,8 +3880,7 @@ public final class JavaCore extends Plugin {
 						} catch(CoreException e) {
 							// executable extension could not be created: ignore this initializer
 							if (JavaModelManager.CP_RESOLVE_VERBOSE || JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-								verbose_failed_to_instanciate_container_initializer(containerID, configurationElement);
-								e.printStackTrace();
+								verbose_failed_to_instanciate_container_initializer(containerID, configurationElement, e);
 							}
 						}
 					}
@@ -3889,16 +3890,16 @@ public final class JavaCore extends Plugin {
 		return null;
 	}
 
-	private static void verbose_failed_to_instanciate_container_initializer(String containerID, IConfigurationElement configurationElement) {
-		Util.verbose(
+	private static void verbose_failed_to_instanciate_container_initializer(String containerID, IConfigurationElement configurationElement, CoreException e) {
+		trace(
 			"CPContainer INIT - failed to instanciate initializer\n" + //$NON-NLS-1$
 			"	container ID: " + containerID + '\n' + //$NON-NLS-1$
 			"	class: " + configurationElement.getAttribute("class"), //$NON-NLS-1$ //$NON-NLS-2$
-			System.err);
+			e);
 	}
 
 	private static void verbose_found_container_initializer(String containerID, IConfigurationElement configurationElement) {
-		Util.verbose(
+		trace(
 			"CPContainer INIT - found initializer\n" + //$NON-NLS-1$
 			"	container ID: " + containerID + '\n' + //$NON-NLS-1$
 			"	class: " + configurationElement.getAttribute("class")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -3959,7 +3960,7 @@ public final class JavaCore extends Plugin {
 				ok = true;
 			} catch (RuntimeException | Error e) {
 				if (JavaModelManager.CP_RESOLVE_VERBOSE || JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE)
-					e.printStackTrace();
+					trace("", new Exception(e)); //$NON-NLS-1$
 				throw e;
 			} finally {
 				if (!ok) JavaModelManager.getJavaModelManager().variablePut(variableName, null); // flush cache
@@ -3972,36 +3973,34 @@ public final class JavaCore extends Plugin {
 	}
 
 	private static void verbose_no_variable_initializer_found(String variableName) {
-		Util.verbose(
+		trace(
 			"CPVariable INIT - no initializer found\n" + //$NON-NLS-1$
 			"	variable: " + variableName); //$NON-NLS-1$
 	}
 
 	private static void verbose_variable_value_after_initialization(String variableName, IPath variablePath) {
-		Util.verbose(
+		trace(
 			"CPVariable INIT - after initialization\n" + //$NON-NLS-1$
 			"	variable: " + variableName +'\n' + //$NON-NLS-1$
 			"	variable path: " + variablePath); //$NON-NLS-1$
 	}
 
 	private static void verbose_triggering_variable_initialization(String variableName, ClasspathVariableInitializer initializer) {
-		Util.verbose(
+		trace(
 			"CPVariable INIT - triggering initialization\n" + //$NON-NLS-1$
 			"	variable: " + variableName + '\n' + //$NON-NLS-1$
 			"	initializer: " + initializer); //$NON-NLS-1$
 	}
 
 	private static void verbose_triggering_variable_initialization_invocation_trace() {
-		Util.verbose(
+		trace(
 			"CPVariable INIT - triggering initialization\n" + //$NON-NLS-1$
-			"	invocation trace:"); //$NON-NLS-1$
-		new Exception("<Fake exception>").printStackTrace(System.out); //$NON-NLS-1$
+			"	invocation trace:", new Exception("<Fake exception>")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
 	 * Returns deprecation message of a given classpath variable.
 	 *
-	 * @param variableName
 	 * @return A string if the classpath variable is deprecated, <code>null</code> otherwise.
 	 * @since 3.3
 	 */
@@ -4088,8 +4087,7 @@ public final class JavaCore extends Plugin {
 					} catch(CoreException e){
 						// executable extension could not be created: ignore this initializer
 						if (JavaModelManager.CP_RESOLVE_VERBOSE || JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-							verbose_failed_to_instanciate_variable_initializer(variable, configElement);
-							e.printStackTrace();
+							verbose_failed_to_instanciate_variable_initializer(variable, configElement, e);
 						}
 					}
 				}
@@ -4098,16 +4096,16 @@ public final class JavaCore extends Plugin {
 		return null;
 	}
 
-	private static void verbose_failed_to_instanciate_variable_initializer(String variable, IConfigurationElement configElement) {
-		Util.verbose(
+	private static void verbose_failed_to_instanciate_variable_initializer(String variable, IConfigurationElement configElement, CoreException e) {
+		trace(
 			"CPContainer INIT - failed to instanciate initializer\n" + //$NON-NLS-1$
 			"	variable: " + variable + '\n' + //$NON-NLS-1$
 			"	class: " + configElement.getAttribute("class"), //$NON-NLS-1$ //$NON-NLS-2$
-			System.err);
+			e);
 	}
 
 	private static void verbose_found_variable_initializer(String variable, IConfigurationElement configElement) {
-		Util.verbose(
+		trace(
 			"CPVariable INIT - found initializer\n" + //$NON-NLS-1$
 			"	variable: " + variable + '\n' + //$NON-NLS-1$
 			"	class: " + configElement.getAttribute("class")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -4251,7 +4249,9 @@ public final class JavaCore extends Plugin {
 					outputLocation = entryOutputLocation;
 				}
 			} catch (JavaModelException e) {
-				e.printStackTrace();
+				if (JavaModelManager.VERBOSE) {
+					trace("", e); //$NON-NLS-1$
+				}
 			}
 			if (outputLocation == null) continue;
 			IContainer container = (IContainer) project.getWorkspace().getRoot().findMember(outputLocation);
@@ -4710,16 +4710,18 @@ public final class JavaCore extends Plugin {
 		String newVersionNumber = Byte.toString(State.VERSION);
 		if (!newVersionNumber.equals(versionNumber)) {
 			// build state version number has changed: touch every projects to force a rebuild
-			if (JavaBuilder.DEBUG)
-				System.out.println("Build state version number has changed"); //$NON-NLS-1$
+			if (JavaBuilder.DEBUG) {
+				trace("Build state version number has changed"); //$NON-NLS-1$
+			}
 			IWorkspaceRunnable runnable = new IWorkspaceRunnable() {
 				@Override
 				public void run(IProgressMonitor progressMonitor2) throws CoreException {
 					for (int i = 0, length = projects.length; i < length; i++) {
 						IJavaProject project = projects[i];
 						try {
-							if (JavaBuilder.DEBUG)
-								System.out.println("Touching " + project.getElementName()); //$NON-NLS-1$
+							if (JavaBuilder.DEBUG) {
+								trace("Touching " + project.getElementName()); //$NON-NLS-1$
+							}
 							new ClasspathValidation((JavaProject) project).validate(); // https://bugs.eclipse.org/bugs/show_bug.cgi?id=287164
 							project.getProject().touch(progressMonitor2);
 						} catch (CoreException e) {
@@ -4781,7 +4783,6 @@ public final class JavaCore extends Plugin {
 	/**
 	 * Returns whether a given classpath variable is read-only or not.
 	 *
-	 * @param variableName
 	 * @return <code>true</code> if the classpath variable is read-only,
 	 * 	<code>false</code> otherwise.
 	 * @since 3.3
@@ -5881,7 +5882,6 @@ public final class JavaCore extends Plugin {
 	 *
 	 * @param monitor a progress monitor, or <code>null</code> if progress
 	 *    reporting and cancellation are not desired
-	 * @throws CoreException
 	 * @since 3.13
 	 */
 	public static void rebuildIndex(IProgressMonitor monitor) throws CoreException {
@@ -6016,7 +6016,6 @@ public final class JavaCore extends Plugin {
 	 * @param affectedProjects - the set of projects for which this container is being bound
 	 * @param respectiveContainers - the set of respective containers for the affected projects
 	 * @param monitor a monitor to report progress
-	 * @throws JavaModelException
 	 * @see ClasspathContainerInitializer
 	 * @see #getClasspathContainer(IPath, IJavaProject)
 	 * @see IClasspathContainer
@@ -6054,7 +6053,6 @@ public final class JavaCore extends Plugin {
 	 *
 	 * @param variableName the name of the classpath variable
 	 * @param path the path
-	 * @throws JavaModelException
 	 * @see #getClasspathVariable(String)
 	 *
 	 * @deprecated Use {@link #setClasspathVariable(String, IPath, IProgressMonitor)} instead
@@ -6083,7 +6081,6 @@ public final class JavaCore extends Plugin {
 	 * @param variableName the name of the classpath variable
 	 * @param path the path
 	 * @param monitor a monitor to report progress
-	 * @throws JavaModelException
 	 * @see #getClasspathVariable(String)
 	 */
 	public static void setClasspathVariable(
@@ -6122,7 +6119,6 @@ public final class JavaCore extends Plugin {
 	 * @param paths an array of path updates for the modified classpath variables (null
 	 *       meaning that the corresponding value will be removed
 	 * @param monitor a monitor to report progress
-	 * @throws JavaModelException
 	 * @see #getClasspathVariable(String)
 	 * @since 2.0
 	 */
@@ -6311,7 +6307,6 @@ public final class JavaCore extends Plugin {
 	 * @param project
 	 *            the project whose referenced modules to be computed
 	 * @return an array of String containing module names
-	 * @throws CoreException
 	 * @since 3.14
 	 */
 	public static String[] getReferencedModules(IJavaProject project) throws CoreException {
@@ -6329,7 +6324,6 @@ public final class JavaCore extends Plugin {
 	 *
 	 * @return the <code>IModuleDescription</code> representing this java element as an automatic module,
 	 * 		never <code>null</code>.
-	 * @throws JavaModelException
 	 * @throws IllegalArgumentException if the provided element is neither <code>IPackageFragmentRoot</code>
 	 * 	nor <code>IJavaProject</code>
 	 * @since 3.14
@@ -6379,7 +6373,6 @@ public final class JavaCore extends Plugin {
 	 * @param classFileAttributes map of attribute names and values to be used during class file generation
 	 * @return the compiled byte code
 	 *
-	 * @throws JavaModelException
 	 * @throws IllegalArgumentException if the map of classFileAttributes contains an unsupported key.
 	 * @since 3.14
 	 */
@@ -6478,7 +6471,6 @@ public final class JavaCore extends Plugin {
 	 * Registers the JavaModelManager as a resource changed listener and save participant.
 	 * Starts the background indexing, and restore saved classpath variable values.
 	 * </p>
-	 * @throws Exception
 	 * @see org.eclipse.core.runtime.Plugin#start(BundleContext)
 	 */
 	@Override

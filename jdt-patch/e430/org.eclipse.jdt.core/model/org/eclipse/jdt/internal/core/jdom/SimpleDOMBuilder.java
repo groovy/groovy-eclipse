@@ -93,8 +93,6 @@ protected void enterAbstractMethod(MethodInfo methodInfo) {
 
 	// type parameters not supported by JDOM
 }
-/**
- */
 @Override
 public void enterConstructor(MethodInfo methodInfo) {
 	/* see 1FVIIQZ */
@@ -105,8 +103,6 @@ public void enterConstructor(MethodInfo methodInfo) {
 
 	enterAbstractMethod(methodInfo);
 }
-/**
- */
 @Override
 public void enterField(FieldInfo fieldInfo) {
 
@@ -121,9 +117,6 @@ public void enterField(FieldInfo fieldInfo) {
 	addChild(this.fNode);
 	this.fStack.push(this.fNode);
 }
-/**
-
- */
 @Override
 public void enterInitializer(int declarationSourceStart, int modifiers) {
 	int[] sourceRange = {declarationSourceStart, -1};
@@ -131,14 +124,10 @@ public void enterInitializer(int declarationSourceStart, int modifiers) {
 	addChild(this.fNode);
 	this.fStack.push(this.fNode);
 }
-/**
- */
 @Override
 public void enterMethod(MethodInfo methodInfo) {
 	enterAbstractMethod(methodInfo);
 }
-/**
- */
 @Override
 public void enterType(TypeInfo typeInfo) {
 	if (this.fBuildingType) {
@@ -162,14 +151,10 @@ public void enterType(TypeInfo typeInfo) {
 public void exitConstructor(int declarationEnd) {
 	exitMember(declarationEnd);
 }
-/**
- */
 @Override
 public void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd) {
 	exitMember(declarationEnd);
 }
-/**
- */
 @Override
 public void exitInitializer(int declarationEnd) {
 	exitMember(declarationEnd);
@@ -185,8 +170,6 @@ protected void exitMember(int declarationEnd) {
 	m.setSourceRangeEnd(declarationEnd);
 	this.fNode = m;
 }
-/**
- */
 @Override
 public void exitMethod(int declarationEnd, Expression defaultValue) {
 	exitMember(declarationEnd);

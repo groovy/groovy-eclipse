@@ -16,16 +16,16 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 public final class SourceType {
-	private int modifiers;
-	private int declarationStart;
+	private final int modifiers;
+	private final int declarationStart;
 	private int declarationEnd;
 	private char[] fileName;
 	private SourcePackage packageName;
 	private SourceImport[] imports;
-	private char[] enclosingTypeName;
-	private char[] name;
-	private int nameSourceStart;
-	private int nameSourceEnd;
+	private final char[] enclosingTypeName;
+	private final char[] name;
+	private final int nameSourceStart;
+	private final int nameSourceEnd;
 	private char[] superclassName;
 	private char[][] interfaceNames;
 	private SourceType[] memberTypes;
@@ -36,7 +36,7 @@ public final class SourceType {
 	private SourceField[] recordComponents;
 	private int numberOfFields;
 	private int numberOfComponents;
-	private char[] source;
+	private final char[] source;
 	SourceType parent;
 	char[][] typeParameterNames;
 	char[][][] typeParameterBounds;

@@ -23,11 +23,11 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
  */
 public class ResourceCompilationUnit implements ICompilationUnit {
 
-	private IFile file;
+	private final IFile file;
 	private char[] contents;
-	private char[] fileName;
-	private char[] mainTypeName;
-	private char[] module;
+	private final char[] fileName;
+	private final char[] mainTypeName;
+	private final char[] module;
 	public ResourceCompilationUnit(IFile file, char[] mod) {
 		this.file = file;
 		this.module = mod;

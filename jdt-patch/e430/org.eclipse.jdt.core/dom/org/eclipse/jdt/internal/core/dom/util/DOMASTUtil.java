@@ -212,7 +212,6 @@ public class DOMASTUtil {
 	 * Calculates the JavaCore Option value string corresponding to the input ast level.
 	 * AST Level 4 is used for Java versions 1.4 to 1.7 and is converted to compliance level 7
 	 * if input ast level is out of boundary, latest compliance will be returned
-	 * @param astLevel
 	 * @return JavaCore Option value string corresponding to the ast level
 	 */
 	public static String getCompliance(int astLevel) {

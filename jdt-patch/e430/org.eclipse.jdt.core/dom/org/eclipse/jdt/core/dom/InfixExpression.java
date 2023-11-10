@@ -62,7 +62,7 @@ public class InfixExpression extends Expression {
 		/**
 		 * The token for the operator.
 		 */
-		private String token;
+		private final String token;
 
 		/**
 		 * Creates a new infix operator with the given token.

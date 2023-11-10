@@ -26,15 +26,11 @@ public class RuntimeInvisibleAnnotationsAttribute
 	implements IRuntimeInvisibleAnnotationsAttribute {
 
 	private static final IAnnotation[] NO_ENTRIES = new IAnnotation[0];
-	private int annotationsNumber;
+	private final int annotationsNumber;
 	private IAnnotation[] annotations;
 
 	/**
 	 * Constructor for RuntimeInvisibleAnnotations.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public RuntimeInvisibleAnnotationsAttribute(
 			byte[] classFileBytes,

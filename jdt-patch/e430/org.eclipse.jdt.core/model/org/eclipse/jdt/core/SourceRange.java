@@ -37,8 +37,8 @@ public final class SourceRange implements ISourceRange {
 		return range != null && range.getOffset() != -1;
 	}
 
-	private int offset;
-	private int length;
+	private final int offset;
+	private final int length;
 
 	/**
 	 * Instantiate a new source range using the given offset and the given length.

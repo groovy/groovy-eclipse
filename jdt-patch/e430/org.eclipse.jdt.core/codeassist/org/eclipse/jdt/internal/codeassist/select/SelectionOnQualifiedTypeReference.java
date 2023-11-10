@@ -22,7 +22,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *	class X extends java.lang.[start]Object[end]
  *
  *	---> class X extends <SelectOnType:java.lang.Object>
- *
  */
 
 import org.eclipse.jdt.core.compiler.CharOperation;

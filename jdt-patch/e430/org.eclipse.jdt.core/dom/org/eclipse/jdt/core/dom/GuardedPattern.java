@@ -239,7 +239,6 @@ public class GuardedPattern extends Pattern{
 
 	/**
 	 * Sets the pattern of this switch case.
-	 * @param pattern
 	 * @noreference This method is not intended to be referenced by clients.
 	 * @exception UnsupportedOperationException if this operation is used not for JLS18
 	 * @exception UnsupportedOperationException if this operation is used without previewEnabled

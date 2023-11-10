@@ -56,7 +56,7 @@ public class ReturnStatement extends Statement {
 	public SubRoutineStatement[] subroutines;
 	public LocalVariableBinding saveValueVariable;
 	public int initStateIndex = -1;
-	private boolean implicitReturn;
+	private final boolean implicitReturn;
 
 public ReturnStatement(Expression expression, int sourceStart, int sourceEnd) {
 	this(expression, sourceStart, sourceEnd, false);
@@ -251,7 +251,6 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 /**
  * Dump the suitable return bytecode for a return statement
- *
  */
 public void generateReturnBytecode(CodeStream codeStream) {
 	codeStream.generateReturnBytecode(this.expression);

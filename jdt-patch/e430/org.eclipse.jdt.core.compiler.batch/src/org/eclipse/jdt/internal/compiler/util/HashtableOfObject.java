@@ -13,12 +13,14 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.util;
 
+import java.util.Arrays;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**
  * Hashtable of {char[] --> Object }
  */
-public final class HashtableOfObject implements Cloneable {
+public final class HashtableOfObject {
 
 	/** Max array size accepted by JVM */
 	public static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 2;
@@ -28,7 +30,7 @@ public final class HashtableOfObject implements Cloneable {
 	public Object valueTable[];
 
 	public int elementSize; // number of elements in the table
-	int threshold;
+	private int threshold;
 
 	public HashtableOfObject() {
 		this(13);
@@ -43,7 +45,6 @@ public final class HashtableOfObject implements Cloneable {
 		if (size < 0) {
 			throw new NegativeArraySizeException("Bad attempt to create table with " + size + " elements"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		this.elementSize = 0;
 		this.threshold = size; // size represents the expected number of elements
 		int extraRoom = (int) (size * 1.75f);
 		if (this.threshold == extraRoom) {
@@ -58,37 +59,20 @@ public final class HashtableOfObject implements Cloneable {
 	}
 
 	public void clear() {
-		for (int i = this.keyTable.length; --i >= 0;) {
-			this.keyTable[i] = null;
-			this.valueTable[i] = null;
-		}
+		Arrays.fill(this.keyTable, null);
+		Arrays.fill(this.valueTable, null);
 		this.elementSize = 0;
 	}
 
-	@Override
-	public Object clone() throws CloneNotSupportedException {
-		HashtableOfObject result = (HashtableOfObject) super.clone();
-		result.elementSize = this.elementSize;
-		result.threshold = this.threshold;
-
-		int length = this.keyTable.length;
-		result.keyTable = new char[length][];
-		System.arraycopy(this.keyTable, 0, result.keyTable, 0, length);
-
-		length = this.valueTable.length;
-		result.valueTable = new Object[length];
-		System.arraycopy(this.valueTable, 0, result.valueTable, 0, length);
-		return result;
-	}
-
 	public boolean containsKey(char[] key) {
-		int length = this.keyTable.length,
-			index = CharOperation.hashCode(key) % length;
-		int keyLength = key.length;
+		int length = this.keyTable.length;
+		int index = CharOperation.hashCode(key) % length;
+
 		char[] currentKey;
 		while ((currentKey = this.keyTable[index]) != null) {
-			if (currentKey.length == keyLength && CharOperation.equals(currentKey, key))
+			if (CharOperation.equals(currentKey, key)) {
 				return true;
+			}
 			if (++index == length) {
 				index = 0;
 			}
@@ -97,13 +81,13 @@ public final class HashtableOfObject implements Cloneable {
 	}
 
 	public Object get(char[] key) {
-		int length = this.keyTable.length,
-			index = CharOperation.hashCode(key) % length;
-		int keyLength = key.length;
+		int length = this.keyTable.length;
+		int index = CharOperation.hashCode(key) % length;
 		char[] currentKey;
 		while ((currentKey = this.keyTable[index]) != null) {
-			if (currentKey.length == keyLength && CharOperation.equals(currentKey, key))
+			if (CharOperation.equals(currentKey, key)) {
 				return this.valueTable[index];
+			}
 			if (++index == length) {
 				index = 0;
 			}
@@ -112,13 +96,13 @@ public final class HashtableOfObject implements Cloneable {
 	}
 
 	public Object put(char[] key, Object value) {
-		int length = this.keyTable.length,
-			index = CharOperation.hashCode(key) % length;
-		int keyLength = key.length;
+		int length = this.keyTable.length;
+		int index = CharOperation.hashCode(key) % length;
 		char[] currentKey;
 		while ((currentKey = this.keyTable[index]) != null) {
-			if (currentKey.length == keyLength && CharOperation.equals(currentKey, key))
+			if (CharOperation.equals(currentKey, key)) {
 				return this.valueTable[index] = value;
+			}
 			if (++index == length) {
 				index = 0;
 			}
@@ -127,8 +111,9 @@ public final class HashtableOfObject implements Cloneable {
 		this.valueTable[index] = value;
 
 		// assumes the threshold is never equal to the size of the table
-		if (++this.elementSize > this.threshold)
+		if (++this.elementSize > this.threshold) {
 			rehash();
+		}
 		return value;
 	}
 
@@ -142,8 +127,8 @@ public final class HashtableOfObject implements Cloneable {
 	 * @param value The value of the table entry
 	 */
 	public void putUnsafely(char[] key, Object value) {
-		int length = this.keyTable.length,
-			index = CharOperation.hashCode(key) % length;
+		int length = this.keyTable.length;
+		int index = CharOperation.hashCode(key) % length;
 		while (this.keyTable[index] != null) {
 			if (++index == length) {
 				index = 0;
@@ -158,34 +143,15 @@ public final class HashtableOfObject implements Cloneable {
 		}
 	}
 
-	public Object removeKey(char[] key) {
-		int length = this.keyTable.length,
-			index = CharOperation.hashCode(key) % length;
-		int keyLength = key.length;
-		char[] currentKey;
-		while ((currentKey = this.keyTable[index]) != null) {
-			if (currentKey.length == keyLength && CharOperation.equals(currentKey, key)) {
-				Object value = this.valueTable[index];
-				this.elementSize--;
-				this.keyTable[index] = null;
-				this.valueTable[index] = null;
-				rehash();
-				return value;
-			}
-			if (++index == length) {
-				index = 0;
-			}
-		}
-		return null;
-	}
-
 	private void rehash() {
 		int newSize = calculateNewSize(this.elementSize);
 		HashtableOfObject newHashtable = new HashtableOfObject(newSize);
 		char[] currentKey;
-		for (int i = this.keyTable.length; --i >= 0;)
-			if ((currentKey = this.keyTable[i]) != null)
+		for (int i = this.keyTable.length; --i >= 0;) {
+			if ((currentKey = this.keyTable[i]) != null) {
 				newHashtable.putUnsafely(currentKey, this.valueTable[i]);
+			}
+		}
 
 		this.keyTable = newHashtable.keyTable;
 		this.valueTable = newHashtable.valueTable;
@@ -236,9 +202,11 @@ public final class HashtableOfObject implements Cloneable {
 	public String toString() {
 		String s = ""; //$NON-NLS-1$
 		Object object;
-		for (int i = 0, length = this.valueTable.length; i < length; i++)
-			if ((object = this.valueTable[i]) != null)
+		for (int i = 0, length = this.valueTable.length; i < length; i++) {
+			if ((object = this.valueTable[i]) != null) {
 				s += new String(this.keyTable[i]) + " -> " + object.toString() + "\n"; 	//$NON-NLS-2$ //$NON-NLS-1$
+			}
+		}
 		return s;
 	}
 }

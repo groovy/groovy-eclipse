@@ -694,7 +694,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				expectedProblemLog);
 	}
 	/*
-	 *
 	 */
 	public void testBug544073_021() {
 		String[] testFiles = new String[] {

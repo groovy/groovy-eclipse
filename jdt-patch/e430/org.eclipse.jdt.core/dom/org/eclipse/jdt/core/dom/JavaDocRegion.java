@@ -94,7 +94,7 @@ public class JavaDocRegion extends AbstractTagElement{
 	/**
 	 * The tags list; <code>empty</code> for none;
 	 */
-	private ASTNode.NodeList tags = new ASTNode.NodeList(TAGS_PROPERTY);
+	private final ASTNode.NodeList tags = new ASTNode.NodeList(TAGS_PROPERTY);
 
 	/**
 	 * The property dummyRegion
@@ -231,7 +231,6 @@ public class JavaDocRegion extends AbstractTagElement{
 
 	/**
 	 * Sets the value of dummyRegion property.
-	 * @param dummyRegion
 	 * @exception UnsupportedOperationException if this operation is used below JLS18
 	 */
 	public void setDummyRegion(boolean dummyRegion) {
@@ -253,7 +252,6 @@ public class JavaDocRegion extends AbstractTagElement{
 
 	/**
 	 * Sets the value of validSnippet property.
-	 * @param validSnippet
 	 * @exception UnsupportedOperationException if this operation is used below JLS18
 	 */
 	public void setValidSnippet(boolean validSnippet) {

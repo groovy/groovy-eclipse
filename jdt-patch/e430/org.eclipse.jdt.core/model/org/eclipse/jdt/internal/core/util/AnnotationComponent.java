@@ -25,9 +25,9 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
  */
 public class AnnotationComponent extends ClassFileStruct implements IAnnotationComponent {
 
-	private int componentNameIndex;
+	private final int componentNameIndex;
 	private char[] componentName;
-	private IAnnotationComponentValue componentValue;
+	private final IAnnotationComponentValue componentValue;
 	private int readOffset;
 
 	public AnnotationComponent(

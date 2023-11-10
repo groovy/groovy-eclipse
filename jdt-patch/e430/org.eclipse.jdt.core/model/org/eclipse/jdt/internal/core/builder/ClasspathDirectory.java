@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,6 +36,7 @@ import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.util.Util;
 
 
@@ -84,15 +87,18 @@ IModule initializeModule() {
 							ClassFileReader cfr = Util.newClassFileReader(m);
 							return cfr.getModuleDeclaration();
 						} catch (ClassFormatException | IOException e) {
-							// TODO Java 9 Auto-generated catch block
-							e.printStackTrace();
+							if (JavaModelManager.VERBOSE) {
+								trace("", e); //$NON-NLS-1$
+							}
 						}
 					}
 				}
 			}
 		}
 	} catch (CoreException e1) {
-		e1.printStackTrace();
+		if (JavaModelManager.VERBOSE) {
+			trace("", e1); //$NON-NLS-1$
+		}
 	}
 	return null;
 }

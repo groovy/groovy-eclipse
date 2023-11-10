@@ -191,7 +191,6 @@ public interface ISourceElementRequestor {
 	 * the parse action, so as to allow computation of normalized ranges.
 	 *
 	 * A line separator might corresponds to several characters in the source,
-	 *
 	 */
 	void acceptLineSeparatorPositions(int[] positions);
 
@@ -241,6 +240,14 @@ public interface ISourceElementRequestor {
 		// do nothing
 	}
 	default void exitModule(int declarationEnd) {
+		// do nothing
+	}
+
+	default void enterCompactConstructor(MethodInfo methodInfo) {
+		// do nothing
+	}
+
+	default void exitCompactConstructor(int declarationEnd) {
 		// do nothing
 	}
 }

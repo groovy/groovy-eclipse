@@ -44,8 +44,8 @@ public class ClasspathJsr199 extends ClasspathLocation {
 		fileTypes.add(JavaFileObject.Kind.CLASS);
 	}
 
-	private JavaFileManager fileManager;
-	private JavaFileManager.Location location;
+	private final JavaFileManager fileManager;
+	private final JavaFileManager.Location location;
 	private Classpath jrt;
 
 	public ClasspathJsr199(JavaFileManager file, JavaFileManager.Location location) {

@@ -150,7 +150,6 @@ public StringBuffer printStatement(int tab, StringBuffer output) {
 
 /**
  * Case code generation
- *
  */
 @Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
@@ -199,8 +198,8 @@ public static class ResolvedCase {
 	public TypeBinding t; // For ease of access. This.e contains the type binding anyway.
 	public int index;
 	private int intValue;
-	private boolean isPattern;
-	private boolean isQualifiedEnum;
+	private final boolean isPattern;
+	private final boolean isQualifiedEnum;
 	public int enumDescIdx;
 	public int classDescIdx;
 	ResolvedCase(Constant c, Expression e, TypeBinding t, int index, boolean isQualifiedEnum) {

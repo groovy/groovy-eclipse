@@ -89,7 +89,7 @@ public class ParameterizedType extends Type {
 	 * The type arguments (element type: {@link Type}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList typeArguments =
+	private final ASTNode.NodeList typeArguments =
 		new ASTNode.NodeList(TYPE_ARGUMENTS_PROPERTY);
 
 	/**

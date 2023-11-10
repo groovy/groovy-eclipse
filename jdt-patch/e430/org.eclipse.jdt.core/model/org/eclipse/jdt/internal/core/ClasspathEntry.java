@@ -22,6 +22,7 @@ package org.eclipse.jdt.internal.core;
 
 import static org.eclipse.jdt.internal.compiler.util.Util.UTF_8;
 import static org.eclipse.jdt.internal.compiler.util.Util.getInputStreamAsCharArray;
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,16 +162,16 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * Patterns allowing to include/exclude portions of the resource tree denoted by this entry path.
 	 */
-	private IPath[] inclusionPatterns;
+	private final IPath[] inclusionPatterns;
 	private volatile char[][] fullInclusionPatternChars;
-	private IPath[] exclusionPatterns;
+	private final IPath[] exclusionPatterns;
 	private volatile char[][] fullExclusionPatternChars;
 	private final static char[][] UNINIT_PATTERNS = new char[][] { "Non-initialized yet".toCharArray() }; //$NON-NLS-1$
 	public final static ClasspathEntry[] NO_ENTRIES = new ClasspathEntry[0];
 	private final static IPath[] NO_PATHS = new IPath[0];
 	private final static IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
-	private boolean combineAccessRules;
+	private final boolean combineAccessRules;
 
 	private String rootID;
 	private AccessRuleSet accessRuleSet;
@@ -983,14 +984,14 @@ public class ClasspathEntry implements IClasspathEntry {
 				String calledFileName = (String) calledFilesIterator.next();
 				if (!directoryPath.isValidPath(calledFileName)) {
 					if (JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-						Util.verbose("Invalid Class-Path entry " + calledFileName + " in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
+						trace("Invalid Class-Path entry " + calledFileName + " in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				} else {
 					IPath calledJar = directoryPath.append(new Path(calledFileName));
 					// Ignore if segment count is Zero (https://bugs.eclipse.org/bugs/show_bug.cgi?id=308150)
 					if (calledJar.segmentCount() == 0) {
 						if (JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-							Util.verbose("Invalid Class-Path entry " + calledFileName + " in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
+							trace("Invalid Class-Path entry " + calledFileName + " in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 						continue;
 					}
@@ -1042,20 +1043,19 @@ public class ClasspathEntry implements IClasspathEntry {
 			calledFileNames = analyzer.getCalledFileNames();
 			if (!success || analyzer.getClasspathSectionsCount() == 1 && calledFileNames == null) {
 				if (JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-					Util.verbose("Invalid Class-Path header in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$
+					trace("Invalid Class-Path header in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$
 				}
 				return null;
 			} else if (analyzer.getClasspathSectionsCount() > 1) {
 				if (JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-					Util.verbose("Multiple Class-Path headers in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$
+					trace("Multiple Class-Path headers in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$
 				}
 				return null;
 			}
 		} catch (CoreException | IOException e) {
 			// not a zip file
 			if (JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-				Util.verbose("Could not read Class-Path header in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$
-				e.printStackTrace();
+				trace("Could not read Class-Path header in manifest of jar file: " + jarPath.toOSString(), e); //$NON-NLS-1$
 			}
 		}
 		return calledFileNames;

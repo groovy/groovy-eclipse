@@ -148,7 +148,7 @@ public class SpacePreparator extends ASTVisitor {
 	}
 
 	TokenManager tm;
-	private DefaultCodeFormatterOptions options;
+	private final DefaultCodeFormatterOptions options;
 
 	public SpacePreparator(TokenManager tokenManager, DefaultCodeFormatterOptions options) {
 		this.tm = tokenManager;

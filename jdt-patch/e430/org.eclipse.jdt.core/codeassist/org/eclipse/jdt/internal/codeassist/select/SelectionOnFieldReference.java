@@ -29,7 +29,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *           <SelectOnFieldReference:bar().fred>
  *         }
  *       }
- *
  */
 
 import org.eclipse.jdt.internal.compiler.ast.FieldReference;

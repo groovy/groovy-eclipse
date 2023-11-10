@@ -85,8 +85,6 @@ public class BinaryModuleFactory {
 	 * the file on disk, the type is read from the index. Otherwise the type is read from disk. Returns null if
 	 * no such type exists.
 	 * <strong>caveat</strong> modules are not yet supported in the index.
-	 *
-	 * @throws ClassFormatException
 	 */
 	public static IBinaryModule readModule(BinaryModuleDescriptor descriptor, IProgressMonitor monitor) throws JavaModelException, ClassFormatException {
 // FIXME: support module in the new index

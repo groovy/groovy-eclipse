@@ -95,9 +95,6 @@ public class JavaSearchPattern extends SearchPattern implements IIndexConstants,
 		this.matchMode = rule & MATCH_MODE_MASK;
 	}
 
-	/**
-	 * @param fineGrain
-	 */
 	public static String getFineGrainFlagString(final int fineGrain) {
 		if (fineGrain == 0) {
 			return "none"; //$NON-NLS-1$
@@ -281,8 +278,6 @@ public class JavaSearchPattern extends SearchPattern implements IIndexConstants,
 	 * Note that obvious compatibility values as equals and {@link IIndexConstants#TYPE_SUFFIX}
 	 * has to be tested by caller to avoid unnecessary method call...
 	 *
-	 * @param typeSuffix
-	 * @param patternSuffix
 	 * @return true if suffixes are compatible, false otherwise
 	 */
 	boolean matchDifferentTypeSuffixes(int typeSuffix, int patternSuffix) {

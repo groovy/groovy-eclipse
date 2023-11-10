@@ -27,10 +27,10 @@ public class ExceptionTableEntry
 	extends ClassFileStruct
 	implements IExceptionTableEntry {
 
-	private int startPC;
-	private int endPC;
-	private int handlerPC;
-	private int catchTypeIndex;
+	private final int startPC;
+	private final int endPC;
+	private final int handlerPC;
+	private final int catchTypeIndex;
 	private char[] catchType;
 
 	ExceptionTableEntry(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {

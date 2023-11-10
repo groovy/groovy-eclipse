@@ -41,7 +41,6 @@ import org.eclipse.text.edits.TextEdit;
  * element in the compilation unit via the methods <code>#createAfter</code>
  * and <code>#createBefore</code>. By default, the new element is positioned
  * as the last child of its parent element.
- *
  */
 public abstract class CreateElementInCUOperation extends JavaModelOperation {
 	/**

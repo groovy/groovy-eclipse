@@ -110,7 +110,6 @@ public class BinaryTypeFactory {
 	 * Reads the given binary type. If the type can be found in the index with a fingerprint that exactly matches
 	 * the file on disk, the type is read from the index. Otherwise the type is read from disk. Returns null if
 	 * no such type exists.
-	 * @throws ClassFormatException
 	 */
 	public static IBinaryType readType(BinaryTypeDescriptor descriptor, IProgressMonitor monitor) throws JavaModelException, ClassFormatException {
 		return rawReadType(descriptor, true);
@@ -203,7 +202,6 @@ public class BinaryTypeFactory {
 	 * the field descriptor points to any other type, this returns the empty string. The field descriptor may optionally
 	 * contain a trailing ';'.
 	 *
-	 * @param fieldDescriptor
 	 * @return ""
 	 */
 	public static char[] fieldDescriptorToBinaryName(char[] fieldDescriptor) {

@@ -61,13 +61,13 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 	private final static int[][] NO_TYPEPATH = new int[0][0];
 	private final static ILocalVariableReferenceInfo[] NO_LOCAL_VARIABLE_TABLE_ENTRIES = new ILocalVariableReferenceInfo[0];
 
-	private int targetType;
+	private final int targetType;
 	private int annotationTypeIndex;
 	private int[][] typePath;
 
-	private int typeIndex;
+	private final int typeIndex;
 	private char[] typeName;
-	private int componentsNumber;
+	private final int componentsNumber;
 	private IAnnotationComponent[] components;
 	private int readOffset;
 	private int offset;
@@ -76,14 +76,9 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 	private int parameterIndex;
 	private int exceptionTableIndex;
 	private ILocalVariableReferenceInfo[] localVariableTable = NO_LOCAL_VARIABLE_TABLE_ENTRIES;
-	
+
 	/**
 	 * Constructor for ExtendedAnnotation, builds an annotation from the supplied bytestream.
-	 *
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public ExtendedAnnotation(
 			byte[] classFileBytes,
@@ -94,7 +89,7 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 		int index = u1At(classFileBytes,0,offset);
 		this.targetType = index;
 		this.readOffset = 1;
-		
+
 		readTargetInfo(index, classFileBytes, constantPool, offset);
 
 		// Read type_path
@@ -111,7 +106,7 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 				typePathEntry[1] = u1At(classFileBytes, this.readOffset++, offset);
 			}
 		}
-		
+
 		// Read annotation
 		index = u2At(classFileBytes, this.readOffset, offset);
 		this.typeIndex = index;
@@ -142,7 +137,7 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 			this.annotationTypeIndex = -1;
 		}
 	}
-	
+
 	private void readTargetInfo(
 			int localTargetType,
 			byte[] classFileBytes,
@@ -167,24 +162,24 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 				this.typeParameterBoundIndex = u1At(classFileBytes, this.readOffset, localOffset);
 				this.readOffset++;
 				break;
-				
+
 			case IExtendedAnnotationConstants.FIELD :
 			case IExtendedAnnotationConstants.METHOD_RETURN :
 			case IExtendedAnnotationConstants.METHOD_RECEIVER :
 				// nothing to do, target_info is empty_target
 				break;
-				
+
 			case IExtendedAnnotationConstants.METHOD_FORMAL_PARAMETER :
 				this.parameterIndex = u1At(classFileBytes, this.readOffset, localOffset);
 				this.readOffset++;
 				break;
-				
+
 			case IExtendedAnnotationConstants.THROWS :
 				this.annotationTypeIndex = u2At(classFileBytes, this.readOffset, localOffset);
 				this.readOffset+=2;
 				break;
 
-				
+
 			case IExtendedAnnotationConstants.LOCAL_VARIABLE :
 			case IExtendedAnnotationConstants.RESOURCE_VARIABLE :
 				int tableLength = u2At(classFileBytes, this.readOffset, localOffset);
@@ -207,11 +202,11 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 			case IExtendedAnnotationConstants.CONSTRUCTOR_REFERENCE :
 				this.offset = u2At(classFileBytes, this.readOffset, localOffset);
 				this.readOffset += 2;
-				break;	
+				break;
 
 			case IExtendedAnnotationConstants.CAST :
 				this.offset = u2At(classFileBytes, this.readOffset, localOffset);
-				this.readOffset += 2; 
+				this.readOffset += 2;
 				// read type_argument_index
 				this.annotationTypeIndex = u1At(classFileBytes, this.readOffset, localOffset);
 				this.readOffset++;
@@ -258,7 +253,7 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 	public int getTargetType() {
 		return this.targetType;
 	}
-	
+
 	@Override
 	public int getExceptionTableIndex() {
 		return this.exceptionTableIndex;

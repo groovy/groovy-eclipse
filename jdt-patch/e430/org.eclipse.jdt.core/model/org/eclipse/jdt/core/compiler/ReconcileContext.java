@@ -52,8 +52,8 @@ import org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation;
 @SuppressWarnings({"rawtypes"})
 public class ReconcileContext {
 
-	private ReconcileWorkingCopyOperation operation;
-	private CompilationUnit workingCopy;
+	private final ReconcileWorkingCopyOperation operation;
+	private final CompilationUnit workingCopy;
 
 /**
  * Creates a reconcile context for the given reconcile operation.

@@ -17,7 +17,7 @@ package org.eclipse.jdt.internal.compiler.classfmt;
 import org.eclipse.jdt.internal.compiler.env.IBinaryTypeAnnotation;
 
 public final class FieldInfoWithTypeAnnotation extends FieldInfoWithAnnotation {
-	private TypeAnnotationInfo[] typeAnnotations;
+	private final TypeAnnotationInfo[] typeAnnotations;
 
 FieldInfoWithTypeAnnotation(FieldInfo info, AnnotationInfo[] annos, TypeAnnotationInfo[] typeAnnos) {
 	super(info, annos);

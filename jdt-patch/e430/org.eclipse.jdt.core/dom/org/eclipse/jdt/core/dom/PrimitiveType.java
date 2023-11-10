@@ -64,7 +64,7 @@ public class PrimitiveType extends AnnotatableType {
 		/**
 		 * The name of the type.
 		 */
-		private String name;
+		private final String name;
 
 		/**
 		 * Creates a new primitive type code with the given name.
@@ -165,7 +165,7 @@ public class PrimitiveType extends AnnotatableType {
 	 */
 	public static final ChildListPropertyDescriptor ANNOTATIONS_PROPERTY =
 			internalAnnotationsPropertyFactory(PrimitiveType.class);
-	
+
 	/**
 	 * The "primitiveTypeCode" structural property of this node type (type: {@link PrimitiveType.Code}).
 	 * @since 3.0
@@ -191,7 +191,7 @@ public class PrimitiveType extends AnnotatableType {
 		createPropertyList(PrimitiveType.class, propertyList);
 		addProperty(PRIMITIVE_TYPE_CODE_PROPERTY, propertyList);
 		PROPERTY_DESCRIPTORS = reapPropertyList(propertyList);
-		
+
 		propertyList = new ArrayList(3);
 		createPropertyList(PrimitiveType.class, propertyList);
 		addProperty(ANNOTATIONS_PROPERTY, propertyList);

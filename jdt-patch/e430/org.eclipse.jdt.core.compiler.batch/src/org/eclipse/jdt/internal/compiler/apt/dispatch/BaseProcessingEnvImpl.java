@@ -58,11 +58,11 @@ public abstract class BaseProcessingEnvImpl implements ProcessingEnvironment {
 	// Initialized in this base class:
 	protected Elements _elementUtils;
 	protected Types _typeUtils;
-	private List<ICompilationUnit> _addedUnits;
-	private List<ReferenceBinding> _addedClassFiles;
-	private List<ICompilationUnit> _deletedUnits;
+	private final List<ICompilationUnit> _addedUnits;
+	private final List<ReferenceBinding> _addedClassFiles;
+	private final List<ICompilationUnit> _deletedUnits;
 	private boolean _errorRaised;
-	private Factory _factory;
+	private final Factory _factory;
 	public ModuleBinding _current_module;
 
 	public BaseProcessingEnvImpl() {

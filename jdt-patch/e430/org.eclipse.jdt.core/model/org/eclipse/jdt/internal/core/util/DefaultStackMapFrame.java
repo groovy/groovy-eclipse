@@ -25,19 +25,14 @@ public class DefaultStackMapFrame extends ClassFileStruct implements IStackMapFr
 	private static final IVerificationTypeInfo[] EMPTY_LOCALS_OR_STACK_ITEMS = new IVerificationTypeInfo[0];
 
 	private int readOffset;
-	private int numberOfLocals;
-	private int numberOfStackItems;
+	private final int numberOfLocals;
+	private final int numberOfStackItems;
 	private IVerificationTypeInfo[] locals;
 	private IVerificationTypeInfo[] stackItems;
-	private int offsetDelta;
+	private final int offsetDelta;
 
 	/**
 	 * Constructor for StackMapFrame.
-	 *
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public DefaultStackMapFrame(
 			byte[] classFileBytes,

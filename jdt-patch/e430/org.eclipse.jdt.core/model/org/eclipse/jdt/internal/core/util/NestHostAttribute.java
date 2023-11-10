@@ -18,8 +18,8 @@ import org.eclipse.jdt.core.util.INestHostAttribute;
 
 public class NestHostAttribute extends ClassFileAttribute implements INestHostAttribute {
 
-	private int hostIndex;
-	private char[] hostName;
+	private final int hostIndex;
+	private final char[] hostName;
 
 	public NestHostAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset)
 			throws ClassFormatException {

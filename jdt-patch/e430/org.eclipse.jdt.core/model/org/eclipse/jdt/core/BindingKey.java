@@ -28,7 +28,7 @@ import org.eclipse.jdt.internal.core.util.KeyToSignature;
  */
 public final class BindingKey {
 
-	private String key;
+	private final String key;
 
 	/**
 	 * Creates a new binding key.

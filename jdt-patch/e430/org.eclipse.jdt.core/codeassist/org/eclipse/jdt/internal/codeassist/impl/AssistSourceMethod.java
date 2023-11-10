@@ -26,8 +26,8 @@ import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
 
 @SuppressWarnings("rawtypes")
 public class AssistSourceMethod extends ResolvedSourceMethod {
-	private Map bindingCache;
-	private Map infoCache;
+	private final Map bindingCache;
+	private final Map infoCache;
 
 	private String uniqueKey;
 	private boolean isResolved;

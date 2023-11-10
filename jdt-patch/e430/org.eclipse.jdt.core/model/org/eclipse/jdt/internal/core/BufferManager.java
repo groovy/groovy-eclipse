@@ -34,7 +34,7 @@ public class BufferManager {
 	 * LRU cache of buffers. The key and value for an entry
 	 * in the table is the identical buffer.
 	 */
-	private BufferCache<IOpenable> openBuffers = new BufferCache<>(60);
+	private final BufferCache<IOpenable> openBuffers = new BufferCache<>(60);
 
 	/**
 	 * @deprecated

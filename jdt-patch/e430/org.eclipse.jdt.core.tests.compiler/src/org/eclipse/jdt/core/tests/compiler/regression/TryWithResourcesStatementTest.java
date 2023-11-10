@@ -4396,6 +4396,26 @@ public void testGHIssue1063() {
 			"	at X.main(X.java:7)\n",
 			null);
 }
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/pull/1495
+public void testGHissue1495() {
+    this.runConformTest(
+        new String[] {
+                "X.java",
+                "import java.io.*;\n" +
+                "interface I extends Closeable {}\n" +
+                "public class X {\n" +
+                "   public static void main(String[] args) {\n" +
+                "       try (I i = i()) {\n" +
+                "         return;\n" +
+                "       } finally {\n" +
+                "         return;\n" +
+                "       }" +
+                "   }" +
+                "   public static I i() { return null; }\n" +
+                "}\n"
+    });
+}
 public static Class testClass() {
 	return TryWithResourcesStatementTest.class;
 }

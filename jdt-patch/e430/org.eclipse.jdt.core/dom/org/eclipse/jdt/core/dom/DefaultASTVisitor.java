@@ -11,19 +11,11 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.core.dom;
-/**
- */
 class DefaultASTVisitor extends ASTVisitor {
-	/**
-	 *
-	 */
 	public DefaultASTVisitor() {
 		super();
 	}
 
-	/**
-	 *
-	 */
 	public DefaultASTVisitor(boolean visitDocTags) {
 		super(visitDocTags);
 	}

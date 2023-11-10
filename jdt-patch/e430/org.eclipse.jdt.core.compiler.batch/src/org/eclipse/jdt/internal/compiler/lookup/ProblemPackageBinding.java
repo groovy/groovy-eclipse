@@ -14,7 +14,7 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 public class ProblemPackageBinding extends PlainPackageBinding {
-	private int problemId;
+	private final int problemId;
 // NOTE: must only answer the subset of the name related to the problem
 
 ProblemPackageBinding(char[][] compoundName, int problemId, LookupEnvironment environment) {

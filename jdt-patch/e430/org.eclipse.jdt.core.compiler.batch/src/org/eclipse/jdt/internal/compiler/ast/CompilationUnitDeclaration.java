@@ -246,6 +246,7 @@ public TypeDeclaration declarationOfType(char[][] typeName) {
 }
 
 public void finalizeProblems() {
+	this.compilationResult.materializeProblems();
 	int problemCount = this.compilationResult.problemCount;
 	CategorizedProblem[] problems = this.compilationResult.problems;
 	if (this.suppressWarningsCount == 0) {

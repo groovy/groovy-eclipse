@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 public class CompletionRequestorWrapper extends CompletionRequestor {
 	private static boolean DECODE_SIGNATURE = false;
 
-	private org.eclipse.jdt.core.ICompletionRequestor requestor;
+	private final org.eclipse.jdt.core.ICompletionRequestor requestor;
 	public CompletionRequestorWrapper(org.eclipse.jdt.core.ICompletionRequestor requestor) {
 		this.requestor = requestor;
 	}

@@ -152,7 +152,7 @@ class DefaultBindingResolver extends BindingResolver {
 	/**
 	 * Compilation unit scope
 	 */
-	private CompilationUnitScope scope;
+	private final CompilationUnitScope scope;
 
 	/**
 	 * The working copy owner that defines the context in which this resolver is creating the bindings.

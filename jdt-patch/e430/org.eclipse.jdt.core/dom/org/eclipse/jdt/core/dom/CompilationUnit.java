@@ -169,7 +169,7 @@ public class CompilationUnit extends ASTNode {
 	 * The list of import declarations in textual order order;
 	 * initially none (elementType: <code>ImportDeclaration</code>).
 	 */
-	private ASTNode.NodeList imports =
+	private final ASTNode.NodeList imports =
 		new ASTNode.NodeList(IMPORTS_PROPERTY);
 
 	/**
@@ -227,7 +227,7 @@ public class CompilationUnit extends ASTNode {
 	 * The list of type declarations in textual order order;
 	 * initially none (elementType: <code>AbstractTypeDeclaration</code>)
 	 */
-	private ASTNode.NodeList types =
+	private final ASTNode.NodeList types =
 		new ASTNode.NodeList(TYPES_PROPERTY);
 
 	/**

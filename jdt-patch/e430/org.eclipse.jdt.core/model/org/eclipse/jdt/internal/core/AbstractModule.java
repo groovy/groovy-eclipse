@@ -28,15 +28,15 @@ import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
 import org.eclipse.jdt.internal.compiler.env.IModule.IService;
 
 public interface AbstractModule extends IModuleDescription {
-	
+
 	/**
 	 * Handle for an automatic module.
 	 *
 	 * <p>Note, that by definition this is mostly a fake, only {@link #getElementName()} provides a useful value.</p>
 	 */
 	static class AutoModule extends NamedMember implements AbstractModule {
-	
-		private boolean nameFromManifest;
+
+		private final boolean nameFromManifest;
 
 		public AutoModule(JavaElement parent, String name, boolean nameFromManifest) {
 			super(parent, name);
@@ -75,7 +75,7 @@ public interface AbstractModule extends IModuleDescription {
 			buffer.append(this.name);
 		}
 	}
-	
+
 	// "forward declaration" for a method from JavaElement:
 	abstract Object getElementInfo() throws JavaModelException;
 
@@ -123,7 +123,7 @@ public interface AbstractModule extends IModuleDescription {
 	default IService[] getProvidedServices() throws JavaModelException {
 		return getModuleInfo().provides();
 	}
-	@Override 
+	@Override
 	default String[] getProvidedServiceNames() throws JavaModelException {
 		ArrayList<String> results = new ArrayList<>();
 		IService[] services = getProvidedServices();
@@ -131,12 +131,12 @@ public interface AbstractModule extends IModuleDescription {
 			results.add(new String(service.name()));
 		}
 		return results.toArray(new String[0]);
-		
+
 	}
 	default char[][] getUsedServices() throws JavaModelException {
 		return getModuleInfo().uses();
 	}
-	@Override 
+	@Override
 	default String[] getUsedServiceNames() throws JavaModelException {
 		ArrayList<String> results = new ArrayList<>();
 		char[][] services = getUsedServices();
@@ -144,7 +144,7 @@ public interface AbstractModule extends IModuleDescription {
 			char[] service = services[i];
 			results.add(new String(service));
 		}
-		return results.toArray(new String[0]);	
+		return results.toArray(new String[0]);
 	}
 	default IPackageExport[] getOpenedPackages() throws JavaModelException {
 		return getModuleInfo().opens();
@@ -160,8 +160,9 @@ public interface AbstractModule extends IModuleDescription {
 		try {
 			toStringContent(buffer, lineDelimiter);
 		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (JavaModelManager.VERBOSE) {
+				JavaModelManager.trace("", e); //$NON-NLS-1$
+			}
 		}
 		return buffer.toString();
 	}

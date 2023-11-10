@@ -498,46 +498,46 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	public static class WW { public static final int WWW = 0; }\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 6)\n" + 
-			"	import static p.Y.Zz;\n" + 
-			"	              ^^^^^^\n" + 
-			"The import p.Y.Zz cannot be resolved\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 7)\n" + 
-			"	import static p.Z.Zz.WW.*;\n" + 
-			"	              ^^^^^^^^^\n" + 
-			"The import p.Z.Zz.WW cannot be resolved\n" + 
-			"----------\n" + 
-			"3. ERROR in X.java (at line 8)\n" + 
-			"	import p.Y.ZZ;\n" + 
-			"	       ^^^^^^\n" + 
-			"The import p.Y.ZZ cannot be resolved\n" + 
-			"----------\n" + 
-			"4. ERROR in X.java (at line 9)\n" + 
-			"	import static p.Y.ZZ.*;\n" + 
-			"	              ^^^^^^\n" + 
-			"The import p.Y.ZZ cannot be resolved\n" + 
-			"----------\n" + 
-			"5. ERROR in X.java (at line 10)\n" + 
-			"	import static p.Y.ZZ.WW;\n" + 
-			"	              ^^^^^^\n" + 
-			"The import p.Y.ZZ cannot be resolved\n" + 
-			"----------\n" + 
-			"6. ERROR in X.java (at line 11)\n" + 
-			"	import static p.Y.ZZ.WW.*;\n" + 
-			"	              ^^^^^^\n" + 
-			"The import p.Y.ZZ cannot be resolved\n" + 
-			"----------\n" + 
-			"7. ERROR in X.java (at line 12)\n" + 
-			"	import static p.Y.ZZ.ZZZ;\n" + 
-			"	              ^^^^^^\n" + 
-			"The import p.Y.ZZ cannot be resolved\n" + 
-			"----------\n" + 
-			"8. ERROR in X.java (at line 13)\n" + 
-			"	import static p.Y.ZZ.WW.WWW;\n" + 
-			"	              ^^^^^^\n" + 
-			"The import p.Y.ZZ cannot be resolved\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 6)\n" +
+			"	import static p.Y.Zz;\n" +
+			"	              ^^^^^^\n" +
+			"The import p.Y.Zz cannot be resolved\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 7)\n" +
+			"	import static p.Z.Zz.WW.*;\n" +
+			"	              ^^^^^^^^^\n" +
+			"The import p.Z.Zz.WW cannot be resolved\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 8)\n" +
+			"	import p.Y.ZZ;\n" +
+			"	       ^^^^^^\n" +
+			"The import p.Y.ZZ cannot be resolved\n" +
+			"----------\n" +
+			"4. ERROR in X.java (at line 9)\n" +
+			"	import static p.Y.ZZ.*;\n" +
+			"	              ^^^^^^\n" +
+			"The import p.Y.ZZ cannot be resolved\n" +
+			"----------\n" +
+			"5. ERROR in X.java (at line 10)\n" +
+			"	import static p.Y.ZZ.WW;\n" +
+			"	              ^^^^^^\n" +
+			"The import p.Y.ZZ cannot be resolved\n" +
+			"----------\n" +
+			"6. ERROR in X.java (at line 11)\n" +
+			"	import static p.Y.ZZ.WW.*;\n" +
+			"	              ^^^^^^\n" +
+			"The import p.Y.ZZ cannot be resolved\n" +
+			"----------\n" +
+			"7. ERROR in X.java (at line 12)\n" +
+			"	import static p.Y.ZZ.ZZZ;\n" +
+			"	              ^^^^^^\n" +
+			"The import p.Y.ZZ cannot be resolved\n" +
+			"----------\n" +
+			"8. ERROR in X.java (at line 13)\n" +
+			"	import static p.Y.ZZ.WW.WWW;\n" +
+			"	              ^^^^^^\n" +
+			"The import p.Y.ZZ cannot be resolved\n" +
 			"----------\n"
 		);
 	}
@@ -827,18 +827,18 @@ public class StaticImportTest extends AbstractComparableTest {
 				"package p;\n" +
 				"public class B { public static int F = 2; }\n",
 			},
-			this.complianceLevel < ClassFileConstants.JDK1_8 ? 
+			this.complianceLevel < ClassFileConstants.JDK1_8 ?
 					"----------\n" +
 					"1. ERROR in X.java (at line 2)\n" +
 					"	import static p.B.F;\n" +
 					"	              ^^^^^\n" +
 					"The import p.B.F collides with another import statement\n" +
 					"----------\n" :
-						"----------\n" + 
-						"1. ERROR in X.java (at line 4)\n" + 
-						"	int i = F;\n" + 
-						"	        ^\n" + 
-						"The field F is ambiguous\n" + 
+						"----------\n" +
+						"1. ERROR in X.java (at line 4)\n" +
+						"	int i = F;\n" +
+						"	        ^\n" +
+						"The field F is ambiguous\n" +
 						"----------\n"
 			// F is already defined in a single-type import
 		);
@@ -2426,51 +2426,51 @@ public class StaticImportTest extends AbstractComparableTest {
 		this.runConformTest(
 			new String[] {
 				"node/Test.java",//------------------------------
-				"package node;\n" + 
-				"public class Test {\n" + 
-				"        public static void node() {}\n" + 
+				"package node;\n" +
+				"public class Test {\n" +
+				"        public static void node() {}\n" +
 				"}\n",
 				"node2/Test2.java",//------------------------------
-				"package node2;\n" + 
-				"import static node.Test.node;\n" + 
-				"public class Test2 {\n" + 
+				"package node2;\n" +
+				"import static node.Test.node;\n" +
+				"public class Test2 {\n" +
 				"}\n",
 			},
 			"");
-	}	
+	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=250211 - variation
 	public void test071() {
 		this.runNegativeTest(
 			new String[] {
 				"node/Test/node.java",//------------------------------
-				"package node.Test;\n" + 
-				"public class node {\n" + 
-				"}\n",					
+				"package node.Test;\n" +
+				"public class node {\n" +
+				"}\n",
 				"node/Test.java",//------------------------------
-				"package node;\n" + 
-				"public class Test {\n" + 
-				"        public static void node() {}\n" + 
+				"package node;\n" +
+				"public class Test {\n" +
+				"        public static void node() {}\n" +
 				"}\n",
 				"node2/Test2.java",//------------------------------
-				"package node2;\n" + 
+				"package node2;\n" +
 				"import node.Test;\n" +
-				"import static Test.node;\n" + 
-				"public class Test2 {\n" + 
+				"import static Test.node;\n" +
+				"public class Test2 {\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in node\\Test.java (at line 2)\n" + 
-			"	public class Test {\n" + 
-			"	             ^^^^\n" + 
-			"The type Test collides with a package\n" + 
-			"----------\n" + 
-			"----------\n" + 
-			"1. ERROR in node2\\Test2.java (at line 3)\n" + 
-			"	import static Test.node;\n" + 
-			"	              ^^^^\n" + 
-			"The import Test cannot be resolved\n" + 
+			"----------\n" +
+			"1. ERROR in node\\Test.java (at line 2)\n" +
+			"	public class Test {\n" +
+			"	             ^^^^\n" +
+			"The type Test collides with a package\n" +
+			"----------\n" +
+			"----------\n" +
+			"1. ERROR in node2\\Test2.java (at line 3)\n" +
+			"	import static Test.node;\n" +
+			"	              ^^^^\n" +
+			"The import Test cannot be resolved\n" +
 			"----------\n");
-	}		
+	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=93913 - variation
 	public void test072() {
 		this.runNegativeTest(
@@ -2499,57 +2499,57 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	public static int B;\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in p1\\A.java (at line 6)\n" + 
-			"	int v1 = b.fooB;\n" + 
-			"	           ^^^^\n" + 
-			"fooB cannot be resolved or is not a field\n" + 
+			"----------\n" +
+			"1. ERROR in p1\\A.java (at line 6)\n" +
+			"	int v1 = b.fooB;\n" +
+			"	           ^^^^\n" +
+			"fooB cannot be resolved or is not a field\n" +
 			"----------\n");
-	}	
+	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=256375
 	public void test073() {
 		this.runNegativeTest(
 			new String[] {
 				"test/Outer.java",
-				"package test;\n" + 
-				"import static test.Outer.Inner.VALUE;\n" + 
-				"public class Outer {\n" + 
-				"    int i = VALUE;\n" + 
-				"    int i2 = Inner.VALUE;\n" + 
-				"    static class Inner {\n" + 
-				"        private static final int VALUE = 0;\n" + 
-				"    }\n" + 
+				"package test;\n" +
+				"import static test.Outer.Inner.VALUE;\n" +
+				"public class Outer {\n" +
+				"    int i = VALUE;\n" +
+				"    int i2 = Inner.VALUE;\n" +
+				"    static class Inner {\n" +
+				"        private static final int VALUE = 0;\n" +
+				"    }\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in test\\Outer.java (at line 2)\n" + 
-			"	import static test.Outer.Inner.VALUE;\n" + 
-			"	              ^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"The field Outer.Inner.test.Outer.Inner.VALUE is not visible\n" + 
-			"----------\n" + 
-			"2. ERROR in test\\Outer.java (at line 4)\n" + 
-			"	int i = VALUE;\n" + 
-			"	        ^^^^^\n" + 
-			"VALUE cannot be resolved to a variable\n" + 
+			"----------\n" +
+			"1. ERROR in test\\Outer.java (at line 2)\n" +
+			"	import static test.Outer.Inner.VALUE;\n" +
+			"	              ^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"The field Outer.Inner.test.Outer.Inner.VALUE is not visible\n" +
+			"----------\n" +
+			"2. ERROR in test\\Outer.java (at line 4)\n" +
+			"	int i = VALUE;\n" +
+			"	        ^^^^^\n" +
+			"VALUE cannot be resolved to a variable\n" +
 			"----------\n");
-	}		
+	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=256375 - variation
 	public void test074() {
 		this.runConformTest(
 			new String[] {
 				"test/Outer.java",
-				"package test;\n" + 
-				"import static test.Outer.Inner.*;\n" + 
-				"public class Outer {\n" + 
-				"    int i = VALUE;\n" + 
-				"    int i2 = Inner.VALUE;\n" + 
-				"    static class Inner {\n" + 
-				"        private static final int VALUE = 0;\n" + 
-				"    }\n" + 
+				"package test;\n" +
+				"import static test.Outer.Inner.*;\n" +
+				"public class Outer {\n" +
+				"    int i = VALUE;\n" +
+				"    int i2 = Inner.VALUE;\n" +
+				"    static class Inner {\n" +
+				"        private static final int VALUE = 0;\n" +
+				"    }\n" +
 				"}\n",
 			},
 			"");
-	}		
+	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=302865
 	// To verify that a static import importing a type which has already been
 	// imported by a single type import is reported as duplicate
@@ -2613,28 +2613,28 @@ public class StaticImportTest extends AbstractComparableTest {
 		this.runConformTest(
 			new String[] {
 				"p1/X.java",
-				"package p1;\n" + 
-				"import p2.A;\n" + 
-				"import static p2.A.C;\n" + 
-				"import static p1.B.C;\n" + 
-				"public class X {\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		foo();\n" + 
-				"	}\n" + 
-				"	public static void foo() {\n" + 
-				"		if (C.CONST == 1) {\n" + 
+				"package p1;\n" +
+				"import p2.A;\n" +
+				"import static p2.A.C;\n" +
+				"import static p1.B.C;\n" +
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		foo();\n" +
+				"	}\n" +
+				"	public static void foo() {\n" +
+				"		if (C.CONST == 1) {\n" +
 				"			System.out.println(\"SUCCESS\");\n" +
-				"			return;\n" + 
-				"		}\n" + 
-				"		System.out.println(\"FAILED\");\n" + 
-				"	}\n" + 
-				"}\n" + 
+				"			return;\n" +
+				"		}\n" +
+				"		System.out.println(\"FAILED\");\n" +
+				"	}\n" +
+				"}\n" +
 				"class B extends A {}",
 				"p2/A.java",
-				"package p2;\n" + 
-				"public class A {\n" + 
-				"	public static class C {\n" + 
-				"		public static int CONST = 1;\n" + 
+				"package p2;\n" +
+				"public class A {\n" +
+				"	public static class C {\n" +
+				"		public static int CONST = 1;\n" +
 				"	}\n" +
 				"}"
 			},
@@ -2666,11 +2666,11 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in A\\A.java (at line 3)\n" + 
-			"	import B.B.C1;\n" + 
-			"	       ^^^^^^\n" + 
-			"The import B.B.C1 collides with another import statement\n" + 
+			"----------\n" +
+			"1. ERROR in A\\A.java (at line 3)\n" +
+			"	import B.B.C1;\n" +
+			"	       ^^^^^^\n" +
+			"The import B.B.C1 collides with another import statement\n" +
 			"----------\n"
 		);
 	}
@@ -2695,11 +2695,11 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	public static class C1 {}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. WARNING in A\\A.java (at line 2)\n" + 
-			"	import static B.B.C1;\n" + 
-			"	              ^^^^^^\n" + 
-			"The import B.B.C1 is never used\n" + 
+			"----------\n" +
+			"1. WARNING in A\\A.java (at line 2)\n" +
+			"	import static B.B.C1;\n" +
+			"	              ^^^^^^\n" +
+			"The import B.B.C1 is never used\n" +
 			"----------\n"
 		);
 	}
@@ -2708,31 +2708,31 @@ public class StaticImportTest extends AbstractComparableTest {
 		this.runNegativeTest(
 			new String[] {
 				"a/B.java",
-				"package a;\n" + 
+				"package a;\n" +
 				"public class B {}",
 				"external/Lib.java",
-				"package external;\n" + 
-				"public class Lib {\n" + 
-				"	public static void m() {}\n" + 
+				"package external;\n" +
+				"public class Lib {\n" +
+				"	public static void m() {}\n" +
 				"}",
 				"a/B/C.java",
-				"package a.B;\n" + 
-				"import static external.Lib.m;\n" + 
-				"public class C {\n" + 
-				"	public void main() {\n" + 
-				"		m();\n" + 
-				"	}\n" + 
+				"package a.B;\n" +
+				"import static external.Lib.m;\n" +
+				"public class C {\n" +
+				"	public void main() {\n" +
+				"		m();\n" +
+				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in a\\B\\C.java (at line 1)\n" + 
-			"	package a.B;\n" + 
-			"	        ^^^\n" + 
-			"The package a.B collides with a type\n" + 
+			"----------\n" +
+			"1. ERROR in a\\B\\C.java (at line 1)\n" +
+			"	package a.B;\n" +
+			"	        ^^^\n" +
+			"The package a.B collides with a type\n" +
 			"----------\n"
 		);
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318401
 	public void test081() {
 		this.runConformTest(
@@ -2773,7 +2773,7 @@ public class StaticImportTest extends AbstractComparableTest {
 			},
 			"1 + 1 =  2");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318401
 	public void test082() {
 		this.runNegativeTest(
@@ -2814,13 +2814,13 @@ public class StaticImportTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" +
-			"1. ERROR in p2\\Test.java (at line 15)\n" + 
-			"	int abc = b.a;\n" + 
-			"	            ^\n" + 
-			"a cannot be resolved or is not a field\n" + 
+			"1. ERROR in p2\\Test.java (at line 15)\n" +
+			"	int abc = b.a;\n" +
+			"	            ^\n" +
+			"a cannot be resolved or is not a field\n" +
 			"----------\n");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318401
 	public void test083() {
 		this.runConformTest(
@@ -2854,12 +2854,12 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" +
 				"}\n"
 			},
-			"random\n" + 
-			"random\n" + 
-			"p1.Bar.B\n" + 
+			"random\n" +
+			"random\n" +
+			"p1.Bar.B\n" +
 			"p1.Bar.B");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318401
 	// Check if we're able to find the correct static member type being imported,
 	// even though the import originally resolved to the static field of the same name,
@@ -2898,7 +2898,7 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" +
 				"}\n"
 			},
-			"p1.Bar.B\n" + 
+			"p1.Bar.B\n" +
 			"p1.Bar.B");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=361327
@@ -2931,20 +2931,20 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" +
 				"}\n"
 			},
-			this.complianceLevel < ClassFileConstants.JDK1_8 ? 
-					"----------\n" + 
-					"1. ERROR in Test.java (at line 2)\n" + 
-					"	import static p3.Foo.B;\n" + 
-					"	              ^^^^^^^^\n" + 
-					"The import p3.Foo.B collides with another import statement\n" + 
-					"----------\n" : 
-						"----------\n" + 
-						"1. ERROR in Test.java (at line 7)\n" + 
-						"	System.out.println(B.class.getCanonicalName().toString());\n" + 
-						"	                   ^\n" + 
-						"The type B is ambiguous\n" + 
+			this.complianceLevel < ClassFileConstants.JDK1_8 ?
+					"----------\n" +
+					"1. ERROR in Test.java (at line 2)\n" +
+					"	import static p3.Foo.B;\n" +
+					"	              ^^^^^^^^\n" +
+					"The import p3.Foo.B collides with another import statement\n" +
+					"----------\n" :
+						"----------\n" +
+						"1. ERROR in Test.java (at line 7)\n" +
+						"	System.out.println(B.class.getCanonicalName().toString());\n" +
+						"	                   ^\n" +
+						"The type B is ambiguous\n" +
 						"----------\n"
-						
+
 				);
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=361327
@@ -2983,14 +2983,14 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" +
 				"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in Test.java (at line 2)\n" + 
-			"	import static p3.Foo.B;\n" + 
-			"	              ^^^^^^^^\n" + 
-			"The import p3.Foo.B collides with another import statement\n" + 
+			"----------\n" +
+			"1. ERROR in Test.java (at line 2)\n" +
+			"	import static p3.Foo.B;\n" +
+			"	              ^^^^^^^^\n" +
+			"The import p3.Foo.B collides with another import statement\n" +
 			"----------\n");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=361327
 	// To verify that all static members are imported with a single static import statement
 	// this tests checks collision with single type import
@@ -3022,14 +3022,14 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" +
 				"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in Test.java (at line 2)\n" + 
-			"	import p3.Foo.B;\n" + 
-			"	       ^^^^^^^^\n" + 
-			"The import p3.Foo.B collides with another import statement\n" + 
+			"----------\n" +
+			"1. ERROR in Test.java (at line 2)\n" +
+			"	import p3.Foo.B;\n" +
+			"	       ^^^^^^^^\n" +
+			"The import p3.Foo.B collides with another import statement\n" +
 			"----------\n");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=361327
 	// To verify that all static members are imported with a single static import statement
 	// this tests checks collision with top level type
@@ -3056,14 +3056,14 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	public static String B = new String(\"random\");\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in Test.java (at line 1)\n" + 
-			"	import static p1.Bar.B;\n" + 
-			"	              ^^^^^^^^\n" + 
-			"The import p1.Bar.B conflicts with a type defined in the same file\n" + 
+			"----------\n" +
+			"1. ERROR in Test.java (at line 1)\n" +
+			"	import static p1.Bar.B;\n" +
+			"	              ^^^^^^^^\n" +
+			"The import p1.Bar.B conflicts with a type defined in the same file\n" +
 			"----------\n");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=361327
 	// Test obscuring rules defined in JLS 7.5.3
 	public void test086() {
@@ -3094,7 +3094,7 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	public static String B = new String(\"Foo's field B\");\n" +
 				"}\n"
 			},
-			"Bar\'s method B\n" + 
+			"Bar\'s method B\n" +
 			"Bar\'s field B");
 	}
 
@@ -3107,24 +3107,24 @@ public class StaticImportTest extends AbstractComparableTest {
 				"public class a {}\n",
 				"a/b/c/C.java",
 				"package a.b.c;\n" +
-				"public class C {\n" + 
-				"	public static final int a = 3;\n" + 
+				"public class C {\n" +
+				"	public static final int a = 3;\n" +
 				"}\n",
 				"x/y/R.java",
-				"package x.y;\n" + 
-				"import static a.b.c.C.a;\n" + 
-				"//import a.b.c.a;\n" + 
-				"\n" + 
-				"public class R { \n" + 
-				"	a b; \n" + 
-				"	char h = a; \n" + 
+				"package x.y;\n" +
+				"import static a.b.c.C.a;\n" +
+				"//import a.b.c.a;\n" +
+				"\n" +
+				"public class R { \n" +
+				"	a b; \n" +
+				"	char h = a; \n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in x\\y\\R.java (at line 6)\n" + 
-			"	a b; \n" + 
-			"	^\n" + 
-			"a cannot be resolved to a type\n" + 
+			"----------\n" +
+			"1. ERROR in x\\y\\R.java (at line 6)\n" +
+			"	a b; \n" +
+			"	^\n" +
+			"a cannot be resolved to a type\n" +
 			"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=426544 - [1.8][compiler] Compiler over-eagerly detects collision of single static imports
@@ -3146,50 +3146,50 @@ public class StaticImportTest extends AbstractComparableTest {
 				"    public static class I {}\n" +
 				"}\n",
 				"X.java",
-				"import static p.X.f;\n" + 
-				"import static q.X.f;\n" + 
-				"import static p.X.C;\n" + 
-				"import static p.X.I;\n" + 
-				"import static q.X.C;\n" + 
-				"import static q.X.I;\n" + 
-				"public class X { \n" + 
+				"import static p.X.f;\n" +
+				"import static q.X.f;\n" +
+				"import static p.X.C;\n" +
+				"import static p.X.I;\n" +
+				"import static q.X.C;\n" +
+				"import static q.X.I;\n" +
+				"public class X { \n" +
 				"    { f = 0; }\n" +
 				"    { C c = null; }\n" +
 				"    { I i = null; }\n" +
 				"}\n"
 			},
-			this.complianceLevel < ClassFileConstants.JDK1_8 ? 
-					"----------\n" + 
-					"1. ERROR in X.java (at line 2)\n" + 
-					"	import static q.X.f;\n" + 
-					"	              ^^^^^\n" + 
-					"The import q.X.f collides with another import statement\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 5)\n" + 
-					"	import static q.X.C;\n" + 
-					"	              ^^^^^\n" + 
-					"The import q.X.C collides with another import statement\n" + 
-					"----------\n" + 
-					"3. ERROR in X.java (at line 6)\n" + 
-					"	import static q.X.I;\n" + 
-					"	              ^^^^^\n" + 
-					"The import q.X.I collides with another import statement\n" + 
+			this.complianceLevel < ClassFileConstants.JDK1_8 ?
+					"----------\n" +
+					"1. ERROR in X.java (at line 2)\n" +
+					"	import static q.X.f;\n" +
+					"	              ^^^^^\n" +
+					"The import q.X.f collides with another import statement\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 5)\n" +
+					"	import static q.X.C;\n" +
+					"	              ^^^^^\n" +
+					"The import q.X.C collides with another import statement\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 6)\n" +
+					"	import static q.X.I;\n" +
+					"	              ^^^^^\n" +
+					"The import q.X.I collides with another import statement\n" +
 					"----------\n" :
-						"----------\n" + 
-						"1. ERROR in X.java (at line 8)\n" + 
-						"	{ f = 0; }\n" + 
-						"	  ^\n" + 
-						"The field f is ambiguous\n" + 
-						"----------\n" + 
-						"2. ERROR in X.java (at line 9)\n" + 
-						"	{ C c = null; }\n" + 
-						"	  ^\n" + 
-						"The type C is ambiguous\n" + 
-						"----------\n" + 
-						"3. ERROR in X.java (at line 10)\n" + 
-						"	{ I i = null; }\n" + 
-						"	  ^\n" + 
-						"The type I is ambiguous\n" + 
+						"----------\n" +
+						"1. ERROR in X.java (at line 8)\n" +
+						"	{ f = 0; }\n" +
+						"	  ^\n" +
+						"The field f is ambiguous\n" +
+						"----------\n" +
+						"2. ERROR in X.java (at line 9)\n" +
+						"	{ C c = null; }\n" +
+						"	  ^\n" +
+						"The type C is ambiguous\n" +
+						"----------\n" +
+						"3. ERROR in X.java (at line 10)\n" +
+						"	{ I i = null; }\n" +
+						"	  ^\n" +
+						"The type I is ambiguous\n" +
 						"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=479287
@@ -3198,30 +3198,30 @@ public class StaticImportTest extends AbstractComparableTest {
 		this.runConformTest(
 			new String[] {
 				"joetest/GenericsIssue.java",
-				"package joetest;\n" + 
-				"import static joetest.GenericsIssueCollaborator.takesAnything;\n" + 
-				"import java.util.Collection;\n" + 
-				"import java.util.Collections;\n" + 
-				"public class GenericsIssue {\n" + 
-				"	private void oddCompileError() {\n" + 
-				"		takesAnything(returnThings(\"works without wildcard in return value\"));\n" + 
-				"		GenericsIssueCollaborator.takesAnything(returnThingsWildcard(\"works without static import\"));\n" + 
-				"		takesAnything(returnThingsWildcard(\"doesn\'t work with static import\"));\n" + 
-				"	}\n" + 
-				"	private <T> Collection<T> returnThings(T thing) {\n" + 
-				"		return Collections.singleton(thing);\n" + 
-				"	}\n" + 
-				"		\n" + 
-				"	private <T> Collection<? extends T> returnThingsWildcard(T toReturn) {\n" + 
-				"		return Collections.singleton(toReturn);\n" + 
-				"	}\n" + 
+				"package joetest;\n" +
+				"import static joetest.GenericsIssueCollaborator.takesAnything;\n" +
+				"import java.util.Collection;\n" +
+				"import java.util.Collections;\n" +
+				"public class GenericsIssue {\n" +
+				"	private void oddCompileError() {\n" +
+				"		takesAnything(returnThings(\"works without wildcard in return value\"));\n" +
+				"		GenericsIssueCollaborator.takesAnything(returnThingsWildcard(\"works without static import\"));\n" +
+				"		takesAnything(returnThingsWildcard(\"doesn\'t work with static import\"));\n" +
+				"	}\n" +
+				"	private <T> Collection<T> returnThings(T thing) {\n" +
+				"		return Collections.singleton(thing);\n" +
+				"	}\n" +
+				"		\n" +
+				"	private <T> Collection<? extends T> returnThingsWildcard(T toReturn) {\n" +
+				"		return Collections.singleton(toReturn);\n" +
+				"	}\n" +
 				"}",
 				"joetest/GenericsIssueCollaborator.java",
-				"package joetest;\n" + 
-				"public class GenericsIssueCollaborator {\n" + 
-				"	public static <T> void takesAnything(T thing) {\n" + 
-				"		System.out.println(\"TOOK IT: \" + thing);\n" + 
-				"	}\n" + 
+				"package joetest;\n" +
+				"public class GenericsIssueCollaborator {\n" +
+				"	public static <T> void takesAnything(T thing) {\n" +
+				"		System.out.println(\"TOOK IT: \" + thing);\n" +
+				"	}\n" +
 				"}"
 			});
 	}
@@ -3230,30 +3230,30 @@ public class StaticImportTest extends AbstractComparableTest {
 	public void testBug442580() {
 		this.runConformTest(new String [] {
 				"a/A.java",
-				"package a;\n" + 
-				"\n" + 
-				"public class A {\n" + 
-				"	public static void foo() {\n" + 
-				"		System.out.println(\"A.foo\");\n" + 
-				"	}\n" + 
+				"package a;\n" +
+				"\n" +
+				"public class A {\n" +
+				"	public static void foo() {\n" +
+				"		System.out.println(\"A.foo\");\n" +
+				"	}\n" +
 				"}",
 				"b/B.java",
-				"package b;\n" + 
-				"\n" + 
-				"public class B {\n" + 
-				"	public static void foo() {\n" + 
-				"		System.out.println(\"B.foo\");\n" + 
-				"	}\n" + 
+				"package b;\n" +
+				"\n" +
+				"public class B {\n" +
+				"	public static void foo() {\n" +
+				"		System.out.println(\"B.foo\");\n" +
+				"	}\n" +
 				"}",
 				"Test.java",
-				"import static a.A.*;\n" + 
-				"import static b.B.*;\n" + 
-				"import static b.B.foo;\n" + 
-				"\n" + 
-				"public class Test {\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		foo();\n" + 
-				"	}\n" + 
+				"import static a.A.*;\n" +
+				"import static b.B.*;\n" +
+				"import static b.B.foo;\n" +
+				"\n" +
+				"public class Test {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		foo();\n" +
+				"	}\n" +
 				"}"
 		});
 	}
@@ -3272,21 +3272,21 @@ public class StaticImportTest extends AbstractComparableTest {
 						"	static class Outer<T extends Inner> {\n" +
 						"		private static interface Inner {}\n" +
 						"    }\n" +
-						"	static class AnotherOuter {\n" + 
-						"		private static class Inner {}\n" + 
-						"	}\n" + 
+						"	static class AnotherOuter {\n" +
+						"		private static class Inner {}\n" +
+						"	}\n" +
 						"}\n"
 				},
-				"----------\n" + 
-				"1. ERROR in p\\X.java (at line 3)\n" + 
-				"	import static p.A1.AnotherOuter.Inner;\n" + 
-				"	              ^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"The type p.A1.AnotherOuter.Inner is not visible\n" + 
-				"----------\n" + 
-				"2. ERROR in p\\X.java (at line 6)\n" + 
-				"	static class Outer<T extends Inner> {\n" + 
-				"	                             ^^^^^\n" + 
-				"The type Inner is not visible\n" + 
+				"----------\n" +
+				"1. ERROR in p\\X.java (at line 3)\n" +
+				"	import static p.A1.AnotherOuter.Inner;\n" +
+				"	              ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"The type p.A1.AnotherOuter.Inner is not visible\n" +
+				"----------\n" +
+				"2. ERROR in p\\X.java (at line 6)\n" +
+				"	static class Outer<T extends Inner> {\n" +
+				"	                             ^^^^^\n" +
+				"The type Inner is not visible\n" +
 				"----------\n");
 	}
 	public void testBug520874b() {
@@ -3305,11 +3305,11 @@ public class StaticImportTest extends AbstractComparableTest {
 						"    }\n" +
 						"}\n"
 				},
-				"----------\n" + 
-				"1. ERROR in p\\X.java (at line 5)\n" + 
-				"	static class Outer<T extends Inner> {\n" + 
-				"	                             ^^^^^\n" + 
-				"The type Inner is not visible\n" + 
+				"----------\n" +
+				"1. ERROR in p\\X.java (at line 5)\n" +
+				"	static class Outer<T extends Inner> {\n" +
+				"	                             ^^^^^\n" +
+				"The type Inner is not visible\n" +
 				"----------\n");
 	}
 	public void testBug520874c() {
@@ -3327,31 +3327,31 @@ public class StaticImportTest extends AbstractComparableTest {
 						"	static class Outer<T extends Inner> {\n" +
 						"		private static interface Inner {}\n" +
 						"    }\n" +
-						"	static class AnotherOuter<T extends Inner> {\n" + 
-						"		private static class Inner {}\n" + 
-						"	}\n" + 
+						"	static class AnotherOuter<T extends Inner> {\n" +
+						"		private static class Inner {}\n" +
+						"	}\n" +
 						"}\n"
 				},
-				"----------\n" + 
-				"1. ERROR in p\\X.java (at line 2)\n" + 
-				"	import static p.A1.Outer.Inner;\n" + 
-				"	              ^^^^^^^^^^^^^^^^\n" + 
-				"The type p.A1.Outer.Inner is not visible\n" + 
-				"----------\n" + 
-				"2. ERROR in p\\X.java (at line 3)\n" + 
-				"	import static p.A1.AnotherOuter.Inner;\n" + 
-				"	              ^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"The type p.A1.AnotherOuter.Inner is not visible\n" + 
-				"----------\n" + 
-				"3. ERROR in p\\X.java (at line 6)\n" + 
-				"	static class Outer<T extends Inner> {\n" + 
-				"	                             ^^^^^\n" + 
-				"Inner cannot be resolved to a type\n" + 
-				"----------\n" + 
-				"4. ERROR in p\\X.java (at line 9)\n" + 
-				"	static class AnotherOuter<T extends Inner> {\n" + 
-				"	                                    ^^^^^\n" + 
-				"Inner cannot be resolved to a type\n" + 
+				"----------\n" +
+				"1. ERROR in p\\X.java (at line 2)\n" +
+				"	import static p.A1.Outer.Inner;\n" +
+				"	              ^^^^^^^^^^^^^^^^\n" +
+				"The type p.A1.Outer.Inner is not visible\n" +
+				"----------\n" +
+				"2. ERROR in p\\X.java (at line 3)\n" +
+				"	import static p.A1.AnotherOuter.Inner;\n" +
+				"	              ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"The type p.A1.AnotherOuter.Inner is not visible\n" +
+				"----------\n" +
+				"3. ERROR in p\\X.java (at line 6)\n" +
+				"	static class Outer<T extends Inner> {\n" +
+				"	                             ^^^^^\n" +
+				"Inner cannot be resolved to a type\n" +
+				"----------\n" +
+				"4. ERROR in p\\X.java (at line 9)\n" +
+				"	static class AnotherOuter<T extends Inner> {\n" +
+				"	                                    ^^^^^\n" +
+				"Inner cannot be resolved to a type\n" +
 				"----------\n");
 	}
 	public void testBug520874d() {
@@ -3374,16 +3374,16 @@ public class StaticImportTest extends AbstractComparableTest {
 						"	public static class Inner {}\n" +
 						"}\n"
 				},
-				"----------\n" + 
-				"1. WARNING in p\\X.java (at line 2)\n" + 
-				"	import static p.A.B.Inner;\n" + 
-				"	              ^^^^^^^^^^^\n" + 
-				"The import p.A.B.Inner is never used\n" + 
-				"----------\n" + 
-				"2. WARNING in p\\X.java (at line 3)\n" + 
-				"	import p.Bar.Inner;\n" + 
-				"	       ^^^^^^^^^^^\n" + 
-				"The import p.Bar.Inner is never used\n" + 
+				"----------\n" +
+				"1. WARNING in p\\X.java (at line 2)\n" +
+				"	import static p.A.B.Inner;\n" +
+				"	              ^^^^^^^^^^^\n" +
+				"The import p.A.B.Inner is never used\n" +
+				"----------\n" +
+				"2. WARNING in p\\X.java (at line 3)\n" +
+				"	import p.Bar.Inner;\n" +
+				"	       ^^^^^^^^^^^\n" +
+				"The import p.Bar.Inner is never used\n" +
 				"----------\n");
 	}
 	public void testBug520874e() {
@@ -3406,16 +3406,190 @@ public class StaticImportTest extends AbstractComparableTest {
 						"	public static class Inner {}\n" +
 						"}\n"
 				},
-				"----------\n" + 
-				"1. WARNING in p\\X.java (at line 2)\n" + 
-				"	import static p.A.B.Inner;\n" + 
-				"	              ^^^^^^^^^^^\n" + 
-				"The import p.A.B.Inner is never used\n" + 
-				"----------\n" + 
-				"2. WARNING in p\\X.java (at line 3)\n" + 
-				"	import p.Bar.*;\n" + 
-				"	       ^^^^^\n" + 
-				"The import p.Bar is never used\n" + 
+				"----------\n" +
+				"1. WARNING in p\\X.java (at line 2)\n" +
+				"	import static p.A.B.Inner;\n" +
+				"	              ^^^^^^^^^^^\n" +
+				"The import p.A.B.Inner is never used\n" +
+				"----------\n" +
+				"2. WARNING in p\\X.java (at line 3)\n" +
+				"	import p.Bar.*;\n" +
+				"	       ^^^^^\n" +
+				"The import p.Bar is never used\n" +
 				"----------\n");
+	}
+	public void testGH809_field_a() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"p2/Client.java",
+			"""
+			package p2;
+			import static p1.Sub.*;
+			public class Client {
+				public static void main(String... args) {
+					System.out.println(ONE);
+				}
+			}
+			""",
+			"p1/Super.java",
+			"""
+			package p1;
+			class Super {
+				public static int ONE = 1;
+			}
+			""",
+			"p1/Sub.java",
+			"""
+			package p1;
+			public class Sub extends Super {}
+			"""
+		};
+		runner.expectedOutputString = "1";
+		runner.runConformTest();
+	}
+	public void testGH809_field_b() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"p2/Client.java",
+			"""
+			package p2;
+			import static p1.Sub.ONE;
+			public class Client {
+				public static void main(String... args) {
+					System.out.println(ONE);
+				}
+			}
+			""",
+			"p1/Super.java",
+			"""
+			package p1;
+			class Super {
+				public static int ONE = 1;
+			}
+			""",
+			"p1/Sub.java",
+			"""
+			package p1;
+			public class Sub extends Super {}
+			"""
+		};
+		runner.expectedOutputString = "1";
+		runner.runConformTest();
+	}
+	public void testGH809_field_c() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"p2/Client.java",
+			"""
+			package p2;
+			import p1.Sub;
+			public class Client {
+				public static void main(String... args) {
+					System.out.println(Sub.ONE);
+				}
+			}
+			""",
+			"p1/Super.java",
+			"""
+			package p1;
+			class Super {
+				public static int ONE = 1;
+			}
+			""",
+			"p1/Sub.java",
+			"""
+			package p1;
+			public class Sub extends Super {}
+			"""
+		};
+		runner.expectedOutputString = "1";
+		runner.runConformTest();
+	}
+	public void testGH809_method_a() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"p2/Client.java",
+			"""
+			package p2;
+			import static p1.Sub.*;
+			public class Client {
+				public static void main(String... args) {
+					System.out.println(ONE());
+				}
+			}
+			""",
+			"p1/Super.java",
+			"""
+			package p1;
+			class Super {
+				public static int ONE() { return 1; }
+			}
+			""",
+			"p1/Sub.java",
+			"""
+			package p1;
+			public class Sub extends Super {}
+			"""
+		};
+		runner.expectedOutputString = "1";
+		runner.runConformTest();
+	}
+	public void testGH809_method_b() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"p2/Client.java",
+			"""
+			package p2;
+			import static p1.Sub.ONE;
+			public class Client {
+				public static void main(String... args) {
+					System.out.println(ONE());
+				}
+			}
+			""",
+			"p1/Super.java",
+			"""
+			package p1;
+			class Super {
+				public static int ONE() { return 1; }
+			}
+			""",
+			"p1/Sub.java",
+			"""
+			package p1;
+			public class Sub extends Super {}
+			"""
+		};
+		runner.expectedOutputString = "1";
+		runner.runConformTest();
+	}
+	public void testGH809_method_c() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"p2/Client.java",
+			"""
+			package p2;
+			import p1.Sub;
+			public class Client {
+				public static void main(String... args) {
+					System.out.println(Sub.ONE());
+				}
+			}
+			""",
+			"p1/Super.java",
+			"""
+			package p1;
+			class Super {
+				public static int ONE() { return 1; }
+			}
+			""",
+			"p1/Sub.java",
+			"""
+			package p1;
+			public class Sub extends Super {}
+			"""
+		};
+		runner.expectedOutputString = "1";
+		runner.runConformTest();
 	}
 }

@@ -14,9 +14,6 @@
 package org.eclipse.jdt.internal.core.dom.rewrite;
 
 
-/**
- *
- */
 public abstract class RewriteEvent {
 
 	/**

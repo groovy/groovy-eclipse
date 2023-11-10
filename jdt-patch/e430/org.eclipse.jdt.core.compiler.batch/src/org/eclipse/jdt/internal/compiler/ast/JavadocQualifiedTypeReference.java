@@ -32,7 +32,7 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference implem
 	public int tagSourceStart, tagSourceEnd;
 	public PackageBinding packageBinding;
 	public ModuleBinding moduleBinding;
-	private boolean canBeModule;
+	private final boolean canBeModule;
 
 	public JavadocQualifiedTypeReference(char[][] sources, long[] pos, int tagStart, int tagEnd) {
 		this(sources, pos, tagStart, tagEnd, false);

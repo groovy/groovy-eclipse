@@ -229,7 +229,7 @@ public class WrapExecutor {
 	private class WrapsApplier extends TokenTraverser {
 
 		private final TokenManager tm2 = WrapExecutor.this.tm;
-		private ArrayDeque<Token> stack = new ArrayDeque<>();
+		private final ArrayDeque<Token> stack = new ArrayDeque<>();
 		private int initialIndent;
 		private int currentIndent;
 		private int fixedIndentDelta;

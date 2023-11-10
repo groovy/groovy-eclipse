@@ -38,7 +38,7 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 	private char[] enumConstantName;
 
 	private int readOffset;
-	private int tag;
+	private final int tag;
 	private int valuesNumber;
 
 	public AnnotationComponentValue(

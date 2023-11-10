@@ -100,7 +100,7 @@ public class MethodRef extends ASTNode implements IDocElement {
 	 * (element type: {@link MethodRefParameter}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList parameters =
+	private final ASTNode.NodeList parameters =
 		new ASTNode.NodeList(PARAMETERS_PROPERTY);
 
 

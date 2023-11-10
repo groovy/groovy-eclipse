@@ -24,8 +24,8 @@ import org.eclipse.jdt.core.util.ISignatureAttribute;
  */
 public class SignatureAttribute extends ClassFileAttribute implements ISignatureAttribute {
 
-	private int signatureIndex;
-	private char[] signature;
+	private final int signatureIndex;
+	private final char[] signature;
 
 	SignatureAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);

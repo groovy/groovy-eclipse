@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -114,7 +115,7 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 				this.document.requireIndexingResolvedDocument();
 		} catch (Exception e) {
 			if (JobManager.VERBOSE) {
-				e.printStackTrace();
+				trace("", e); //$NON-NLS-1$
 			}
 		}
 	}
@@ -172,7 +173,7 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 			this.cud.resolve();
 		} catch (Exception e) {
 			if (JobManager.VERBOSE) {
-				e.printStackTrace();
+				trace("", e); //$NON-NLS-1$
 			}
 		}
 	}
@@ -213,7 +214,9 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 	@Override
 	public void indexResolvedDocument() {
 		try {
-			if (DEBUG) System.out.println(new String(this.cud.compilationResult.fileName) + ':');
+			if (DEBUG) {
+				trace(new String(this.cud.compilationResult.fileName) + ':');
+			}
 			for (int i = 0, length = this.cud.functionalExpressionsCount; i < length; i++) {
 				FunctionalExpression expression = this.cud.functionalExpressions[i];
 				if (expression instanceof LambdaExpression) {
@@ -221,7 +224,7 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 					if (lambdaExpression.binding != null && lambdaExpression.binding.isValidBinding()) {
 						final char[] superinterface = lambdaExpression.resolvedType.sourceName();
 						if (DEBUG) {
-							System.out.println('\t' + new String(superinterface) + '.' +
+							trace('\t' + new String(superinterface) + '.' +
 									new String(lambdaExpression.descriptor.selector) + "-> {}"); //$NON-NLS-1$
 						}
 						SourceIndexer.this.addIndexEntry(IIndexConstants.METHOD_DECL, MethodPattern.createIndexKey(lambdaExpression.descriptor.selector, lambdaExpression.descriptor.parameters.length));
@@ -236,7 +239,9 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 								true); // not primary.
 
 					} else {
-						if (DEBUG) System.out.println("\tnull/bad binding in lambda"); //$NON-NLS-1$
+						if (DEBUG) {
+							trace("\tnull/bad binding in lambda"); //$NON-NLS-1$
+						}
 					}
 				} else {
 					ReferenceExpression referenceExpression = (ReferenceExpression) expression;
@@ -245,7 +250,7 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 					MethodBinding binding = referenceExpression.getMethodBinding();
 					if (binding != null && binding.isValidBinding()) {
 						if (DEBUG) {
-							System.out.println('\t' + new String(referenceExpression.resolvedType.sourceName()) + "::"  //$NON-NLS-1$
+							trace('\t' + new String(referenceExpression.resolvedType.sourceName()) + "::"  //$NON-NLS-1$
 									+ new String(referenceExpression.descriptor.selector) + " == " + new String(binding.declaringClass.sourceName()) + '.' + //$NON-NLS-1$
 									new String(binding.selector));
 						}
@@ -254,13 +259,15 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 						else
 							SourceIndexer.this.addConstructorReference(binding.declaringClass.sourceName(), binding.parameters.length);
 					} else {
-						if (DEBUG) System.out.println("\tnull/bad binding in reference expression"); //$NON-NLS-1$
+						if (DEBUG) {
+							trace("\tnull/bad binding in reference expression"); //$NON-NLS-1$
+						}
 					}
 				}
 			}
 		} catch (Exception e) {
 			if (JobManager.VERBOSE) {
-				e.printStackTrace();
+				trace("", e); //$NON-NLS-1$
 			}
 		}
 	}

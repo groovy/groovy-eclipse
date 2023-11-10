@@ -57,7 +57,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
@@ -175,8 +174,6 @@ public static FieldBinding binarySearch(char[] name, FieldBinding[] sortedFields
  * (remember methods are sorted alphabetically on selectors), and end is the index of last contiguous methods with same
  * selector.
  * -1 means no method got found
- * @param selector
- * @param sortedMethods
  * @return (start + (end<<32)) or -1 if no method found
  */
 public static long binarySearch(char[] selector, MethodBinding[] sortedMethods) {
@@ -2041,7 +2038,7 @@ public char[] sourceName() {
  * Perform an upwards type projection as per JLS 4.10.5
  * @param scope Relevant scope for evaluating type projection
  * @param mentionedTypeVariables Filter for mentioned type variabled
- * @returns Upwards type projection of 'this', or null if downwards projection is undefined
+ * @return Upwards type projection of 'this', or null if downwards projection is undefined
 */
 @Override
 public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
@@ -2052,7 +2049,7 @@ public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTy
  * Perform a downwards type projection as per JLS 4.10.5
  * @param scope Relevant scope for evaluating type projection
  * @param mentionedTypeVariables Filter for mentioned type variabled
- * @returns Downwards type projection of 'this', or null if downwards projection is undefined
+ * @return Downwards type projection of 'this', or null if downwards projection is undefined
 */
 @Override
 public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
@@ -2225,10 +2222,10 @@ protected int applyCloseableInterfaceWhitelists() {
 	return 0;
 }
 
-protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards, boolean filterDefaultMethods) throws InvalidInputException {
+protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards, boolean filterDefaultMethods) throws InvalidBindingException {
 
 	if (!isInterface() || !isValidBinding()) {
-		throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
+		throw new InvalidBindingException("Not a functional interface"); //$NON-NLS-1$
 	}
 
 	MethodBinding [] methods = methods();
@@ -2255,7 +2252,7 @@ protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean re
 		if (method == null || method.isStatic() || method.redeclaresPublicObjectMethod(scope) || method.isPrivate())
 			continue;
 		if (!method.isValidBinding())
-			throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
+			throw new InvalidBindingException("Not a functional interface"); //$NON-NLS-1$
 		for (int j = 0; j < contractsCount;) {
 			if ( contracts[j] != null && MethodVerifier.doesMethodOverride(method, contracts[j], environment)) {
 				contractsCount--;
@@ -2348,7 +2345,7 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 					return this.singleAbstractMethod[index] = samProblemBinding;
 			}
 		}
-	} catch (InvalidInputException e) {
+	} catch (InvalidBindingException e) {
 		return this.singleAbstractMethod[index] = samProblemBinding;
 	}
 	if (methods.length == 1)
@@ -2495,5 +2492,12 @@ public boolean hasEnclosingInstanceContext() {
 	if (enclosingMethod != null)
 		return !enclosingMethod.isStatic();
 	return false;
+}
+static class InvalidBindingException extends Exception {
+	private static final long serialVersionUID = 1L;
+
+	InvalidBindingException(String message) {
+		super(message);
+	}
 }
 }

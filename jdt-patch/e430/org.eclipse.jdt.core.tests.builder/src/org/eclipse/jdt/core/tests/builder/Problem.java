@@ -19,9 +19,9 @@ import org.eclipse.jdt.core.IJavaModelMarker;
 
 @SuppressWarnings("rawtypes")
 public class Problem implements Comparable {
-	private String location;
-	private String message;
-	private IPath resourcePath;
+	private final String location;
+	private final String message;
+	private final IPath resourcePath;
 	private int start = -1, end = -1, categoryId = -1;
 	private String sourceId;
 	private int severity = IMarker.SEVERITY_ERROR;

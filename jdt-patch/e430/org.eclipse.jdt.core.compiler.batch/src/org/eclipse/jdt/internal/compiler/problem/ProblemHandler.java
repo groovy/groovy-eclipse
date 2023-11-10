@@ -53,7 +53,6 @@ public class ProblemHandler {
  * Problem handler can be supplied with a policy to specify
  * its behavior in error handling. Also see static methods for
  * built-in policies.
- *
  */
 public ProblemHandler(IErrorHandlingPolicy policy, CompilerOptions options, IProblemFactory problemFactory) {
 	this.policy = policy;

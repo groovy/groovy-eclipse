@@ -29,7 +29,6 @@ package org.eclipse.jdt.internal.codeassist.select;
  *           <SelectOnExplicitConstructorCall:Y.super(1, 2)>
  *         }
  *       }
- *
  */
 
 import org.eclipse.jdt.internal.compiler.ast.*;

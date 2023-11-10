@@ -24,21 +24,16 @@ import org.eclipse.jdt.core.util.ILocalVariableTypeTableEntry;
  */
 public class LocalVariableTypeTableEntry extends ClassFileStruct implements ILocalVariableTypeTableEntry {
 
-	private int startPC;
-	private int length;
-	private int nameIndex;
-	private int signatureIndex;
-	private char[] name;
-	private char[] signature;
-	private int index;
+	private final int startPC;
+	private final int length;
+	private final int nameIndex;
+	private final int signatureIndex;
+	private final char[] name;
+	private final char[] signature;
+	private final int index;
 
 	/**
 	 * Constructor for LocalVariableTypeTableEntry.
-	 *
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public LocalVariableTypeTableEntry(
 		byte[] classFileBytes,

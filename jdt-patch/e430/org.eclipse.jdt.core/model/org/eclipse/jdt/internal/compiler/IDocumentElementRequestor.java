@@ -97,7 +97,6 @@ void acceptInitializer(
  * of the parse action, so as to allow computation of normalized ranges.
  *
  * A line separator might corresponds to several characters in the source,
- *
  */
 void acceptLineSeparatorPositions(int[] positions);
 /**

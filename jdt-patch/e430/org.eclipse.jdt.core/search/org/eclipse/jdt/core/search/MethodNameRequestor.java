@@ -14,27 +14,26 @@
 package org.eclipse.jdt.core.search;
 
  /**
-  * 
+  *
   * A <code> MethodDeclarationRequestor</code> collects search results from a <code> searchAllMethodDeclarations</code>
   * query to a <code>SearchEngine</code>. Clients must subclass this abstract class and pass an instance to the
-  * <code>SearchEngine.searchAllMethodDeclarations</code> method. 
-  * 
+  * <code>SearchEngine.searchAllMethodDeclarations</code> method.
+  *
   * <p>
   * This class may be subclassed by clients
   * </p>
  * @since 3.12
-  * 
   */
 public abstract class MethodNameRequestor {
-	
+
 	/**
 	 * Accepts a method.
-	 * 
+	 *
 	 * <p>
-	 * The default implementation of this method does nothing. 
+	 * The default implementation of this method does nothing.
 	 * Subclasses should override.
 	 * </p>
-	 * 
+	 *
 	 * @param methodName name of the method.
 	 * @param parameterCount number of parameters in this method.
 	 * @param declaringQualifier the qualified name of parent of the enclosing type of this method.

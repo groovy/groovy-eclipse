@@ -40,7 +40,6 @@ public class SourceRangeVerifier extends ASTVisitor {
 	 * nodes never overlap.
 	 * </p>
 	 *
-	 * @param node
 	 * @return <code>null</code> if everything is OK; a list of errors otherwise
 	 */
 	public String process(ASTNode node) {

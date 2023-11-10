@@ -22,8 +22,8 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 public class CaptureBinding18 extends CaptureBinding {
 
 	TypeBinding[] upperBounds;
-	private char[] originalName;
-	private CaptureBinding18 prototype;
+	private final char[] originalName;
+	private final CaptureBinding18 prototype;
 
 	public CaptureBinding18(ReferenceBinding contextType, char[] sourceName, char[] originalName, int start, int end, int captureID, LookupEnvironment environment) {
 		super(contextType, sourceName, start, end, captureID, environment);

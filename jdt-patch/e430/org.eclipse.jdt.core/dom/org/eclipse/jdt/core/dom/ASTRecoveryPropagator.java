@@ -78,10 +78,10 @@ class ASTRecoveryPropagator extends DefaultASTVisitor {
 		this.endingTokens.put(VariableDeclarationStatement.class, new int[]{TerminalTokens.TokenNameSEMICOLON});
 	}
 
-	private CategorizedProblem[] problems;
-	private boolean[] usedOrIrrelevantProblems;
+	private final CategorizedProblem[] problems;
+	private final boolean[] usedOrIrrelevantProblems;
 
-	private RecoveryScannerData data;
+	private final RecoveryScannerData data;
 	private int blockDepth = 0;
 	private int lastEnd;
 

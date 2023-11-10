@@ -2555,6 +2555,12 @@ void setSourceStart(int sourceStart);
 	int CannotInferRecordPatternTypes = PreviewRelated + 1940;
 
 	/**
+	 * @since 3.36
+	 */
+	int IllegalRecordPattern = TypeRelated + 1941;
+
+
+	/**
 	 * @since 3.35
 	 */
 	int SyntheticAccessorNotEnclosingMethod = MethodRelated + 1990;

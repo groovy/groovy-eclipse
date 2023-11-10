@@ -341,7 +341,6 @@ protected int determineKind(IResource underlyingResource) throws JavaModelExcept
  * Compares two objects for equality;
  * for <code>PackageFragmentRoot</code>s, equality is having the
  * same parent, same resources, and occurrence count.
- *
  */
 @Override
 public boolean equals(Object o) {
@@ -892,7 +891,6 @@ protected void verifyAttachSource(IPath sourcePath) throws JavaModelException {
  * to directly under the root. It is the responsibility of such package fragment roots to
  * provide the custom behavior.
  *
- * @param classname
  * @return the relative path for the class file within the archive
  */
 public String getClassFilePath(String classname) {

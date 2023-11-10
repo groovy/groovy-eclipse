@@ -14,6 +14,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.File;
 import java.util.*;
 import java.util.function.Function;
@@ -65,7 +67,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  * package.  The other set of methods all begin with <code>seek*</code>.  These methods
  * do comprehensive searches of the <code>IJavaProject</code> returning hits
  * in real time through an <code>IJavaElementRequestor</code>.
- *
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class NameLookup implements SuffixConstants {
@@ -238,7 +239,7 @@ public class NameLookup implements SuffixConstants {
 	public long timeSpentInIsPackageWithModuleContext;
 	public long timeSpentInSeekTypesInType;
 
-	private JavaProject rootProject;
+	private final JavaProject rootProject;
 
 	public NameLookup(
 			JavaProject rootProject, IPackageFragmentRoot[] packageFragmentRoots,
@@ -248,10 +249,10 @@ public class NameLookup implements SuffixConstants {
 		this.rootProject = rootProject;
 		long start = -1;
 		if (VERBOSE) {
-			Util.verbose(" BUILDING NameLoopkup");  //$NON-NLS-1$
-			Util.verbose(" -> pkg roots size: " + (packageFragmentRoots == null ? 0 : packageFragmentRoots.length));  //$NON-NLS-1$
-			Util.verbose(" -> pkgs size: " + (packageFragments == null ? 0 : packageFragments.size()));  //$NON-NLS-1$
-			Util.verbose(" -> working copy size: " + (workingCopies == null ? 0 : workingCopies.length));  //$NON-NLS-1$
+			trace(" BUILDING NameLoopkup");  //$NON-NLS-1$
+			trace(" -> pkg roots size: " + (packageFragmentRoots == null ? 0 : packageFragmentRoots.length));  //$NON-NLS-1$
+			trace(" -> pkgs size: " + (packageFragments == null ? 0 : packageFragments.size()));  //$NON-NLS-1$
+			trace(" -> working copy size: " + (workingCopies == null ? 0 : workingCopies.length));  //$NON-NLS-1$
 			start = System.currentTimeMillis();
 		}
 		this.rootToModule = new HashMap<>();
@@ -361,7 +362,7 @@ public class NameLookup implements SuffixConstants {
 
 		this.rootToResolvedEntries = rootToResolvedEntries;
         if (VERBOSE) {
-            Util.verbose(" -> spent: " + (System.currentTimeMillis() - start) + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+        	trace(" -> spent: " + (System.currentTimeMillis() - start) + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
         }
 	}
 
@@ -716,11 +717,11 @@ public class NameLookup implements SuffixConstants {
 					IType type = types.get(typeName);
 					if (type != null) {
 						if (JavaModelManager.VERBOSE) {
-							Util.verbose("NameLookup FIND SECONDARY TYPES:"); //$NON-NLS-1$
-							Util.verbose(" -> pkg name: " + packageName);  //$NON-NLS-1$
-							Util.verbose(" -> type name: " + typeName);  //$NON-NLS-1$
-							Util.verbose(" -> project: "+project.getElementName()); //$NON-NLS-1$
-							Util.verbose(" -> type: " + type.getElementName());  //$NON-NLS-1$
+							trace("NameLookup FIND SECONDARY TYPES:"); //$NON-NLS-1$
+							trace(" -> pkg name: " + packageName);  //$NON-NLS-1$
+							trace(" -> type name: " + typeName);  //$NON-NLS-1$
+							trace(" -> project: "+project.getElementName()); //$NON-NLS-1$
+							trace(" -> type: " + type.getElementName());  //$NON-NLS-1$
 						}
 						return type;
 					}
@@ -1776,14 +1777,14 @@ public class NameLookup implements SuffixConstants {
 		if(!NameLookup.VERBOSE)
 			return;
 
-		Util.verbose(" TIME SPENT NameLoopkup");  //$NON-NLS-1$
-		Util.verbose(" -> seekTypesInSourcePackage..................." + this.timeSpentInSeekTypesInSourcePackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-		Util.verbose(" -> seekTypesInBinaryPackage..................." + this.timeSpentInSeekTypesInBinaryPackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-		Util.verbose(" -> seekTypesInType............................" + this.timeSpentInSeekTypesInType + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-		Util.verbose(" -> seekModule................................." + this.timeSpentInSeekModule + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-		Util.verbose(" -> seekModuleAwarePartialPackageFragments....." + this.timeSpentInSeekModuleAwarePartialPackageFragments + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-		Util.verbose(" -> seekPackageFragments......................." + this.timeSpentInSeekPackageFragments + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-		Util.verbose(" -> seekPackageFragmentsWithModuleContext......" + this.timeSpentInSeekPackageFragmentsWithModuleContext + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-		Util.verbose(" -> isPackage(pkg,moduleCtx)..................." + this.timeSpentInIsPackageWithModuleContext + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" TIME SPENT NameLoopkup");  //$NON-NLS-1$
+		trace(" -> seekTypesInSourcePackage..................." + this.timeSpentInSeekTypesInSourcePackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> seekTypesInBinaryPackage..................." + this.timeSpentInSeekTypesInBinaryPackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> seekTypesInType............................" + this.timeSpentInSeekTypesInType + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> seekModule................................." + this.timeSpentInSeekModule + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> seekModuleAwarePartialPackageFragments....." + this.timeSpentInSeekModuleAwarePartialPackageFragments + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> seekPackageFragments......................." + this.timeSpentInSeekPackageFragments + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> seekPackageFragmentsWithModuleContext......" + this.timeSpentInSeekPackageFragmentsWithModuleContext + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+		trace(" -> isPackage(pkg,moduleCtx)..................." + this.timeSpentInIsPackageWithModuleContext + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

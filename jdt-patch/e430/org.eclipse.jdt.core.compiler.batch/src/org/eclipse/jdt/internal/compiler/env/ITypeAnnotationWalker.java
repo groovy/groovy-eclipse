@@ -18,7 +18,7 @@ package org.eclipse.jdt.internal.compiler.env;
  * A TypeAnnotationWalker is initialized with all type annotations found at a given element.
  * It can be used to walk into the types at the given element and finally answer the
  * actual annotations at any node of the walk.
- * 
+ *
  * The walker is implemented as immutable objects. During the walk either new instances
  * are created, or the current instance is shared if no difference is encountered.
  */
@@ -90,13 +90,12 @@ public interface ITypeAnnotationWalker {
 
 	/**
 	 * Detail of {@link #toTypeParameterBounds(boolean, int)}: walk to the bounds
-	 * of the previously selected type parameter. 
-	 * @param boundIndex
+	 * of the previously selected type parameter.
 	 */
 	public abstract ITypeAnnotationWalker toTypeBound(short boundIndex);
 
 	/** Walk to the specified supertype either index based or name based:
-	 * @param index -1 is superclass, else index into the list of superinterfaces 
+	 * @param index -1 is superclass, else index into the list of superinterfaces
 	 * @param superTypeSignature name and type arguments of the super type to visit
 	 */
 	public abstract ITypeAnnotationWalker toSupertype(short index, char[] superTypeSignature);

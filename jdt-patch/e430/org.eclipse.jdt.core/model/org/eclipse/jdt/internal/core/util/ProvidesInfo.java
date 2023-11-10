@@ -20,9 +20,9 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
 import org.eclipse.jdt.core.util.IProvidesInfo;
 
 public class ProvidesInfo extends ClassFileStruct implements IProvidesInfo {
-	private int index;
-	private char[] serviceName;
-	private int implementationsCount;
+	private final int index;
+	private final char[] serviceName;
+	private final int implementationsCount;
 	private int[] implementationIndices;
 	private char[][] implementationNames;
 

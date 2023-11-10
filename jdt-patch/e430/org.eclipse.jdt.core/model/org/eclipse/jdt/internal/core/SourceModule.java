@@ -47,8 +47,9 @@ public class SourceModule extends NamedMember implements AbstractModule {
 		try {
 			toStringContent(buffer, lineDelimiter);
 		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (JavaModelManager.VERBOSE) {
+				JavaModelManager.trace("", e); //$NON-NLS-1$
+			}
 		}
 		return buffer.toString();
 	}

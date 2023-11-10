@@ -30,9 +30,9 @@ import java.util.List;
  * <p>
  * Not all node arrangements will represent legal Java constructs. In particular,
  * at least one resource, catch clause, or finally block must be present.</p>
- * 
+ *
  * <p>A resource is either a {@link VariableDeclarationExpression} or (since JLS9) a {@link Name}.</p>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noextend This class is not intended to be subclassed by clients.
@@ -40,7 +40,7 @@ import java.util.List;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class TryStatement extends Statement {
 
-	
+
 	/**
 	 * The "resources" structural property of this node type (element type: {@link VariableDeclarationExpression}) (added in JLS4 API).
 	 * @deprecated In the JLS9 API, this property is replaced by {@link #RESOURCES2_PROPERTY}.
@@ -83,7 +83,7 @@ public class TryStatement extends Statement {
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	/**
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
@@ -167,7 +167,7 @@ public class TryStatement extends Statement {
 	 * The catch clauses (element type: {@link CatchClause}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList catchClauses =
+	private final ASTNode.NodeList catchClauses =
 		new ASTNode.NodeList(CATCH_CLAUSES_PROPERTY);
 
 	/**
@@ -360,7 +360,7 @@ public class TryStatement extends Statement {
 
 	/**
 	 * Returns the live ordered list of resources for this try statement (added in JLS4 API).
-	 * 
+	 *
 	 * <p>A resource is either a {@link VariableDeclarationExpression} or (since JLS9) a {@link Name}.</p>
 	 *
 	 * @return the live list of resources (element type: {@link Expression}).

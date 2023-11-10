@@ -25,7 +25,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
  *******************************************************************************/
 public class ModuleLocator extends PatternLocator {
 
-	private ModulePattern pattern;
+	private final ModulePattern pattern;
 	/* package */ boolean target = false;
 
 	public ModuleLocator(ModulePattern pattern) {

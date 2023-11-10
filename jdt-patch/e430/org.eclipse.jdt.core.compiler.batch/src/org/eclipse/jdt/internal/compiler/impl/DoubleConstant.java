@@ -15,7 +15,7 @@ package org.eclipse.jdt.internal.compiler.impl;
 
 public class DoubleConstant extends Constant {
 
-	private double value;
+	private final double value;
 
 	public static Constant fromValue(double value) {
 		return new DoubleConstant(value);

@@ -21,7 +21,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 @SuppressWarnings("rawtypes")
 public class ProblemReferenceBinding extends ReferenceBinding {
 	ReferenceBinding closestMatch;
-	private int problemReason;
+	private final int problemReason;
 
 // NOTE: must only answer the subset of the name related to the problem
 

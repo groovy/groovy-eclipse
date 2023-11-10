@@ -33,7 +33,6 @@ public abstract class AbstractTextElement extends ASTNode implements IDocElement
 
 	/**
 	 * The "text" structural property of this node type (type: {@link String}).
-	 *
 	 */
 	public static final SimplePropertyDescriptor internalTextPropertyFactory(Class nodeClass) {
 		return new SimplePropertyDescriptor(nodeClass, "text", String.class, MANDATORY); //$NON-NLS-1$

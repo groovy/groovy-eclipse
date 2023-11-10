@@ -26,13 +26,13 @@ public class InnerClassesAttributeEntry
 	extends ClassFileStruct
 	implements IInnerClassesAttributeEntry {
 
-	private int innerClassNameIndex;
-	private int outerClassNameIndex;
-	private int innerNameIndex;
+	private final int innerClassNameIndex;
+	private final int outerClassNameIndex;
+	private final int innerNameIndex;
 	private char[] innerClassName;
 	private char[] outerClassName;
 	private char[] innerName;
-	private int accessFlags;
+	private final int accessFlags;
 
 	public InnerClassesAttributeEntry(byte classFileBytes[], IConstantPool constantPool, int offset)
 		throws ClassFormatException {

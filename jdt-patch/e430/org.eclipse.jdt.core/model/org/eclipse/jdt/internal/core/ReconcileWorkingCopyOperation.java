@@ -125,9 +125,6 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 
 	/**
 	 * Report working copy problems to a given requestor.
-	 *
-	 * @param workingCopy
-	 * @param problemRequestor
 	 */
 	private void reportProblems(CompilationUnit workingCopy, IProblemRequestor problemRequestor) {
 		try {
@@ -138,7 +135,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 				for (int i = 0, length = categorizedProblems.length; i < length; i++) {
 					CategorizedProblem problem = categorizedProblems[i];
 					if (JavaModelManager.VERBOSE){
-						System.out.println("PROBLEM FOUND while reconciling : " + problem.getMessage());//$NON-NLS-1$
+						JavaModelManager.trace("PROBLEM FOUND while reconciling : " + problem.getMessage());//$NON-NLS-1$
 					}
 					if (this.progressMonitor != null && this.progressMonitor.isCanceled()) break;
 					problemRequestor.acceptProblem(problem);

@@ -60,13 +60,12 @@ import org.eclipse.jdt.internal.core.util.Messages;
  *
  *    <li>This operation only copies elements contained within compilation units.
  * </ul>
- *
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class CopyElementsOperation extends MultiOperation implements SuffixConstants {
 
 
-	private Map sources = new HashMap();
+	private final Map sources = new HashMap();
 /**
  * When executed, this operation will copy the given elements to the
  * given containers.  The elements and destination containers must be in

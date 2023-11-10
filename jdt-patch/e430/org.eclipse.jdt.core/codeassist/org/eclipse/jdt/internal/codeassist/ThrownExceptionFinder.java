@@ -44,9 +44,7 @@ public class ThrownExceptionFinder extends ASTVisitor {
 	 * Finds the thrown exceptions minus the ones that are already caught in previous catch blocks.
 	 * Exception is already caught even if its super type is being caught. Also computes, separately,
 	 * a list comprising of (a)those exceptions that have been caught already and (b)those exceptions that are thrown
-	 * by the method and whose super type has been caught already. 
-	 * @param tryStatement
-	 * @param scope
+	 * by the method and whose super type has been caught already.
 	 */
 	public void processThrownExceptions(TryStatement tryStatement, BlockScope scope) {
 		this.thrownExceptions = new SimpleSet();
@@ -107,10 +105,10 @@ public class ThrownExceptionFinder extends ASTVisitor {
 		this.caughtExceptions.asArray(allCaughtExceptions);
 		return allCaughtExceptions;
 	}
-	
+
 	/**
 	 * Returns all the thrown exceptions minus the ones that are already caught in previous catch blocks
-	 * (of the same try), found by the call to 
+	 * (of the same try), found by the call to
 	 * {@link ThrownExceptionFinder#processThrownExceptions(TryStatement, BlockScope)}.
 	 * @return Returns an array of thrown exceptions that are still not caught in any catch block.
 	 */
@@ -119,9 +117,9 @@ public class ThrownExceptionFinder extends ASTVisitor {
 		this.thrownExceptions.asArray(result);
 		return result;
 	}
-	
+
 	/**
-	 * Returns all exceptions that are discouraged to use because (a) they are already caught in some inner try-catch, 
+	 * Returns all exceptions that are discouraged to use because (a) they are already caught in some inner try-catch,
 	 * or (b) their super exception has already been caught.
 	 * @return all discouraged exceptions
 	 */
@@ -174,7 +172,7 @@ public class ThrownExceptionFinder extends ASTVisitor {
 		}
 		return false;
 	}
-	
+
 	private void removeCaughtExceptions(TryStatement tryStatement, boolean recordUncheckedCaughtExceptions) {
 		Argument[] catchArguments = tryStatement.catchArguments;
 		int length = catchArguments == null ? 0 : catchArguments.length;

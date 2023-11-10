@@ -933,7 +933,6 @@ public static String charToString(char[] charArray) {
  * Converts the given list of strings to an array of equal size,
  * containing the individual strings converted to char[] each.
  *
- * @param stringList
  * @return an array of char[], representing the elements in the input list, or {@code null} if the list was {@code null}.
  * @since 3.14
  */
@@ -1981,8 +1980,6 @@ public static final boolean contains(char[] characters, char[] array) {
 
 /**
  * Does the given array contain a char sequence that is equal to the give sequence?
- * @param array
- * @param sequence
  * @return true if sequence is equal to an element in array
  * @since 3.14
  */

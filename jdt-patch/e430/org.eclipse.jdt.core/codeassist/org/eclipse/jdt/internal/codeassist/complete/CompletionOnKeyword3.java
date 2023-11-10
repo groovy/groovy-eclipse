@@ -18,8 +18,8 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class CompletionOnKeyword3 extends SingleNameReference implements CompletionOnKeyword {
-	private char[][] possibleKeywords;
-	private boolean tryOrCatch;
+	private final char[][] possibleKeywords;
+	private final boolean tryOrCatch;
 	public CompletionOnKeyword3(char[] token, long pos, char[] possibleKeyword) {
 		this(token, pos, new char[][]{possibleKeyword}, false);
 	}

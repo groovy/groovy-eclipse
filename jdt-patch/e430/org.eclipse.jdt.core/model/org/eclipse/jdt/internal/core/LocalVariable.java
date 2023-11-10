@@ -47,8 +47,8 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	public int nameStart, nameEnd;
 	String typeSignature;
 	public IAnnotation[] annotations;
-	private int flags;
-	private boolean isParameter;
+	private final int flags;
+	private final boolean isParameter;
 	public IAnnotation[][] annotationsOnDimensions;
 
 	public LocalVariable(

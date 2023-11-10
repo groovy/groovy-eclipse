@@ -6001,7 +6001,7 @@ public class DefaultCodeFormatterConstants {
 	 * @return the settings according to the Java conventions
 	 * @since 3.0
 	 */
-	public static Map getJavaConventionsSettings() {
+	public static Map<String, String> getJavaConventionsSettings() {
 		return DefaultCodeFormatterOptions.getJavaConventionsSettings().getMap();
 	}
 	/**

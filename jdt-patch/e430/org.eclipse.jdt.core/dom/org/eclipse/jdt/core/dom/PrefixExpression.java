@@ -50,7 +50,7 @@ public class PrefixExpression extends Expression {
 		/**
 		 * The token for the operator.
 		 */
-		private String token;
+		private final String token;
 
 		/**
 		 * Creates a new prefix operator with the given token.

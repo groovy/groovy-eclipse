@@ -29,8 +29,8 @@ public abstract class SearchDocument {
 	private Index index;
 	private String containerRelativePath;
 	private SourceElementParser parser;
-	private String documentPath;
-	private SearchParticipant participant;
+	private final String documentPath;
+	private final SearchParticipant participant;
 	private boolean shouldIndexResolvedDocument = false;
 
 	/**
@@ -121,7 +121,7 @@ public abstract class SearchDocument {
 	public SourceElementParser getParser() {
 		return this.parser;
 	}
-	
+
 	/**
 	 * Returns the participant that created this document.
 	 *
@@ -151,7 +151,7 @@ public abstract class SearchDocument {
 		if (this.index != null)
 			this.index.remove(getContainerRelativePath());
 	}
-	
+
 	/**
 	 * @nooverride This method is not intended to be re-implemented or extended by clients.
 	 * @noreference This method is not intended to be referenced by clients.
@@ -159,7 +159,7 @@ public abstract class SearchDocument {
 	public void setIndex(Index indexToSet) {
 		this.index = indexToSet;
 	}
-	
+
 	/**
 	 * @nooverride This method is not intended to be re-implemented or extended by clients.
 	 * @noreference This method is not intended to be referenced by clients.
@@ -168,16 +168,16 @@ public abstract class SearchDocument {
 		this.parser = sourceElementParser;
 	}
 
-	/** Flags the document as requiring indexing after symbol and type resolution. A participant would be asked 
-	 *  to resolve the document via {@link SearchParticipant#resolveDocument} and to index the document adding 
-	 *  additional entries via {@link SearchParticipant#indexResolvedDocument} 
-	 *  
-	 * @since 3.10 
+	/** Flags the document as requiring indexing after symbol and type resolution. A participant would be asked
+	 *  to resolve the document via {@link SearchParticipant#resolveDocument} and to index the document adding
+	 *  additional entries via {@link SearchParticipant#indexResolvedDocument}
+	 *
+	 * @since 3.10
 	 */
 	public void requireIndexingResolvedDocument() {
 		this.shouldIndexResolvedDocument = true;
 	}
-	
+
 	/**
 	 * @nooverride This method is not intended to be re-implemented or extended by clients.
 	 * @noreference This method is not intended to be referenced by clients.

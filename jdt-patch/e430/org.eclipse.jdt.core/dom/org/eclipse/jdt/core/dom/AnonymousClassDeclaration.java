@@ -75,7 +75,7 @@ public class AnonymousClassDeclaration extends ASTNode {
 	 * The body declarations (element type: {@link BodyDeclaration}).
 	 * Defaults to none.
 	 */
-	private ASTNode.NodeList bodyDeclarations =
+	private final ASTNode.NodeList bodyDeclarations =
 		new ASTNode.NodeList(BODY_DECLARATIONS_PROPERTY);
 
 	/**

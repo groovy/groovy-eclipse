@@ -56,9 +56,9 @@ public class DOMFinder extends ASTVisitor {
 	public ASTNode foundNode = null;
 	public IBinding foundBinding = null;
 
-	private CompilationUnit ast;
-	private SourceRefElement element;
-	private boolean resolveBinding;
+	private final CompilationUnit ast;
+	private final SourceRefElement element;
+	private final boolean resolveBinding;
 	private int rangeStart = -1, rangeLength = 0;
 
 	public DOMFinder(CompilationUnit ast, SourceRefElement element, boolean resolveBinding) {

@@ -120,7 +120,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	boolean voidCompatible = true;
 	boolean valueCompatible = false;
 	boolean returnsValue;
-	private boolean requiresGenericSignature;
+	private final boolean requiresGenericSignature;
 	boolean returnsVoid;
 	public LambdaExpression original = this;
 	private boolean committed = false;
@@ -298,6 +298,13 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 							haveDescriptor ? this.descriptor.thrownExceptions : Binding.NO_EXCEPTIONS,
 							blockScope.enclosingSourceType());
 		this.binding.typeVariables = Binding.NO_TYPE_VARIABLES;
+
+		MethodScope enm = this.scope.namedMethodScope();
+		MethodBinding enmb = enm == null ? null : enm.referenceMethodBinding();
+		if (enmb != null && enmb.isViewedAsDeprecated()) {
+			this.binding.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
+			this.binding.tagBits |= enmb.tagBits & TagBits.AnnotationTerminallyDeprecated;
+		}
 
 		boolean argumentsHaveErrors = false;
 		if (haveDescriptor) {

@@ -105,7 +105,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	}
 
 	protected StringBuffer result;
-	private RewriteEventStore store;
+	private final RewriteEventStore store;
 
 	public ASTRewriteFlattener(RewriteEventStore store) {
 		this.store= store;

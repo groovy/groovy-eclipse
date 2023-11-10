@@ -22,7 +22,7 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class ResolvedBinaryType extends BinaryType {
 
-	private String uniqueKey;
+	private final String uniqueKey;
 
 	/*
 	 * See class comments.

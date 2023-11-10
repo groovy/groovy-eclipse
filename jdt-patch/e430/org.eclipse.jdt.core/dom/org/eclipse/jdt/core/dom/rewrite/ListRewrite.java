@@ -40,9 +40,9 @@ import org.eclipse.text.edits.TextEditGroup;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class ListRewrite {
 
-	private ASTNode parent;
-	private ChildListPropertyDescriptor childListProperty;
-	private ASTRewrite rewriter;
+	private final ASTNode parent;
+	private final ChildListPropertyDescriptor childListProperty;
+	private final ASTRewrite rewriter;
 
 
 	/* package*/ ListRewrite(ASTRewrite rewriter, ASTNode parent, ChildListPropertyDescriptor childProperty) {

@@ -114,7 +114,7 @@ public class BinaryTypeBinding extends ReferenceBinding {
 	protected ReferenceBinding[] memberTypes;
 	protected TypeVariableBinding[] typeVariables;
 	protected ModuleBinding module;
-	private BinaryTypeBinding prototype;
+	private final BinaryTypeBinding prototype;
 	public URI path;
 
 	// For the link with the principle structure
@@ -288,19 +288,12 @@ public BinaryTypeBinding(BinaryTypeBinding prototype) {
 
 /**
  * Standard constructor for creating binary type bindings from binary models (classfiles)
- * @param packageBinding
- * @param binaryType
- * @param environment
  */
 public BinaryTypeBinding(PackageBinding packageBinding, IBinaryType binaryType, LookupEnvironment environment) {
 	this(packageBinding, binaryType, environment, false);
 }
 /**
  * Standard constructor for creating binary type bindings from binary models (classfiles)
- * @param packageBinding
- * @param binaryType
- * @param environment
- * @param needFieldsAndMethods
  */
 public BinaryTypeBinding(PackageBinding packageBinding, IBinaryType binaryType, LookupEnvironment environment, boolean needFieldsAndMethods) {
 
@@ -523,15 +516,15 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 				this.typeVariables = addMethodTypeVariables(typeVars);
 			}
 		}
+		char[] superclassName = binaryType.getSuperclassName();
+		if (CharOperation.equals(superclassName, TypeConstants.CharArray_JAVA_LANG_RECORD_SLASH)){
+			this.modifiers |= ExtraCompilerModifiers.AccRecord;
+		}
 		if (typeSignature == null)  {
-			char[] superclassName = binaryType.getSuperclassName();
 			if (superclassName != null) {
 				// attempt to find the superclass if it exists in the cache (otherwise - resolve it when requested)
 				this.superclass = this.environment.getTypeFromConstantPoolName(superclassName, 0, -1, false, missingTypeNames, toplevelWalker.toSupertype((short) -1, superclassName));
 				this.tagBits |= TagBits.HasUnresolvedSuperclass;
-				if (CharOperation.equals(superclassName, TypeConstants.CharArray_JAVA_LANG_RECORD_SLASH)){
-					this.modifiers |= ExtraCompilerModifiers.AccRecord;
-				}
 			}
 
 			this.superInterfaces = Binding.NO_SUPERINTERFACES;

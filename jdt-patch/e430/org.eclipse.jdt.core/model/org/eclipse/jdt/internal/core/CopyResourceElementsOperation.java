@@ -78,7 +78,6 @@ import org.eclipse.text.edits.TextEditGroup;
  *    <li>This operation only copies compilation units and package fragments.
  *    It does not copy package fragment roots - a platform operation must be used for that.
  * </ul>
- *
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class CopyResourceElementsOperation extends MultiOperation implements SuffixConstants {
@@ -293,7 +292,6 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 	 *			<li>one rooted in the destination project
 	 * <li> When a CU is being overwritten, the delta on the destination will be of type F_CONTENT </ul></ul>
 	 * If the operation is rooted in a single project, the delta is rooted in that project
-	 *
 	 */
 	protected void prepareDeltas(IJavaElement sourceElement, IJavaElement destinationElement, boolean isMove, boolean overWriteCU) {
 		if (Util.isExcluded(sourceElement) || Util.isExcluded(destinationElement)) return;

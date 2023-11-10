@@ -218,7 +218,7 @@ protected Object peekAtInfo(IJavaElement element) {
  */
 protected void putInfo(IJavaElement element, Object info) {
 	if (DEBUG_CACHE_INSERTIONS) {
-		System.out.println(Thread.currentThread() + " cache putInfo (" + getElementType(element) + " " + element.toString() + ", " + info + ")");  //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$
+		JavaModelManager.trace(Thread.currentThread() + " cache putInfo (" + getElementType(element) + " " + element.toString() + ", " + info + ")");  //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$
 	}
 	switch (element.getElementType()) {
 		case IJavaElement.JAVA_MODEL:
@@ -275,7 +275,7 @@ public static String getElementType(IJavaElement element) {
 protected void removeInfo(JavaElement element) {
 	if (DEBUG_CACHE_INSERTIONS) {
 		String elementToString = element.toString();
-		System.out.println(Thread.currentThread() + " cache removeInfo " + getElementType(element) + " " + elementToString);  //$NON-NLS-1$//$NON-NLS-2$
+		JavaModelManager.trace(Thread.currentThread() + " cache removeInfo " + getElementType(element) + " " + elementToString);  //$NON-NLS-1$//$NON-NLS-2$
 	}
 	switch (element.getElementType()) {
 		case IJavaElement.JAVA_MODEL:

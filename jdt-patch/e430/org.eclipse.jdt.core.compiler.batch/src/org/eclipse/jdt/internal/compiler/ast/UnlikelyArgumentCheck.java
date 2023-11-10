@@ -39,7 +39,6 @@ public class UnlikelyArgumentCheck {
 
 	/**
 	 * Check if the invocation is likely a bug.
-	 * @param currentScope
 	 * @return false, if the typeToCheck does not seem to related to the expectedType
 	 */
 	public boolean isDangerous(BlockScope currentScope) {
@@ -133,7 +132,7 @@ public class UnlikelyArgumentCheck {
 						ReferenceBinding argumentCollectionType = argumentType
 								.findSuperTypeOriginatingFrom(TypeIds.T_JavaUtilCollection, false);
 						if (collectionType != null && argumentCollectionType != null
-								&& argumentCollectionType.isParameterizedTypeWithActualArguments() 
+								&& argumentCollectionType.isParameterizedTypeWithActualArguments()
 								&& collectionType.isParameterizedTypeWithActualArguments()) {
 							return new UnlikelyArgumentCheck(suspect,
 									((ParameterizedTypeBinding) argumentCollectionType).typeArguments()[0],

@@ -23,7 +23,7 @@ import java.util.List;
  * </pre>
  *
  * @since 3.14
- * 
+ *
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -82,7 +82,7 @@ public class ProvidesDirective extends ModuleDirective {
 	 * (element type: {@link Name}).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList implementations =
+	private final ASTNode.NodeList implementations =
 		new ASTNode.NodeList(IMPLEMENTATIONS_PROPERTY);
 
 	/**

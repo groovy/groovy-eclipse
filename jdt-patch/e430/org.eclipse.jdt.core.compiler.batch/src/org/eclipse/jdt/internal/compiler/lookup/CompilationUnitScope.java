@@ -448,18 +448,25 @@ public char[] computeConstantPoolName(LocalTypeBinding localType) {
 	return candidateName;
 }
 
-void connectTypeHierarchy1() {
+void connectTypeHierarchy() {
 	for (int i = 0, length = this.topLevelTypes.length; i < length; i++)
 		this.topLevelTypes[i].scope.connectTypeHierarchy();
 }
-void connectTypeHierarchy2() {
+void integrateAnnotationsInHierarchy() {
 	// Only now that all hierarchy information is built we're ready for ...
 	// ... integrating annotations
 	for (int i = 0, length = this.topLevelTypes.length; i < length; i++)
 		this.topLevelTypes[i].scope.referenceType().updateSupertypesWithAnnotations(Collections.emptyMap());
 	// ... checking on permitted types
+	connectPermittedTypes();
 	for (int i = 0, length = this.topLevelTypes.length; i < length; i++)
 		this.topLevelTypes[i].scope.connectImplicitPermittedTypes();
+}
+private void connectPermittedTypes() {
+	for (int i = 0, length = this.topLevelTypes.length; i < length; i++) {
+		SourceTypeBinding sourceType = this.topLevelTypes[i];
+		sourceType.scope.connectPermittedTypes();
+	}
 }
 void faultInImports() {
 	if (this.tempImports != null)
@@ -1065,10 +1072,6 @@ private void recordImportBinding(ImportBinding bindingToAdd) {
  * Checks additional bindings (methods or types) imported from a single static import.
  * Method is tried first, followed by type. If found, records them.
  * If in the process, import is flagged as duplicate, -1 is returned.
- * @param compoundName
- * @param typesBySimpleNames
- * @param mask
- * @param importReference
  */
 private void checkMoreStaticBindings(
 		char[][] compoundName,
@@ -1098,10 +1101,6 @@ private void checkMoreStaticBindings(
 /**
  * Checks for duplicates. If all ok, records the importBinding
  * returns -1 when this import is flagged as duplicate.
- * @param importBinding
- * @param typesBySimpleNames
- * @param importReference
- * @param compoundName
  * @return -1 when this import is flagged as duplicate, importPtr otherwise.
  */
 private int checkAndRecordImportBinding(

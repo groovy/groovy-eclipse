@@ -2802,7 +2802,6 @@ private static int validateMatchRule(String stringPattern, int searchFor, int li
 
 /*
  * Validate pattern for a camel case match rule
- * @return
  */
 private static boolean validateCamelCasePattern(String stringPattern) {
 	if (stringPattern == null) return true;

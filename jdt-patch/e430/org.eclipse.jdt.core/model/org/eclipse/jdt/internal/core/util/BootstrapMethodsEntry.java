@@ -24,8 +24,8 @@ public class BootstrapMethodsEntry
 	extends ClassFileStruct
 	implements IBootstrapMethodsEntry {
 
-	private int bootstrapMethodReference;
-	private int[] bootstrapArguments;
+	private final int bootstrapMethodReference;
+	private final int[] bootstrapArguments;
 
 	public BootstrapMethodsEntry(byte classFileBytes[], IConstantPool constantPool, int offset) throws ClassFormatException {
 		this.bootstrapMethodReference = u2At(classFileBytes, 0, offset);

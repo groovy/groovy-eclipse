@@ -42,7 +42,7 @@ import org.eclipse.jdt.internal.core.dom.rewrite.RewriteEventStore.PropertyLocat
 class InternalASTRewrite extends NodeEventHandler {
 
 	/** root node for the rewrite: Only nodes under this root are accepted */
-	private CompilationUnit root;
+	private final CompilationUnit root;
 
 	protected final RewriteEventStore eventStore;
 	protected final NodeInfoStore nodeStore;

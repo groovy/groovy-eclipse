@@ -26,13 +26,13 @@ import org.eclipse.jdt.core.util.IEnclosingMethodAttribute;
  */
 public class EnclosingMethodAttribute extends ClassFileAttribute implements IEnclosingMethodAttribute {
 
-	private int enclosingClassIndex;
-	private char[] enclosingClassName;
+	private final int enclosingClassIndex;
+	private final char[] enclosingClassName;
 	private int methodDescriptorIndex;
 	private char[] methodDescriptor;
 	private int methodNameIndex;
 	private char[] methodName;
-	private int methodNameAndTypeIndex;
+	private final int methodNameAndTypeIndex;
 
 	EnclosingMethodAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);

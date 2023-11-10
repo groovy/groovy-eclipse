@@ -28,8 +28,6 @@ class PackageFragmentInfo extends OpenableElementInfo {
 public PackageFragmentInfo() {
 	this.nonJavaResources = null;
 }
-/**
- */
 boolean containsJavaResources() {
 	return this.children.length != 0;
 }

@@ -20,7 +20,6 @@ public class DefaultErrorHandlingPolicies {
  *
  * Typically, the #proceedWithProblems(Problem[]) should
  * show the problems.
- *
  */
 public static IErrorHandlingPolicy exitAfterAllProblems() {
 	return new IErrorHandlingPolicy() {
@@ -41,7 +40,6 @@ public static IErrorHandlingPolicy exitAfterAllProblems() {
 /*
  * Exit without proceeding on the first problem wich appears
  * to be an error.
- *
  */
 public static IErrorHandlingPolicy exitOnFirstError() {
 	return new IErrorHandlingPolicy() {
@@ -61,7 +59,6 @@ public static IErrorHandlingPolicy exitOnFirstError() {
 }
 /*
  * Proceed on the first error met.
- *
  */
 public static IErrorHandlingPolicy proceedOnFirstError() {
 	return new IErrorHandlingPolicy() {
@@ -81,7 +78,6 @@ public static IErrorHandlingPolicy proceedOnFirstError() {
 }
 /*
  * Accumulate all problems, then proceed with them.
- *
  */
 public static IErrorHandlingPolicy proceedWithAllProblems() {
 	return new IErrorHandlingPolicy() {
@@ -101,7 +97,6 @@ public static IErrorHandlingPolicy proceedWithAllProblems() {
 }
 /*
  * Accumulate all problems, then proceed with them, but never report them.
- *
  */
 public static IErrorHandlingPolicy ignoreAllProblems() {
 	return new IErrorHandlingPolicy() {

@@ -125,6 +125,7 @@ public final class Messages {
 	public static String pattern_matching_switch;
 	public static String record_patterns;
 	public static String unnammed_patterns_and_vars;
+	public static String unnamed_classes_and_instance_main_methods;
 
 	static {
 		initializeMessages(BUNDLE_NAME, Messages.class);

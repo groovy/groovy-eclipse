@@ -352,7 +352,6 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 
 	/**
 	 * Get the compiler arguments
-	 * @param javacClass
 	 * @return String[] the array of arguments
 	 */
 	private String[] processCompilerArguments(Class javacClass) {

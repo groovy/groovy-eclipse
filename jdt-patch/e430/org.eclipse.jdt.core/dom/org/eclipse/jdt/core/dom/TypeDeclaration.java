@@ -252,7 +252,6 @@ public class TypeDeclaration extends AbstractTypeDeclaration {
 	 * The superinterface names (element type: {@link Name}).
 	 * JLS2 only; defaults to an empty list. Not used in JLS3.
 	 * (see constructor).
-	 *
 	 */
 	private ASTNode.NodeList superInterfaceNames = null;
 

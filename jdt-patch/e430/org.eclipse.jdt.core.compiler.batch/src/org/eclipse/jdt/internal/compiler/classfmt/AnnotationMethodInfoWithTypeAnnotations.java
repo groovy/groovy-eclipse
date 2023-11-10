@@ -16,7 +16,7 @@ package org.eclipse.jdt.internal.compiler.classfmt;
 import org.eclipse.jdt.internal.compiler.env.IBinaryTypeAnnotation;
 
 class AnnotationMethodInfoWithTypeAnnotations extends AnnotationMethodInfoWithAnnotations {
-	private TypeAnnotationInfo[] typeAnnotations;
+	private final TypeAnnotationInfo[] typeAnnotations;
 
 AnnotationMethodInfoWithTypeAnnotations(MethodInfo methodInfo, Object defaultValue, AnnotationInfo[] annotations, TypeAnnotationInfo[] typeAnnotations) {
 	super(methodInfo, defaultValue, annotations);

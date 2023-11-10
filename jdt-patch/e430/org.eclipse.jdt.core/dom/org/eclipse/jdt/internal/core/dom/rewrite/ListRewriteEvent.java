@@ -18,9 +18,6 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-/**
- *
- */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ListRewriteEvent extends RewriteEvent {
 
@@ -29,7 +26,7 @@ public class ListRewriteEvent extends RewriteEvent {
 	public final static int BOTH= NEW | OLD;
 
 	/** original list of 'ASTNode' */
-	private List originalNodes;
+	private final List originalNodes;
 
 	/** list of type 'RewriteEvent' */
 	private List listEntries;

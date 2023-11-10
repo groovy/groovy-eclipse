@@ -221,20 +221,20 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			},
 			null, customOptions,
 			"----------\n" +
-			"1. ERROR in p2\\C.java (at line 3)\n" + 
-			"	void bar(p1.X.Inner a) {\n" + 
-			"	            ^\n" + 
-			"The type X has been deprecated and marked for removal\n" + 
-			"----------\n" + 
-			"2. ERROR in p2\\C.java (at line 3)\n" + 
-			"	void bar(p1.X.Inner a) {\n" + 
-			"	              ^^^^^\n" + 
-			"The type X.Inner has been deprecated and marked for removal\n" + 
-			"----------\n" + 
-			"3. ERROR in p2\\C.java (at line 4)\n" + 
-			"	a.foo();\n" + 
-			"	  ^^^^^\n" + 
-			"The method foo() from the type X.Inner has been deprecated and marked for removal\n" + 
+			"1. ERROR in p2\\C.java (at line 3)\n" +
+			"	void bar(p1.X.Inner a) {\n" +
+			"	            ^\n" +
+			"The type X has been deprecated and marked for removal\n" +
+			"----------\n" +
+			"2. ERROR in p2\\C.java (at line 3)\n" +
+			"	void bar(p1.X.Inner a) {\n" +
+			"	              ^^^^^\n" +
+			"The type X.Inner has been deprecated and marked for removal\n" +
+			"----------\n" +
+			"3. ERROR in p2\\C.java (at line 4)\n" +
+			"	a.foo();\n" +
+			"	  ^^^^^\n" +
+			"The method foo() from the type X.Inner has been deprecated and marked for removal\n" +
 			"----------\n",
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
@@ -275,7 +275,7 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"package p1;\n" +
 				"public class X {\n" +
 				"    public static class Inner {\n" +
-				"		 @java.lang.Deprecated(forRemoval=true)\n" + 
+				"		 @java.lang.Deprecated(forRemoval=true)\n" +
 				"        public void foo() {}\n" +
 				"    }\n" +
 				"}\n",
@@ -293,10 +293,10 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			};
 		runner.expectedCompilerLog =
 			"----------\n" +
-			"1. WARNING in p2\\C.java (at line 5)\n" + 
-			"	a.foo();\n" + 
-			"	  ^^^^^\n" + 
-			"The method foo() from the type X.Inner has been deprecated and marked for removal\n" + 
+			"1. WARNING in p2\\C.java (at line 5)\n" +
+			"	a.foo();\n" +
+			"	  ^^^^^\n" +
+			"The method foo() from the type X.Inner has been deprecated and marked for removal\n" +
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -322,11 +322,11 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}"
 			};
 		runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. WARNING in test1\\E02.java (at line 3)\n" + 
-			"	public void foo(E01 arg) {\n" + 
-			"	                ^^^\n" + 
-			"The type E01 is deprecated since version 4\n" + 
+			"----------\n" +
+			"1. WARNING in test1\\E02.java (at line 3)\n" +
+			"	public void foo(E01 arg) {\n" +
+			"	                ^^^\n" +
+			"The type E01 is deprecated since version 4\n" +
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -356,16 +356,16 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}\n",
 			},
 			null, customOptions,
-			"----------\n" + 
-			"1. WARNING in p2\\C.java (at line 4)\n" + 
-			"	@Override public void foo() {}\n" + 
-			"	                      ^^^^^\n" + 
-			"The method C.foo() overrides a deprecated method from X\n" + 
-			"----------\n" + 
-			"2. ERROR in p2\\C.java (at line 5)\n" + 
-			"	@Override public void bar() {}\n" + 
-			"	                      ^^^^^\n" + 
-			"The method C.bar() overrides a method from X that has been deprecated and marked for removal\n" + 
+			"----------\n" +
+			"1. WARNING in p2\\C.java (at line 4)\n" +
+			"	@Override public void foo() {}\n" +
+			"	                      ^^^^^\n" +
+			"The method C.foo() overrides a deprecated method from X\n" +
+			"----------\n" +
+			"2. ERROR in p2\\C.java (at line 5)\n" +
+			"	@Override public void bar() {}\n" +
+			"	                      ^^^^^\n" +
+			"The method C.bar() overrides a method from X that has been deprecated and marked for removal\n" +
 			"----------\n",
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
@@ -401,46 +401,46 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}"
 			};
 		runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. WARNING in test1\\E02.java (at line 4)\n" + 
-			"	System.out.println(new E01.Old());\n" + 
-			"	                       ^^^^^^^^^\n" + 
-			"The constructor E01.Old() is deprecated since version 1.0\n" + 
-			"----------\n" + 
-			"2. WARNING in test1\\E02.java (at line 4)\n" + 
-			"	System.out.println(new E01.Old());\n" + 
-			"	                           ^^^\n" + 
-			"The type E01.Old is deprecated since version 1.0\n" + 
-			"----------\n" + 
-			"3. WARNING in test1\\E02.java (at line 5)\n" + 
-			"	E01 e = new E01();\n" + 
-			"	            ^^^^^\n" + 
-			"The constructor E01() is deprecated since version 3.0.0\n" + 
-			"----------\n" + 
-			"4. WARNING in test1\\E02.java (at line 6)\n" + 
-			"	e.old();\n" + 
-			"	  ^^^^^\n" + 
-			"The method old() from the type E01 is deprecated since version 4-SNAPSHOT\n" + 
-			"----------\n" + 
-			"5. WARNING in test1\\E02.java (at line 7)\n" + 
-			"	System.out.println(E01.x);\n" + 
-			"	                       ^\n" + 
-			"The field E01.x is deprecated since version 2\n" + 
-			"----------\n" + 
-			"6. WARNING in test1\\E02.java (at line 8)\n" + 
-			"	System.out.println(E01.y);\n" + 
-			"	                       ^\n" + 
-			"The field E01.y is deprecated since version 2\n" + 
-			"----------\n" + 
-			"7. WARNING in test1\\E02.java (at line 10)\n" + 
-			"	class E03 extends E01 {\n" + 
-			"	      ^^^\n" + 
-			"The constructor E01() is deprecated since version 3.0.0\n" + 
-			"----------\n" + 
-			"8. WARNING in test1\\E02.java (at line 11)\n" + 
-			"	protected void old() {}\n" + 
-			"	               ^^^^^\n" + 
-			"The method E02.E03.old() overrides a method from E01 that is deprecated since version 4-SNAPSHOT\n" + 
+			"----------\n" +
+			"1. WARNING in test1\\E02.java (at line 4)\n" +
+			"	System.out.println(new E01.Old());\n" +
+			"	                       ^^^^^^^^^\n" +
+			"The constructor E01.Old() is deprecated since version 1.0\n" +
+			"----------\n" +
+			"2. WARNING in test1\\E02.java (at line 4)\n" +
+			"	System.out.println(new E01.Old());\n" +
+			"	                           ^^^\n" +
+			"The type E01.Old is deprecated since version 1.0\n" +
+			"----------\n" +
+			"3. WARNING in test1\\E02.java (at line 5)\n" +
+			"	E01 e = new E01();\n" +
+			"	            ^^^^^\n" +
+			"The constructor E01() is deprecated since version 3.0.0\n" +
+			"----------\n" +
+			"4. WARNING in test1\\E02.java (at line 6)\n" +
+			"	e.old();\n" +
+			"	  ^^^^^\n" +
+			"The method old() from the type E01 is deprecated since version 4-SNAPSHOT\n" +
+			"----------\n" +
+			"5. WARNING in test1\\E02.java (at line 7)\n" +
+			"	System.out.println(E01.x);\n" +
+			"	                       ^\n" +
+			"The field E01.x is deprecated since version 2\n" +
+			"----------\n" +
+			"6. WARNING in test1\\E02.java (at line 8)\n" +
+			"	System.out.println(E01.y);\n" +
+			"	                       ^\n" +
+			"The field E01.y is deprecated since version 2\n" +
+			"----------\n" +
+			"7. WARNING in test1\\E02.java (at line 10)\n" +
+			"	class E03 extends E01 {\n" +
+			"	      ^^^\n" +
+			"The constructor E01() is deprecated since version 3.0.0\n" +
+			"----------\n" +
+			"8. WARNING in test1\\E02.java (at line 11)\n" +
+			"	protected void old() {}\n" +
+			"	               ^^^^^\n" +
+			"The method E02.E03.old() overrides a method from E01 that is deprecated since version 4-SNAPSHOT\n" +
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -482,46 +482,46 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}"
 			};
 		runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. WARNING in test1\\E02.java (at line 4)\n" + 
-			"	System.out.println(new E01.Old());\n" + 
-			"	                       ^^^^^^^^^\n" + 
-			"The constructor E01.Old() is deprecated since version 1.0\n" + 
-			"----------\n" + 
-			"2. WARNING in test1\\E02.java (at line 4)\n" + 
-			"	System.out.println(new E01.Old());\n" + 
-			"	                           ^^^\n" + 
-			"The type E01.Old is deprecated since version 1.0\n" + 
-			"----------\n" + 
-			"3. WARNING in test1\\E02.java (at line 5)\n" + 
-			"	E01 e = new E01();\n" + 
-			"	            ^^^^^\n" + 
-			"The constructor E01() is deprecated since version 3.0.0\n" + 
-			"----------\n" + 
-			"4. WARNING in test1\\E02.java (at line 6)\n" + 
-			"	e.old();\n" + 
-			"	  ^^^^^\n" + 
-			"The method old() from the type E01 is deprecated since version 4-SNAPSHOT\n" + 
-			"----------\n" + 
-			"5. WARNING in test1\\E02.java (at line 7)\n" + 
-			"	System.out.println(E01.x);\n" + 
-			"	                       ^\n" + 
-			"The field E01.x is deprecated since version 2\n" + 
-			"----------\n" + 
-			"6. WARNING in test1\\E02.java (at line 8)\n" + 
-			"	System.out.println(E01.y);\n" + 
-			"	                       ^\n" + 
-			"The field E01.y is deprecated since version 2\n" + 
-			"----------\n" + 
-			"7. WARNING in test1\\E02.java (at line 10)\n" + 
-			"	class E03 extends E01 {\n" + 
-			"	      ^^^\n" + 
-			"The constructor E01() is deprecated since version 3.0.0\n" + 
-			"----------\n" + 
-			"8. WARNING in test1\\E02.java (at line 11)\n" + 
-			"	protected void old() {}\n" + 
-			"	               ^^^^^\n" + 
-			"The method E02.E03.old() overrides a method from E01 that is deprecated since version 4-SNAPSHOT\n" + 
+			"----------\n" +
+			"1. WARNING in test1\\E02.java (at line 4)\n" +
+			"	System.out.println(new E01.Old());\n" +
+			"	                       ^^^^^^^^^\n" +
+			"The constructor E01.Old() is deprecated since version 1.0\n" +
+			"----------\n" +
+			"2. WARNING in test1\\E02.java (at line 4)\n" +
+			"	System.out.println(new E01.Old());\n" +
+			"	                           ^^^\n" +
+			"The type E01.Old is deprecated since version 1.0\n" +
+			"----------\n" +
+			"3. WARNING in test1\\E02.java (at line 5)\n" +
+			"	E01 e = new E01();\n" +
+			"	            ^^^^^\n" +
+			"The constructor E01() is deprecated since version 3.0.0\n" +
+			"----------\n" +
+			"4. WARNING in test1\\E02.java (at line 6)\n" +
+			"	e.old();\n" +
+			"	  ^^^^^\n" +
+			"The method old() from the type E01 is deprecated since version 4-SNAPSHOT\n" +
+			"----------\n" +
+			"5. WARNING in test1\\E02.java (at line 7)\n" +
+			"	System.out.println(E01.x);\n" +
+			"	                       ^\n" +
+			"The field E01.x is deprecated since version 2\n" +
+			"----------\n" +
+			"6. WARNING in test1\\E02.java (at line 8)\n" +
+			"	System.out.println(E01.y);\n" +
+			"	                       ^\n" +
+			"The field E01.y is deprecated since version 2\n" +
+			"----------\n" +
+			"7. WARNING in test1\\E02.java (at line 10)\n" +
+			"	class E03 extends E01 {\n" +
+			"	      ^^^\n" +
+			"The constructor E01() is deprecated since version 3.0.0\n" +
+			"----------\n" +
+			"8. WARNING in test1\\E02.java (at line 11)\n" +
+			"	protected void old() {}\n" +
+			"	               ^^^^^\n" +
+			"The method E02.E03.old() overrides a method from E01 that is deprecated since version 4-SNAPSHOT\n" +
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -557,46 +557,46 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}"
 			};
 		runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. ERROR in test1\\E02.java (at line 4)\n" + 
-			"	System.out.println(new E01.Old());\n" + 
-			"	                       ^^^^^^^^^\n" + 
-			"The constructor E01.Old() has been deprecated since version 1.0 and marked for removal\n" + 
-			"----------\n" + 
-			"2. ERROR in test1\\E02.java (at line 4)\n" + 
-			"	System.out.println(new E01.Old());\n" + 
-			"	                           ^^^\n" + 
-			"The type E01.Old has been deprecated since version 1.0 and marked for removal\n" + 
-			"----------\n" + 
-			"3. ERROR in test1\\E02.java (at line 5)\n" + 
-			"	E01 e = new E01();\n" + 
-			"	            ^^^^^\n" + 
-			"The constructor E01() has been deprecated since version 3.0.0 and marked for removal\n" + 
-			"----------\n" + 
-			"4. ERROR in test1\\E02.java (at line 6)\n" + 
-			"	e.old();\n" + 
-			"	  ^^^^^\n" + 
-			"The method old() from the type E01 has been deprecated since version 4-SNAPSHOT and marked for removal\n" + 
-			"----------\n" + 
-			"5. ERROR in test1\\E02.java (at line 7)\n" + 
-			"	System.out.println(E01.x);\n" + 
-			"	                       ^\n" + 
-			"The field E01.x has been deprecated since version 2 and marked for removal\n" + 
-			"----------\n" + 
-			"6. ERROR in test1\\E02.java (at line 8)\n" + 
-			"	System.out.println(E01.y);\n" + 
-			"	                       ^\n" + 
-			"The field E01.y has been deprecated since version 2 and marked for removal\n" + 
-			"----------\n" + 
-			"7. ERROR in test1\\E02.java (at line 10)\n" + 
-			"	class E03 extends E01 {\n" + 
-			"	      ^^^\n" + 
-			"The constructor E01() has been deprecated since version 3.0.0 and marked for removal\n" + 
-			"----------\n" + 
-			"8. ERROR in test1\\E02.java (at line 11)\n" + 
-			"	protected void old() {}\n" + 
-			"	               ^^^^^\n" + 
-			"The method E02.E03.old() overrides a method from E01 that has been deprecated since version 4-SNAPSHOT and marked for removal\n" + 
+			"----------\n" +
+			"1. ERROR in test1\\E02.java (at line 4)\n" +
+			"	System.out.println(new E01.Old());\n" +
+			"	                       ^^^^^^^^^\n" +
+			"The constructor E01.Old() has been deprecated since version 1.0 and marked for removal\n" +
+			"----------\n" +
+			"2. ERROR in test1\\E02.java (at line 4)\n" +
+			"	System.out.println(new E01.Old());\n" +
+			"	                           ^^^\n" +
+			"The type E01.Old has been deprecated since version 1.0 and marked for removal\n" +
+			"----------\n" +
+			"3. ERROR in test1\\E02.java (at line 5)\n" +
+			"	E01 e = new E01();\n" +
+			"	            ^^^^^\n" +
+			"The constructor E01() has been deprecated since version 3.0.0 and marked for removal\n" +
+			"----------\n" +
+			"4. ERROR in test1\\E02.java (at line 6)\n" +
+			"	e.old();\n" +
+			"	  ^^^^^\n" +
+			"The method old() from the type E01 has been deprecated since version 4-SNAPSHOT and marked for removal\n" +
+			"----------\n" +
+			"5. ERROR in test1\\E02.java (at line 7)\n" +
+			"	System.out.println(E01.x);\n" +
+			"	                       ^\n" +
+			"The field E01.x has been deprecated since version 2 and marked for removal\n" +
+			"----------\n" +
+			"6. ERROR in test1\\E02.java (at line 8)\n" +
+			"	System.out.println(E01.y);\n" +
+			"	                       ^\n" +
+			"The field E01.y has been deprecated since version 2 and marked for removal\n" +
+			"----------\n" +
+			"7. ERROR in test1\\E02.java (at line 10)\n" +
+			"	class E03 extends E01 {\n" +
+			"	      ^^^\n" +
+			"The constructor E01() has been deprecated since version 3.0.0 and marked for removal\n" +
+			"----------\n" +
+			"8. ERROR in test1\\E02.java (at line 11)\n" +
+			"	protected void old() {}\n" +
+			"	               ^^^^^\n" +
+			"The method E02.E03.old() overrides a method from E01 that has been deprecated since version 4-SNAPSHOT and marked for removal\n" +
 			"----------\n";
 		runner.javacTestOptions =
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
@@ -664,26 +664,26 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}\n"
 			};
 		runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. WARNING in module-info.java (at line 2)\n" + 
-			"	requires mod.dep;\n" + 
-			"	         ^^^^^^^\n" + 
-			"The module mod.dep is deprecated\n" + 
-			"----------\n" + 
-			"2. WARNING in module-info.java (at line 3)\n" + 
-			"	requires mod.dep.since;\n" + 
-			"	         ^^^^^^^^^^^^^\n" + 
-			"The module mod.dep.since is deprecated since version 42\n" + 
-			"----------\n" + 
-			"3. ERROR in module-info.java (at line 4)\n" + 
-			"	requires mod.dep.terminally;\n" + 
-			"	         ^^^^^^^^^^^^^^^^^^\n" + 
-			"The module mod.dep.terminally has been deprecated and marked for removal\n" + 
-			"----------\n" + 
-			"4. ERROR in module-info.java (at line 5)\n" + 
-			"	requires mod.dep.since.terminally;\n" + 
-			"	         ^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"The module mod.dep.since.terminally has been deprecated since version 42 and marked for removal\n" + 
+			"----------\n" +
+			"1. WARNING in module-info.java (at line 2)\n" +
+			"	requires mod.dep;\n" +
+			"	         ^^^^^^^\n" +
+			"The module mod.dep is deprecated\n" +
+			"----------\n" +
+			"2. WARNING in module-info.java (at line 3)\n" +
+			"	requires mod.dep.since;\n" +
+			"	         ^^^^^^^^^^^^^\n" +
+			"The module mod.dep.since is deprecated since version 42\n" +
+			"----------\n" +
+			"3. ERROR in module-info.java (at line 4)\n" +
+			"	requires mod.dep.terminally;\n" +
+			"	         ^^^^^^^^^^^^^^^^^^\n" +
+			"The module mod.dep.terminally has been deprecated and marked for removal\n" +
+			"----------\n" +
+			"4. ERROR in module-info.java (at line 5)\n" +
+			"	requires mod.dep.since.terminally;\n" +
+			"	         ^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"The module mod.dep.since.terminally has been deprecated since version 42 and marked for removal\n" +
 			"----------\n";
 		runner.runNegativeTest();
 	}
@@ -743,46 +743,46 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}\n"
 			};
 		runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. INFO in mod1\\module-info.java (at line 3)\n" + 
-			"	provides p1.IServiceDep with p1impl.ServiceDep;\n" + 
-			"	            ^^^^^^^^^^^\n" + 
-			"The type IServiceDep is deprecated\n" + 
-			"----------\n" + 
-			"2. INFO in mod1\\module-info.java (at line 3)\n" + 
-			"	provides p1.IServiceDep with p1impl.ServiceDep;\n" + 
-			"	                                    ^^^^^^^^^^\n" + 
-			"The type ServiceDep is deprecated\n" + 
-			"----------\n" + 
-			"3. INFO in mod1\\module-info.java (at line 4)\n" + 
-			"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" + 
-			"	            ^^^^^^^^^^^^^^^^\n" + 
-			"The type IServiceDepSince is deprecated since version 2\n" + 
-			"----------\n" + 
-			"4. INFO in mod1\\module-info.java (at line 4)\n" + 
-			"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" + 
-			"	                                         ^^^^^^^^^^^^^^^\n" + 
-			"The type ServiceDepSince is deprecated since version 2\n" + 
-			"----------\n" + 
-			"5. WARNING in mod1\\module-info.java (at line 5)\n" + 
-			"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" + 
-			"	            ^^^^^^^^^^^^^^^\n" + 
-			"The type IServiceTermDep has been deprecated and marked for removal\n" + 
-			"----------\n" + 
-			"6. WARNING in mod1\\module-info.java (at line 5)\n" + 
-			"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" + 
-			"	                                        ^^^^^^^^^^^^^^\n" + 
-			"The type ServiceTermDep has been deprecated and marked for removal\n" + 
-			"----------\n" + 
-			"7. WARNING in mod1\\module-info.java (at line 6)\n" + 
-			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" + 
-			"	            ^^^^^^^^^^^^^^^^^^^^\n" + 
-			"The type IServiceTermDepSince has been deprecated since version 3 and marked for removal\n" + 
-			"----------\n" + 
-			"8. WARNING in mod1\\module-info.java (at line 6)\n" + 
-			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" + 
-			"	                                             ^^^^^^^^^^^^^^^^^^^\n" + 
-			"The type ServiceTermDepSince has been deprecated since version 3 and marked for removal\n" + 
+			"----------\n" +
+			"1. INFO in mod1\\module-info.java (at line 3)\n" +
+			"	provides p1.IServiceDep with p1impl.ServiceDep;\n" +
+			"	            ^^^^^^^^^^^\n" +
+			"The type IServiceDep is deprecated\n" +
+			"----------\n" +
+			"2. INFO in mod1\\module-info.java (at line 3)\n" +
+			"	provides p1.IServiceDep with p1impl.ServiceDep;\n" +
+			"	                                    ^^^^^^^^^^\n" +
+			"The type ServiceDep is deprecated\n" +
+			"----------\n" +
+			"3. INFO in mod1\\module-info.java (at line 4)\n" +
+			"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" +
+			"	            ^^^^^^^^^^^^^^^^\n" +
+			"The type IServiceDepSince is deprecated since version 2\n" +
+			"----------\n" +
+			"4. INFO in mod1\\module-info.java (at line 4)\n" +
+			"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" +
+			"	                                         ^^^^^^^^^^^^^^^\n" +
+			"The type ServiceDepSince is deprecated since version 2\n" +
+			"----------\n" +
+			"5. WARNING in mod1\\module-info.java (at line 5)\n" +
+			"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" +
+			"	            ^^^^^^^^^^^^^^^\n" +
+			"The type IServiceTermDep has been deprecated and marked for removal\n" +
+			"----------\n" +
+			"6. WARNING in mod1\\module-info.java (at line 5)\n" +
+			"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" +
+			"	                                        ^^^^^^^^^^^^^^\n" +
+			"The type ServiceTermDep has been deprecated and marked for removal\n" +
+			"----------\n" +
+			"7. WARNING in mod1\\module-info.java (at line 6)\n" +
+			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" +
+			"	            ^^^^^^^^^^^^^^^^^^^^\n" +
+			"The type IServiceTermDepSince has been deprecated since version 3 and marked for removal\n" +
+			"----------\n" +
+			"8. WARNING in mod1\\module-info.java (at line 6)\n" +
+			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" +
+			"	                                             ^^^^^^^^^^^^^^^^^^^\n" +
+			"The type ServiceTermDepSince has been deprecated since version 3 and marked for removal\n" +
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -818,7 +818,7 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}\n",
 			};
 		runner.runConformTest();
-		
+
 		runner.shouldFlushOutputDirectory = false;
 		runner.testFiles =
 			new String[] {
@@ -832,26 +832,26 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}\n"
 			};
 		runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. INFO in module-info.java (at line 3)\n" + 
-			"	uses p1.IServiceDep;\n" + 
-			"	        ^^^^^^^^^^^\n" + 
-			"The type IServiceDep is deprecated\n" + 
-			"----------\n" + 
-			"2. INFO in module-info.java (at line 4)\n" + 
-			"	uses p1.IServiceDepSince;\n" + 
-			"	        ^^^^^^^^^^^^^^^^\n" + 
-			"The type IServiceDepSince is deprecated since version 2\n" + 
-			"----------\n" + 
-			"3. WARNING in module-info.java (at line 5)\n" + 
-			"	uses p1.IServiceTermDep;\n" + 
-			"	        ^^^^^^^^^^^^^^^\n" + 
-			"The type IServiceTermDep has been deprecated and marked for removal\n" + 
-			"----------\n" + 
-			"4. WARNING in module-info.java (at line 6)\n" + 
-			"	uses p1.IServiceTermDepSince;\n" + 
-			"	        ^^^^^^^^^^^^^^^^^^^^\n" + 
-			"The type IServiceTermDepSince has been deprecated since version 3 and marked for removal\n" + 
+			"----------\n" +
+			"1. INFO in module-info.java (at line 3)\n" +
+			"	uses p1.IServiceDep;\n" +
+			"	        ^^^^^^^^^^^\n" +
+			"The type IServiceDep is deprecated\n" +
+			"----------\n" +
+			"2. INFO in module-info.java (at line 4)\n" +
+			"	uses p1.IServiceDepSince;\n" +
+			"	        ^^^^^^^^^^^^^^^^\n" +
+			"The type IServiceDepSince is deprecated since version 2\n" +
+			"----------\n" +
+			"3. WARNING in module-info.java (at line 5)\n" +
+			"	uses p1.IServiceTermDep;\n" +
+			"	        ^^^^^^^^^^^^^^^\n" +
+			"The type IServiceTermDep has been deprecated and marked for removal\n" +
+			"----------\n" +
+			"4. WARNING in module-info.java (at line 6)\n" +
+			"	uses p1.IServiceTermDepSince;\n" +
+			"	        ^^^^^^^^^^^^^^^^^^^^\n" +
+			"The type IServiceTermDepSince has been deprecated since version 3 and marked for removal\n" +
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -869,20 +869,20 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			};
 			if (isJRE11Plus) {
 				runner.expectedCompilerLog =
-					"----------\n" + 
-					"1. ERROR in module-info.java (at line 2)\n" + 
-					"	requires jdk.xml.bind;\n" + 
-					"	         ^^^^^^^^^^^^\n" + 
-					"jdk.xml.bind cannot be resolved to a module\n" + 
+					"----------\n" +
+					"1. ERROR in module-info.java (at line 2)\n" +
+					"	requires jdk.xml.bind;\n" +
+					"	         ^^^^^^^^^^^^\n" +
+					"jdk.xml.bind cannot be resolved to a module\n" +
 					"----------\n";
 				runner.runNegativeTest();
 			} else {
 				runner.expectedCompilerLog =
-					"----------\n" + 
-					"1. WARNING in module-info.java (at line 2)\n" + 
-					"	requires jdk.xml.bind;\n" + 
-					"	         ^^^^^^^^^^^^\n" + 
-					"The module jdk.xml.bind has been deprecated since version 9 and marked for removal\n" + 
+					"----------\n" +
+					"1. WARNING in module-info.java (at line 2)\n" +
+					"	requires jdk.xml.bind;\n" +
+					"	         ^^^^^^^^^^^^\n" +
+					"The module jdk.xml.bind has been deprecated since version 9 and marked for removal\n" +
 					"----------\n";
 				runner.runWarningTest();
 			}
@@ -907,11 +907,11 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"}\n"
 		};
 		runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. WARNING in my.mod\\module-info.java (at line 2)\n" + 
-			"	requires dont.use;\n" + 
-			"	         ^^^^^^^^\n" + 
-			"The module dont.use has been deprecated since version 9 and marked for removal\n" + 
+			"----------\n" +
+			"1. WARNING in my.mod\\module-info.java (at line 2)\n" +
+			"	requires dont.use;\n" +
+			"	         ^^^^^^^^\n" +
+			"The module dont.use has been deprecated since version 9 and marked for removal\n" +
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -919,45 +919,45 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 		runNegativeTest(
 			new String[] {
 				"p1/C1.java",
-				"package p1;\n" + 
-				"\n" + 
-				"import pdep.Dep1;\n" + 
-				"\n" + 
-				"public class C1 {\n" + 
-				"	Dep1 f;\n" + 
+				"package p1;\n" +
+				"\n" +
+				"import pdep.Dep1;\n" +
+				"\n" +
+				"public class C1 {\n" +
+				"	Dep1 f;\n" +
 				"}\n",
 				"pdep/Dep1.java",
-				"package pdep;\n" + 
-				"\n" + 
-				"import pmissing.CMissing;\n" + 
-				"\n" + 
-				"@Deprecated(since=\"13\")\n" + 
-				"@CMissing\n" + 
-				"public class Dep1 {\n" + 
-				"\n" + 
+				"package pdep;\n" +
+				"\n" +
+				"import pmissing.CMissing;\n" +
+				"\n" +
+				"@Deprecated(since=\"13\")\n" +
+				"@CMissing\n" +
+				"public class Dep1 {\n" +
+				"\n" +
 				"}\n"
-			}, 
-			"----------\n" + 
-			"1. WARNING in p1\\C1.java (at line 3)\n" + 
-			"	import pdep.Dep1;\n" + 
-			"	       ^^^^^^^^^\n" + 
-			"The type Dep1 is deprecated since version 13\n" + 
-			"----------\n" + 
-			"2. WARNING in p1\\C1.java (at line 6)\n" + 
-			"	Dep1 f;\n" + 
-			"	^^^^\n" + 
-			"The type Dep1 is deprecated since version 13\n" + 
-			"----------\n" + 
-			"----------\n" + 
-			"1. ERROR in pdep\\Dep1.java (at line 3)\n" + 
-			"	import pmissing.CMissing;\n" + 
-			"	       ^^^^^^^^\n" + 
-			"The import pmissing cannot be resolved\n" + 
-			"----------\n" + 
-			"2. ERROR in pdep\\Dep1.java (at line 6)\n" + 
-			"	@CMissing\n" + 
-			"	 ^^^^^^^^\n" + 
-			"CMissing cannot be resolved to a type\n" + 
+			},
+			"----------\n" +
+			"1. WARNING in p1\\C1.java (at line 3)\n" +
+			"	import pdep.Dep1;\n" +
+			"	       ^^^^^^^^^\n" +
+			"The type Dep1 is deprecated since version 13\n" +
+			"----------\n" +
+			"2. WARNING in p1\\C1.java (at line 6)\n" +
+			"	Dep1 f;\n" +
+			"	^^^^\n" +
+			"The type Dep1 is deprecated since version 13\n" +
+			"----------\n" +
+			"----------\n" +
+			"1. ERROR in pdep\\Dep1.java (at line 3)\n" +
+			"	import pmissing.CMissing;\n" +
+			"	       ^^^^^^^^\n" +
+			"The import pmissing cannot be resolved\n" +
+			"----------\n" +
+			"2. ERROR in pdep\\Dep1.java (at line 6)\n" +
+			"	@CMissing\n" +
+			"	 ^^^^^^^^\n" +
+			"CMissing cannot be resolved to a type\n" +
 			"----------\n");
 	}
 	public void testBug542795() throws Exception {
@@ -983,29 +983,82 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"}\n",
 		};
 		runner.expectedCompilerLog =
-				"----------\n" + 
-				"1. ERROR in Test.java (at line 1)\n" + 
-				"	public class Test implements test.Screen.Component {}\n" + 
-				"	             ^^^^\n" + 
-				"The hierarchy of the type Test is inconsistent\n" + 
-				"----------\n" + 
-				"2. ERROR in Test.java (at line 1)\n" + 
-				"	public class Test implements test.Screen.Component {}\n" + 
-				"	                                  ^^^^^^\n" + 
-				"The type Screen is deprecated\n" + 
-				"----------\n" + 
-				"3. ERROR in Test.java (at line 1)\n" + 
-				"	public class Test implements test.Screen.Component {}\n" + 
-				"	                                         ^^^^^^^^^\n" + 
-				"The type Screen.Component is deprecated\n" + 
-				"----------\n" + 
-				"----------\n" + 
-				"1. ERROR in test\\Screen.java (at line 7)\n" + 
-				"	public interface Component extends test.ReaderWarningView.Component {\n" + 
-				"	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"test.ReaderWarningView.Component cannot be resolved to a type\n" + 
+				"----------\n" +
+				"1. ERROR in Test.java (at line 1)\n" +
+				"	public class Test implements test.Screen.Component {}\n" +
+				"	             ^^^^\n" +
+				"The hierarchy of the type Test is inconsistent\n" +
+				"----------\n" +
+				"2. ERROR in Test.java (at line 1)\n" +
+				"	public class Test implements test.Screen.Component {}\n" +
+				"	                                  ^^^^^^\n" +
+				"The type Screen is deprecated\n" +
+				"----------\n" +
+				"3. ERROR in Test.java (at line 1)\n" +
+				"	public class Test implements test.Screen.Component {}\n" +
+				"	                                         ^^^^^^^^^\n" +
+				"The type Screen.Component is deprecated\n" +
+				"----------\n" +
+				"----------\n" +
+				"1. ERROR in test\\Screen.java (at line 7)\n" +
+				"	public interface Component extends test.ReaderWarningView.Component {\n" +
+				"	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"test.ReaderWarningView.Component cannot be resolved to a type\n" +
 				"----------\n";
 		runner.runNegativeTest();
+	}
+	public void testGH1431() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"Parent.java",
+				"""
+				@Deprecated(since = AbstractChild.TEST_CONSTANT) // this now fails
+				public class Parent extends AbstractChild {
+				    private static final String REF_OK = AbstractChild.TEST_CONSTANT; // this compiles OK
+				}
+				""",
+				"AbstractChild.java",
+				"""
+				public abstract class AbstractChild implements Constants {
+				    // redacted for brevity
+				}
+				""",
+				"Constants.java",
+				"""
+				public interface Constants {
+				    public static final String TEST_CONSTANT = "this is a test";
+				}
+				"""
+			};
+		runner.runConformTest();
+	}
+	public void testGH1412() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"AbstractClass.java",
+			"""
+			public abstract class AbstractClass<T> {}
+			""",
+			"AnnotationWithClassValue.java",
+			"""
+			public @interface AnnotationWithClassValue {
+				Class<? extends AbstractClass<?>> value();
+			}
+			""",
+			"ConcreteClass.java",
+			"""
+			//Adding @Deprecated here fixes the bug
+			//@Deprecated
+			public class ConcreteClass extends AbstractClass<AnnotatedClass> {}
+			""",
+			"AnnotatedClass.java",
+			"""
+			@Deprecated
+			@AnnotationWithClassValue(ConcreteClass.class) //Type mismatch: cannot convert from Class<ConcreteClass> to Class<? extends AbstractClass<?>>
+			public class AnnotatedClass {}
+			"""
+		};
+		runner.runConformTest();
 	}
 	public static Class<?> testClass() {
 		return Deprecated9Test.class;

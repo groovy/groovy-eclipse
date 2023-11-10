@@ -29,10 +29,6 @@ public class ModuleMainClassAttribute extends ClassFileAttribute implements IMod
 
 	/**
 	 * Constructor for ModuleMainClassAttribute.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public ModuleMainClassAttribute(	byte[] classFileBytes,	IConstantPool constantPool,	int offset)	throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);

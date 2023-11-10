@@ -802,6 +802,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
         	}
         } else {
         	this.binding = null;
+        	this.exactMethodBinding = null;
         	this.bits &= ~ASTNode.DepthMASK;
         }
 

@@ -25,7 +25,7 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
 public class CompletionNodeDetector extends ASTVisitor {
 
 	static class FindAny extends GenericAstVisitor {
-		private ASTNode searchFor;
+		private final ASTNode searchFor;
 		boolean found;
 
 		public FindAny(ASTNode searchFor) {
@@ -49,10 +49,10 @@ public class CompletionNodeDetector extends ASTVisitor {
 	@SuppressWarnings("serial")
 	static class StopTraversal extends RuntimeException { /* no details */}
 
-	private ASTNode searchedNode;
+	private final ASTNode searchedNode;
 	private ASTNode parent;
 	private Expression outerExpression;
-	private Stack<ASTNode> interestingEnclosings = new Stack<>();
+	private final Stack<ASTNode> interestingEnclosings = new Stack<>();
 	private ASTNode enclosingNode;
 	private boolean result;
 	private ASTNode blockedNode;

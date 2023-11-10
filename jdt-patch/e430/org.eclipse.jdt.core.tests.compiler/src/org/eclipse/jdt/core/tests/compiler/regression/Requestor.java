@@ -26,7 +26,7 @@ import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 public class Requestor implements ICompilerRequestor {
 	public boolean hasErrors = false;
 	public String outputPath;
-	private boolean forceOutputGeneration;
+	private final boolean forceOutputGeneration;
 	public Hashtable expectedProblems = new Hashtable();
 	public String problemLog = "";
 	public ICompilerRequestor clientRequestor;

@@ -486,7 +486,6 @@ public class EqualExpression extends BinaryExpression {
 	}
 	/**
 	 * Boolean generation for == with non-boolean operands
-	 *
 	 */
 	public void generateNonBooleanEqual(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 
@@ -695,7 +694,6 @@ public class EqualExpression extends BinaryExpression {
 
 	/**
 	 * Boolean generation for == with non-boolean operands
-	 *
 	 */
 	public void generateOptimizedNonBooleanEqual(BlockScope currentScope, CodeStream codeStream, BranchLabel trueLabel, BranchLabel falseLabel, boolean valueRequired) {
 

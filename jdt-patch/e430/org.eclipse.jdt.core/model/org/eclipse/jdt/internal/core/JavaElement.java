@@ -140,7 +140,6 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	 *
 	 * @exception IllegalArgumentException if the type is not one of the valid
 	 *		Java element type constants
-	 *
 	 */
 	protected JavaElement(JavaElement parent) throws IllegalArgumentException {
 		this.setParent(parent);
@@ -605,8 +604,6 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 		return info;
 	}
-	/**
-	 */
 	public String readableName() {
 		return getElementName();
 	}

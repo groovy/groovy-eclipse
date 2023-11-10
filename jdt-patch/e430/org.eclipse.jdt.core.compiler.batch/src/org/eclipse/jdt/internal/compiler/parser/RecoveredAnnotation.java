@@ -30,9 +30,9 @@ public class RecoveredAnnotation extends RecoveredElement {
 	public static final int SINGLE_MEMBER = 2;
 
 	private int kind;
-	private int identifierPtr;
-	private int identifierLengthPtr;
-	private int sourceStart;
+	private final int identifierPtr;
+	private final int identifierLengthPtr;
+	private final int sourceStart;
 	public boolean hasPendingMemberValueName;
 	public int memberValuPairEqualEnd = -1;
 	public Annotation annotation;

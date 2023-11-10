@@ -28,7 +28,7 @@ import org.eclipse.core.runtime.Path;
 public class JarIndexLocation extends IndexLocation {
 	private JarFile jarFile = null;
 	private JarEntry jarEntry = null;
-	private URL localUrl;
+	private final URL localUrl;
 
 	public JarIndexLocation(URL url, URL localUrl2) {
 		super(url);

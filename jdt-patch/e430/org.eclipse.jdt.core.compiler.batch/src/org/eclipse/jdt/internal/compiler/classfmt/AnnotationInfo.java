@@ -44,7 +44,6 @@ AnnotationInfo(byte[] classFileBytes, int[] contantPoolOffsets, int offset) {
 	super(classFileBytes, contantPoolOffsets, offset);
 }
 /**
- * @param classFileBytes
  * @param offset the offset into <code>classFileBytes</code> for the "type_index" of the annotation attribute.
  * @param populate <code>true</code> to indicate to build out the annotation structure.
  */

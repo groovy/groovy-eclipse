@@ -18,7 +18,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
  */
 public class InferenceContext {
 
-	private TypeBinding[][][] collectedSubstitutes;
+	private final TypeBinding[][][] collectedSubstitutes;
 	MethodBinding genericMethod;
 	int depth;
 	int status;

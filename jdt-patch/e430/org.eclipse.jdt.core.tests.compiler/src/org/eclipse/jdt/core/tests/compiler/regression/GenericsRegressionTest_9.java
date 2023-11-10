@@ -671,7 +671,7 @@ public void testBug533644() {
 	runner.runConformTest();
 }
 //As All non-private methods of an anonymous class instantiated with '<>' must be treated as being annotated with @override,
-//"Remove redundant type arguments" error should be reported if all the non-private methods defined in the anonymous class
+//"Remove redundant type arguments" diagnostic should be reported ONLY if all the non-private methods defined in the anonymous class
 //are also present in the parent class.
 public void testBug551913_001() {
 	Map<String, String> options = getCompilerOptions();
@@ -696,7 +696,7 @@ public void testBug551913_001() {
 		},"10", options);
 }
 // As All non-private methods of an anonymous class instantiated with '<>' must be treated as being annotated with @override,
-// "Remove redundant type arguments" error should be reported if all the non-private methods defined in the anonymous class
+// "Remove redundant type arguments" diagnostic should be reported ONLY if all the non-private methods defined in the anonymous class
 // are also present in the parent class.
 public void testBug551913_002() {
 	Map<String, String> options = getCompilerOptions();
@@ -720,6 +720,291 @@ public void testBug551913_002() {
 		"	                                            ^^^^^^^\n" +
 		"Redundant specification of type arguments <String>\n" +
 		"----------\n",
+		null, true, options);
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1506
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=551913
+public void testBug551913_003() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"	void foo() {\n" +
+			"		java.util.HashSet<String> a = new java.util.HashSet<>();\n" +
+			"		java.util.HashSet<String> b = new java.util.HashSet<String>(a) {\n" +
+			"			private static final long serialVersionUID = 1L;\n" +
+			"			public String toString() {return asString();}\n" +
+			"           private String asString() { return null;}\n" +
+			"		};\n" +
+			"	}\n" +
+			"}",
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\n" +
+		"	java.util.HashSet<String> b = new java.util.HashSet<String>(a) {\n" +
+		"	                                            ^^^^^^^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n",
+		null, true, options);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1506
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=551913
+public void testBug551913_004() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"	void foo() {\n" +
+			"		java.util.HashSet<String> a = new java.util.HashSet<>();\n" +
+			"		java.util.HashSet<String> b = new java.util.HashSet<String>(a) {\n" +
+			"			private static final long serialVersionUID = 1L;\n" +
+			"			public String toString() {return asString();}\n" +
+			"           public String asString() { return null;}\n" +
+			"		};\n" +
+			"	}\n" +
+			"}",
+		},
+		"",
+		null, true, options);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1506
+// Recommendation from compiler to drop type arguments leads to compile error
+public void testGH1506() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"import java.io.File;\n" +
+			"import java.util.Arrays;\n" +
+			"import java.util.Iterator;\n" +
+			"\n" +
+			"public class X {\n" +
+			"\n" +
+			"	public Iterable<File> getStackFramesClassesLocations(Object element) {\n" +
+			"		return new Iterable<File>() {\n" +
+			"			@Override\n" +
+			"			public Iterator<File> iterator() {\n" +
+			"				return Arrays.stream(new Object[0]) //\n" +
+			"						.map(frame -> getClassesLocation(frame)) //\n" +
+			"						.iterator();\n" +
+			"			}\n" +
+			"			\n" +
+			"			File getClassesLocation(Object frame) {\n" +
+			"				return null;\n" +
+			"			}\n" +
+			"		};\n" +
+			"	}\n" +
+			"}\n",
+		},
+		"",
+		null, true, options);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1506
+// Recommendation from compiler to drop type arguments leads to compile error
+public void testGH1506_2() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"import java.io.File;\n" +
+			"import java.util.Arrays;\n" +
+			"import java.util.Iterator;\n" +
+			"\n" +
+			"public class X {\n" +
+			"\n" +
+			"	public Iterable<File> getStackFramesClassesLocations(Object element) {\n" +
+			"		return new Iterable<File>() {\n" +
+			"			@Override\n" +
+			"			public Iterator<File> iterator() {\n" +
+			"				return Arrays.stream(new Object[0]) //\n" +
+			"						.map(frame -> getClassesLocation(frame)) //\n" +
+			"						.iterator();\n" +
+			"			}\n" +
+			"			\n" +
+			"			private File getClassesLocation(Object frame) {\n" +
+			"				return null;\n" +
+			"			}\n" +
+			"		};\n" +
+			"	}\n" +
+			"}\n",
+		},
+		"----------\n"
+		+ "1. ERROR in X.java (at line 8)\n"
+		+ "	return new Iterable<File>() {\n"
+		+ "	           ^^^^^^^^\n"
+		+ "Redundant specification of type arguments <File>\n"
+		+ "----------\n",
+		null, true, options);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1506
+// Recommendation from compiler to drop type arguments leads to compile error
+public void testGH1506_3() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X<E> {\n" +
+			"    static class AX<T>{}\n" +
+			"    X(E e) {}\n" +
+			"    X() {}\n" +
+			"    public static void main(String[] args) {\n" +
+			"    	X<? extends AX> x5 = new X<AX<String>>(new AX<String>() { private void foo() {} });\n" +
+			"	}\n" +
+			"} \n",
+		},
+		"----------\n"
+		+ "1. WARNING in X.java (at line 6)\n"
+		+ "	X<? extends AX> x5 = new X<AX<String>>(new AX<String>() { private void foo() {} });\n"
+		+ "	            ^^\n"
+		+ "X.AX is a raw type. References to generic type X.AX<T> should be parameterized\n"
+		+ "----------\n"
+		+ "2. WARNING in X.java (at line 6)\n"
+		+ "	X<? extends AX> x5 = new X<AX<String>>(new AX<String>() { private void foo() {} });\n"
+		+ "	                                                                       ^^^^^\n"
+		+ "The method foo() from the type new X.AX<String>(){} is never used locally\n"
+		+ "----------\n",
+		null, true, options);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1506
+// Recommendation from compiler to drop type arguments leads to compile error
+public void testGH1506_4() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X<E> {\n" +
+			"    static class AX<T>{}\n" +
+			"    X(E e) {}\n" +
+			"    X() {}\n" +
+			"    public static void main(String[] args) {\n" +
+			"    	X<? extends AX> x5 = new X<AX<String>>(new AX<String>() { public void foo() {} });\n" +
+			"	}\n" +
+			"} \n",
+		},
+		"----------\n"
+		+ "1. WARNING in X.java (at line 6)\n"
+		+ "	X<? extends AX> x5 = new X<AX<String>>(new AX<String>() { public void foo() {} });\n"
+		+ "	            ^^\n"
+		+ "X.AX is a raw type. References to generic type X.AX<T> should be parameterized\n"
+		+ "----------\n"
+		+ "2. WARNING in X.java (at line 6)\n"
+		+ "	X<? extends AX> x5 = new X<AX<String>>(new AX<String>() { public void foo() {} });\n"
+		+ "	                                                                      ^^^^^\n"
+		+ "The method foo() from the type new X.AX<String>(){} is never used locally\n"
+		+ "----------\n",
+		null, true, options);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1560
+// ECJ recommends diamond when using it would result in non-denotable types.
+public void testGH1560() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			import java.util.Collection;
+			import java.util.List;
+
+			public class X<S, D> {
+
+				public interface MMenuElement {}
+				public interface IObservable {}
+				public static class ListDiffVisitor<E> {}
+				public interface IObservablesListener {}
+				public interface IObservableCollection<E> extends IObservable, Collection<E> {}
+				public static class ObservableEvent {}
+				public interface IDiff {}
+				public static class ListDiff<E> implements IDiff {
+					public void accept(ListDiffVisitor<? super E> visitor) {}
+				}
+				public static class ListChangeEvent<E> extends ObservableEvent {
+					public ListDiff<E> diff;
+				}
+				public interface IListChangeListener<E> extends IObservablesListener {
+					void handleListChange(ListChangeEvent<? extends E> event);
+				}
+				public interface IObservableList<E> extends List<E>, IObservableCollection<E> {
+					void addListChangeListener(IListChangeListener<? super E> listener);
+				}
+
+				public void foo() {
+
+					IObservableList<MMenuElement> l;
+
+					l.addListChangeListener(event -> event.diff.accept(new ListDiffVisitor<MMenuElement>() {})); // <> should not be recommended here!!!
+
+				}
+			}
+			""",
+		},
+		"----------\n"
+		+ "1. ERROR in X.java (at line 30)\n"
+		+ "	l.addListChangeListener(event -> event.diff.accept(new ListDiffVisitor<MMenuElement>() {})); // <> should not be recommended here!!!\n"
+		+ "	^\n"
+		+ "The local variable l may not have been initialized\n"
+		+ "----------\n",
+		null, true, options);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1560
+// ECJ recommends diamond when using it would result in non-denotable types.
+public void testGH1560_2() {
+	Map<String, String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			import java.util.Collection;
+			import java.util.List;
+
+			public class X<S, D> {
+
+				public interface MMenuElement {}
+				public interface IObservable {}
+				public static class ListDiffVisitor<E> {}
+				public interface IObservablesListener {}
+				public interface IObservableCollection<E> extends IObservable, Collection<E> {}
+				public static class ObservableEvent {}
+				public interface IDiff {}
+				public static class ListDiff<E> implements IDiff {
+					public void accept(ListDiffVisitor<? super E> visitor) {}
+				}
+				public static class ListChangeEvent<E> extends ObservableEvent {
+					public ListDiff<E> diff;
+				}
+				public interface IListChangeListener<E> extends IObservablesListener {
+					void handleListChange(ListChangeEvent<? extends E> event);
+				}
+				public interface IObservableList<E> extends List<E>, IObservableCollection<E> {
+					void addListChangeListener(IListChangeListener<? super E> listener);
+				}
+
+				public void foo() {
+
+					IObservableList<MMenuElement> l;
+
+					l.addListChangeListener(event -> event.diff.accept(new ListDiffVisitor<>() {})); // non-denotable type error
+
+				}
+			}
+			""",
+		},
+		"----------\n"
+		+ "1. ERROR in X.java (at line 30)\n"
+		+ "	l.addListChangeListener(event -> event.diff.accept(new ListDiffVisitor<>() {})); // non-denotable type error\n"
+		+ "	                                                       ^^^^^^^^^^^^^^^\n"
+		+ "Type X.ListDiffVisitor<capture#1-of ? extends X.MMenuElement> inferred for ListDiffVisitor<>, is not valid for an anonymous class with '<>'\n"
+		+ "----------\n",
 		null, true, options);
 }
 public static Class<GenericsRegressionTest_9> testClass() {

@@ -24,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * A variables evaluator compiles the global variables of an evaluation context and returns
@@ -167,7 +168,10 @@ Compiler getCompiler(ICompilerRequestor compilerRequestor) {
 			try {
 				binary = new ClassFileReader(classFile.getBytes(), null);
 			} catch (ClassFormatException e) {
-				e.printStackTrace(); // Should never happen since we compiled this type
+				if (JavaModelManager.VERBOSE) {
+					JavaModelManager.trace("", e); //$NON-NLS-1$
+				}
+				// Should never happen since we compiled this type
 			}
 			compiler.lookupEnvironment.cacheBinaryType(binary, null /*no access restriction*/);
 		}

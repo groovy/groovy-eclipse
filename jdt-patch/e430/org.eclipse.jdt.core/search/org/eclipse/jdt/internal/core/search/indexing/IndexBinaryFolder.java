@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.IOException;
 import java.net.URI;
 
@@ -137,8 +139,7 @@ public class IndexBinaryFolder extends IndexRequest {
 			this.manager.request(new SaveIndex(this.containerPath, this.manager));
 		} catch (CoreException | IOException e) {
 			if (JobManager.VERBOSE) {
-				Util.verbose("-> failed to index " + this.folder + " because of the following exception:", System.err); //$NON-NLS-1$ //$NON-NLS-2$
-				e.printStackTrace();
+				trace("-> failed to index " + this.folder + " because of the following exception:", e); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			this.manager.removeIndex(this.containerPath);
 			return false;

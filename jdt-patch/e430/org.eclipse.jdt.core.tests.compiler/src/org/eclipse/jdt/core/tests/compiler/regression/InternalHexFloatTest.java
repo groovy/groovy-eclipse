@@ -52,8 +52,6 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		return InternalHexFloatTest.class;
 	}
 
-	/**
-	 */
 	public void test001() {
 		List x = new ArrayList();
 
@@ -187,8 +185,6 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		}
 	}
 
-	/**
-	 */
 	public void test002() {
 		List x = new ArrayList();
 		// various forms of zero

@@ -29,7 +29,7 @@ public class JavadocContents {
 	private static final int[] UNKNOWN_FORMAT = new int[0];
 
 	private BinaryType type;
-	private char[] content;
+	private final char[] content;
 
 	private int childrenStart;
 

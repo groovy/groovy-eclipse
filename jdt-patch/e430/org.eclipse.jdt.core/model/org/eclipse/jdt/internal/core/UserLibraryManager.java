@@ -31,9 +31,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.osgi.service.prefs.BackingStoreException;
 
-/**
- *
- */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class UserLibraryManager {
 
@@ -153,7 +150,7 @@ public class UserLibraryManager {
 		} catch (IOException | ClasspathEntry.AssertionFailedException ase) {
 			Util.log(ase, "Exception while decoding user library '"+ libName +"'."); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		
+
 	}
 
 	public void removeUserLibrary(String libName)  {

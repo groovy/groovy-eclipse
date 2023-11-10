@@ -36,8 +36,6 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 @SuppressWarnings({"rawtypes", "unchecked"})
 class BindingComparator {
 	/**
-	 * @param bindings
-	 * @param otherBindings
 	 * @return true if both parameters are equals, false otherwise
 	 */
 	static boolean isEqual(TypeVariableBinding[] bindings, TypeVariableBinding[] otherBindings) {
@@ -63,8 +61,6 @@ class BindingComparator {
 	}
 
 	/**
-	 * @param declaringElement
-	 * @param declaringElement2
 	 * @return true if both parameters are equals, false otherwise
 	 */
 	static boolean isEqual(Binding declaringElement, Binding declaringElement2, HashSet visitedTypes) {
@@ -144,7 +140,7 @@ class BindingComparator {
 			return moduleBinding2 == null;
 		if (moduleBinding2 == null)
 			return false;
-		return CharOperation.equals(moduleBinding.moduleName, moduleBinding2.moduleName); 
+		return CharOperation.equals(moduleBinding.moduleName, moduleBinding2.moduleName);
 	}
 
 	static boolean isEqual(VariableBinding variableBinding, VariableBinding variableBinding2) {
@@ -163,16 +159,12 @@ class BindingComparator {
 	}
 
 	/**
-	 * @param bindings
-	 * @param otherBindings
 	 * @return true if both parameters are equals, false otherwise
 	 */
 	static boolean isEqual(org.eclipse.jdt.internal.compiler.lookup.TypeBinding[] bindings, org.eclipse.jdt.internal.compiler.lookup.TypeBinding[] otherBindings) {
 		return isEqual(bindings, otherBindings, new HashSet());
 	}
 	/**
-	 * @param bindings
-	 * @param otherBindings
 	 * @return true if both parameters are equals, false otherwise
 	 */
 	static boolean isEqual(org.eclipse.jdt.internal.compiler.lookup.TypeBinding[] bindings, org.eclipse.jdt.internal.compiler.lookup.TypeBinding[] otherBindings, HashSet visitedTypes) {
@@ -320,8 +312,6 @@ class BindingComparator {
 		}
 	}
 	/**
-	 * @param typeBinding
-	 * @param typeBinding2
 	 * @return true if both parameters are equals, false otherwise
 	 */
 	static boolean isEqual(org.eclipse.jdt.internal.compiler.lookup.TypeBinding typeBinding, org.eclipse.jdt.internal.compiler.lookup.TypeBinding typeBinding2) {

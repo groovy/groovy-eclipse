@@ -31,7 +31,6 @@ import java.util.List;
  *
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @since 3.24
- *
  */
 @SuppressWarnings("rawtypes")
 public class ModuleQualifiedName extends Name {

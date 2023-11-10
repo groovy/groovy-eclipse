@@ -65,7 +65,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 	private static final class SyntheticLocalVariableBinding extends LocalVariableBinding {
 
 		private final MethodBinding enclosingMethod;
-		private int paramPosition;
+		private final int paramPosition;
 		private char[] key;
 
 		SyntheticLocalVariableBinding(char[] name, TypeBinding type, MethodBinding enclosingMethod, int paramPosition) {

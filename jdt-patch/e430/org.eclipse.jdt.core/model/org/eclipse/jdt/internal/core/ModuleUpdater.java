@@ -43,9 +43,9 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class ModuleUpdater {
 
-	private JavaProject javaProoject;
+	private final JavaProject javaProoject;
 
-	private Map<String,UpdatesByKind> moduleUpdates = new HashMap<>();
+	private final Map<String,UpdatesByKind> moduleUpdates = new HashMap<>();
 
 	public ModuleUpdater(JavaProject javaProject) {
 		this.javaProoject = javaProject;
@@ -55,7 +55,6 @@ public class ModuleUpdater {
 	 * Detects any ADD_EXPORTS or ADD_READS classpath attributes, parses the value,
 	 * and collects the resulting module updates.
 	 * @param entry a classpath entry of the current project.
-	 * @throws JavaModelException
 	 */
 	public void computeModuleUpdates(IClasspathEntry entry) throws JavaModelException {
 		for (IClasspathAttribute attribute : entry.getExtraAttributes()) {

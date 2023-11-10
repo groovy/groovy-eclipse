@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -18,10 +18,9 @@ package org.eclipse.jdt.internal.compiler.env;
  * can use to look up types, compilation units, and packages in the
  * current environment.  The name environment is passed to the compiler
  * on creation.
- * 
+ *
  * This name environment adds a method to switch on/off the search for secondary types.
  * Refer {@link #findType(char[], char[][], boolean)}.
- * 
  */
 public interface INameEnvironmentExtension extends INameEnvironment {
 	/**
@@ -48,7 +47,7 @@ public interface INameEnvironmentExtension extends INameEnvironment {
 	 * @return {@link NameEnvironmentAnswer}
 	 */
 	NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, boolean searchWithSecondaryTypes, char[] moduleName);
-	
+
 	default NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, boolean searchWithSecondaryTypes) {
 		return findType(typeName, packageName, searchWithSecondaryTypes, null);
 	}

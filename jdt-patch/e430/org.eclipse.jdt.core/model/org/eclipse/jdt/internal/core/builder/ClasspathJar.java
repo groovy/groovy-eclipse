@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +52,7 @@ import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.util.Util;
 
 @SuppressWarnings("rawtypes")
@@ -133,7 +136,9 @@ IModule initializeModule() {
 		try {
 			classfile = ClassFileReader.read(file, releasePath);
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (JavaModelManager.VERBOSE) {
+				trace("", e); //$NON-NLS-1$
+			}
 			// move on to the default
 		}
 		if (classfile == null) {
@@ -210,8 +215,8 @@ public void cleanup() {
 		if (this.zipFile != null) {
 			try {
 				this.zipFile.close();
-				if (org.eclipse.jdt.internal.core.JavaModelManager.ZIP_ACCESS_VERBOSE) {
-					System.out.println("(" + Thread.currentThread() + ") [ClasspathJar.cleanup()] Closed ZipFile on " + this.zipFilename); //$NON-NLS-1$	//$NON-NLS-2$
+				if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
+					trace("(" + Thread.currentThread() + ") [ClasspathJar.cleanup()] Closed ZipFile on " + this.zipFilename); //$NON-NLS-1$	//$NON-NLS-2$
 				}
 			} catch(IOException e) { // ignore it
 				JavaCore.getPlugin().getLog().log(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, "Error closing " + this.zipFile.getName(), e)); //$NON-NLS-1$
@@ -221,8 +226,8 @@ public void cleanup() {
 		if (this.annotationZipFile != null) {
 			try {
 				this.annotationZipFile.close();
-				if (org.eclipse.jdt.internal.core.JavaModelManager.ZIP_ACCESS_VERBOSE) {
-					System.out.println("(" + Thread.currentThread() + ") [ClasspathJar.cleanup()] Closed Annotation ZipFile on " + this.zipFilename); //$NON-NLS-1$	//$NON-NLS-2$
+				if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
+					trace("(" + Thread.currentThread() + ") [ClasspathJar.cleanup()] Closed Annotation ZipFile on " + this.zipFilename); //$NON-NLS-1$	//$NON-NLS-2$
 				}
 			} catch(IOException e) { // ignore it
 				JavaCore.getPlugin().getLog().log(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, "Error closing " + this.annotationZipFile.getName(), e)); //$NON-NLS-1$
@@ -230,10 +235,10 @@ public void cleanup() {
 			this.annotationZipFile = null;
 		}
 	} else {
-		if (this.zipFile != null && org.eclipse.jdt.internal.core.JavaModelManager.ZIP_ACCESS_VERBOSE) {
+		if (this.zipFile != null && JavaModelManager.ZIP_ACCESS_VERBOSE) {
 			try {
 				this.zipFile.size();
-				System.out.println("(" + Thread.currentThread() + ") [ClasspathJar.cleanup()] ZipFile NOT closed on " + this.zipFilename); //$NON-NLS-1$	//$NON-NLS-2$
+				trace("(" + Thread.currentThread() + ") [ClasspathJar.cleanup()] ZipFile NOT closed on " + this.zipFilename); //$NON-NLS-1$	//$NON-NLS-2$
 			} catch (IllegalStateException e) {
 				// OK: the file was already closed
 			}
@@ -332,8 +337,8 @@ public boolean hasCompilationUnit(String pkgName, String moduleName) {
 private boolean scanContent() {
 	try {
 		if (this.zipFile == null) {
-			if (org.eclipse.jdt.internal.core.JavaModelManager.ZIP_ACCESS_VERBOSE) {
-				System.out.println("(" + Thread.currentThread() + ") [ClasspathJar.isPackage(String)] Creating ZipFile on " + this.zipFilename); //$NON-NLS-1$	//$NON-NLS-2$
+			if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
+				trace("(" + Thread.currentThread() + ") [ClasspathJar.isPackage(String)] Creating ZipFile on " + this.zipFilename); //$NON-NLS-1$	//$NON-NLS-2$
 			}
 			this.zipFile = new ZipFile(this.zipFilename);
 			this.closeZipFileAtEnd = true;

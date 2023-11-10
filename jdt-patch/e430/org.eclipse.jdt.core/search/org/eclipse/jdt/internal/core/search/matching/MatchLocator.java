@@ -17,6 +17,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -97,6 +99,7 @@ import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.index.Index;
 import org.eclipse.jdt.internal.core.search.*;
 import org.eclipse.jdt.internal.core.search.indexing.QualifierQuery;
+import org.eclipse.jdt.internal.core.search.processing.JobManager;
 import org.eclipse.jdt.internal.core.util.ASTNodeFinder;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -285,8 +288,9 @@ public static IBinaryType classFileReader(IType type) {
 			ZipFile zipFile = null;
 			try {
 				IPath zipPath = root.getPath();
-				if (JavaModelManager.ZIP_ACCESS_VERBOSE)
-					System.out.println("(" + Thread.currentThread() + ") [MatchLocator.classFileReader()] Creating ZipFile on " + zipPath); //$NON-NLS-1$	//$NON-NLS-2$
+				if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
+					trace("(" + Thread.currentThread() + ") [MatchLocator.classFileReader()] Creating ZipFile on " + zipPath); //$NON-NLS-1$	//$NON-NLS-2$
+				}
 				zipFile = manager.getZipFile(zipPath);
 				String classFileName = classFile.getElementName();
 				String path = Util.concatWith(pkg.names, classFileName, '/');
@@ -393,7 +397,7 @@ public void accept(ICompilationUnit sourceUnit, AccessRestriction accessRestrict
 	// Display unit error in debug mode
 	if (BasicSearchEngine.VERBOSE) {
 		if (unitResult.problemCount > 0) {
-			System.out.println(unitResult);
+			trace(unitResult.toString());
 		}
 	}
 }
@@ -539,7 +543,7 @@ protected IJavaElement createHandle(AbstractMethodDeclaration method, IJavaEleme
 						typeName = declaringType.getFullyQualifiedName().toCharArray();
 					} else {
 						if (BasicSearchEngine.VERBOSE) {
-							System.out.println("Null declaring type for " + type); //$NON-NLS-1$
+							trace("Null declaring type for " + type); //$NON-NLS-1$
 						}
 					}
 				} else if (arguments != null) {
@@ -571,7 +575,7 @@ protected IJavaElement createHandle(AbstractMethodDeclaration method, IJavaEleme
 			return binaryMethod;
 		}
 		if (BasicSearchEngine.VERBOSE) {
-			System.out.println("Not able to createHandle for the method " + //$NON-NLS-1$
+			trace("Not able to createHandle for the method " + //$NON-NLS-1$
 					CharOperation.charToString(method.selector) + " May miss some results");  //$NON-NLS-1$
 		}
 		return null;
@@ -926,7 +930,9 @@ protected IBinaryType getBinaryInfo(ClassFile classFile, IResource resource) thr
 		if (info == null) throw binaryType.newNotPresentException();
 		return info;
 	} catch (ClassFormatException e) {
-		//e.printStackTrace();
+		if (JobManager.VERBOSE) {
+			trace("", e); //$NON-NLS-1$
+		}
 		return null;
 	} catch (java.io.IOException e) {
 		throw new JavaModelException(e, IJavaModelStatusConstants.IO_EXCEPTION);
@@ -1437,10 +1443,11 @@ public void locateMatches(SearchDocument[] searchDocuments) throws CoreException
 	int docsLength = searchDocuments.length;
 	int progressLength = docsLength;
 	if (BasicSearchEngine.VERBOSE) {
-		System.out.println("Locating matches in documents ["); //$NON-NLS-1$
-		for (int i = 0; i < docsLength; i++)
-			System.out.println("\t" + searchDocuments[i]); //$NON-NLS-1$
-		System.out.println("]"); //$NON-NLS-1$
+		trace("Locating matches in documents ["); //$NON-NLS-1$
+		for (int i = 0; i < docsLength; i++) {
+			trace("\t" + searchDocuments[i]); //$NON-NLS-1$
+		}
+		trace("]"); //$NON-NLS-1$
 	}
 	IJavaProject[] javaModelProjects = null;
 	if (this.searchPackageDeclaration) {
@@ -1961,8 +1968,9 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
 		throw new OperationCanceledException();
 
 	try {
-		if (BasicSearchEngine.VERBOSE)
-			System.out.println("Parsing " + possibleMatch.openable.toStringWithAncestors()); //$NON-NLS-1$
+		if (BasicSearchEngine.VERBOSE) {
+			trace("Parsing " + possibleMatch.openable.toStringWithAncestors()); //$NON-NLS-1$
+		}
 
 		this.parser.nodeSet = possibleMatch.nodeSet;
 		CompilationResult unitResult = new CompilationResult(possibleMatch, 1, 1, this.options.maxProblemsPerUnit);
@@ -2055,8 +2063,9 @@ protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated)
 		boolean mustResolve = (this.pattern.mustResolve || possibleMatch.nodeSet.mustResolve);
 		if (bindingsWereCreated && mustResolve) {
 			if (unit.types != null) {
-				if (BasicSearchEngine.VERBOSE)
-					System.out.println("Resolving " + this.currentPossibleMatch.openable.toStringWithAncestors()); //$NON-NLS-1$
+				if (BasicSearchEngine.VERBOSE) {
+					trace("Resolving " + this.currentPossibleMatch.openable.toStringWithAncestors()); //$NON-NLS-1$
+				}
 
 				this.lookupEnvironment.unitBeingCompleted = unit;
 				reduceParseTree(unit);
@@ -2067,12 +2076,14 @@ protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated)
 				}
 				unit.resolve();
 			} else if (unit.isPackageInfo()) {
-				if (BasicSearchEngine.VERBOSE)
-					System.out.println("Resolving " + this.currentPossibleMatch.openable.toStringWithAncestors()); //$NON-NLS-1$
+				if (BasicSearchEngine.VERBOSE) {
+					trace("Resolving " + this.currentPossibleMatch.openable.toStringWithAncestors()); //$NON-NLS-1$
+				}
 				unit.resolve();
 			} else if (unit.isModuleInfo()) {
-				if (BasicSearchEngine.VERBOSE)
-					System.out.println("Resolving " + this.currentPossibleMatch.openable.toStringWithAncestors()); //$NON-NLS-1$
+				if (BasicSearchEngine.VERBOSE) {
+					trace("Resolving " + this.currentPossibleMatch.openable.toStringWithAncestors()); //$NON-NLS-1$
+				}
 				this.lookupEnvironment.unitBeingCompleted = unit;
 				if (unit.scope != null && unit.moduleDeclaration != null) {
 					unit.moduleDeclaration.resolveTypeDirectives(unit.scope);
@@ -2082,8 +2093,7 @@ protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated)
 		reportMatching(unit, mustResolve);
 	} catch (AbortCompilation e) {
 		if (BasicSearchEngine.VERBOSE) {
-			System.out.println("AbortCompilation while resolving unit " + String.valueOf(unit.getFileName())); //$NON-NLS-1$
-			e.printStackTrace();
+			trace("AbortCompilation while resolving unit " + String.valueOf(unit.getFileName()), e); //$NON-NLS-1$
 		}
 		// could not resolve: report inaccurate matches
 		reportMatching(unit, false); // do not resolve when cu has errors
@@ -2143,35 +2153,35 @@ public SearchParticipant getParticipant() {
 protected void report(SearchMatch match) throws CoreException {
 	if (match == null) {
 		if (BasicSearchEngine.VERBOSE) {
-			System.out.println("Cannot report a null match!!!"); //$NON-NLS-1$
+			trace("Cannot report a null match!!!"); //$NON-NLS-1$
 		}
 		return;
 	}
 	if (filterEnum(match)){
 		if (BasicSearchEngine.VERBOSE) {
-			System.out.println("Filtered package with name enum"); //$NON-NLS-1$
+			trace("Filtered package with name enum"); //$NON-NLS-1$
 		}
 		return;
 	}
 	long start = -1;
 	if (BasicSearchEngine.VERBOSE) {
 		start = System.currentTimeMillis();
-		System.out.println("Reporting match"); //$NON-NLS-1$
-		System.out.println("\tResource: " + match.getResource());//$NON-NLS-1$
-		System.out.println("\tPositions: [offset=" + match.getOffset() + ", length=" + match.getLength() + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		trace("Reporting match"); //$NON-NLS-1$
+		trace("\tResource: " + match.getResource());//$NON-NLS-1$
+		trace("\tPositions: [offset=" + match.getOffset() + ", length=" + match.getLength() + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		try {
 			if (this.parser != null && match.getOffset() > 0 && match.getLength() > 0 && !(match.getElement() instanceof BinaryMember)) {
 				String selection = new String(this.parser.scanner.source, match.getOffset(), match.getLength());
-				System.out.println("\tSelection: -->" + selection + "<--"); //$NON-NLS-1$ //$NON-NLS-2$
+				trace("\tSelection: -->" + selection + "<--"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} catch (Exception e) {
 			// it's just for debug purposes... ignore all exceptions in this area
 		}
 		try {
 			JavaElement javaElement = (JavaElement)match.getElement();
-			System.out.println("\tJava element: "+ javaElement.toStringWithAncestors()); //$NON-NLS-1$
+			trace("\tJava element: "+ javaElement.toStringWithAncestors()); //$NON-NLS-1$
 			if (!javaElement.exists()) {
-				System.out.println("\t\tWARNING: this element does NOT exist!"); //$NON-NLS-1$
+				trace("\t\tWARNING: this element does NOT exist!"); //$NON-NLS-1$
 			}
 		} catch (Exception e) {
 			// it's just for debug purposes... ignore all exceptions in this area
@@ -2181,17 +2191,17 @@ protected void report(SearchMatch match) throws CoreException {
 				ReferenceMatch refMatch = (ReferenceMatch) match;
 				JavaElement local = (JavaElement) refMatch.getLocalElement();
 				if (local != null) {
-					System.out.println("\tLocal element: "+ local.toStringWithAncestors()); //$NON-NLS-1$
+					trace("\tLocal element: "+ local.toStringWithAncestors()); //$NON-NLS-1$
 				}
 				if (match instanceof TypeReferenceMatch) {
 					IJavaElement[] others = ((TypeReferenceMatch) refMatch).getOtherElements();
 					if (others != null) {
 						int length = others.length;
 						if (length > 0) {
-							System.out.println("\tOther elements:"); //$NON-NLS-1$
+							trace("\tOther elements:"); //$NON-NLS-1$
 							for (int i=0; i<length; i++) {
 								JavaElement other = (JavaElement) others[i];
-								System.out.println("\t\t- "+ other.toStringWithAncestors()); //$NON-NLS-1$
+								trace("\t\t- "+ other.toStringWithAncestors()); //$NON-NLS-1$
 							}
 						}
 					}
@@ -2200,32 +2210,32 @@ protected void report(SearchMatch match) throws CoreException {
 				// it's just for debug purposes... ignore all exceptions in this area
 			}
 		}
-		System.out.println(match.getAccuracy() == SearchMatch.A_ACCURATE
+		trace(match.getAccuracy() == SearchMatch.A_ACCURATE
 			? "\tAccuracy: EXACT_MATCH" //$NON-NLS-1$
 			: "\tAccuracy: POTENTIAL_MATCH"); //$NON-NLS-1$
-		System.out.print("\tRule: "); //$NON-NLS-1$
+		trace("\tRule: "); //$NON-NLS-1$
 		if (match.isExact()) {
-			System.out.print("EXACT"); //$NON-NLS-1$
+			trace("EXACT"); //$NON-NLS-1$
 		} else if (match.isEquivalent()) {
-			System.out.print("EQUIVALENT"); //$NON-NLS-1$
+			trace("EQUIVALENT"); //$NON-NLS-1$
 		} else if (match.isErasure()) {
-			System.out.print("ERASURE"); //$NON-NLS-1$
+			trace("ERASURE"); //$NON-NLS-1$
 		} else {
-			System.out.print("INVALID RULE"); //$NON-NLS-1$
+			trace("INVALID RULE"); //$NON-NLS-1$
 		}
 		if (match instanceof MethodReferenceMatch) {
 			MethodReferenceMatch methodReferenceMatch = (MethodReferenceMatch) match;
 			if (methodReferenceMatch.isSuperInvocation()) {
-				System.out.print("+SUPER INVOCATION"); //$NON-NLS-1$
+				trace("+SUPER INVOCATION"); //$NON-NLS-1$
 			}
 			if (methodReferenceMatch.isImplicit()) {
-				System.out.print("+IMPLICIT"); //$NON-NLS-1$
+				trace("+IMPLICIT"); //$NON-NLS-1$
 			}
 			if (methodReferenceMatch.isSynthetic()) {
-				System.out.print("+SYNTHETIC"); //$NON-NLS-1$
+				trace("+SYNTHETIC"); //$NON-NLS-1$
 			}
 		}
-		System.out.println("\n\tRaw: "+match.isRaw()); //$NON-NLS-1$
+		trace("\n\tRaw: "+match.isRaw()); //$NON-NLS-1$
 	}
 	this.requestor.acceptSearchMatch(match);
 	if (BasicSearchEngine.VERBOSE)
@@ -2806,15 +2816,15 @@ protected void reportMatching(CompilationUnitDeclaration unit, boolean mustResol
 	boolean locatorMustResolve = this.patternLocator.mustResolve;
 	if (nodeSet.mustResolve) this.patternLocator.mustResolve = true;
 	if (BasicSearchEngine.VERBOSE) {
-		System.out.println("Report matching: "); //$NON-NLS-1$
+		trace("Report matching: "); //$NON-NLS-1$
 		int size = nodeSet.matchingNodes==null ? 0 : nodeSet.matchingNodes.elementSize;
-		System.out.print("	- node set: accurate="+ size); //$NON-NLS-1$
+		trace("	- node set: accurate="+ size); //$NON-NLS-1$
 		size = nodeSet.possibleMatchingNodesSet==null ? 0 : nodeSet.possibleMatchingNodesSet.elementSize;
-		System.out.println(", possible="+size); //$NON-NLS-1$
-		System.out.print("	- must resolve: "+mustResolve); //$NON-NLS-1$
-		System.out.print(" (locator: "+this.patternLocator.mustResolve); //$NON-NLS-1$
-		System.out.println(", nodeSet: "+nodeSet.mustResolve+')'); //$NON-NLS-1$
-		System.out.println("	- fine grain flags="+ JavaSearchPattern.getFineGrainFlagString(this.patternLocator.fineGrain())); //$NON-NLS-1$
+		trace(", possible="+size); //$NON-NLS-1$
+		trace("	- must resolve: "+mustResolve); //$NON-NLS-1$
+		trace(" (locator: "+this.patternLocator.mustResolve); //$NON-NLS-1$
+		trace(", nodeSet: "+nodeSet.mustResolve+')'); //$NON-NLS-1$
+		trace("	- fine grain flags="+ JavaSearchPattern.getFineGrainFlagString(this.patternLocator.fineGrain())); //$NON-NLS-1$
 	}
 	if (mustResolve) {
 		this.unitScope= unit.scope.compilationUnitScope();
@@ -2846,9 +2856,9 @@ protected void reportMatching(CompilationUnitDeclaration unit, boolean mustResol
 		nodeSet.possibleMatchingNodesSet = new SimpleSet(3);
 		if (BasicSearchEngine.VERBOSE) {
 			int size = nodeSet.matchingNodes==null ? 0 : nodeSet.matchingNodes.elementSize;
-			System.out.print("	- node set: accurate="+size); //$NON-NLS-1$
+			trace("	- node set: accurate="+size); //$NON-NLS-1$
 			size = nodeSet.possibleMatchingNodesSet==null ? 0 : nodeSet.possibleMatchingNodesSet.elementSize;
-			System.out.println(", possible="+size); //$NON-NLS-1$
+			trace(", possible="+size); //$NON-NLS-1$
 		}
 	} else {
 		this.unitScope = null;
@@ -3157,8 +3167,9 @@ private void reportMatching(UsesStatement[] uses, ModuleDeclaration module, Matc
 				}
 			}
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (JobManager.VERBOSE) {
+				trace("", e); //$NON-NLS-1$
+			}
 		}
 	}
 }

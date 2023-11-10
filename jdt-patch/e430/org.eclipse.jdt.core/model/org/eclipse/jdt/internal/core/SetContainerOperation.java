@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -23,7 +25,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.util.Util;
 
 public class SetContainerOperation extends ChangeClasspathOperation {
 
@@ -150,22 +151,21 @@ public class SetContainerOperation extends ChangeClasspathOperation {
 	}
 
 	private void verbose_failure(CoreException e) {
-		Util.verbose(
+		trace(
 			"CPContainer SET  - FAILED DUE TO EXCEPTION\n" + //$NON-NLS-1$
 			"	container path: " + this.containerPath, //$NON-NLS-1$
-			System.err);
-		e.printStackTrace();
+			e);
 	}
 
 	private void verbose_update_project(JavaProject affectedProject) {
-		Util.verbose(
+		trace(
 			"CPContainer SET  - updating affected project due to setting container\n" + //$NON-NLS-1$
 			"	project: " + affectedProject.getElementName() + '\n' + //$NON-NLS-1$
 			"	container path: " + this.containerPath); //$NON-NLS-1$
 	}
 
 	private void verbose_set_container() {
-		Util.verbose(
+		trace(
 			"CPContainer SET  - setting container\n" + //$NON-NLS-1$
 			"	container path: " + this.containerPath + '\n' + //$NON-NLS-1$
 			"	projects: {" +//$NON-NLS-1$
@@ -205,10 +205,9 @@ public class SetContainerOperation extends ChangeClasspathOperation {
 	}
 
 	private void verbose_set_container_invocation_trace() {
-		Util.verbose(
+		trace(
 			"CPContainer SET  - setting container\n" + //$NON-NLS-1$
-			"	invocation stack trace:"); //$NON-NLS-1$
-			new Exception("<Fake exception>").printStackTrace(System.out); //$NON-NLS-1$
+			"	invocation stack trace:", new Exception("<Fake exception>")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 }

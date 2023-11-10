@@ -30,7 +30,7 @@ import org.eclipse.jdt.internal.compiler.env.IMultiModuleEntry;
  */
 public class ModulePathEntry implements IModulePathEntry {
 
-	private IPath path;
+	private final IPath path;
 	/*private*/ ClasspathLocation[] locations;
 	IModule module;
 	boolean isAutomaticModule;

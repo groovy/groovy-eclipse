@@ -79,18 +79,18 @@ public class InternalExtendedCompletionContext {
 		}
 	};
 
-	private InternalCompletionContext completionContext;
+	private final InternalCompletionContext completionContext;
 
 	// static data
-	private ITypeRoot typeRoot;
-	private CompilationUnitDeclaration compilationUnitDeclaration;
-	private LookupEnvironment lookupEnvironment;
-	private Scope assistScope;
-	private ASTNode assistNode;
-	private ASTNode assistNodeParent;
-	private WorkingCopyOwner owner;
+	private final ITypeRoot typeRoot;
+	private final CompilationUnitDeclaration compilationUnitDeclaration;
+	private final LookupEnvironment lookupEnvironment;
+	private final Scope assistScope;
+	private final ASTNode assistNode;
+	private final ASTNode assistNodeParent;
+	private final WorkingCopyOwner owner;
 
-	private CompletionParser parser;
+	private final CompletionParser parser;
 
 	// computed data
 	private boolean hasComputedVisibleElementBindings;

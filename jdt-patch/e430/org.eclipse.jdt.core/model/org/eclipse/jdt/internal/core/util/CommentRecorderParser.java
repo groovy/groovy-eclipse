@@ -37,10 +37,6 @@ public class CommentRecorderParser extends Parser {
 	int commentPtr = -1; // no comment test with commentPtr value -1
 	protected final static int CommentIncrement = 100;
 
-	/**
-	 * @param problemReporter
-	 * @param optimizeStringLiterals
-	 */
 	public CommentRecorderParser(ProblemReporter problemReporter, boolean optimizeStringLiterals) {
 		super(problemReporter, optimizeStringLiterals);
 	}

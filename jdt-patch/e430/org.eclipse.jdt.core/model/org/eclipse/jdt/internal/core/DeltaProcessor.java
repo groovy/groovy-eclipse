@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+
 import java.io.File;
 import java.net.URL;
 import java.util.*;
@@ -229,7 +231,7 @@ public class DeltaProcessor {
 	/*
 	 * The global state of delta processing.
 	 */
-	private DeltaProcessingState state;
+	private final DeltaProcessingState state;
 
 	/*
 	 * The Java model manager
@@ -636,7 +638,7 @@ public class DeltaProcessor {
 				perProjectInfo.readAndCacheClasspath(javaProject);
 		} catch (JavaModelException e) {
 			if (VERBOSE) {
-				e.printStackTrace();
+				trace("", e); //$NON-NLS-1$
 			}
 		}
 	}
@@ -899,8 +901,9 @@ public class DeltaProcessor {
 									IProject project = projectsToTouch[i];
 
 									// touch to force a build of this project
-									if (JavaBuilder.DEBUG)
-										System.out.println("Touching project " + project.getName() + " due to external jar file change"); //$NON-NLS-1$ //$NON-NLS-2$
+									if (JavaBuilder.DEBUG) {
+										trace("Touching project " + project.getName() + " due to external jar file change"); //$NON-NLS-1$ //$NON-NLS-2$
+									}
 									project.touch(progressMonitor);
 								}
 							}
@@ -1083,7 +1086,7 @@ public class DeltaProcessor {
 						if (status == EXTERNAL_JAR_ADDED){
 							PackageFragmentRoot root = (PackageFragmentRoot) javaProject.getPackageFragmentRoot(entryPath.toString());
 							if (VERBOSE){
-								System.out.println("- External JAR ADDED, affecting root: "+root.getElementName()); //$NON-NLS-1$
+								trace("- External JAR ADDED, affecting root: "+root.getElementName()); //$NON-NLS-1$
 							}
 							elementAdded(root, null, null);
 							deltaContainsModifiedJar = true;
@@ -1092,7 +1095,7 @@ public class DeltaProcessor {
 						} else if (status == EXTERNAL_JAR_CHANGED) {
 							PackageFragmentRoot root = (PackageFragmentRoot) javaProject.getPackageFragmentRoot(entryPath.toString());
 							if (VERBOSE){
-								System.out.println("- External JAR CHANGED, affecting root: "+root.getElementName()); //$NON-NLS-1$
+								trace("- External JAR CHANGED, affecting root: "+root.getElementName()); //$NON-NLS-1$
 							}
 							// TODO(sxenos): this is causing each change event for an external jar file to be fired twice.
 							// We need to preserve the clearing of cached information in the jar but defer the actual firing of
@@ -1103,7 +1106,7 @@ public class DeltaProcessor {
 						} else if (status == EXTERNAL_JAR_REMOVED) {
 							PackageFragmentRoot root = (PackageFragmentRoot) javaProject.getPackageFragmentRoot(entryPath.toString());
 							if (VERBOSE){
-								System.out.println("- External JAR REMOVED, affecting root: "+root.getElementName()); //$NON-NLS-1$
+								trace("- External JAR REMOVED, affecting root: "+root.getElementName()); //$NON-NLS-1$
 							}
 							elementRemoved(root, null, null);
 							deltaContainsModifiedJar = true;
@@ -1513,7 +1516,7 @@ public class DeltaProcessor {
 		if (!this.isFiring) return;
 
 		if (DEBUG) {
-			System.out.println("-----------------------------------------------------------------------------------------------------------------------");//$NON-NLS-1$
+			trace("-----------------------------------------------------------------------------------------------------------------------");//$NON-NLS-1$
 		}
 
 		IJavaElementDelta deltaToNotify;
@@ -1565,8 +1568,8 @@ public class DeltaProcessor {
 
 		// post change deltas
 		if (DEBUG){
-			System.out.println("FIRING POST_CHANGE Delta ["+Thread.currentThread()+"]:"); //$NON-NLS-1$//$NON-NLS-2$
-			System.out.println(deltaToNotify == null ? "<NONE>" : deltaToNotify.toString()); //$NON-NLS-1$
+			trace("FIRING POST_CHANGE Delta ["+Thread.currentThread()+"]:"); //$NON-NLS-1$//$NON-NLS-2$
+			trace(deltaToNotify == null ? "<NONE>" : deltaToNotify.toString()); //$NON-NLS-1$
 		}
 		if (deltaToNotify != null) {
 			// flush now so as to keep listener reactions to post their own deltas for subsequent iteration
@@ -1586,8 +1589,8 @@ public class DeltaProcessor {
 
 		IJavaElementDelta deltaToNotify = mergeDeltas(this.reconcileDeltas.values());
 		if (DEBUG){
-			System.out.println("FIRING POST_RECONCILE Delta ["+Thread.currentThread()+"]:"); //$NON-NLS-1$//$NON-NLS-2$
-			System.out.println(deltaToNotify == null ? "<NONE>" : deltaToNotify.toString()); //$NON-NLS-1$
+			trace("FIRING POST_RECONCILE Delta ["+Thread.currentThread()+"]:"); //$NON-NLS-1$//$NON-NLS-2$
+			trace(deltaToNotify == null ? "<NONE>" : deltaToNotify.toString()); //$NON-NLS-1$
 		}
 		if (deltaToNotify != null) {
 			// flush now so as to keep listener reactions to post their own deltas for subsequent iteration
@@ -1697,7 +1700,7 @@ public class DeltaProcessor {
 		if (deltas.size() == 1) return deltas.iterator().next();
 
 		if (VERBOSE) {
-			System.out.println("MERGING " + deltas.size() + " DELTAS ["+Thread.currentThread()+"]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			trace("MERGING " + deltas.size() + " DELTAS ["+Thread.currentThread()+"]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		Iterator<IJavaElementDelta> iterator = deltas.iterator();
@@ -1706,7 +1709,7 @@ public class DeltaProcessor {
 		while (iterator.hasNext()) {
 			JavaElementDelta delta = (JavaElementDelta)iterator.next();
 			if (VERBOSE) {
-				System.out.println(delta.toString());
+				trace(delta.toString());
 			}
 			IJavaElement element = delta.getElement();
 			if (this.manager.javaModel.equals(element)) {
@@ -1761,7 +1764,7 @@ public class DeltaProcessor {
 					}
 				});
 				if (VERBOSE) {
-					System.out.println(" -> " + (System.currentTimeMillis()-start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
+					trace(" -> " + (System.currentTimeMillis()-start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		}
@@ -1947,7 +1950,7 @@ public class DeltaProcessor {
 					model.open(null);
 				} catch (JavaModelException e) {
 					if (VERBOSE) {
-						e.printStackTrace();
+						trace("", e); //$NON-NLS-1$
 					}
 					return null;
 				}
@@ -2619,8 +2622,9 @@ public class DeltaProcessor {
 
 				if (deltaRes.getType() == IResource.PROJECT){
 					// reset the corresponding project built state, since cannot reuse if added back
-					if (JavaBuilder.DEBUG)
-						System.out.println("Clearing last state for removed project : " + deltaRes); //$NON-NLS-1$
+					if (JavaBuilder.DEBUG) {
+						trace("Clearing last state for removed project : " + deltaRes); //$NON-NLS-1$
+					}
 					this.manager.setLastBuiltState((IProject)deltaRes, null /*no state*/);
 
 					// clean up previous session containers (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=89850)
@@ -2697,8 +2701,9 @@ public class DeltaProcessor {
 								this.manager.indexManager.discardJobs(element.getElementName());
 								this.manager.indexManager.removeIndexFamily(res.getFullPath());
 								// reset the corresponding project built state, since cannot reuse if added back
-								if (JavaBuilder.DEBUG)
-									System.out.println("Clearing last state for project loosing Java nature: " + res); //$NON-NLS-1$
+								if (JavaBuilder.DEBUG) {
+									trace("Clearing last state for project loosing Java nature: " + res); //$NON-NLS-1$
+								}
 								this.manager.setLastBuiltState(res, null /*no state*/);
 							}
 							return false; // when a project's nature is added/removed don't process children

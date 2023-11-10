@@ -18,7 +18,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 public class ProblemMethodBinding extends MethodBinding {
 
-	private int problemReason;
+	private final int problemReason;
 	public MethodBinding closestMatch; // TODO (philippe) should rename into #alternateMatch
 	public InferenceContext18 inferenceContext; // inference context may help to coordinate error reporting
 

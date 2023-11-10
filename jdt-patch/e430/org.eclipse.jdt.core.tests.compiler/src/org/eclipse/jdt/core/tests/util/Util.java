@@ -1533,8 +1533,6 @@ public static void zipFiles(File[] files, String zipPath) throws IOException {
  * Returns the compilation errors / warnings for the given CompilationResult.
  *
  * @param compilationResult the compilation result
- * @param showCategory
- * @param showWarningToken
  * @return String the problem log
  */
 public static String getProblemLog(CompilationResult compilationResult, boolean showCategory, boolean showWarningToken) {

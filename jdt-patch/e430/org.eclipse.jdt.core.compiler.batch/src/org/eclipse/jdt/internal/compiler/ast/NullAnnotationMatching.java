@@ -216,8 +216,6 @@ public class NullAnnotationMatching {
 
 	/**
 	 * Find any mismatches between the two given types, which are caused by null type annotations.
-	 * @param requiredType
-	 * @param providedType
 	 * @param nullStatus we are only interested in NULL or NON_NULL, -1 indicates that we are in a recursion, where flow info is ignored
 	 * @return a status object representing the severity of mismatching plus optionally a supertype hint
 	 */
@@ -226,8 +224,6 @@ public class NullAnnotationMatching {
 	}
 	/**
 	 * Find any mismatches between the two given types, which are caused by null type annotations.
-	 * @param requiredType
-	 * @param providedType
 	 * @param providedSubstitute in inheritance situations this maps the providedType into the realm of the subclass, needed for TVB identity checks.
 	 * 		Pass null if not interested in these added checks.
 	 * @param substitution TODO

@@ -34,13 +34,13 @@ import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnota
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 
 public class HierarchyBinaryType implements IBinaryType {
-	private int modifiers;
-	private char[] sourceName;
+	private final int modifiers;
+	private final char[] sourceName;
 	private char[] name;
 	private char[] enclosingTypeName;
 	private char[] superclass;
 	private char[][] superInterfaces = NoInterface;
-	private char[][] typeParameterSignatures;
+	private final char[][] typeParameterSignatures;
 	private char[] genericSignature;
 
 public HierarchyBinaryType(int modifiers, char[] qualification, char[] sourceName, char[] enclosingTypeName, char[][] typeParameterSignatures, char typeSuffix){

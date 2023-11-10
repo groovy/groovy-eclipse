@@ -22,8 +22,8 @@ public class ElementValuePairInfo implements org.eclipse.jdt.internal.compiler.e
 
 	static final ElementValuePairInfo[] NoMembers = new ElementValuePairInfo[0];
 
-	private char[] name;
-	private Object value;
+	private final char[] name;
+	private final Object value;
 
 public ElementValuePairInfo(char[] name, Object value) {
 	this.name = name;

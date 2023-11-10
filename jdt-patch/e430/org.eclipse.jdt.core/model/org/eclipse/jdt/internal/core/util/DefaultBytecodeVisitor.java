@@ -41,15 +41,15 @@ public class DefaultBytecodeVisitor implements IBytecodeVisitor {
 	private static final int T_INT = 10;
 	private static final int T_LONG = 11;
 
-	private StringBuffer buffer;
-	private String lineSeparator;
-	private int tabNumber;
-	private int digitNumberForPC;
+	private final StringBuffer buffer;
+	private final String lineSeparator;
+	private final int tabNumber;
+	private final int digitNumberForPC;
 	private ILocalVariableTableEntry[] localVariableTableEntries;
-	private int localVariableAttributeLength;
-	private int mode;
-	private char[][] parameterNames;
-	private boolean isStatic;
+	private final int localVariableAttributeLength;
+	private final int mode;
+	private final char[][] parameterNames;
+	private final boolean isStatic;
 	private int[] argumentSizes;
 
 	public DefaultBytecodeVisitor(ICodeAttribute codeAttribute, char[][] parameterNames, char[] methodDescriptor, boolean isStatic, StringBuffer buffer, String lineSeparator, int tabNumber, int mode) {

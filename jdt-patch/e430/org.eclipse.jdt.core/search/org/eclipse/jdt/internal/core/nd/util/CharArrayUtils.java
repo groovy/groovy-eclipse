@@ -250,7 +250,6 @@ public class CharArrayUtils {
 	/**
 	 * Answers a new array which is the concatenation of all the given arrays.
 	 *
-	 * @param toCatenate
 	 * @since 3.12
 	 */
 	public static char[] concat(char[]... toCatenate) {
@@ -452,11 +451,6 @@ public class CharArrayUtils {
 		return subarray(array, pos + separator.length, array.length);
 	}
 
-    /**
-     * @param buff
-     * @param i
-     * @param charImage
-     */
     public static void overWrite(char[] buff, int i, char[] charImage) {
         if (buff.length < i + charImage.length)
             return;

@@ -33,9 +33,9 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
  * exhaustive search.)
  */
 public class BindingMap<V> {
-	private Map<TypeBinding, V> identityMap = new IdentityHashMap<>();
+	private final Map<TypeBinding, V> identityMap = new IdentityHashMap<>();
 	private Object[] mapIdToValue = new Object[0];
-	private Set<TypeBinding> bindingsWithoutAnId = new HashSet<>();
+	private final Set<TypeBinding> bindingsWithoutAnId = new HashSet<>();
 
 	public void put(TypeBinding key, V value) {
 		this.identityMap.put(key, value);

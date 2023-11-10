@@ -99,7 +99,6 @@ public class RecordDeclaration extends AbstractTypeDeclaration {
 	private int restrictedIdentifierStartPosition = -1;
 
 	/**
-	 * @param restrictedIdentifierStartPosition
 	 * @since 3.26
 	 */
 	public void setRestrictedIdentifierStartPosition(int restrictedIdentifierStartPosition) {
@@ -161,7 +160,7 @@ public class RecordDeclaration extends AbstractTypeDeclaration {
 	 * The type parameters (element type: {@link TypeParameter}).
 	 * defaults to an empty list
 	 */
-	private ASTNode.NodeList typeParameters = new ASTNode.NodeList(TYPE_PARAMETERS_PROPERTY);
+	private final ASTNode.NodeList typeParameters = new ASTNode.NodeList(TYPE_PARAMETERS_PROPERTY);
 
 
 	/**
@@ -169,14 +168,14 @@ public class RecordDeclaration extends AbstractTypeDeclaration {
 	 * defaults to an empty list
 	 * (see constructor).
 	 */
-	private ASTNode.NodeList superInterfaceTypes =  new ASTNode.NodeList(SUPER_INTERFACE_TYPES_PROPERTY);
+	private final ASTNode.NodeList superInterfaceTypes =  new ASTNode.NodeList(SUPER_INTERFACE_TYPES_PROPERTY);
 
 	/**
 	 * The parameters (element type: {@link SingleVariableDeclaration}).
 	 * defaults to an empty list
 	 * (see constructor).
 	 */
-	private ASTNode.NodeList recordComponents = new ASTNode.NodeList(RECORD_COMPONENTS_PROPERTY);
+	private final ASTNode.NodeList recordComponents = new ASTNode.NodeList(RECORD_COMPONENTS_PROPERTY);
 
 
 	/**

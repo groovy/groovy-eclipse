@@ -165,7 +165,6 @@ class BindingResolver {
 	 *
 	 * @param moduleBinding the old module binding
 	 * @return the new module binding
-	 *
 	 */
 	IModuleBinding getModuleBinding(org.eclipse.jdt.internal.compiler.lookup.ModuleBinding moduleBinding) {
 		return null;
@@ -313,7 +312,6 @@ class BindingResolver {
 	 * The default implementation of this method does nothing.
 	 * Subclasses may reimplement.
 	 * </p>
-	 * @param astNode
 	 */
 	void recordScope(ASTNode astNode, BlockScope blockScope) {
 		// default implementation: do nothing

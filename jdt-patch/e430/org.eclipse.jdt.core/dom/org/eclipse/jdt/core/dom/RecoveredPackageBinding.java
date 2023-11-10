@@ -28,8 +28,8 @@ class RecoveredPackageBinding implements IPackageBinding {
 	private static final String UNNAMED = Util.EMPTY_STRING;
 	private static final char PACKAGE_NAME_SEPARATOR = '.';
 
-	private PackageBinding binding;
-	private BindingResolver resolver;
+	private final PackageBinding binding;
+	private final BindingResolver resolver;
 	private String name = null;
 	private String[] components = null;
 

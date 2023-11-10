@@ -10,7 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contributions for 
+ *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contributions for
  *			     				bug 292478 - Report potentially null across variable assignment
  *     							bug 332637 - Dead Code detection removing code that isn't dead
  *								bug 394768 - [compiler][resource] Incorrect resource leak warning when creating stream in conditional
@@ -29,9 +29,9 @@ public abstract class FlowInfo {
 
 	public int tagBits; // REACHABLE by default
 	public final static int REACHABLE = 0;
-	/* unreachable code 
+	/* unreachable code
 	 * eg. while (true);
-	 *     i++;  --> unreachable code 
+	 *     i++;  --> unreachable code
 	 */
 	public final static int UNREACHABLE_OR_DEAD = 1;
 	/* unreachable code as inferred by null analysis
@@ -46,7 +46,7 @@ public abstract class FlowInfo {
 	 */
 	public final static int UNREACHABLE = UNREACHABLE_OR_DEAD | UNREACHABLE_BY_NULLANALYSIS;
 	public final static int NULL_FLAG_MASK = 4;
-	
+
 	public final static int UNKNOWN = 1;
 	public final static int NULL = 2;
 	public final static int NON_NULL = 4;
@@ -55,7 +55,7 @@ public abstract class FlowInfo {
 	public final static int POTENTIALLY_NON_NULL = 32;
 
 	public final static int UNROOTED = 64; // marks a flowInfo that may be appended to another flowInfo (accepting incoming nulls/nonnulls, see UFI.iNBit/iNNBit).
-	
+
 	public static final int FREE_TYPEVARIABLE = FlowInfo.POTENTIALLY_NULL | FlowInfo.POTENTIALLY_NON_NULL;
 
 	public static final UnconditionalFlowInfo DEAD_END; // Represents a dead branch status of initialization
@@ -324,7 +324,6 @@ abstract public void markAsDefinitelyUnknown(LocalVariableBinding local);
 
 /**
  * Mark the null status of the given local according to the given status
- * @param local
  * @param nullStatus bitset of FLowInfo.UNKNOWN ... FlowInfo.POTENTIALLY_NON_NULL
  */
 public void markNullStatus(LocalVariableBinding local, int nullStatus) {
@@ -355,7 +354,6 @@ public void markNullStatus(LocalVariableBinding local, int nullStatus) {
 
 /**
  * Answer the null status of the given local
- * @param local
  * @return bitset of FlowInfo.UNKNOWN ... FlowInfo.POTENTIALLY_NON_NULL
  */
 public int nullStatus(LocalVariableBinding local) {
@@ -542,7 +540,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 		// if a variable is only initialized in one branch and not initialized in the other,
 		// then we need to cast a doubt on its initialization in the merged info
 		mergedInfo.mergeDefiniteInitsWith(initsWhenFalse.unconditionalCopy());
-		
+
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=415997, classify unreachability precisely, IsElseStatementUnreachable could be due to null analysis
 		if ((mergedInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0 && (initsWhenFalse.tagBits & FlowInfo.UNREACHABLE) == FlowInfo.UNREACHABLE_BY_NULLANALYSIS) {
 			mergedInfo.tagBits &= ~UNREACHABLE_OR_DEAD;
@@ -556,7 +554,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 		// true or false (i.e if(true), etc) for sure
 		// We don't do this if both if and else branches themselves are in an unreachable code
 		// or if any of them is a DEAD_END (e.g. contains 'return' or 'throws')
-		mergedInfo = 
+		mergedInfo =
 			initsWhenFalse.addPotentialInitializationsFrom(initsWhenTrue.
 				nullInfoLessUnconditionalCopy()).
 			unconditionalInits();
@@ -674,7 +672,6 @@ abstract public UnconditionalFlowInfo unconditionalInitsWithoutSideEffect();
 
 /**
  * Resets the definite and potential initialization info for the given local variable
- * @param local
  */
 abstract public void resetAssignmentInfo(LocalVariableBinding local);
 

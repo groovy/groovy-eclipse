@@ -34,7 +34,6 @@ public AbstractReader(String name) {
 abstract protected void readerLoop();
 /**
  * Start the thread that reads events.
- *
  */
 public void start() {
 	this.readerThread = new Thread(

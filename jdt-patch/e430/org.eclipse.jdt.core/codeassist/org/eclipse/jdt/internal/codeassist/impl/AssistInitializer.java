@@ -23,8 +23,8 @@ import org.eclipse.jdt.internal.core.JavaElement;
 
 @SuppressWarnings("rawtypes")
 public class AssistInitializer extends Initializer {
-	private Map bindingCache;
-	private Map infoCache;
+	private final Map bindingCache;
+	private final Map infoCache;
 	public AssistInitializer(JavaElement parent, int count, Map bindingCache, Map infoCache) {
 		super(parent, count);
 		this.bindingCache = bindingCache;

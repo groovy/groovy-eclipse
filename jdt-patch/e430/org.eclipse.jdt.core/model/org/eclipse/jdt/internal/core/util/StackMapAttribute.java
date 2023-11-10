@@ -28,17 +28,13 @@ public class StackMapAttribute
 	private static final IStackMapFrame[] NO_FRAMES = new IStackMapFrame[0];
 	private static final byte[] NO_ENTRIES = new byte[0];
 
-	private int numberOfEntries;
+	private final int numberOfEntries;
 	private IStackMapFrame[] frames;
 
 	private byte[] bytes;
 
 	/**
 	 * Constructor for LineNumberAttribute.
-	 * @param classFileBytes
-	 * @param constantPool
-	 * @param offset
-	 * @throws ClassFormatException
 	 */
 	public StackMapAttribute(
 			byte[] classFileBytes,
@@ -79,8 +75,6 @@ public class StackMapAttribute
 		return this.frames;
 	}
 
-	/**
-	 */
 	public byte[] getBytes() {
 		return this.bytes;
 	}

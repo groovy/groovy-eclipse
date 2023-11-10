@@ -732,8 +732,6 @@ public void setReturnType(String name) throws IllegalArgumentException {
 protected void setReturnTypeAltered(boolean typeAltered) {
 	setMask(MASK_RETURN_TYPE_ALTERED, typeAltered);
 }
-/**
- */
 @Override
 protected void setSourceRangeEnd(int end) {
 	super.setSourceRangeEnd(end);
