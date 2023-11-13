@@ -46,6 +46,10 @@ import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import java.util.Iterator;
 import java.util.Map;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
+import static org.apache.groovy.ast.tools.ExpressionUtils.isThisOrSuper;
+
 /**
  * Some expressions use symbols as aliases to method calls (&lt;&lt;, +=, ...). In static compilation,
  * if such a method call is found, we transform the original binary expression into a method
@@ -116,21 +120,24 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
         if (expr instanceof ConstructorCallExpression) {
             return constructorCallTransformer.transformConstructorCall((ConstructorCallExpression) expr);
         }
-        // GRECLIPSE add -- GROOVY-6097, GROOVY-7300, GROOVY-9089, et al.
+        // GRECLIPSE add -- GROOVY-6097, GROOVY-7300, GROOVY-8065, GROOVY-9089, GROOVY-10557, et al.
         if (expr instanceof PropertyExpression) {
             MethodNode dmct = expr.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             // NOTE: BinaryExpressionTransformer handles the setter
             if (dmct != null && dmct.getParameters().length == 0) {
                 PropertyExpression pe = (PropertyExpression) expr;
-
-                MethodCallExpression mce = new MethodCallExpression(transform(pe.getObjectExpression()), pe.getPropertyAsString(), MethodCallExpression.NO_ARGUMENTS);
-                mce.setImplicitThis(pe.isImplicitThis());
-                mce.setMethodTarget(dmct);
-                mce.setSourcePosition(pe);
-                mce.setSpreadSafe(pe.isSpreadSafe());
-                mce.setSafe(pe.isSafe());
-                mce.copyNodeMetaData(pe);
-                return mce;
+                if (!isOrImplements(getTypeChooser().resolveType(pe.getObjectExpression(),getClassNode()), ClassHelper.MAP_TYPE)) {
+                    MethodCallExpression mce = callX(transform(pe.getObjectExpression()), pe.getPropertyAsString());
+                    mce.setImplicitThis(pe.isImplicitThis());
+                    mce.setMethodTarget(dmct);
+                    mce.setSourcePosition(pe);
+                    mce.setSpreadSafe(pe.isSpreadSafe());
+                    mce.setSafe(pe.isSafe());
+                    mce.copyNodeMetaData(pe);
+                    return mce;
+                } else if (!isThisOrSuper(pe.getObjectExpression())) {
+                    expr.removeNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                }
             }
             return super.transform(expr);
         }

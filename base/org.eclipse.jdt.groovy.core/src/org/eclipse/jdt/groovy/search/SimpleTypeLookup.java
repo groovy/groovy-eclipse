@@ -617,7 +617,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * Looks for the named member in the declaring type. Also searches super types.
      * The result can be a field, method, or property.
      *
-     * @param name the name of the field, method, constant or property to find
      * @param declaringType the type in which the named member's declaration resides
      * @param isLhsExpression {@code true} if named member is being assigned a value
      * @param isStaticExpression {@code true} if member is being accessed statically
@@ -652,7 +651,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         boolean dynamicProperty = (!isCallExpression && !isStaticExpression && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE));
 
-        if (dynamicProperty && directFieldAccess == 0 && !isLhsExpression) { // GROOVY-5491
+        if (dynamicProperty && !isLhsExpression && (GroovyUtils.getGroovyVersion().getMajor() < 5 || name.matches("empty|class|metaClass"))) { // GROOVY-5001, GROOVY-5491, GROOVY-6144
             return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 
@@ -674,9 +673,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     .flatMap(list -> list.stream().filter(prop -> prop.getName().equals(name)).findFirst()).orElse(null);
             }
             if (isCompatible(property, isStaticExpression) &&
-                (!isLhsExpression || !Flags.isFinal(property.getModifiers())) && // GROOVY-8065
-                (!(accessor.isPresent() || (dynamicProperty && !isLhsExpression)) || // GROOVY-5491
-                    directFieldAccess == 1 && declaringType.equals(property.getDeclaringClass()))) {
+                    (!isLhsExpression || !Flags.isFinal(property.getModifiers())) && // GROOVY-8065
+                    (!accessor.isPresent() || (directFieldAccess == 1 && declaringType.equals(property.getDeclaringClass())))) {
                 return property;
             }
             if (property != null) break;
@@ -692,7 +690,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return field;
         }
 
-        if (dynamicProperty && !(isLhsExpression && nonPrivateAccessor)) { // GROOVY-5491
+        if (dynamicProperty && !(nonPrivateAccessor && (isLhsExpression || GroovyUtils.getGroovyVersion().getMajor() >= 5))) { // GROOVY-5001, GROOVY-5491
             return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 

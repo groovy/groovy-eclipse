@@ -4903,7 +4903,7 @@ public void invalidParenthesizedExpression(ASTNode reference) {
 		reference.sourceEnd);
 }
 public void invalidType(ASTNode location, TypeBinding type) {
-	try (this) { // ensure clean-up despite the many exits without calling handle(..)
+	try (ProblemReporter that = this) { // ensure clean-up despite the many exits without calling handle(..)
 		if (type instanceof ReferenceBinding) {
 			if (isRecoveredName(((ReferenceBinding)type).compoundName)) return;
 		}
@@ -9856,7 +9856,7 @@ private boolean validateRestrictedKeywords(char[] name, int start, int end, bool
 }
 public boolean validateRestrictedKeywords(char[] name, ASTNode node) {
 	// ensure clean-up because inner method is not guaranteed to invoke handle(..)
-	try (this) {
+	try (ProblemReporter that = this) {
 		return validateRestrictedKeywords(name, node.sourceStart, node.sourceEnd, false);
 	}
 }
@@ -12584,7 +12584,7 @@ public boolean scheduleProblemForContext(Runnable problemComputation) {
 	if (this.referenceContext != null) {
 		CompilationResult result = this.referenceContext.compilationResult();
 		if (result != null) {
-			try (this) {
+			try (ProblemReporter that = this) {
 				ReferenceContext capturedContext = this.referenceContext;
 				result.scheduleProblem(() -> {
 					ReferenceContext save = this.referenceContext;

@@ -27,6 +27,7 @@ import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
+import static org.apache.groovy.ast.tools.ExpressionUtils.isThisOrSuper;
 
 class PropertyExpressionTransformer {
 
@@ -39,15 +40,19 @@ class PropertyExpressionTransformer {
     Expression transformPropertyExpression(final PropertyExpression pe) {
         MethodNode dmct = pe.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
         // NOTE: BinaryExpressionTransformer handles the setter
-        if (dmct != null && dmct.getParameters().length == 0 && !isOrImplements(scTransformer.getTypeChooser().resolveType(pe.getObjectExpression(), scTransformer.getClassNode()), MAP_TYPE)) {
-            MethodCallExpression mce = callX(scTransformer.transform(pe.getObjectExpression()), pe.getPropertyAsString()); // GRECLIPSE edit
-            mce.setImplicitThis(pe.isImplicitThis());
-            mce.setMethodTarget(dmct);
-            mce.setSourcePosition(pe);
-            mce.setSpreadSafe(pe.isSpreadSafe());
-            mce.setSafe(pe.isSafe());
-            mce.copyNodeMetaData(pe);
-            return mce;
+        if (dmct != null && dmct.getParameters().length == 0) {
+            if (!isOrImplements(scTransformer.getTypeChooser().resolveType(pe.getObjectExpression(), scTransformer.getClassNode()), MAP_TYPE)) {
+                MethodCallExpression mce = callX(scTransformer.transform(pe.getObjectExpression()), pe.getPropertyAsString()); // GRECLIPSE edit
+                mce.setImplicitThis(pe.isImplicitThis());
+                mce.setMethodTarget(dmct);
+                mce.setSourcePosition(pe);
+                mce.setSpreadSafe(pe.isSpreadSafe());
+                mce.setSafe(pe.isSafe());
+                mce.copyNodeMetaData(pe);
+                return mce;
+            } else if (!isThisOrSuper(pe.getObjectExpression())) { // GRECLIPSE add
+                pe.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            }
         }
 
         return scTransformer.superTransform(pe);

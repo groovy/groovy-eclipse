@@ -3613,12 +3613,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('key'), 3, MAP_KEY))
     }
 
-    @Test
+    @Test // GROOVY-5001
     void testMapKey5() {
-        String contents = '''\
+        addGroovySource '''\
             |abstract class A extends HashMap {
             |  def one, two = { -> }
+            |  def getSomething() {}
             |}
+            |'''.stripMargin()
+
+        String contents = '''\
             |class C extends A {
             |  def three
             |  void test() {
@@ -3627,34 +3631,71 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |    three
             |    empty
             |    isEmpty()
+            |    something
             |  }
             |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
-            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('two'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
-            new HighlightedTypedPosition(contents.lastIndexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
             new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
-            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
-            new HighlightedTypedPosition(contents.lastIndexOf('isEmpty'), 7, METHOD_CALL))
+            new HighlightedTypedPosition(contents.lastIndexOf('isEmpty'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY))
+    }
+
+    @Test // GROOVY-5001
+    void testMapKey6() {
+        addGroovySource '''\
+            |abstract class A extends HashMap {
+            |  def one, two = { -> }
+            |  def getSomething() {}
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |class C extends A {
+            |  def three
+            |  void test() {{ ->
+            |    one
+            |    two()
+            |    three
+            |    empty
+            |    isEmpty()
+            |    something
+            |  }}
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('isEmpty'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY))
     }
 
     @Test // GROOVY-5491
-    void testMapKey6() {
-        String contents = '''\
+    void testMapKey7() {
+        addGroovySource '''\
             |abstract class A extends HashMap {
             |  def one
             |  protected two
             |  private   xxx
             |}
+            |'''.stripMargin()
+
+        String contents = '''\
             |class C extends A {
             |  final three
             |  void test() {
@@ -3668,13 +3709,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
-            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('two'), 3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('xxx'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
-            new HighlightedTypedPosition(contents.lastIndexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
             new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
@@ -3685,7 +3721,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // GROOVY-5491
-    void testMapKey7() {
+    void testMapKey8() {
         addGroovySource '''\
             |import groovy.transform.PackageScope
             |abstract class A {
@@ -3729,6 +3765,29 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('C().e'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('C().e'), 1, CTOR_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('eight'), 5, METHOD_CALL))
+    }
+
+    @Test // GROOVY-8065
+    void testMapKey9() {
+        addGroovySource '''\
+            |class C extends HashMap {
+            |  def getSomething() {}
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |void test(C c) {
+            |  c.something
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('C '), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('c)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('c'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY))
     }
 
     @Test

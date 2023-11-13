@@ -897,7 +897,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // see GROOVY-5001, GROOVY-5491, GROOVY-6144, GROOVY-8788
+    @Test
+    public void testCompileStatic5491() {
+        for (String mode : new String[] {"", "public", "protected", "@groovy.transform.PackageScope"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "class M extends HashMap<String,Number> {\n" +
+                  mode + " void setFoo(foo) { print foo }\n" +
+                "}\n" +
+                "@groovy.transform.CompileStatic\n" +
+                "void test() {\n" +
+                "  def map = new M()\n" +
+                "  map.foo = 123\n" + // setter
+                "  print map.foo\n" + // get(K)
+                "}\n" +
+                "test()\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "123null");
+        }
+    }
+
+    @Test // see GROOVY-5001, GROOVY-6144, GROOVY-8065, GROOVY-8788
     public void testCompileStatic5517() {
         //@formatter:off
         String[] sources = {
