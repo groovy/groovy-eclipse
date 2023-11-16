@@ -1832,7 +1832,7 @@ public void conditionalArgumentsIncompatibleTypes(ConditionalExpression expressi
 		expression.sourceEnd);
 }
 public void conflictingImport(ImportReference importRef) {
-	String[] arguments = new String[] {CharOperation.toString(importRef.tokens)};
+	String[] arguments = new String[] {importRef.toString()}; // GROOVY edit
 	this.handleUntagged(
 		IProblem.ConflictingImport,
 		arguments,
@@ -2132,7 +2132,7 @@ public void duplicateFieldInType(SourceTypeBinding type, FieldDeclaration fieldD
 		fieldDecl.sourceEnd);
 }
 public void duplicateImport(ImportReference importRef) {
-	String[] arguments = new String[] {CharOperation.toString(importRef.tokens)};
+	String[] arguments = new String[] {importRef.toString()}; // GROOVY edit
 	this.handleUntagged(
 		IProblem.DuplicateImport,
 		arguments,
@@ -9553,7 +9553,7 @@ public void unusedImport(ImportReference importRef) {
 	// GROOVY end
 	int severity = computeSeverity(IProblem.UnusedImport);
 	if (severity == ProblemSeverities.Ignore) return;
-	String[] arguments = new String[] { CharOperation.toString(importRef.tokens) };
+	String[] arguments = new String[] {importRef.toString()}; // GROOVY edit
 	this.handle(
 		IProblem.UnusedImport,
 		arguments,

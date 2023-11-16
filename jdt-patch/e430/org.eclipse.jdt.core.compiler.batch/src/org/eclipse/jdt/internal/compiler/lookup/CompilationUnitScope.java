@@ -583,9 +583,9 @@ void faultInImports() {
 			if (importBinding instanceof PackageBinding) {
 				problemReporter().cannotImportPackage(importReference);
 				continue nextImport;
-			} else if (this.environment.useModuleSystem && importBinding instanceof ReferenceBinding) {
+			} else if (importBinding instanceof ReferenceBinding && this.environment.useModuleSystem) {
 				PackageBinding importedPackage = ((ReferenceBinding) importBinding).fPackage;
-				if (importedPackage != null) {
+				if (importedPackage != null && importedPackage != this.environment.defaultPackage) {
 					if (!importedPackage.isValidBinding()) {
 						problemReporter().importProblem(importReference, importedPackage);
 						continue nextImport;

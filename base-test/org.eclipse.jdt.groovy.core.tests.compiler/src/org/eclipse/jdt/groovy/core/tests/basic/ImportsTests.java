@@ -615,7 +615,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\C.groovy (at line 8)\n" +
             "\tpublic static void callitOne(A a) {}\n" +
             "\t                             ^\n" +
@@ -627,10 +628,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     public void testAliasing_GRE473() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "import java.util.regex.Pattern as JavaPattern\n" +
-            "class Pattern {JavaPattern javaPattern}\n" +
-            "def p = new Pattern(javaPattern:~/\\d+/)\n" +
+            "class Pattern { JavaPattern javaPattern }\n" +
+            "def p = new Pattern(javaPattern: ~/\\d+/)\n" +
             "assert \"123\" ==~ p.javaPattern\n" +
             "print 'success '\n" +
             "print '['+p.class.name+']['+JavaPattern.class.name+']'\n",
@@ -641,23 +642,118 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAliasing_GRE473_2() {
+    public void testImportConflict1() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "import java.util.regex.Pattern\n" +
-            "class Pattern {Pattern javaPattern}\n" +
-            "def p = new Pattern(javaPattern:~/\\d+/)\n" +
-            "assert \"123\" ==~ p.javaPattern\n" +
-            "print 'success'\n",
+            "class Pattern { }\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
             "\timport java.util.regex.Pattern\n" +
             "\t       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testImportConflict2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.regex.Pattern as Regexp\n" +
+            "class Regexp { }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\timport java.util.regex.Pattern as Regexp\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import java.util.regex.Pattern as Regexp conflicts with a type defined in the same file\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testImportConflict3() {
+        //@formatter:off
+        String[] sources = {
+            "Pattern.groovy",
+            "import java.util.regex.Pattern\n" +
+            "null\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Pattern.groovy (at line 1)\n" +
+            "\timport java.util.regex.Pattern\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testImportConflict4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.lang.Script as Main\n" +
+            "null\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\timport groovy.lang.Script as Main\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import groovy.lang.Script as Main conflicts with a type defined in the same file\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testImportConflict5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.regex.Pattern\n" +
+            "import java.lang.Object as Pattern\n" +
+            "Pattern pattern = null\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
+            "\timport java.lang.Object as Pattern\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import java.lang.Object as Pattern collides with another import statement\n" +
+            "----------\n");
+    }
+
+    @Test // GROOVY-8254
+    public void testImportConflict6() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import Foo as Bar\n" +
+            "class Foo { }\n" +
+            "class Bar { }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\timport Foo as Bar\n" +
+            "\t       ^^^^^^^^^^\n" +
+            "The import Foo as Bar conflicts with a type defined in the same file\n" +
             "----------\n");
     }
 
@@ -1067,7 +1163,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
             "\tType.m()\n" +
             "\t^^^^\n" +
@@ -1106,7 +1203,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in com\\bar\\Runner.groovy (at line 1)\n" +
             "\tpackage com.bar\n" +
             "\t^\n" +
@@ -1156,7 +1254,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
             "\tType.m()\n" +
             "\t^^^^\n" +
@@ -1218,7 +1317,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\timport a.b.c.D;\n" +
             "\t       ^^^^^^^\n" +

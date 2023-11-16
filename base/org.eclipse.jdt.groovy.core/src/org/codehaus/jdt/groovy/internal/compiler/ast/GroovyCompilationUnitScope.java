@@ -124,6 +124,15 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     }
 
     @Override
+    protected Binding findSingleImport(char[][] compoundName, int mask, boolean staticImport) {
+        if (compoundName.length == 1) {
+            Binding binding = findType(compoundName[0], environment.defaultPackage, fPackage);
+            return (binding != null ? binding : new ProblemReferenceBinding(compoundName, null, ProblemReasons.NotFound));
+        }
+        return super.findSingleImport(compoundName, mask, staticImport);
+    }
+
+    @Override
     protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration compUnitDecl) {
         // check for parser recovery of an incomplete package statement or a script with no package statement before reporting name mismatch
         char[][] declaredPackage = (compUnitDecl.currentPackage != null ? compUnitDecl.currentPackage.tokens : CharOperation.NO_CHAR_CHAR);

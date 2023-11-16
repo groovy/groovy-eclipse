@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -569,9 +569,9 @@ void faultInImports() {
 			if (importBinding instanceof PackageBinding) {
 				problemReporter().cannotImportPackage(importReference);
 				continue nextImport;
-			} else if (this.environment.useModuleSystem && importBinding instanceof ReferenceBinding) {
+			} else if (importBinding instanceof ReferenceBinding && this.environment.useModuleSystem) {
 				PackageBinding importedPackage = ((ReferenceBinding) importBinding).fPackage;
-				if (importedPackage != null) {
+				if (importedPackage != null && importedPackage != this.environment.defaultPackage) {
 					if (!importedPackage.isValidBinding()) {
 						problemReporter().importProblem(importReference, importedPackage);
 						continue nextImport;
