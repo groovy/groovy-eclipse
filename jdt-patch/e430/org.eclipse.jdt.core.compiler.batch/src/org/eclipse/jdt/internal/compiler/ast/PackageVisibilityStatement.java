@@ -7,10 +7,10 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     
+ *
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -36,7 +36,7 @@ public abstract class PackageVisibilityStatement extends ModuleStatement {
 	public boolean isQualified() {
 		return this.targets != null && this.targets.length > 0;
 	}
-	
+
 	public ModuleReference[] getTargetedModules() {
 		return this.targets;
 	}

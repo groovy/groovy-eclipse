@@ -57,10 +57,10 @@ public interface ILocalVariable extends IJavaElement, ISourceReference, IAnnotat
 	 * @see Signature
 	 */
 	String getTypeSignature();
-	
+
 	/**
 	 * Returns <code>true</code> if this local variable is a method parameter, <code>false</code> otherwise.
-	 * 
+	 *
 	 * @return <code>true</code> if this local variable is a method parameter, <code>false</code> otherwise
 	 * @since 3.7
 	 */
@@ -69,7 +69,7 @@ public interface ILocalVariable extends IJavaElement, ISourceReference, IAnnotat
 	/**
 	 * Returns the modifier flags for this local variable. The flags can be examined using class
 	 * {@link Flags}.
-	 * 
+	 *
 	 * <p>Note that only flags as indicated in the source are returned.</p>
 	 *
 	 * @return the modifier flags for this local variable

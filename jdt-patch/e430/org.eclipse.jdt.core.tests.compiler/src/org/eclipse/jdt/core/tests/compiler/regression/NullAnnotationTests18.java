@@ -910,4 +910,32 @@ public class NullAnnotationTests18 extends AbstractNullAnnotationTest {
 				"""};
 		runner.runConformTest();
 	}
+	public void testGH1302() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"p/package-info.java",
+			"""
+			@org.eclipse.jdt.annotation.NonNullByDefault
+			package p;
+			""",
+			"p/Parent.java",
+			"""
+			package p;
+			import java.util.Map;
+			public interface Parent {
+			  Map<String, String> model();
+			}
+			""",
+			"p/Child.java",
+			"""
+			package p;
+			import java.util.Map;
+			public record Child(Map<String, String> model) implements Parent {
+			}
+			"""
+		};
+		runner.customOptions = getCompilerOptions();
+		runner.classLibraries = this.LIBS;
+		runner.runConformTest();
+	}
 }

@@ -85,7 +85,7 @@ public int hashCode() {
 
 /**
  * Sets the accessibility of the accepted match.
- * 
+ *
  * @param accessibility the accessibility of the current match
  */
 public void setAccessibility(int accessibility) {

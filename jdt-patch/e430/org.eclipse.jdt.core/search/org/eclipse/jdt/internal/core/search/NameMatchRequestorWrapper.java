@@ -125,7 +125,7 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 	IPackageFragment pkgFragment= (IPackageFragment) this.packageHandles.get(pkgName);
 	if (pkgFragment == null) {
 		pkgFragment= ((PackageFragmentRoot) this.lastPkgFragmentRoot).getPackageFragment(pkgName, moduleName); //BUG 478143
-		// filter org.apache.commons.lang.enum package for projects above 1.5 
+		// filter org.apache.commons.lang.enum package for projects above 1.5
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264
 		if (length == 5 && pkgName[4].equals("enum")) { //$NON-NLS-1$
 			IJavaProject proj = (IJavaProject)pkgFragment.getAncestor(IJavaElement.JAVA_PROJECT);
@@ -136,7 +136,7 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 			}
 			if (this.complianceValue >= ClassFileConstants.JDK1_5)
 				return null;
-		} 
+		}
 		this.packageHandles.put(pkgName, pkgFragment);
 	}
 	return pkgFragment.getOrdinaryClassFile(simpleNames[length]).getType();

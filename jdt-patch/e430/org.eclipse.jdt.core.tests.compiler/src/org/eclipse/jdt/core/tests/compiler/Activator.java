@@ -21,7 +21,7 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * Make the PackageAdmin service accessible to tests.
- * 
+ *
  * @deprecated uses deprecated class PackageAdmin.
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -33,7 +33,7 @@ public class Activator extends Plugin {
 
 
 	public void start(BundleContext context) throws Exception {
-		
+
 		ServiceReference ref= context.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class.getName());
 		if (ref!=null)
 			packageAdmin = (org.osgi.service.packageadmin.PackageAdmin)context.getService(ref);
@@ -48,5 +48,5 @@ public class Activator extends Plugin {
 	public static org.osgi.service.packageadmin.PackageAdmin getPackageAdmin() {
 		return packageAdmin;
 	}
-	
+
 }

@@ -25,7 +25,7 @@ import java.util.List;
  *    <b>for</b> <b>(</b> FormalParameter <b>:</b> Expression <b>)</b>
  * 			Statement
  * </pre>
- * 
+ *
  * <p>The FormalParameter is represented by a {@link SingleVariableDeclaration}
  * (without an initializer).</p>
  *

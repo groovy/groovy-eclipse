@@ -33,7 +33,7 @@ public class SelectionOnLocalName extends LocalDeclaration{
 		if (isTypeNameVar(scope)) {
 			if ((this.bits & ASTNode.IsForeachElementVariable) != 0 && scope.blockStatement instanceof ForeachStatement) {
 				// small version extracted from ForeachStatement.resolve():
-				
+
 				ForeachStatement stat = (ForeachStatement) scope.blockStatement;
 				TypeBinding collectionType = stat.collection == null ? null : stat.collection.resolveType((BlockScope) scope.parent);
 

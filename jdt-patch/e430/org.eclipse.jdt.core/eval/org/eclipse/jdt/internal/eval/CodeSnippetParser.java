@@ -74,7 +74,7 @@ protected void classInstanceCreation(boolean alwaysQualified) {
 		}
 		alloc.type = getTypeReference(0);
 		checkForDiamond(alloc.type);
-		
+
 		//the default constructor with the correct number of argument
 		//will be created and added by the TC (see createsInternalConstructorWithBinding)
 		alloc.sourceStart = this.intStack[this.intPtr--];
@@ -414,20 +414,20 @@ protected void consumeMethodInvocationNameWithTypeArguments() {
 			&& this.scanner.startPosition <= this.codeSnippetEnd + 1 + this.lineSeparatorLength // 14838
 			&& isTopLevelType()) {
 
-	
+
 		MessageSend m = newMessageSendWithTypeArguments();
 		m.sourceEnd = this.rParenPos;
 		m.sourceStart =
 			(int) ((m.nameSourcePosition = this.identifierPositionStack[this.identifierPtr]) >>> 32);
 		m.selector = this.identifierStack[this.identifierPtr--];
 		this.identifierLengthPtr--;
-	
+
 		// handle type arguments
 		int length = this.genericsLengthStack[this.genericsLengthPtr--];
 		this.genericsPtr -= length;
 		System.arraycopy(this.genericsStack, this.genericsPtr + 1, m.typeArguments = new TypeReference[length], 0, length);
 		this.intPtr--;
-	
+
 		m.receiver = getUnspecifiedReference();
 		m.sourceStart = m.receiver.sourceStart;
 		pushOnExpressionStack(m);

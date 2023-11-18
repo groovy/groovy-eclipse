@@ -120,7 +120,7 @@ public interface IBinding {
 	 * <p>
 	 * <b>Note:</b> This method only returns declaration annotations.
 	 * <em>Type annotations</em> in the sense of JLS8 9.7.4 are <em>not</em> returned.
-	 * Type annotations can be retrieved via {@link ITypeBinding#getTypeAnnotations()}. 
+	 * Type annotations can be retrieved via {@link ITypeBinding#getTypeAnnotations()}.
 	 * </p>
 	 *
 	 * @return the list of resolved declaration annotations, or the empty list if there are no
@@ -341,7 +341,7 @@ public interface IBinding {
 	 * different clusters of bindings, the binding objects may or may
 	 * not be different objects; in these cases, the binding keys
 	 * are used where available.
-	 * 
+	 *
 	 * <p>
 	 * Note that type bindings that only differ in their {@link ITypeBinding#getTypeAnnotations() type annotations}
 	 * have the same {@link IBinding#getKey() key}, and hence this method returns

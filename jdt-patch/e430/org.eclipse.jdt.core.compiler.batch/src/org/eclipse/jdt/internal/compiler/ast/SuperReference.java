@@ -44,7 +44,7 @@ public class SuperReference extends ThisReference {
 
 		return true;
 	}
-	
+
 	@Override
 	public boolean isUnqualifiedSuper() {
 		return true;

@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Abstract base class of all AST node types that represent a method reference
  * expression (added in JLS8 API).
- * 
+ *
  * <pre>
  * MethodReference:
  *    CreationReference
@@ -29,7 +29,7 @@ import java.util.List;
  * <p>
  * A method reference that is represented by a simple or qualified name,
  * followed by <code>::</code>, followed by a simple name can be represented
- * as {@link ExpressionMethodReference} or as {@link TypeMethodReference}. 
+ * as {@link ExpressionMethodReference} or as {@link TypeMethodReference}.
  * The ASTParser currently prefers the first form.
  * </p>
  *
@@ -49,9 +49,9 @@ public abstract class MethodReference extends Expression {
 	ASTNode.NodeList typeArguments;
 
 	/**
-	 * Creates and returns a structural property descriptor for the "typeArguments" 
+	 * Creates and returns a structural property descriptor for the "typeArguments"
 	 * property declared on the given concrete node type (element type: {@link Type}).
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	static final ChildListPropertyDescriptor internalTypeArgumentsFactory(Class nodeClass) {

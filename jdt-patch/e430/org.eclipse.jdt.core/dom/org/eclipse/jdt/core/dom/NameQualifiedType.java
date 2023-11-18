@@ -19,12 +19,12 @@ import java.util.List;
 
 /**
  * Node for a name-qualified type (added in JLS8 API).
- * 
+ *
  * <pre>
  * NameQualifiedType:
  *    Name <b>.</b> { Annotation } SimpleName
  * </pre>
- * 
+ *
  * <p>
  * The qualifier can resolve to a type or to a package.
  * </p>
@@ -36,7 +36,7 @@ import java.util.List;
  *
  * @see SimpleType
  * @see QualifiedType
- * 
+ *
  * @since 3.10
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -54,13 +54,13 @@ public class NameQualifiedType extends AnnotatableType {
 	 */
 	public static final ChildListPropertyDescriptor ANNOTATIONS_PROPERTY =
 			internalAnnotationsPropertyFactory(NameQualifiedType.class);
-	
+
 	/**
 	 * The "name" structural property of this node type (child type: {@link SimpleName}).
 	 */
 	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(NameQualifiedType.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
@@ -91,7 +91,7 @@ public class NameQualifiedType extends AnnotatableType {
 	}
 
 	/**
-	 * The qualifier node; lazily initialized; defaults to 
+	 * The qualifier node; lazily initialized; defaults to
 	 * an unspecified, but legal, simple name.
 	 */
 	private Name qualifier = null;

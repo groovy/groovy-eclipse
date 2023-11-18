@@ -105,7 +105,7 @@ public interface IPackageFragment extends IParent, IJavaElement, IOpenable, ISou
 	 * Returns the class file for <code>"module-info.class"</code> in this package.
 	 * This is a handle-only method.  The class file may or may not be present.
 	 * If the class file is present, then it is guaranteed to contain an {@link IModuleDescription}.
-	 * 
+	 *
 	 * @since 3.14
 	 * @return the class file representing "module-info.class" in this package.
 	 */
@@ -117,7 +117,7 @@ public interface IPackageFragment extends IParent, IJavaElement, IOpenable, ISou
 	 * <p>Note: it is possible that a package fragment contains only
 	 * compilation units (in other words, its kind is <code>K_SOURCE</code>), in
 	 * which case this method returns an empty collection.</p>
-	 * 
+	 *
 	 * <p>Note: the returned list may contain ordinary class files as well as
 	 * a modular class file (for "module-info.class").</p>
 	 *
@@ -127,11 +127,11 @@ public interface IPackageFragment extends IParent, IJavaElement, IOpenable, ISou
 	 * @since 3.14
 	 */
 	IClassFile[] getAllClassFiles() throws JavaModelException;
-	
+
 	/**
 	 * Returns all of the ordinary class files in this package fragment.
-	 * 
-	 * <p>Note: this list never includes a modular class file 
+	 *
+	 * <p>Note: this list never includes a modular class file
 	 * (see {@link #getModularClassFile()}).</p>
 	 *
 	 * <p>Note: it is possible that a package fragment contains only
@@ -153,7 +153,7 @@ public interface IPackageFragment extends IParent, IJavaElement, IOpenable, ISou
 	 * <p>Note: it is possible that a package fragment contains only
 	 * compilation units (in other words, its kind is <code>K_SOURCE</code>), in
 	 * which case this method returns an empty collection.</p>
-	 * 
+	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
 	 * @return all of the ordinary class files in this package fragment

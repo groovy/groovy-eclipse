@@ -44,7 +44,7 @@ public class DoStatement extends Statement {
 	 */
 	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
 			new ChildPropertyDescriptor(DoStatement.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
@@ -79,7 +79,7 @@ public class DoStatement extends Statement {
 	 * The body statement; lazily initialized; defaults to an empty block.
 	 */
 	private Statement body = null;
-	
+
 	/**
 	 * The expression; lazily initialized; defaults to an unspecified, but
 	 * legal, expression.

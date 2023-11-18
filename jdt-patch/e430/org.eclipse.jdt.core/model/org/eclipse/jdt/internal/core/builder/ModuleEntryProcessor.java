@@ -27,7 +27,7 @@ import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.ModuleUpdater;
 
-/** 
+/**
  * Collection of functions to process classpath attributes relating to modules (from JEP 261).
  * For <code>add-exports</code> and <code>add-reads</code> see {@link ModuleUpdater}.
  */
@@ -100,7 +100,7 @@ class ModuleEntryProcessor {
 		String extraAttribute = ClasspathEntry.getExtraAttribute(entry, IClasspathAttribute.LIMIT_MODULES);
 		if (extraAttribute == null)
 			return null;
-		
+
 		// collect the transitive closure of modules contained in limitSet
 		return new LinkedHashSet<>(Arrays.asList(extraAttribute.split(","))); //$NON-NLS-1$
 	}

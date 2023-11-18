@@ -55,7 +55,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	this.assertExpression.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
 	boolean isOptimizedTrueAssertion = cst != Constant.NotAConstant && cst.booleanValue() == true;
 	boolean isOptimizedFalseAssertion = cst != Constant.NotAConstant && cst.booleanValue() == false;
-	
+
 	flowContext.tagBits |= FlowContext.HIDE_NULL_COMPARISON_WARNING;
 	FlowInfo conditionFlowInfo = this.assertExpression.analyseCode(currentScope, flowContext, flowInfo.copy());
 	flowContext.extendTimeToLiveForNullCheckedField(1); // survive this assert as a Statement

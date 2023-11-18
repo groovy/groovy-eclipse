@@ -41,7 +41,7 @@ public class WildcardType extends AnnotatableType {
 	 */
 	public static final ChildListPropertyDescriptor ANNOTATIONS_PROPERTY =
 			internalAnnotationsPropertyFactory(WildcardType.class);
-	
+
 	/**
 	 * The "bound" structural property of this node type (child type: {@link Type}).
 	 */
@@ -74,7 +74,7 @@ public class WildcardType extends AnnotatableType {
 		addProperty(BOUND_PROPERTY, propertyList);
 		addProperty(UPPER_BOUND_PROPERTY, propertyList);
 		PROPERTY_DESCRIPTORS = reapPropertyList(propertyList);
-		
+
 		propertyList = new ArrayList(4);
 		createPropertyList(WildcardType.class, propertyList);
 		addProperty(ANNOTATIONS_PROPERTY, propertyList);

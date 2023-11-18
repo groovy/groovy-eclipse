@@ -153,7 +153,7 @@ public void acceptModule(IModuleDescription module) {
 	if (this.modules == null) {
 		this.modules= new ArrayList();
 	}
-	this.modules.add(module);	
+	this.modules.add(module);
 }
 
 /**

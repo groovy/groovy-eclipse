@@ -160,7 +160,7 @@ public RecoveredElement add(Statement stmt, int bracketBalanceValue) {
  * Record a statement declaration
  */
 public RecoveredElement add(Statement stmt, int bracketBalanceValue, boolean delegatedByParent) {
-	
+
 	resetPendingModifiers();
 
 	/* do not consider a nested block starting passed the block end (if set)
@@ -307,7 +307,7 @@ public Block updatedBlock(int depth, Set<TypeDeclaration> knownTypes){
 
 	// if block was not marked to be preserved or empty, then ignore it
 	if (!this.preserveContent || this.statementCount == 0) return null;
-	
+
 	Statement[] updatedStatements = new Statement[this.statementCount];
 	int updatedCount = 0;
 
@@ -362,7 +362,7 @@ public Block updatedBlock(int depth, Set<TypeDeclaration> knownTypes){
 				}
 			}
 			updatedStatements[updatedCount++] = updatedStatement;
-			
+
 			if (updatedStatement instanceof LocalDeclaration) {
 				LocalDeclaration localDeclaration = (LocalDeclaration) updatedStatement;
 				if(localDeclaration.declarationSourceEnd > lastEnd) {

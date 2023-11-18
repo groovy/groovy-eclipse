@@ -132,12 +132,12 @@ public interface IJavaModelStatusConstants {
 
 	/**
 	 * Status constant indicating that a destination provided for a copy/move/rename operation
-	 * is invalid. The destination for a package fragment must be a package fragment root; the 
-	 * destination for a compilation unit must be a package fragment; the destination for 
-	 * a package declaration or import declaration must be a compilation unit; the 
-	 * destination for a type must be a type or compilation unit; the destination for any 
+	 * is invalid. The destination for a package fragment must be a package fragment root; the
+	 * destination for a compilation unit must be a package fragment; the destination for
+	 * a package declaration or import declaration must be a compilation unit; the
+	 * destination for a type must be a type or compilation unit; the destination for any
 	 * type member (other than a type) must be a type. <br>
-	 * 
+	 *
 	 * The destination element can be retrieved using <code>getElements</code> on the status object.
 	 */
 	public static final int INVALID_DESTINATION = 978;
@@ -339,13 +339,13 @@ public interface IJavaModelStatusConstants {
 	 * @since 3.4
 	 */
 	public static final int BAD_TEXT_EDIT_LOCATION = 1011;
-	
+
 	/**
 	 * <p>Status constant indicating that the attached javadoc content cannot be retrieved due to timeout
 	 * @since 3.7
 	 */
 	public static final int CANNOT_RETRIEVE_ATTACHED_JAVADOC_TIMEOUT = 1012;
-	
+
 	/**
 	 * <p>Status constant indicating that the default or specific output folder is overlapping
 	 * with another source location. </p>
@@ -359,9 +359,9 @@ public interface IJavaModelStatusConstants {
 	 * @see org.eclipse.jdt.core.IClasspathAttribute#EXTERNAL_ANNOTATION_PATH
 	 */
 	public static final int CP_INVALID_EXTERNAL_ANNOTATION_PATH = 1014;
-	
+
 	/**
-	 * Status constant indicating that a source folder marked to contain test sources has no separate output location, but the project also contains main sources. 
+	 * Status constant indicating that a source folder marked to contain test sources has no separate output location, but the project also contains main sources.
 	 * preference settings.
 	 * @see IClasspathAttribute#TEST
 	 * @since 3.14
@@ -380,7 +380,7 @@ public interface IJavaModelStatusConstants {
 	 * Status constant indicating that the project has only main source folders but depends on a project that has only
 	 * test source folders.
 	 * </p>
-	 * 
+	 *
 	 * @since 3.16
 	 */
 	public static final int MAIN_ONLY_PROJECT_DEPENDS_ON_TEST_ONLY_PROJECT = 1017;

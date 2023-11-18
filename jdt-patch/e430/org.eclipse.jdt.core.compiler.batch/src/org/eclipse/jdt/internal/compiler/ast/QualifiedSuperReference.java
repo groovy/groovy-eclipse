@@ -95,7 +95,7 @@ int findCompatibleEnclosing(ReferenceBinding enclosingType, TypeBinding type, Bl
 				compoundName = supers[i].compoundName;
 				if (closestMatch == null)
 					closestMatch = supers[i];
-				// keep looking to ensure we always find the referenced type (even if illegal) 
+				// keep looking to ensure we always find the referenced type (even if illegal)
 			}
 		}
 		if (!isLegal || !isJava8) {
@@ -104,7 +104,7 @@ int findCompatibleEnclosing(ReferenceBinding enclosingType, TypeBinding type, Bl
 			// we use the problem's compoundName to report the type being illegally bypassed,
 			// whereas the closestMatch denotes the resolved (though illegal) target type
 			// for downstream resolving.
-			this.resolvedType =  new ProblemReferenceBinding(compoundName, 
+			this.resolvedType =  new ProblemReferenceBinding(compoundName,
 					closestMatch, isJava8 ? ProblemReasons.AttemptToBypassDirectSuper : ProblemReasons.InterfaceMethodInvocationNotBelow18);
 		}
 		return 0; // never an outer enclosing type

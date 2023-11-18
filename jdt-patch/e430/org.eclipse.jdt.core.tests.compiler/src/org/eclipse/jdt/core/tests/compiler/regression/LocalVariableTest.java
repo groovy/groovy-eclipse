@@ -870,52 +870,52 @@ public void testBug537033() {
 	runNegativeTest(
 		new String[] {
 			"ShowBug.java",
-			"import java.util.concurrent.Callable;\n" + 
-			"\n" + 
-			"public class ShowBug {\n" + 
-			"    private static abstract class X {\n" + 
-			"        abstract void x(int val);\n" + 
-			"    }\n" + 
-			"\n" + 
-			"    public ShowBug() {\n" + 
-			"        final X x = new X() {\n" + 
-			"            void x(int val) {\n" + 
-			"                if (val > 0) {\n" + 
-			"                    // (1) The local variable x may not have been initialized\n" + 
-			"                    x.x(val - 1);\n" + 
-			"                }\n" + 
-			"            }\n" + 
-			"        };\n" + 
-			"\n" + 
-			"        new Callable<Void>() {\n" + 
-			"            public Void call() {\n" + 
-			"                // (2) Missing code implementation in the compiler\n" + 
-			"                x.x(10);          \n" + 
-			"                return null;\n" + 
-			"            }\n" + 
-			"        }.call();\n" + 
-			"    }\n" + 
+			"import java.util.concurrent.Callable;\n" +
+			"\n" +
+			"public class ShowBug {\n" +
+			"    private static abstract class X {\n" +
+			"        abstract void x(int val);\n" +
+			"    }\n" +
+			"\n" +
+			"    public ShowBug() {\n" +
+			"        final X x = new X() {\n" +
+			"            void x(int val) {\n" +
+			"                if (val > 0) {\n" +
+			"                    // (1) The local variable x may not have been initialized\n" +
+			"                    x.x(val - 1);\n" +
+			"                }\n" +
+			"            }\n" +
+			"        };\n" +
+			"\n" +
+			"        new Callable<Void>() {\n" +
+			"            public Void call() {\n" +
+			"                // (2) Missing code implementation in the compiler\n" +
+			"                x.x(10);          \n" +
+			"                return null;\n" +
+			"            }\n" +
+			"        }.call();\n" +
+			"    }\n" +
 			"}\n"
 		},
 		this.complianceLevel < ClassFileConstants.JDK11
 		?
-		"----------\n" + 
-		"1. WARNING in ShowBug.java (at line 9)\n" + 
-		"	final X x = new X() {\n" + 
-		"	                ^^^\n" + 
-		"Access to enclosing constructor ShowBug.X() is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"2. ERROR in ShowBug.java (at line 13)\n" + 
-		"	x.x(val - 1);\n" + 
-		"	^\n" + 
-		"The local variable x may not have been initialized\n" + 
+		"----------\n" +
+		"1. WARNING in ShowBug.java (at line 9)\n" +
+		"	final X x = new X() {\n" +
+		"	                ^^^\n" +
+		"Access to enclosing constructor ShowBug.X() is emulated by a synthetic accessor method\n" +
+		"----------\n" +
+		"2. ERROR in ShowBug.java (at line 13)\n" +
+		"	x.x(val - 1);\n" +
+		"	^\n" +
+		"The local variable x may not have been initialized\n" +
 		"----------\n"
 		:
-		"----------\n" + 
-		"1. ERROR in ShowBug.java (at line 13)\n" + 
-		"	x.x(val - 1);\n" + 
-		"	^\n" + 
-		"The local variable x may not have been initialized\n" + 
+		"----------\n" +
+		"1. ERROR in ShowBug.java (at line 13)\n" +
+		"	x.x(val - 1);\n" +
+		"	^\n" +
+		"The local variable x may not have been initialized\n" +
 		"----------\n");
 }
 public static Class testClass() {

@@ -43,9 +43,9 @@ public abstract class VariableBinding extends Binding {
 	public Constant constant() {
 		return this.constant;
 	}
-	
+
 	/**
-	 * Call this variant during resolve / analyse, so we can handle the case 
+	 * Call this variant during resolve / analyse, so we can handle the case
 	 * when a tentative lambda resolve triggers resolving of outside code.
 	 */
 	public Constant constant(Scope scope) {
@@ -66,7 +66,7 @@ public abstract class VariableBinding extends Binding {
 	public final boolean isFinal() {
 		return (this.modifiers & ClassFileConstants.AccFinal) != 0;
 	}
-	
+
 	public final boolean isEffectivelyFinal() {
 		return (this.tagBits & TagBits.IsEffectivelyFinal) != 0;
 	}
@@ -74,14 +74,14 @@ public abstract class VariableBinding extends Binding {
 	/** Answer true if null annotations are enabled and this field is specified @NonNull */
 	public boolean isNonNull() {
 		return (this.tagBits & TagBits.AnnotationNonNull) != 0
-				|| (this.type != null 
+				|| (this.type != null
 					&& (this.type.tagBits & TagBits.AnnotationNonNull) != 0);
 	}
 
 	/** Answer true if null annotations are enabled and this field is specified @Nullable */
 	public boolean isNullable() {
 		return (this.tagBits & TagBits.AnnotationNullable) != 0
-				|| (this.type != null 
+				|| (this.type != null
 				&& (this.type.tagBits & TagBits.AnnotationNullable) != 0);
 	}
 

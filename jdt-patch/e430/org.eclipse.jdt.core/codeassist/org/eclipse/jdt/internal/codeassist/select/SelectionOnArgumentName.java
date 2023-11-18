@@ -58,7 +58,7 @@ public class SelectionOnArgumentName extends Argument {
 		super.resolve(scope);
 		throw new SelectionNodeFound(this.binding);
 	}
-	
+
 	@Override
 	public TypeBinding resolveForCatch(BlockScope scope) {
 		super.resolveForCatch(scope);

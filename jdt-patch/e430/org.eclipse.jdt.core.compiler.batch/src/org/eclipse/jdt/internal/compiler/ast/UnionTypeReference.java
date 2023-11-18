@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -49,7 +49,7 @@ public class UnionTypeReference extends TypeReference {
 
 	@Override
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
-		// return the lub (least upper bound of all type binding) 
+		// return the lub (least upper bound of all type binding)
 		int length = this.typeReferences.length;
 		TypeBinding[] allExceptionTypes = new TypeBinding[length];
 		boolean hasError = false;

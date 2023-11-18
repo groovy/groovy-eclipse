@@ -205,7 +205,7 @@ public interface IConstantPoolEntry {
 	 * CONSTANT_InterfaceMethodref type entry. This value is set only when decoding the
 	 * CONSTANT_Methodref, CONSTANT_InterfaceMethodref, CONSTANT_MethodType
 	 * or CONSTANT_InvokeDynamic entry.
-	 * 
+	 *
 	 * Returns null otherwise.
 	 *
 	 * @return the method descriptor value for a CONSTANT_Methodref,

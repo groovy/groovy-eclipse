@@ -33,17 +33,17 @@ public class AnnotationTest_9 extends AbstractComparableTest {
 	        new String[] {
 	                "p/A.java",
 	                "package p;\n" +
-	                "@java.lang.annotation.Target({\n" + 
-	                "    java.lang.annotation.ElementType.TYPE, java.lang.annotation.ElementType.METHOD})\n" + 
-	                "@Deprecated\n" + 
+	                "@java.lang.annotation.Target({\n" +
+	                "    java.lang.annotation.ElementType.TYPE, java.lang.annotation.ElementType.METHOD})\n" +
+	                "@Deprecated\n" +
 	                "public @interface A {}\n",
 	        },"");
 	    runConformTest(
             new String[] {
                     "X.java",
                     "import p.A;\n" +
-                    "class X {\n" + 
-                    "  @A void foo() {}\n" + 
+                    "class X {\n" +
+                    "  @A void foo() {}\n" +
                     "}\n",
             },"", null, false, null);
 	}
@@ -55,12 +55,12 @@ public class AnnotationTest_9 extends AbstractComparableTest {
     				"	String value(X this);\n" +
     				"}\n",
     		},
-    		"----------\n" + 
-    		"1. ERROR in X.java (at line 2)\n" + 
-    		"	String value(X this);\n" + 
-    		"	       ^^^^^^^^^^^^^\n" + 
-    		"Annotation attributes cannot have parameters\n" + 
-    		"----------\n", 
+    		"----------\n" +
+    		"1. ERROR in X.java (at line 2)\n" +
+    		"	String value(X this);\n" +
+    		"	       ^^^^^^^^^^^^^\n" +
+    		"Annotation attributes cannot have parameters\n" +
+    		"----------\n",
     		null, true);
     }
     public void testBug521054b() throws Exception {
@@ -75,12 +75,12 @@ public class AnnotationTest_9 extends AbstractComparableTest {
     				"	X[] value(Container this);\n" +
     				"}\n",
     		},
-    		"----------\n" + 
-    		"1. ERROR in X.java (at line 6)\n" + 
-    		"	X[] value(Container this);\n" + 
-    		"	    ^^^^^^^^^^^^^^^^^^^^^\n" + 
-    		"Annotation attributes cannot have parameters\n" + 
-    		"----------\n", 
+    		"----------\n" +
+    		"1. ERROR in X.java (at line 6)\n" +
+    		"	X[] value(Container this);\n" +
+    		"	    ^^^^^^^^^^^^^^^^^^^^^\n" +
+    		"Annotation attributes cannot have parameters\n" +
+    		"----------\n",
     		null, true);
     }
     public void testBug521054c() throws Exception {
@@ -95,12 +95,12 @@ public class AnnotationTest_9 extends AbstractComparableTest {
     				"	X[] value();\n" +
     				"}\n",
     		},
-    		"----------\n" + 
-    		"1. ERROR in X.java (at line 3)\n" + 
-    		"	String value(X this, int i);\n" + 
-    		"	       ^^^^^^^^^^^^^^^^^^^^\n" + 
-    		"Annotation attributes cannot have parameters\n" + 
-    		"----------\n", 
+    		"----------\n" +
+    		"1. ERROR in X.java (at line 3)\n" +
+    		"	String value(X this, int i);\n" +
+    		"	       ^^^^^^^^^^^^^^^^^^^^\n" +
+    		"Annotation attributes cannot have parameters\n" +
+    		"----------\n",
     		null, true);
     }
 }

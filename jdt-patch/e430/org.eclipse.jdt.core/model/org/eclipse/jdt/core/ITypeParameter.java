@@ -45,12 +45,12 @@ public interface ITypeParameter extends IJavaElement, ISourceReference {
 	String[] getBounds() throws JavaModelException;
 
 	/**
-	 * Returns the signatures for this type parameter's bounds. The type parameter may have 
-	 * been declared as part of a type or a method. The signatures represent only the individual 
-	 * bounds and do not include the type variable name or the <code>extends</code> keyword.  
-	 * The signatures may be either unresolved (for source types) or resolved (for binary types). 
+	 * Returns the signatures for this type parameter's bounds. The type parameter may have
+	 * been declared as part of a type or a method. The signatures represent only the individual
+	 * bounds and do not include the type variable name or the <code>extends</code> keyword.
+	 * The signatures may be either unresolved (for source types) or resolved (for binary types).
 	 * See {@link Signature} for details.
-	 * 
+	 *
 	 * @return the signatures for the bounds of this formal type parameter
 	 * @throws JavaModelException
 	 *             if this element does not exist or if an exception occurs while accessing its corresponding resource.
@@ -58,7 +58,7 @@ public interface ITypeParameter extends IJavaElement, ISourceReference {
 	 * @since 3.6
 	 */
 	String[] getBoundsSignatures() throws JavaModelException;
-	
+
 	/**
 	 * Returns the declaring member of this type parameter. This can be either an <code>IType</code>
 	 * or an <code>IMethod</code>.

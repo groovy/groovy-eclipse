@@ -32,31 +32,31 @@ public class TypeBindingVisitor {
 	public boolean visit(ArrayBinding arrayBinding) {
 		return true;  // continue traversal.
 	}
-	
+
 	public boolean visit(TypeVariableBinding typeVariable) {
 		return true;  // continue traversal.
 	}
-	
+
 	public boolean visit(ReferenceBinding referenceBinding) {
 		return true;  // continue traversal.
 	}
-	
+
 	public boolean visit(WildcardBinding wildcardBinding) {
 		return true;  // continue traversal.
 	}
-	
+
 	public boolean visit(ParameterizedTypeBinding parameterizedTypeBinding) {
 		return true;  // continue traversal.
 	}
-	
+
 	public boolean visit(IntersectionTypeBinding18 intersectionTypeBinding18) {
 		return true;  // continue traversal.
 	}
-	
+
 	public boolean visit(RawTypeBinding rawTypeBinding) {
 		return true;  // continue traversal.
 	}
-	
+
 	public boolean visit(PolyTypeBinding polyTypeBinding) {
 		return true;  // continue traversal.
 	}
@@ -69,9 +69,9 @@ public class TypeBindingVisitor {
 
 	public static void visit(TypeBindingVisitor visitor, TypeBinding type) {
 
-		if (type == null) 
+		if (type == null)
 			return;
-		
+
 		SimpleLookupTable visitedCache = visitor.visitedCache;
 		if (visitedCache == null) {
 			visitor.visitedCache = new SimpleLookupTable(3);
@@ -83,7 +83,7 @@ public class TypeBindingVisitor {
 			return;
 		visitedCache.put(type, Boolean.TRUE);
 		switch (type.kind()) {
-			
+
 			case Binding.TYPE_PARAMETER:
 				TypeVariableBinding typeVariableBinding = (TypeVariableBinding) type;
 				if (visitor.visit(typeVariableBinding)) {
@@ -92,7 +92,7 @@ public class TypeBindingVisitor {
 					visit(visitor, typeVariableBinding.superInterfaces);
 				}
 	            break;
-	            
+
 			case Binding.PARAMETERIZED_TYPE:
 				ParameterizedTypeBinding parameterizedTypeBinding = (ParameterizedTypeBinding) type;
 				if (visitor.visit(parameterizedTypeBinding)) {
@@ -117,15 +117,15 @@ public class TypeBindingVisitor {
 		        	}
 		        }
 				break;
-			
+
 			case Binding.BASE_TYPE:
 				visitor.visit((BaseTypeBinding) type);
 				break;
-			
+
 			case Binding.RAW_TYPE:
 				visitor.visit((RawTypeBinding) type);
 				break;
-				
+
 			case Binding.TYPE:
 			case Binding.GENERIC_TYPE:
 				ReferenceBinding referenceBinding = (ReferenceBinding) type;
@@ -134,17 +134,17 @@ public class TypeBindingVisitor {
 					visit(visitor, referenceBinding.typeVariables());
 				}
 				break;
-			
+
 			case Binding.INTERSECTION_TYPE18:
 				IntersectionTypeBinding18 intersectionTypeBinding18 = (IntersectionTypeBinding18) type;
 				if (visitor.visit(intersectionTypeBinding18))
 					visit(visitor, intersectionTypeBinding18.intersectingTypes);
 				break;
-				
+
 			case Binding.POLY_TYPE:
 				visitor.visit((PolyTypeBinding) type);
 				break;
-				
+
 			default:
 				throw new InternalError("Unexpected binding type"); //$NON-NLS-1$
 		}

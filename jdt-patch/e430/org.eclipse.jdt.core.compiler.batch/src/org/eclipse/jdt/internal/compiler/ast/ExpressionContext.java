@@ -16,14 +16,14 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 public enum ExpressionContext {
-	
-	/** Assignment context: potential poly-expressions are: method invocations, lambdas, reference expressions, 
+
+	/** Assignment context: potential poly-expressions are: method invocations, lambdas, reference expressions,
 	   conditional expressions and allocation expressions. This is the only Java 7 context where target type
 	   influenced evaluation of some expression.
-	   
-	   Context induced by: ReturnStatement, ArrayInitializer, Assignment, FieldDeclaration and LocalDeclaration. 
+
+	   Context induced by: ReturnStatement, ArrayInitializer, Assignment, FieldDeclaration and LocalDeclaration.
 	*/
-	ASSIGNMENT_CONTEXT { 
+	ASSIGNMENT_CONTEXT {
 		@Override
 		public String toString() {
 			return "assignment context"; //$NON-NLS-1$
@@ -33,14 +33,14 @@ public enum ExpressionContext {
 			return true;
 		}
 	},
-	
-	/** Invocation context: potential poly-expressions are: method invocations, lambdas, reference expressions, 
-	   conditional expressions and allocation expressions. At this point, we don't distinguish between strict 
+
+	/** Invocation context: potential poly-expressions are: method invocations, lambdas, reference expressions,
+	   conditional expressions and allocation expressions. At this point, we don't distinguish between strict
 	   and loose invocation contexts - we may have to cross the bridge some day.
-	   
+
 	   Context induced by: AllocationExpression, QualifiedAllocationExpression, ExplicitConstructorCall, MessageSend
 	   CodeSnippetAllocationExpression and CodeSnippetMessageSend.
-	*/													
+	*/
 	INVOCATION_CONTEXT {
 		@Override
 		public String toString() {
@@ -51,7 +51,7 @@ public enum ExpressionContext {
 			return true;
 		}
 	},
-	
+
 	/** Casting context: potential poly-expressions are: lambdas and reference expressions
 	   Context induced by: CastExpression.
 	*/
@@ -65,9 +65,9 @@ public enum ExpressionContext {
 			return false;
 		}
 	},
-	
-	/** Vanilla context (string, numeric): potential poly-expressions are: NONE. This is the nonpoly context in which 
-	   expressions get evaluated, unless they feature in one of the above contexts. 
+
+	/** Vanilla context (string, numeric): potential poly-expressions are: NONE. This is the nonpoly context in which
+	   expressions get evaluated, unless they feature in one of the above contexts.
 	*/
 	VANILLA_CONTEXT {
 		@Override

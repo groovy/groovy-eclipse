@@ -29,7 +29,7 @@ public interface Invocation extends InvocationSite {
 
 	/** Answer the resolved method binding of this invocation */
 	MethodBinding binding();
-	
+
 	/**
 	 * Register the given inference context, which produced the given method as its intermediate result.
 	 * Later when the same method is selected as the most specific method, the inference context

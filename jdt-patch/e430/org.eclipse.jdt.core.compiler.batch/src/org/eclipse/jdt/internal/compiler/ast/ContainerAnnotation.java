@@ -22,29 +22,29 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 
 public class ContainerAnnotation extends SingleMemberAnnotation {
-	
+
 	private Annotation [] containees;
 	private ArrayInitializer memberValues;
-	
+
 	public ContainerAnnotation(Annotation repeatingAnnotation, ReferenceBinding containerAnnotationType, BlockScope scope) {
-		
+
 		char [][] containerTypeName = containerAnnotationType.compoundName;
 		if (containerTypeName.length == 1) {
 			this.type = new SingleTypeReference(containerTypeName[0], 0);
 		} else {
 			this.type = new QualifiedTypeReference(containerTypeName, new long [containerTypeName.length]);
 		}
-		
+
 		this.sourceStart = repeatingAnnotation.sourceStart;
 		this.sourceEnd = repeatingAnnotation.sourceEnd;
-		
+
 		this.resolvedType = containerAnnotationType;
 		this.recipient = repeatingAnnotation.recipient;
 		this.containees = new Annotation[0];
 		this.memberValue = this.memberValues = new ArrayInitializer();
 		addContainee(repeatingAnnotation);
 	}
-	
+
 	public void addContainee(Annotation repeatingAnnotation) {
 		final int length = this.containees.length;
 		System.arraycopy(this.containees, 0, this.containees = new Annotation[length + 1], 0, length);
@@ -52,7 +52,7 @@ public class ContainerAnnotation extends SingleMemberAnnotation {
 		this.memberValues.expressions = this.containees;
 		repeatingAnnotation.setPersistibleAnnotation(length == 0 ? this : null);
 	}
-	
+
 	// Resolve the compiler synthesized container annotation.
 	@Override
 	public TypeBinding resolveType(BlockScope scope) {
@@ -74,11 +74,11 @@ public class ContainerAnnotation extends SingleMemberAnnotation {
 		this.resolvedType = containerAnnotationType = repeatingAnnotationType.containerAnnotationType();
 		if (!this.resolvedType.isValidBinding())
 			return this.resolvedType;
-		
-		// OK, the declaration site of the repeating annotation type as well as the use site where the annotations actually repeat pass muster. 
+
+		// OK, the declaration site of the repeating annotation type as well as the use site where the annotations actually repeat pass muster.
 		MethodBinding[] methods = containerAnnotationType.methods();
 		MemberValuePair pair = memberValuePairs()[0];
-		
+
 		for (int i = 0, length = methods.length; i < length; i++) {
 			MethodBinding method = methods[i];
 			if (CharOperation.equals(method.selector, TypeConstants.VALUE)) {

@@ -16,7 +16,7 @@
  *								bug 331649 - [compiler][null] consider null annotations for fields
  *								bug 383368 - [compiler][null] syntactic null analysis for field references
  *								bug 392384 - [1.8][compiler][null] Restore nullness info from type annotations in class files
- *								Bug 392099 - [1.8][compiler][null] Apply null annotation on types for null analysis 
+ *								Bug 392099 - [1.8][compiler][null] Apply null annotation on types for null analysis
  *								Bug 411964 - [1.8][null] leverage null type annotation in foreach statement
  *								Bug 407414 - [compiler][null] Incorrect warning on a primitive type being null
  *******************************************************************************/
@@ -68,7 +68,7 @@ protected boolean checkNullableFieldDereference(Scope scope, FieldBinding field,
 		if ((field.type.tagBits & TagBits.AnnotationNullable) != 0) {
 			scope.problemReporter().dereferencingNullableExpression(sourcePosition, scope.environment());
 			return true;
-		} 
+		}
 		if (field.type.isFreeTypeVariable()) {
 			scope.problemReporter().fieldFreeTypeVariableReference(field, sourcePosition);
 			return true;
@@ -96,7 +96,7 @@ public void fieldStore(Scope currentScope, CodeStream codeStream, FieldBinding f
 				case TypeIds.T_double :
 					codeStream.dup2();
 					break;
-				default : 
+				default :
 					codeStream.dup();
 					break;
 			}
@@ -114,7 +114,7 @@ public void fieldStore(Scope currentScope, CodeStream codeStream, FieldBinding f
 				case TypeIds.T_double :
 					codeStream.dup2_x1();
 					break;
-				default : 
+				default :
 					codeStream.dup_x1();
 					break;
 			}
@@ -135,8 +135,8 @@ public abstract void generateCompoundAssignment(BlockScope currentScope, CodeStr
 
 public abstract void generatePostIncrement(BlockScope currentScope, CodeStream codeStream, CompoundAssignment postIncrement, boolean valueRequired);
 
-/** 
- * Is the given reference equivalent to the receiver, 
+/**
+ * Is the given reference equivalent to the receiver,
  * meaning that both denote the same path of field reads?
  * Used from {@link FlowContext#isNullcheckedFieldAccess(Reference)}.
  */
@@ -184,7 +184,7 @@ void reportOnlyUselesslyReadPrivateField(BlockScope currentScope, FieldBinding f
 		if (fieldBinding.isUsedOnlyInCompound()) {
 			fieldBinding.compoundUseFlag--; // consume one
 			if (fieldBinding.compoundUseFlag == 0					// report only the last usage
-					&& fieldBinding.isOrEnclosedByPrivateType() 
+					&& fieldBinding.isOrEnclosedByPrivateType()
 					&& (this.implicitConversion & TypeIds.UNBOXING) == 0) // don't report if unboxing is involved (might cause NPE)
 			{
 				// compoundAssignment/postIncrement is the only usage of this field
@@ -219,14 +219,14 @@ static void reportOnlyUselesslyReadLocal(BlockScope currentScope, LocalVariableB
 		MethodScope methodScope = currentScope.methodScope();
 		if (methodScope != null && !methodScope.isLambdaScope()) { // lambda must be congruent with the descriptor.
 			MethodBinding method = ((AbstractMethodDeclaration)methodScope.referenceContext()).binding;
-			
+
 			boolean shouldReport = !method.isMain();
 			if (method.isImplementing()) {
 				shouldReport &= currentScope.compilerOptions().reportUnusedParameterWhenImplementingAbstract;
 			} else if (method.isOverriding()) {
 				shouldReport &= currentScope.compilerOptions().reportUnusedParameterWhenOverridingConcrete;
 			}
-			
+
 			if (shouldReport) {
 				// report the case of an argument that is unread except through a special operator
 				currentScope.problemReporter().unusedArgument(localBinding.declaration);

@@ -23,7 +23,7 @@ import java.util.List;
  * <pre>
  * BreakStatement:
  *    <b>break</b> [ Identifier ] <b>;</b>
- *    
+ *
  *    Break statement allows expression as part of Java 12 preview feature (JEP 325)
  *		<b>break</b> <b>{ Identifier | Expression }</b>
  * </pre>
@@ -40,7 +40,7 @@ public class BreakStatement extends Statement {
 	 */
 	public static final ChildPropertyDescriptor LABEL_PROPERTY =
 		new ChildPropertyDescriptor(BreakStatement.class, "label", SimpleName.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * The "expression" structural property of this node type (child type: {@link Expression}). (added in JEP 325).
 	 * @noreference This property is not intended to be referenced by clients as it is a part of Java preview feature.
@@ -56,7 +56,7 @@ public class BreakStatement extends Statement {
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	/**
 	 * <code>true</code> indicates implicit and <code>false</code> indicates not implicit.
 	 */
@@ -83,7 +83,7 @@ public class BreakStatement extends Statement {
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-	
+
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
@@ -106,7 +106,7 @@ public class BreakStatement extends Statement {
 	 * The label, or <code>null</code> if none; none by default.
 	 */
 	private SimpleName optionalLabel = null;
-	
+
 	/**
 	 * The expression; <code>null</code> for none
 	 */
@@ -129,7 +129,7 @@ public class BreakStatement extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	@Override
 	final ASTNode internalGetSetChildProperty(ChildPropertyDescriptor property, boolean get, ASTNode child) {
 		if (property == LABEL_PROPERTY) {
@@ -139,7 +139,7 @@ public class BreakStatement extends Statement {
 				setLabel((SimpleName) child);
 				return null;
 			}
-		} 
+		}
 		if (property == EXPRESSION_PROPERTY) {
 			if (get) {
 				return getExpression();
@@ -208,7 +208,7 @@ public class BreakStatement extends Statement {
 		this.optionalLabel = label;
 		postReplaceChild(oldChild, label, LABEL_PROPERTY);
 	}
-	
+
 	/**
 	 * Returns the expression of this break statement, or <code>null</code> if
 	 * there is none.

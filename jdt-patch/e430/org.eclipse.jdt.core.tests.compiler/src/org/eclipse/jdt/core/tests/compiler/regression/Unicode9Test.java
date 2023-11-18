@@ -32,8 +32,8 @@ public void test1() {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"public class X {\n" + 
-			"		public int a\u20BE; // new unicode character in unicode 8.0 \n" + 
+			"public class X {\n" +
+			"		public int a\u20BE; // new unicode character in unicode 8.0 \n" +
 			"}",
 		},
 		"",

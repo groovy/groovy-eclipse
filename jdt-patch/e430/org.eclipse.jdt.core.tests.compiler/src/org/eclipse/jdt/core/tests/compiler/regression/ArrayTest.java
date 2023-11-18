@@ -410,22 +410,22 @@ public void test014() throws Exception {
 	CompilerOptions options = new CompilerOptions(optionsMap);
 	if (options.complianceLevel > ClassFileConstants.JDK1_4) {
 		// check that #clone() return type is changed ONLY from -source 1.5 only (independant from compliance level)
-		optionsMap.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);		
-	}	
+		optionsMap.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
+	}
 	this.runNegativeTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	void foo(long[] longs) throws Exception {\n" + 
-				"		long[] other = longs.clone();\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	void foo(long[] longs) throws Exception {\n" +
+				"		long[] other = longs.clone();\n" +
+				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	long[] other = longs.clone();\n" + 
-			"	               ^^^^^^^^^^^^^\n" + 
-			"Type mismatch: cannot convert from Object to long[]\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	long[] other = longs.clone();\n" +
+			"	               ^^^^^^^^^^^^^\n" +
+			"Type mismatch: cannot convert from Object to long[]\n" +
 			"----------\n",
 			null,
 			true,
@@ -440,10 +440,10 @@ public void test015() throws Exception {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"public class X {\n" + 
-			"	void foo(long[] longs) throws Exception {\n" + 
-			"		long[] other = longs.clone();\n" + 
-			"	}\n" + 
+			"public class X {\n" +
+			"	void foo(long[] longs) throws Exception {\n" +
+			"		long[] other = longs.clone();\n" +
+			"	}\n" +
 			"}\n",
 		},
 		"");
@@ -454,10 +454,10 @@ public void test016() throws Exception {
 	this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	void foo(long[] longs) throws Exception {\n" + 
-				"		Object other = longs.clone();\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	void foo(long[] longs) throws Exception {\n" +
+				"		Object other = longs.clone();\n" +
+				"	}\n" +
 				"}\n",
 			},
 			"");
@@ -470,25 +470,25 @@ public void test016() throws Exception {
 			ClassFileBytesDisassembler.DETAILED);
 
 	String expectedOutput =	new CompilerOptions(getCompilerOptions()).sourceLevel <= ClassFileConstants.JDK1_4
-		?	"  // Method descriptor #15 ([J)V\n" + 
-			"  // Stack: 1, Locals: 3\n" + 
-			"  void foo(long[] longs) throws java.lang.Exception;\n" + 
-			"    0  aload_1 [longs]\n" + 
-			"    1  invokevirtual java.lang.Object.clone() : java.lang.Object [19]\n" + 
-			"    4  astore_2 [other]\n" + 
-			"    5  return\n" + 
-			"      Line numbers:\n" + 
-			"        [pc: 0, line: 3]\n" + 
+		?	"  // Method descriptor #15 ([J)V\n" +
+			"  // Stack: 1, Locals: 3\n" +
+			"  void foo(long[] longs) throws java.lang.Exception;\n" +
+			"    0  aload_1 [longs]\n" +
+			"    1  invokevirtual java.lang.Object.clone() : java.lang.Object [19]\n" +
+			"    4  astore_2 [other]\n" +
+			"    5  return\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 3]\n" +
 			"        [pc: 5, line: 4]\n"
-		:	"  // Method descriptor #15 ([J)V\n" + 
-			"  // Stack: 1, Locals: 3\n" + 
-			"  void foo(long[] longs) throws java.lang.Exception;\n" + 
-			"    0  aload_1 [longs]\n" + 
-			"    1  invokevirtual long[].clone() : java.lang.Object [19]\n" + 
-			"    4  astore_2 [other]\n" + 
-			"    5  return\n" + 
-			"      Line numbers:\n" + 
-			"        [pc: 0, line: 3]\n" + 
+		:	"  // Method descriptor #15 ([J)V\n" +
+			"  // Stack: 1, Locals: 3\n" +
+			"  void foo(long[] longs) throws java.lang.Exception;\n" +
+			"    0  aload_1 [longs]\n" +
+			"    1  invokevirtual long[].clone() : java.lang.Object [19]\n" +
+			"    4  astore_2 [other]\n" +
+			"    5  return\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 3]\n" +
 			"        [pc: 5, line: 4]\n";
 
 	int index = actualOutput.indexOf(expectedOutput);
@@ -497,7 +497,7 @@ public void test016() throws Exception {
 	}
 	if (index == -1) {
 		assertEquals("unexpected bytecode sequence", expectedOutput, actualOutput);
-	}		
+	}
 	return;
 }
 
@@ -508,15 +508,15 @@ public void test017() throws Exception {
 	CompilerOptions options = new CompilerOptions(optionsMap);
 	if (options.complianceLevel > ClassFileConstants.JDK1_4) {
 		// check that #clone() return type is changed ONLY from -source 1.5 only (independant from compliance level)
-		optionsMap.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);		
+		optionsMap.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
 	}
 	this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	void foo(long[] longs) throws Exception {\n" + 
-				"		Object other = longs.clone();\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	void foo(long[] longs) throws Exception {\n" +
+				"		Object other = longs.clone();\n" +
+				"	}\n" +
 				"}\n",
 			},
 			"",
@@ -534,15 +534,15 @@ public void test017() throws Exception {
 			ClassFileBytesDisassembler.DETAILED);
 
 	String expectedOutput =
-		"  // Method descriptor #15 ([J)V\n" + 
-		"  // Stack: 1, Locals: 3\n" + 
-		"  void foo(long[] longs) throws java.lang.Exception;\n" + 
-		"    0  aload_1 [longs]\n" + 
-		"    1  invokevirtual java.lang.Object.clone() : java.lang.Object [19]\n" + 
-		"    4  astore_2 [other]\n" + 
-		"    5  return\n" + 
-		"      Line numbers:\n" + 
-		"        [pc: 0, line: 3]\n" + 
+		"  // Method descriptor #15 ([J)V\n" +
+		"  // Stack: 1, Locals: 3\n" +
+		"  void foo(long[] longs) throws java.lang.Exception;\n" +
+		"    0  aload_1 [longs]\n" +
+		"    1  invokevirtual java.lang.Object.clone() : java.lang.Object [19]\n" +
+		"    4  astore_2 [other]\n" +
+		"    5  return\n" +
+		"      Line numbers:\n" +
+		"        [pc: 0, line: 3]\n" +
 		"        [pc: 5, line: 4]\n";
 
 	int index = actualOutput.indexOf(expectedOutput);
@@ -551,7 +551,7 @@ public void test017() throws Exception {
 	}
 	if (index == -1) {
 		assertEquals("unexpected bytecode sequence", expectedOutput, actualOutput);
-	}		
+	}
 }
 
 // https://bugs.eclipse.org/331872 -  [compiler] NPE in Scope.createArrayType when attempting qualified access from type parameter
@@ -561,24 +561,24 @@ public void test018() throws Exception {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
-			"public class X<p> {\n" + 
-			"	void foo(p.O[] elems)  {\n" + 
+			"public class X<p> {\n" +
+			"	void foo(p.O[] elems)  {\n" +
 			"	}\n" +
 			"   void bar() {\n" +
 			"        foo(new Object[0]);\n" +
-			"   }\n" + 
+			"   }\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 2)\n" + 
-		"	void foo(p.O[] elems)  {\n" + 
-		"	         ^^^^^\n" + 
-		"Illegal qualified access from the type parameter p\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 5)\n" + 
-		"	foo(new Object[0]);\n" + 
-		"	^^^\n" + 
-		"The method foo(Object[]) is undefined for the type X<p>\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 2)\n" +
+		"	void foo(p.O[] elems)  {\n" +
+		"	         ^^^^^\n" +
+		"Illegal qualified access from the type parameter p\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 5)\n" +
+		"	foo(new Object[0]);\n" +
+		"	^^^\n" +
+		"The method foo(Object[]) is undefined for the type X<p>\n" +
 		"----------\n");
 }
 
@@ -587,7 +587,7 @@ public void test019() throws Exception {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"public class X {\n" + 
+			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
 			"		X [][][] x = new X[10][10][];\n" +
 			"		System.out.println(\"SUCCESS\");\n" +

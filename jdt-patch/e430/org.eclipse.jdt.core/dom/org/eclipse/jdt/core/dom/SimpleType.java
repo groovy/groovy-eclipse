@@ -33,10 +33,10 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
  * In JLS8 and later, the SimpleType may have optional annotations.
  * If annotations are present, then the name must be a {@link SimpleName}.
  * Annotated qualified names are represented as {@link QualifiedType} or {@link NameQualifiedType}.
- * 
+ *
  * @see QualifiedType
  * @see NameQualifiedType
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -49,7 +49,7 @@ public class SimpleType extends AnnotatableType {
 	 */
 	public static final ChildListPropertyDescriptor ANNOTATIONS_PROPERTY =
 			internalAnnotationsPropertyFactory(SimpleType.class);
-	
+
 	/**
 	 * The "name" structural property of this node type (child type: {@link Name}).
 	 * @since 3.0
@@ -76,7 +76,7 @@ public class SimpleType extends AnnotatableType {
 		createPropertyList(SimpleType.class, propertyList);
 		addProperty(NAME_PROPERTY, propertyList);
 		PROPERTY_DESCRIPTORS = reapPropertyList(propertyList);
-		
+
 		propertyList = new ArrayList(3);
 		createPropertyList(SimpleType.class, propertyList);
 		addProperty(ANNOTATIONS_PROPERTY, propertyList);

@@ -36,7 +36,7 @@ package org.eclipse.jdt.core.dom;
  *    ParameterizedType
  *    UnionType
  *    IntersectionType
- *    
+ *
  * {@link PrimitiveType}:
  *    { Annotation } <b>byte</b>
  *    { Annotation } <b>short</b>
@@ -68,7 +68,7 @@ package org.eclipse.jdt.core.dom;
  * @since 2.0
  */
 public abstract class Type extends ASTNode {
-	
+
 	/**
 	 * Creates a new AST node for a type owned by the given AST.
 	 * <p>
@@ -218,14 +218,14 @@ public abstract class Type extends ASTNode {
 	public final boolean isWildcardType() {
 		return (this instanceof WildcardType);
 	}
-	
+
 	/**
 	 * Returns whether this type can be annotated. All sub-classes of
 	 * {@link AnnotatableType} can be annotated.
 	 *
 	 * @return <code>true</code> if this type is an instance of {@link AnnotatableType}, and
 	 * <code>false</code> otherwise
-	 * 			
+	 *
 	 * @since 3.10
 	 */
 	public boolean isAnnotatable() {

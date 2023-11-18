@@ -22,38 +22,38 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryTypeAnnotation;
 
 /**
  * The TypeAnnotationInfo class does not currently support type annotations within code
- * blocks (those that have a target type of 0x40 and higher) - it is not yet clear that 
+ * blocks (those that have a target type of 0x40 and higher) - it is not yet clear that
  * these need to be accessible.
  */
 public class TypeAnnotationInfo extends ClassFileStruct implements IBinaryTypeAnnotation {
 
 	private AnnotationInfo annotation;
-	
+
 	private int targetType = 0;
-	
+
 	// info is used in different ways:
 	// TargetType 0x00: CLASS_TYPE_PARAMETER: type parameter index
-	// TargetType 0x01: METHOD_TYPE_PARAMETER: type parameter index 
+	// TargetType 0x01: METHOD_TYPE_PARAMETER: type parameter index
 	// TargetType 0x10: CLASS_EXTENDS: supertype index (-1 = superclass, 0..N superinterface)
 	// TargetType 0x11: CLASS_TYPE_PARAMETER_BOUND: type parameter index
 	// TargetType 0x12: METHOD_TYPE_PARAMETER_BOUND: type parameter index
 	// TargetType 0x16: METHOD_FORMAL_PARAMETER: method formal parameter index
 	// TargetType 0x17: THROWS: throws type index
 	private int info;
-	
+
 	// TargetType 0x11: CLASS_TYPE_PARAMETER_BOUND: bound index
 	// TargetType 0x12: METHOD_TYPE_PARAMETER_BOUND: bound index
 	private int info2;
-	
+
 	private int[] typePath; // each pair of ints in the array is a type path entry
-	
+
 	int readOffset = 0;
-	
-	
+
+
 TypeAnnotationInfo(byte[] classFileBytes, int[] contantPoolOffsets, int offset) {
 	super(classFileBytes, contantPoolOffsets, offset);
 }
-	
+
 TypeAnnotationInfo(byte[] classFileBytes, int[] contantPoolOffsets, int offset, boolean runtimeVisible, boolean populate) {
 	this(classFileBytes, contantPoolOffsets, offset);
 	this.readOffset = 0;
@@ -64,30 +64,30 @@ TypeAnnotationInfo(byte[] classFileBytes, int[] contantPoolOffsets, int offset, 
 			this.info = u1At(1); // typeParameterIndex
 			this.readOffset += 2;
 			break;
-			
+
 		case AnnotationTargetTypeConstants.CLASS_EXTENDS:
 			this.info = u2At(1); // supertypeIndex
 			this.readOffset += 3;
 			break;
-			
+
 		case AnnotationTargetTypeConstants.CLASS_TYPE_PARAMETER_BOUND:
 		case AnnotationTargetTypeConstants.METHOD_TYPE_PARAMETER_BOUND:
 			this.info = u1At(1); // typeParameterIndex
 			this.info2 = u1At(2); // boundIndex;
 			this.readOffset += 3;
 			break;
-			
+
 		case AnnotationTargetTypeConstants.FIELD:
 		case AnnotationTargetTypeConstants.METHOD_RETURN:
 		case AnnotationTargetTypeConstants.METHOD_RECEIVER:
 			this.readOffset ++;
 			break;
-			
+
 		case AnnotationTargetTypeConstants.METHOD_FORMAL_PARAMETER :
 			this.info = u1At(1); // methodFormalParameterIndex
 			this.readOffset += 2;
 			break;
-			
+
 		case AnnotationTargetTypeConstants.THROWS :
 			this.info = u2At(1); // throwsTypeIndex
 			this.readOffset += 3;
@@ -204,7 +204,7 @@ public boolean equals(Object obj) {
 	if (this.targetType != other.targetType) {
 		return false;
 	}
-	
+
 	if (this.info != other.info) {
 		return false;
 	}
@@ -212,11 +212,11 @@ public boolean equals(Object obj) {
 	if (this.info2 != other.info2) {
 		return false;
 	}
-	
+
 	if (!Arrays.equals(this.typePath, other.typePath)) {
 		return false;
 	}
-	
+
 	return this.annotation.equals(other.annotation);
 }
 }

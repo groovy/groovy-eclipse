@@ -68,7 +68,7 @@ public void generateAssignment(BlockScope currentScope, CodeStream codeStream, A
 				default :
 					codeStream.dup_x2();
 					break;
-			}			
+			}
 		}
 		codeStream.generateEmulatedWriteAccessForField(codegenBinding);
 	}

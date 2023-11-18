@@ -48,8 +48,8 @@ public interface IConstantPoolConstant {
 	 * proposed new name in JVMLS11
 	 * @since 3.16
 	 */
-	int CONSTANT_DynamicCallSite = CONSTANT_InvokeDynamic; 
-	
+	int CONSTANT_DynamicCallSite = CONSTANT_InvokeDynamic;
+
 	/**
 	 * @since 3.14
 	 */
@@ -60,7 +60,7 @@ public interface IConstantPoolConstant {
 	int CONSTANT_Package = 20;
 	/**
 	 * For the proposed section of JVMLS11 4.4.13 The CONSTANT_Dynamic_info Structure
-	 * @since 3.16 
+	 * @since 3.16
 	 */
 	int CONSTANT_Dynamic = 17;
 
@@ -89,7 +89,7 @@ public interface IConstantPoolConstant {
 	int CONSTANT_InvokeDynamic_SIZE = 5;
 
 	/**
-	 * @since 3.16 
+	 * @since 3.16
 	 */
 	int CONSTANT_Dynamic_SIZE = 5;
 	/**

@@ -18,10 +18,10 @@ import java.util.List;
 
 /**
  * Creation reference expression AST node type (added in JLS8 API).
- * 
+ *
  * <pre>
  * CreationReference:
- *     Type <b>::</b> 
+ *     Type <b>::</b>
  *         [ <b>&lt;</b> Type { <b>,</b> Type } <b>&gt;</b> ]
  *         <b>new</b>
  * </pre>

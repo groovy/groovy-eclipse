@@ -26,14 +26,14 @@ public abstract class ReductionResult {
 		@Override
 		public String toString() { return "TRUE"; } //$NON-NLS-1$
 	};
-	protected static final ConstraintTypeFormula FALSE = new ConstraintTypeFormula() { 
-		/* empty body just to make abstract class instantiable */ 
+	protected static final ConstraintTypeFormula FALSE = new ConstraintTypeFormula() {
+		/* empty body just to make abstract class instantiable */
 		@Override
 		public Object reduce(InferenceContext18 context) { return this; }
 		@Override
 		public String toString() { return "FALSE"; } //$NON-NLS-1$
 	};
-	
+
 	// Relation kinds, mimic an enum:
 	protected static final int COMPATIBLE = 1;
 	protected static final int SUBTYPE = 2;
@@ -43,7 +43,7 @@ public abstract class ReductionResult {
 	protected static final int CAPTURE = 6;
 	static final int EXCEPTIONS_CONTAINED = 7;
 	protected static final int POTENTIALLY_COMPATIBLE = 8;
-	
+
 	protected TypeBinding right; // note that the LHS differs between sub-classes.
 	protected int relation;
 

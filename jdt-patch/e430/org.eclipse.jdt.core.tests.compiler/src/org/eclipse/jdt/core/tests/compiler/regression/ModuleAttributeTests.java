@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -117,7 +117,7 @@ public class ModuleAttributeTests extends AbstractRegressionTest9 {
 			"public class X11 {}\n",
 			"pack2/X21.java",
 			"package pack2;\n" +
-			"public class X21 {}\n",	
+			"public class X21 {}\n",
 		};
 		IModuleAttribute module = getModuleAttribute(contents);
 		assertEquals("Wrong Module Name", "first", new String(module.getModuleName()));

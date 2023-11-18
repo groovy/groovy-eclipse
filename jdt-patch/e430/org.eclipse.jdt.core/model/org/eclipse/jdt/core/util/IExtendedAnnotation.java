@@ -31,10 +31,10 @@ public interface IExtendedAnnotation extends IAnnotation {
 	 * @return the target type
 	 */
 	int getTargetType();
-	
+
 	/**
 	 * Answer back the offset.
-	 * 
+	 *
 	 * For a target_type value equals to:
 	 * <table border="1">
 	 * <tr>
@@ -56,73 +56,73 @@ public interface IExtendedAnnotation extends IAnnotation {
 	 * may have been discarded by the compiler if it were a no-op.</td>
 	 * </tr>
 	 * </table>
-	 * 
-	 * 
+	 *
+	 *
 	 * @return the offset
 	 */
 	int getOffset();
-	
+
 	/**
 	 * Answer back the exception table index when the target_type is EXCEPTION_PARAMETER.
-	 * 
+	 *
 	 * @return the exception table index
 	 */
 	int getExceptionTableIndex();
-	
+
 	/**
 	 * Answer back the local variable reference info table length of this entry as specified in
 	 * the JVM specifications.
-	 * 
+	 *
 	 * <p>This is defined only for annotations related to a local variable.</p>
 	 *
 	 * @return the local variable reference info table length of this entry as specified in
 	 * the JVM specifications
 	 */
 	int getLocalVariableRefenceInfoLength();
-	
+
 	/**
 	 * Answer back the local variable reference info table of this entry as specified in
 	 * the JVM specifications. Answer an empty array if none.
-	 * 
+	 *
 	 * <p>This is defined only for annotations related to a local variable.</p>
 	 *
 	 * @return the local variable reference info table of this entry as specified in
 	 * the JVM specifications. Answer an empty array if none
 	 */
 	ILocalVariableReferenceInfo[] getLocalVariableTable();
-	
+
 	/**
 	 * Answer back the method parameter index.
-	 * 
+	 *
 	 * <p>The index is 0-based.</p>
-	 * 
+	 *
 	 * @return the method parameter index
 	 */
 	int getParameterIndex();
 
 	/**
 	 * Answer back the index of the type parameter of the class or method
-	 * 
+	 *
 	 * <p>The index is 0-based.</p>
-	 * 
+	 *
 	 * @return the index of the type parameter of the class or method
 	 */
 	int getTypeParameterIndex();
 
 	/**
 	 * Answer back the index of the bound of the type parameter of the method or class
-	 * 
+	 *
 	 * <p>The index is 0-based.</p>
-	 * 
+	 *
 	 * @return the index of the bound of the type parameter of the method or class
 	 */
 	int getTypeParameterBoundIndex();
 
 	/**
 	 * Answer back the index in the given different situations.
-	 * 
+	 *
 	 * <p>The index is 0-based.</p>
-	 * 
+	 *
 	 * <table border="1">
 	 * <tr>
 	 * <th>target_type</th>
@@ -130,13 +130,13 @@ public interface IExtendedAnnotation extends IAnnotation {
 	 * </tr>
 	 * <tr>
 	 * <td>0x10 (CLASS_EXTENDS)</td>
-	 * <td>the index of the type in the clause: <code>-1 (65535)</code> is used if the annotation is on 
+	 * <td>the index of the type in the clause: <code>-1 (65535)</code> is used if the annotation is on
 	 * the superclass type, and the value <code>i</code> is used if the annotation is on the <code>i</code>th
 	 * superinterface type (counting from zero).</td>
 	 * </tr>
 	 * <tr>
 	 * <td>0x17 (THROWS)</td>
-	 * <td>the index of the exception type in the clause: the value <code>i</code> denotes an annotation of the 
+	 * <td>the index of the exception type in the clause: the value <code>i</code> denotes an annotation of the
 	 * <code>i</code>th exception type (counting from zero).</td>
 	 * </tr>
 	 * <tr>
@@ -148,14 +148,14 @@ public interface IExtendedAnnotation extends IAnnotation {
 	 * @return the index in the given different situations
 	 */
 	int getAnnotationTypeIndex();
-	
+
 	/**
 	 * Answer back the locations of the annotated type as described in the JVM specifications.
-	 * 
+	 *
 	 * <p>This is used for parameterized and array types.</p>
 	 *
 	 * @return the locations of the annotated type
 	 */
 	int[][] getTypePath();
-	
+
 }

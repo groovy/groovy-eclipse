@@ -31,7 +31,7 @@ public class PolymorphicMethodBinding extends MethodBinding {
 		this.polymorphicMethod = polymorphicMethod;
 		this.tagBits = polymorphicMethod.tagBits;
 	}
-	
+
 	public PolymorphicMethodBinding(MethodBinding polymorphicMethod, TypeBinding returnType, TypeBinding[] parameterTypes) {
 		super(
 				polymorphicMethod.modifiers,
@@ -48,7 +48,7 @@ public class PolymorphicMethodBinding extends MethodBinding {
 	public MethodBinding original() {
 		return this.polymorphicMethod;
 	}
-	
+
 	@Override
 	public boolean isPolymorphic() {
 		return true;
@@ -78,7 +78,7 @@ public class PolymorphicMethodBinding extends MethodBinding {
 		// all arguments match
 		return true;
 	}
-	
+
 	/*
 	 * Even if polymorphic methods are varargs method, we don't want them to be treated as varargs method
 	 */

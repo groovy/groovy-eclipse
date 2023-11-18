@@ -172,7 +172,7 @@ public RecoveredElement add(ModuleDeclaration moduleDeclaration, int bracketBala
 }
 @Override
 public RecoveredElement add(TypeDeclaration typeDeclaration, int bracketBalanceValue) {
-	
+
 	if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0){
 		if (this.typeCount > 0) {
 			// add it to the last type
@@ -295,7 +295,7 @@ public CompilationUnitDeclaration updatedCompilationUnitDeclaration(){
 			this.types[this.typeCount - 1].typeDeclaration.declarationSourceEnd = this.unitDeclaration.sourceEnd;
 			this.types[this.typeCount - 1].typeDeclaration.bodyEnd = this.unitDeclaration.sourceEnd;
 		}
-		
+
 		Set<TypeDeclaration> knownTypes = new HashSet<>();
 		int actualCount = existingCount;
 		for (int i = 0; i < this.typeCount; i++){

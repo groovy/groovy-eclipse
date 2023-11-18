@@ -46,7 +46,7 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 	}
 
 	// ==== filter by top-level targetType: ====
-	
+
 	@Override
 	public ITypeAnnotationWalker toField() {
 		return toTarget(AnnotationTargetTypeConstants.FIELD);
@@ -92,7 +92,7 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 				newMatches &= ~mask;
 			}
 		}
-		return restrict(newMatches, 0);		
+		return restrict(newMatches, 0);
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 				newMatches &= ~mask;
 			}
 		}
-		return restrict(newMatches, 0);	
+		return restrict(newMatches, 0);
 	}
 
 	@Override
@@ -126,10 +126,10 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 				newMatches &= ~mask;
 			}
 		}
-		return restrict(newMatches, 0);		
+		return restrict(newMatches, 0);
 	}
-	
-	
+
+
 	/**
 	 * {@inheritDoc}
 	 * <p>(superTypesSignature is ignored in this implementation).</p>
@@ -147,7 +147,7 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 				newMatches &= ~mask;
 			}
 		}
-		return restrict(newMatches, 0);		
+		return restrict(newMatches, 0);
 	}
 
 	@Override
@@ -163,7 +163,7 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 				newMatches &= ~mask;
 			}
 		}
-		return restrict(newMatches, 0);		
+		return restrict(newMatches, 0);
 	}
 
 	@Override
@@ -179,7 +179,7 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 				newMatches &= ~mask;
 			}
 		}
-		return restrict(newMatches, 0);		
+		return restrict(newMatches, 0);
 	}
 
 	// ==== descending into details: ====
@@ -195,13 +195,13 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 		for (int i = 0; i < length; i++, mask = mask << 1) {
 			IBinaryTypeAnnotation candidate = this.typeAnnotations[i];
 			int[] path = candidate.getTypePath();
-			if (this.pathPtr >= path.length 
+			if (this.pathPtr >= path.length
 					|| path[this.pathPtr] != AnnotationTargetTypeConstants.TYPE_ARGUMENT
 					|| path[this.pathPtr+1] != rank) {
 				newMatches &= ~mask;
 			}
 		}
-		return restrict(newMatches, this.pathPtr+2);		
+		return restrict(newMatches, this.pathPtr+2);
 	}
 
 	@Override
@@ -214,19 +214,19 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 		for (int i = 0; i < length; i++, mask = mask << 1) {
 			IBinaryTypeAnnotation candidate = this.typeAnnotations[i];
 			int[] path = candidate.getTypePath();
-			if (this.pathPtr >= path.length 
+			if (this.pathPtr >= path.length
 					|| path[this.pathPtr] != AnnotationTargetTypeConstants.WILDCARD_BOUND) {
 				newMatches &= ~mask;
 			}
 		}
-		return restrict(newMatches, this.pathPtr+2);		
+		return restrict(newMatches, this.pathPtr+2);
 	}
 
 	@Override
 	public ITypeAnnotationWalker toNextArrayDimension() {
 		return toNextDetail(AnnotationTargetTypeConstants.NEXT_ARRAY_DIMENSION);
 	}
-	
+
 	@Override
 	public ITypeAnnotationWalker toNextNestedType() {
 		return toNextDetail(AnnotationTargetTypeConstants.NEXT_NESTED_TYPE);
@@ -250,9 +250,9 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 		}
 		return restrict(newMatches, this.pathPtr+2);
 	}
-	
+
 	// ==== leaves: the actual annotations: ====
-	
+
 	@Override
 	public IBinaryAnnotation[] getAnnotationsAtCursor(int currentTypeId, boolean mayApplyArrayContentsDefaultNullness) {
 		int length = this.typeAnnotations.length;

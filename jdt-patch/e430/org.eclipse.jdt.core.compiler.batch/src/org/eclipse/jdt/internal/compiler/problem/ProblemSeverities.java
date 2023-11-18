@@ -29,6 +29,6 @@ public interface ProblemSeverities {
 	final int Ignore = 256; // during handling only
 	final int InternalError = 512;  // always exposed, even when silent error handling policy is in effect.
 	final int Info = 1024; // When bit is set, the unit or project is not flagged.
-	
+
 	final int CoreSeverityMASK = Warning | Error | Info | Ignore;
 }

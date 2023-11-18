@@ -24,7 +24,7 @@ public class Receiver extends Argument {
 	public boolean isReceiver() {
 		return true;
 	}
-	
+
 	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 

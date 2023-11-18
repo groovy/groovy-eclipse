@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.*;
 
 /**
  * An abstract Java search match that represents a reference.
- * 
+ *
  * @since 3.4
  */
 public abstract class ReferenceMatch extends SearchMatch {
@@ -125,7 +125,7 @@ final public IJavaElement getLocalElement() {
  * Store the local element in the match.
  *
  * @param element The local element to be stored
- * 
+ *
  * @since 3.5
  */
 final public void setLocalElement(IJavaElement element) {

@@ -29,7 +29,7 @@ public class JavadocImplicitTypeReference extends TypeReference {
 		this.sourceStart = pos;
 		this.sourceEnd = pos;
 	}
-	
+
 	@Override
 	public TypeReference augmentTypeWithAdditionalDimensions(int additionalDimensions, Annotation[][] additionalAnnotations, boolean isVarargs) {
 		return null;

@@ -45,11 +45,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0b_001);\n" + 
-			"	                   ^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0b_001);\n" +
+			"	                   ^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test002() {
@@ -62,11 +62,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0_b001);\n" + 
-			"	                   ^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0_b001);\n" +
+			"	                   ^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test003() {
@@ -79,11 +79,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0b001_);\n" + 
-			"	                   ^^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0b001_);\n" +
+			"	                   ^^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test004() {
@@ -96,11 +96,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0x_11.0p33f);\n" + 
-			"	                   ^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0x_11.0p33f);\n" +
+			"	                   ^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test005() {
@@ -113,11 +113,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0x11_.0p33f);\n" + 
-			"	                   ^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0x11_.0p33f);\n" +
+			"	                   ^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test006() {
@@ -130,11 +130,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0x11._0p33f);\n" + 
-			"	                   ^^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0x11._0p33f);\n" +
+			"	                   ^^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test007() {
@@ -147,11 +147,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0x11.0_p33f);\n" + 
-			"	                   ^^^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0x11.0_p33f);\n" +
+			"	                   ^^^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test008() {
@@ -164,11 +164,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0x11.0p_33f);\n" + 
-			"	                   ^^^^^^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0x11.0p_33f);\n" +
+			"	                   ^^^^^^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test009() {
@@ -181,11 +181,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0x11.0p33_f);\n" + 
-			"	                   ^^^^^^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0x11.0p33_f);\n" +
+			"	                   ^^^^^^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test010() {
@@ -198,11 +198,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0x_0001AEFBBA);\n" + 
-			"	                   ^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0x_0001AEFBBA);\n" +
+			"	                   ^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test011() {
@@ -215,11 +215,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0_x0001AEFBBA);\n" + 
-			"	                   ^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0_x0001AEFBBA);\n" +
+			"	                   ^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test012() {
@@ -232,11 +232,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0x0001AEFBBA_);\n" + 
-			"	                   ^^^^^^^^^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0x0001AEFBBA_);\n" +
+			"	                   ^^^^^^^^^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test013() {
@@ -249,11 +249,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(_01234567);\n" + 
-			"	                   ^^^^^^^^^\n" + 
-			"_01234567 cannot be resolved to a variable\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(_01234567);\n" +
+			"	                   ^^^^^^^^^\n" +
+			"_01234567 cannot be resolved to a variable\n" +
 			"----------\n");
 	}
 	public void test014() {
@@ -266,11 +266,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(01234567_);\n" + 
-			"	                   ^^^^^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(01234567_);\n" +
+			"	                   ^^^^^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test015() {
@@ -283,11 +283,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(1_.236589954f);\n" + 
-			"	                   ^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(1_.236589954f);\n" +
+			"	                   ^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test016() {
@@ -300,11 +300,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(1._236589954f);\n" + 
-			"	                   ^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(1._236589954f);\n" +
+			"	                   ^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test017() {
@@ -317,11 +317,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(1_e2);\n" + 
-			"	                   ^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(1_e2);\n" +
+			"	                   ^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test018() {
@@ -334,11 +334,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(1e_2);\n" + 
-			"	                   ^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(1e_2);\n" +
+			"	                   ^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test019() {
@@ -351,11 +351,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(1e2_);\n" + 
-			"	                   ^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(1e2_);\n" +
+			"	                   ^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test020() {
@@ -368,11 +368,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(01e2_);\n" + 
-			"	                   ^^^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(01e2_);\n" +
+			"	                   ^^^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test021() {
@@ -385,11 +385,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(01_e2_);\n" + 
-			"	                   ^^^\n" + 
-			"Underscores have to be located within digits\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(01_e2_);\n" +
+			"	                   ^^^\n" +
+			"Underscores have to be located within digits\n" +
 			"----------\n");
 	}
 	public void test022() {
@@ -406,11 +406,11 @@ public class UnderscoresInLiteralsTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	System.out.println(0b1110000_);\n" + 
-			"	                   ^^^^^^^^^^\n" + 
-			"Underscores can only be used with source level 1.7 or greater\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	System.out.println(0b1110000_);\n" +
+			"	                   ^^^^^^^^^^\n" +
+			"Underscores can only be used with source level 1.7 or greater\n" +
 			"----------\n",
 			null,
 			true,

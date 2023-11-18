@@ -913,13 +913,13 @@ public void test0023() {
 
 	String completionIdentifier = "emptyList";
 	String expectedUnitDisplayString =
-		"package test;\n" + 
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  public List<String> foo() {\n" + 
-		"    return <SelectOnMessageSend:Collections.emptyList()>;\n" + 
-		"  }\n" + 
+		"package test;\n" +
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  public List<String> foo() {\n" +
+		"    return <SelectOnMessageSend:Collections.emptyList()>;\n" +
+		"  }\n" +
 		"}\n";
 	String expectedReplacedSource = "Collections.emptyList()";
 	String testName = "<select method>";
@@ -941,14 +941,14 @@ public void test0023() {
 public void test0024() {
 
 	String str =
-		"import java.util.List;\n" + 
-		"public class X {\n" + 
-		"        <T> T bar(T t) { return t; }\n" + 
-		"        void foo(boolean b, Runnable r) {\n" + 
-		"                Zork z = null;\n" + 
-		"                String s = (String) bar(z); // 5\n" + 
-		"        }\n" + 
-		"}\n" + 
+		"import java.util.List;\n" +
+		"public class X {\n" +
+		"        <T> T bar(T t) { return t; }\n" +
+		"        void foo(boolean b, Runnable r) {\n" +
+		"                Zork z = null;\n" +
+		"                String s = (String) bar(z); // 5\n" +
+		"        }\n" +
+		"}\n" +
 		"\n";
 
 	String selection = "bar";
@@ -957,16 +957,16 @@ public void test0024() {
 
 	String completionIdentifier = "bar";
 	String expectedUnitDisplayString =
-		"import java.util.List;\n" + 
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T>T bar(T t) {\n" + 
-		"  }\n" + 
-		"  void foo(boolean b, Runnable r) {\n" + 
-		"    Zork z;\n" + 
-		"    String s = (String) <SelectOnMessageSend:bar(z)>;\n" + 
-		"  }\n" + 
+		"import java.util.List;\n" +
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T>T bar(T t) {\n" +
+		"  }\n" +
+		"  void foo(boolean b, Runnable r) {\n" +
+		"    Zork z;\n" +
+		"    String s = (String) <SelectOnMessageSend:bar(z)>;\n" +
+		"  }\n" +
 		"}\n";
 	String expectedReplacedSource = "bar(z)";
 	String testName = "<select method>";

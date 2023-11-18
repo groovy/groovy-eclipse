@@ -50,7 +50,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 		this.evaluationContext = evaluationContext;
 		this.isImplicit = isImplicit;
 	}
-	
+
 	@Override
 	public boolean checkAccess(BlockScope scope, ReferenceBinding thisType) {
 		// this/super cannot be used in constructor call
@@ -68,7 +68,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 		scope.tagAsAccessingEnclosingInstanceStateOf(thisType, false /* type variable access */);
 		return true;
 	}
-	
+
 	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 		int pc = codeStream.position;
@@ -78,7 +78,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 		}
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
-	
+
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
 	 */
@@ -86,7 +86,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 	public TypeBinding[] genericTypeArguments() {
 		return null;
 	}
-	
+
 	@Override
 	public InferenceContext18 freshInferenceContext(Scope scope) {
 		return null;
@@ -96,12 +96,12 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 	public boolean isSuperAccess(){
 		return false;
 	}
-	
+
 	@Override
 	public boolean isTypeAccess(){
 		return false;
 	}
-	
+
 	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
@@ -113,7 +113,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 			output.append(declaringType);
 		return output.append(")this"); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		// implicit this
@@ -133,17 +133,17 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 		}
 		return this.resolvedType = this.delegateThis.type;
 	}
-	
+
 	@Override
 	public void setActualReceiverType(ReferenceBinding receiverType) {
 		// ignored
 	}
-	
+
 	@Override
 	public void setDepth(int depth){
 		// ignored
 	}
-	
+
 	@Override
 	public void setFieldIndex(int index){
 		// ignored

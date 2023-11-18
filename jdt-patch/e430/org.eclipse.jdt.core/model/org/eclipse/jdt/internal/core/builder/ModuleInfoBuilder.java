@@ -40,7 +40,7 @@ import org.eclipse.jdt.internal.core.ModuleUpdater;
 
 /** Implementation of {@link org.eclipse.jdt.core.JavaCore#compileWithAttributes(IModuleDescription, Map)}. */
 public class ModuleInfoBuilder {
-	
+
 	static class BytecodeCollector implements ICompilerRequestor {
 		byte[] bytes;
 
@@ -52,14 +52,14 @@ public class ModuleInfoBuilder {
 			this.bytes = classFiles[0].getBytes();
 		}
 	}
-	
+
 	public byte[] compileWithAttributes(IModuleDescription module, Map<String,String> classFileAttributes) throws JavaModelException {
 		IJavaProject javaProject = module.getJavaProject();
 		NameEnvironment nameEnvironment = new NameEnvironment(javaProject, CompilationGroup.MAIN);
 
 		addModuleUpdates(module, nameEnvironment.moduleUpdater, classFileAttributes);
-		
-		ClasspathMultiDirectory sourceLocation = getSourceLocation(javaProject, nameEnvironment, module); 
+
+		ClasspathMultiDirectory sourceLocation = getSourceLocation(javaProject, nameEnvironment, module);
 		IFile file = (IFile) module.getCompilationUnit().getCorrespondingResource();
 		ICompilationUnit[] sourceUnits = { new SourceFile(file, sourceLocation) };
 		BytecodeCollector collector = new BytecodeCollector();
@@ -95,7 +95,7 @@ public class ModuleInfoBuilder {
 	private ClasspathMultiDirectory getSourceLocation(IJavaProject javaProject, NameEnvironment nameEnvironment, IModuleDescription module)
 			throws JavaModelException {
 		IPackageFragmentRoot root = (IPackageFragmentRoot) module.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
-		IResource rootResource = root.getCorrespondingResource(); 
+		IResource rootResource = root.getCorrespondingResource();
 		for (ClasspathMultiDirectory sourceLocation : nameEnvironment.sourceLocations) {
 			if (sourceLocation.sourceFolder.equals(rootResource)) {
 				return sourceLocation;

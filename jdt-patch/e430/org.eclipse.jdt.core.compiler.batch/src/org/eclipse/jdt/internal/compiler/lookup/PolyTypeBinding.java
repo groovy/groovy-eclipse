@@ -23,11 +23,11 @@ public class PolyTypeBinding extends TypeBinding {
 
 	Expression expression;
 	boolean vanillaCompatibilty = true;
-	
+
 	public PolyTypeBinding(Expression expression) {
 		this.expression = expression;
 	}
-	
+
 	@Override
 	public char[] constantPoolName() {
 		throw new UnsupportedOperationException();  // should never reach code generation
@@ -42,7 +42,7 @@ public class PolyTypeBinding extends TypeBinding {
 	public boolean isCompatibleWith(TypeBinding left, Scope scope) {
 		return this.vanillaCompatibilty ? this.expression.isCompatibleWith(left, scope) : this.expression.isBoxingCompatibleWith(left, scope);
 	}
-	
+
 	@Override
 	public boolean isPotentiallyCompatibleWith(TypeBinding targetType, Scope scope) {
 		return this.expression.isPotentiallyCompatibleWith(targetType, scope);
@@ -52,7 +52,7 @@ public class PolyTypeBinding extends TypeBinding {
 	public boolean isPolyType() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean isFunctionalType() {
 		return this.expression.isFunctionalType();
@@ -83,13 +83,13 @@ public class PolyTypeBinding extends TypeBinding {
 	public boolean sIsMoreSpecific(TypeBinding s, TypeBinding t, Scope scope) {
 		return this.expression.sIsMoreSpecific(s, t, scope);
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer("PolyTypeBinding for: "); //$NON-NLS-1$
 		return this.expression.printExpression(0,  buffer).toString();
 	}
-	
+
 	@Override
 	public int kind() {
 		return Binding.POLY_TYPE;

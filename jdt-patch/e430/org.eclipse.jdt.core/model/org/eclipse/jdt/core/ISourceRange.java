@@ -20,7 +20,7 @@ package org.eclipse.jdt.core;
  * <p>Clients may use the method {@link org.eclipse.jdt.core.SourceRange#isAvailable(ISourceRange)}
  * in order to find out if a source range is available. This method returns <code>false</code>
  * when the source range offset is equals to <code>-1</code>.</p>
- * 
+ *
  * <p>Clients may use the default implementation provided by {@link SourceRange}.</p>
  *
  * @see SourceRange
@@ -39,11 +39,11 @@ int getLength();
 /**
  * Returns the 0-based index of the first character of the source code for this element,
  * relative to the source buffer in which this element is contained. However, if the element
- * has no associated source code, an implementation may return -1. 
+ * has no associated source code, an implementation may return -1.
  *
  * @return the 0-based index of the first character of the source code for this element,
  * relative to the source buffer in which this element is contained. However, if the element
- * has no associated source code, an implementation may return -1. 
+ * has no associated source code, an implementation may return -1.
  */
 int getOffset();
 }

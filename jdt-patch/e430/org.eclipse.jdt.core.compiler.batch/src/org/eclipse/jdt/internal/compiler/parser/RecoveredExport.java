@@ -7,10 +7,10 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     
+ *
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
 
@@ -23,7 +23,7 @@ public class RecoveredExport extends RecoveredElement {
 	public ExportsStatement exportReference;
 	RecoveredModuleReference[] targets;
 	int targetCount = 0;
-	
+
 	public RecoveredExport(ExportsStatement exportReference, RecoveredElement parent, int bracketBalance) {
 		super(parent, bracketBalance);
 		this.exportReference = exportReference;
@@ -49,7 +49,7 @@ public class RecoveredExport extends RecoveredElement {
 		/* if target not finished, then target becomes current */
 		if (target.sourceEnd == 0) return element;
 		return this;
-		
+
 	}
 	/*
 	 * Answer the associated parsed structure

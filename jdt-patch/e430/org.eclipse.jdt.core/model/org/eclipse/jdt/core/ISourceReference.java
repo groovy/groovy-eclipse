@@ -78,13 +78,13 @@ ISourceRange getSourceRange() throws JavaModelException;
 
 /**
  * Returns the name range associated with this element.
- * 
+ *
  * <p>If the element is an {@link IMember}, it returns
  * the source range of this member's simple name,
  * or <code>null</code> if this member does not have a name
  * (for example, an initializer), or if this member does not have
  * associated source code (for example, a binary type).</p>
- * 
+ *
  * <p>If this element is an {@link IImportDeclaration}, the source range
  * of this import declaration's name, or <code>null</code> if this import
  * declaration does not have associated source code (for example, a binary type).
@@ -93,17 +93,17 @@ ISourceRange getSourceRange() throws JavaModelException;
  * </p>
  *
  * <p>If this element is an {@link IPackageDeclaration}, the source range of
- * this package declaration's name, or <code>null</code> if this package 
+ * this package declaration's name, or <code>null</code> if this package
  * declaration does not have associated source code (for example, a binary type).</p>
  *
  * <p>If this element is an {@link IAnnotation}, the source range of
  * this annotation's name, or <code>null</code> if this annotation does not have
  * associated source code (for example, in a binary type).</p>
- * 
- * <p>If this element is an {@link ITypeParameter}, the source range of this 
+ *
+ * <p>If this element is an {@link ITypeParameter}, the source range of this
  * type parameter's name, or <code>null</code> if this type parameter does not have
  * associated source code (for example, in a binary type).</p>
- * 
+ *
  * <p>If this element is an {@link ITypeRoot} or {@link IImportContainer}, it
  * returns null.</p>
  *

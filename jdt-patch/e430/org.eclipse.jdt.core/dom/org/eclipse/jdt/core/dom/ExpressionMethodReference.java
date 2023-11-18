@@ -20,7 +20,7 @@ import java.util.List;
  * Expression method reference AST node type (added in JLS8 API).
  * <pre>
  * ExpressionMethodReference:
- *     Expression <b>::</b> 
+ *     Expression <b>::</b>
  *         [ <b>&lt;</b> Type { <b>,</b> Type } <b>&gt;</b> ]
  *         Identifier
  * </pre>
@@ -38,7 +38,7 @@ public class ExpressionMethodReference extends MethodReference {
 		new ChildPropertyDescriptor(ExpressionMethodReference.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * The "typeArguments" structural property of this node type (element type: {@link Type}) 
+	 * The "typeArguments" structural property of this node type (element type: {@link Type})
 	 */
 	public static final ChildListPropertyDescriptor TYPE_ARGUMENTS_PROPERTY =
 		internalTypeArgumentsFactory(ExpressionMethodReference.class);

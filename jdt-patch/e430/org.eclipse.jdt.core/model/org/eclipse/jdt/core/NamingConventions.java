@@ -29,16 +29,16 @@ import org.eclipse.jdt.internal.core.InternalNamingConventions;
  * <ul>
  * <li> {@link JavaCore#CODEASSIST_FIELD_PREFIXES} : Define the Prefixes for Field Name.</li>
  * <li> {@link JavaCore#CODEASSIST_FIELD_SUFFIXES} : Define the Suffixes for Field Name.</li>
- * 
+ *
  * <li> {@link JavaCore#CODEASSIST_STATIC_FIELD_PREFIXES} : Define the Prefixes for Static Field Name.</li>
  * <li> {@link JavaCore#CODEASSIST_STATIC_FIELD_SUFFIXES} : Define the Suffixes for Static Field Name.</li>
- * 
+ *
  * <li> {@link JavaCore#CODEASSIST_STATIC_FINAL_FIELD_PREFIXES} : Define the Prefixes for Static Final Field Name.</li>
  * <li> {@link JavaCore#CODEASSIST_STATIC_FINAL_FIELD_SUFFIXES} : Define the Suffixes for Static Final Field Name.</li>
- * 
+ *
  * <li> {@link JavaCore#CODEASSIST_LOCAL_PREFIXES} : Define the Prefixes for Local Variable Name.</li>
  * <li> {@link JavaCore#CODEASSIST_LOCAL_SUFFIXES} : Define the Suffixes for Local Variable Name.</li>
- * 
+ *
  * <li> {@link JavaCore#CODEASSIST_ARGUMENT_PREFIXES} : Define the Prefixes for Argument Name.</li>
  * <li> {@link JavaCore#CODEASSIST_ARGUMENT_SUFFIXES} : Define the Suffixes for Argument Name.</li>
  * </ul>
@@ -244,51 +244,51 @@ public final class NamingConventions {
 
 	/**
 	 * Variable kind which represents a static field.
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int VK_STATIC_FIELD = InternalNamingConventions.VK_STATIC_FIELD;
 	/**
 	 * Variable kind which represents an instance field.
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int VK_INSTANCE_FIELD = InternalNamingConventions.VK_INSTANCE_FIELD;
 	/**
 	 * Variable kind which represents a static final field.
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int VK_STATIC_FINAL_FIELD = InternalNamingConventions.VK_STATIC_FINAL_FIELD;
 	/**
 	 * Variable kind which represents an argument.
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int VK_PARAMETER = InternalNamingConventions.VK_PARAMETER;
 	/**
 	 * Variable kind which represents a local variable.
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int VK_LOCAL = InternalNamingConventions.VK_LOCAL;
-	
+
 	/**
 	 * The base name associated to this base name kind is a simple name.
 	 * When this base name is used the whole name is considered.
-	 * 
+	 *
 	 * @see #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int BK_NAME = InternalNamingConventions.BK_SIMPLE_NAME;
-	
+
 	/**
 	 * The base name associated to this base name kind is a simple type name.
 	 * When this base name is used all the words of the name are considered.
-	 * 
+	 *
 	 * @see #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static final int BK_TYPE_NAME = InternalNamingConventions.BK_SIMPLE_TYPE_NAME;
@@ -336,7 +336,7 @@ public final class NamingConventions {
 	 * @return char[] the name without prefix and suffix.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #getBaseName(int, String, IJavaProject)} instead with {@link #VK_PARAMETER} as variable kind.
 	 */
 	public static char[] removePrefixAndSuffixForArgumentName(IJavaProject javaProject, char[] argumentName) {
@@ -365,7 +365,7 @@ public final class NamingConventions {
 	 * @return char[] the name without prefix and suffix.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #getBaseName(int, String, IJavaProject)} instead with {@link #VK_PARAMETER} as variable kind.
 	 */
 	public static String removePrefixAndSuffixForArgumentName(IJavaProject javaProject, String argumentName) {
@@ -397,7 +397,7 @@ public final class NamingConventions {
 	 * @see Flags
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #getBaseName(int, String, IJavaProject)} instead
 	 * with {@link #VK_INSTANCE_FIELD} or {@link #VK_STATIC_FIELD} as variable kind.
 	 */
@@ -434,7 +434,7 @@ public final class NamingConventions {
 	 * @see Flags
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #getBaseName(int, String, IJavaProject)} instead
 	 * with {@link #VK_INSTANCE_FIELD} or {@link #VK_STATIC_FIELD} as variable kind.
 	 */
@@ -464,7 +464,7 @@ public final class NamingConventions {
 	 * @return char[] the name without prefix and suffix.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #getBaseName(int, String, IJavaProject)} instead with {@link #VK_LOCAL} as variable kind.
 	 */
 	public static char[] removePrefixAndSuffixForLocalVariableName(IJavaProject javaProject, char[] localName) {
@@ -493,13 +493,13 @@ public final class NamingConventions {
 	 * @return char[] the name without prefix and suffix.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #getBaseName(int, String, IJavaProject)} instead with {@link #VK_LOCAL} as variable kind.
 	 */
 	public static String removePrefixAndSuffixForLocalVariableName(IJavaProject javaProject, String localName) {
 		return String.valueOf(removePrefixAndSuffixForLocalVariableName(javaProject, localName.toCharArray()));
 	}
-	
+
 	/**
 	 * Returns a base name which could be used to generate the given variable name with {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)}.
 	 * <p>
@@ -522,12 +522,12 @@ public final class NamingConventions {
 	 * If the variable is a {@link #VK_LOCAL}, the variable name is <code>preVariableNamesuf</code>, a possible prefix is <code>pre</code> and a possible suffix is <code>suf</code>
 	 * then the base name will be <code>variableName</code>.<br>
 	 * </p>
-	 * 
+	 *
 	 * @param variableKind specifies what type the variable is: {@link #VK_LOCAL}, {@link #VK_PARAMETER}, {@link #VK_STATIC_FIELD},
 	 * {@link #VK_INSTANCE_FIELD} or {@link #VK_STATIC_FINAL_FIELD}.
 	 * @param variableName a variable name
 	 * @param javaProject project which contains the variable or <code>null</code> to take into account only workspace settings.
-	 * 
+	 *
 	 * @see #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)
 	 * @since 3.5
 	 */
@@ -537,7 +537,7 @@ public final class NamingConventions {
 			IJavaProject javaProject) {
 		return String.valueOf(InternalNamingConventions.getBaseName(variableKind, javaProject, variableName.toCharArray(), true));
 	}
-	
+
 	private static int getFieldVariableKind(int modifiers) {
 		if (Flags.isStatic(modifiers)) {
 			if (Flags.isFinal(modifiers)) {
@@ -585,15 +585,15 @@ public final class NamingConventions {
 	 * @return char[][] an array of names.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)} instead with {@link #VK_PARAMETER} as variable kind.
 	 */
 	public static char[][] suggestArgumentNames(IJavaProject javaProject, char[] packageName, char[] qualifiedTypeName, int dim, char[][] excludedNames) {
 		if(qualifiedTypeName == null || qualifiedTypeName.length == 0)
 			return CharOperation.NO_CHAR_CHAR;
-		
+
 		char[] typeName = CharOperation.lastSegment(qualifiedTypeName, '.');
-		
+
  		NamingRequestor requestor = new NamingRequestor();
 		InternalNamingConventions.suggestVariableNames(
 				VK_PARAMETER,
@@ -605,7 +605,7 @@ public final class NamingConventions {
 				excludedNames,
 				true,
 				requestor);
- 
+
  		return requestor.getResults();
 	}
 
@@ -636,7 +636,7 @@ public final class NamingConventions {
 	 * @return char[][] an array of names.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)} instead with {@link #VK_PARAMETER} as variable kind.
 	 */
 	public static String[] suggestArgumentNames(IJavaProject javaProject, String packageName, String qualifiedTypeName, int dim, String[] excludedNames) {
@@ -680,16 +680,16 @@ public final class NamingConventions {
 	 * @see Flags
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
-	 * @deprecated Use {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)} instead 
+	 *
+	 * @deprecated Use {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)} instead
 	 * with {@link #VK_INSTANCE_FIELD} or  {@link #VK_STATIC_FIELD} as variable kind.
 	 */
 	public static char[][] suggestFieldNames(IJavaProject javaProject, char[] packageName, char[] qualifiedTypeName, int dim, int modifiers, char[][] excludedNames) {
 		if(qualifiedTypeName == null || qualifiedTypeName.length == 0)
 			return CharOperation.NO_CHAR_CHAR;
-		
+
 		char[] typeName = CharOperation.lastSegment(qualifiedTypeName, '.');
-		
+
  		NamingRequestor requestor = new NamingRequestor();
 		InternalNamingConventions.suggestVariableNames(
 				Flags.isStatic(modifiers) ? VK_STATIC_FIELD : VK_INSTANCE_FIELD,
@@ -701,7 +701,7 @@ public final class NamingConventions {
 				excludedNames,
 				true,
 				requestor);
- 
+
  		return requestor.getResults();
 	}
 
@@ -736,8 +736,8 @@ public final class NamingConventions {
 	 * @see Flags
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
-	 * @deprecated Use {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)} instead 
+	 *
+	 * @deprecated Use {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)} instead
 	 * with {@link #VK_INSTANCE_FIELD} or  {@link #VK_STATIC_FIELD} as variable kind.
 	 */
 	public static String[] suggestFieldNames(IJavaProject javaProject, String packageName, String qualifiedTypeName, int dim, int modifiers, String[] excludedNames) {
@@ -750,7 +750,7 @@ public final class NamingConventions {
 				modifiers,
 				convertStringToChars(excludedNames)));
 	}
-	
+
 	/**
 	 * Suggest name for a getter method. The name is computed from field's name
 	 * and possible prefixes or suffixes are removed.
@@ -869,15 +869,15 @@ public final class NamingConventions {
 	 * @return char[][] an array of names.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)} instead with {@link #VK_LOCAL} as variable kind.
 	 */
 	public static char[][] suggestLocalVariableNames(IJavaProject javaProject, char[] packageName, char[] qualifiedTypeName, int dim, char[][] excludedNames) {
 		if(qualifiedTypeName == null || qualifiedTypeName.length == 0)
 			return CharOperation.NO_CHAR_CHAR;
-		
+
 		char[] typeName = CharOperation.lastSegment(qualifiedTypeName, '.');
-		
+
 		NamingRequestor requestor = new NamingRequestor();
 		InternalNamingConventions.suggestVariableNames(
 				VK_LOCAL,
@@ -889,7 +889,7 @@ public final class NamingConventions {
 				excludedNames,
 				true,
 				requestor);
- 
+
 		return requestor.getResults();
 
 	}
@@ -920,7 +920,7 @@ public final class NamingConventions {
 	 * @return char[][] an array of names.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @deprecated Use {@link #suggestVariableNames(int, int, String, IJavaProject, int, String[], boolean)} instead with {@link #VK_LOCAL} as variable kind.
 	 */
 	public static String[] suggestLocalVariableNames(IJavaProject javaProject, String packageName, String qualifiedTypeName, int dim, String[] excludedNames) {
@@ -950,7 +950,7 @@ public final class NamingConventions {
 		}
 		return newName;
 	}
-	
+
 	/**
 	 * Suggest name for a setter method. The name is computed from field's name
 	 * and possible prefixes or suffixes are removed.
@@ -1045,7 +1045,7 @@ public final class NamingConventions {
 				isBoolean,
 				convertStringToChars(excludedNames)));
 	}
-	
+
 	/**
 	 * Suggests names for a variable. The name is computed from a base name and possible prefixes or suffixes are added.
 	 *
@@ -1116,7 +1116,7 @@ public final class NamingConventions {
 	 * @return String[] an array of names.
 	 * @see JavaCore#setOptions(java.util.Hashtable)
 	 * @see JavaCore#getDefaultOptions()
-	 * 
+	 *
 	 * @since 3.5
 	 */
 	public static String[] suggestVariableNames(
@@ -1127,7 +1127,7 @@ public final class NamingConventions {
 			int dim,
 			String[] excluded,
 			boolean evaluateDefault) {
-		
+
 		NamingRequestor requestor = new NamingRequestor();
 		InternalNamingConventions.suggestVariableNames(
 			variableKind,
@@ -1142,7 +1142,7 @@ public final class NamingConventions {
 
 		return convertCharsToString(requestor.getResults());
 	}
-	
+
 	private NamingConventions() {
 		// Not instantiable
 	}

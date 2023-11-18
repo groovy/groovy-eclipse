@@ -18,14 +18,14 @@ import java.util.List;
 
 /**
  * Super method reference AST node type (added in JLS8 API).
- * 
+ *
  * <pre>
  * SuperMethodReference:
  *     [ ClassName <b>.</b> ] <b>super</b> <b>::</b>
  *         [ <b>&lt;</b> Type { <b>,</b> Type } <b>&gt;</b> ]
  *         Identifier
  * </pre>
- * 
+ *
  * @since 3.10
  * @noinstantiate This class is not intended to be instantiated by clients
  */

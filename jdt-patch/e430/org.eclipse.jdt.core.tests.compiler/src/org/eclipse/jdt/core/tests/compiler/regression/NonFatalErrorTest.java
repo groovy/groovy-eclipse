@@ -237,26 +237,26 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 			null /* no class libraries */,
 			customOptions /* custom options */,
 			// compiler results
-			"----------\n" + 
-			"1. ERROR in X.java (at line 2)\n" + 
-			"	{     }\n" + 
-			"	^^^^^^^\n" + 
-			"Empty block should be documented\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 3)\n" + 
-			"	static {  }\n" + 
-			"	       ^^^^\n" + 
-			"Empty block should be documented\n" + 
-			"----------\n" + 
-			"3. ERROR in X.java (at line 5)\n" + 
-			"	X(int a) {}\n" + 
-			"	         ^^\n" + 
-			"Empty block should be documented\n" + 
-			"----------\n" + 
-			"4. ERROR in X.java (at line 6)\n" + 
-			"	public void foo() {}\n" + 
-			"	                  ^^\n" + 
-			"Empty block should be documented\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	{     }\n" +
+			"	^^^^^^^\n" +
+			"Empty block should be documented\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 3)\n" +
+			"	static {  }\n" +
+			"	       ^^^^\n" +
+			"Empty block should be documented\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 5)\n" +
+			"	X(int a) {}\n" +
+			"	         ^^\n" +
+			"Empty block should be documented\n" +
+			"----------\n" +
+			"4. ERROR in X.java (at line 6)\n" +
+			"	public void foo() {}\n" +
+			"	                  ^^\n" +
+			"Empty block should be documented\n" +
 			"----------\n",
 			// runtime results
 			"SUCCESS" /* expected output string */,
@@ -320,11 +320,11 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 			},
 			null, // libs
 			options,
-			"----------\n" + 
-			"1. ERROR in X.java (at line 1)\n" + 
-			"	import com.bogus.Missing;\n" + 
-			"	       ^^^^^^^^^\n" + 
-			"The import com.bogus cannot be resolved\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 1)\n" +
+			"	import com.bogus.Missing;\n" +
+			"	       ^^^^^^^^^\n" +
+			"The import com.bogus cannot be resolved\n" +
 			"----------\n",
 			"OK",
 			"",
@@ -363,14 +363,14 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 					},
 					null, // libs
 					options,
-					"----------\n" + 
-							"1. ERROR in X.java (at line 1)\n" + 
-							"	import com.bogus.Missing;\n" + 
-							"	       ^^^^^^^^^\n" + 
-							"The import com.bogus cannot be resolved\n" + 
+					"----------\n" +
+							"1. ERROR in X.java (at line 1)\n" +
+							"	import com.bogus.Missing;\n" +
+							"	       ^^^^^^^^^\n" +
+							"The import com.bogus cannot be resolved\n" +
 							"----------\n",
 							"",
-							"Unresolved compilation problem: \n" + 
+							"Unresolved compilation problem: \n" +
 									"	The import com.bogus cannot be resolved",
 									JavacTestOptions.SKIP);
 		} finally {
@@ -406,11 +406,11 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 					},
 					null, // libs
 					options,
-					"----------\n" + 
-							"1. ERROR in p\\z\\X.java (at line 1)\n" + 
-							"	package p.z;\n" + 
-							"	        ^^^\n" + 
-							"The package p.z collides with a type\n" + 
+					"----------\n" +
+							"1. ERROR in p\\z\\X.java (at line 1)\n" +
+							"	package p.z;\n" +
+							"	        ^^^\n" +
+							"The package p.z collides with a type\n" +
 							"----------\n",
 							"java.lang.ClassNotFoundException", // cannot generate code in presence of the above error
 							"",
@@ -458,21 +458,21 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 					},
 					null, // libs
 					options,
-					"----------\n" + 
-							"1. ERROR in X.java (at line 1)\n" + 
-							"	import java.util;\n" + 
-							"	       ^^^^^^^^^\n" + 
-							"Only a type can be imported. java.util resolves to a package\n" + 
-							"----------\n" + 
-							"2. ERROR in X.java (at line 2)\n" + 
-							"	import p.Z;\n" + 
-							"	       ^^^\n" + 
-							"The import p.Z conflicts with a type defined in the same file\n" + 
-							"----------\n" + 
-							"3. ERROR in X.java (at line 4)\n" + 
-							"	import p2.Y;\n" + 
-							"	       ^^^^\n" + 
-							"The import p2.Y collides with another import statement\n" + 
+					"----------\n" +
+							"1. ERROR in X.java (at line 1)\n" +
+							"	import java.util;\n" +
+							"	       ^^^^^^^^^\n" +
+							"Only a type can be imported. java.util resolves to a package\n" +
+							"----------\n" +
+							"2. ERROR in X.java (at line 2)\n" +
+							"	import p.Z;\n" +
+							"	       ^^^\n" +
+							"The import p.Z conflicts with a type defined in the same file\n" +
+							"----------\n" +
+							"3. ERROR in X.java (at line 4)\n" +
+							"	import p2.Y;\n" +
+							"	       ^^^^\n" +
+							"The import p2.Y collides with another import statement\n" +
 							"----------\n",
 							"OK",
 							"",
@@ -516,16 +516,16 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 			},
 			null, // libs
 			options,
-			"----------\n" + 
-			"1. ERROR in X.java (at line 1)\n" + 
-			"	import static p1.Y;\n" + 
-			"	              ^^^^\n" + 
-			"The static import p1.Y must be a field or member type\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 2)\n" + 
-			"	import static p1.Y.f;\n" + 
-			"	              ^^^^^^\n" + 
-			"The field Y.p1.Y.f is not visible\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 1)\n" +
+			"	import static p1.Y;\n" +
+			"	              ^^^^\n" +
+			"The static import p1.Y must be a field or member type\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 2)\n" +
+			"	import static p1.Y.f;\n" +
+			"	              ^^^^^^\n" +
+			"The field Y.p1.Y.f is not visible\n" +
 			"----------\n",
 			"OK",
 			"",
@@ -536,11 +536,11 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 		runConformTest(
 			new String[] {
 				"Test.java",
-				"import java.lang.Character.Subset;\n" + 
-				"import static java.lang.Character.Subset;\n" + 
-				"\n" + 
-				"public class Test {\n" + 
-				"	Subset s = null;\n" + 
+				"import java.lang.Character.Subset;\n" +
+				"import static java.lang.Character.Subset;\n" +
+				"\n" +
+				"public class Test {\n" +
+				"	Subset s = null;\n" +
 				"}\n"
 			});
 	}
@@ -549,11 +549,11 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 		runConformTest(
 			new String[] {
 				"Test.java",
-				"import static java.awt.geom.Line2D.Double;\n" + 
-				"import static java.awt.geom.Line2D.Double;\n" + 
-				"\n" + 
-				"public class Test {\n" + 
-				"	Double d = null;\n" + 
+				"import static java.awt.geom.Line2D.Double;\n" +
+				"import static java.awt.geom.Line2D.Double;\n" +
+				"\n" +
+				"public class Test {\n" +
+				"	Double d = null;\n" +
 				"}\n"
 			});
 	}
@@ -564,27 +564,27 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 				"Test.java",
 				// JLS doesn't really allow this duplication, but also javac defers the error to the use site, see:
 				// https://bugs.openjdk.java.net/browse/JDK-8133619?focusedCommentId=14133759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-14133759
-				"import static java.awt.geom.Line2D.Double;\n" + 
-				"import static java.awt.geom.Point2D.Double;\n" + 
-				"\n" + 
+				"import static java.awt.geom.Line2D.Double;\n" +
+				"import static java.awt.geom.Point2D.Double;\n" +
+				"\n" +
 				"public class Test {\n" +
-				"	Double d = null;\n" + 
+				"	Double d = null;\n" +
 				"}\n"
 			},
 			(this.complianceLevel < ClassFileConstants.JDK1_8
 			?
-				"----------\n" + 
-				"1. ERROR in Test.java (at line 2)\n" + 
-				"	import static java.awt.geom.Point2D.Double;\n" + 
-				"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"The import java.awt.geom.Point2D.Double collides with another import statement\n" + 
+				"----------\n" +
+				"1. ERROR in Test.java (at line 2)\n" +
+				"	import static java.awt.geom.Point2D.Double;\n" +
+				"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"The import java.awt.geom.Point2D.Double collides with another import statement\n" +
 				"----------\n"
 			:
-				"----------\n" + 
-				"1. ERROR in Test.java (at line 5)\n" + 
-				"	Double d = null;\n" + 
-				"	^^^^^^\n" + 
-				"The type Double is ambiguous\n" + 
+				"----------\n" +
+				"1. ERROR in Test.java (at line 5)\n" +
+				"	Double d = null;\n" +
+				"	^^^^^^\n" +
+				"The type Double is ambiguous\n" +
 				"----------\n"));
 	}
 }

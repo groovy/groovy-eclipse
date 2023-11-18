@@ -38,7 +38,7 @@ public interface IModuleBinding extends IBinding {
 	/**
 	 * Returns all required modules.
 	 * <p>The resulting bindings are in no particular order.</p>
-	 * 
+	 *
 	 * @return all required modules
 	 */
 	public abstract IModuleBinding[] getRequiredModules();
@@ -52,9 +52,9 @@ public interface IModuleBinding extends IBinding {
 	public abstract IPackageBinding[] getExportedPackages();
 
 	/**
-	 * If this module exports the given package to specific modules, returns the array of names of 
+	 * If this module exports the given package to specific modules, returns the array of names of
 	 * modules, otherwise returns an empty array.
-	 * 
+	 *
 	 * @param packageBinding a package binding for which targeted modules are declared
 	 * @return array of names of targeted modules
 	 */
@@ -81,7 +81,7 @@ public interface IModuleBinding extends IBinding {
 	/**
 	 * Returns the services used by this module.
 	 * <p>The resulting bindings are in no particular order.</p>
-	 * 
+	 *
 	 * @return array of type bindings
 	 */
 	public abstract ITypeBinding[] getUses();

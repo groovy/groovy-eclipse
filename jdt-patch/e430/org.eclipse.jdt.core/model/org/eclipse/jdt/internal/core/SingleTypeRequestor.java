@@ -62,7 +62,7 @@ public void acceptMethod(IMethod method) {
  */
 @Override
 public void acceptModule(IModuleDescription module) {
-	// implements interface method	
+	// implements interface method
 }
 /**
  * @see IJavaElementRequestor

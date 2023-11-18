@@ -314,15 +314,15 @@ public interface IPackageFragmentRoot
 	 * @since 2.0
 	 */
 	IClasspathEntry getRawClasspathEntry() throws JavaModelException;
-	
+
 	/**
 	 * Returns the first resolved classpath entry that corresponds to this package fragment root.
 	 * A resolved classpath entry is said to correspond to a root if the path of the resolved
 	 * entry is equal to the root's path.
-	 * 
+	 *
 	 * @return the first resolved classpath entry that corresponds to this package fragment root
 	 * @throws JavaModelException if this element does not exist or if an
-	 *		exception occurs while accessing its corresponding resource. 
+	 *		exception occurs while accessing its corresponding resource.
 	 * @since 3.6
 	 */
 	IClasspathEntry getResolvedClasspathEntry() throws JavaModelException;
@@ -454,7 +454,7 @@ public interface IPackageFragmentRoot
 	 * Returns the <code>IModuleDescription</code> that this package fragment root contains.
 	 * Returns <code>null</code> if the root doesn't contain any named module or if the project compiler compliance is 1.8 or lower.
 	 * If present the module descriptor is found as a child of the package fragment representing the default package.
-	 * 
+	 *
 	 * Note that only one of the source package fragment roots in a Java Project can legally
 	 * contain a module descriptor.
 	 *

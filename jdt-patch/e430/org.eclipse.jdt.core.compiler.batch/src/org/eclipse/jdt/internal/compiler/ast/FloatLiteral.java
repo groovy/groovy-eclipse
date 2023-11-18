@@ -22,9 +22,9 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.util.FloatUtil;
 
 public class FloatLiteral extends NumberLiteral {
-	
+
 	float value;
-	
+
 public FloatLiteral(char[] token, int s, int e) {
 	super(token, s, e);
 }

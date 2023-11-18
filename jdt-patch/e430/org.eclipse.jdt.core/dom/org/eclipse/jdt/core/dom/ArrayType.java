@@ -24,10 +24,10 @@ import java.util.List;
  * be an array type) and a list of dimensions, each of which may have a list of annotations.
  * </p>
  * <pre>
- * ArrayType: 
+ * ArrayType:
  *    Type Dimension <b>{</b> Dimension <b>}</b>
  * </pre>
- * 
+ *
  * In JLS4 and before, array types were expressed in a recursive manner, one dimension at a time:
  * <pre>
  * ArrayType:
@@ -42,7 +42,7 @@ import java.util.List;
  * is an <u><code>@A</code></u>-array of<br>
  * <code><u>int </u>&nbsp;&nbsp;&nbsp;&nbsp;<u> @B[] @C[]</u></code>,
  * but such a component type is not representable by nested <code>ArrayType</code>s with contiguous source ranges.
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -63,14 +63,14 @@ public class ArrayType extends Type {
 	 * @since 3.10
 	 */
 	public static final ChildPropertyDescriptor ELEMENT_TYPE_PROPERTY =
-			new ChildPropertyDescriptor(ArrayType.class, "elementType", Type.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$	
-	
+			new ChildPropertyDescriptor(ArrayType.class, "elementType", Type.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
+
 	/**
 	 * The "dimensions" structural property of this node type (element type: {@link Dimension}) (added in JLS8 API).
 	 * @since 3.10
 	 */
 	public static final ChildListPropertyDescriptor DIMENSIONS_PROPERTY =
-			new ChildListPropertyDescriptor(ArrayType.class, "dimensions", Dimension.class, CYCLE_RISK); //$NON-NLS-1$	
+			new ChildListPropertyDescriptor(ArrayType.class, "dimensions", Dimension.class, CYCLE_RISK); //$NON-NLS-1$
 	/**
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
@@ -131,7 +131,7 @@ public class ArrayType extends Type {
 	 * (element type: {@link Dimension}).
 	 * Null before JLS8. Added in JLS8; defaults to a list with one element
 	 * (see constructor).
-	 * 
+	 *
 	 * @since 3.10
 	 */
 	private ASTNode.NodeList dimensions = null;
@@ -219,7 +219,7 @@ public class ArrayType extends Type {
 		ArrayType result;
 		if (this.ast.apiLevel < AST.JLS8_INTERNAL) {
 			result = new ArrayType(target);
-			result.setComponentType((Type) getComponentType().clone(target));			
+			result.setComponentType((Type) getComponentType().clone(target));
 		} else {
 			result = new ArrayType(target, 0);
 			result.setElementType((Type) getElementType().clone(target));
@@ -242,7 +242,7 @@ public class ArrayType extends Type {
 		if (visitChildren) {
 			// visit children in normal left to right reading order
 			if (this.ast.apiLevel < AST.JLS8_INTERNAL) {
-				acceptChild(visitor, getComponentType());				
+				acceptChild(visitor, getComponentType());
 			} else {
 				acceptChild(visitor, getElementType());
 				acceptChildren(visitor, this.dimensions);
@@ -374,7 +374,7 @@ public class ArrayType extends Type {
 			dimension++;
 			t = ((ArrayType) t).getComponentType();
 		}
-		return dimension;			
+		return dimension;
 	}
 
 	/**
@@ -382,7 +382,7 @@ public class ArrayType extends Type {
 	 * <p>
 	 * For the array type to be plausible, the list should contain at least one element.
 	 * </p>
-	 * 
+	 *
 	 * @return the live list of dimensions with optional annotations (element type: {@link Dimension})
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
 	 * @since 3.10

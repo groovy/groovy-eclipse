@@ -122,9 +122,9 @@ public class InternalCompletionContext extends CompletionContext {
 	@Override
 	public IJavaElement getEnclosingElement() {
 		if (!this.isExtended) throw new UnsupportedOperationException("Operation only supported in extended context"); //$NON-NLS-1$
-	
+
 		if (this.extendedContext == null) return null;
-	
+
 		return this.extendedContext.getEnclosingElement();
 	}
 
@@ -172,9 +172,9 @@ public class InternalCompletionContext extends CompletionContext {
 	@Override
 	public IJavaElement[] getVisibleElements(String typeSignature) {
 		if (!this.isExtended) throw new UnsupportedOperationException("Operation only supported in extended context"); //$NON-NLS-1$
-	
+
 		if (this.extendedContext == null) return new IJavaElement[0];
-	
+
 		return this.extendedContext.getVisibleElements(typeSignature);
 	}
 
@@ -197,7 +197,7 @@ public class InternalCompletionContext extends CompletionContext {
 	public boolean isInJavadocText() {
 		return (this.javadoc & CompletionOnJavadoc.TEXT) != 0;
 	}
-	
+
 	/**
 	 * Return the completion node associated with the current completion.
 	 *
@@ -208,12 +208,12 @@ public class InternalCompletionContext extends CompletionContext {
 	 */
 	public ASTNode getCompletionNode() {
 		if (!this.isExtended) throw new UnsupportedOperationException("Operation only supported in extended context"); //$NON-NLS-1$
-	
+
 		if (this.extendedContext == null) return null;
-	
+
 		return this.extendedContext.getCompletionNode();
 	}
-	
+
 	/**
 	 * Return the parent AST node of the completion node associated with the current completion.
 	 *
@@ -224,12 +224,12 @@ public class InternalCompletionContext extends CompletionContext {
 	 */
 	public ASTNode getCompletionNodeParent() {
 		if (!this.isExtended) throw new UnsupportedOperationException("Operation only supported in extended context"); //$NON-NLS-1$
-	
+
 		if (this.extendedContext == null) return null;
-	
+
 		return this.extendedContext.getCompletionNodeParent();
 	}
-	
+
 	/**
 	 * Return the bindings of all visible local variables in the current completion context.
 	 *
@@ -241,12 +241,12 @@ public class InternalCompletionContext extends CompletionContext {
 	 */
 	public ObjectVector getVisibleLocalVariables() {
 		if (!this.isExtended) throw new UnsupportedOperationException("Operation only supported in extended context"); //$NON-NLS-1$
-	
+
 		if (this.extendedContext == null) return null;
-	
+
 		return this.extendedContext.getVisibleLocalVariables();
 	}
-	
+
 	/**
 	 * Return the bindings of all visible fields in the current completion context.
 	 *
@@ -258,12 +258,12 @@ public class InternalCompletionContext extends CompletionContext {
 	 */
 	public ObjectVector getVisibleFields() {
 		if (!this.isExtended) throw new UnsupportedOperationException("Operation only supported in extended context"); //$NON-NLS-1$
-	
+
 		if (this.extendedContext == null) return null;
-	
+
 		return this.extendedContext.getVisibleFields();
 	}
-	
+
 	/**
 	 * Return the bindings of all visible methods in the current completion context.
 	 *
@@ -275,9 +275,9 @@ public class InternalCompletionContext extends CompletionContext {
 	 */
 	public ObjectVector getVisibleMethods() {
 		if (!this.isExtended) throw new UnsupportedOperationException("Operation only supported in extended context"); //$NON-NLS-1$
-	
+
 		if (this.extendedContext == null) return null;
-	
+
 		return this.extendedContext.getVisibleMethods();
 	}
 }

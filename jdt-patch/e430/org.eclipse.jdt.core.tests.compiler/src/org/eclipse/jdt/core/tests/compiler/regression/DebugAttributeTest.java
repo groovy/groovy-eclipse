@@ -151,12 +151,12 @@ public void test003() throws Exception {
 			"		List l2 = new ArrayList();\n" +
 			"		l.add(new X());\n" +
 			"		for (Iterator iterator = l.iterator(); iterator.hasNext() ;) {\n" +
-			"			l2.add(((X) iterator.next()).toString()\n" + 
+			"			l2.add(((X) iterator.next()).toString()\n" +
 			"				.substring(3));\n" +
-			"		}\n" + 
+			"		}\n" +
 			"		for (Iterator iterator = l2.iterator(); iterator.hasNext() ;) {\n" +
 			"			System.out.println(iterator.next());\n" +
-			"		}\n" + 
+			"		}\n" +
 			"	}" +
 			"	public String toString() {\n" +
 			"		return \"NO_SUCCESS\";\n" +
@@ -166,63 +166,63 @@ public void test003() throws Exception {
 		"SUCCESS");
 
 	String expectedOutput =
-		"  // Method descriptor #15 ([Ljava/lang/String;)V\n" + 
-		"  // Stack: 3, Locals: 4\n" + 
-		"  public static void main(java.lang.String[] args);\n" + 
-		"      0  new java.util.ArrayList [16]\n" + 
-		"      3  dup\n" + 
-		"      4  invokespecial java.util.ArrayList() [18]\n" + 
-		"      7  astore_1 [l]\n" + 
-		"      8  new java.util.ArrayList [16]\n" + 
-		"     11  dup\n" + 
-		"     12  invokespecial java.util.ArrayList() [18]\n" + 
-		"     15  astore_2 [l2]\n" + 
-		"     16  aload_1 [l]\n" + 
-		"     17  new X [1]\n" + 
-		"     20  dup\n" + 
-		"     21  invokespecial X() [19]\n" + 
-		"     24  invokeinterface java.util.List.add(java.lang.Object) : boolean [20] [nargs: 2]\n" + 
-		"     29  pop\n" + 
-		"     30  aload_1 [l]\n" + 
-		"     31  invokeinterface java.util.List.iterator() : java.util.Iterator [26] [nargs: 1]\n" + 
-		"     36  astore_3 [iterator]\n" + 
-		"     37  goto 63\n" + 
-		"     40  aload_2 [l2]\n" + 
-		"     41  aload_3 [iterator]\n" + 
-		"     42  invokeinterface java.util.Iterator.next() : java.lang.Object [30] [nargs: 1]\n" + 
-		"     47  checkcast X [1]\n" + 
-		"     50  invokevirtual X.toString() : java.lang.String [36]\n" + 
-		"     53  iconst_3\n" + 
-		"     54  invokevirtual java.lang.String.substring(int) : java.lang.String [40]\n" + 
-		"     57  invokeinterface java.util.List.add(java.lang.Object) : boolean [20] [nargs: 2]\n" + 
-		"     62  pop\n" + 
-		"     63  aload_3 [iterator]\n" + 
-		"     64  invokeinterface java.util.Iterator.hasNext() : boolean [46] [nargs: 1]\n" + 
-		"     69  ifne 40\n" + 
-		"     72  aload_2 [l2]\n" + 
-		"     73  invokeinterface java.util.List.iterator() : java.util.Iterator [26] [nargs: 1]\n" + 
-		"     78  astore_3 [iterator]\n" + 
-		"     79  goto 94\n" + 
-		"     82  getstatic java.lang.System.out : java.io.PrintStream [50]\n" + 
-		"     85  aload_3 [iterator]\n" + 
-		"     86  invokeinterface java.util.Iterator.next() : java.lang.Object [30] [nargs: 1]\n" + 
-		"     91  invokevirtual java.io.PrintStream.println(java.lang.Object) : void [56]\n" + 
-		"     94  aload_3 [iterator]\n" + 
-		"     95  invokeinterface java.util.Iterator.hasNext() : boolean [46] [nargs: 1]\n" + 
-		"    100  ifne 82\n" + 
-		"    103  return\n" + 
-		"      Line numbers:\n" + 
-		"        [pc: 0, line: 6]\n" + 
-		"        [pc: 8, line: 7]\n" + 
-		"        [pc: 16, line: 8]\n" + 
-		"        [pc: 30, line: 9]\n" + 
-		"        [pc: 40, line: 10]\n" + 
-		"        [pc: 53, line: 11]\n" + 
-		"        [pc: 57, line: 10]\n" + 
-		"        [pc: 63, line: 9]\n" + 
-		"        [pc: 72, line: 13]\n" + 
-		"        [pc: 82, line: 14]\n" + 
-		"        [pc: 94, line: 13]\n" + 
+		"  // Method descriptor #15 ([Ljava/lang/String;)V\n" +
+		"  // Stack: 3, Locals: 4\n" +
+		"  public static void main(java.lang.String[] args);\n" +
+		"      0  new java.util.ArrayList [16]\n" +
+		"      3  dup\n" +
+		"      4  invokespecial java.util.ArrayList() [18]\n" +
+		"      7  astore_1 [l]\n" +
+		"      8  new java.util.ArrayList [16]\n" +
+		"     11  dup\n" +
+		"     12  invokespecial java.util.ArrayList() [18]\n" +
+		"     15  astore_2 [l2]\n" +
+		"     16  aload_1 [l]\n" +
+		"     17  new X [1]\n" +
+		"     20  dup\n" +
+		"     21  invokespecial X() [19]\n" +
+		"     24  invokeinterface java.util.List.add(java.lang.Object) : boolean [20] [nargs: 2]\n" +
+		"     29  pop\n" +
+		"     30  aload_1 [l]\n" +
+		"     31  invokeinterface java.util.List.iterator() : java.util.Iterator [26] [nargs: 1]\n" +
+		"     36  astore_3 [iterator]\n" +
+		"     37  goto 63\n" +
+		"     40  aload_2 [l2]\n" +
+		"     41  aload_3 [iterator]\n" +
+		"     42  invokeinterface java.util.Iterator.next() : java.lang.Object [30] [nargs: 1]\n" +
+		"     47  checkcast X [1]\n" +
+		"     50  invokevirtual X.toString() : java.lang.String [36]\n" +
+		"     53  iconst_3\n" +
+		"     54  invokevirtual java.lang.String.substring(int) : java.lang.String [40]\n" +
+		"     57  invokeinterface java.util.List.add(java.lang.Object) : boolean [20] [nargs: 2]\n" +
+		"     62  pop\n" +
+		"     63  aload_3 [iterator]\n" +
+		"     64  invokeinterface java.util.Iterator.hasNext() : boolean [46] [nargs: 1]\n" +
+		"     69  ifne 40\n" +
+		"     72  aload_2 [l2]\n" +
+		"     73  invokeinterface java.util.List.iterator() : java.util.Iterator [26] [nargs: 1]\n" +
+		"     78  astore_3 [iterator]\n" +
+		"     79  goto 94\n" +
+		"     82  getstatic java.lang.System.out : java.io.PrintStream [50]\n" +
+		"     85  aload_3 [iterator]\n" +
+		"     86  invokeinterface java.util.Iterator.next() : java.lang.Object [30] [nargs: 1]\n" +
+		"     91  invokevirtual java.io.PrintStream.println(java.lang.Object) : void [56]\n" +
+		"     94  aload_3 [iterator]\n" +
+		"     95  invokeinterface java.util.Iterator.hasNext() : boolean [46] [nargs: 1]\n" +
+		"    100  ifne 82\n" +
+		"    103  return\n" +
+		"      Line numbers:\n" +
+		"        [pc: 0, line: 6]\n" +
+		"        [pc: 8, line: 7]\n" +
+		"        [pc: 16, line: 8]\n" +
+		"        [pc: 30, line: 9]\n" +
+		"        [pc: 40, line: 10]\n" +
+		"        [pc: 53, line: 11]\n" +
+		"        [pc: 57, line: 10]\n" +
+		"        [pc: 63, line: 9]\n" +
+		"        [pc: 72, line: 13]\n" +
+		"        [pc: 82, line: 14]\n" +
+		"        [pc: 94, line: 13]\n" +
 		"        [pc: 103, line: 16]\n";
 
 	File f = new File(OUTPUT_DIR + File.separator + "X.class");
@@ -242,39 +242,39 @@ public void test004() throws Exception {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"public class X{\n" + 
-			"	public class Inner {\n" + 
-			"		public void foo() {\n" + 
-			"			int i = 0;\n" + 
-			"			final int NEW = 1;\n" + 
-			"			if (i == NEW) {\n" + 
-			"				System.out.println();\n" + 
-			"			}\n" + 
-			"			bar();\n" + 
-			"		}\n" + 
-			"	}\n" + 
-			"	public void bar() {\n" + 
-			"		System.out.println(\"SUCCESS\");\n" + 
-			"	}\n" + 
-			"	public static void main(String[] args) {\n" + 
-			"		new X().new Inner().foo();\n" + 
-			"	}\n" + 
+			"public class X{\n" +
+			"	public class Inner {\n" +
+			"		public void foo() {\n" +
+			"			int i = 0;\n" +
+			"			final int NEW = 1;\n" +
+			"			if (i == NEW) {\n" +
+			"				System.out.println();\n" +
+			"			}\n" +
+			"			bar();\n" +
+			"		}\n" +
+			"	}\n" +
+			"	public void bar() {\n" +
+			"		System.out.println(\"SUCCESS\");\n" +
+			"	}\n" +
+			"	public static void main(String[] args) {\n" +
+			"		new X().new Inner().foo();\n" +
+			"	}\n" +
 			"}",
 		},
 		"SUCCESS");
 
 	String expectedOutput =
-		"    22  return\n" + 
-		"      Line numbers:\n" + 
-		"        [pc: 0, line: 4]\n" + 
-		"        [pc: 2, line: 5]\n" + 
-		"        [pc: 4, line: 6]\n" + 
-		"        [pc: 9, line: 7]\n" + 
-		"        [pc: 15, line: 9]\n" + 
-		"        [pc: 22, line: 10]\n" + 
-		"      Local variable table:\n" + 
-		"        [pc: 0, pc: 23] local: this index: 0 type: X.Inner\n" + 
-		"        [pc: 2, pc: 23] local: i index: 1 type: int\n" + 
+		"    22  return\n" +
+		"      Line numbers:\n" +
+		"        [pc: 0, line: 4]\n" +
+		"        [pc: 2, line: 5]\n" +
+		"        [pc: 4, line: 6]\n" +
+		"        [pc: 9, line: 7]\n" +
+		"        [pc: 15, line: 9]\n" +
+		"        [pc: 22, line: 10]\n" +
+		"      Local variable table:\n" +
+		"        [pc: 0, pc: 23] local: this index: 0 type: X.Inner\n" +
+		"        [pc: 2, pc: 23] local: i index: 1 type: int\n" +
 		"        [pc: 4, pc: 23] local: NEW index: 2 type: int\n";
 
 	File f = new File(OUTPUT_DIR + File.separator + "X$Inner.class");

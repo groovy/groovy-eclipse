@@ -451,103 +451,103 @@ public class AssertionTest extends AbstractRegressionTest {
 		runNegativeTest(
 			new String[] { /* test files */
 				"X.java",
-				"public class X {\n" + 
-				"	protected void transform1(boolean srcPts) {\n" + 
-				"		final float error1;\n" + 
-				"		assert !(srcPts && (error1 = maxError()) > 0) : error1;\n" + 
-				"	}\n" + 
-				"	float foo1(boolean srcPts) {\n" + 
-				"		final float error2;\n" + 
-				"		if (!(srcPts && (error2 = maxError()) > 0)) {\n" + 
-				"		} else {\n" + 
-				"			return error2;\n" + 
-				"		}\n" + 
-				"		return 0;\n" + 
-				"	}\n" + 
-				"	float bar1(boolean srcPts) {\n" + 
-				"		final float error3;\n" + 
-				"		if ((srcPts && (error3 = maxError()) > 0)) {\n" + 
-				"			return error3;\n" + 
-				"		}\n" + 
-				"		return 0;\n" + 
-				"	}	\n" + 
-				"	protected void transform2(boolean srcPts) {\n" + 
-				"		final float error4;\n" + 
-				"		assert (srcPts && (error4 = maxError()) > 0) : error4;\n" + 
-				"	}\n" + 
-				"	float foo2(boolean srcPts) {\n" + 
-				"		final float error5;\n" + 
-				"		if (srcPts && (error5 = maxError()) > 0) {\n" + 
-				"		} else {\n" + 
-				"			return error5;\n" + 
-				"		}\n" + 
-				"		return 0;\n" + 
-				"	}\n" + 
-				"	float bar2(boolean srcPts) {\n" + 
-				"		final float error6;\n" + 
-				"		if (!(srcPts && (error6 = maxError()) > 0)) {\n" + 
-				"			return error6;\n" + 
-				"		}\n" + 
-				"		return 0;\n" + 
-				"	}\n" + 
-				"	private float maxError() {\n" + 
-				"		return 0;\n" + 
-				"	}\n" + 
-				"\n" + 
+				"public class X {\n" +
+				"	protected void transform1(boolean srcPts) {\n" +
+				"		final float error1;\n" +
+				"		assert !(srcPts && (error1 = maxError()) > 0) : error1;\n" +
+				"	}\n" +
+				"	float foo1(boolean srcPts) {\n" +
+				"		final float error2;\n" +
+				"		if (!(srcPts && (error2 = maxError()) > 0)) {\n" +
+				"		} else {\n" +
+				"			return error2;\n" +
+				"		}\n" +
+				"		return 0;\n" +
+				"	}\n" +
+				"	float bar1(boolean srcPts) {\n" +
+				"		final float error3;\n" +
+				"		if ((srcPts && (error3 = maxError()) > 0)) {\n" +
+				"			return error3;\n" +
+				"		}\n" +
+				"		return 0;\n" +
+				"	}	\n" +
+				"	protected void transform2(boolean srcPts) {\n" +
+				"		final float error4;\n" +
+				"		assert (srcPts && (error4 = maxError()) > 0) : error4;\n" +
+				"	}\n" +
+				"	float foo2(boolean srcPts) {\n" +
+				"		final float error5;\n" +
+				"		if (srcPts && (error5 = maxError()) > 0) {\n" +
+				"		} else {\n" +
+				"			return error5;\n" +
+				"		}\n" +
+				"		return 0;\n" +
+				"	}\n" +
+				"	float bar2(boolean srcPts) {\n" +
+				"		final float error6;\n" +
+				"		if (!(srcPts && (error6 = maxError()) > 0)) {\n" +
+				"			return error6;\n" +
+				"		}\n" +
+				"		return 0;\n" +
+				"	}\n" +
+				"	private float maxError() {\n" +
+				"		return 0;\n" +
+				"	}\n" +
+				"\n" +
 				"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 23)\n" + 
-			"	assert (srcPts && (error4 = maxError()) > 0) : error4;\n" + 
-			"	                                               ^^^^^^\n" + 
-			"The local variable error4 may not have been initialized\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 29)\n" + 
-			"	return error5;\n" + 
-			"	       ^^^^^^\n" + 
-			"The local variable error5 may not have been initialized\n" + 
-			"----------\n" + 
-			"3. ERROR in X.java (at line 36)\n" + 
-			"	return error6;\n" + 
-			"	       ^^^^^^\n" + 
-			"The local variable error6 may not have been initialized\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 23)\n" +
+			"	assert (srcPts && (error4 = maxError()) > 0) : error4;\n" +
+			"	                                               ^^^^^^\n" +
+			"The local variable error4 may not have been initialized\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 29)\n" +
+			"	return error5;\n" +
+			"	       ^^^^^^\n" +
+			"The local variable error5 may not have been initialized\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 36)\n" +
+			"	return error6;\n" +
+			"	       ^^^^^^\n" +
+			"The local variable error6 may not have been initialized\n" +
 			"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=328361
 	public void test018() {
 		this.runNegativeTest(new String[] {
 			"X.java",
-			"public class X {\n" + 
-			"    static final int i;\n" + 
-			"    static {\n" + 
-			"        assert (i = 0) == 0;\n" + 
-			"        System.out.println(i);\n" + 
-			"    }\n" + 
+			"public class X {\n" +
+			"    static final int i;\n" +
+			"    static {\n" +
+			"        assert (i = 0) == 0;\n" +
+			"        System.out.println(i);\n" +
+			"    }\n" +
 			"}"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 2)\n" + 
-		"	static final int i;\n" + 
-		"	                 ^\n" + 
-		"The blank final field i may not have been initialized\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 5)\n" + 
-		"	System.out.println(i);\n" + 
-		"	                   ^\n" + 
-		"The blank final field i may not have been initialized\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 2)\n" +
+		"	static final int i;\n" +
+		"	                 ^\n" +
+		"The blank final field i may not have been initialized\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 5)\n" +
+		"	System.out.println(i);\n" +
+		"	                   ^\n" +
+		"The blank final field i may not have been initialized\n" +
 		"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=328361
 	public void test019() {
 		this.runConformTest(new String[] {
 			"X.java",
-			"public class X {\n" + 
-			"    static final int i;\n" + 
+			"public class X {\n" +
+			"    static final int i;\n" +
 			"    static {\n" +
-			"        i = 0;\n" + 
-			"        assert i == 0;\n" + 
-			"        System.out.println(i);\n" + 
-			"    }\n" + 
+			"        i = 0;\n" +
+			"        assert i == 0;\n" +
+			"        System.out.println(i);\n" +
+			"    }\n" +
 			"}"
 		},
 		"");
@@ -559,17 +559,17 @@ public class AssertionTest extends AbstractRegressionTest {
 					"X.java",
 					"public class X {\n" +
 						"    void method1() {\n" +
-						"		 int i;" +	
-						"        assert (i = 0) == 0;\n" +	
-						"        System.out.println(i);\n" +	
-						"    }\n" +	
-						"}\n"	
+						"		 int i;" +
+						"        assert (i = 0) == 0;\n" +
+						"        System.out.println(i);\n" +
+						"    }\n" +
+						"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 4)\n" + 
-			"	System.out.println(i);\n" + 
-			"	                   ^\n" + 
-			"The local variable i may not have been initialized\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	System.out.println(i);\n" +
+			"	                   ^\n" +
+			"The local variable i may not have been initialized\n" +
 			"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=328361
@@ -582,17 +582,17 @@ public class AssertionTest extends AbstractRegressionTest {
 					"		return 1;\n" +
 					"	}\n" +
 					"    void method1() {\n" +
-						"		 int i;" +	
-						"        assert (i = this.bar()) == 0;\n" +	
-						"        System.out.println(i);\n" +	
-						"    }\n" +	
-						"}\n"	
+						"		 int i;" +
+						"        assert (i = this.bar()) == 0;\n" +
+						"        System.out.println(i);\n" +
+						"    }\n" +
+						"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 7)\n" + 
-			"	System.out.println(i);\n" + 
-			"	                   ^\n" + 
-			"The local variable i may not have been initialized\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 7)\n" +
+			"	System.out.println(i);\n" +
+			"	                   ^\n" +
+			"The local variable i may not have been initialized\n" +
 			"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=328361
@@ -605,28 +605,28 @@ public class AssertionTest extends AbstractRegressionTest {
 					"		return 1;\n" +
 					"	}\n" +
 					"    void method1() {\n" +
-						"		 int i;\n" +	
-						"        assert i++ == 0;\n" +	
-						"        System.out.println(i);\n" +	
-						"    }\n" +	
-						"}\n"	
+						"		 int i;\n" +
+						"        assert i++ == 0;\n" +
+						"        System.out.println(i);\n" +
+						"    }\n" +
+						"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 7)\n" + 
-			"	assert i++ == 0;\n" + 
-			"	       ^\n" + 
-			"The local variable i may not have been initialized\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 8)\n" + 
-			"	System.out.println(i);\n" + 
-			"	                   ^\n" + 
-			"The local variable i may not have been initialized\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 7)\n" +
+			"	assert i++ == 0;\n" +
+			"	       ^\n" +
+			"The local variable i may not have been initialized\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 8)\n" +
+			"	System.out.println(i);\n" +
+			"	                   ^\n" +
+			"The local variable i may not have been initialized\n" +
 			"----------\n");
 	}
 	public void test023() {
 		if (this.complianceLevel < ClassFileConstants.JDK1_8)
 			return;
-		this.runConformTest(new String[] {"X.java", 
+		this.runConformTest(new String[] {"X.java",
 				"interface Foo {\n" +
 				"  default Object test(Object a) {\n" +
 				"    assert a != null; // triggers creation of bogus synthetic field\n" +

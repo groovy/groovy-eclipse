@@ -55,7 +55,7 @@ public class NameEnvironmentAnswer {
 		this.externalAnnotationPath = externalAnnotationPath;
 		this.moduleName = module;
 	}
-	
+
 	public NameEnvironmentAnswer(ReferenceBinding binding, ModuleBinding module) {
 		this.binding = binding;
 		this.moduleBinding = module;
@@ -86,7 +86,7 @@ public class NameEnvironmentAnswer {
 		}
 		return baseString;
 	}
-	
+
 	/**
 	 * Returns the associated access restriction, or null if none.
 	 */
@@ -167,10 +167,10 @@ public class NameEnvironmentAnswer {
 	public boolean ignoreIfBetter() {
 		return this.accessRestriction != null && this.accessRestriction.ignoreIfBetter();
 	}
-	
-	/** 
+
+	/**
 	 * Name of the module to which the CU in this answer is associated.
-	 * {@code null} when associated to the unnamed module. 
+	 * {@code null} when associated to the unnamed module.
 	 * @return module name or {@code null}
 	 */
 	public char[] moduleName() {

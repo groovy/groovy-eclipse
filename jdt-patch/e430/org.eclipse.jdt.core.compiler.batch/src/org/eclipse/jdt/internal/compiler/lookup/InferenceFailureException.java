@@ -21,9 +21,9 @@ public class InferenceFailureException extends Exception {
 	private static final long serialVersionUID = 1L;
 
 	// TODO(stephan); add more details so that ProblemReported can eventually manufacture an appropriate message
-	
+
 	public InferenceFailureException(String message) {
 		super(message);
 	}
-	
+
 }

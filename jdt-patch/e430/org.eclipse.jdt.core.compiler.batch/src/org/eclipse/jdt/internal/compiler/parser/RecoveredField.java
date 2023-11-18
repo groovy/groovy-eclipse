@@ -39,7 +39,7 @@ public class RecoveredField extends RecoveredElement {
 
 	public RecoveredAnnotation[] annotations;
 	public int annotationCount;
-	
+
 	public int modifiers;
 	public int modifiersStart;
 
@@ -71,7 +71,7 @@ public RecoveredElement add(FieldDeclaration addedfieldDeclaration, int bracketB
 	/* default behavior is to delegate recording to parent if any */
 	resetPendingModifiers();
 	if (this.parent == null) return this; // ignore
-	
+
 	if (this.fieldDeclaration.declarationSourceStart == addedfieldDeclaration.declarationSourceStart) {
 		if (this.fieldDeclaration.initialization != null) {
 			this.updateSourceEndIfNecessary(this.fieldDeclaration.initialization.sourceEnd);
@@ -96,7 +96,7 @@ public RecoveredElement add(Statement statement, int bracketBalanceValue) {
 		if (statement.sourceEnd > 0)
 				this.alreadyCompletedFieldInitialization = true;
 		// else we may still be inside the initialization, having parsed only a part of it yet
-		if (!(statement instanceof AllocationExpression) && 
+		if (!(statement instanceof AllocationExpression) &&
 				this.fieldDeclaration.getKind() == AbstractVariableDeclaration.ENUM_CONSTANT) {
 			AllocationExpression alloc = new AllocationExpression();
 			alloc.arguments = new Expression[] {(Expression) statement};
@@ -249,7 +249,7 @@ public FieldDeclaration updatedFieldDeclaration(int depth, Set<TypeDeclaration> 
 							recoveredInitializers.expressions[recoveredInitializersCount++] = anonymousType.allocation;
 						}
 						else {
-							this.fieldDeclaration.initialization = anonymousType.allocation;							
+							this.fieldDeclaration.initialization = anonymousType.allocation;
 						}
 						int end = anonymousType.declarationSourceEnd;
 						if (end > this.fieldDeclaration.declarationSourceEnd) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=307337

@@ -57,7 +57,7 @@ public interface IPackageBinding extends IBinding {
 	 * Returns the binding of the module associated with this package binding.
 	 * @return the binding of the module associated with this package, or
 	 * <code>null</code> if none
-	 * 
+	 *
 	 * @since 3.14
 	 */
 	public default IModuleBinding getModule() {

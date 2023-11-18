@@ -1444,8 +1444,7 @@ public RecordComponentBinding[] components() {
 					TypeBinding leafType = rcb.type.leafComponentType();
 					if (leafType instanceof ReferenceBinding && (((ReferenceBinding) leafType).modifiers & ExtraCompilerModifiers.AccGenericSignature) != 0)
 						smb.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
-					// Don't copy the annotations to the accessor method's return type from record component
-					smb.returnType = rcb.type.unannotated();
+					smb.returnType = rcb.type;
 					// add code for implicit canonical constructor argument annotations also
 					for (FieldBinding f : this.fields) {
 						if (f.isRecordComponent() && CharOperation.equals(f.name, rcb.name)) {

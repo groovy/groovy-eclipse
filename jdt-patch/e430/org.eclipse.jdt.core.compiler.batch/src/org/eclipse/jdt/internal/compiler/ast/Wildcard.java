@@ -79,11 +79,11 @@ public class Wildcard extends SingleTypeReference {
 		}
 		this.resolvedType = scope.environment().createWildcard(genericType, rank, boundType, null /*no extra bound*/, this.kind);
 		resolveAnnotations(scope, 0); // no defaultNullness for wildcards
-		
+
 		if(scope.environment().usesNullTypeAnnotations()) {
 			((WildcardBinding)this.resolvedType).evaluateNullAnnotations(scope, this);
 		}
-		
+
 		return this.resolvedType;
 	}
 

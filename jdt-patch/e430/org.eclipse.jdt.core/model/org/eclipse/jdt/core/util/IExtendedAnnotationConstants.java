@@ -26,7 +26,7 @@ import org.eclipse.jdt.internal.compiler.codegen.AnnotationTargetTypeConstants;
  * @noextend This interface is not intended to be extended by clients.
  */
 public interface IExtendedAnnotationConstants {
-	
+
 	int CLASS_TYPE_PARAMETER = AnnotationTargetTypeConstants.CLASS_TYPE_PARAMETER;
 	int METHOD_TYPE_PARAMETER = AnnotationTargetTypeConstants.METHOD_TYPE_PARAMETER;
 
@@ -51,7 +51,7 @@ public interface IExtendedAnnotationConstants {
 	int METHOD_INVOCATION_TYPE_ARGUMENT = AnnotationTargetTypeConstants.METHOD_INVOCATION_TYPE_ARGUMENT;
 	int CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT = AnnotationTargetTypeConstants.CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT;
 	int METHOD_REFERENCE_TYPE_ARGUMENT = AnnotationTargetTypeConstants.METHOD_REFERENCE_TYPE_ARGUMENT;
-	
+
 	// Type path entry kinds
 	int TYPE_PATH_DEEPER_IN_ARRAY = 0;
 	int TYPE_PATH_DEEPER_IN_INNER_TYPE = 1;

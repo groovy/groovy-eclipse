@@ -24,7 +24,7 @@ import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
  *
  * <p>NOTE: The only visible entries from a Jmod package fragment root
  * are .class files. The sub folder "classes" where the .class files are nested under
- * is hidden from clients. THe package fragments appear to be directly under the 
+ * is hidden from clients. THe package fragments appear to be directly under the
  * package fragment roots.
  * <p>NOTE: A JMod package fragment root may or may not have an associated resource.
  *

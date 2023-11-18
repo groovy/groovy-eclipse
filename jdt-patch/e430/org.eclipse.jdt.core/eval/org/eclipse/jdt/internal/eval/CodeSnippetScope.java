@@ -13,7 +13,7 @@
  *     Jesper S Moller <jesper@selskabet.org> - Contributions for
  *								bug 378674 - "The method can be declared as static" is wrong
  *     Stephan Herrmann - Contribution for
- *								Bug 424167 - [1.8] Fully integrate type inference with overload resolution     
+ *								Bug 424167 - [1.8] Fully integrate type inference with overload resolution
  *******************************************************************************/
 package org.eclipse.jdt.internal.eval;
 
@@ -133,7 +133,7 @@ public final boolean canBeSeenByForCodeSnippet(FieldBinding fieldBinding, TypeBi
 	TypeBinding originalDeclaringClass = fieldBinding.declaringClass .original();
 	do {
 		if (type.isCapture()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=285002
-			if (TypeBinding.equalsEquals(originalDeclaringClass, type.erasure().original())) return true;	
+			if (TypeBinding.equalsEquals(originalDeclaringClass, type.erasure().original())) return true;
 		} else {
 			if (TypeBinding.equalsEquals(originalDeclaringClass, type.original())) return true;
 		}
@@ -513,7 +513,7 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 					CharOperation.concatWith(CharOperation.subarray(compoundName, 0, currentIndex), '.'),
 					ProblemReasons.NonStaticReferenceInStaticContext);
 		}
-		// Since a qualified reference must be for a static member, it won't affect static-ness of the enclosing method, 
+		// Since a qualified reference must be for a static member, it won't affect static-ness of the enclosing method,
 		// so we don't have to call resetEnclosingMethodStaticFlag() in this case
 		return binding;
 	}

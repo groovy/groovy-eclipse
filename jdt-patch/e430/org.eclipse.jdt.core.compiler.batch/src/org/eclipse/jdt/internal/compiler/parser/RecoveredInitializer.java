@@ -68,7 +68,7 @@ public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValu
 	}
 	if (this.initializerBody == null) {
 		return this.initializerBody = new RecoveredBlock(nestedBlockDeclaration, this, bracketBalanceValue);
-	}	
+	}
 	this.initializerBody.blockDeclaration.sourceEnd = 0; /* needed to allow adding more elements to the existing initializerBody */
 	if (nestedBlockDeclaration.sourceEnd == 0) return this.initializerBody;
 	return this.initializerBody.add(nestedBlockDeclaration, bracketBalanceValue, true);

@@ -70,7 +70,7 @@ public interface IModule {
 		public char[] name();
 		char[][] with();
 	}
-	
+
 	public default boolean isAutomatic() {
 		return false;
 	}
@@ -92,32 +92,32 @@ public interface IModule {
 			public char[] name() {
 				return this.name;
 			}
-			
+
 			@Override
 			public IModuleReference[] requires() {
 				return IModule.NO_MODULE_REFS;
 			}
-			
+
 			@Override
 			public IPackageExport[] exports() {
 				return IModule.NO_EXPORTS;
 			}
-			
+
 			@Override
 			public char[][] uses() {
 				return IModule.NO_USES;
 			}
-			
+
 			@Override
 			public IService[] provides() {
 				return IModule.NO_PROVIDES;
 			}
-			
+
 			@Override
 			public IPackageExport[] opens() {
 				return NO_OPENS;
 			}
-			
+
 			@Override
 			public boolean isAutomatic() {
 				return true;

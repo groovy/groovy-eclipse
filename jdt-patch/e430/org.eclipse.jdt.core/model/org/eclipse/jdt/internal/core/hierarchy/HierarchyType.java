@@ -69,7 +69,7 @@ public int getModifiers() {
 public boolean isBinaryType() {
 	return false;
 }
-/** 
+/**
  * Answer whether the receiver is an anonymous type
  */
 public boolean isAnonymous() {

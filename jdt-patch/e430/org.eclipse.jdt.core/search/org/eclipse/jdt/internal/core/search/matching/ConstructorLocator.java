@@ -113,7 +113,7 @@ public int match(ReferenceExpression node, MatchingNodeSet nodeSet) {
 public int match(TypeDeclaration node, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 
-	if (this.pattern.fineGrain != 0 && 
+	if (this.pattern.fineGrain != 0 &&
 			(this.pattern.fineGrain & ~IJavaSearchConstants.METHOD_REFERENCE_EXPRESSION) == 0 )
 		return IMPOSSIBLE_MATCH;
 

@@ -21,17 +21,17 @@ public class NullTypeBinding extends BaseTypeBinding {
 	NullTypeBinding() {
 		super(TypeIds.T_null, TypeConstants.NULL, new char[] { 'N' }); // N stands for null even if it is never internally used);
 	}
-	
+
 	@Override
 	public TypeBinding clone(TypeBinding enclosingType) {
 		return this;  // enforce solitude.
 	}
-	
+
 	@Override
 	public void setTypeAnnotations(AnnotationBinding[] annotations, boolean evalNullAnnotations) {
 		return; // reject misguided attempt.
 	}
-	
+
 	@Override
 	public TypeBinding unannotated() {
 		return this;

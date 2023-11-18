@@ -15,7 +15,7 @@ package org.eclipse.jdt.core;
 
 /**
  * Ordinary form of a {@link IClassFile} which holds exactly one <code>IType</code>.
- * 
+ *
  * @since 3.14
  * @noimplement This interface is not intended to be implemented by clients.
  */

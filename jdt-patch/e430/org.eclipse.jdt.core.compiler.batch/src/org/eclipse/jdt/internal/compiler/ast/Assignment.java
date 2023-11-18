@@ -65,7 +65,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 // just a local variable.
 	LocalVariableBinding local = this.lhs.localVariableBinding();
 	this.expression.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
-	
+
 	FlowInfo preInitInfo = null;
 	CompilerOptions compilerOptions = currentScope.compilerOptions();
 	boolean shouldAnalyseResource = local != null
@@ -78,7 +78,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		// analysis of resource leaks needs additional context while analyzing the RHS:
 		FakedTrackingVariable.preConnectTrackerAcrossAssignment(this, local, this.expression, flowInfo);
 	}
-	
+
 	flowInfo = ((Reference) this.lhs)
 		.analyseAssignment(currentScope, flowContext, flowInfo, this, false)
 		.unconditionalInits();
@@ -208,7 +208,7 @@ public TypeBinding resolveType(BlockScope scope) {
 		this.resolvedType = lhsType.capture(scope, this.lhs.sourceStart, this.lhs.sourceEnd); // make it unique, `this' shares source end with 'this.expression'.
 	}
 	LocalVariableBinding localVariableBinding = this.lhs.localVariableBinding();
-	if (localVariableBinding != null && (localVariableBinding.isCatchParameter() || localVariableBinding.isParameter())) { 
+	if (localVariableBinding != null && (localVariableBinding.isCatchParameter() || localVariableBinding.isParameter())) {
 		localVariableBinding.tagBits &= ~TagBits.IsEffectivelyFinal;  // as it is already definitely assigned, we can conclude already. Also note: catch parameter cannot be compound assigned.
 	}
 	TypeBinding rhsType = this.expression.resolveType(scope);

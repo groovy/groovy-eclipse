@@ -115,7 +115,7 @@ private boolean addIfSamePackage(char[][] compoundName, char[][] path) {
 	int resultLength = this.samePackageSuperTypeName.length;
 	for (int i = 0; i < resultLength; i++)
 		if (CharOperation.equals(this.samePackageSuperTypeName[i], compoundName)) return false; // already known
-	
+
 	for (int i = 0, length = compoundName.length - 1; i < length; i ++) {
 		if (!CharOperation.equals(compoundName[i], path[i])) return false;
 	}

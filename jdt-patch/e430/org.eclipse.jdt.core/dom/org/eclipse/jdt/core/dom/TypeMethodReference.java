@@ -20,7 +20,7 @@ import java.util.List;
  * Type method reference expression AST node type (added in JLS8 API).
  * <pre>
  * TypeMethodReference:
- *     Type <b>::</b> 
+ *     Type <b>::</b>
  *         [ <b>&lt;</b> Type { <b>,</b> Type } <b>&gt;</b> ]
  *         Identifier
  * </pre>
@@ -55,7 +55,7 @@ public class TypeMethodReference extends MethodReference {
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS_8_0;
-	
+
 	static {
 		List propertyList = new ArrayList(4);
 		createPropertyList(TypeMethodReference.class, propertyList);

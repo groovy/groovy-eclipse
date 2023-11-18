@@ -39,7 +39,7 @@ public class ClasspathJmod extends ClasspathJar {
 
 	public static char[] CLASSES = "classes".toCharArray(); //$NON-NLS-1$
 	public static char[] CLASSES_FOLDER = "classes/".toCharArray(); //$NON-NLS-1$
-	
+
 public ClasspathJmod(File file, boolean closeZipFileAtEnd,
 		AccessRuleSet accessRuleSet, String destinationPath) {
 	super(file, closeZipFileAtEnd, accessRuleSet, destinationPath);
@@ -97,7 +97,7 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 @Override
 public boolean hasAnnotationFileFor(String qualifiedTypeName) {
 	qualifiedTypeName = new String(CharOperation.append(CLASSES_FOLDER, qualifiedTypeName.toCharArray()));
-	return this.zipFile.getEntry(qualifiedTypeName+ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX) != null; 
+	return this.zipFile.getEntry(qualifiedTypeName+ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX) != null;
 }
 @SuppressWarnings({ "rawtypes", "unchecked" })
 @Override
@@ -142,7 +142,7 @@ public synchronized char[][] getModulesDeclaringPackage(String qualifiedPackageN
 
 	this.packageCache = new HashSet<>(41);
 	this.packageCache.add(Util.EMPTY_STRING);
-	
+
 	for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
 		char[] entryName = e.nextElement().getName().toCharArray();
 		int index = CharOperation.indexOf('/', entryName);
@@ -175,7 +175,7 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 				}
 			}
 		}
-	}	
+	}
 	return false;
 }
 @Override

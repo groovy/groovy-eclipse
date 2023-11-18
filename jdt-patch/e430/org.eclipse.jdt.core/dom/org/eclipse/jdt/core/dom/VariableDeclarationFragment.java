@@ -143,7 +143,7 @@ public class VariableDeclarationFragment extends VariableDeclaration {
 	final ChildListPropertyDescriptor internalExtraDimensions2Property() {
 		return EXTRA_DIMENSIONS2_PROPERTY;
 	}
-	
+
 	@Override
 	final ChildPropertyDescriptor internalInitializerProperty() {
 		return INITIALIZER_PROPERTY;

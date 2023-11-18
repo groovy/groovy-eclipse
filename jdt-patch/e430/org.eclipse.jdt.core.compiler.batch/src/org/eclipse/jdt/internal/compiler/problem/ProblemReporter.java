@@ -9553,7 +9553,7 @@ public void unusedImport(ImportReference importRef) {
 	// GROOVY end
 	int severity = computeSeverity(IProblem.UnusedImport);
 	if (severity == ProblemSeverities.Ignore) return;
-	String[] arguments = new String[] {importRef.toString()}; // GROOVY edit
+	String[] arguments = new String[] {CharOperation.toString(importRef.tokens)};
 	this.handle(
 		IProblem.UnusedImport,
 		arguments,

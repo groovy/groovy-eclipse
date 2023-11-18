@@ -34,13 +34,13 @@ public class SelectionOnReferenceExpressionName extends ReferenceExpression {
 		super.printExpression(indent, output);
 		return output.append('>');
 	}
-	
+
 	// See SelectionScanner#scanIdentifierOrKeyword
 	@Override
 	public boolean isConstructorReference() {
 		return CharOperation.equals(this.selector, "new".toCharArray()); //$NON-NLS-1$
 	}
-	
+
 	// See SelectionScanner#scanIdentifierOrKeyword
 	@Override
 	public boolean isMethodReference() {

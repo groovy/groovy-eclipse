@@ -38,7 +38,7 @@ public class Sorting {
 		ReferenceBinding[] unsorted = new ReferenceBinding[len];
 		ReferenceBinding[] sorted = new ReferenceBinding[len];
 		System.arraycopy(types, 0, unsorted, 0, len);
-		
+
 		int o = 0;
 		for(int i=0; i<len; i++)
 			o = sort(unsorted, i, sorted, o);
@@ -119,6 +119,6 @@ public class Sorting {
 			public int compare(InferenceVariable iv1, InferenceVariable iv2) {
 				return iv1.rank - iv2.rank;
 			}
-		});		
+		});
 	}
 }

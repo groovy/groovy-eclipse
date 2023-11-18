@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -29,7 +29,7 @@ public class PolymorphicSignatureTest extends AbstractRegressionTest {
 	public static Class testClass() {
 		return PolymorphicSignatureTest.class;
 	}
-	
+
 	public void test0001() {
 		this.runConformTest(
 			new String[] {
@@ -52,14 +52,14 @@ public class PolymorphicSignatureTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"import static java.lang.invoke.MethodHandles.*; \n" + 
-				"import java.lang.invoke.MethodHandle;\n" + 
-				"public class X {\n" + 
-				"	public static void main(String[] args) throws Throwable {\n" + 
-				"		MethodHandle mh = dropArguments(insertArguments(identity(int.class), 0, 42), 0, Object[].class);\n" + 
+				"import static java.lang.invoke.MethodHandles.*; \n" +
+				"import java.lang.invoke.MethodHandle;\n" +
+				"public class X {\n" +
+				"	public static void main(String[] args) throws Throwable {\n" +
+				"		MethodHandle mh = dropArguments(insertArguments(identity(int.class), 0, 42), 0, Object[].class);\n" +
 				"		int value = (int)mh.invokeExact(new Object[0]);\n" +
 				"		System.out.println(value);\n"+
-				"	}\n" + 
+				"	}\n" +
 				"}"
 			},
 			"42");
@@ -68,20 +68,20 @@ public class PolymorphicSignatureTest extends AbstractRegressionTest {
 		runConformTest(
 			new String[] {
 				"Test.java",
-				"import java.lang.invoke.MethodHandle;\n" + 
-				"import java.util.ArrayList;\n" + 
-				"import java.util.Collections;\n" + 
-				"\n" + 
-				"public class Test {\n" + 
-				"	\n" + 
-				"	public void foo() throws Throwable {\n" + 
-				"		\n" + 
-				"		MethodHandle mh = null;\n" + 
-				"		mh.invoke(null);                           // works, no issues.\n" + 
-				"		mh.invoke(null, new ArrayList<>());        // Bug 501457 fixed this\n" + 
-				"		mh.invoke(null, Collections.emptyList());  // This triggers UOE\n" + 
-				"		\n" + 
-				"	}\n" + 
+				"import java.lang.invoke.MethodHandle;\n" +
+				"import java.util.ArrayList;\n" +
+				"import java.util.Collections;\n" +
+				"\n" +
+				"public class Test {\n" +
+				"	\n" +
+				"	public void foo() throws Throwable {\n" +
+				"		\n" +
+				"		MethodHandle mh = null;\n" +
+				"		mh.invoke(null);                           // works, no issues.\n" +
+				"		mh.invoke(null, new ArrayList<>());        // Bug 501457 fixed this\n" +
+				"		mh.invoke(null, Collections.emptyList());  // This triggers UOE\n" +
+				"		\n" +
+				"	}\n" +
 				"}\n"
 			});
 	}

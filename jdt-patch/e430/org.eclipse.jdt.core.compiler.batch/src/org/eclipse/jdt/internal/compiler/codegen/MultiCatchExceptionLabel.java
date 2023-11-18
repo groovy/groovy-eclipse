@@ -28,7 +28,7 @@ public class MultiCatchExceptionLabel extends ExceptionLabel {
 	public MultiCatchExceptionLabel(CodeStream codeStream, TypeBinding exceptionType) {
 		super(codeStream, exceptionType);
 	}
-	
+
 	public void initialize(UnionTypeReference typeReference, Annotation [] annotations) {
 		TypeReference[] typeReferences = typeReference.typeReferences;
 		int length = typeReferences.length;

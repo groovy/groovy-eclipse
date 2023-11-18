@@ -30,7 +30,7 @@ public abstract class TryFlowContext extends FlowContext {
 	public TryFlowContext(FlowContext parent, ASTNode associatedNode) {
 		super(parent, associatedNode, true);
 	}
-	
+
 	@Override
 	public void markFinallyNullStatus(LocalVariableBinding local, int nullStatus) {
 		if (this.outerTryContext != null) {

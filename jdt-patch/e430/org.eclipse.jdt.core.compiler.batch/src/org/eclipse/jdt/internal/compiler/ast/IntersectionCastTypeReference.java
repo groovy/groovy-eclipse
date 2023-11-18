@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -68,14 +68,14 @@ public class IntersectionCastTypeReference extends TypeReference {
 	public TypeReference[] getTypeReferences() {
 		return this.typeReferences;
 	}
-	
+
 	@Override
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
 
 		int length = this.typeReferences.length;
 		ReferenceBinding[] intersectingTypes = new ReferenceBinding[length];
 		boolean hasError = false;
-		
+
 		int typeCount = 0;
 		nextType:
 		for (int i = 0; i < length; i++) {
@@ -138,7 +138,7 @@ public class IntersectionCastTypeReference extends TypeReference {
 			itsSuperclass = firstType.superclass();
 			System.arraycopy(intersectingTypes, 1, interfaces = new ReferenceBinding[typeCount - 1], 0, typeCount - 1);
 		}
-		
+
 		Map invocations = new HashMap(2);
 		nextInterface: for (int i = 0, interfaceCount = interfaces.length; i < interfaceCount; i++) {
 			ReferenceBinding one = interfaces[i];

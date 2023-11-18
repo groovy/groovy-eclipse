@@ -56,10 +56,10 @@ import org.eclipse.core.runtime.IPath;
  * </p>
  *
  * @since 3.1
- * 
+ *
  * @see JavaCore#newAccessRule(IPath, int)
  * @see IClasspathEntry#getExclusionPatterns()
- * 
+ *
  * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface IAccessRule {

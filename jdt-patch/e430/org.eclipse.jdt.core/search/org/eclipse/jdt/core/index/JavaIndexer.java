@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.core.search.indexing.DefaultJavaIndexer;
 /**
  * {@link JavaIndexer} provides functionality to generate index files which can be used by the JDT {@link SearchEngine}.
  * The generated index files can be used as a classpath attribute for the particular classpath entry.
- * 
+ *
  * <p> The search engine indexes all the elements referred in the classpath entries of the project into
  * index files. These index files are used to search the elements faster. Indexing for bigger jars could
  * take some time. To avoid this time, one can generate the index file and specify it when the jar is added

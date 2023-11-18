@@ -131,7 +131,7 @@ public class ThisReference extends Reference {
 	public TypeBinding resolveType(BlockScope scope) {
 
 		this.constant = Constant.NotAConstant;
-		
+
 		ReferenceBinding enclosingReceiverType = scope.enclosingReceiverType();
 		if (!isImplicitThis() &&!checkAccess(scope, enclosingReceiverType)) {
 			return null;

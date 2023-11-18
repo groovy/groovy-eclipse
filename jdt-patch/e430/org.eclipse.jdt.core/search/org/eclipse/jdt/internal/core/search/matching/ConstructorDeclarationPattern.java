@@ -20,10 +20,10 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 public class ConstructorDeclarationPattern extends ConstructorPattern {
 	public int extraFlags;
-	
+
 	public int declaringTypeModifiers;
 	public char[] declaringPackageName;
-	
+
 	public int modifiers;
 	public char[] signature;
 	public char[][] parameterTypes;
@@ -47,11 +47,11 @@ public void decodeIndexKey(char[] key) {
 	int last = key.length - 1;
 	int slash = CharOperation.indexOf(SEPARATOR, key, 0);
 	this.declaringSimpleName = CharOperation.subarray(key, 0, slash);
-	
+
 	int start = slash + 1;
 	slash = CharOperation.indexOf(SEPARATOR, key, start);
 	last = slash - 1;
-	
+
 	boolean isDefaultConstructor = key[last] == '#';
 	if (isDefaultConstructor) {
 		this.parameterCount = -1;
@@ -67,23 +67,23 @@ public void decodeIndexKey(char[] key) {
 			}
 		}
 	}
-	
+
 	slash = slash + 3;
 	last = slash - 1;
-	
+
 	int typeModifiersWithExtraFlags = key[last-1] + (key[last]<<16);
 	this.declaringTypeModifiers = decodeModifers(typeModifiersWithExtraFlags);
 	this.extraFlags = decodeExtraFlags(typeModifiersWithExtraFlags);
-	
+
 	// initialize optional fields
 	this.declaringPackageName = null;
 	this.modifiers = 0;
 	this.signature = null;
 	this.parameterTypes = null;
 	this.parameterNames = null;
-	
+
 	boolean isMemberType = (this.extraFlags & ExtraFlags.IsMemberType) != 0;
-	
+
 	if (!isMemberType) {
 		start = slash + 1;
 		if (this.parameterCount == -1) {
@@ -93,19 +93,19 @@ public void decodeIndexKey(char[] key) {
 			slash = CharOperation.indexOf(SEPARATOR, key, start);
 		}
 		last = slash - 1;
-		
+
 		this.declaringPackageName = CharOperation.subarray(key, start, slash);
-		
+
 		start = slash + 1;
 		if (this.parameterCount == 0) {
 			slash = slash + 3;
 			last = slash - 1;
-			
+
 			this.modifiers = key[last-1] + (key[last]<<16);
 		} else if (this.parameterCount > 0){
 			slash = CharOperation.indexOf(SEPARATOR, key, start);
 			last = slash - 1;
-			
+
 			boolean hasParameterStoredAsSignature = (this.extraFlags & ExtraFlags.ParameterTypesStoredAsSignature) != 0;
 			if (hasParameterStoredAsSignature) {
 				this.signature  = CharOperation.subarray(key, start, slash);
@@ -116,20 +116,20 @@ public void decodeIndexKey(char[] key) {
 			start = slash + 1;
 			slash = CharOperation.indexOf(SEPARATOR, key, start);
 			last = slash - 1;
-			
+
 			if (slash != start) {
 				this.parameterNames = CharOperation.splitOn(PARAMETER_SEPARATOR, key, start, slash);
 			}
-			
+
 			slash = slash + 3;
 			last = slash - 1;
-			
+
 			this.modifiers = key[last-1] + (key[last]<<16);
 		} else {
 			this.modifiers = ClassFileConstants.AccPublic;
 		}
 	}
-	
+
 	removeInternalFlags(); // remove internal flags
 }
 
@@ -144,10 +144,10 @@ public char[][] getIndexCategories() {
 @Override
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	ConstructorDeclarationPattern pattern = (ConstructorDeclarationPattern) decodedPattern;
-	
+
 	// only top level types
 	if ((pattern.extraFlags & ExtraFlags.IsMemberType) != 0) return false;
-	
+
 	// check package - exact match only
 	if (this.declaringPackageName != null && !CharOperation.equals(this.declaringPackageName, pattern.declaringPackageName, true))
 		return false;

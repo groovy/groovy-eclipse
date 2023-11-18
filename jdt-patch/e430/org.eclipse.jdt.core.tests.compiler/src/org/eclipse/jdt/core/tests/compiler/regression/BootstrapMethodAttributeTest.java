@@ -54,17 +54,17 @@ public class BootstrapMethodAttributeTest extends AbstractRegressionTest {
 					ClassFileBytesDisassembler.DETAILED);
 
 			String expectedOutput =
-					"//  (version 1.2 : 46.0, no super bit)\n" + 
-					"public class test.G {\n" + 
-					"  \n" + 
-					"  // Method descriptor #2 ()V\n" + 
-					"  // Stack: 0, Locals: 0\n" + 
-					"  public static void call();\n" + 
-					"    0  invokedynamic 0 dyn() : void [18]\n" + 
-					"    5  return\n" + 
-					"\n" + 
-					"Bootstrap methods:\n" + 
-					"  0 : # 17 arguments: {#1}\n" + 
+					"//  (version 1.2 : 46.0, no super bit)\n" +
+					"public class test.G {\n" +
+					"  \n" +
+					"  // Method descriptor #2 ()V\n" +
+					"  // Stack: 0, Locals: 0\n" +
+					"  public static void call();\n" +
+					"    0  invokedynamic 0 dyn() : void [18]\n" +
+					"    5  return\n" +
+					"\n" +
+					"Bootstrap methods:\n" +
+					"  0 : # 17 arguments: {#1}\n" +
 					"}";
 
 			int index = actualOutput.indexOf(expectedOutput);

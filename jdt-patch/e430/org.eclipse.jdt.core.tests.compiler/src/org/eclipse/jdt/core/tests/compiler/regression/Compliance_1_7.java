@@ -48,8 +48,8 @@ public void test1() {
 			"import java.util.List;\n" +
 			"public class Z  {\n" +
 			"	@SafeVarargs\n" +
-			"	public static <T> List<T> asList(T... a) {\n" + 
-			"		return null;\n" + 
+			"	public static <T> List<T> asList(T... a) {\n" +
+			"		return null;\n" +
 			"	}\n" +
 			"}"
 		},
@@ -91,18 +91,18 @@ public void testBug390889_a() {
 	this.runConformTest(
 			new String[] {
 					"MyComp.java",
-					"import java.util.Comparator;\n" + 
-					"public class MyComp implements Comparator {\n" + 
-					"	@Override\n" + 
-					"	public int compare(Object o1, Object o2) {\n" + 
-					"		return 0;\n" + 
-					"	}\n" + 
-					"}\n" + 
-					"class MyStringComp implements Comparator<String> {\n" + 
-					"	@Override\n" + 
-					"	public int compare(String o1, String o2) {\n" + 
-					"		return 0;\n" + 
-					"	}\n" + 
+					"import java.util.Comparator;\n" +
+					"public class MyComp implements Comparator {\n" +
+					"	@Override\n" +
+					"	public int compare(Object o1, Object o2) {\n" +
+					"		return 0;\n" +
+					"	}\n" +
+					"}\n" +
+					"class MyStringComp implements Comparator<String> {\n" +
+					"	@Override\n" +
+					"	public int compare(String o1, String o2) {\n" +
+					"		return 0;\n" +
+					"	}\n" +
 					"}\n"
 			},
 			"",
@@ -120,12 +120,12 @@ public void testBug390889_b() {
 	runConformTest(
 			new String[] {
 				"I1.java",
-				"interface I0 {\n" + 
-				"  void foo();\n" + 
-				"}\n" + 
+				"interface I0 {\n" +
+				"  void foo();\n" +
+				"}\n" +
 				"public interface I1 extends I0 {\n" +
-				"  @Override\n" + 
-				"  default void foo() {}\n" + 
+				"  @Override\n" +
+				"  default void foo() {}\n" +
 				"}\n"
 			});
 
@@ -136,7 +136,7 @@ public void testBug390889_b() {
 	this.runConformTest(
 			new String[] {
 					"C1.java",
-					"public class C1 implements I1 {\n" + 
+					"public class C1 implements I1 {\n" +
 					"}\n"
 			},
 			"",
@@ -154,8 +154,8 @@ public void testBug390889_c() {
 	runConformTest(
 			new String[] {
 				"I.java",
-				"interface I {\n" + 
-				"  default void foo() {}\n" + 
+				"interface I {\n" +
+				"  default void foo() {}\n" +
 				"}\n"
 			});
 
@@ -166,11 +166,11 @@ public void testBug390889_c() {
 	this.runConformTest(
 			new String[] {
 				"CI.java",
-				"public class CI implements I {\n" + 
-				"	 void test(I i) {\n" + 
-				"      this.foo();\n" + 
-				"      i.foo();\n" + 
-				"    }\n" + 
+				"public class CI implements I {\n" +
+				"	 void test(I i) {\n" +
+				"      this.foo();\n" +
+				"      i.foo();\n" +
+				"    }\n" +
 				"}\n"
 			},
 			"",
@@ -192,35 +192,35 @@ public void testBug490988() {
 	this.runNegativeTest(
 			new String[] {
 				"Thing.java",
-				"import java.util.Comparator;\n" + 
-				"import java.util.Iterator;\n" + 
-				"public class Thing implements Iterator<Object> {\n" + 
-				"    void breaking() {\n" + 
-				"        Iterator.super.remove(); // not 1.7-compliant (must be an error)\n" + 
-				"        Comparator.naturalOrder(); // not 1.7-compliant (bad error message)\n" + 
-				"    }\n" + 
-				"    @Override\n" + 
-				"    public boolean hasNext() {\n" + 
-				"        return false;\n" + 
-				"    }\n" + 
-				"    @Override\n" + 
-				"    public Object next() {\n" + 
-				"        return null;\n" + 
-				"    }\n" + 
-				"    public static void main(String[] args) {\n" + 
-				"        new Thing().breaking();\n" + 
-				"    }\n" + 
+				"import java.util.Comparator;\n" +
+				"import java.util.Iterator;\n" +
+				"public class Thing implements Iterator<Object> {\n" +
+				"    void breaking() {\n" +
+				"        Iterator.super.remove(); // not 1.7-compliant (must be an error)\n" +
+				"        Comparator.naturalOrder(); // not 1.7-compliant (bad error message)\n" +
+				"    }\n" +
+				"    @Override\n" +
+				"    public boolean hasNext() {\n" +
+				"        return false;\n" +
+				"    }\n" +
+				"    @Override\n" +
+				"    public Object next() {\n" +
+				"        return null;\n" +
+				"    }\n" +
+				"    public static void main(String[] args) {\n" +
+				"        new Thing().breaking();\n" +
+				"    }\n" +
 				"}"
 			},
 			"----------\n" +
 			"1. ERROR in Thing.java (at line 5)\n" +
 			"	Iterator.super.remove(); // not 1.7-compliant (must be an error)\n" +
-			"	^^^^^^^^^^^^^^\n" + 
+			"	^^^^^^^^^^^^^^\n" +
 			"Super method references to interface default methods are allowed only at source level 1.8 or above\n" +
 			"----------\n" +
 			"2. ERROR in Thing.java (at line 6)\n" +
 			"	Comparator.naturalOrder(); // not 1.7-compliant (bad error message)\n" +
-			"	           ^^^^^^^^^^^^\n" + 
+			"	           ^^^^^^^^^^^^\n" +
 			"References to interface static methods are allowed only at source level 1.8 or above\n" +
 			"----------\n",
 			null,

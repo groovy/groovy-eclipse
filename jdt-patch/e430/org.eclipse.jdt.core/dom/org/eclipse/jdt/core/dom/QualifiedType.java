@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * Type node for a qualified type (added in JLS3 API).
- * 
+ *
  * <pre>
  * QualifiedType:
  *    Type <b>.</b> { Annotation } SimpleName
@@ -62,10 +62,10 @@ import java.util.List;
  * same rules.
  * </li>
  * </ul>
- * 
+ *
  * @see SimpleType
  * @see NameQualifiedType
- * 
+ *
  * @since 3.1
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -88,13 +88,13 @@ public class QualifiedType extends AnnotatableType {
 	 */
 	public static final ChildListPropertyDescriptor ANNOTATIONS_PROPERTY =
 			internalAnnotationsPropertyFactory(QualifiedType.class);
-	
+
 	/**
 	 * The "name" structural property of this node type (child type: {@link SimpleName}).
 	 */
 	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(QualifiedType.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
@@ -115,7 +115,7 @@ public class QualifiedType extends AnnotatableType {
 		addProperty(QUALIFIER_PROPERTY, propertyList);
 		addProperty(NAME_PROPERTY, propertyList);
 		PROPERTY_DESCRIPTORS = reapPropertyList(propertyList);
-		
+
 		propertyList = new ArrayList(4);
 		createPropertyList(QualifiedType.class, propertyList);
 		addProperty(QUALIFIER_PROPERTY, propertyList);

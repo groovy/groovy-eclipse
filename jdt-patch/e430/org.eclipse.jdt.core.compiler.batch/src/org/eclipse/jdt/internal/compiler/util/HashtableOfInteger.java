@@ -136,7 +136,7 @@ public final class HashtableOfInteger {
 		}
 		this.keyTable[index] = intKey;
 		this.valueTable[index] = value;
-	
+
 		// assumes the threshold is never equal to the size of the table
 		if (++this.elementSize > this.threshold) {
 			rehash();

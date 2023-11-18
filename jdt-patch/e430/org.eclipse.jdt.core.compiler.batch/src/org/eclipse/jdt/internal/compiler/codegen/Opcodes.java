@@ -10,9 +10,9 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     
+ *
  *     Jesper S Moller - Contributions for
- *							Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335    
+ *							Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.codegen;
 

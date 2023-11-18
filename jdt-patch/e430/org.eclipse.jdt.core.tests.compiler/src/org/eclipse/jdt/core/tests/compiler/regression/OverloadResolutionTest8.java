@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -57,11 +57,11 @@ public void test001() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 9)\n" + 
-			"	System.out.println(foo((a)->a.length));\n" + 
-			"	                   ^^^\n" + 
-			"The method foo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 9)\n" +
+			"	System.out.println(foo((a)->a.length));\n" +
+			"	                   ^^^\n" +
+			"The method foo(I) is ambiguous for the type X\n" +
 			"----------\n"
 			);
 }
@@ -154,20 +154,20 @@ public void test004() {
 				"}\n",
 			},
 			// none of the lambdas is compatible because none is value-compatible, whereas foo() needs to return int.
-			"----------\n" + 
-			"1. ERROR in X.java (at line 11)\n" + 
-			"	goo(()-> { \n" + 
-			"	^^^\n" + 
-			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" + 
-			"----------\n2. ERROR in X.java (at line 15)\n" + 
-			"	goo(()-> { \n" + 
-			"	^^^\n" + 
-			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" + 
-			"----------\n" + 
-			"3. ERROR in X.java (at line 18)\n" + 
-			"	goo(()-> { \n" + 
-			"	^^^\n" + 
-			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 11)\n" +
+			"	goo(()-> { \n" +
+			"	^^^\n" +
+			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" +
+			"----------\n2. ERROR in X.java (at line 15)\n" +
+			"	goo(()-> { \n" +
+			"	^^^\n" +
+			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 18)\n" +
+			"	goo(()-> { \n" +
+			"	^^^\n" +
+			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" +
 			"----------\n");
 }
 public void test005() {
@@ -198,15 +198,15 @@ public void test005() {
 				"}\n",
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 18)\n" + 
-			"	goo(()-> { \n" + 
-			"	^^^\n" + 
-			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" + // because lambda has errors -> not valueCompatible 
+			"1. ERROR in X.java (at line 18)\n" +
+			"	goo(()-> { \n" +
+			"	^^^\n" +
+			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" + // because lambda has errors -> not valueCompatible
 			"----------\n" +
-			"2. ERROR in X.java (at line 19)\n" + 
-			"	while (f); \n" + 
-			"	       ^\n" + 
-			"Cannot make a static reference to the non-static field f\n" + 
+			"2. ERROR in X.java (at line 19)\n" +
+			"	while (f); \n" +
+			"	       ^\n" +
+			"Cannot make a static reference to the non-static field f\n" +
 			"----------\n");
 }
 public void test006() {
@@ -249,16 +249,16 @@ public void test007() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 9)\n" + 
-			"	goo(()-> 10); \n" + 
-			"	^^^\n" + 
-			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 9)\n" + 
-			"	goo(()-> 10); \n" + 
-			"	         ^^\n" + 
-			"Void methods cannot return a value\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 9)\n" +
+			"	goo(()-> 10); \n" +
+			"	^^^\n" +
+			"The method goo(J) in the type X is not applicable for the arguments (() -> {})\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 9)\n" +
+			"	goo(()-> 10); \n" +
+			"	         ^^\n" +
+			"Void methods cannot return a value\n" +
 			"----------\n");
 }
 public void test008() {
@@ -573,11 +573,11 @@ public void test020() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 20)\n" + 
-			"	foo(Y::new);\n" + 
-			"	^^^\n" + 
-			"The method foo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 20)\n" +
+			"	foo(Y::new);\n" +
+			"	^^^\n" +
+			"The method foo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 public void test021() {
@@ -669,11 +669,11 @@ public void test023() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 18)\n" + 
-			"	foo(Y::new);\n" + 
-			"	^^^\n" + 
-			"The method foo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 18)\n" +
+			"	foo(Y::new);\n" +
+			"	^^^\n" +
+			"The method foo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 public void test024() {
@@ -701,11 +701,11 @@ public void test024() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 18)\n" + 
-			"	foo(Y::new);\n" + 
-			"	^^^\n" + 
-			"The method foo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 18)\n" +
+			"	foo(Y::new);\n" +
+			"	^^^\n" +
+			"The method foo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 public void test025() {
@@ -762,11 +762,11 @@ public void test026() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 19)\n" + 
-			"	foo(Y::new);\n" + 
-			"	^^^\n" + 
-			"The method foo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 19)\n" +
+			"	foo(Y::new);\n" +
+			"	^^^\n" +
+			"The method foo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 public void test027() { // javac bug: 8b115 complains of ambiguity here.
@@ -849,16 +849,16 @@ public void test029() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 17)\n" + 
-			"	foo(X []::new);\n" + 
-			"	^^^\n" + 
-			"The method foo(I) in the type X is not applicable for the arguments (X[]::new)\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 17)\n" + 
-			"	foo(X []::new);\n" + 
-			"	    ^^^^^^^^^\n" + 
-			"Constructed array X[] cannot be assigned to Y[] as required in the interface descriptor  \n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 17)\n" +
+			"	foo(X []::new);\n" +
+			"	^^^\n" +
+			"The method foo(I) in the type X is not applicable for the arguments (X[]::new)\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 17)\n" +
+			"	foo(X []::new);\n" +
+			"	    ^^^^^^^^^\n" +
+			"Constructed array X[] cannot be assigned to Y[] as required in the interface descriptor  \n" +
 			"----------\n");
 }
 public void test030() {
@@ -904,7 +904,7 @@ public void test031() {
 			"foo(X<String>)");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=401850, [1.8][compiler] Compiler fails to type poly allocation expressions in method invocation contexts
-// FAIL: we no longer see that both methods are applicable... 
+// FAIL: we no longer see that both methods are applicable...
 // inference starts with X#RAW, finds the second method, then infers the diamond to Object and sees that foo is not ambiguous
 public void _test032() {
 	this.runNegativeTest(
@@ -922,16 +922,16 @@ public void _test032() {
 				"    }\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. WARNING in X.java (at line 5)\n" + 
-			"	void foo(X xs, String s) {\n" + 
-			"	         ^\n" + 
-			"X is a raw type. References to generic type X<T> should be parameterized\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 9)\n" + 
-			"	new X<String>().foo(new X<>(), \"Hello\");\n" + 
-			"	                ^^^\n" + 
-			"The method foo(X<String>, Object) is ambiguous for the type X<String>\n" + 
+			"----------\n" +
+			"1. WARNING in X.java (at line 5)\n" +
+			"	void foo(X xs, String s) {\n" +
+			"	         ^\n" +
+			"X is a raw type. References to generic type X<T> should be parameterized\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 9)\n" +
+			"	new X<String>().foo(new X<>(), \"Hello\");\n" +
+			"	                ^^^\n" +
+			"The method foo(X<String>, Object) is ambiguous for the type X<String>\n" +
 			"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=401850, [1.8][compiler] Compiler fails to type poly allocation expressions in method invocation contexts
@@ -1104,11 +1104,11 @@ public void test400871c() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 23)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 23)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=400871, [1.8][compiler] Overhaul overload resolution to reconcile with JLS8 15.12.2
@@ -1142,11 +1142,11 @@ public void test400871d() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 23)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 23)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=400871, [1.8][compiler] Overhaul overload resolution to reconcile with JLS8 15.12.2
@@ -1180,11 +1180,11 @@ public void test4008712() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 23)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 23)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 public void test4008712e() {
@@ -1243,11 +1243,11 @@ public void test4008712f() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 20)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 20)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 public void test4008712g() {
@@ -1277,21 +1277,21 @@ public void test4008712g() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. WARNING in X.java (at line 8)\n" + 
-			"	private int foo(int x) {\n" + 
-			"	            ^^^^^^^^^^\n" + 
-			"The method foo(int) from the type Y is never used locally\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 20)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) in the type X is not applicable for the arguments (new X()::foo)\n" + 
-			"----------\n" + 
-			"3. ERROR in X.java (at line 20)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	    ^^^^^^^^^^^^\n" + 
-			"The type X does not define foo(int) that is applicable here\n" + 
+			"----------\n" +
+			"1. WARNING in X.java (at line 8)\n" +
+			"	private int foo(int x) {\n" +
+			"	            ^^^^^^^^^^\n" +
+			"The method foo(int) from the type Y is never used locally\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 20)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) in the type X is not applicable for the arguments (new X()::foo)\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 20)\n" +
+			"	goo(new X()::foo);\n" +
+			"	    ^^^^^^^^^^^^\n" +
+			"The type X does not define foo(int) that is applicable here\n" +
 			"----------\n");
 }
 public void test4008712h() {
@@ -1321,11 +1321,11 @@ public void test4008712h() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 20)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 20)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 public void test4008712i() { // javac bug: 8b115 complains of ambiguity here.
@@ -1474,11 +1474,11 @@ public void test4008712m() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 21)\n" + 
-			"	goo(new X<String>()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X<T>\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 21)\n" +
+			"	goo(new X<String>()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X<T>\n" +
 			"----------\n");
 }
 public void test4008712n() {
@@ -1572,16 +1572,16 @@ public void test4008712p() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 21)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X<T>\n" + 
-			"----------\n" + 
-			"2. WARNING in X.java (at line 21)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	        ^\n" + 
-			"X is a raw type. References to generic type X<T> should be parameterized\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 21)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X<T>\n" +
+			"----------\n" +
+			"2. WARNING in X.java (at line 21)\n" +
+			"	goo(new X()::foo);\n" +
+			"	        ^\n" +
+			"X is a raw type. References to generic type X<T> should be parameterized\n" +
 			"----------\n");
 }
 public void test4008712q_raw() {
@@ -1613,21 +1613,21 @@ public void test4008712q_raw() {
 				"}\n",
 			};
 	runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. ERROR in X.java (at line 20)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X<T>\n" + 
-			"----------\n" + 
-			"2. WARNING in X.java (at line 20)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	    ^^^^^^^^^^^^\n" + 
-			"Type safety: The method foo(Object) belongs to the raw type Y. References to generic type Y<T> should be parameterized\n" + 
-			"----------\n" + 
-			"3. WARNING in X.java (at line 20)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	        ^\n" + 
-			"X is a raw type. References to generic type X<T> should be parameterized\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 20)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X<T>\n" +
+			"----------\n" +
+			"2. WARNING in X.java (at line 20)\n" +
+			"	goo(new X()::foo);\n" +
+			"	    ^^^^^^^^^^^^\n" +
+			"Type safety: The method foo(Object) belongs to the raw type Y. References to generic type Y<T> should be parameterized\n" +
+			"----------\n" +
+			"3. WARNING in X.java (at line 20)\n" +
+			"	goo(new X()::foo);\n" +
+			"	        ^\n" +
+			"X is a raw type. References to generic type X<T> should be parameterized\n" +
 			"----------\n";
 	runner.javacTestOptions = JavacTestOptions.Excuse.JavacCompilesIncorrectSource;
 	runner.runNegativeTest();
@@ -1690,11 +1690,11 @@ public void test4008712r() {
 				"}\n",
 			};
 	runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. ERROR in X.java (at line 20)\n" + 
-			"	goo(new X[0]::clone);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X<T>\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 20)\n" +
+			"	goo(new X[0]::clone);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X<T>\n" +
 			"----------\n";
 	runner.javacTestOptions = JavacTestOptions.Excuse.JavacCompilesIncorrectSource;
 	runner.runNegativeTest();
@@ -1784,16 +1784,16 @@ public void test4008712u() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 20)\n" + 
-			"	goo(I::clone);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) in the type X<T> is not applicable for the arguments (I::clone)\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 20)\n" + 
-			"	goo(I::clone);\n" + 
-			"	    ^^^^^^^^\n" + 
-			"The type I does not define clone() that is applicable here\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 20)\n" +
+			"	goo(I::clone);\n" +
+			"	^^^\n" +
+			"The method goo(I) in the type X<T> is not applicable for the arguments (I::clone)\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 20)\n" +
+			"	goo(I::clone);\n" +
+			"	    ^^^^^^^^\n" +
+			"The type I does not define clone() that is applicable here\n" +
 			"----------\n");
 }
 public void test4008712v() {
@@ -1854,16 +1854,16 @@ public void test4008712w() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 21)\n" + 
-			"	goo(i::clone);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) in the type X<T> is not applicable for the arguments (i::clone)\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 21)\n" + 
-			"	goo(i::clone);\n" + 
-			"	    ^^^^^^^^\n" + 
-			"The type I does not define clone() that is applicable here\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 21)\n" +
+			"	goo(i::clone);\n" +
+			"	^^^\n" +
+			"The method goo(I) in the type X<T> is not applicable for the arguments (i::clone)\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 21)\n" +
+			"	goo(i::clone);\n" +
+			"	    ^^^^^^^^\n" +
+			"The type I does not define clone() that is applicable here\n" +
 			"----------\n");
 }
 public void test4008712x() {
@@ -1995,11 +1995,11 @@ public void test4008712zb() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 16)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) is ambiguous for the type X\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 16)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) is ambiguous for the type X\n" +
 			"----------\n");
 }
 public void test4008712zc() {
@@ -2025,16 +2025,16 @@ public void test4008712zc() {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 16)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	^^^\n" + 
-			"The method goo(I) in the type X is not applicable for the arguments (new X()::foo)\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 16)\n" + 
-			"	goo(new X()::foo);\n" + 
-			"	    ^^^^^^^^^^^^\n" + 
-			"The type of foo() from the type X is long, this is incompatible with the descriptor\'s return type: int\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 16)\n" +
+			"	goo(new X()::foo);\n" +
+			"	^^^\n" +
+			"The method goo(I) in the type X is not applicable for the arguments (new X()::foo)\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 16)\n" +
+			"	goo(new X()::foo);\n" +
+			"	    ^^^^^^^^^^^^\n" +
+			"The type of foo() from the type X is long, this is incompatible with the descriptor\'s return type: int\n" +
 			"----------\n");
 }
 public void test4008712zd() {
@@ -2199,7 +2199,7 @@ public void test401850() {
 			},
 			"foo(X<String>)");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427072,  [1.8][compiler] Regression since fix of bug 423505: Method is ambiguous for type X 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427072,  [1.8][compiler] Regression since fix of bug 423505: Method is ambiguous for type X
 public void test427072() {
 	this.runConformTest(
 			new String[] {
@@ -2225,7 +2225,7 @@ public void test427072() {
 			},
 			"1");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427072,  [1.8][compiler] Regression since fix of bug 423505: Method is ambiguous for type X 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427072,  [1.8][compiler] Regression since fix of bug 423505: Method is ambiguous for type X
 public void test427072a() {
 	this.runConformTest(
 			new String[] {
@@ -2251,7 +2251,7 @@ public void test427072a() {
 			},
 			"1");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427072,  [1.8][compiler] Regression since fix of bug 423505: Method is ambiguous for type X 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427072,  [1.8][compiler] Regression since fix of bug 423505: Method is ambiguous for type X
 public void test427072b() {
 	this.runConformTest(
 			new String[] {
@@ -2277,7 +2277,7 @@ public void test427072b() {
 			},
 			"1");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427072,  [1.8][compiler] Regression since fix of bug 423505: Method is ambiguous for type X 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427072,  [1.8][compiler] Regression since fix of bug 423505: Method is ambiguous for type X
 public void test427072c() {
 	this.runConformTest(
 			new String[] {
@@ -2304,7 +2304,7 @@ public void test427072c() {
 			},
 			"1");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427628,  regression : The method * is ambiguous for the type * 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427628,  regression : The method * is ambiguous for the type *
 public void test427628() {
 	this.runConformTest(
 			new String[] {
@@ -2332,7 +2332,7 @@ public void test427628() {
 			},
 			"Jnull");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427628,  regression : The method * is ambiguous for the type * 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427628,  regression : The method * is ambiguous for the type *
 public void test427628a() {
 	this.runNegativeTest(
 			new String[] {
@@ -2359,24 +2359,24 @@ public void test427628a() {
 				"	public class K{}\n" +
 				"}\n",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 6)\n" + 
-			"	test(i!=null?i.getJ():null);\n" + 
-			"	^^^^\n" + 
-			"The method test(X.I) in the type X is not applicable for the arguments (((i != null) ? i.getJ() : null))\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 6)\n" + 
-			"	test(i!=null?i.getJ():null);\n" + 
-			"	             ^^^^^^^^\n" + 
-			"Type mismatch: cannot convert from X.J to X.I\n" + 
-			"----------\n" + 
-			"3. ERROR in X.java (at line 12)\n" + 
-			"	System.out.println(\"K\" + j);\n" + 
-			"	                         ^\n" + 
-			"j cannot be resolved to a variable\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 6)\n" +
+			"	test(i!=null?i.getJ():null);\n" +
+			"	^^^^\n" +
+			"The method test(X.I) in the type X is not applicable for the arguments (((i != null) ? i.getJ() : null))\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 6)\n" +
+			"	test(i!=null?i.getJ():null);\n" +
+			"	             ^^^^^^^^\n" +
+			"Type mismatch: cannot convert from X.J to X.I\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 12)\n" +
+			"	System.out.println(\"K\" + j);\n" +
+			"	                         ^\n" +
+			"j cannot be resolved to a variable\n" +
 			"----------\n");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427628,  regression : The method * is ambiguous for the type * 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427628,  regression : The method * is ambiguous for the type *
 public void test427628b() {
 	this.runNegativeTest(
 			new String[] {
@@ -2391,7 +2391,7 @@ public void test427628b() {
 			},
 			"");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=421922, [1.8][compiler] Varargs & Overload - Align to JLS8 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=421922, [1.8][compiler] Varargs & Overload - Align to JLS8
 public void _test421922() {
 	this.runConformTest(
 			new String[] {
@@ -2413,7 +2413,7 @@ public void _test421922() {
 			},
 			"int ... = [1]");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427748, [1.8][compiler] Cannot convert from Boolean to boolean on generic return type 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427748, [1.8][compiler] Cannot convert from Boolean to boolean on generic return type
 public void test427748() {
 	this.runConformTest(
 			new String[] {
@@ -2433,7 +2433,7 @@ public void test427748() {
 			},
 			"OK");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427808, [1.8] Correct super() invocation is not inferred when argument is a conditional expression 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427808, [1.8] Correct super() invocation is not inferred when argument is a conditional expression
 public void test427808() {
 	this.runConformTest(
 			new String[] {
@@ -2454,7 +2454,7 @@ public void test427808() {
 			},
 			"OK");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=429985,  [1.8][compiler] Resolution of right method signature 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=429985,  [1.8][compiler] Resolution of right method signature
 public void test429985() {
 	this.runConformTest(
 			new String[] {
@@ -2475,7 +2475,7 @@ public void test429985() {
 			},
 			"hi");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=429985,  [1.8][compiler] Resolution of right method signature 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=429985,  [1.8][compiler] Resolution of right method signature
 public void test429985a() {
 	this.runConformTest(
 			new String[] {
@@ -2496,7 +2496,7 @@ public void test429985a() {
 			},
 			"hi");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=448801, [1.8][compiler] Scope.mSMB & 15.12.3 Compile-Time Step 3  
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=448801, [1.8][compiler] Scope.mSMB & 15.12.3 Compile-Time Step 3
 public void test448801() {
 	this.runNegativeTest(
 			new String[] {
@@ -2511,7 +2511,7 @@ public void test448801() {
 				"	public void goo() {\n" +
 				"	}\n" +
 				"}\n",
-				"Z.java", 
+				"Z.java",
 				"interface I {\n" +
 				"	static void ifoo() {\n" +
 				"	}\n" +
@@ -2544,54 +2544,54 @@ public void test448801() {
 				"	}\n" +
 				"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in Z.java (at line 13)\n" + 
-			"	super.goo();\n" + 
-			"	^^^^^^^^^^^\n" + 
-			"Cannot directly invoke the abstract method goo() for the type ZSuper\n" + 
-			"----------\n" + 
-			"2. ERROR in Z.java (at line 16)\n" + 
-			"	X x = new X();\n" + 
-			"	      ^^^^^^^\n" + 
-			"The constructor X(X.Y...) of type X is not applicable as the formal varargs element type X.Y is not accessible here\n" + 
-			"----------\n" + 
-			"3. ERROR in Z.java (at line 17)\n" + 
-			"	x.foo();\n" + 
-			"	  ^^^\n" + 
-			"The method foo(X.Y...) of type X is not applicable as the formal varargs element type X.Y is not accessible here\n" + 
-			"----------\n" + 
-			"4. ERROR in Z.java (at line 18)\n" + 
-			"	System.out.println(x.goo());\n" + 
-			"	           ^^^^^^^\n" + 
-			"The method println(boolean) in the type PrintStream is not applicable for the arguments (void)\n" + 
-			"----------\n" + 
-			"5. ERROR in Z.java (at line 19)\n" + 
-			"	goo();\n" + 
-			"	^^^\n" + 
-			"Cannot make a static reference to the non-static method goo() from the type Z\n" + 
-			"----------\n" + 
-			"6. ERROR in Z.java (at line 20)\n" + 
-			"	Z.goo();\n" + 
-			"	^^^^^^^\n" + 
-			"Cannot make a static reference to the non-static method goo() from the type Z\n" + 
-			"----------\n" + 
-			"7. ERROR in Z.java (at line 21)\n" + 
-			"	zoo();\n" + 
-			"	^^^\n" + 
-			"The method zoo() is undefined for the type Z\n" + 
-			"----------\n" + 
-			"8. ERROR in Z.java (at line 22)\n" + 
-			"	new Z().ifoo();\n" + 
-			"	        ^^^^\n" + 
-			"The method ifoo() is undefined for the type Z\n" + 
-			"----------\n" + 
-			"9. ERROR in Z.java (at line 23)\n" + 
-			"	super.zSuperFoo();\n" + 
-			"	^^^^^\n" + 
-			"Cannot use super in a static context\n" + 
+			"----------\n" +
+			"1. ERROR in Z.java (at line 13)\n" +
+			"	super.goo();\n" +
+			"	^^^^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method goo() for the type ZSuper\n" +
+			"----------\n" +
+			"2. ERROR in Z.java (at line 16)\n" +
+			"	X x = new X();\n" +
+			"	      ^^^^^^^\n" +
+			"The constructor X(X.Y...) of type X is not applicable as the formal varargs element type X.Y is not accessible here\n" +
+			"----------\n" +
+			"3. ERROR in Z.java (at line 17)\n" +
+			"	x.foo();\n" +
+			"	  ^^^\n" +
+			"The method foo(X.Y...) of type X is not applicable as the formal varargs element type X.Y is not accessible here\n" +
+			"----------\n" +
+			"4. ERROR in Z.java (at line 18)\n" +
+			"	System.out.println(x.goo());\n" +
+			"	           ^^^^^^^\n" +
+			"The method println(boolean) in the type PrintStream is not applicable for the arguments (void)\n" +
+			"----------\n" +
+			"5. ERROR in Z.java (at line 19)\n" +
+			"	goo();\n" +
+			"	^^^\n" +
+			"Cannot make a static reference to the non-static method goo() from the type Z\n" +
+			"----------\n" +
+			"6. ERROR in Z.java (at line 20)\n" +
+			"	Z.goo();\n" +
+			"	^^^^^^^\n" +
+			"Cannot make a static reference to the non-static method goo() from the type Z\n" +
+			"----------\n" +
+			"7. ERROR in Z.java (at line 21)\n" +
+			"	zoo();\n" +
+			"	^^^\n" +
+			"The method zoo() is undefined for the type Z\n" +
+			"----------\n" +
+			"8. ERROR in Z.java (at line 22)\n" +
+			"	new Z().ifoo();\n" +
+			"	        ^^^^\n" +
+			"The method ifoo() is undefined for the type Z\n" +
+			"----------\n" +
+			"9. ERROR in Z.java (at line 23)\n" +
+			"	super.zSuperFoo();\n" +
+			"	^^^^^\n" +
+			"Cannot use super in a static context\n" +
 			"----------\n");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=450415, [1.8][compiler] Failure to resolve overloaded call. 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=450415, [1.8][compiler] Failure to resolve overloaded call.
 public void test450415() {
 	this.runConformTest(
 			new String[] {
@@ -2620,7 +2620,7 @@ public void test450415() {
 			},
 			"goo(J)");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=450415, [1.8][compiler] Failure to resolve overloaded call.   
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=450415, [1.8][compiler] Failure to resolve overloaded call.
 public void test450415a() {
 	this.runConformTest(
 			new String[] {
@@ -2651,74 +2651,74 @@ public void test482440a() {
 	runNegativeTest(
 		new String[] {
 			"Test.java",
-			"class Test {\n" + 
-			"\n" + 
-			"    // generic method\n" + 
-			"    interface ConsumerA {\n" + 
-			"        <T> void accept(int i);\n" + 
-			"    }\n" + 
-			"\n" + 
-			"    // non-generic\n" + 
-			"    interface ConsumerB {\n" + 
-			"        void accept(int i);\n" + 
-			"    }\n" + 
-			"\n" + 
-			"    // A before B\n" + 
-			"    void execute1(ConsumerA c) {}\n" + 
-			"    void execute1(ConsumerB c) {}\n" + 
-			"\n" + 
-			"    // B before A\n" + 
-			"    void execute2(ConsumerB c) {}\n" + 
-			"    void execute2(ConsumerA c) {}\n" + 
-			"\n" + 
-			"    void test() {\n" + 
-			"        execute1(x -> {});  // compiles in Eclipse\n" + 
-			"        execute2(x -> {});  // doesn't compile\n" + 
-			"    }\n" + 
-			"\n" + 
+			"class Test {\n" +
+			"\n" +
+			"    // generic method\n" +
+			"    interface ConsumerA {\n" +
+			"        <T> void accept(int i);\n" +
+			"    }\n" +
+			"\n" +
+			"    // non-generic\n" +
+			"    interface ConsumerB {\n" +
+			"        void accept(int i);\n" +
+			"    }\n" +
+			"\n" +
+			"    // A before B\n" +
+			"    void execute1(ConsumerA c) {}\n" +
+			"    void execute1(ConsumerB c) {}\n" +
+			"\n" +
+			"    // B before A\n" +
+			"    void execute2(ConsumerB c) {}\n" +
+			"    void execute2(ConsumerA c) {}\n" +
+			"\n" +
+			"    void test() {\n" +
+			"        execute1(x -> {});  // compiles in Eclipse\n" +
+			"        execute2(x -> {});  // doesn't compile\n" +
+			"    }\n" +
+			"\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in Test.java (at line 22)\n" + 
-		"	execute1(x -> {});  // compiles in Eclipse\n" + 
-		"	^^^^^^^^\n" + 
-		"The method execute1(Test.ConsumerA) is ambiguous for the type Test\n" + 
-		"----------\n" + 
-		"2. ERROR in Test.java (at line 23)\n" + 
-		"	execute2(x -> {});  // doesn\'t compile\n" + 
-		"	^^^^^^^^\n" + 
-		"The method execute2(Test.ConsumerB) is ambiguous for the type Test\n" + 
+		"----------\n" +
+		"1. ERROR in Test.java (at line 22)\n" +
+		"	execute1(x -> {});  // compiles in Eclipse\n" +
+		"	^^^^^^^^\n" +
+		"The method execute1(Test.ConsumerA) is ambiguous for the type Test\n" +
+		"----------\n" +
+		"2. ERROR in Test.java (at line 23)\n" +
+		"	execute2(x -> {});  // doesn\'t compile\n" +
+		"	^^^^^^^^\n" +
+		"The method execute2(Test.ConsumerB) is ambiguous for the type Test\n" +
 		"----------\n");
 }
 public void test482440b() {
 	runConformTest(
 		new String[] {
 			"Test.java",
-			"class Test {\n" + 
-			"\n" + 
-			"    // generic method\n" + 
-			"    interface ConsumerA {\n" + 
-			"        <T> void accept(int i);\n" + 
-			"    }\n" + 
-			"\n" + 
-			"    // non-generic\n" + 
-			"    interface ConsumerB {\n" + 
-			"        void accept(int i);\n" + 
-			"    }\n" + 
-			"\n" + 
-			"    // A before B\n" + 
-			"    void execute1(ConsumerA c) {}\n" + 
-			"    void execute1(ConsumerB c) {}\n" + 
-			"\n" + 
-			"    // B before A\n" + 
-			"    void execute2(ConsumerB c) {}\n" + 
-			"    void execute2(ConsumerA c) {}\n" + 
-			"\n" + 
-			"    void test() {\n" + 
-			"        execute1((int x) -> {});  // compiles in Eclipse\n" + 
-			"        execute2((int x) -> {});  // doesn't compile\n" + 
-			"    }\n" + 
-			"\n" + 
+			"class Test {\n" +
+			"\n" +
+			"    // generic method\n" +
+			"    interface ConsumerA {\n" +
+			"        <T> void accept(int i);\n" +
+			"    }\n" +
+			"\n" +
+			"    // non-generic\n" +
+			"    interface ConsumerB {\n" +
+			"        void accept(int i);\n" +
+			"    }\n" +
+			"\n" +
+			"    // A before B\n" +
+			"    void execute1(ConsumerA c) {}\n" +
+			"    void execute1(ConsumerB c) {}\n" +
+			"\n" +
+			"    // B before A\n" +
+			"    void execute2(ConsumerB c) {}\n" +
+			"    void execute2(ConsumerA c) {}\n" +
+			"\n" +
+			"    void test() {\n" +
+			"        execute1((int x) -> {});  // compiles in Eclipse\n" +
+			"        execute2((int x) -> {});  // doesn't compile\n" +
+			"    }\n" +
+			"\n" +
 			"}\n"
 		});
 }

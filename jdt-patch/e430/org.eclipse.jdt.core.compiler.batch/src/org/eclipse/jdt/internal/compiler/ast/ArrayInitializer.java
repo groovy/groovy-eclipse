@@ -10,7 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contributions for 
+ *     Stephan Herrmann - Contributions for
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *								bug 370639 - [compiler][resource] restore the default for resource leak warnings
  *								bug 388996 - [compiler][resource] Incorrect 'potential resource leak'
@@ -69,7 +69,7 @@ public class ArrayInitializer extends Expression {
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 		generateCode(null, null, currentScope, codeStream, valueRequired);
 	}
-	
+
 	/**
 	 * Code generation for a array initializer
 	 */
@@ -198,7 +198,7 @@ public class ArrayInitializer extends Expression {
 				if (TypeBinding.notEquals(elementType, expressionType)) // must call before computeConversion() and typeMismatchError()
 					scope.compilationUnitScope().recordTypeConversion(elementType, expressionType);
 
-				if (expression.isConstantValueOfTypeAssignableToType(expressionType, elementType) 
+				if (expression.isConstantValueOfTypeAssignableToType(expressionType, elementType)
 						|| expressionType.isCompatibleWith(elementType)) {
 					expression.computeConversion(scope, elementType, expressionType);
 				} else if (isBoxingCompatible(expressionType, elementType, expression, scope)) {

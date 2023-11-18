@@ -60,15 +60,15 @@ public PackageBinding(char[][] compoundName, PackageBinding parent, LookupEnviro
 	this.environment = environment;
 	this.knownTypes = null; // initialized if used... class counts can be very large 300-600
 	this.knownPackages = new HashtableOfPackage<PackageBinding>(3); // sub-package counts are typically 0-3
-	
+
 	if (compoundName != CharOperation.NO_CHAR_CHAR)
 		checkIfNullAnnotationPackage();
-	
+
 	if (enclosingModule != null)
 		this.enclosingModule = enclosingModule;
 	else if (parent != null)
 		this.enclosingModule = parent.enclosingModule; // stop-gap for any remaining calls that don't provide an enclosingModule (they should)
-	
+
 	if (this.enclosingModule == null)
 		throw new IllegalStateException("Package should have an enclosing module"); //$NON-NLS-1$
 }

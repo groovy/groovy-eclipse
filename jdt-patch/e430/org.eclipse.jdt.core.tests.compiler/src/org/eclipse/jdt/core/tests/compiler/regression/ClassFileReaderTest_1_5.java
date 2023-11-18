@@ -514,106 +514,106 @@ public class ClassFileReaderTest_1_5 extends AbstractRegressionTest {
 	 */
 	public void test016() throws Exception {
 		String source =
-			"public @interface MonAnnotation {\n" + 
-			"	String test1() default \"\\0\";\n" + 
-			"	char test2() default '\\0';\n" + 
-			"}\n" + 
+			"public @interface MonAnnotation {\n" +
+			"	String test1() default \"\\0\";\n" +
+			"	char test2() default '\\0';\n" +
+			"}\n" +
 			"";
 		String expectedOutput =
 			"  public abstract char test2() default \'\\u0000\';";
 		checkClassFile("", "MonAnnotation", source, expectedOutput, ClassFileBytesDisassembler.DETAILED | ClassFileBytesDisassembler.COMPACT);
 	}
-	
+
 	public void testBug504031() throws Exception {
 		String source =
 				"package test;\n" +
-				"@RunWith(JUnitPlatform.class)\n" + 
-				"@SelectPackages(\"test.dynamic.TODO\")\n" + 
-				"public class AllTests {\n" + 
-				"	@Test\n" + 
-				"	void test1() {\n" + 
-				"	}\n" + 
-				"} \n" + 
+				"@RunWith(JUnitPlatform.class)\n" +
+				"@SelectPackages(\"test.dynamic.TODO\")\n" +
+				"public class AllTests {\n" +
+				"	@Test\n" +
+				"	void test1() {\n" +
+				"	}\n" +
+				"} \n" +
 				"\n" +
-				"@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)\n" + 
-				"@interface RunWith {\n" + 
-				"    Class<? extends Runner> value();\n" + 
+				"@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)\n" +
+				"@interface RunWith {\n" +
+				"    Class<? extends Runner> value();\n" +
 				"}\n" +
-				"@interface SelectPackages {\n" + 
+				"@interface SelectPackages {\n" +
 				"}\n" +
 				"class Runner {}\n" +
-				"@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)\n" + 
+				"@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)\n" +
 				"@interface Test {}\n";
 
 		String expectedOutput =
-				"@RunWith(value=JUnitPlatform)\n" + 
-				"public class test.AllTests {\n" + 
-				"  Constant pool:\n" + 
-				"    constant #1 class: #2 test/AllTests\n" + 
-				"    constant #2 utf8: \"test/AllTests\"\n" + 
-				"    constant #3 class: #4 java/lang/Object\n" + 
-				"    constant #4 utf8: \"java/lang/Object\"\n" + 
-				"    constant #5 utf8: \"<init>\"\n" + 
-				"    constant #6 utf8: \"()V\"\n" + 
-				"    constant #7 utf8: \"Code\"\n" + 
-				"    constant #8 class: #9 java/lang/Error\n" + 
-				"    constant #9 utf8: \"java/lang/Error\"\n" + 
-				"    constant #10 string: #11 \"Unresolved compilation problems: \\n\\tJUnitPlatform cannot be resolved to a type\\n\\tClass<JUnitPlatform> cannot be resolved to a type\\n\\tThe attribute value is undefined for the annotation type SelectPackages\\n\"\n" + 
-				"    constant #11 utf8: \"Unresolved compilation problems: \\n\\tJUnitPlatform cannot be resolved to a type\\n\\tClass<JUnitPlatform> cannot be resolved to a type\\n\\tThe attribute value is undefined for the annotation type SelectPackages\\n\"\n" + 
-				"    constant #12 method_ref: #8.#13 java/lang/Error.<init> (Ljava/lang/String;)V\n" + 
-				"    constant #13 name_and_type: #5.#14 <init> (Ljava/lang/String;)V\n" + 
-				"    constant #14 utf8: \"(Ljava/lang/String;)V\"\n" + 
-				"    constant #15 utf8: \"LineNumberTable\"\n" + 
-				"    constant #16 utf8: \"LocalVariableTable\"\n" + 
-				"    constant #17 utf8: \"this\"\n" + 
-				"    constant #18 utf8: \"Ltest/AllTests;\"\n" + 
-				"    constant #19 utf8: \"test1\"\n" + 
-				"    constant #20 utf8: \"RuntimeVisibleAnnotations\"\n" + 
-				"    constant #21 utf8: \"Ltest/Test;\"\n" + 
-				"    constant #22 string: #23 \"Unresolved compilation problem: \\n\"\n" + 
-				"    constant #23 utf8: \"Unresolved compilation problem: \\n\"\n" + 
-				"    constant #24 utf8: \"SourceFile\"\n" + 
-				"    constant #25 utf8: \"AllTests.java\"\n" + 
+				"@RunWith(value=JUnitPlatform)\n" +
+				"public class test.AllTests {\n" +
+				"  Constant pool:\n" +
+				"    constant #1 class: #2 test/AllTests\n" +
+				"    constant #2 utf8: \"test/AllTests\"\n" +
+				"    constant #3 class: #4 java/lang/Object\n" +
+				"    constant #4 utf8: \"java/lang/Object\"\n" +
+				"    constant #5 utf8: \"<init>\"\n" +
+				"    constant #6 utf8: \"()V\"\n" +
+				"    constant #7 utf8: \"Code\"\n" +
+				"    constant #8 class: #9 java/lang/Error\n" +
+				"    constant #9 utf8: \"java/lang/Error\"\n" +
+				"    constant #10 string: #11 \"Unresolved compilation problems: \\n\\tJUnitPlatform cannot be resolved to a type\\n\\tClass<JUnitPlatform> cannot be resolved to a type\\n\\tThe attribute value is undefined for the annotation type SelectPackages\\n\"\n" +
+				"    constant #11 utf8: \"Unresolved compilation problems: \\n\\tJUnitPlatform cannot be resolved to a type\\n\\tClass<JUnitPlatform> cannot be resolved to a type\\n\\tThe attribute value is undefined for the annotation type SelectPackages\\n\"\n" +
+				"    constant #12 method_ref: #8.#13 java/lang/Error.<init> (Ljava/lang/String;)V\n" +
+				"    constant #13 name_and_type: #5.#14 <init> (Ljava/lang/String;)V\n" +
+				"    constant #14 utf8: \"(Ljava/lang/String;)V\"\n" +
+				"    constant #15 utf8: \"LineNumberTable\"\n" +
+				"    constant #16 utf8: \"LocalVariableTable\"\n" +
+				"    constant #17 utf8: \"this\"\n" +
+				"    constant #18 utf8: \"Ltest/AllTests;\"\n" +
+				"    constant #19 utf8: \"test1\"\n" +
+				"    constant #20 utf8: \"RuntimeVisibleAnnotations\"\n" +
+				"    constant #21 utf8: \"Ltest/Test;\"\n" +
+				"    constant #22 string: #23 \"Unresolved compilation problem: \\n\"\n" +
+				"    constant #23 utf8: \"Unresolved compilation problem: \\n\"\n" +
+				"    constant #24 utf8: \"SourceFile\"\n" +
+				"    constant #25 utf8: \"AllTests.java\"\n" +
 				"    constant #26 utf8: \"RuntimeInvisibleAnnotations\"\n" + // unused but tolerated
 				"    constant #27 utf8: \"Ltest/SelectPackages;\"\n" + // unused but tolerated
-				"    constant #28 utf8: \"value\"\n" + 
-				"    constant #29 utf8: \"Ltest/RunWith;\"\n" + 
-				"    constant #30 utf8: \"LJUnitPlatform;\"\n" + 
-				"  \n" + 
-				"  // Method descriptor #6 ()V\n" + 
-				"  // Stack: 3, Locals: 1\n" + 
-				"  public AllTests();\n" + 
-				"     0  new Error [8]\n" + 
-				"     3  dup\n" + 
-				"     4  ldc <String \"Unresolved compilation problems: \\n\\tJUnitPlatform cannot be resolved to a type\\n\\tClass<JUnitPlatform> cannot be resolved to a type\\n\\tThe attribute value is undefined for the annotation type SelectPackages\\n\"> [10]\n" + 
-				"     6  invokespecial Error(String) [12]\n" + 
-				"     9  athrow\n" + 
-				"      Line numbers:\n" + 
-				"        [pc: 0, line: 2]\n" + 
-				"      Local variable table:\n" + 
-				"        [pc: 0, pc: 10] local: this index: 0 type: AllTests\n" + 
-				"  \n" + 
-				"  // Method descriptor #6 ()V\n" + 
-				"  // Stack: 3, Locals: 1\n" + 
-				"  @Test\n" + 
-				"  void test1();\n" + 
-				"     0  new Error [8]\n" + 
-				"     3  dup\n" + 
-				"     4  ldc <String \"Unresolved compilation problem: \\n\"> [22]\n" + 
-				"     6  invokespecial Error(String) [12]\n" + 
-				"     9  athrow\n" + 
-				"      Line numbers:\n" + 
-				"        [pc: 0, line: 6]\n" + 
-				"      Local variable table:\n" + 
-				"        [pc: 0, pc: 10] local: this index: 0 type: AllTests\n" + 
-				"    RuntimeVisibleAnnotations: \n" + 
-				"      #21 @Test(\n" + 
-				"      )\n" + 
-				"\n" + 
-				"  RuntimeVisibleAnnotations: \n" + 
-				"    #29 @RunWith(\n" + 
-				"      #28 value=JUnitPlatform (#30 class type)\n" + 
-				"    )\n" + 
+				"    constant #28 utf8: \"value\"\n" +
+				"    constant #29 utf8: \"Ltest/RunWith;\"\n" +
+				"    constant #30 utf8: \"LJUnitPlatform;\"\n" +
+				"  \n" +
+				"  // Method descriptor #6 ()V\n" +
+				"  // Stack: 3, Locals: 1\n" +
+				"  public AllTests();\n" +
+				"     0  new Error [8]\n" +
+				"     3  dup\n" +
+				"     4  ldc <String \"Unresolved compilation problems: \\n\\tJUnitPlatform cannot be resolved to a type\\n\\tClass<JUnitPlatform> cannot be resolved to a type\\n\\tThe attribute value is undefined for the annotation type SelectPackages\\n\"> [10]\n" +
+				"     6  invokespecial Error(String) [12]\n" +
+				"     9  athrow\n" +
+				"      Line numbers:\n" +
+				"        [pc: 0, line: 2]\n" +
+				"      Local variable table:\n" +
+				"        [pc: 0, pc: 10] local: this index: 0 type: AllTests\n" +
+				"  \n" +
+				"  // Method descriptor #6 ()V\n" +
+				"  // Stack: 3, Locals: 1\n" +
+				"  @Test\n" +
+				"  void test1();\n" +
+				"     0  new Error [8]\n" +
+				"     3  dup\n" +
+				"     4  ldc <String \"Unresolved compilation problem: \\n\"> [22]\n" +
+				"     6  invokespecial Error(String) [12]\n" +
+				"     9  athrow\n" +
+				"      Line numbers:\n" +
+				"        [pc: 0, line: 6]\n" +
+				"      Local variable table:\n" +
+				"        [pc: 0, pc: 10] local: this index: 0 type: AllTests\n" +
+				"    RuntimeVisibleAnnotations: \n" +
+				"      #21 @Test(\n" +
+				"      )\n" +
+				"\n" +
+				"  RuntimeVisibleAnnotations: \n" +
+				"    #29 @RunWith(\n" +
+				"      #28 value=JUnitPlatform (#30 class type)\n" +
+				"    )\n" +
 				"}";
 		int mode = ClassFileBytesDisassembler.DETAILED | ClassFileBytesDisassembler.COMPACT | ClassFileBytesDisassembler.SYSTEM;
 		checkClassFile("test", "AllTests", "AllTests", source, expectedOutput, mode, true/*suppress expected errors*/);

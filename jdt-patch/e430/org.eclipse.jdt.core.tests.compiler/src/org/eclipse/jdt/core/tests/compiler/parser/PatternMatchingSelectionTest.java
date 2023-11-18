@@ -194,7 +194,9 @@ public class PatternMatchingSelectionTest extends AbstractSelectionTest {
 									"  public static void foo(ColoredRectangle[] ar_ray) {\n" +
 									"    for (ColoredRectangle(int x_1, int y_1, Color col) : ar_ray) \n" +
 									"      {\n" +
+									"        int;\n" +
 									"        int per = <SelectOnName:x_1>;\n" +
+									"        <SelectOnName:x_1>;\n" +
 									"      }\n" +
 									"  }\n" +
 									"}\n" +
@@ -347,5 +349,64 @@ public class PatternMatchingSelectionTest extends AbstractSelectionTest {
 				completionIdentifier,
 				expectedReplacedSource,
 				testName);
+	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1568
+	// Current text selection cannot be opened in an editor #1568
+	public void testGH1568() {
+		if (this.complianceLevel < ClassFileConstants.JDK17)
+			return;
+		String string =  "@SuppressWarnings(\"preview\")\n"
+						+ "public class X {\n"
+						+ "    public static Object k_;\n"
+						+ "    public int val_;\n"
+						+ "    public static void foo(X[] ar_ray) {\n"
+						+ "       if (k instanceof String z_) {\n"
+						+ "           System.out.println(\"Some statement\");\n"
+						+ "           for(X x_ : ar_ray) {\n"
+						+ "    	          int per = x_.val_ * 2;\n"
+						+ "           }\n"
+						+ "       }\n"
+						+ "    }\n"
+						+ "}\n";
+
+		String selection = "x_";
+		String selectKey = "<SelectOnName:";
+		String expectedSelection = selectKey + selection + ">";
+
+		String selectionIdentifier = "x_";
+		String expectedUnitDisplayString =
+						"public @SuppressWarnings(\"preview\") class X {\n" +
+						"  public static Object k_;\n" +
+						"  public int val_;\n" +
+						"  <clinit>() {\n" +
+						"  }\n" +
+						"  public X() {\n" +
+						"  }\n" +
+						"  public static void foo(X[] ar_ray) {\n" +
+						"    {\n" +
+						"      {\n" +
+						"        if ((k instanceof String z_))\n" +
+						"            {\n" +
+			            "              System.out.println(\"Some statement\");\n" +
+						"              for (X x_ : ar_ray) \n" +
+						"                {\n" +
+						"                  int;\n" +
+						"                  int per;\n" +
+						"                  <SelectOnName:x_>;\n" +
+						"                }\n" +
+						"            }\n" +
+						"      }\n" +
+						"    }\n" +
+						"  }\n" +
+						"}\n";
+
+		String expectedReplacedSource = "x_";
+		String testName = "X.java";
+
+		int selectionStart = string.lastIndexOf(selection);
+		int selectionEnd = selectionStart + selection.length() - 1;
+
+		checkMethodParse(string.toCharArray(), selectionStart, selectionEnd, expectedSelection, expectedUnitDisplayString,
+				selectionIdentifier, expectedReplacedSource, testName);
 	}
 }

@@ -93,11 +93,11 @@ public class InternalNamingConventions {
 
 	private static char[][] computeNonBaseTypeNames(char[] sourceName, boolean isConstantField, boolean onlyLongest){
 		int length = sourceName.length;
-		
+
 		if (length == 0) {
 			return CharOperation.NO_CHAR_CHAR;
 		}
-		
+
 		if (length == 1) {
 			if (isConstantField) {
 				return generateConstantName(new char[][]{CharOperation.toLowerCase(sourceName)}, 0, onlyLongest);
@@ -105,31 +105,31 @@ public class InternalNamingConventions {
 				return generateNonConstantName(new char[][]{CharOperation.toLowerCase(sourceName)}, 0, onlyLongest);
 			}
 		}
-		
+
 		char[][] nameParts = new char[length][];
 		int namePartsPtr = -1;
-		
+
 		int endIndex = length;
 		char c = sourceName[length - 1];
-		
+
 		final int IS_LOWER_CASE = 1;
 		final int IS_UPPER_CASE = 2;
 		final int IS_UNDERSCORE = 3;
 		final int IS_OTHER = 4;
-		
+
 		int previousCharKind =
 			ScannerHelper.isLowerCase(c) ? IS_LOWER_CASE :
 				ScannerHelper.isUpperCase(c) ? IS_UPPER_CASE :
 					c == '_' ? IS_UNDERSCORE : IS_OTHER;
-		
+
 		for(int i = length - 1 ; i >= 0 ; i--){
 			c = sourceName[i];
-			
+
 			int charKind =
 				ScannerHelper.isLowerCase(c) ? IS_LOWER_CASE :
 					ScannerHelper.isUpperCase(c) ? IS_UPPER_CASE :
 						c == '_' ? IS_UNDERSCORE : IS_OTHER;
-			
+
 			switch (charKind) {
 				case IS_LOWER_CASE:
 					if (previousCharKind == IS_UPPER_CASE) {
@@ -157,7 +157,7 @@ public class InternalNamingConventions {
 					switch (previousCharKind) {
 						case IS_UNDERSCORE:
 							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=283539
-							// Process consecutive underscores only for constant types 
+							// Process consecutive underscores only for constant types
 							if (isConstantField) {
 								if (i > 0) {
 									char pc = sourceName[i - 1];
@@ -198,15 +198,15 @@ public class InternalNamingConventions {
 		if (namePartsPtr == -1) {
 			return new char[][] { sourceName };
 		}
-		
+
 		if (isConstantField) {
 			return generateConstantName(nameParts, namePartsPtr, onlyLongest);
 		} else {
 			return generateNonConstantName(nameParts, namePartsPtr, onlyLongest);
 		}
 	}
-	
-	
+
+
 
 	private static char[] excludeNames(
 		char[] suffixName,
@@ -229,7 +229,7 @@ public class InternalNamingConventions {
 		}
 		return suffixName;
 	}
-	
+
 	private static char[][] generateNonConstantName(char[][] nameParts, int namePartsPtr, boolean onlyLongest) {
 		char[][] names;
 		if (onlyLongest) {
@@ -237,28 +237,28 @@ public class InternalNamingConventions {
 		} else {
 			names = new char[namePartsPtr + 1][];
 		}
-		
+
 		char[] namePart = nameParts[0];
-		
+
 		char[] name = CharOperation.toLowerCase(namePart);
-		
+
 		if (!onlyLongest) {
 			names[namePartsPtr] = name;
 		}
-		
+
 		char[] nameSuffix = namePart;
-		
+
 		for (int i = 1; i <= namePartsPtr; i++) {
 			namePart = nameParts[i];
-			
+
 			name = CharOperation.concat(CharOperation.toLowerCase(namePart), nameSuffix);
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=283539
 			// Only the first word is converted to lower case and the rest of them are not changed for non-constants
-			
+
 			if (!onlyLongest) {
 				names[namePartsPtr - i] = name;
 			}
-			
+
 			nameSuffix = CharOperation.concat(namePart, nameSuffix);
 		}
 		if (onlyLongest) {
@@ -274,17 +274,17 @@ public class InternalNamingConventions {
 		} else {
 			names = new char[namePartsPtr + 1][];
 		}
-		
+
 		char[] namePart = CharOperation.toUpperCase(nameParts[0]);
 		int namePartLength = namePart.length;
 		System.arraycopy(namePart, 0, namePart, 0, namePartLength);
-		
+
 		char[] name = namePart;
-		
+
 		if (!onlyLongest) {
 			names[namePartsPtr] = name;
 		}
-		
+
 		for (int i = 1; i <= namePartsPtr; i++) {
 			namePart = CharOperation.toUpperCase(nameParts[i]);
 			namePartLength = namePart.length;
@@ -293,7 +293,7 @@ public class InternalNamingConventions {
 			} else {
 				name = CharOperation.concat(namePart, name);
 			}
-			
+
 			if (!onlyLongest) {
 				names[namePartsPtr - i] = name;
 			}
@@ -303,20 +303,20 @@ public class InternalNamingConventions {
 		}
 		return names;
 	}
-	
+
 	public static char[] getBaseName(
 			int variableKind,
 			IJavaProject javaProject,
 			char[] name,
 			boolean updateFirstCharacter) {
-		
+
 		AssistOptions assistOptions;
 		if (javaProject != null) {
 			assistOptions = new AssistOptions(javaProject.getOptions(true));
 		} else {
 			assistOptions = new AssistOptions(JavaCore.getOptions());
 		}
-		
+
 		char[][] prefixes = null;
 		char[][] suffixes = null;
 		switch (variableKind) {
@@ -341,20 +341,20 @@ public class InternalNamingConventions {
 				suffixes = assistOptions.argumentSuffixes;
 				break;
 		}
-		
-		
+
+
 		return getBaseName(name, prefixes, suffixes, variableKind == VK_STATIC_FINAL_FIELD, updateFirstCharacter);
 	}
 
 	private static char[] getBaseName(char[] name, char[][] prefixes, char[][] suffixes, boolean isConstant, boolean updateFirstCharacter) {
 		char[] nameWithoutPrefixAndSiffix = removeVariablePrefixAndSuffix(name, prefixes, suffixes, updateFirstCharacter);
-		
+
 		char[] baseName;
 		if (isConstant) {
 			int length = nameWithoutPrefixAndSiffix.length;
 			baseName = new char[length];
 			int baseNamePtr = -1;
-			
+
 			boolean previousIsUnderscore = false;
 			for (int i = 0; i < length; i++) {
 				char c = nameWithoutPrefixAndSiffix[i];
@@ -373,10 +373,10 @@ public class InternalNamingConventions {
 		} else {
 			baseName = nameWithoutPrefixAndSiffix;
 		}
-		
+
 		return baseName;
 	}
-	
+
 	public static char[] removeVariablePrefixAndSuffix(
 			int variableKind,
 			IJavaProject javaProject,
@@ -387,7 +387,7 @@ public class InternalNamingConventions {
 		} else {
 			assistOptions = new AssistOptions(JavaCore.getOptions());
 		}
-		
+
 		char[][] prefixes = null;
 		char[][] suffixes = null;
 		switch (variableKind) {
@@ -412,10 +412,10 @@ public class InternalNamingConventions {
 				suffixes = assistOptions.argumentSuffixes;
 				break;
 		}
-		
+
 		return InternalNamingConventions.removeVariablePrefixAndSuffix(name, prefixes, suffixes, true);
 	}
-	
+
 	private static char[] removeVariablePrefixAndSuffix(char[] name, char[][] prefixes, char[][] suffixes, boolean updateFirstCharacter) {
 		// remove longer prefix
 		char[] withoutPrefixName = name;
@@ -528,13 +528,13 @@ public class InternalNamingConventions {
 
 		return withoutPrefixName;
 	}
-	
+
 	public static final int VK_STATIC_FIELD = 1;
 	public static final int VK_INSTANCE_FIELD = 2;
 	public static final int VK_STATIC_FINAL_FIELD = 3;
 	public static final int VK_PARAMETER = 4;
 	public static final int VK_LOCAL = 5;
-	
+
 	public static final int BK_SIMPLE_NAME = 1;
 	public static final int BK_SIMPLE_TYPE_NAME = 2;
 
@@ -548,10 +548,10 @@ public class InternalNamingConventions {
 			char[][] excluded,
 			boolean evaluateDefault,
 			INamingRequestor requestor) {
-		
+
 		if(baseName == null || baseName.length == 0)
 			return;
-		
+
 		Map<String, String> options;
 		if (javaProject != null) {
 			options = javaProject.getOptions(true);
@@ -560,9 +560,9 @@ public class InternalNamingConventions {
 		}
 		CompilerOptions compilerOptions = new CompilerOptions(options);
 		AssistOptions assistOptions = new AssistOptions(options);
-		
+
 		boolean isConstantField = false;
-		
+
 		char[][] prefixes = null;
 		char[][] suffixes = null;
 		switch (variableKind) {
@@ -588,7 +588,7 @@ public class InternalNamingConventions {
 				suffixes = assistOptions.argumentSuffixes;
 				break;
 		}
-		
+
 		if(prefixes == null || prefixes.length == 0) {
 			prefixes = new char[1][0];
 		} else {
@@ -604,7 +604,7 @@ public class InternalNamingConventions {
 			System.arraycopy(suffixes, 0, suffixes = new char[length+1][], 0, length);
 			suffixes[length] = CharOperation.NO_CHAR;
 		}
-		
+
 		if(internalPrefix == null) {
 			internalPrefix = CharOperation.NO_CHAR;
 		} else {
@@ -612,11 +612,11 @@ public class InternalNamingConventions {
 		}
 
 		char[][] tempNames = null;
-		
+
 		Scanner nameScanner = getNameScanner(compilerOptions);
 		if (baseNameKind == BK_SIMPLE_TYPE_NAME) {
 			boolean isBaseType = false;
-			
+
 			try{
 				nameScanner.setSource(baseName);
 				switch (nameScanner.getNextToken()) {
@@ -637,7 +637,7 @@ public class InternalNamingConventions {
 			if (isBaseType) {
 				// compute variable name from base type
 				if (internalPrefix.length > 0) return;
-	
+
 				tempNames = computeBaseTypeNames(baseName, isConstantField, excluded);
 			} else {
 				// compute variable name for non base type
@@ -652,11 +652,11 @@ public class InternalNamingConventions {
 
 		for (int i = 0; i < tempNames.length; i++) {
 			char[] tempName = tempNames[i];
-			
+
 			// add English plural form is necessary
 			if(dim > 0) {
 				int length = tempName.length;
-				
+
 				if (isConstantField) {
 					if (tempName[length-1] == 'S'){
 						if(tempName.length > 1 && tempName[length-2] == 'S') {
@@ -725,13 +725,13 @@ public class InternalNamingConventions {
 					}
 				}
 			}
-			
+
 			char[] unprefixedName = tempName;
-			
+
 			int matchingIndex = -1;
 			if (!isConstantField) {
 				unprefixedName[0] = ScannerHelper.toUpperCase(unprefixedName[0]);
-				
+
 				done : for (int j = 0; j <= internalPrefix.length; j++) {
 					if(j == internalPrefix.length ||
 							CharOperation.prefixEquals(CharOperation.subarray(internalPrefix, j, -1), unprefixedName, j != 0 /*do not check case when there is no prefix*/)) {
@@ -749,7 +749,7 @@ public class InternalNamingConventions {
 							matchingIndex = j;
 							break done;
 						}
-						
+
 					}
 				}
 			}
@@ -765,7 +765,7 @@ public class InternalNamingConventions {
 						tempName = CharOperation.concat(CharOperation.subarray(CharOperation.toUpperCase(internalPrefix), 0, matchingIndex), unprefixedName);
 					}
 				}
-				
+
 				for (int k = 0; k < prefixes.length; k++) {
 					if (!isConstantField) {
 						if(prefixes[k].length > 0

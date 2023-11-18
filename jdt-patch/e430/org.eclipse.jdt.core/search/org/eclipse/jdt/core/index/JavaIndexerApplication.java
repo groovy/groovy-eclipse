@@ -7,7 +7,7 @@
  *  https://www.eclipse.org/legal/epl-2.0/
  *
  *  SPDX-License-Identifier: EPL-2.0
- * 
+ *
  *  Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -24,14 +24,14 @@ import org.eclipse.osgi.util.NLS;
 
 /**
  * Implements an Eclipse Application for {@link org.eclipse.jdt.core.index.JavaIndexer}.
- * 
+ *
  * <p>
  * On MacOS, when invoked using the Eclipse executable, the "user.dir" property is set to the folder in which the
  * eclipse.ini file is located. This makes it harder to use relative paths to point to the files to be jar'd or to
  * the index file that is generated.
  * </p>
- * 
- * 
+ *
+ *
  * @since 3.8
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noextend This class is not intended to be subclassed by clients.

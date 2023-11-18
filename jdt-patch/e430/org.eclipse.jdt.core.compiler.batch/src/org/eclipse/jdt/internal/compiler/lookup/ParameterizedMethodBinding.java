@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -356,8 +356,8 @@ public class ParameterizedMethodBinding extends MethodBinding {
 	public MethodBinding original() {
 		return this.originalMethod.original();
 	}
-	
-	
+
+
 	@Override
 	public MethodBinding shallowOriginal() {
 		return this.originalMethod;

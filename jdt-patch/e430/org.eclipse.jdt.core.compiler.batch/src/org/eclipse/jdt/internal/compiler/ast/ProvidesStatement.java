@@ -59,7 +59,7 @@ public class ProvidesStatement extends ModuleStatement {
 			}
 			int problemId = ProblemReasons.NoError;
 			ModuleBinding declaringModule = impl.module();
-			
+
 			if (declaringModule != src) {
 				problemId = IProblem.ServiceImplNotDefinedByModule;
 			} else if (!impl.isClass() && !impl.isInterface()) {

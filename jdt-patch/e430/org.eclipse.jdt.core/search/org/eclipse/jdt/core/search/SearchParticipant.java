@@ -158,7 +158,7 @@ public abstract class SearchParticipant {
 	 *
 	 * @param document the document to index
 	 * @param indexLocation the location in the file system to the index
-	 * 
+	 *
 	 * @since 3.10
 	 */
 	public void indexResolvedDocument(SearchDocument document, IPath indexLocation) {
@@ -212,7 +212,7 @@ public abstract class SearchParticipant {
 	}
 
 	/**
-	 * Resolves the given document. A search participant asked to resolve a document should parse it and 
+	 * Resolves the given document. A search participant asked to resolve a document should parse it and
 	 * resolve the types and preserve enough state to be able to tend to a indexResolvedDocument call
 	 * subsequently. This API is invoked without holding any index related locks or monitors.
 	 * <p>
@@ -227,7 +227,7 @@ public abstract class SearchParticipant {
 	public void resolveDocument(SearchDocument document) {
 		// do nothing, subtypes should do the "appropriate thing"
 	}
-	
+
 	/**
 	 * Schedules the indexing of the given document.
 	 * Once the document is ready to be indexed,

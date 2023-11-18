@@ -93,6 +93,6 @@ public interface ISearchRequestor {
 	 *    The default package is represented by an empty array.
 	 */
 	public void acceptPackage(char[] packageName);
-	
+
 	public void acceptModule(char[] moduleName);
 }

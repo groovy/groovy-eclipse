@@ -55,7 +55,7 @@ public class CompletionContext {
 	 * @since 3.4
 	 */
 	public static final int TL_STATEMENT_START = 2;
-	
+
 	/**
 	 * The completed token is the first token of a constructor
 	 * invocation expression.<br>
@@ -170,7 +170,7 @@ public class CompletionContext {
 	public char[][] getExpectedTypesSignatures() {
 		return null; // default overridden by concrete implementation
 	}
-	
+
 	/**
 	 * Return keys of expected types of a potential completion proposal at the completion position.
 	 *

@@ -255,20 +255,20 @@ public void test005() {
 		},
 		null, customOptions,
 		"----------\n" +
-		"1. ERROR in p2\\C.java (at line 3)\n" + 
-		"	void bar(p1.X.Inner a) {\n" + 
-		"	            ^\n" + 
-		"The type X is deprecated\n" + 
-		"----------\n" + 
-		"2. ERROR in p2\\C.java (at line 3)\n" + 
-		"	void bar(p1.X.Inner a) {\n" + 
-		"	              ^^^^^\n" + 
-		"The type X.Inner is deprecated\n" + 
-		"----------\n" + 
-		"3. ERROR in p2\\C.java (at line 4)\n" + 
-		"	a.foo();\n" + 
-		"	  ^^^^^\n" + 
-		"The method foo() from the type X.Inner is deprecated\n" + 
+		"1. ERROR in p2\\C.java (at line 3)\n" +
+		"	void bar(p1.X.Inner a) {\n" +
+		"	            ^\n" +
+		"The type X is deprecated\n" +
+		"----------\n" +
+		"2. ERROR in p2\\C.java (at line 3)\n" +
+		"	void bar(p1.X.Inner a) {\n" +
+		"	              ^^^^^\n" +
+		"The type X.Inner is deprecated\n" +
+		"----------\n" +
+		"3. ERROR in p2\\C.java (at line 4)\n" +
+		"	a.foo();\n" +
+		"	  ^^^^^\n" +
+		"The method foo() from the type X.Inner is deprecated\n" +
 		"----------\n",
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
@@ -294,11 +294,11 @@ public void test006() {
 			"}"
 		},
 		null, customOptions,
-		"----------\n" + 
-		"1. ERROR in test1\\E02.java (at line 3)\n" + 
-		"	public void foo(E01 arg) {\n" + 
-		"	                ^^^\n" + 
-		"The type E01 is deprecated\n" + 
+		"----------\n" +
+		"1. ERROR in test1\\E02.java (at line 3)\n" +
+		"	public void foo(E01 arg) {\n" +
+		"	                ^^^\n" +
+		"The type E01 is deprecated\n" +
 		"----------\n",
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }

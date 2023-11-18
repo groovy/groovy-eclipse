@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Abstract base class of AST nodes that represent an annotatable type (added in JLS8 API).
  * <p>
- * Introduced in JLS8, type references that can be annotated are represented by 
+ * Introduced in JLS8, type references that can be annotated are represented by
  * AnnotatableType. For the list of types extending AnnotatableType, see {@link Type}.
  * </p>
  * <p>
@@ -32,7 +32,7 @@ import java.util.List;
  */
 @SuppressWarnings({"rawtypes"})
 public abstract class AnnotatableType extends Type {
-	
+
 	/**
 	 * The annotations (element type: {@link Annotation}).
 	 * Null in JLS < 8. Added in JLS8; defaults to an empty list
@@ -91,7 +91,7 @@ public abstract class AnnotatableType extends Type {
 	 * Syntactically, type annotations can also be part of an associated declaration node's
 	 * <code>modifiers()</code> list.
 	 * </p>
-	 * 
+	 *
 	 * @return the live list of annotations (element type: {@link Annotation})
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
 	 * @see ITypeBinding#getTypeAnnotations()

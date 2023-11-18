@@ -23,7 +23,7 @@ public class FileFinder {
 
 /**
  * Although the file finder is meant to be generic for any file name patters,
- * at the moment it is used only for *.java files. This method handles the 
+ * at the moment it is used only for *.java files. This method handles the
  * module-info.java in a special way by always placing it as the first element
  * of the resulting array.
  */

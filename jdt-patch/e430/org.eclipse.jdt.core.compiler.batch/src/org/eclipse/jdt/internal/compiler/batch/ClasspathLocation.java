@@ -81,7 +81,7 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 		}
 		return this.accessRuleSet.getViolatedRestriction(qualifiedTypeName);
 	}
-	
+
 	public int getMode() {
 		return SOURCE | BINARY;
 	}
@@ -121,7 +121,7 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 	public String getDestinationPath() {
 		return this.destinationPath;
 	}
-	
+
 	@Override
 	public void acceptModule(IModule mod) {
 		this.module = mod;
@@ -191,9 +191,9 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 			return new char[][] { this.module.name() };
 		return new char[][] { ModuleBinding.UNNAMED };
 	}
-	
+
 	@Override
 	public void reset() {
-		this.module = null;	
+		this.module = null;
 	}
 }

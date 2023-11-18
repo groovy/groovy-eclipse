@@ -145,7 +145,7 @@ public void test003() {
 		"Zork cannot be resolved to a type\n" +
 		"----------\n");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=201912, test to make sure that unused public members of 
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=201912, test to make sure that unused public members of
 // private class (including constructors, fields, types and methods) get warned about.
 public void test004() {
 	this.runNegativeTest(
@@ -178,26 +178,26 @@ public void test004() {
 			"	}\n" +
 			"} \n"
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 4)\n" + 
-		"	public int unusedMethod() { return this.state; }\n" + 
-		"	           ^^^^^^^^^^^^^^\n" + 
-		"The method unusedMethod() from the type X.M is never used locally\n" + 
-		"----------\n" + 
-		"2. WARNING in X.java (at line 5)\n" + 
-		"	public M (int state) { this.state = state;} \n" + 
-		"	       ^^^^^^^^^^^^^\n" + 
-		"The constructor X.M(int) is never used locally\n" + 
-		"----------\n" + 
-		"3. WARNING in X.java (at line 6)\n" + 
-		"	public int unusedField = 0;\n" + 
-		"	           ^^^^^^^^^^^\n" + 
-		"The value of the field X.M.unusedField is not used\n" + 
-		"----------\n" + 
-		"4. WARNING in X.java (at line 7)\n" + 
-		"	public class N {}\n" + 
-		"	             ^\n" + 
-		"The type X.M.N is never used locally\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	public int unusedMethod() { return this.state; }\n" +
+		"	           ^^^^^^^^^^^^^^\n" +
+		"The method unusedMethod() from the type X.M is never used locally\n" +
+		"----------\n" +
+		"2. WARNING in X.java (at line 5)\n" +
+		"	public M (int state) { this.state = state;} \n" +
+		"	       ^^^^^^^^^^^^^\n" +
+		"The constructor X.M(int) is never used locally\n" +
+		"----------\n" +
+		"3. WARNING in X.java (at line 6)\n" +
+		"	public int unusedField = 0;\n" +
+		"	           ^^^^^^^^^^^\n" +
+		"The value of the field X.M.unusedField is not used\n" +
+		"----------\n" +
+		"4. WARNING in X.java (at line 7)\n" +
+		"	public class N {}\n" +
+		"	             ^\n" +
+		"The type X.M.N is never used locally\n" +
 		"----------\n"
 		);
 }
@@ -221,11 +221,11 @@ public void test005() {
 			};
 	if (!isMinimumCompliant(ClassFileConstants.JDK11)) {
 		this.runNegativeTest(testFiles,
-				"----------\n" + 
-				"1. WARNING in A.java (at line 3)\n" + 
-				"	B.test();\n" + 
-				"	^^^^^^^^\n" + 
-				"Access to enclosing method test() from the type A.B is emulated by a synthetic accessor method\n" + 
+				"----------\n" +
+				"1. WARNING in A.java (at line 3)\n" +
+				"	B.test();\n" +
+				"	^^^^^^^^\n" +
+				"Access to enclosing method test() from the type A.B is emulated by a synthetic accessor method\n" +
 				"----------\n");
 	} else {
 		this.runConformTest(testFiles);
@@ -235,23 +235,23 @@ public void test005() {
 //we DO complain about the constructor of B not being used when its base class has a no-arg constructor
 public void test006() {
 	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
-			"----------\n" + 
-			"1. WARNING in A.java (at line 8)\n" + 
-			"	public B () { super(\"\"); }\n" + 
-			"	       ^^^^\n" + 
-			"The constructor A.B() is never used locally\n" + 
+			"----------\n" +
+			"1. WARNING in A.java (at line 8)\n" +
+			"	public B () { super(\"\"); }\n" +
+			"	       ^^^^\n" +
+			"The constructor A.B() is never used locally\n" +
 			"----------\n"
 			:
-			"----------\n" + 
-			"1. WARNING in A.java (at line 3)\n" + 
-			"	B.test();\n" + 
-			"	^^^^^^^^\n" + 
-			"Access to enclosing method test() from the type A.B is emulated by a synthetic accessor method\n" + 
-			"----------\n" + 
-			"2. WARNING in A.java (at line 8)\n" + 
-			"	public B () { super(\"\"); }\n" + 
-			"	       ^^^^\n" + 
-			"The constructor A.B() is never used locally\n" + 
+			"----------\n" +
+			"1. WARNING in A.java (at line 3)\n" +
+			"	B.test();\n" +
+			"	^^^^^^^^\n" +
+			"Access to enclosing method test() from the type A.B is emulated by a synthetic accessor method\n" +
+			"----------\n" +
+			"2. WARNING in A.java (at line 8)\n" +
+			"	public B () { super(\"\"); }\n" +
+			"	       ^^^^\n" +
+			"The constructor A.B() is never used locally\n" +
 			"----------\n";
 	this.runNegativeTest(
 		new String[] {
@@ -330,11 +330,11 @@ public void test009() {
 			"	}\n" +
 			"}\n"
 			},
-			"----------\n" + 
-			"1. WARNING in A.java (at line 7)\n" + 
-			"	public B () { super(\"\"); }\n" + 
-			"	       ^^^^\n" + 
-			"The constructor C.B() is never used locally\n" + 
+			"----------\n" +
+			"1. WARNING in A.java (at line 7)\n" +
+			"	public B () { super(\"\"); }\n" +
+			"	       ^^^^\n" +
+			"The constructor C.B() is never used locally\n" +
 			"----------\n");
 }
 //Bug 408038 - Classes which implement Externalizable should not have an unused constructor warning

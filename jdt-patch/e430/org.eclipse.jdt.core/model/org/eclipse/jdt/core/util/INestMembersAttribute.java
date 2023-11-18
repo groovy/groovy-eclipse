@@ -14,7 +14,7 @@ package org.eclipse.jdt.core.util;
  * Description of nest members attribute as described in the JVM
  * specifications.
  *
- * @since 3.16 
+ * @since 3.16
  */
 public interface INestMembersAttribute extends IClassFileAttribute {
 

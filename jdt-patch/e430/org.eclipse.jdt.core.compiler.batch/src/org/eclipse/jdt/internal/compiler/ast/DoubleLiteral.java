@@ -21,9 +21,9 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.util.FloatUtil;
 
 public class DoubleLiteral extends NumberLiteral {
-	
+
 	double value;
-	
+
 public DoubleLiteral(char[] token, int s, int e) {
 	super(token, s, e);
 }

@@ -43,6 +43,7 @@ import org.eclipse.jdt.internal.compiler.ast.EmptyStatement;
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldReference;
+import org.eclipse.jdt.internal.compiler.ast.ForeachStatement;
 import org.eclipse.jdt.internal.compiler.ast.GuardedPattern;
 import org.eclipse.jdt.internal.compiler.ast.IfStatement;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
@@ -103,6 +104,8 @@ public class SelectionParser extends AssistParser {
 	protected static final int K_INSIDE_STATEMENT_SWITCH = SELECTION_PARSER + 11; // whether we are in a switch statement
 	protected static final int K_INSIDE_EXPRESSION_SWITCH = SELECTION_PARSER + 12; // whether we are in an expression switch
 	protected static final int K_INSIDE_WHEN = SELECTION_PARSER + 13; // whether we are in the guard
+
+	protected static final int K_INSIDE_FOR_EACH = SELECTION_PARSER + 14; // whether we are in a for each statement
 
 
 
@@ -213,6 +216,7 @@ private void buildMoreCompletionContext(Expression expression) {
 			case K_INSIDE_ELSE:
 			case K_INSIDE_STATEMENT_SWITCH:
 			case K_INSIDE_EXPRESSION_SWITCH:
+			case K_INSIDE_FOR_EACH:
 				int newAstPtr = (int) this.elementObjectInfoStack[i];
 				int length = this.astPtr - newAstPtr;
 				Statement[] statements = new Statement[length + (orphan != null ? 1 : 0)];
@@ -236,6 +240,11 @@ private void buildMoreCompletionContext(Expression expression) {
 					case K_INSIDE_ELSE:
 						elseStat = b;
 						orphan = null; // orphan subsumed into the dangling else
+						break;
+					case K_INSIDE_FOR_EACH:
+						ForeachStatement forEach = (ForeachStatement)this.astStack[this.astPtr--];
+						forEach.action = b;
+						orphan = forEach;
 						break;
 					case K_POST_WHILE_EXPRESSION:
 						whileBody = b;
@@ -912,6 +921,19 @@ protected void consumeStatementWhile() {
 		popUntilElement(K_INSIDE_WHILE);
 		popElement(K_INSIDE_WHILE);
 	}
+}
+
+@Override
+protected void consumeEnhancedForStatementHeader() {
+	super.consumeEnhancedForStatementHeader();
+	pushOnElementStack(K_INSIDE_FOR_EACH, this.expressionPtr, this.astPtr);
+}
+
+@Override
+protected void consumeEnhancedForStatement() {
+	super.consumeEnhancedForStatement();
+	popUntilElement(K_INSIDE_FOR_EACH);
+	popElement(K_INSIDE_FOR_EACH);
 }
 
 @Override

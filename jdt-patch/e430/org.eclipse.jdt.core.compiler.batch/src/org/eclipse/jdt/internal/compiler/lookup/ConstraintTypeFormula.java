@@ -33,18 +33,18 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 class ConstraintTypeFormula extends ConstraintFormula {
 
 	TypeBinding left;
-	
+
 	// this flag contributes to the workaround controlled by InferenceContext18.ARGUMENT_CONSTRAINTS_ARE_SOFT:
 	boolean isSoft;
 
 	public static ConstraintTypeFormula create(TypeBinding exprType, TypeBinding right, int relation) {
-		if (exprType == null || right == null) 
+		if (exprType == null || right == null)
 			return FALSE;
 		return new ConstraintTypeFormula(exprType, right, relation, false);
 	}
 
 	public static ConstraintTypeFormula create(TypeBinding exprType, TypeBinding right, int relation, boolean isSoft) {
-		if (exprType == null || right == null) 
+		if (exprType == null || right == null)
 			return FALSE;
 		return new ConstraintTypeFormula(exprType, right, relation, isSoft);
 	}
@@ -83,7 +83,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 					break;
 				//$FALL-THROUGH$ array of parameterized is handled below:
 			case Binding.PARAMETERIZED_TYPE:
-				{																
+				{
 					//															  this.right = G<T1,T2,...> or G<T1,T2,...>[]k
 					TypeBinding gs = this.left.findSuperTypeOriginatingFrom(this.right);	// G<S1,S2,...> or G<S1,S2,...>[]k
 					if (gs != null && gs.leafComponentType().isRawType()) {
@@ -110,7 +110,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 			// 18.2.3:
 			if (this.right.kind() != Binding.WILDCARD_TYPE) { // "If T is a type" ... all alternatives require "wildcard"
 				if (this.left.kind() != Binding.WILDCARD_TYPE) {
-					return ConstraintTypeFormula.create(this.left, this.right, SAME, this.isSoft);						
+					return ConstraintTypeFormula.create(this.left, this.right, SAME, this.isSoft);
 				} else {
 					// TODO: speculative addition:
 					if (this.right instanceof InferenceVariable)
@@ -129,15 +129,15 @@ class ConstraintTypeFormula extends ConstraintFormula {
 						switch (s.boundKind) {
 							case Wildcard.UNBOUND:
 								return ConstraintTypeFormula.create(inferenceContext.object, t.bound, SUBTYPE, this.isSoft);
-							case Wildcard.EXTENDS: 
+							case Wildcard.EXTENDS:
 								return ConstraintTypeFormula.create(s.bound, t.bound, SUBTYPE, this.isSoft);
-							case Wildcard.SUPER: 
+							case Wildcard.SUPER:
 								return ConstraintTypeFormula.create(inferenceContext.object, t.bound, SAME, this.isSoft);
 							default:
 								throw new IllegalArgumentException("Unexpected boundKind "+s.boundKind);  //$NON-NLS-1$
 						}
 					}
-				} else { // SUPER 
+				} else { // SUPER
 					if (this.left.kind() != Binding.WILDCARD_TYPE) {
 						return ConstraintTypeFormula.create(t.bound, this.left, SUBTYPE, this.isSoft);
 					} else {
@@ -181,7 +181,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 					||(leftWC.boundKind == Wildcard.SUPER && rightWC.boundKind == Wildcard.SUPER))
 				{
 					return ConstraintTypeFormula.create(leftWC.bound, rightWC.bound, SAME, this.isSoft);
-				}						
+				}
 			}
 		} else {
 			if (this.right.kind() != Binding.WILDCARD_TYPE) {
@@ -200,9 +200,9 @@ class ConstraintTypeFormula extends ConstraintFormula {
 				if (this.right instanceof InferenceVariable && !this.left.isPrimitiveType()) {
 					return new TypeBound((InferenceVariable) this.right, this.left, SAME, this.isSoft);
 				}
-				if ((this.left.isClass() || this.left.isInterface()) 
+				if ((this.left.isClass() || this.left.isInterface())
 						&& (this.right.isClass() || this.right.isInterface())
-						&& TypeBinding.equalsEquals(this.left.erasure(), this.right.erasure())) 
+						&& TypeBinding.equalsEquals(this.left.erasure(), this.right.erasure()))
 				{
 					TypeBinding[] leftParams = this.left.typeArguments();
 					TypeBinding[] rightParams = this.right.typeArguments();
@@ -268,7 +268,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 					boolean isFirst = true;
 					while (superCandidate != null && superCandidate.kind() == Binding.PARAMETERIZED_TYPE && subCandidate != null)  {
 						if (!addConstraintsFromTypeParameters(subCandidate, (ParameterizedTypeBinding) superCandidate, constraints))
-							if (isFirst) return FALSE;				
+							if (isFirst) return FALSE;
 						isFirst = false;
 						// travel to enclosing types to check if they have type parameters, too:
 						superCandidate = superCandidate.enclosingType();
@@ -300,7 +300,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 						sPrimeArray = findMostSpecificSuperArray(subTVB.firstBound, subTVB.otherUpperBounds(), subTVB);
 						break;
 					}
-				default:					
+				default:
 					return FALSE;
 				}
 				if (sPrimeArray == null)
@@ -360,7 +360,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 		}
 		throw new IllegalStateException("Unexpected RHS "+superCandidate); //$NON-NLS-1$
 	}
-	
+
 	private ArrayBinding findMostSpecificSuperArray(TypeBinding firstBound, TypeBinding[] otherUpperBounds, TypeBinding theType) {
 		int numArrayBounds = 0;
 		ArrayBinding result = null;
@@ -385,7 +385,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 	boolean addConstraintsFromTypeParameters(TypeBinding subCandidate, ParameterizedTypeBinding ca, List<ConstraintFormula> constraints) {
 		TypeBinding cb = subCandidate.findSuperTypeOriginatingFrom(ca);	// C<B1,B2,...>
 		if (cb == null)
-			return false; // nothing here means we failed 
+			return false; // nothing here means we failed
 		if (TypeBinding.equalsEquals(ca, cb)) // incl C#RAW vs C#RAW
 			return true;
 		if (!(cb instanceof ParameterizedTypeBinding)) {
@@ -397,17 +397,17 @@ class ConstraintTypeFormula extends ConstraintFormula {
 		if (ai == null)
 			return true; // no arguments here means nothing to check
 		if (cb.isRawType() || bi == null || bi.length == 0)
-			return (this.isSoft && InferenceContext18.SIMULATE_BUG_JDK_8026527) ? true : false; // FALSE would conform to the spec 
+			return (this.isSoft && InferenceContext18.SIMULATE_BUG_JDK_8026527) ? true : false; // FALSE would conform to the spec
 		for (int i = 0; i < ai.length; i++)
 			constraints.add(ConstraintTypeFormula.create(bi[i], ai[i], TYPE_ARGUMENT_CONTAINED, this.isSoft));
 		return true;
 	}
 
 	public boolean equalsEquals (ConstraintTypeFormula that) {
-		return (that != null && this.relation == that.relation && this.isSoft == that.isSoft && 
+		return (that != null && this.relation == that.relation && this.isSoft == that.isSoft &&
 					TypeBinding.equalsEquals(this.left, that.left) && TypeBinding.equalsEquals(this.right, that.right));
 	}
-	
+
 	@Override
 	public boolean applySubstitution(BoundSet solutionSet, InferenceVariable[] variables) {
 		super.applySubstitution(solutionSet, variables);
@@ -426,7 +426,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 	public String toString() {
 		StringBuffer buf = new StringBuffer("Type Constraint:\n"); //$NON-NLS-1$
 		buf.append('\t').append(LEFT_ANGLE_BRACKET);
-		appendTypeName(buf, this.left); 
+		appendTypeName(buf, this.left);
 		buf.append(relationToString(this.relation));
 		appendTypeName(buf, this.right);
 		buf.append(RIGHT_ANGLE_BRACKET);

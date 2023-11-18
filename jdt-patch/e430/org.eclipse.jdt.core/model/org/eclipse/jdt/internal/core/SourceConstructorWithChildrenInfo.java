@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.IJavaElement;
 public class SourceConstructorWithChildrenInfo extends SourceConstructorInfo {
 
 	protected IJavaElement[] children;
-	
+
 	public SourceConstructorWithChildrenInfo(IJavaElement[] children) {
 		this.children = children;
 	}

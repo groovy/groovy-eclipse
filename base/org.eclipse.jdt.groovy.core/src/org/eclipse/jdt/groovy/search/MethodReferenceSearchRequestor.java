@@ -122,6 +122,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     protected static String[] getParameterTypeNames(MethodPattern pattern, String[] parameterTypeSignatures, IType declaringType) {
+        if (pattern.parameterCount < 0) return null;
         int n = parameterTypeSignatures.length;
         String[] typeNames = new String[n];
         if (declaringType != null) { // TODO: Should searches like "main(String[])", which have null declaring type, check param types?
@@ -164,6 +165,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     protected static String[] getParameterTypeSignatures(MethodPattern pattern) {
+        if (pattern.parameterCount < 0) return null;
         char[][][] signatures = ReflectionUtils.getPrivateField(MethodPattern.class, "parametersTypeSignatures", pattern);
         int n = (signatures == null ? 0 : signatures.length);
         String[] parameterTypeSignatures = new String[n];
@@ -316,24 +318,26 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private boolean parameterTypesMatch(MethodNode methodNode) {
-        // in case of resolved type parameter(s), redirect to unresolved
-        Parameter[] parameters = (methodNode == methodNode.getOriginal() ||
-                parameterCountOf(methodNode) != parameterCountOf(methodNode.getOriginal())
-                    ? methodNode.getParameters() : methodNode.getOriginal().getParameters());
+        if (parameterTypeSignatures != null) {
+            // in case of resolved type parameter(s), redirect to unresolved
+            Parameter[] parameters = (methodNode == methodNode.getOriginal() ||
+                    parameterCountOf(methodNode) != parameterCountOf(methodNode.getOriginal())
+                        ? methodNode.getParameters() : methodNode.getOriginal().getParameters());
 
-        List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(parameters);
-        int n; if ((n = parameterTypes.size()) != parameterTypeSignatures.length) {
-            return false;
-        }
-        for (int i = 0; i < n; i += 1) {
-            ClassNode parameterType = parameterTypes.get(i);
-            String parameterTypeSignature = Signature.getTypeErasure(parameterTypeSignatures[i]);
-
-            if (GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, false, false).equals(parameterTypeSignature)) {
-                continue;
-            }
-            if (ClassHelper.isPrimitiveType(parameterType) || !GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, true, false).equals(parameterTypeSignature)) {
+            List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(parameters);
+            int n; if ((n = parameterTypes.size()) != parameterTypeSignatures.length) {
                 return false;
+            }
+            for (int i = 0; i < n; i += 1) {
+                ClassNode parameterType = parameterTypes.get(i);
+                String parameterTypeSignature = Signature.getTypeErasure(parameterTypeSignatures[i]);
+
+                if (GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, false, false).equals(parameterTypeSignature)) {
+                    continue;
+                }
+                if (ClassHelper.isPrimitiveType(parameterType) || !GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, true, false).equals(parameterTypeSignature)) {
+                    return false;
+                }
             }
         }
         return true;
@@ -360,10 +364,9 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      * </ol>
      */
     private boolean argumentTypesMatch(List<ClassNode> argumentTypes, ClassNode declaringType) {
-        if (argumentTypes == null) {
+        if (argumentTypes == null || parameterTypeNames == null) {
             return true;
         }
-
         if (argumentTypes.size() == parameterTypeNames.length) {
             for (int i = 0; i < parameterTypeNames.length; i += 1) {
                 if (parameterTypeNames[i] == null) continue; // skip check
@@ -374,7 +377,6 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             }
             return true;
         }
-
         BitSet foundParameterCounts = cachedParameterCounts.computeIfAbsent(declaringType, t -> {
             BitSet parameterCounts = new BitSet(MAX_PARAMS + 1);
             gatherParameters(declaringType, parameterCounts);
@@ -386,18 +388,17 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private void gatherParameters(ClassNode declaringType, BitSet foundParameterCounts) {
-        if (declaringType == null) {
-            return;
-        }
-        declaringType = findWrappedNode(declaringType.redirect());
-        List<MethodNode> methods = declaringType.getMethods(methodName);
-        for (MethodNode method : methods) {
-            Parameter[] parameters = method.getParameters();
-            foundParameterCounts.set(Math.min(parameters.length, MAX_PARAMS));
-        }
-        gatherParameters(declaringType.getSuperClass(), foundParameterCounts);
-        for (ClassNode face : declaringType.getInterfaces()) {
-            gatherParameters(face, foundParameterCounts);
+        if (declaringType != null) {
+            declaringType = findWrappedNode(declaringType.redirect());
+            List<MethodNode> methods = declaringType.getMethods(methodName);
+            for (MethodNode method : methods) {
+                Parameter[] parameters = method.getParameters();
+                foundParameterCounts.set(Math.min(parameters.length, MAX_PARAMS));
+            }
+            gatherParameters(declaringType.getSuperClass(), foundParameterCounts);
+            for (ClassNode face : declaringType.getInterfaces()) {
+                gatherParameters(face, foundParameterCounts);
+            }
         }
     }
 
@@ -405,7 +406,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      * Converts from a {@link JDTClassNode} to a {@link ClassNode} in order to
      * check default parameters.
      */
-    private ClassNode findWrappedNode(ClassNode declaringType) {
+    private static ClassNode findWrappedNode(ClassNode declaringType) {
         ClassNode wrappedNode = null;
         if (declaringType instanceof JDTClassNode) {
             ReferenceBinding binding = ((JDTClassNode) declaringType).getJdtBinding();

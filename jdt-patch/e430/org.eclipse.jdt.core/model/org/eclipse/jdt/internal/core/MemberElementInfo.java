@@ -40,7 +40,7 @@ package org.eclipse.jdt.internal.core;
 	public int getNameSourceStart() {
 		return -1;
 	}
-	
+
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.env.IGenericType#getModifiers()
 	 * @see org.eclipse.jdt.internal.compiler.env.IGenericMethod#getModifiers()

@@ -31,7 +31,7 @@ public class SingleMemberAnnotation extends Annotation {
 		this.sourceStart = sourceStart;
 		this.sourceEnd = type.sourceEnd;
 	}
-	
+
 	public SingleMemberAnnotation() {
 		// for subclasses.
 	}

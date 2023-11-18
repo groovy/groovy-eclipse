@@ -50,7 +50,7 @@ public interface IConstantPoolEntry2 extends IConstantPoolEntry {
 	 * @see IConstantPoolConstant#CONSTANT_MethodHandle
 	 */
 	int getReferenceIndex();
-	
+
 	/**
 	 * Returns the bootstrap method attribute index. This value is set only when decoding a InvokeDynamic entry.
 	 * The value is unspecified otherwise.

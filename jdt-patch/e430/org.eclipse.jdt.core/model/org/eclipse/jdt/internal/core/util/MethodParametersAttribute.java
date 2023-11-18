@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     Jesper Steen Moeller - initial API and implementation
  *******************************************************************************/
@@ -27,15 +27,15 @@ public class MethodParametersAttribute extends ClassFileAttribute implements IMe
 
 	private static final char[][] NO_NAMES = new char[0][];
 	private static final short[] NO_ACCES_FLAGS = new short[0];
-	
+
 	private final int numberOfEntries;
 	private final char[][] names;
 	private final short[] accessFlags;
-	
+
 
 	MethodParametersAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);
-		
+
 		final int length = u1At(classFileBytes, 6, offset);
 		this.numberOfEntries = length;
 		if (length != 0) {

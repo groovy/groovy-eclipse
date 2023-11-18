@@ -26,7 +26,7 @@ public class ConstantPoolEntry2 extends ConstantPoolEntry implements IConstantPo
 	private int referenceKind;
 	private int referenceIndex;
 	private int bootstrapMethodAttributeIndex;
-	
+
 	private int moduleIndex;
 	private char[] moduleName;
 	private int packageIndex;
@@ -87,7 +87,7 @@ public class ConstantPoolEntry2 extends ConstantPoolEntry implements IConstantPo
 	public void setBootstrapMethodAttributeIndex(int bootstrapMethodAttributeIndex) {
 		this.bootstrapMethodAttributeIndex = bootstrapMethodAttributeIndex;
 	}
-	
+
 	public void setModuleIndex(int moduleIndex) {
 		this.moduleIndex = moduleIndex;
 	}

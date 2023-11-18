@@ -41,7 +41,7 @@ package org.eclipse.jdt.internal.core;
 //	}
 //	@Override
 //	public IModuleDeclaration getDeclaration() {
-//		// 
+//		//
 //		if (this.declaration == null) {
 //			try {
 //				if (this.isBinary) {
@@ -56,9 +56,9 @@ package org.eclipse.jdt.internal.core;
 //		}
 //		return this.declaration;
 //	}
-//	
+//
 //	public String toString() {
 //		return new String(this.name());
-//		
+//
 //	}
 //}

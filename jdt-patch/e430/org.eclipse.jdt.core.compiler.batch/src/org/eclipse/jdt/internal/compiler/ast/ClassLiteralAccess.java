@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -84,14 +84,14 @@ public class ClassLiteralAccess extends Expression {
 		this.constant = Constant.NotAConstant;
 		if ((this.targetType = this.type.resolveType(scope, true /* check bounds*/)) == null)
 			return null;
-		
+
 		/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=320463
 		   https://bugs.eclipse.org/bugs/show_bug.cgi?id=312076
 		   JLS3 15.8.2 forbids the type named in the class literal expression from being a parameterized type.
 		   And the grammar in 18.1 disallows (where X and Y are some concrete types) constructs of the form
 		   Outer<X>.class, Outer<X>.Inner.class, Outer.Inner<X>.class, Outer<X>.Inner<Y>.class etc.
 		   Corollary wise, we should resolve the type of the class literal expression to be a raw type as
-		   class literals exist only for the raw underlying type. 
+		   class literals exist only for the raw underlying type.
 		 */
 		LookupEnvironment environment = scope.environment();
 		this.targetType = environment.convertToRawType(this.targetType, true /* force conversion of enclosing types*/);
