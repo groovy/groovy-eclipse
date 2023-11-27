@@ -249,7 +249,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         int bodyEnd = body.getStartPosition() + body.getLength();
         if (bodyEnd > 0 && decl instanceof IMethod && (decl.getNameRange().getLength() == 0 ||
                 (Flags.isAbstract(decl.getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
-            bodyEnd += 1; // construcotrs and methods with a body have been set back by 1 for JDT compatibility
+            bodyEnd += 1; // constructors and methods with a body have been set back by 1 for JDT compatibility
         } else if (body instanceof FieldDeclaration && source.charAt(source.indexOf(endTag) - 1) != ';') {
             end -= endTag.length();
         }

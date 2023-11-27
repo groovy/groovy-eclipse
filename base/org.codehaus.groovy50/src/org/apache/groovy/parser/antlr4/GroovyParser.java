@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.11.1.4
+// Generated from GroovyParser.g4 by ANTLR 4.13.1.2
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -1352,8 +1352,8 @@ public class GroovyParser extends AbstractParser {
 	public final TypeParametersContext typeParameters() throws RecognitionException {
 		TypeParametersContext _localctx = new TypeParametersContext(_ctx, getState());
 		enterRule(_localctx, 30, RULE_typeParameters);
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(438);
@@ -1364,23 +1364,21 @@ public class GroovyParser extends AbstractParser {
 			typeParameter();
 			setState(447);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,18,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(441);
-					match(COMMA);
-					setState(442);
-					nls();
-					setState(443);
-					typeParameter();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(441);
+				match(COMMA);
+				setState(442);
+				nls();
+				setState(443);
+				typeParameter();
+				}
 				}
 				setState(449);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,18,_ctx);
+				_la = _input.LA(1);
 			}
 			setState(450);
 			nls();
@@ -1428,6 +1426,7 @@ public class GroovyParser extends AbstractParser {
 	public final TypeParameterContext typeParameter() throws RecognitionException {
 		TypeParameterContext _localctx = new TypeParameterContext(_ctx, getState());
 		enterRule(_localctx, 32, RULE_typeParameter);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -1437,8 +1436,8 @@ public class GroovyParser extends AbstractParser {
 			className();
 			setState(459);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,19,_ctx) ) {
-			case 1:
+			_la = _input.LA(1);
+			if (_la==EXTENDS) {
 				{
 				setState(455);
 				match(EXTENDS);
@@ -1447,8 +1446,8 @@ public class GroovyParser extends AbstractParser {
 				setState(457);
 				typeBound();
 				}
-				break;
 			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -1494,31 +1493,29 @@ public class GroovyParser extends AbstractParser {
 	public final TypeBoundContext typeBound() throws RecognitionException {
 		TypeBoundContext _localctx = new TypeBoundContext(_ctx, getState());
 		enterRule(_localctx, 34, RULE_typeBound);
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(461);
 			type();
 			setState(468);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,20,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(462);
-					match(BITAND);
-					setState(463);
-					nls();
-					setState(464);
-					type();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==BITAND) {
+				{
+				{
+				setState(462);
+				match(BITAND);
+				setState(463);
+				nls();
+				setState(464);
+				type();
+				}
 				}
 				setState(470);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,20,_ctx);
+				_la = _input.LA(1);
 			}
 			}
 		}
@@ -1565,31 +1562,29 @@ public class GroovyParser extends AbstractParser {
 	public final TypeListContext typeList() throws RecognitionException {
 		TypeListContext _localctx = new TypeListContext(_ctx, getState());
 		enterRule(_localctx, 36, RULE_typeList);
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(471);
 			type();
 			setState(478);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,21,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(472);
-					match(COMMA);
-					setState(473);
-					nls();
-					setState(474);
-					type();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(472);
+				match(COMMA);
+				setState(473);
+				nls();
+				setState(474);
+				type();
+				}
 				}
 				setState(480);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,21,_ctx);
+				_la = _input.LA(1);
 			}
 			}
 		}
@@ -1894,7 +1889,7 @@ public class GroovyParser extends AbstractParser {
 			setState(555);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << StringLiteral) | (1L << AS) | (1L << DEF) | (1L << IN) | (1L << TRAIT) | (1L << VAR) | (1L << BuiltInPrimitiveType) | (1L << ABSTRACT) | (1L << YIELD) | (1L << CLASS) | (1L << DEFAULT) | (1L << ENUM) | (1L << FINAL) | (1L << IMPORT) | (1L << INTERFACE) | (1L << NATIVE) | (1L << NON_SEALED) | (1L << PACKAGE) | (1L << PERMITS) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RECORD) | (1L << SEALED) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOID) | (1L << VOLATILE))) != 0) || ((((_la - 88)) & ~0x3f) == 0 && ((1L << (_la - 88)) & ((1L << (LBRACE - 88)) | (1L << (LBRACK - 88)) | (1L << (LT - 88)) | (1L << (QUESTION - 88)) | (1L << (CapitalizedIdentifier - 88)) | (1L << (Identifier - 88)) | (1L << (AT - 88)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << StringLiteral) | (1L << AS) | (1L << DEF) | (1L << IN) | (1L << TRAIT) | (1L << VAR) | (1L << BuiltInPrimitiveType) | (1L << ABSTRACT) | (1L << YIELD) | (1L << CLASS) | (1L << DEFAULT) | (1L << ENUM) | (1L << FINAL) | (1L << INTERFACE) | (1L << NATIVE) | (1L << NON_SEALED) | (1L << PERMITS) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RECORD) | (1L << SEALED) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOID) | (1L << VOLATILE))) != 0) || ((((_la - 88)) & ~0x3f) == 0 && ((1L << (_la - 88)) & ((1L << (LBRACE - 88)) | (1L << (LT - 88)) | (1L << (CapitalizedIdentifier - 88)) | (1L << (Identifier - 88)) | (1L << (AT - 88)))) != 0)) {
 				{
 				setState(546);
 				classBodyDeclaration(_localctx.t);
@@ -2045,6 +2040,7 @@ public class GroovyParser extends AbstractParser {
 	public final EnumConstantContext enumConstant() throws RecognitionException {
 		EnumConstantContext _localctx = new EnumConstantContext(_ctx, getState());
 		enterRule(_localctx, 44, RULE_enumConstant);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -2054,14 +2050,14 @@ public class GroovyParser extends AbstractParser {
 			identifier();
 			setState(576);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,35,_ctx) ) {
-			case 1:
+			_la = _input.LA(1);
+			if (_la==LPAREN) {
 				{
 				setState(575);
 				arguments();
 				}
-				break;
 			}
+
 			setState(579);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,36,_ctx) ) {
@@ -2527,21 +2523,35 @@ public class GroovyParser extends AbstractParser {
 		try {
 			setState(637);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,47,_ctx) ) {
-			case 1:
+			switch (_input.LA(1)) {
+			case AS:
+			case DEF:
+			case IN:
+			case TRAIT:
+			case VAR:
+			case BuiltInPrimitiveType:
+			case YIELD:
+			case PERMITS:
+			case RECORD:
+			case SEALED:
+			case CapitalizedIdentifier:
+			case Identifier:
+			case AT:
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(635);
 				standardType();
 				}
 				break;
-			case 2:
+			case VOID:
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(636);
 				match(VOID);
 				}
 				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2624,31 +2634,29 @@ public class GroovyParser extends AbstractParser {
 	public final VariableDeclaratorsContext variableDeclarators() throws RecognitionException {
 		VariableDeclaratorsContext _localctx = new VariableDeclaratorsContext(_ctx, getState());
 		enterRule(_localctx, 60, RULE_variableDeclarators);
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(641);
 			variableDeclarator();
 			setState(648);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,48,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(642);
-					match(COMMA);
-					setState(643);
-					nls();
-					setState(644);
-					variableDeclarator();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(642);
+				match(COMMA);
+				setState(643);
+				nls();
+				setState(644);
+				variableDeclarator();
+				}
 				}
 				setState(650);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,48,_ctx);
+				_la = _input.LA(1);
 			}
 			}
 		}
@@ -2832,6 +2840,7 @@ public class GroovyParser extends AbstractParser {
 	public final VariableInitializersContext variableInitializers() throws RecognitionException {
 		VariableInitializersContext _localctx = new VariableInitializersContext(_ctx, getState());
 		enterRule(_localctx, 68, RULE_variableInitializers);
+		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -2864,14 +2873,14 @@ public class GroovyParser extends AbstractParser {
 			nls();
 			setState(676);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,51,_ctx) ) {
-			case 1:
+			_la = _input.LA(1);
+			if (_la==COMMA) {
 				{
 				setState(675);
 				match(COMMA);
 				}
-				break;
 			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -3254,6 +3263,7 @@ public class GroovyParser extends AbstractParser {
 	public final ClassOrInterfaceTypeContext standardClassOrInterfaceType() throws RecognitionException {
 		ClassOrInterfaceTypeContext _localctx = new ClassOrInterfaceTypeContext(_ctx, getState());
 		enterRule(_localctx, 82, RULE_standardClassOrInterfaceType);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -3261,14 +3271,14 @@ public class GroovyParser extends AbstractParser {
 			qualifiedStandardClassName();
 			setState(719);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,60,_ctx) ) {
-			case 1:
+			_la = _input.LA(1);
+			if (_la==LT) {
 				{
 				setState(718);
 				typeArguments();
 				}
-				break;
 			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -3351,8 +3361,8 @@ public class GroovyParser extends AbstractParser {
 	public final TypeArgumentsContext typeArguments() throws RecognitionException {
 		TypeArgumentsContext _localctx = new TypeArgumentsContext(_ctx, getState());
 		enterRule(_localctx, 86, RULE_typeArguments);
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(723);
@@ -3363,23 +3373,21 @@ public class GroovyParser extends AbstractParser {
 			typeArgument();
 			setState(732);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,61,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(726);
-					match(COMMA);
-					setState(727);
-					nls();
-					setState(728);
-					typeArgument();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(726);
+				match(COMMA);
+				setState(727);
+				nls();
+				setState(728);
+				typeArgument();
+				}
 				}
 				setState(734);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,61,_ctx);
+				_la = _input.LA(1);
 			}
 			setState(735);
 			nls();
@@ -3447,8 +3455,8 @@ public class GroovyParser extends AbstractParser {
 				match(QUESTION);
 				setState(745);
 				_errHandler.sync(this);
-				switch ( getInterpreter().adaptivePredict(_input,62,_ctx) ) {
-				case 1:
+				_la = _input.LA(1);
+				if (_la==EXTENDS || _la==SUPER) {
 					{
 					setState(741);
 					_la = _input.LA(1);
@@ -3467,8 +3475,8 @@ public class GroovyParser extends AbstractParser {
 					setState(743);
 					type();
 					}
-					break;
 				}
+
 				}
 				break;
 			}
@@ -3558,31 +3566,29 @@ public class GroovyParser extends AbstractParser {
 	public final QualifiedClassNameListContext qualifiedClassNameList() throws RecognitionException {
 		QualifiedClassNameListContext _localctx = new QualifiedClassNameListContext(_ctx, getState());
 		enterRule(_localctx, 92, RULE_qualifiedClassNameList);
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(752);
 			annotatedQualifiedClassName();
 			setState(759);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,64,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(753);
-					match(COMMA);
-					setState(754);
-					nls();
-					setState(755);
-					annotatedQualifiedClassName();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(753);
+				match(COMMA);
+				setState(754);
+				nls();
+				setState(755);
+				annotatedQualifiedClassName();
+				}
 				}
 				setState(761);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,64,_ctx);
+				_la = _input.LA(1);
 			}
 			}
 		}
@@ -3629,7 +3635,7 @@ public class GroovyParser extends AbstractParser {
 			setState(764);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << AS) | (1L << DEF) | (1L << IN) | (1L << TRAIT) | (1L << VAR) | (1L << BuiltInPrimitiveType) | (1L << ABSTRACT) | (1L << YIELD) | (1L << FINAL) | (1L << IMPORT) | (1L << PACKAGE) | (1L << PERMITS) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RECORD) | (1L << SEALED) | (1L << STATIC) | (1L << STRICTFP) | (1L << VOID))) != 0) || ((((_la - 90)) & ~0x3f) == 0 && ((1L << (_la - 90)) & ((1L << (LBRACK - 90)) | (1L << (QUESTION - 90)) | (1L << (CapitalizedIdentifier - 90)) | (1L << (Identifier - 90)) | (1L << (AT - 90)) | (1L << (ELLIPSIS - 90)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << AS) | (1L << DEF) | (1L << IN) | (1L << TRAIT) | (1L << VAR) | (1L << BuiltInPrimitiveType) | (1L << ABSTRACT) | (1L << YIELD) | (1L << FINAL) | (1L << PERMITS) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RECORD) | (1L << SEALED) | (1L << STATIC) | (1L << STRICTFP) | (1L << VOID))) != 0) || ((((_la - 130)) & ~0x3f) == 0 && ((1L << (_la - 130)) & ((1L << (CapitalizedIdentifier - 130)) | (1L << (Identifier - 130)) | (1L << (AT - 130)) | (1L << (ELLIPSIS - 130)))) != 0)) {
 				{
 				setState(763);
 				formalParameterList();
@@ -3686,8 +3692,8 @@ public class GroovyParser extends AbstractParser {
 	public final FormalParameterListContext formalParameterList() throws RecognitionException {
 		FormalParameterListContext _localctx = new FormalParameterListContext(_ctx, getState());
 		enterRule(_localctx, 96, RULE_formalParameterList);
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(770);
@@ -3708,23 +3714,21 @@ public class GroovyParser extends AbstractParser {
 			}
 			setState(778);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,67,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(772);
-					match(COMMA);
-					setState(773);
-					nls();
-					setState(774);
-					formalParameter();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				setState(772);
+				match(COMMA);
+				setState(773);
+				nls();
+				setState(774);
+				formalParameter();
+				}
 				}
 				setState(780);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,67,_ctx);
+				_la = _input.LA(1);
 			}
 			}
 		}
@@ -4179,8 +4183,8 @@ public class GroovyParser extends AbstractParser {
 	public final QualifiedStandardClassNameContext qualifiedStandardClassName() throws RecognitionException {
 		QualifiedStandardClassNameContext _localctx = new QualifiedStandardClassNameContext(_ctx, getState());
 		enterRule(_localctx, 112, RULE_qualifiedStandardClassName);
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(827);
@@ -4189,21 +4193,19 @@ public class GroovyParser extends AbstractParser {
 			className();
 			setState(833);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,74,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(829);
-					match(DOT);
-					setState(830);
-					className();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==DOT) {
+				{
+				{
+				setState(829);
+				match(DOT);
+				setState(830);
+				className();
+				}
 				}
 				setState(835);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,74,_ctx);
+				_la = _input.LA(1);
 			}
 			}
 		}
@@ -4803,7 +4805,7 @@ public class GroovyParser extends AbstractParser {
 				setState(892);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << AS) | (1L << DEF) | (1L << IN) | (1L << TRAIT) | (1L << VAR) | (1L << BuiltInPrimitiveType) | (1L << ABSTRACT) | (1L << YIELD) | (1L << FINAL) | (1L << IMPORT) | (1L << PACKAGE) | (1L << PERMITS) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RECORD) | (1L << SEALED) | (1L << STATIC) | (1L << STRICTFP) | (1L << VOID))) != 0) || ((((_la - 90)) & ~0x3f) == 0 && ((1L << (_la - 90)) & ((1L << (LBRACK - 90)) | (1L << (QUESTION - 90)) | (1L << (CapitalizedIdentifier - 90)) | (1L << (Identifier - 90)) | (1L << (AT - 90)) | (1L << (ELLIPSIS - 90)))) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << AS) | (1L << DEF) | (1L << IN) | (1L << TRAIT) | (1L << VAR) | (1L << BuiltInPrimitiveType) | (1L << ABSTRACT) | (1L << YIELD) | (1L << FINAL) | (1L << PERMITS) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RECORD) | (1L << SEALED) | (1L << STATIC) | (1L << STRICTFP) | (1L << VOID))) != 0) || ((((_la - 130)) & ~0x3f) == 0 && ((1L << (_la - 130)) & ((1L << (CapitalizedIdentifier - 130)) | (1L << (Identifier - 130)) | (1L << (AT - 130)) | (1L << (ELLIPSIS - 130)))) != 0)) {
 					{
 					setState(889);
 					formalParameterList();
@@ -5789,14 +5791,10 @@ public class GroovyParser extends AbstractParser {
 				case VAR:
 				case BuiltInPrimitiveType:
 				case YIELD:
-				case IMPORT:
-				case PACKAGE:
 				case PERMITS:
 				case RECORD:
 				case SEALED:
 				case VOID:
-				case LBRACK:
-				case QUESTION:
 				case CapitalizedIdentifier:
 				case Identifier:
 				case AT:
@@ -6227,7 +6225,6 @@ public class GroovyParser extends AbstractParser {
 		enterRule(_localctx, 176, RULE_switchStatement);
 		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(1069);
@@ -6247,24 +6244,18 @@ public class GroovyParser extends AbstractParser {
 				{
 				setState(1075); 
 				_errHandler.sync(this);
-				_alt = 1;
+				_la = _input.LA(1);
 				do {
-					switch (_alt) {
-					case 1:
-						{
-						{
-						setState(1074);
-						switchBlockStatementGroup();
-						}
-						}
-						break;
-					default:
-						throw new NoViableAltException(this);
+					{
+					{
+					setState(1074);
+					switchBlockStatementGroup();
+					}
 					}
 					setState(1077); 
 					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input,110,_ctx);
-				} while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
+					_la = _input.LA(1);
+				} while ( _la==CASE || _la==DEFAULT );
 				setState(1079);
 				nls();
 				}
@@ -6452,6 +6443,7 @@ public class GroovyParser extends AbstractParser {
 	public final ContinueStatementContext continueStatement() throws RecognitionException {
 		ContinueStatementContext _localctx = new ContinueStatementContext(_ctx, getState());
 		enterRule(_localctx, 180, RULE_continueStatement);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -6459,14 +6451,14 @@ public class GroovyParser extends AbstractParser {
 			match(CONTINUE);
 			setState(1108);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,113,_ctx) ) {
-			case 1:
+			_la = _input.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << AS) | (1L << IN) | (1L << TRAIT) | (1L << VAR) | (1L << YIELD) | (1L << PERMITS) | (1L << RECORD) | (1L << SEALED))) != 0) || _la==CapitalizedIdentifier || _la==Identifier) {
 				{
 				setState(1107);
 				identifier();
 				}
-				break;
 			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -6500,6 +6492,7 @@ public class GroovyParser extends AbstractParser {
 	public final BreakStatementContext breakStatement() throws RecognitionException {
 		BreakStatementContext _localctx = new BreakStatementContext(_ctx, getState());
 		enterRule(_localctx, 182, RULE_breakStatement);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -6507,14 +6500,14 @@ public class GroovyParser extends AbstractParser {
 			match(BREAK);
 			setState(1112);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,114,_ctx) ) {
-			case 1:
+			_la = _input.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << AS) | (1L << IN) | (1L << TRAIT) | (1L << VAR) | (1L << YIELD) | (1L << PERMITS) | (1L << RECORD) | (1L << SEALED))) != 0) || _la==CapitalizedIdentifier || _la==Identifier) {
 				{
 				setState(1111);
 				identifier();
 				}
-				break;
 			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -6606,6 +6599,7 @@ public class GroovyParser extends AbstractParser {
 	public final TryCatchStatementContext tryCatchStatement() throws RecognitionException {
 		TryCatchStatementContext _localctx = new TryCatchStatementContext(_ctx, getState());
 		enterRule(_localctx, 186, RULE_tryCatchStatement);
+		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -6614,14 +6608,14 @@ public class GroovyParser extends AbstractParser {
 			match(TRY);
 			setState(1119);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,115,_ctx) ) {
-			case 1:
+			_la = _input.LA(1);
+			if (_la==LPAREN) {
 				{
 				setState(1118);
 				resources();
 				}
-				break;
 			}
+
 			setState(1121);
 			nls();
 			setState(1122);
@@ -8351,8 +8345,8 @@ public class GroovyParser extends AbstractParser {
 
 		    inSwitchExpressionLevel++;
 
+		int _la;
 		try {
-			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(1303);
@@ -8367,19 +8361,17 @@ public class GroovyParser extends AbstractParser {
 			nls();
 			setState(1311);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,138,_ctx);
-			while ( _alt!=2 && _alt!=groovyjarjarantlr4.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					{
-					{
-					setState(1308);
-					switchBlockStatementExpressionGroup();
-					}
-					} 
+			_la = _input.LA(1);
+			while (_la==CASE || _la==DEFAULT) {
+				{
+				{
+				setState(1308);
+				switchBlockStatementExpressionGroup();
+				}
 				}
 				setState(1313);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,138,_ctx);
+				_la = _input.LA(1);
 			}
 			setState(1314);
 			nls();
@@ -11781,8 +11773,9 @@ public class GroovyParser extends AbstractParser {
 			createdName();
 			setState(1709);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,182,_ctx) ) {
-			case 1:
+			switch (_input.LA(1)) {
+			case LPAREN:
+			case NL:
 				{
 				setState(1694);
 				nls();
@@ -11800,7 +11793,8 @@ public class GroovyParser extends AbstractParser {
 				}
 				}
 				break;
-			case 2:
+			case LBRACK:
+			case AT:
 				{
 				setState(1700); 
 				_errHandler.sync(this);
@@ -11836,6 +11830,8 @@ public class GroovyParser extends AbstractParser {
 				}
 				}
 				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 			}
 		}
@@ -12035,6 +12031,7 @@ public class GroovyParser extends AbstractParser {
 	public final CreatedNameContext createdName() throws RecognitionException {
 		CreatedNameContext _localctx = new CreatedNameContext(_ctx, getState());
 		enterRule(_localctx, 296, RULE_createdName);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -12065,14 +12062,14 @@ public class GroovyParser extends AbstractParser {
 				qualifiedClassName();
 				setState(1733);
 				_errHandler.sync(this);
-				switch ( getInterpreter().adaptivePredict(_input,185,_ctx) ) {
-				case 1:
+				_la = _input.LA(1);
+				if (_la==LT) {
 					{
 					setState(1732);
 					typeArgumentsOrDiamond();
 					}
-					break;
 				}
+
 				}
 				break;
 			default:

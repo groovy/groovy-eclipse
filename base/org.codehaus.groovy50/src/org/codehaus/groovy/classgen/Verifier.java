@@ -947,7 +947,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             throw new RuntimeParserException("Found unexpected MOP methods in the class node for " + classNode.getName() + "(" + node.getName() + ")", classNode);
         }
 
-        adjustTypesIfPublicStaticMainMethod(node);
+        adjustTypesIfMainMethod(node);
         this.methodNode = node;
         addReturnIfNeeded(node);
 
@@ -957,12 +957,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
     }
 
-    private static void adjustTypesIfPublicStaticMainMethod(final MethodNode node) { // GRECLIPSE edit
-        if (node.isPublic() && node.isStatic() && node.getName().equals("main")) {
+    private static void adjustTypesIfMainMethod(final MethodNode node) {
+        if (node.isPublic() && node.isStatic() && node.getName().equals("main")) { // GRECLIPSE edit
             Parameter[] params = node.getParameters();
             if (params.length == 1) {
                 Parameter param = params[0];
-                if (param.getType() == null || (isObjectType(param.getType()) && !param.getType().isGenericsPlaceHolder())) {
+                if (param.getType() == null || (isObjectType(param.getType()) && !param.getType().isGenericsPlaceHolder())) { // GRECLIPSE edit
                     param.setType(ClassHelper.STRING_TYPE.makeArray());
                     if (isObjectType(node.getReturnType())) {
                         node.setReturnType(ClassHelper.VOID_TYPE);
@@ -1016,27 +1016,20 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
         Statement setterBlock = node.getSetterBlock();
         if (setterBlock == null) {
-            MethodNode setter = classNode.getSetterMethod(setterName,
-                    false); // atypical: allow setter with non-void return type
-            if ((accessorModifiers & (ACC_FINAL | ACC_PRIVATE)) == 0 && methodNeedsReplacement(setter)) {
+            MethodNode setter = classNode.getSetterMethod(setterName, false); // atypical: allow setter with non-void return type
+            if (!node.isFinal() && !node.isPrivate() && methodNeedsReplacement(setter)) {
                 setterBlock = createSetterBlock(node, field);
             }
         }
 
-        int getterModifiers = accessorModifiers;
-        // don't make static accessors final
-        if (node.isStatic()) {
-            getterModifiers &= ~ACC_FINAL;
-        }
-
         if (getterBlock != null) {
-            visitGetter(node, field, getterBlock, getterModifiers, getterName);
+            visitGetter(node, field, getterBlock, accessorModifiers, getterName);
 
             if (node.getGetterName() == null && getterName.startsWith("get") && isPrimitiveBoolean(node.getType())) {
                 String altGetterName = "is" + capitalize(name);
                 MethodNode altGetter = classNode.getGetterMethod(altGetterName, !node.isStatic());
                 if (methodNeedsReplacement(altGetter)) {
-                    visitGetter(node, field, getterBlock, getterModifiers, altGetterName);
+                    visitGetter(node, field, getterBlock, accessorModifiers, altGetterName);
                 }
             }
         }
@@ -1063,7 +1056,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         // GRECLIPSE end
         getter.setSynthetic(true);
         addPropertyMethod(getter);
-        if (classNode.getNodeMetaData("_RECORD_HEADER") != null || !field.isSynthetic()) {
+        if (!field.isSynthetic() || classNode.getNodeMetaData("_RECORD_HEADER") != null) {
             copyAnnotations(node, getter);
         }
         visitMethod(getter);

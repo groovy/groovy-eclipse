@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerHelper;
+import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.transform.BaseScriptASTTransformation;
 
 import java.io.File;
@@ -151,12 +152,15 @@ public class ModuleNode extends ASTNode {
         return aliases.get(alias);
     }
 
-    public void addImport(final String alias, final ClassNode type) {
-        addImport(alias, type, Collections.emptyList());
+    public void addImport(final String name, final ClassNode type) {
+        addImport(name, type, Collections.emptyList());
     }
 
-    public void addImport(final String alias, final ClassNode type, final List<AnnotationNode> annotations) {
-        ImportNode importNode = new ImportNode(type, alias);
+    public void addImport(final String name, final ClassNode type, final List<AnnotationNode> annotations) {
+        /* GRECLIPSE edit
+        checkUsage(name, type); // GROOVY-8254
+        */
+        ImportNode importNode = new ImportNode(type, name);
         // GRECLIPSE add
         // configure sloc from the type's sloc
         // note: sloc configuration is done more precisely in AntlrParserPlugin.importDef()
@@ -189,17 +193,24 @@ public class ModuleNode extends ASTNode {
         storeLastAddedImportNode(importNode);
     }
 
-    public void addStaticImport(final ClassNode type, final String fieldName, final String alias) {
-        addStaticImport(type, fieldName, alias, Collections.emptyList());
+    public void addStaticImport(final ClassNode type, final String memberName, final String simpleName) {
+        addStaticImport(type, memberName, simpleName, Collections.emptyList());
     }
 
-    public void addStaticImport(final ClassNode type, final String fieldName, final String alias, final List<AnnotationNode> annotations) {
-        ImportNode node = new ImportNode(type, fieldName, alias);
+    public void addStaticImport(final ClassNode type, final String memberName, final String simpleName, final List<AnnotationNode> annotations) {
+        /* GRECLIPSE edit
+        ClassNode memberType = new ClassNode(type.getName() + '.' + memberName, 0, null) {
+            @Override public ClassNode getOuterClass() { return type; }
+        };
+        memberType.setSourcePosition(type);
+        checkUsage(simpleName, memberType);
+        */
+        ImportNode node = new ImportNode(type, memberName, simpleName);
         node.addAnnotations(annotations);
-        ImportNode prev = staticImports.put(alias, node);
+        ImportNode prev = staticImports.put(simpleName, node);
         if (prev != null) {
             staticImports.put(prev.toString(), prev);
-            staticImports.put(alias, staticImports.remove(alias));
+            staticImports.put(simpleName, staticImports.remove(simpleName));
         }
 
         storeLastAddedImportNode(node);
@@ -227,12 +238,39 @@ public class ModuleNode extends ASTNode {
         classes.add(node);
         node.setModule(this);
         addToCompileUnit(node);
+        /* GRECLIPSE edit
+        checkUsage(node.getNameWithoutPackage(), node);
+        */
     }
 
     private void addToCompileUnit(final ClassNode node) {
         // register the new class with the compile unit
         if (unit != null) {
             unit.addClass(node);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void checkUsage(final String name, final ClassNode type) {
+        for (ClassNode node : classes) {
+            if (node.getNameWithoutPackage().equals(name) && !node.equals(type)) {
+                getContext().addErrorAndContinue(new SyntaxException("The name " + name + " is already declared", type));
+                return;
+            }
+        }
+
+        for (ImportNode node : imports) {
+            if (node.getAlias().equals(name) && !node.getType().equals(type)) {
+                getContext().addErrorAndContinue(new SyntaxException("The name " + name + " is already declared", type));
+                return;
+            }
+        }
+
+        {
+            ImportNode node = staticImports.get(name);
+            if (node != null && !node.getType().equals(type.getOuterClass())) {
+                getContext().addErrorAndContinue(new SyntaxException("The name " + name + " is already declared", type));
+            }
         }
     }
 

@@ -315,35 +315,20 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGM25() {
         //@formatter:off
         String contents =
-            "[key:1].inject(1.0) { seed, entry -> null }";
+            "[key:1].inject(1.0) { acc, entry -> null }";
         //@formatter:on
-        assertExprType(contents, "seed", "java.math.BigDecimal");
+        assertExprType(contents, "acc", isAtLeastGroovy(50) ? "T" : "java.math.BigDecimal");
+        assertExprType(contents, "entry", "java.util.Map$Entry<java.lang.String,java.lang.Integer>");
     }
 
     @Test
     public void testDGM26() {
         //@formatter:off
         String contents =
-            "[key:1].inject(1.0) { seed, entry -> entry.key.toUpperCase() + entry.value.intValue() }";
+            "[key:1].inject('prefix') { acc, key, value -> acc + key.toUpperCase() + value.intValue() }";
         //@formatter:on
-        assertExprType(contents, "entry", "java.util.Map$Entry<java.lang.String,java.lang.Integer>");
-    }
-
-    @Test
-    public void testDGM26a() {
-        //@formatter:off
-        String contents =
-            "[key:1].inject(1.0) { seed, key, value -> key.toUpperCase() + value.intValue() }";
-        //@formatter:on
+        assertExprType(contents, "acc", isAtLeastGroovy(50) ? "T" : "java.lang.String");
         assertExprType(contents, "key", "java.lang.String");
-    }
-
-    @Test
-    public void testDGM26b() {
-        //@formatter:off
-        String contents =
-            "[key:1].inject(1.0) { seed, key, value -> key.toUpperCase() + value.intValue() }";
-        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 

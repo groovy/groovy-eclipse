@@ -65,10 +65,12 @@ import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -282,13 +284,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE end
 
     @Override
-    public void visitMethod(final MethodNode node) {
-        super.visitMethod(node);
-        visitGenericsTypeAnnotations(node);
-        visitTypeAnnotations(node.getReturnType());
-    }
-
-    @Override
     protected void visitConstructorOrMethod(final MethodNode node, final boolean isConstructor) {
         VariableScope oldScope = currentScope;
         currentScope = node.getVariableScope();
@@ -352,8 +347,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     private void resolveOrFail(final ClassNode type, final String msg, final ASTNode node, final boolean preferImports) {
-        visitTypeAnnotations(type);
-        if (preferImports) {
+        if (type.isRedirectNode() || !type.isPrimaryClassNode()) {
+            visitTypeAnnotations(type); // JSR 308 support
+        }
+        if (preferImports && !type.isResolved() && !type.isPrimaryClassNode()) {
             resolveGenericsTypes(type.getGenericsTypes());
             if (resolveAliasFromModule(type)) return;
         }
@@ -672,9 +669,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     private boolean resolveAliasFromModule(final ClassNode type) {
-        // In case of getting a ConstructedClassWithPackage here we do not do checks for partial
-        // matches with imported classes. The ConstructedClassWithPackage is already a constructed
-        // node and any subclass resolving will then take place elsewhere
+        // In case of getting a ConstructedClassWithPackage here we do not check
+        // for partial matches with imported classes. ConstructedClassWithPackage
+        // is already a constructed node and subclass resolving takes place elsewhere.
         if (type instanceof ConstructedClassWithPackage) return false;
 
         ModuleNode module = currentClass.getModule();
@@ -741,50 +738,47 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     protected boolean resolveFromModule(final ClassNode type, final boolean testModuleImports) {
-        if (type instanceof ConstructedNestedClass) return false;
+        ModuleNode module = currentClass.getModule();
+        if (module == null) return false;
 
-        // we decided if we have a vanilla name starting with a lower case
+        if (type instanceof ConstructedNestedClass) return false;
+        // We decided if we have a vanilla name starting with a lower case
         // letter that we will not try to resolve this name against .*
         // imports. Instead a full import is needed for these.
         // resolveAliasFromModule will do this check for us. This method
         // does also check the module contains a class in the same package
         // of this name. This check is not done for vanilla names starting
-        // with a lower case letter anymore
-        if (type instanceof LowerCaseClass) {
-            return resolveAliasFromModule(type);
-        }
+        // with a lower case letter anymore.
+        if (type instanceof LowerCaseClass) return resolveAliasFromModule(type);
 
         String name = type.getName();
-        ModuleNode module = currentClass.getModule();
-        if (module == null) return false;
-
-        boolean newNameUsed = false;
-        // we add a package if there is none yet and the module has one. But we
+        boolean type_setName = false;
+        // We add a package if there is none yet and the module has one. But we
         // do not add that if the type is a ConstructedClassWithPackage. The code in ConstructedClassWithPackage
         // hasPackageName() will return true if ConstructedClassWithPackage#className has no dots.
-        // but since the prefix may have them and the code there does ignore that
-        // fact. We check here for ConstructedClassWithPackage.
+        // but since the prefix may have them and the code there does ignore that fact.
         if (!type.hasPackageName() && module.hasPackageName() && !(type instanceof ConstructedClassWithPackage)) {
             type.setName(module.getPackageName() + name);
-            newNameUsed = true;
+            type_setName = true;
         }
-        // look into the module node if there is a class with that name
-        List<ClassNode> moduleClasses = module.getClasses();
-        for (ClassNode mClass : moduleClasses) {
-            if (mClass.getName().equals(type.getName())) {
-                if (mClass != type) type.setRedirect(mClass);
+        // check the module node for a class with the name
+        for (ClassNode localClass : module.getClasses()) {
+            if (localClass.getName().equals(type.getName())) {
+                if (localClass != type) type.setRedirect(localClass);
                 return true;
             }
         }
-        if (newNameUsed) type.setName(name);
+        if (type_setName) type.setName(name);
 
         if (testModuleImports) {
-            if (resolveAliasFromModule(type)) return true;
-
+            // check regular imports
+            if (resolveAliasFromModule(type)) {
+                return true;
+            }
+            // check enclosing package
             if (module.hasPackageName()) {
-                // check package this class is defined in. The usage of ConstructedClassWithPackage here
-                // means, that the module package will not be involved when the
-                // compiler tries to find an inner class.
+                // The usage of ConstructedClassWithPackage indicates the module
+                // package will not be involved when the compiler tries to find an inner class.
                 ClassNode tmp = new ConstructedClassWithPackage(module.getPackageName(), name);
                 // GRECLIPSE add
                 if (!resolutionFailed.contains(tmp.getName())) {
@@ -1089,7 +1083,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!prop.equals("this") && !prop.equals("super")) return;
 
         ClassNode type = expression.getObjectExpression().getType();
-        if (expression.getObjectExpression() instanceof ClassExpression) {
+        if (expression.getObjectExpression() instanceof ClassExpression && !isSuperCallToDefaultMethod(expression) && !isThisCallToPrivateInterfaceMethod(expression)) {
             if (!(currentClass instanceof InnerClassNode) && !Traits.isTrait(type)) {
                 addError("The usage of 'Class.this' and 'Class.super' is only allowed in nested/inner classes.", expression);
                 return;
@@ -1111,6 +1105,18 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             addError("The usage of 'Class.this' and 'Class.super' within static nested class '" +
                     currentClass.getName() + "' is not allowed in a static context.", expression);
         }
+    }
+
+    private boolean isSuperCallToDefaultMethod(PropertyExpression expression) {
+        // a more sophisticated check might be required in the future
+        ClassExpression clazzExpression = (ClassExpression) expression.getObjectExpression();
+        return clazzExpression.getType().isInterface() && expression.getPropertyAsString().equals("super");
+    }
+
+    private boolean isThisCallToPrivateInterfaceMethod(PropertyExpression expression) {
+        // a more sophisticated check might be required in the future
+        ClassExpression clazzExpression = (ClassExpression) expression.getObjectExpression();
+        return clazzExpression.getType().isInterface() && expression.getPropertyAsString().equals("this");
     }
 
     protected Expression transformVariableExpression(final VariableExpression ve) {
@@ -1308,40 +1314,24 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     private void visitTypeAnnotations(final ClassNode node) {
         visitAnnotations(node.getTypeAnnotations());
-        visitGenericsTypeAnnotations(node);
-    }
-
-    private void visitGenericsTypeAnnotations(final ClassNode node) {
-        GenericsType[] genericsTypes = node.getGenericsTypes();
-        if (node.isUsingGenerics() && genericsTypes != null) {
-            visitGenericsTypeAnnotations(genericsTypes);
-        }
-    }
-
-    private void visitGenericsTypeAnnotations(final MethodNode node) {
-        GenericsType[] genericsTypes = node.getGenericsTypes();
-        if (genericsTypes != null) {
-            visitGenericsTypeAnnotations(genericsTypes);
-        }
-    }
-
-    private void visitGenericsTypeAnnotations(final GenericsType[] genericsTypes) {
-        for (GenericsType gt : genericsTypes) {
-            visitTypeAnnotations(gt.getType());
-        }
     }
 
     @Override
     protected void visitAnnotation(final AnnotationNode node) {
-        resolveOrFail(node.getClassNode(), " for annotation", node, true);
-        // duplicates part of AnnotationVisitor because we cannot wait until later
-        for (Map.Entry<String, Expression> entry : node.getMembers().entrySet()) {
-            // resolve constant-looking expressions statically
-            // do it now since they get transformed away later
-            Expression value = transform(entry.getValue());
-            value = transformInlineConstants(value);
-            checkAnnotationMemberValue(value);
-            entry.setValue(value);
+        Collection<AnnotationNode> collector = currentClass.getNodeMetaData(AnnotationNode[].class);
+        if (collector != null) {
+            collector.add(node); // GROOVY-11179: defer resolve and inlining
+        } else {
+            resolveOrFail(node.getClassNode(), " for annotation", node, true);
+            // duplicates part of AnnotationVisitor because we cannot wait until later
+            for (Map.Entry<String, Expression> entry : node.getMembers().entrySet()) {
+                // resolve constant-looking expressions statically
+                // do it now since they get transformed away later
+                Expression value = transform(entry.getValue());
+                value = transformInlineConstants(value);
+                checkAnnotationMemberValue(value);
+                entry.setValue(value);
+            }
         }
     }
 
@@ -1421,6 +1411,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         //
 
+        if (phase < 2) node.putNodeMetaData(AnnotationNode[].class, new LinkedHashSet<>());
+
         if (!(node instanceof InnerClassNode) || Modifier.isStatic(node.getModifiers())) {
             genericParameterNames = new HashMap<>();
         }
@@ -1468,13 +1460,17 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
             visitPackage(node.getPackage());
             visitImports(node.getModule());
+            visitAnnotations(node);
 
+            // grab the collected annotations and stop collecting
+            var headerAnnotations = (Set<AnnotationNode>) node.putNodeMetaData(AnnotationNode[].class, null);
+            // GRECLIPSE add
+            if (headerAnnotations == null) headerAnnotations = Collections.EMPTY_SET;
+            // GRECLIPSE end
             node.visitContents(this);
             visitObjectInitializerStatements(node);
-
-            // GROOVY-10750: do last for inlining
-            visitTypeAnnotations(node);
-            visitAnnotations(node);
+            // GROOVY-10750, GROOVY-11179: resolve and inline
+            headerAnnotations.forEach(this::visitAnnotation);
             // GRECLIPSE add
             finishedResolution();
             // GRECLIPSE end
@@ -1589,6 +1585,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
             String name = type.getName();
             ClassNode typeType = type.getType();
+            visitTypeAnnotations(typeType); // JSR 308 support
             GenericsTypeName gtn = new GenericsTypeName(name);
             boolean isWildcardGT = QUESTION_MARK.equals(name);
             boolean dealWithGenerics = (level == 0 || (level > 0 && genericParameterNames.get(gtn) != null));
@@ -1641,7 +1638,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (genericsType.isResolved()) return true;
         currentClass.setUsingGenerics(true);
         ClassNode type = genericsType.getType();
-        visitTypeAnnotations(type); // JSR-308 support
+        visitTypeAnnotations(type); // JSR 308 support
         GenericsType tp = genericParameterNames.get(new GenericsTypeName(type.getName()));
         if (tp != null) {
             // GRECLIPSE add -- indicate provenance

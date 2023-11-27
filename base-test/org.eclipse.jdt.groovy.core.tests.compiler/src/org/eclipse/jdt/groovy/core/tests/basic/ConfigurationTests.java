@@ -48,9 +48,10 @@ public final class ConfigurationTests {
         var x19x = isAtLeastGroovy(40) ? "19" : "17";
         var x20x = isAtLeastGroovy(40) ? "20" : "17";
         var x21x = isAtLeastGroovy(40) ? "21" : "17";
+        var x22x = isAtLeastGroovy(40) ? "22" : "17";
 
-        String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
-        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", "16", "17", x18x, x19x, x20x, x21x, x21x};
+        String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"};
+        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", "16", "17", x18x, x19x, x20x, x21x, x22x, x22x};
 
         if (isAtLeastGroovy(50)) Arrays.fill(expect, 0, 14, "11");
         assertArrayEquals(expect, Arrays.stream(inputs).map(v -> { config.setTargetBytecode(v); return config.getTargetBytecode(); }).toArray(String[]::new));

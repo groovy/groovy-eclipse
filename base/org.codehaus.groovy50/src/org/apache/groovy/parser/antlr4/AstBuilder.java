@@ -484,57 +484,43 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public ImportNode visitImportDeclaration(final ImportDeclarationContext ctx) {
-        ImportNode importNode;
+        List<AnnotationNode> annotations = this.visitAnnotationsOpt(ctx.annotationsOpt());
 
         boolean hasStatic = asBoolean(ctx.STATIC());
-        boolean hasStar = asBoolean(ctx.MUL());
-        boolean hasAlias = asBoolean(ctx.alias);
+        boolean hasStar   = asBoolean(ctx.MUL());
+        boolean hasAlias  = asBoolean(ctx.alias);
 
-        List<AnnotationNode> annotationNodeList = this.visitAnnotationsOpt(ctx.annotationsOpt());
+        ImportNode importNode;
 
         if (hasStatic) {
             if (hasStar) { // e.g. import static java.lang.Math.*
                 String qualifiedName = this.visitQualifiedName(ctx.qualifiedName());
-                ClassNode type = makeClassNode(qualifiedName);
-                /* GRECLIPSE edit
-                configureAST(type, ctx);
-                */
-                configureAST(type, ctx.qualifiedName());
-                // GRECLIPSE end
+                ClassNode importType = makeClassNode(qualifiedName);
+                configureAST(importType, ctx.qualifiedName());
 
-                moduleNode.addStaticStarImport(type.getText(), type, annotationNodeList);
-
+                moduleNode.addStaticStarImport(importType.getText(), importType, annotations);
                 importNode = last(moduleNode.getStaticStarImports().values());
             } else { // e.g. import static java.lang.Math.pow
                 List<? extends QualifiedNameElementContext> identifierList = ctx.qualifiedName().qualifiedNameElement();
                 int identifierListSize = identifierList.size();
-                String name = identifierList.get(identifierListSize - 1).getText();
-                ClassNode classNode =
-                        makeClassNode(
-                                identifierList.stream()
-                                        .limit(identifierListSize - 1)
-                                        .map(ParseTree::getText)
-                                        .collect(Collectors.joining(DOT_STR)));
-                String alias = hasAlias
-                        ? ctx.alias.getText()
-                        : name;
-                /* GRECLIPSE edit
-                configureAST(classNode, ctx);
-                */
-                PositionConfigureUtils.configureAST(classNode, ctx.qualifiedName()); // qualifiedName includes field name
-                PositionConfigureUtils.configureEndPosition(classNode, identifierList.get(Math.max(0, identifierListSize - 2)).getStop());
-                configureAST(classNode);
-                // GRECLIPSE end
 
-                moduleNode.addStaticImport(classNode, name, alias, annotationNodeList);
+                String qualifiedName = identifierList.stream().limit(identifierListSize - 1).map(ParseTree::getText).collect(Collectors.joining(DOT_STR));
+                ClassNode importType = makeClassNode(qualifiedName);
+                PositionConfigureUtils.configureAST(importType, ctx.qualifiedName()); // qualifiedName() includes member name
+                PositionConfigureUtils.configureEndPosition(importType, identifierList.get(Math.max(0, identifierListSize - 2)).getStop());
 
+                String memberName = identifierList.get(identifierListSize - 1).getText();
+                String simpleName = hasAlias ? ctx.alias.getText() : memberName;
+
+                moduleNode.addStaticImport(importType, memberName, simpleName, annotations);
                 importNode = last(moduleNode.getStaticImports().values());
                 // GRECLIPSE add
-                ConstantExpression nameExpr = new ConstantExpression(name);
+                configureAST(importType);
+                ConstantExpression nameExpr = new ConstantExpression(memberName);
                 configureAST(nameExpr, last(identifierList));
                 importNode.setFieldNameExpr(nameExpr);
                 if (hasAlias) {
-                    ConstantExpression aliasExpr = new ConstantExpression(alias);
+                    ConstantExpression aliasExpr = new ConstantExpression(simpleName);
                     configureAST(aliasExpr, ctx.alias);
                     importNode.setAliasExpr(aliasExpr);
                 }
@@ -543,29 +529,21 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else {
             if (hasStar) { // e.g. import java.util.*
                 String qualifiedName = this.visitQualifiedName(ctx.qualifiedName());
-
-                moduleNode.addStarImport(qualifiedName + DOT_STR, annotationNodeList);
-
+                moduleNode.addStarImport(qualifiedName + DOT_STR, annotations);
                 importNode = last(moduleNode.getStarImports());
             } else { // e.g. import java.util.Map
                 String qualifiedName = this.visitQualifiedName(ctx.qualifiedName());
-                String name = last(ctx.qualifiedName().qualifiedNameElement()).getText();
-                ClassNode classNode = makeClassNode(qualifiedName);
-                String alias = hasAlias
-                        ? ctx.alias.getText()
-                        : name;
-                /* GRECLIPSE edit
-                configureAST(classNode, ctx);
-                */
-                configureAST(classNode, ctx.qualifiedName());
-                // GRECLIPSE end
+                ClassNode importType = makeClassNode(qualifiedName);
+                configureAST(importType, ctx.qualifiedName());
 
-                moduleNode.addImport(alias, classNode, annotationNodeList);
+                String simpleName = hasAlias ? ctx.alias.getText()
+                                             : last(ctx.qualifiedName().qualifiedNameElement()).getText();
 
+                moduleNode.addImport(simpleName, importType, annotations);
                 importNode = last(moduleNode.getImports());
                 // GRECLIPSE add
                 if (hasAlias) {
-                    ConstantExpression aliasExpr = new ConstantExpression(alias);
+                    ConstantExpression aliasExpr = new ConstantExpression(simpleName);
                     configureAST(aliasExpr, ctx.alias);
                     importNode.setAliasExpr(aliasExpr);
                 }
@@ -1218,7 +1196,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     configureAST(
                             closureX(null, createBlockStatement(declarationStatement, switchStatement)),
                             ctx
-                    ), "call");
+                    ), CALL_STR);
             callClosure.setImplicitThis(false);
 
             return configureAST(callClosure, ctx);
@@ -1304,7 +1282,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                     configureAST(
                                             closureX(null, exprOrBlockStatement),
                                             exprOrBlockStatement
-                                    ), "call");
+                                    ), CALL_STR);
                             callClosure.setImplicitThis(false);
                             Expression resultExpr = exprOrBlockStatement instanceof ExpressionStatement
                                     ? ((ExpressionStatement) exprOrBlockStatement).getExpression()
@@ -1540,7 +1518,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // GRECLIPSE end
         classNode.setSyntheticPublic(syntheticPublic);
         classNode.setGenericsTypes(this.visitTypeParameters(ctx.typeParameters()));
-        boolean isInterfaceWithDefaultMethods = (isInterface && this.containsDefaultMethods(ctx));
+        boolean isInterfaceWithDefaultMethods = (isInterface && this.containsDefaultOrPrivateMethods(ctx));
         // GRECLIPSE add
         if (classNode.getGenericsTypes() != null)
             for (GenericsType tp : classNode.getGenericsTypes()) tp.getType().setDeclaringClass(classNode);
@@ -1563,7 +1541,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else if (isNonSealed) {
             classNode.addAnnotation(makeAnnotationNode(NonSealed.class));
         }
-        if (isInterfaceWithDefaultMethods || asBoolean(ctx.TRAIT())) {
+        if (asBoolean(ctx.TRAIT())) {
             classNode.addAnnotation(makeAnnotationNode(Trait.class));
         }
         classNode.addAnnotations(modifierManager.getAnnotations());
@@ -1586,10 +1564,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 classNode.setSuperClass(scs[0]);
             }
             classNode.setInterfaces(this.visitTypeList(ctx.is));
-            this.initUsingGenerics(classNode);
-
-        } else if (isInterfaceWithDefaultMethods) { // GROOVY-9259
-            classNode.setInterfaces(this.visitTypeList(ctx.scs));
             this.initUsingGenerics(classNode);
 
         } else if (isInterface) {
@@ -1655,7 +1629,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
     }
 
-    private boolean containsDefaultMethods(final ClassDeclarationContext ctx) {
+    private boolean containsDefaultOrPrivateMethods(final ClassDeclarationContext ctx) {
         List<MethodDeclarationContext> methodDeclarationContextList =
                 (List<MethodDeclarationContext>) ctx.classBody().classBodyDeclaration().stream()
                         .map(ClassBodyDeclarationContext::memberDeclaration)
@@ -1663,7 +1637,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         .map(e -> (Object) e.methodDeclaration())
                         .filter(Objects::nonNull).reduce(new LinkedList<MethodDeclarationContext>(), (r, e) -> {
                             MethodDeclarationContext methodDeclarationContext = (MethodDeclarationContext) e;
-                            if (createModifierManager(methodDeclarationContext).containsAny(DEFAULT)) {
+                            if (createModifierManager(methodDeclarationContext).containsAny(DEFAULT, PRIVATE)) {
                                 ((List) r).add(methodDeclarationContext);
                             }
                             return r;
@@ -2108,8 +2082,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
 
             boolean isInterfaceOrAbstractClass = asBoolean(classNode) && classNode.isAbstract() && !classNode.isAnnotationDefinition();
-            if (isInterfaceOrAbstractClass && !modifierManager.containsAny(DEFAULT) && isAbstractMethod && hasMethodBody) {
-                throw createParsingFailedException("You defined an abstract method[" + methodNode.getName() + "] with a body. Try removing the method body" + (classNode.isInterface() ? ", or declare it default" : ""), methodNode);
+            if (isInterfaceOrAbstractClass && !modifierManager.containsAny(DEFAULT, PRIVATE) && isAbstractMethod && hasMethodBody) {
+                throw createParsingFailedException("You defined an abstract method[" + methodNode.getName() + "] with a body. Try removing the method body" + (classNode.isInterface() ? ", or declare it default or private" : ""), methodNode);
             }
         }
 
@@ -2163,7 +2137,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         }
 
-        modifiers |= !modifierManager.containsAny(STATIC) && (classNode.isInterface() || (isTrue(classNode, IS_INTERFACE_WITH_DEFAULT_METHODS) && !modifierManager.containsAny(DEFAULT))) ? Opcodes.ACC_ABSTRACT : 0;
+        modifiers |= !modifierManager.containsAny(STATIC) && classNode.isInterface() && !(isTrue(classNode, IS_INTERFACE_WITH_DEFAULT_METHODS) && modifierManager.containsAny(DEFAULT, PRIVATE)) ? Opcodes.ACC_ABSTRACT : 0;
         MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, parameters, exceptions, code);
         classNode.addMethod(methodNode);
 
@@ -3840,20 +3814,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             if (asBoolean(ctx.typeArgumentsOrDiamond())) {
                 classNode.setGenericsTypes(
                         this.visitTypeArgumentsOrDiamond(ctx.typeArgumentsOrDiamond()));
+                /* GRECLIPSE edit
+                configureAST(classNode, ctx);
+                */
             }
-            /* GRECLIPSE edit
-            classNode = configureAST(classNode, ctx);
-            */
         } else if (asBoolean(ctx.primitiveType())) {
-            classNode = configureAST(
-                    this.visitPrimitiveType(ctx.primitiveType()),
-                    ctx);
+            classNode = configureAST(this.visitPrimitiveType(ctx.primitiveType()), ctx);
         }
-
-        if (!asBoolean(classNode)) {
+        if (classNode == null) {
             throw createParsingFailedException("Unsupported created name: " + ctx.getText(), ctx);
         }
-
         classNode.addTypeAnnotations(this.visitAnnotationsOpt(ctx.annotationsOpt())); // GROOVY-11178
 
         return classNode;

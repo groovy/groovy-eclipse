@@ -4037,59 +4037,77 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtendingGroovyInterfaceWithJava() {
+        boolean interfaceDefaultMethod = isParrotParser() && isAtLeastGroovy(50);
         //@formatter:off
         String[] sources = {
-            "pkg/C.java",
-            "package pkg;\n" +
-            "public class C extends groovy.lang.GroovyObjectSupport implements I {" +
-            "  public static void main(String[]argv) {\n" +
+            "p/C.java",
+            "package p;\n" +
+            "public class C implements I {" +
+            "  public static void main(String[] args) {\n" +
             "    I i = new C();\n" +
-            "    System.out.println( \"success\");" +
+            "    System.out.println(i.foo());\n" +
             "  }\n" +
+            (!interfaceDefaultMethod ? "@Override public String foo() { return \"foobar\"; }\n" : "") +
             "}\n",
 
-            "pkg/I.groovy",
-            "package pkg;\n" +
-            "interface I {}\n",
+            "p/I.groovy",
+            "package p\n" +
+            "interface I {\n" + (!interfaceDefaultMethod
+            ?
+            "  String foo()\n"
+            :
+            "  default String foo() {\n" +
+            "    'foo' + I.this.bar()\n" +
+            "  }\n" +
+            "  private String bar() {\n" +
+            "    'bar'\n" +
+            "  }\n") +
+            "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "success");
+        runConformTest(sources, "foobar");
     }
 
     @Test
     public void testExtendingJavaInterfaceWithGroovy() {
         //@formatter:off
         String[] sources = {
-            "pkg/C.groovy",
-            "package pkg;\n" +
-            "public class C implements I {" +
-            "  public static void main(String[]argv) {\n" +
-            "    I i = new C();\n" +
-            "    System.out.println( \"success\");" +
+            "p/C.groovy",
+            "package p\n" +
+            "class C implements I {" +
+            "  static main(args) {\n" +
+            "    I i = new C()\n" +
+            "    print i.foo()\n" +
             "  }\n" +
             "}\n",
 
-            "pkg/I.java",
-            "package pkg;\n" +
-            "interface I {}\n",
+            "p/I.java",
+            "package p;\n" +
+            "interface I {\n" +
+            "  default String foo() {\n" +
+            "    return \"foo\" + bar();\n" +
+            "  }\n" +
+            "  private String bar() {\n" +
+            "    return \"bar\";\n" +
+            "  }\n" +
+            "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "success");
+        runConformTest(sources, "foobar");
     }
 
-    // WMTM: the fix for the previous code that tracks why classes are generated
     @Test
     public void testExtendingJavaWithGroovyAndThenJavaAndThenGroovy() {
         //@formatter:off
         String[] sources = {
             "p/D.groovy",
-            "package p;\n" +
+            "package p\n" +
             "class D extends C {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new C();\n" +
-            "    print \"success\"\n" +
+            "  static main(args) {\n" +
+            "    new C()\n" +
+            "    print 'success'\n" +
             "  }\n" +
             "}\n",
 
@@ -4098,8 +4116,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class C extends B {}\n",
 
             "p/B.groovy",
-            "package p;\n" +
-            "public class B extends A {}\n",
+            "package p\n" +
+            "class B extends A {}\n",
 
             "p/A.java",
             "package p;\n" +
@@ -4385,61 +4403,46 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "B.groovy",
             "interface B extends A {\n" +
             "  default String m() {\n" +
-            "    'G'\n" +
-            "  }\n" +
-            "  static String sm() {\n" +
-            "    'S'\n" +
+            "    'B'\n" +
             "  }\n" +
             "}\n",
 
             "C.groovy",
             "class C implements B {\n" +
             "  @Override String m() {\n" +
-            "    'C' + B.super.m() + sm()\n" +
+            "    'C' + " + (isAtLeastGroovy(50) ? "" : "B.") + "super.m()\n" +
             "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "CGS");
+        runConformTest(sources, "CB");
     }
 
-    // WMTW: Groovy compilation unit scope adds the extra default import for java.util so List can be seen
     @Test
     public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod() {
         //@formatter:off
         String[] sources = {
             "p/C.java",
             "package p;\n" +
-            "import java.util.List;\n" +
-            "public class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
+            "public class C implements I {\n" +
             "  public String m() { return \"\";}\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    System.out.println( \"success\");\n" +
-            "  }\n" +
             "}\n",
 
             "p/I.groovy",
             "package p;\n" +
             "public interface I {\n" +
-            "  List m();\n" +
+            "  List<?> m();\n" +
             "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in p\\C.java (at line 4)\n" +
+            "1. ERROR in p\\C.java (at line 3)\n" +
             "\tpublic String m() { return \"\";}\n" +
             "\t       ^^^^^^\n" +
             "The return type is incompatible with I.m()\n" +
-            "----------\n" +
-            // this verifies the position report for the error against the return value of the method
-            "----------\n" +
-            "1. WARNING in p\\I.groovy (at line 3)\n" +
-            "\tList m();\n" +
-            "\t^^^^\n" +
-            "List is a raw type. References to generic type List<E> should be parameterized\n" +
             "----------\n");
     }
 

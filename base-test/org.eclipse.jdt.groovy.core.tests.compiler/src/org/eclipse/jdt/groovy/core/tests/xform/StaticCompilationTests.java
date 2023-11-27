@@ -1121,7 +1121,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@CompileStatic void test() {\n" +
             "  @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
             "    def target = node.rightExpression.getNodeMetaData(DIRECT_METHOD_CALL_TARGET)\n" +
-            "    assert target.declaringClass.name == 'java.util.Collection'\n" + // not java.lang.Object
+            "    assert target.declaringClass.name == '" + (isAtLeastGroovy(50) ? "java.lang.Iterable" : "java.util.Collection") + "'\n" + // not java.lang.Object
             "  })\n" +
             "  int sum = ['a','bb','ccc'].inject(0) { int acc, String str -> acc += str.length(); acc }\n" +
             "  print sum" +
@@ -6990,7 +6990,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "String");
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testCompileStatic9909() {
         //@formatter:off
         String[] sources = {
@@ -7025,7 +7025,22 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "A");
+        if (isAtLeastGroovy(50)) {
+            runConformTest(sources, "A");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 5)\n" +
+                "\tA.super.m()\n" +
+                "\t^^^^^^^\n" +
+                "Groovy:The usage of 'Class.this' and 'Class.super' is only allowed in nested/inner classes.\n" +
+                "----------\n" +
+                "2. ERROR in Main.groovy (at line 5)\n" +
+                "\tA.super.m()\n" +
+                "\t^^^^^^^\n" +
+                "Groovy:[Static type checking] - No such property: super for class: java.lang.Class\n" +
+                "----------\n");
+        }
     }
 
     @Test
