@@ -1152,6 +1152,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 genericsTypes[i] = cn.getPlainNodeReference().asGenericsType();
             }
         } else {
+            // GROOVY-11192: mapping between source and target type parameter(s)
+            if (!source.equals(target)) {
+                ClassNode mapped = adjustForTargetType(target, source);
+                genericsTypes = mapped.getGenericsTypes();
+            }
             genericsTypes = genericsTypes.clone();
             for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
                 GenericsType gt = genericsTypes[i];
@@ -3957,7 +3962,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     @Deprecated
     protected void visitInstanceofNot(final BinaryExpression be) {
         BlockStatement currentBlock = typeCheckingContext.enclosingBlocks.getFirst();
-        assert currentBlock != null;
         if (typeCheckingContext.blockStatements2Types.containsKey(currentBlock)) {
             // another instanceOf_not was before, no need store vars
         } else {
@@ -4304,13 +4308,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 // GROOVY-6126, GROOVY-6558, GROOVY-6564, et al.
                 if (!targetType.isGenericsPlaceHolder()) return targetType;
             } else {
-                // GROOVY-5640, GROOVY-9033, GROOVY-10220, GROOVY-10235, GROOVY-10688, et al.
+                // GROOVY-5640, GROOVY-9033, GROOVY-10220, GROOVY-10235, GROOVY-10688, GROOVY-11192, et al.
                 Map<GenericsTypeName, GenericsType> gt = new HashMap<>();
-                extractGenericsConnections(gt, resultType, resultType.redirect());
                 ClassNode sc = resultType;
-                do { sc = getNextSuperClass(sc, targetType);
-                } while (sc != null && !sc.equals(targetType));
-                extractGenericsConnections(gt, targetType, sc);
+                for (;;) {
+                    sc = getNextSuperClass(sc,targetType);
+                    if (!gt.isEmpty()) {
+                        // propagate resultType's generics
+                        sc = applyGenericsContext(gt, sc);
+                    }
+                    if (sc == null || sc.equals(targetType)) {
+                        gt.clear();
+                        break;
+                    }
+                    // map of sc's type vars to resultType's type vars
+                    extractGenericsConnections(gt, sc, sc.redirect());
+                }
+                extractGenericsConnections(gt, resultType, resultType.redirect());
+                extractGenericsConnections(gt, targetType, sc); // maps rt's tv(s)
 
                 return applyGenericsContext(gt, resultType.redirect());
             }
@@ -4447,15 +4462,30 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         if (op == EQUAL || op == ELVIS_EQUAL) {
             if (rightRedirect.isDerivedFrom(CLOSURE_TYPE)) {
-                ClosureExpression closureExpression = null;
-                if (rightExpression instanceof ClosureExpression) {
-                    closureExpression = (ClosureExpression) rightExpression;
-                } else if (rightExpression instanceof MethodReferenceExpression) {
-                    closureExpression = rightExpression.getNodeMetaData(CONSTRUCTED_LAMBDA_EXPRESSION);
-                }
-                if (closureExpression != null) {
-                    MethodNode abstractMethod = findSAM(left);
-                    if (abstractMethod != null) {
+                MethodNode abstractMethod = findSAM(left);
+                if (abstractMethod != null) {
+                    ClosureExpression closureExpression = null;
+                    if (rightExpression instanceof ClosureExpression) {
+                        closureExpression = (ClosureExpression) rightExpression;
+                    } else if (rightExpression instanceof MethodPointerExpression) {
+                        closureExpression = rightExpression.getNodeMetaData(CONSTRUCTED_LAMBDA_EXPRESSION);
+                        if (closureExpression == null) { // GROOVY-11201
+                            ClassNode[] paramTypes;
+                            List<MethodNode> methods = rightExpression.getNodeMetaData(MethodNode.class);
+                            if (methods == null || methods.isEmpty()) { int nParameters = abstractMethod.getParameters().length;
+                                paramTypes = IntStream.range(0, nParameters).mapToObj(i -> dynamicType()).toArray(ClassNode[]::new);
+                            } else {
+                                paramTypes = collateMethodReferenceParameterTypes((MethodPointerExpression) rightExpression, methods.get(0));
+                            }
+                            Parameter[] parameters = new Parameter[paramTypes.length];
+                            for (int i = 0; i < paramTypes.length; i += 1) {
+                                parameters[i] = new Parameter(paramTypes[i], "p" + i);
+                            }
+                            closureExpression = new ClosureExpression(parameters, GENERATED_EMPTY_STATEMENT);
+                            closureExpression.putNodeMetaData(INFERRED_TYPE, rightExpression.getNodeMetaData(INFERRED_TYPE));
+                        }
+                    }
+                    if (closureExpression != null) {
                         return inferSAMTypeGenericsInAssignment(left, abstractMethod, right, closureExpression);
                     }
                 }

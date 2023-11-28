@@ -974,7 +974,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             throw new RuntimeParserException("Found unexpected MOP methods in the class node for " + classNode.getName() + "(" + node.getName() + ")", classNode);
         }
 
-        adjustTypesIfPublicStaticMainMethod(node);
+        adjustTypesIfMainMethod(node);
         this.methodNode = node;
         addReturnIfNeeded(node);
 
@@ -984,12 +984,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
     }
 
-    private static void adjustTypesIfPublicStaticMainMethod(final MethodNode node) { // GRECLIPSE edit
-        if (node.isPublic() && node.isStatic() && node.getName().equals("main")) {
+    private static void adjustTypesIfMainMethod(final MethodNode node) {
+        if (node.isPublic() && node.isStatic() && node.getName().equals("main")) { // GRECLIPSE edit
             Parameter[] params = node.getParameters();
             if (params.length == 1) {
                 Parameter param = params[0];
-                if (param.getType() == null || (isObjectType(param.getType()) && !param.getType().isGenericsPlaceHolder())) {
+                if (param.getType() == null || (isObjectType(param.getType()) && !param.getType().isGenericsPlaceHolder())) { // GRECLIPSE edit
                     param.setType(ClassHelper.STRING_TYPE.makeArray());
                     if (isObjectType(node.getReturnType())) {
                         node.setReturnType(ClassHelper.VOID_TYPE);
