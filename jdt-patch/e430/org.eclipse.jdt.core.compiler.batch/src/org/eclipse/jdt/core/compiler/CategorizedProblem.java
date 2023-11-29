@@ -107,7 +107,7 @@ public abstract class CategorizedProblem implements IProblem {
 	 * @since 3.18
 	 */
 	public static final int CAT_COMPLIANCE = 170;
-	/** Category for problems related to preview features 
+	/** Category for problems related to preview features
 	 * @since 3.20*/
 	public static final int CAT_PREVIEW_RELATED = 180;
 

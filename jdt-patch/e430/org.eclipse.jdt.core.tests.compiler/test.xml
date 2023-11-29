@@ -57,7 +57,7 @@
       <property name="classname" 
                 value="org.eclipse.jdt.core.tests.compiler.regression.TestAll"/>
       <property name="vmargs" 
-      	value="-Dcompliance.jre.11=1.8,9,10,11 -Dcompliance.jre.16=1.8,11,15,16 -Dcompliance.jre.17=1.8,11,16,17"
+      	value="-Dcompliance.jre.17=1.7,1.8,11,17 -Dcompliance.jre.21=1.8,11,17,20,21 -Dcompliance.jre.22=1.8,11,17,21,22 -Dcompliance.jre.23=1.8,11,17,21,23"
       />
     </ant>
 

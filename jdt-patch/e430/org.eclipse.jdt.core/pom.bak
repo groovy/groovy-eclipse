@@ -108,7 +108,6 @@
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-p2-plugin</artifactId>
-        <version>${tycho.version}</version>
         <configuration>
           <baselineMode>warn</baselineMode>
           <baselineReplace>common</baselineReplace>
