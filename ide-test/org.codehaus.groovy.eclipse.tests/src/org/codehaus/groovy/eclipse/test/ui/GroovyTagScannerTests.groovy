@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextAttribute
 import org.eclipse.jface.text.rules.IToken
-import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.RGB
 import org.junit.Test
 
@@ -33,9 +32,52 @@ final class GroovyTagScannerTests {
     private final GroovyTagScanner scanner = new GroovyTagScanner(groovyPlugin.textTools.colorManager,
             Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST)
 
+    private void tryString(String string, String colorPreference) {
+        IDocument doc = new Document(string)
+        scanner.setRange(doc, 0, string.length())
+
+        IToken token
+        while (!(token = scanner.nextToken()).isEOF()) { if (token.isWhitespace()) continue
+            assert token.data instanceof TextAttribute : 'Token data should be a TextAttribute, but instead is ' + token.data.class
+            RGB actual = getActualColor(token), expect = getExpectedColor(colorPreference)
+            assert actual == expect
+        }
+    }
+
+    private static RGB getExpectedColor(String colorPreference) {
+        PreferenceConverter.getColor(PreferenceConstants.getPreferenceStore(), colorPreference)
+    }
+
+    private static RGB getActualColor(IToken token) {
+        token.data.foreground?.RGB ?: new RGB(0, 0, 0)
+    }
+
+    //--------------------------------------------------------------------------
+
     @Test
-    void testNoColor() {
-        tryString('fddsaadsa "fdfdassdfafasd"', 'black')
+    void testNoColor1() {
+        tryString('"foo bar" baz', PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR)
+    }
+
+    @Test
+    void testNoColor2() {
+        tryString('foo "bar baz"', PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1522
+    void testNoColor3() {
+        scanner.setRange(new Document('foo.@bar.isBaz()'), 0, 16)
+        assert getActualColor(scanner.nextToken()) == getExpectedColor(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR)
+        assert getActualColor(scanner.nextToken()) == getExpectedColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR)
+        assert getActualColor(scanner.nextToken()) == getExpectedColor(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR)
+        assert getActualColor(scanner.nextToken()) == getExpectedColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR)
+        assert getActualColor(scanner.nextToken()) == getExpectedColor(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR)
+        assert getActualColor(scanner.nextToken()) == getExpectedColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR)
+    }
+
+    @Test
+    void testNoColor4() {
+        tryString('var foo', PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR)
     }
 
     @Test
@@ -88,28 +130,13 @@ final class GroovyTagScannerTests {
         tryString('return', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR)
     }
 
-    //
-
-    private void tryString(String string, String foregroundColorPreference) {
-        IDocument doc = new Document(string)
-        scanner.setRange(doc, 0, string.length())
-        IToken token = scanner.nextToken()
-
-        assert token.data instanceof TextAttribute : 'Token data should be a TextAttribute, but instead is ' + token.data.class
-        RGB actual = getActualColor(token)
-        RGB expected = getExpectedColor(foregroundColorPreference)
-        assert actual == expected
+    @Test
+    void testAnnotation1() {
+        tryString('@Deprecated', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR)
     }
 
-    private RGB getActualColor(IToken token) {
-        Color c = token.data.foreground
-        return (c != null ? c.RGB : new RGB(0, 0, 0))
-    }
-
-    private RGB getExpectedColor(String foregroundColorPreference) {
-        if (foregroundColorPreference == 'black') {
-            return new RGB(0, 0, 0)
-        }
-        return PreferenceConverter.getColor(groovyPlugin.preferenceStore, foregroundColorPreference)
+    @Test
+    void testAnnotation2() {
+        tryString('@java.lang.Deprecated', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR)
     }
 }

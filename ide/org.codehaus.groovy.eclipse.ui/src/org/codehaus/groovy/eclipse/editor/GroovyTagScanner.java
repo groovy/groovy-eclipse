@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import org.eclipse.jface.text.rules.WhitespaceRule;
 
 /**
  * A code scanner for Groovy files.
- *
+ * <p>
  * Much of this class has been adapted from {@link JavaCodeScanner}
  */
 public class GroovyTagScanner extends AbstractJavaScanner {
@@ -68,12 +68,16 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "interface",
         "native",
         "new",
+      //"non-sealed",
         "null",
         "package",
+      //"permits",
         "private",
         "protected",
         "public",
+      //"record",
       //"return",
+      //"sealed",
         "static",
         "strictfp",
         "super",
@@ -89,6 +93,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "try",
         "volatile",
         "while",
+      //"yield",
     };
 
     private static final String[] PRIMITIVES = {
@@ -102,6 +107,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "interface",
         "long",
         "short",
+      //"var",
         "void",
     };
 
@@ -199,31 +205,29 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             rules.addAll(initialAdditionalRules);
         }
 
-        // Add generic whitespace rule.
+        // whitespaces
         rules.add(new WhitespaceRule(new JavaWhitespaceDetector()));
 
-        // Add JLS3 rule for /@\s*interface/
-        AnnotationRule atInterfaceRule = new AnnotationRule(
+        // annotations
+        rules.add(new AnnotationRule(
             getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR),
-            getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR));
-        rules.add(atInterfaceRule);
+            getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR)));
 
         // brackets; this rule must come before the operator rule
-        Token token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR);
-        rules.add(new BracketRule(token));
+        rules.add(new BracketRule(
+            getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR)));
 
         // operators
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR);
-        rules.add(new OperatorRule(token));
+        rules.add(new OperatorRule(
+            getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR)));
 
         // combined rule for all "words"
         JavaWordDetector wordDetector = new JavaWordDetector();
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
-        CombinedWordRule combinedWordRule = new CombinedWordRule(wordDetector, token);
+        CombinedWordRule combinedWordRule = new CombinedWordRule(wordDetector, getToken(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR));
 
         // keywords
         CombinedWordRule.WordMatcher keywordsMatcher = new CombinedWordRule.WordMatcher();
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR);
+        Token token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR);
         for (String keyword : KEYWORDS) {
             keywordsMatcher.addWord(keyword, token);
         }
@@ -279,68 +283,14 @@ public class GroovyTagScanner extends AbstractJavaScanner {
     //--------------------------------------------------------------------------
 
     /**
-     * Rule to detect java operators.
-     *
-     * @since 3.0
-     */
-    protected class OperatorRule implements IRule {
-
-        /** Java operators */
-        private final char[] JAVA_OPERATORS = {';', '(', ')', '{', '}', '.', '=', '/', '\\', '+', '-', '*', '[', ']', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~'};
-
-        /** Token to return for this rule */
-        private final IToken fToken;
-
-        /**
-         * Creates a new operator rule.
-         *
-         * @param token Token to use for this rule
-         */
-        public OperatorRule(final IToken token) {
-            fToken = token;
-        }
-
-        /**
-         * Is this character an operator character?
-         *
-         * @param character Character to determine whether it is an operator
-         *            character
-         * @return <code>true</code> iff the character is an operator,
-         *         <code>false</code> otherwise.
-         */
-        public boolean isOperator(final char character) {
-            for (int index = 0; index < JAVA_OPERATORS.length; index++) {
-                if (JAVA_OPERATORS[index] == character)
-                    return true;
-            }
-            return false;
-        }
-
-        @Override
-        public IToken evaluate(final ICharacterScanner scanner) {
-            int character = scanner.read();
-            if (isOperator((char) character)) {
-                do {
-                    character = scanner.read();
-                } while (isOperator((char) character));
-                scanner.unread();
-                return fToken;
-            } else {
-                scanner.unread();
-                return Token.UNDEFINED;
-            }
-        }
-    }
-
-    /**
-     * Rule to detect java brackets.
+     * Rule to detect brackets.
      *
      * @since 3.3
      */
-    private static final class BracketRule implements IRule {
+    protected static class BracketRule implements IRule {
 
         /** Java brackets */
-        private final char[] JAVA_BRACKETS = {'(', ')', '{', '}', '[', ']'};
+        private final char[] fBrackets = {'(', ')', '{', '}', '[', ']'};
 
         /** Token to return for this rule */
         private final IToken fToken;
@@ -350,24 +300,8 @@ public class GroovyTagScanner extends AbstractJavaScanner {
          *
          * @param token Token to use for this rule
          */
-        BracketRule(final IToken token) {
+        public BracketRule(final IToken token) {
             fToken = token;
-        }
-
-        /**
-         * Is this character a bracket character?
-         *
-         * @param character Character to determine whether it is a bracket
-         *            character
-         * @return <code>true</code> iff the character is a bracket,
-         *         <code>false</code> otherwise.
-         */
-        public boolean isBracket(final char character) {
-            for (int index = 0; index < JAVA_BRACKETS.length; index++) {
-                if (JAVA_BRACKETS[index] == character)
-                    return true;
-            }
-            return false;
         }
 
         @Override
@@ -384,12 +318,85 @@ public class GroovyTagScanner extends AbstractJavaScanner {
                 return Token.UNDEFINED;
             }
         }
+
+        /**
+         * Is this character a bracket character?
+         *
+         * @return <code>true</code> iff the character is a bracket,
+         *         <code>false</code> otherwise.
+         */
+        private boolean isBracket(final char character) {
+            for (char bracket : fBrackets) {
+                if (bracket == character) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /**
-     * An annotation rule matches the '@' symbol, any following whitespace and
-     * a following java identifier or the <code>interface</code> keyword.
+     * Rule to detect operators.
      *
+     * @since 3.0
+     */
+    protected static class OperatorRule implements IRule {
+
+        /** Java operators */
+        private final char[] fOperators = {';', '.', '=', '/', '\\', '+', '-', '*', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~'};
+
+        /** Token to return for this rule */
+        private final IToken fToken;
+
+        /**
+         * Creates a new operator rule.
+         *
+         * @param token Token to use for this rule
+         */
+        public OperatorRule(final IToken token) {
+            fToken = token;
+        }
+
+        @Override
+        public IToken evaluate(final ICharacterScanner scanner) {
+            int character = scanner.read();
+            if (isOperator((char) character)) {
+                do {
+                    var dot = character == '.';
+                    character = scanner.read();
+                    if (dot && character == '@')
+                        character = scanner.read();
+                } while (isOperator((char) character));
+                scanner.unread();
+                return fToken;
+            } else {
+                scanner.unread();
+                return Token.UNDEFINED;
+            }
+        }
+
+        /**
+         * Is this character an operator character?
+         *
+         * @return <code>true</code> iff the character is an operator,
+         *         <code>false</code> otherwise.
+         */
+        private boolean isOperator(final char character) {
+            for (char operator : fOperators) {
+                if (operator == character) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Rule to detect annotations.
+     * <p>
+     * It matches the '@' symbol, any following whitespace and a following java
+     * identifier or the <code>interface</code> keyword.
+     * <p>
      * It does not match if there is a comment between the '@' symbol and
      * the identifier. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=82452
      *
@@ -402,7 +409,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
          * Doing sp could be confusing when an incomplete annotation is present
          * and the modifier of a method or field is highlighted as an annotation.
          */
-        private final IWhitespaceDetector fWhitespaceDetector = ch -> Character.isWhitespace(ch) && ch != '\n' && ch != '\r';
+        private final IWhitespaceDetector fWhitespaceDetector = (char c) -> Character.isWhitespace(c) && c != '\n' && c != '\r';
 
         private final IWordDetector fWordDetector = new JavaWordDetector();
 
@@ -411,7 +418,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         private final IToken fAnnotationToken;
 
         /**
-         * Creates a new rule.
+         * Creates a new annotation rule.
          *
          * @param interfaceToken the token to return if
          *            <code>'@\s*interface'</code> is matched
@@ -425,52 +432,59 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 
         @Override
         public IToken evaluate(final ICharacterScanner scanner) {
-
-            ResettableScanner resettable = new ResettableScanner(scanner);
-            if (resettable.read() == '@')
-                if (skipWhitespace(resettable))
-                    return readAnnotation(resettable);
-
-            resettable.reset();
-            return Token.UNDEFINED;
-        }
-
-        private IToken readAnnotation(final ResettableScanner scanner) {
-            StringBuffer buffer = new StringBuffer();
-
-            if (!readIdentifier(scanner, buffer)) {
-                scanner.reset();
+            int next = scanner.read();
+            scanner.unread(); // reset
+            if (next != '@') {
                 return Token.UNDEFINED;
             }
+            /* check for the ".@" operator
+            if (scanner.getColumn() > 1) {
+                scanner.unread();
+                if (scanner.read() == '.') {
+                    return Token.UNDEFINED;
+                }
+            }*/
+            return readAnnotation(scanner);
+        }
 
-            if ("interface".equals(buffer.toString()))
+        private IToken readAnnotation(final ICharacterScanner scanner) {
+            ResettableScanner wrapper = new ResettableScanner(scanner);
+            @SuppressWarnings("unused")
+            int at = wrapper.read();
+            skipWhitespace(wrapper);
+            StringBuilder buffer = new StringBuilder();
+            if (!readIdentifier(wrapper, buffer)) {
+                wrapper.reset();
+                return Token.UNDEFINED;
+            }
+            if ("interface".equals(buffer.toString())) {
                 return fInterfaceToken;
-
-            while (readSegment(new ResettableScanner(scanner))) {
-                // do nothing
+            }
+            while (readSegment(new ResettableScanner(wrapper))) {
+                // consume name(s)
             }
             return fAnnotationToken;
         }
 
         private boolean readSegment(final ResettableScanner scanner) {
             scanner.mark();
-            if (skipWhitespace(scanner) && skipDot(scanner) && skipWhitespace(scanner) && readIdentifier(scanner, null))
+            if (skipWhitespace(scanner) && skipDot(scanner) && skipWhitespace(scanner) && readIdentifier(scanner, null)) {
                 return true;
-
+            }
             scanner.reset();
             return false;
         }
 
         private boolean skipDot(final ICharacterScanner scanner) {
             int ch = scanner.read();
-            if (ch == '.')
+            if (ch == '.') {
                 return true;
-
+            }
             scanner.unread();
             return false;
         }
 
-        private boolean readIdentifier(final ICharacterScanner scanner, final StringBuffer buffer) {
+        private boolean readIdentifier(final ICharacterScanner scanner, final StringBuilder buffer) {
             int ch = scanner.read();
             boolean read = false;
             while (fWordDetector.isWordPart((char) ch)) {
@@ -479,10 +493,9 @@ public class GroovyTagScanner extends AbstractJavaScanner {
                 ch = scanner.read();
                 read = true;
             }
-
-            if (ch != ICharacterScanner.EOF)
+            if (ch != ICharacterScanner.EOF) {
                 scanner.unread();
-
+            }
             return read;
         }
 
@@ -490,14 +503,13 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             while (fWhitespaceDetector.isWhitespace((char) scanner.read())) {
                 // do nothing
             }
-
             scanner.unread();
             return true;
         }
 
         /**
-         * A resettable scanner supports marking a position in a scanner and
-         * unreading back to the marked position.
+         * Supports marking a position in a character scanner and unreading back
+         * to the marked position.
          */
         private static final class ResettableScanner implements ICharacterScanner {
 
