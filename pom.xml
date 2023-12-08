@@ -105,11 +105,6 @@
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.30</url>
 				</repository>
-				<repository>
-					<id>milestone</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.30-I-builds/I20231201-0110</url>
-				</repository>
 			</repositories>
 			<modules>
 				<module>jdt-patch/e430/org.eclipse.jdt.core</module>
