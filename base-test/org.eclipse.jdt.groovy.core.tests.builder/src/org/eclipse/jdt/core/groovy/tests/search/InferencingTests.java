@@ -961,66 +961,66 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-1229: constructors with map parameters
     public void testConstructor1() {
         String contents =
-            "class O {\n" +
+            "class C {\n" +
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O(aa: 1, bb:8)\n";
+            "new C(aa: 1, bb:8)\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
         assertType(contents, start, end, "java.lang.Boolean");
-        assertDeclaration(contents, start, end, "O", "aa", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "C", "aa", DeclarationKind.PROPERTY);
 
         start = contents.lastIndexOf("bb");
         end = start + "bb".length();
         assertType(contents, start, end, "java.lang.Integer");
-        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "C", "bb", DeclarationKind.PROPERTY);
     }
 
     @Test
     public void testConstructor2() {
         String contents =
-            "class O {\n" +
+            "class C {\n" +
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O([aa: 1, bb:8])\n";
+            "new C([aa: 1, bb:8])\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
         assertType(contents, start, end, "java.lang.Boolean");
-        assertDeclaration(contents, start, end, "O", "aa", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "C", "aa", DeclarationKind.PROPERTY);
 
         start = contents.lastIndexOf("bb");
         end = start + "bb".length();
         assertType(contents, start, end, "java.lang.Integer");
-        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "C", "bb", DeclarationKind.PROPERTY);
     }
 
     @Test
     public void testConstructor3() {
         String contents =
-            "class O {\n" +
+            "class C {\n" +
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O([8: 1, bb:8])\n";
+            "new C([8: 1, bb:8])\n";
 
         int start = contents.lastIndexOf("bb");
         int end = start + "bb".length();
         assertType(contents, start, end, "java.lang.Integer");
-        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "C", "bb", DeclarationKind.PROPERTY);
     }
 
     @Test
     public void testConstructor4() {
         String contents =
-            "class O {\n" +
+            "class C {\n" +
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O([aa: 1, bb:8], 9)\n";
+            "new C([aa: 1, bb:8], 9)\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -1036,11 +1036,11 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testConstructor5() {
         String contents =
-            "class O {\n" +
+            "class C {\n" +
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "new O(9, [aa: 1, bb:8])\n";
+            "new C(9, [aa: 1, bb:8])\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -1056,11 +1056,11 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testConstructor6() {
         String contents =
-            "class O {\n" +
+            "class C {\n" +
             "  boolean aa\n" +
             "  int bb\n" +
             "}\n" +
-            "def g = [aa: 1, bb:8]\n";
+            "def c = C[aa: 1, bb:8]\n";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -2272,45 +2272,59 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testAnonInner1() {
-        String contents = "def foo = new Object() {}";
+        String contents = "def aic = new Object() {}";
+        assertType(contents, "aic", "java.lang.Object");
         assertType(contents, "Object", "java.lang.Object");
     }
 
     @Test
     public void testAnonInner2() {
-        String contents = "def foo = new Runnable() {\n void run() {}\n}";
-        assertType(contents, "Runnable", "java.lang.Runnable");
+        String contents = "def aic = new Cloneable() {}";
+        assertType(contents, "aic", "java.lang.Cloneable");
+        assertType(contents, "Cloneable", "java.lang.Cloneable");
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1523
     public void testAnonInner3() {
-        String contents = "def foo = new Comparable<String>() {\n int compareTo(String that) {}\n}";
-        assertType(contents, "Comparable", "java.lang.Comparable<java.lang.String>");
+        for (String mode : new String[] {"TypeChecked", "CompileStatic", "CompileDynamic"}) {
+            String contents = "@groovy.transform." + mode + " m() {\n" +
+                "  def aic = new Number() {}\n" +
+                "  def cia = new Cloneable() {}\n" +
+                "}";
+            assertType(contents, "aic", "java.lang.Number");
+            assertType(contents, "cia", "java.lang.Cloneable");
+        }
     }
 
     @Test
     public void testAnonInner4() {
-        String contents = "def foo = new Comparable<String>() {\n int compareTo(String that) {\n  compareTo('x')\n}\n}";
-        assertDeclaringType(contents, "compareTo", "Search$1");
+        String contents = "def aic = new Comparable<String>() {\n int compareTo(String that) {}\n}";
+        assertType(contents, "Comparable", "java.lang.Comparable<java.lang.String>");
     }
 
     @Test
     public void testAnonInner5() {
-        String contents = "def foo = new Comparable<String>() {\n int compareTo(String that) {}\n}\n" +
-            "foo.compareTo('x')";
-        assertDeclaringType(contents, "compareTo", "java.lang.Comparable<java.lang.String>");
+        String contents = "def aic = new Comparable<String>() {\n int compareTo(String that) {\n  compareTo('x')\n}\n}";
+        assertDeclaringType(contents, "compareTo", "Search$1");
     }
 
     @Test
     public void testAnonInner6() {
-        String contents = "def foo = new Comparable<Integer>() {\n int compareTo(Integer that) {}\n}\n" +
-            "foo = new Comparable<String>() {\n int compareTo(String that) {}\n}\n" +
-            "foo.compareTo('x')";
+        String contents = "def aic = new Comparable<String>() {\n int compareTo(String that) {}\n}\n" +
+            "aic.compareTo('x')";
+        assertDeclaringType(contents, "compareTo", "java.lang.Comparable<java.lang.String>");
+    }
+
+    @Test
+    public void testAnonInner7() {
+        String contents = "def aic = new Comparable<Integer>() {\n int compareTo(Integer that) {}\n}\n" +
+            "aic = new Comparable<String>() {\n int compareTo(String that) {}\n}\n" +
+            "aic.compareTo('x')";
         assertDeclaringType(contents, "compareTo", "java.lang.Comparable<java.lang.String>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/378
-    public void testAnonInner7() {
+    public void testAnonInner8() {
         String contents =
             "class A {\n" +
             "  protected def f\n" +
@@ -2331,7 +2345,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/383
-    public void testAnonInner8() {
+    public void testAnonInner9() {
         String contents =
             "class A {\n" +
             "  protected def m() {}\n" +

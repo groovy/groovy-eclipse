@@ -385,10 +385,15 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo(String s) {}\n" +
             "}\n");
         createUnit("Other", "import p.Foo\n" +
-            "def foo = new Foo(0) {\n" + // yes
+            "def one = new Foo(0) {}\n" + // yes
+            "@groovy.transform.TypeChecked stc() {\n" +
+            "  def two = new Foo(0) {}\n" + // yes
+            "}\n" +
+            "@groovy.transform.CompileStatic sc() {\n" +
+            "  def three = new Foo(0) {}\n" + // yes
             "}\n");
 
-        assertEquals(1, searchForReferences(foo.getType("Foo").getMethods()[0]).stream().count());
+        assertEquals(3, searchForReferences(foo.getType("Foo").getMethods()[0]).stream().count());
     }
 
     @Test
@@ -399,7 +404,12 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo(String s) {}\n" + // search for this
             "}\n");
         createUnit("Other", "import p.Foo\n" +
-            "def foo = new Foo(0) {\n" + // no
+            "def one = new Foo(0) {}\n" + // no
+            "@groovy.transform.TypeChecked stc() {\n" +
+            "  def two = new Foo(0) {}\n" + // no
+            "}\n" +
+            "@groovy.transform.CompileStatic sc() {\n" +
+            "  def three = new Foo(0) {}\n" + // no
             "}\n");
 
         assertEquals(0, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
@@ -412,7 +422,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo(String s, Map m) {}\n" +
             "  Foo(String s, ... v) {}\n" + // search for this
             "}\n");
-        createUnit("Other", "def foo = new p.Foo('')\n");
+        createUnit("Other", "def one = new p.Foo('')\n");
 
         assertEquals(1, searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count());
     }

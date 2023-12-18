@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.stc.ExtensionMethodNode;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -91,6 +92,15 @@ public class STCTypeLookup implements ITypeLookup {
                                     if (info != null && VariableScope.isParameterizedClosure(info.type)) {
                                         inferredType = info.type; // Closure --> Closure<String>
                                     }
+                                } else if (GroovyUtils.isAnonymous((ClassNode) inferredType)) {
+                                    ClassNode type = (ClassNode) inferredType;
+                                    // return extended/implemented type for anonymous inner class
+                                    if (type.getUnresolvedSuperClass(false) != VariableScope.OBJECT_CLASS_NODE) {
+                                        type = type.getUnresolvedSuperClass(false);
+                                    } else {
+                                        type = type.getUnresolvedInterfaces()[0];
+                                    }
+                                    inferredType = type;
                                 }
                             } else {
                                 // defer to other type lookup impls
