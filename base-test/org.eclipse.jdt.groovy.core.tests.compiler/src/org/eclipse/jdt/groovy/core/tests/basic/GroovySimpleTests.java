@@ -651,6 +651,34 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[a:1, b:2]");
     }
 
+    @Test
+    public void testLogicalImplication1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "print(true.implies(true))\n" +
+            "print(true.implies(false))\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "truefalse");
+    }
+
+    @Test // GROOVY-11238
+    public void testLogicalImplication2() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(50));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "print(true ==> true)\n" +
+            "print(true ==> false)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "truefalse");
+    }
+
     @Test // GROOVY-5245
     public void testBooleanCategoryMethod1() {
         //@formatter:off
@@ -4411,6 +4439,45 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "class C implements B {\n" +
             "  @Override String m() {\n" +
             "    'C' + " + (isAtLeastGroovy(50) ? "" : "B.") + "super.m()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "CB");
+    }
+
+    @Test // GROOVY-8299
+    public void testImplementingInterface12() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(50));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "print new C().m()\n",
+
+            "A.java",
+            "public interface A {\n" +
+            "  String m();\n" +
+            "}\n",
+
+            "B.groovy",
+            "interface B extends A {\n" +
+            "  default String m() {\n" +
+            "    B.this.pm()\n" +
+            "  }\n" +
+            "  private String pm() {\n" +
+            "    sm()\n" +
+            "  }\n" +
+            "  static  String sm() {\n" +
+            "    'B'\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "class C implements B {\n" +
+            "  @Override String m() {\n" +
+            "    'C' + super.m()\n" +
             "  }\n" +
             "}\n",
         };

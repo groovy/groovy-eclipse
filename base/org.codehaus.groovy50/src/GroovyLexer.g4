@@ -858,6 +858,7 @@ POWER                   : '**';
 POWER_ASSIGN            : '**=';
 SPACESHIP               : '<=>';
 IDENTICAL               : '===';
+IMPLIES                 : '==>';
 NOT_IDENTICAL           : '!==';
 ARROW                   : '->';
 

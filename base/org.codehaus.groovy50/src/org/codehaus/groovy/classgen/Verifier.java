@@ -958,11 +958,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     private static void adjustTypesIfMainMethod(final MethodNode node) {
-        if (node.isPublic() && node.isStatic() && node.getName().equals("main")) { // GRECLIPSE edit
+        if (node.isPublic() && node.isStatic() && node.getName().equals("main")) {
             Parameter[] params = node.getParameters();
             if (params.length == 1) {
                 Parameter param = params[0];
-                if (param.getType() == null || (isObjectType(param.getType()) && !param.getType().isGenericsPlaceHolder())) { // GRECLIPSE edit
+                if (param.getType() == null || (isObjectType(param.getType()) && !param.getType().isGenericsPlaceHolder())) {
                     param.setType(ClassHelper.STRING_TYPE.makeArray());
                     if (isObjectType(node.getReturnType())) {
                         node.setReturnType(ClassHelper.VOID_TYPE);

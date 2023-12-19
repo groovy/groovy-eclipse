@@ -24,7 +24,7 @@
 		<groovy-eclipse-compiler-version>3.9.0</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
-		<groovy-eclipse-batch-version>3.0.19-02</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>3.0.20-02</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 

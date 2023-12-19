@@ -19,7 +19,7 @@
 
     <target name="build" depends="clean">
         <resolve-dependencies pathid="classpath.antlr4">
-            <dependency org="me.sunlan" name="antlr4" rev="4.13.1.2">
+            <dependency org="me.sunlan" name="antlr4" rev="4.13.1.3">
                 <exclude name="org.abego.treelayout.core" />
             </dependency>
         </resolve-dependencies>

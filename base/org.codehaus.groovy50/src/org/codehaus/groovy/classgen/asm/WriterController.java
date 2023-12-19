@@ -356,7 +356,7 @@ public class WriterController {
      *         local variables but are properties
      */
     public boolean isInScriptBody() {
-        return classNode.isScriptBody() || (methodNode != null && methodNode.isScriptBody()); // GRECLIPSE edit
+        return classNode.isScriptBody() || (methodNode != null && methodNode.isScriptBody());
     }
 
     public boolean shouldOptimizeForInt() {

@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.13.1.2
+// Generated from GroovyParser.g4 by ANTLR 4.13.1.3
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -247,6 +247,13 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitLogicalOrExprAlt(@NotNull GroovyParser.LogicalOrExprAltContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code implicationExprAlt}
+	 * labeled alternative in {@link GroovyParser#expression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitImplicationExprAlt(@NotNull GroovyParser.ImplicationExprAltContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code conditionalExprAlt}
 	 * labeled alternative in {@link GroovyParser#expression}.

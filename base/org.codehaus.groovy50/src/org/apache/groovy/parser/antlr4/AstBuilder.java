@@ -3497,6 +3497,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     @Override
+    public BinaryExpression visitImplicationExprAlt(final ImplicationExprAltContext ctx) {
+        return configureAST(
+                this.createBinaryExpression(ctx.left, ctx.op, ctx.right),
+                ctx);
+    }
+
+    @Override
     public Expression visitConditionalExprAlt(final ConditionalExprAltContext ctx) {
         ctx.fb.putNodeMetaData(IS_INSIDE_CONDITIONAL_EXPRESSION, Boolean.TRUE);
 
@@ -3807,10 +3814,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public ClassNode visitCreatedName(final CreatedNameContext ctx) {
         ClassNode classNode = null;
-
         if (asBoolean(ctx.qualifiedClassName())) {
             classNode = this.visitQualifiedClassName(ctx.qualifiedClassName());
-
             if (asBoolean(ctx.typeArgumentsOrDiamond())) {
                 classNode.setGenericsTypes(
                         this.visitTypeArgumentsOrDiamond(ctx.typeArgumentsOrDiamond()));
@@ -4465,6 +4470,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         if (classNode == null) {
+            /* GRECLIPSE edit
+            if (VOID_STR.equals(ctx.getText())) {
+                throw createParsingFailedException("void is not allowed here", ctx);
+            }
+            */
             throw createParsingFailedException("Unsupported type: " + ctx.getText(), ctx);
         }
 
