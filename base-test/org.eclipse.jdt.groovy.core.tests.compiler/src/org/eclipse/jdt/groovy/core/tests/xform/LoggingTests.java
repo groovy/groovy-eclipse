@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,7 +121,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.17.1", "org.apache.logging.log4j:log4j-core:2.17.1");
+        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.22.0", "org.apache.logging.log4j:log4j-core:2.22.0");
         vmArguments = new String[] {"-Dorg.apache.logging.log4j.level=INFO", "-Dlog4j2.clock=T"};
         runConformTest(sources, "[main] INFO  C - yay!");
     }
@@ -149,7 +149,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.17.1", "org.apache.logging.log4j:log4j-core:2.17.1", "org.apache.logging.log4j:log4j-jpl:2.17.1");
+        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.22.0", "org.apache.logging.log4j:log4j-core:2.22.0", "org.apache.logging.log4j:log4j-jpl:2.22.0");
         vmArguments = new String[] {"-Dorg.apache.logging.log4j.level=INFO", "-Dlog4j2.clock=T"};
         runConformTest(sources, "[main] INFO  C - yay!");
     }

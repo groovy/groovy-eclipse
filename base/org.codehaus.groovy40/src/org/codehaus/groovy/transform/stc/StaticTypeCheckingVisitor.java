@@ -2456,6 +2456,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (!candidates.isEmpty()) {
                 int nParameters = candidates.stream().mapToInt(m -> m.getParameters().length).reduce((i,j) -> i == j ? i : -1).getAsInt();
                 Map<GenericsTypeName, GenericsType> gts = GenericsUtils.extractPlaceholders(receiverType);
+                stubMissingTypeVariables(receiverType.redirect().getGenericsTypes(), gts); // GROOVY-11241
                 candidates.stream().map(candidate -> applyGenericsContext(gts, candidate.getReturnType()))
                         .reduce(WideningCategories::lowestUpperBound).ifPresent(returnType -> {
                             ClassNode closureType = wrapClosureType(returnType);
@@ -3682,9 +3683,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         visitMethodCallArguments(receiver, args(newArgumentExpressions), true, selectedMethod);
 
         for (int index : methodReferencePositions) {
-            Expression lambdaExpression = newArgumentExpressions.get(index);
-            Expression methodReferenceExpression = argumentExpressions.get(index);
-            methodReferenceExpression.putNodeMetaData(CLOSURE_ARGUMENTS, lambdaExpression.getNodeMetaData(CLOSURE_ARGUMENTS));
+            Expression lambda = newArgumentExpressions.get(index);
+            Expression methodReference = argumentExpressions.get(index);
+            methodReference.putNodeMetaData(PARAMETER_TYPE, lambda.getNodeMetaData(PARAMETER_TYPE));
+            methodReference.putNodeMetaData(CLOSURE_ARGUMENTS, lambda.getNodeMetaData(CLOSURE_ARGUMENTS));
         }
     }
 
@@ -3706,7 +3708,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 parameters[i] = new Parameter(i == 0 ? firstParamType : dynamicType(), "p" + i);
             }
         }
-        return new LambdaExpression(parameters, GENERATED_EMPTY_STATEMENT);
+        LambdaExpression lambda = new LambdaExpression(parameters, GENERATED_EMPTY_STATEMENT);
+        lambda.putNodeMetaData(INFERRED_TYPE, methodReference.getNodeMetaData(INFERRED_TYPE));
+        return lambda;
     }
 
     /**
@@ -5520,21 +5524,27 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             extractGenericsConnectionsForBoundTypes(methodGenericTypes, resolvedPlaceholders);
         }
 
-        for (GenericsType gt : methodGenericTypes) {
-            // GROOVY-8409, GROOVY-10067, et al.: provide "no type witness" mapping for param
-            resolvedPlaceholders.computeIfAbsent(new GenericsTypeName(gt.getName()), gtn -> {
-                ClassNode hash = ClassHelper.makeWithoutCaching("#" + gt.getName());
-                hash.setRedirect(getCombinedBoundType(gt));
-                hash.setGenericsPlaceHolder(true);
-
-                GenericsType gtx = new GenericsType(hash, applyGenericsContext(resolvedPlaceholders, gt.getUpperBounds()), null);
-                gtx.putNodeMetaData(GenericsType.class, gt);
-                gtx.setResolved(true);
-                return gtx;
-            });
-        }
+        // GROOVY-8409, GROOVY-10067, et al.: provide "no type witness" mappings
+        stubMissingTypeVariables(methodGenericTypes, resolvedPlaceholders);
 
         return resolvedPlaceholders;
+    }
+
+    private static void stubMissingTypeVariables(final GenericsType[] typeParameters, final Map<GenericsTypeName, GenericsType> resolvedPlaceholders) {
+        if (asBoolean(typeParameters)) {
+            for (GenericsType tp : typeParameters) {
+                resolvedPlaceholders.computeIfAbsent(new GenericsTypeName(tp.getName()), name -> {
+                    ClassNode hash = ClassHelper.makeWithoutCaching("#" + tp.getName());
+                    hash.setRedirect(getCombinedBoundType(tp));
+                    hash.setGenericsPlaceHolder(true);
+
+                    GenericsType gtx = new GenericsType(hash, applyGenericsContext(resolvedPlaceholders, tp.getUpperBounds()), null);
+                    gtx.putNodeMetaData(GenericsType.class, tp);
+                    gtx.setResolved(true);
+                    return gtx;
+                });
+            }
+        }
     }
 
     /**

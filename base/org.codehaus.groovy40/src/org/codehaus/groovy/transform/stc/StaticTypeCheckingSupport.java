@@ -1040,7 +1040,7 @@ public abstract class StaticTypeCheckingSupport {
      * @return zero or more results
      */
     public static List<MethodNode> chooseBestMethod(final ClassNode receiver, final Collection<MethodNode> methods, final ClassNode... argumentTypes) {
-        if (methods == null || methods.isEmpty()) {
+        if (!asBoolean(methods)) {
             return Collections.emptyList();
         }
 
@@ -1204,7 +1204,8 @@ public abstract class StaticTypeCheckingSupport {
         // GRECLIPSE end
     }
 
-    /*private static ClassNode makeRawType(final ClassNode receiver) {
+    /* GRECLIPSE edit
+    private static ClassNode makeRawType(final ClassNode receiver) {
         if (receiver.isArray()) {
             return makeRawType(receiver.getComponentType()).makeArray();
         }
@@ -1212,7 +1213,8 @@ public abstract class StaticTypeCheckingSupport {
         raw.setUsingGenerics(false);
         raw.setGenericsTypes(null);
         return raw;
-    }*/
+    }
+    */
 
     private static List<MethodNode> removeCovariantsAndInterfaceEquivalents(final Collection<MethodNode> collection, final boolean disjoint) {
         List<MethodNode> list = new ArrayList<>(new LinkedHashSet<>(collection)), toBeRemoved = new ArrayList<>();

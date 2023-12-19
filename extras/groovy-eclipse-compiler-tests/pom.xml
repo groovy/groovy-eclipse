@@ -9,9 +9,9 @@
 	<properties>
 		<org>org.apache</org>
 		<!-- groovy version to use for tests: -->
-		<groovy.rt.version>4.0.16</groovy.rt.version>
+		<groovy.rt.version>4.0.17</groovy.rt.version>
 		<!-- groovy-batch version to use for tests: -->
-		<groovy.xx.version>4.0.16-03</groovy.xx.version>
+		<groovy.xx.version>4.0.17-03</groovy.xx.version>
 		<!-- maven-compiler versions to use for tests: -->
 		<maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
 		<maven-compiler-adapter.version>3.9.0</maven-compiler-adapter.version>
