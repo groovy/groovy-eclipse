@@ -2868,7 +2868,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\t[].stream().map{item,xxxx ->}\n" +
             "\t               ^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Wrong number of parameters for method target: apply(" + (isAtLeastGroovy(40) ? "java.lang.Object" : "E") + ")\n" +
+            "Groovy:[Static type checking] - Wrong number of parameters for method target: apply(java.lang.Object)\n" +
             "----------\n");
     }
 
@@ -3129,7 +3129,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
@@ -3150,7 +3151,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
@@ -6645,6 +6647,46 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9852() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Promise.promise().future()\n" + // STC is unaware of Promise return from future()
+            "    .onSuccess({ print it }" + (isAtLeastGroovy(40) ? "" : " as Handler") + ")\n" +
+            "}\n" +
+            "test()\n",
+
+            "Future.groovy",
+            "interface Future<T> {\n" +
+            "  Future<T> onSuccess(Handler<T> handler)\n" +
+            "}\n",
+
+            "Handler.groovy",
+            "interface Handler<E> {\n" +
+            "  void handle(E event)\n" +
+            "}\n",
+
+            "Promise.groovy",
+            "class Promise<T> implements Future<T> {\n" +
+            "  static <T> Promise<T> promise() { new Promise() }\n" +
+            "  Future<T> future() { return this; }\n" +
+            "  Future<T> onSuccess(Handler<T> h) {\n" +
+            "    h.handle('works')\n" +
+            "    return this\n" +
+            "  }\n" +
+            "  void onSuccess(T value) {\n" +
+            "    print(value)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic9853() {
         assumeTrue(isParrotParser());
 
@@ -6758,8 +6800,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  print new Value<>(123).replace { -> 'foo' }\n" +
-            "  print new Value<>(123).replace { Integer v -> 'bar' }\n" +
+            "  print(new Value<>(123).replace { -> 'foo';})\n" +
+            "  print(new Value<>(123).replace { Integer v -> 'bar';})\n" +
             "}\n" +
             "test()\n",
 
@@ -6783,7 +6825,22 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "foobar");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "foobar");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 3)\n" +
+                "\tprint(new Value<>(123).replace { -> 'foo';})\n" +
+                "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [Value<T> Value<V>#replace(java.util.function.Supplier<T>), Value<T> Value<V>#replace(java.util.function.Function<? super V, ? extends T>)]\n" +
+                "----------\n" +
+                "2. ERROR in Main.groovy (at line 4)\n" +
+                "\tprint(new Value<>(123).replace { Integer v -> 'bar';})\n" +
+                "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [Value<T> Value<V>#replace(java.util.function.Supplier<T>), Value<T> Value<V>#replace(java.util.function.Function<? super V, ? extends T>)]\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -6795,8 +6852,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  print new Value<>(123).replace(() -> 'foo')\n" +
-            "  print new Value<>(123).replace((Integer v) -> 'bar')\n" +
+            "  print(new Value<>(123).replace(() -> 'foo'))\n" +
+            "  print(new Value<>(123).replace((Integer v) -> 'bar'))\n" +
             "}\n" +
             "test()\n",
 
@@ -6820,7 +6877,22 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "foobar");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "foobar");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 3)\n" +
+                "\tprint(new Value<>(123).replace(() -> 'foo'))\n" +
+                "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [Value<T> Value<V>#replace(java.util.function.Supplier<T>), Value<T> Value<V>#replace(java.util.function.Function<? super V, ? extends T>)]\n" +
+                "----------\n" +
+                "2. ERROR in Main.groovy (at line 4)\n" +
+                "\tprint(new Value<>(123).replace((Integer v) -> 'bar'))\n" +
+                "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [Value<T> Value<V>#replace(java.util.function.Supplier<T>), Value<T> Value<V>#replace(java.util.function.Function<? super V, ? extends T>)]\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -8255,7 +8327,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             };
             //@formatter:on
 
-            runConformTest(sources, "42");
+            if (xform.contains("Function") || isAtLeastGroovy(40)) {
+                runConformTest(sources, "42");
+            } else {
+                runNegativeTest(sources,
+                    "----------\n" +
+                    "1. ERROR in Main.groovy (at line 7)\n" +
+                    "\tprint(from(" + xform + "))\n" +
+                    "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                    "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [V Main#from(java.util.function.Function<K, V>), V Main#from(java.util.function.Supplier<V>)]\n" +
+                    "----------\n");
+            }
         }
     }
 

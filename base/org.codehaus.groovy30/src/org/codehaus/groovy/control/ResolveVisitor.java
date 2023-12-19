@@ -76,7 +76,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -520,7 +519,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     protected boolean resolve(final ClassNode type, final boolean testModuleImports, final boolean testDefaultImports, final boolean testStaticInnerClasses) {
-        resolveGenericsTypes(type.getGenericsTypes());
+        GenericsType[] genericsTypes = type.getGenericsTypes();
+        resolveGenericsTypes(genericsTypes);
+
         if (type.isPrimaryClassNode()) return true;
         if (type.isArray()) {
             ClassNode element = type.getComponentType();
@@ -533,48 +534,34 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         if (type.isResolved()) return true;
 
-        // test if vanilla name is current class name
-        if (currentClass == type) return true;
-
         String typeName = type.getName();
 
-        GenericsType genericsType = genericParameterNames.get(new GenericsTypeName(typeName));
-        if (genericsType != null) {
-            type.setDeclaringClass(genericsType.getType().getDeclaringClass());
-            type.setGenericsTypes(new GenericsType[]{genericsType});
-            type.setRedirect(genericsType.getType());
+        GenericsType typeParameter = genericParameterNames.get(new GenericsTypeName(typeName));
+        if (typeParameter != null) {
+            type.setDeclaringClass(typeParameter.getType().getDeclaringClass());
+            type.setGenericsTypes(new GenericsType[]{typeParameter});
+            type.setRedirect(typeParameter.getType());
             type.setGenericsPlaceHolder(true);
             return true;
         }
-        // GRECLIPSE add
-        try {
-        // GRECLIPSE end
+
+        boolean resolved;
         if (currentClass.getNameWithoutPackage().equals(typeName)) {
             type.setRedirect(currentClass);
-            return true;
+            resolved = true;
+        } else {
+            resolved = (!type.hasPackageName() && resolveNestedClass(type))
+                    || resolveFromModule(type, testModuleImports)
+                    || resolveFromCompileUnit(type)
+                    || (testDefaultImports && !type.hasPackageName() && resolveFromDefaultImports(type, true))
+                    || resolveToOuter(type)
+                    || (testStaticInnerClasses && type.hasPackageName() && resolveFromStaticInnerClasses(type, true));
         }
-
-        return  (!type.hasPackageName() && resolveNestedClass(type)) ||
-                resolveFromModule(type, testModuleImports) ||
-                resolveFromCompileUnit(type) ||
-                (testDefaultImports && !type.hasPackageName() && resolveFromDefaultImports(type, true)) ||
-                resolveToOuter(type) ||
-                (testStaticInnerClasses && type.hasPackageName() && resolveFromStaticInnerClasses(type, true));
-        // GRECLIPSE add -- GROOVY-10153: deal with "Foo<? super Bar> -> Foo<T extends Baz>"
-        } finally {
-            if (type.isRedirectNode()) Optional.ofNullable(type.getGenericsTypes()).ifPresent(arguments -> {
-                for (int i = 0, n = arguments.length; i < n; i += 1) { GenericsType argument = arguments[i];
-                    if (!argument.isWildcard() || argument.getUpperBounds() != null) continue;
-                    GenericsType[] parameters = type.redirect().getGenericsTypes();
-                    if (parameters != null && i < parameters.length) {
-                        ClassNode implicitBound = parameters[i].getType();
-                        if (!implicitBound.equals(ClassHelper.OBJECT_TYPE))
-                            argument.getType().setRedirect(implicitBound);
-                    }
-                }
-            });
+        // GROOVY-10153: handle "C<? super T>"
+        if (resolved && genericsTypes != null) {
+            resolveWildcardBounding(genericsTypes, type);
         }
-        // GRECLIPSE end
+        return resolved;
     }
 
     protected boolean resolveNestedClass(final ClassNode type) {
@@ -1362,6 +1349,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected Expression transformConstructorCallExpression(final ConstructorCallExpression cce) {
         /* GRECLIPSE edit -- GROOVY-4386, et al.
         findPossibleOuterClassNodeForNonStaticInnerClassInstantiation(cce);
+
         ClassNode type = cce.getType();
         if (cce.isUsingAnonymousInnerClass()) { // GROOVY-9642
             resolveOrFail(type.getUnresolvedSuperClass(false), type);
@@ -1808,54 +1796,40 @@ if (phase == 1) break; // resolve other class headers before members, et al.
                 continue;
             }
 
-            ClassNode classNode = type.getType();
             String name = type.getName();
+            ClassNode typeType = type.getType();
             GenericsTypeName gtn = new GenericsTypeName(name);
-            ClassNode[] bounds = type.getUpperBounds();
-            boolean isWild = QUESTION_MARK.equals(name);
-            boolean toDealWithGenerics = 0 == level || (level > 0 && genericParameterNames.get(gtn) != null);
+            boolean isWildcardGT = QUESTION_MARK.equals(name);
+            boolean dealWithGenerics = (level == 0 || (level > 0 && genericParameterNames.get(gtn) != null));
 
-            if (bounds != null) {
+            if (type.getUpperBounds() != null) {
                 boolean nameAdded = false;
-                for (ClassNode upperBound : bounds) {
+                for (ClassNode upperBound : type.getUpperBounds()) {
+                    if (upperBound == null) continue;
                     // GRECLIPSE add
                     if (upperBound.hasInconsistentHierarchy()) continue;
                     // GRECLIPSE end
-                    if (!isWild) {
-                        if (!nameAdded && upperBound != null || !resolve(classNode)) {
-                            if (toDealWithGenerics) {
-                                genericParameterNames.put(gtn, type);
+                    if (!isWildcardGT) {
+                        if (!nameAdded || !resolve(typeType)) {
+                            if (dealWithGenerics) {
                                 type.setPlaceholder(true);
-                                classNode.setRedirect(upperBound);
+                                typeType.setRedirect(upperBound);
+                                genericParameterNames.put(gtn, type);
                                 nameAdded = true;
                             }
                         }
-
-                        upperBoundsToResolve.add(tuple(upperBound, classNode));
+                        upperBoundsToResolve.add(tuple(upperBound, typeType));
                     }
-
-                    if (upperBound != null && upperBound.isUsingGenerics()) {
+                    if (upperBound.isUsingGenerics()) {
                         upperBoundsWithGenerics.add(tuple(upperBound, type));
                     }
                 }
             } else {
-                if (!isWild) {
-                    if (toDealWithGenerics) {
-                        /* GRECLIPSE edit
-                        GenericsType originalGt = genericParameterNames.get(gtn);
-                        genericParameterNames.put(gtn, type);
-                        type.setPlaceholder(true);
-
-                        if (null == originalGt) {
-                            classNode.setRedirect(ClassHelper.OBJECT_TYPE);
-                        } else {
-                            classNode.setRedirect(originalGt.getType());
-                        }
-                        */
+                if (!isWildcardGT) {
+                    if (dealWithGenerics) {
                         type.setPlaceholder(true);
                         GenericsType last = genericParameterNames.put(gtn, type);
-                        classNode.setRedirect(last != null ? last.getType().redirect() : ClassHelper.OBJECT_TYPE);
-                        // GRECLIPSE end
+                        typeType.setRedirect(last != null ? last.getType().redirect() : ClassHelper.OBJECT_TYPE);
                     }
                 }
             }
@@ -1901,16 +1875,30 @@ if (phase == 1) break; // resolve other class headers before members, et al.
             // GRECLIPSE end
             genericsType.setPlaceholder(true);
         }
-
         if (genericsType.getLowerBound() != null) {
             resolveOrFail(genericsType.getLowerBound(), genericsType);
         }
-
         if (resolveGenericsTypes(type.getGenericsTypes())) {
             genericsType.setResolved(genericsType.getType().isResolved());
         }
         return genericsType.isResolved();
+    }
 
+    /**
+     * For cases like "Foo&lt;? super Bar> -> Foo&lt;T extends Baz>" there is an
+     * implicit upper bound on the wildcard type argument. It was unavailable at
+     * the time "? super Bar" was resolved but is present in type's redirect now.
+     */
+    private static void resolveWildcardBounding(final GenericsType[] typeArguments, final ClassNode type) {
+        for (int i = 0, n = typeArguments.length; i < n; i += 1) { GenericsType argument= typeArguments[i];
+            if (!argument.isWildcard() || argument.getUpperBounds() != null) continue;
+            GenericsType[] parameters = type.redirect().getGenericsTypes();
+            if (parameters != null && i < parameters.length) {
+                ClassNode implicitBound = parameters[i].getType();
+                if (!ClassHelper.OBJECT_TYPE.equals(implicitBound))
+                    argument.getType().setRedirect(implicitBound);
+            }
+        }
     }
 
     /* GRECLIPSE edit

@@ -14,7 +14,7 @@ Getting Started with Groovy-Eclipse Source Code
 
 There is currently no mailing list or official forum dedicated to Groovy-Eclipse development.  Bug reports, feature enhancement requests, and development questions can be filed in [the Issues section of the Groovy-Eclipse Github repo](https://github.com/groovy/groovy-eclipse/issues).
 
-Additional questions and answers might be found by searching for [the groovy-eclipse tag on stack overflow](http://stackoverflow.com/questions/tagged/groovy-eclipse) and in the [Groovy Users group](https://plus.google.com/communities/105160926044623621768).
+Additional questions and answers might be found by searching for [the groovy-eclipse tag on stack overflow](https://stackoverflow.com/questions/tagged/groovy-eclipse) and in the [Groovy Users group](https://plus.google.com/communities/105160926044623621768).
 
 ## Development Environment Setup
 
@@ -74,7 +74,7 @@ This project contains Groovy core logic for parser, compiler, type inferencing, 
 
 ### org.codehaus.groovyXX
 
-Implementations of Groovy language, where XX stands for Groovy language version.  These projects are the source code for Groovy language and are needed in the workspace to make Groovy-Eclipse compile.  One can test Groovy-Eclipse for a specific version of Groovy by keeping the desired Groovy language version project opened and the rest closed.  If anyone is tempted to change anything in any of these projects, either talk to the Groovy team folks or [raise a defect against Groovy language](http://www.groovy-lang.org/contribute.html#reporting-issues).
+Implementations of Groovy language, where XX stands for Groovy language version.  These projects are the source code for Groovy language and are needed in the workspace to make Groovy-Eclipse compile.  One can test Groovy-Eclipse for a specific version of Groovy by keeping the desired Groovy language version project opened and the rest closed.  If anyone is tempted to change anything in any of these projects, either talk to the Groovy team folks or [raise a defect against Groovy language](https://groovy-lang.org/contribute.html#reporting-issues).
 
 ### org.codehaus.groovy.eclipse.compilerResolver
 

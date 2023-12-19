@@ -1609,13 +1609,14 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  void x()\n" +
             "}\n" +
             "class C {\n" +
-            "  void m(A a) { print 'fails' }\n" +
+            "  @SuppressWarnings('rawtypes')\n" +
+            "  void m(A a) { print 'wrong' }\n" +
             "  void m(B b) { print 'hello'; b.x() } \n" +
             "}\n" +
             "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
             "  def c = new C()\n" +
-            "  c.m { -> print ' world' }\n" +
+            "  c.m { -> print(' world')}\n" +
             "}\n" +
             "test()\n",
         };
@@ -1624,7 +1625,13 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         if (isAtLeastGroovy(40)) {
             runConformTest(sources, "hello world");
         } else {
-            runConformTest(sources, "", "groovy.lang.GroovyRuntimeException: Ambiguous method overloading for method C#m");
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 15)\n" +
+                "\tc.m { -> print(' world')}\n" +
+                "\t^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [void C#m(A), void C#m(B)]\n" +
+                "----------\n");
         }
     }
 
@@ -1942,7 +1949,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tMVM m = [:]\n" +
             "\t        ^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching constructor MVM(java.util.LinkedHashMap" + (isAtLeastGroovy(40) ? "<#K, #V>" : "") + ")\n" +
+            "Groovy:[Static type checking] - Cannot find matching constructor MVM(java.util.LinkedHashMap<#K, #V>)\n" +
             "----------\n");
     }
 
@@ -1965,7 +1972,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tMVM m = [:]\n" +
             "\t        ^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching constructor MVM(java.util.LinkedHashMap" + (isAtLeastGroovy(40) ? "<#K, #V>" : "") + ")\n" +
+            "Groovy:[Static type checking] - Cannot find matching constructor MVM(java.util.LinkedHashMap<#K, #V>)\n" +
             "----------\n");
     }
 
@@ -3010,6 +3017,46 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9852() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  Promise.promise().future()\n" + // STC is unaware of Promise return from future()
+            "    .onSuccess({ print it }" + (isAtLeastGroovy(40) ? "" : " as Handler") + ")\n" +
+            "}\n" +
+            "test()\n",
+
+            "Future.groovy",
+            "interface Future<T> {\n" +
+            "  Future<T> onSuccess(Handler<T> handler)\n" +
+            "}\n",
+
+            "Handler.groovy",
+            "interface Handler<E> {\n" +
+            "  void handle(E event)\n" +
+            "}\n",
+
+            "Promise.groovy",
+            "class Promise<T> implements Future<T> {\n" +
+            "  static <T> Promise<T> promise() { new Promise() }\n" +
+            "  Future<T> future() { return this; }\n" +
+            "  Future<T> onSuccess(Handler<T> h) {\n" +
+            "    h.handle('works')\n" +
+            "    return this\n" +
+            "  }\n" +
+            "  void onSuccess(T value) {\n" +
+            "    print(value)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testTypeChecked9854() {
         //@formatter:off
         String[] sources = {
@@ -3070,6 +3117,56 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "123", options);
+    }
+
+    @Test
+    public void testTypeChecked9881() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  print(new Value<>(123).replace { -> 'foo';})\n" +
+            "  print(new Value<>(123).replace { Integer v -> 'bar';})\n" +
+            "}\n" +
+            "test()\n",
+
+            "Value.groovy",
+            "import java.util.function.*\n" +
+            "class Value<V> {\n" +
+            "  final V val\n" +
+            "  Value(V v) {\n" +
+            "    this.val = v\n" +
+            "  }\n" +
+            "  String toString() {\n" +
+            "    val as String\n" +
+            "  }\n" +
+            "  def <T> Value<T> replace(Supplier<T> supplier) {\n" +
+            "    new Value<>(supplier.get())\n" +
+            "  }\n" +
+            "  def <T> Value<T> replace(Function<? super V, ? extends T> function) {\n" +
+            "    new Value(function.apply(val))\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "foobar");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 3)\n" +
+                "\tprint(new Value<>(123).replace { -> 'foo';})\n" +
+                "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [Value<T> Value<V>#replace(java.util.function.Supplier<T>), Value<T> Value<V>#replace(java.util.function.Function<? super V, ? extends T>)]\n" +
+                "----------\n" +
+                "2. ERROR in Main.groovy (at line 4)\n" +
+                "\tprint(new Value<>(123).replace { Integer v -> 'bar';})\n" +
+                "\t      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [Value<T> Value<V>#replace(java.util.function.Supplier<T>), Value<T> Value<V>#replace(java.util.function.Function<? super V, ? extends T>)]\n" +
+                "----------\n");
+        }
     }
 
     @Test

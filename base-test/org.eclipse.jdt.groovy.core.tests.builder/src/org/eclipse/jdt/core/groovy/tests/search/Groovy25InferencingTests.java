@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-
 import org.junit.Test;
 
 public final class Groovy25InferencingTests extends InferencingTestSuite {
@@ -100,7 +98,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  Map map = [:]\n" +
             "}\n";
 
-        assertType(contents, "map", "java.util.LinkedHashMap" + (!isAtLeastGroovy(40) ? "" : "<java.lang.Object,java.lang.Object>"));
+        assertType(contents, "map", "java.util.LinkedHashMap<java.lang.Object,java.lang.Object>");
     }
 
     @Test

@@ -22,7 +22,7 @@
          id="org.codehaus.groovy"
          download-size="0"
          install-size="0"
-         version="3.0.19.qualifier"
+         version="3.0.20.qualifier"
    />
 
    <plugin
