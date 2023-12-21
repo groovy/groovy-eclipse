@@ -37,10 +37,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "Test.groovy",
             "@Grab('joda-time:joda-time:2.12.5;transitive=false')\n" +
             "import org.joda.time.DateTime\n" +
-            "void printDate() {\n" +
-            "  def now = new DateTime()\n" +
-            "}\n" +
-            "printDate()\n",
+            "def now = new DateTime()\n",
         };
         //@formatter:on
 
@@ -48,8 +45,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
     }
 
     /**
-     * This program has a broken grab. Without changes we get a 'general error'
-     * recorded on the first line of the source file:
+     * This program has a broken grab. Without changes we get a 'general error' recorded on the first line of the source file:
      * <tt>General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.x: not found]</tt>
      * <p>
      * With grab improvements we get two errors: the missing dependency and the missing type (which is at the right version of that dependency!)
@@ -58,13 +54,6 @@ public final class GrabTests extends GroovyCompilerTestSuite {
     public void testGrabError() {
         //@formatter:off
         String[] sources = {
-            "Main.java",
-            "public class Main {\n" +
-            "  public static void main(String[] args) {\n" +
-                // not concerned with execution
-            "  }\n" +
-            "}\n",
-
             "Test.groovy",
             "@Grapes([\n" +
             "  @Grab('joda-time:joda-time:2.12.5;transitive=false'),\n" +
@@ -91,6 +80,25 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "\tdef world = new org.aspectj.weaver.bcel.BcelWorld()\n" +
             "\t                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld\n" +
+            "----------\n");
+    }
+
+    @Test // GROOVY-11046
+    public void testGrabError2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@Grab('org.apache.logging.log4j:log4j-core:2.22.0')\n" +
+            "org.apache.logging.log4j.core.async.AsyncLogger log\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
+            "\torg.apache.logging.log4j.core.async.AsyncLogger log\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:unable to define class org.apache.logging.log4j.core.async.AsyncLogger : com/lmax/disruptor/EventTranslatorVararg\n" +
             "----------\n");
     }
 

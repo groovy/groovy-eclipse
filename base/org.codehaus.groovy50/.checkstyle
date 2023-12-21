@@ -43,6 +43,7 @@
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/ErrorCollector.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/control/GenericsVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/ProcessingUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/ResolveVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/SourceUnit.java" include-pattern="false" />

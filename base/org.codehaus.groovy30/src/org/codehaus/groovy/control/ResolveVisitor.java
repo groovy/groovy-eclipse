@@ -83,13 +83,13 @@ import static groovy.lang.Tuple.tuple;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 
 /**
- * Visitor to resolve Types and convert VariableExpression to
+ * Visitor to resolve types and convert VariableExpression to
  * ClassExpressions if needed. The ResolveVisitor will try to
  * find the Class for a ClassExpression and prints an error if
  * it fails to do so. Constructions like C[], foo as C, (C) foo
  * will force creation of a ClassExpression for C
  * <p>
- * Note: the method to start the resolving is  startResolving(ClassNode, SourceUnit).
+ * Note: the method to start the resolving is {@link #startResolving(ClassNode,SourceUnit)}.
  */
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // note: BigInteger and BigDecimal are also imported by default
@@ -347,12 +347,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     private void resolveOrFail(final ClassNode type, final String msg, final ASTNode node, final boolean preferImports) {
-        if (preferImports) {
+        if (preferImports && !type.isResolved() && !type.isPrimaryClassNode()) {
             resolveGenericsTypes(type.getGenericsTypes());
             if (resolveAliasFromModule(type)) return;
         }
-        if (resolve(type)) return;
         /* GRECLIPSE edit
+        if (resolve(type)) return;
         if (resolveToInner(type)) return;
         if (resolveToOuterNested(type)) return;
 
@@ -362,6 +362,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         while (temp.isArray())//GROOVY-8715
             temp = temp.getComponentType();
         final String name = temp.getName();
+        try {
+            if (resolve(type)) return;
+        } catch (LinkageError e) {
+            String message = "unable to define class " + name + msg + " : " + e.getLocalizedMessage();
+            addError(message, temp.getEnd() > 0 ? temp : node);
+            return;
+        }
         String nameAsType = name.replace('.', '$');
         ModuleNode module = currentClass.getModule();
         if (!name.equals(nameAsType) && module.hasPackageName()) {

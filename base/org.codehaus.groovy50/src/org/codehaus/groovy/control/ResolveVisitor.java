@@ -354,8 +354,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             resolveGenericsTypes(type.getGenericsTypes());
             if (resolveAliasFromModule(type)) return;
         }
-        if (resolve(type)) return;
         /* GRECLIPSE edit
+        if (resolve(type)) return;
         if (resolveToInner(type)) return;
 
         addError("unable to resolve class " + type.toString(false) + msg, node);
@@ -364,6 +364,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         while (temp.isArray())//GROOVY-8715
             temp = temp.getComponentType();
         final String name = temp.getName();
+        try {
+            if (resolve(type)) return;
+        } catch (LinkageError e) {
+            String message = "unable to define class " + name + msg + " : " + e.getLocalizedMessage();
+            addError(message, temp.getEnd() > 0 ? temp : node);
+            return;
+        }
         String nameAsType = name.replace('.', '$');
         ModuleNode module = currentClass.getModule();
         if (!name.equals(nameAsType) && module.hasPackageName()) {
