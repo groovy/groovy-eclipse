@@ -178,8 +178,9 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 }
 
                 @Override public void visitConstantExpression(final ConstantExpression expr) {
-                    // "null" or "true" or "false"
-                    keyword[0] = (expr.isNullExpression() || expr.isTrueExpression() || expr.isFalseExpression());
+                    // "null" or "true" or "false" or "Type.this" or "Type.super"
+                    keyword[0] = (expr.isNullExpression() || expr.isTrueExpression() || expr.isFalseExpression() ||
+                        (length == 4 && expr.getText().equals("this")) || (length == 5 && expr.getText().equals("super")));
                 }
 
                 @Override public void visitConstructorCallExpression(final ConstructorCallExpression expr) {
@@ -236,7 +237,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     }
 
     protected static boolean isStringLiteral(final ASTNode node, final char[] contents, final int start, final int length) {
-        if (node instanceof ConstantExpression && ClassHelper.STRING_TYPE.equals(((ConstantExpression) node).getType())) {
+        if (node instanceof ConstantExpression && ((ConstantExpression) node).getType().equals(ClassHelper.STRING_TYPE)) {
             return (start > node.getStart() && length < node.getLength());
         } else if (node instanceof MethodNode) {
             return (start > ((MethodNode) node).getNameStart() && start + length <= ((MethodNode) node).getNameEnd());

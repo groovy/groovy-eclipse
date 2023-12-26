@@ -226,6 +226,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     } else {
                         return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, TypeConfidence.UNKNOWN, scope);
                     }
+                } else if (scope.getEnclosingNode() instanceof PropertyExpression) {
+                    if (("this".equals(node.getText()) || "super".equals(node.getText())) && isStaticObjectExpression) {
+                        // "Type.this" in inner class or "Type.super" in implementer
+                        ClassNode type = declaringType.getGenericsTypes()[0].getType();
+                        return new TypeLookupResult(type, null, type, confidence, scope);
+                    }
                 }
 
                 if ("new".equals(node.getText()) && isStaticObjectExpression && isStaticReferenceToInstanceMethod(scope)) {
@@ -373,9 +379,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             resolvedType = VariableScope.OBJECT_CLASS_NODE;
             resolvedDeclaringType = VariableScope.CLOSURE_CLASS_NODE;
             declaration = resolvedDeclaringType.getMethods("call").get(0);
-        } else if ("this".equals(name) && declaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
-            // "Type.this" (aka ClassExpression.ConstantExpression) within inner class
-            declaration = resolvedType = resolvedDeclaringType = declaringType.getGenericsTypes()[0].getType();
         } else {
             resolvedType = VariableScope.OBJECT_CLASS_NODE;
             resolvedDeclaringType = declaringType;

@@ -181,6 +181,13 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'this', null)
     }
 
+    @Test
+    void testCodeSelectKeywordThis3() {
+        // Java Editor doesn't code select on 'this' property expression
+        String contents = 'class C { class D { def x() { C.this } } }'
+        assertCodeSelect([contents], 'this', null)
+    }
+
     @Test // GRECLIPSE-548
     void testCodeSelectKeywordSuper1() {
         String contents = '''\
@@ -201,6 +208,30 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()
         assertCodeSelect([contents], 'super', 'Super')
+    }
+
+    @Test
+    void testCodeSelectKeywordSuper3() {
+        addJavaSource '''\
+            |package p;
+            |public interface A {
+            |  default void m() {}
+            |}
+            |'''.stripMargin(), 'A', 'p'
+        addJavaSource '''\
+            |package p;
+            |public interface B {
+            |  default void m() {}
+            |}
+            |'''.stripMargin(), 'B', 'p'
+
+        String contents = '''\
+            |import p.*
+            |class C implements A,B {
+            |  void m() { A.super.m() }
+            |}
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'super', null)
     }
 
     @Test

@@ -5219,6 +5219,44 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('getFoo'), 6, METHOD_CALL))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1526
+    void testInterface() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |interface I {
+            |  static  bar() {}
+            |  private baz() {}
+            |  default foo() {
+            |    I.bar()
+            |    I.this.baz() // required qualifier w/o static compilation
+            |  }
+            |}
+            |class C implements I{
+            |  @Override
+            |  def foo() {
+            |    I.super.foo()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('I'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('I.'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('I.this.'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.lastIndexOf('baz'), 3, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('I{'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo() {'), 3, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('I.'), 1, INTERFACE),
+          //new HighlightedTypedPosition(contents.lastIndexOf('super'), 5, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, METHOD_CALL))
+    }
+
     //
     private int counter
 
