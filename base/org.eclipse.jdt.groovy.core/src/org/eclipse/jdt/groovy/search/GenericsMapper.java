@@ -186,6 +186,9 @@ public class GenericsMapper {
             if (topGT.getUpperBounds() != null) {
                 return topGT.getUpperBounds()[0];
             }
+            if (!topGT.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+                return topGT.getType(); // GROOVY-10671: non-Object erasure
+            }
             return VariableScope.OBJECT_CLASS_NODE;
         }
 

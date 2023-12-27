@@ -1797,6 +1797,43 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 8, "Scorable<? super T,FeatureName>");
     }
 
+    @Test // GROOVY-10671
+    public void testCircularReference3() {
+        createJavaUnit("p", "ObjectAssert",
+            "package p;\n" +
+            "abstract class ObjectAssert<SELF extends ObjectAssert<SELF>> {\n" +
+            "  SELF as(String description) {\n" +
+            "    return (SELF) this;\n" +
+            "  }\n" +
+            "}\n");
+
+        createJavaUnit("p", "IterableAssert",
+            "package p;\n" +
+            "abstract class IterableAssert<SELF extends IterableAssert<SELF>> extends ObjectAssert<SELF> {\n" +
+            "}\n");
+
+        createJavaUnit("p", "CollectionAssert",
+            "package p;\n" +
+            "abstract class CollectionAssert<SELF extends CollectionAssert<SELF>> extends IterableAssert<SELF> {\n" +
+            "  void containsExactlyInAnyOrderElementsOf(java.util.Collection<?> expect) {\n" +
+            "  }\n" +
+            "}\n");
+
+        createJavaUnit("p", "Assert",
+            "package p;\n" +
+            "class Assert {\n" +
+            "  public static <E> CollectionAssert<?> assertThat(java.util.Collection<? extends E> c) {return null;}\n" +
+            "}\n");
+
+        String contents =
+            "import static p.Assert.assertThat\n" +
+            "def strings = (Collection<String>) ['a','b']\n" +
+            "assertThat(strings).as('assertion description')\n" +
+            "  .containsExactlyInAnyOrderElementsOf(['a','b'])\n";
+
+        assertDeclaringType(contents, "containsExactlyInAnyOrderElementsOf", "p.CollectionAssert");
+    }
+
     @Test
     public void testJira1718() throws Exception {
         createUnit("p2", "Renderer",

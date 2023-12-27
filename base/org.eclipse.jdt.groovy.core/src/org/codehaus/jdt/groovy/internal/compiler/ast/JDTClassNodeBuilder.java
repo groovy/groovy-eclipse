@@ -232,11 +232,22 @@ class JDTClassNodeBuilder {
             // the messing about in here is for a few reasons. Contrast it with the ClassHelper.makeWithoutCaching
             // that code when called for Iterable will set the redirect to point to the generics. That is what
             // we are trying to achieve here.
-            if (!(tb instanceof RawTypeBinding)) {
-                setRedirect(cn, configureType(tb.genericType()));
+            setRedirect(cn, configureType(tb.genericType()));
+        }
+        GenericsType[] gts = configureTypeArguments(tb.arguments);
+        if (gts != null && cn.isRedirectNode()) {
+            for (int i = 0, n = gts.length; i < n; i += 1) { // GROOVY-10671
+                if (!gts[i].isWildcard() || gts[i].getUpperBounds() != null) continue;
+                if (tb.genericType().typeVariables()[i].enterRecursiveFunction()) { // GROOVY-10651
+                    ClassNode[] implicitBounds = cn.redirect().getGenericsTypes()[i].getUpperBounds();
+                    if (implicitBounds != null && !ClassHelper.OBJECT_TYPE.equals(implicitBounds[0])){
+                        gts[i].getType().setRedirect(implicitBounds[0]); // "?" erasure is not Object!
+                    }
+                    tb.genericType().typeVariables()[i].exitRecursiveFunction();
+                }
             }
         }
-        cn.setGenericsTypes(configureTypeArguments(tb.arguments));
+        cn.setGenericsTypes(gts);
         return cn;
     }
 

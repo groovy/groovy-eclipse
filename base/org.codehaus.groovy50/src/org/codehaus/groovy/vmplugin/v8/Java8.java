@@ -18,9 +18,9 @@
  */
 package org.codehaus.groovy.vmplugin.v8;
 
-import groovy.lang.GroovyRuntimeException;
 import groovy.lang.MetaClass;
 import groovy.lang.MetaMethod;
+import org.apache.groovy.util.Maps;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -41,6 +41,7 @@ import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.reflection.ReflectionUtils;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.vmplugin.VMPlugin;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
 
@@ -66,12 +67,12 @@ import java.lang.reflect.ReflectPermission;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.security.AccessController;
 import java.security.Permission;
-import java.security.PrivilegedAction;
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
-
-import static org.codehaus.groovy.runtime.MetaClassHelper.EMPTY_CLASS_ARRAY;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Java 8 based functions.
@@ -92,7 +93,7 @@ public class Java8 implements VMPlugin {
             gt = new GenericsType(base);
         } else {
             // GROOVY-10756: fix erasure -- ResolveVisitor#resolveGenericsHeader
-            if (!ClassHelper.OBJECT_TYPE.equals(bounds[0])) redirect = bounds[0];
+            if (!ClassHelper.isObjectType(bounds[0])) redirect = bounds[0];
             gt = new GenericsType(base, bounds, null);
             gt.setName(base.getName());
             gt.setPlaceholder(true);
@@ -145,44 +146,12 @@ public class Java8 implements VMPlugin {
 
     @Override
     public Class<?>[] getPluginStaticGroovyMethods() {
-        return EMPTY_CLASS_ARRAY;
+        return MetaClassHelper.EMPTY_TYPE_ARRAY;
     }
 
     @Override
     public int getVersion() {
         return 8;
-    }
-
-    protected int getElementCode(final ElementType value) {
-        switch (value) {
-          case TYPE:
-            return AnnotationNode.TYPE_TARGET;
-          case CONSTRUCTOR:
-            return AnnotationNode.CONSTRUCTOR_TARGET;
-          case METHOD:
-            return AnnotationNode.METHOD_TARGET;
-          case FIELD:
-            return AnnotationNode.FIELD_TARGET;
-          case PARAMETER:
-            return AnnotationNode.PARAMETER_TARGET;
-          case LOCAL_VARIABLE:
-            return AnnotationNode.LOCAL_VARIABLE_TARGET;
-          case ANNOTATION_TYPE:
-            return AnnotationNode.ANNOTATION_TARGET;
-          case PACKAGE:
-            return AnnotationNode.PACKAGE_TARGET;
-          case TYPE_PARAMETER:
-            return AnnotationNode.TYPE_PARAMETER_TARGET;
-          case TYPE_USE:
-            return AnnotationNode.TYPE_USE_TARGET;
-          default:
-            // falls through
-        }
-        if ("MODULE".equals(value.name())) { // JDK 9+
-            return AnnotationNode.TYPE_TARGET;
-        } else {
-            throw new GroovyBugError("unsupported Target " + value);
-        }
     }
 
     @Override
@@ -346,7 +315,7 @@ public class Java8 implements VMPlugin {
         }
     }
 
-    private AnnotationNode toAnnotationNode(final Annotation annotation) {
+    protected AnnotationNode toAnnotationNode(final Annotation annotation) {
         ClassNode type = ClassHelper.make(annotation.annotationType());
         AnnotationNode node = new AnnotationNode(type);
         configureAnnotation(node, annotation);
@@ -378,6 +347,19 @@ public class Java8 implements VMPlugin {
 
     //
 
+    protected final Map<ElementType, Integer> elementTypeToTarget = new EnumMap<>(Maps.of(
+        ElementType.TYPE,            AnnotationNode.TYPE_TARGET,
+        ElementType.FIELD,           AnnotationNode.FIELD_TARGET,
+        ElementType.METHOD,          AnnotationNode.METHOD_TARGET,
+        ElementType.PARAMETER,       AnnotationNode.PARAMETER_TARGET,
+        ElementType.CONSTRUCTOR,     AnnotationNode.CONSTRUCTOR_TARGET,
+        ElementType.LOCAL_VARIABLE,  AnnotationNode.LOCAL_VARIABLE_TARGET,
+        ElementType.ANNOTATION_TYPE, AnnotationNode.ANNOTATION_TARGET,
+        ElementType.PACKAGE,         AnnotationNode.PACKAGE_TARGET,
+        ElementType.TYPE_PARAMETER,  AnnotationNode.TYPE_PARAMETER_TARGET,
+        ElementType.TYPE_USE,        AnnotationNode.TYPE_USE_TARGET
+    ));
+
     @Override
     public void configureAnnotationNodeFromDefinition(final AnnotationNode definition, final AnnotationNode root) {
         String typeName = definition.getClassNode().getName();
@@ -398,7 +380,9 @@ public class Java8 implements VMPlugin {
                 PropertyExpression element = (PropertyExpression) e;
                 String name = element.getPropertyAsString();
                 ElementType type = ElementType.valueOf(name);
-                targets |= getElementCode(type);
+                Integer target = elementTypeToTarget.get(type);
+                if (target == null) throw new GroovyBugError("unsupported Target " + type);
+                targets |= target;
             }
             root.setAllowedTargets(targets);
         }
@@ -422,10 +406,9 @@ public class Java8 implements VMPlugin {
                 ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
                 MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), rt, params, exceptions, null);
                 setAnnotationMetaData(m.getAnnotations(), mn);
-                // GRECLIPSE edit --- GROOVY-10862
                 if (m.getDefaultValue() != null) {
-                    mn.setAnnotationDefault(true);
-                    mn.setCode(new ReturnStatement(new ConstantExpression(m.getDefaultValue())));
+                    mn.setAnnotationDefault(true); // GROOVY-10862
+                    mn.setCode(new ReturnStatement(new ConstantExpression(m.getDefaultValue(), true)));
                 }
                 mn.setGenericsTypes(configureTypeParameters(m.getTypeParameters()));
                 mn.setSynthetic(m.isSynthetic());
@@ -442,6 +425,8 @@ public class Java8 implements VMPlugin {
             Class<?> sc = clazz.getSuperclass();
             if (sc != null) classNode.setUnresolvedSuperClass(makeClassNode(compileUnit, clazz.getGenericSuperclass(), sc));
             makeInterfaceTypes(compileUnit, classNode, clazz);
+            makePermittedSubclasses(compileUnit, classNode, clazz);
+            makeRecordComponents(compileUnit, classNode, clazz);
             setAnnotationMetaData(clazz.getAnnotations(), classNode);
 
             PackageNode packageNode = classNode.getPackage();
@@ -502,6 +487,17 @@ public class Java8 implements VMPlugin {
         return annotations;
     }
 
+    private void makePermittedSubclasses(final CompileUnit cu, final ClassNode classNode, final Class<?> clazz) {
+        if (!ReflectionUtils.isSealed(clazz)) return;
+        List<ClassNode> permittedSubclasses = Arrays.stream(ReflectionUtils.getPermittedSubclasses(clazz))
+                .map(c -> makeClassNode(cu, c, c))
+                .collect(Collectors.toList());
+        classNode.setPermittedSubclasses(permittedSubclasses);
+    }
+
+    protected void makeRecordComponents(final CompileUnit cu, final ClassNode classNode, final Class<?> clazz) {
+    }
+
     private void makeInterfaceTypes(final CompileUnit cu, final ClassNode classNode, final Class<?> clazz) {
         Type[] interfaceTypes = clazz.getGenericInterfaces();
         final int n = interfaceTypes.length;
@@ -534,7 +530,7 @@ public class Java8 implements VMPlugin {
         return nodes;
     }
 
-    private ClassNode makeClassNode(final CompileUnit cu, Type t, final Class<?> c) {
+    protected ClassNode makeClassNode(final CompileUnit cu, final Type t, final Class<?> c) {
         ClassNode back = null;
         if (cu != null) back = cu.getClass(c.getName());
         if (back == null) back = ClassHelper.make(c);
@@ -546,33 +542,9 @@ public class Java8 implements VMPlugin {
         return back.getPlainNodeReference();
     }
 
-    @Deprecated
-    protected Parameter[] processParameters(final CompileUnit compileUnit, final Method m) {
-        java.lang.reflect.Parameter[] parameters = m.getParameters();
-        Type[] types = m.getGenericParameterTypes();
-        Parameter[] params = Parameter.EMPTY_ARRAY;
-        if (types.length > 0) {
-            params = new Parameter[types.length];
-            for (int i = 0; i < params.length; i++) {
-                java.lang.reflect.Parameter p = parameters[i];
-                String name = p.isNamePresent() ? p.getName() : "param" + i;
-                params[i] = makeParameter(compileUnit, types[i], m.getParameterTypes()[i], m.getParameterAnnotations()[i], name);
-            }
-        }
-        return params;
-    }
-
-    @Deprecated
-    protected Parameter makeParameter(final CompileUnit cu, final Type type, final Class<?> cl, final Annotation[] annotations, final String name) {
-        ClassNode cn = makeClassNode(cu, type, cl);
-        Parameter parameter = new Parameter(cn, name);
-        setAnnotationMetaData(annotations, parameter);
-        return parameter;
-    }
-
     private Parameter[] makeParameters(final CompileUnit cu, final Type[] types, final Class<?>[] cls, final Annotation[][] parameterAnnotations, final Member member) {
         Parameter[] params = Parameter.EMPTY_ARRAY;
-        int n = types.length;
+        final int n = types.length;
         if (n > 0) {
             params = new Parameter[n];
             String[] names = new String[n];
@@ -646,13 +618,13 @@ public class Java8 implements VMPlugin {
     }
 
     @Override
-    public MetaMethod transformMetaMethod(final MetaClass metaClass, final MetaMethod metaMethod, final Class<?> caller) {
-        return metaMethod;
+    public MetaMethod transformMetaMethod(final MetaClass metaClass, final MetaMethod metaMethod) {
+        return transformMetaMethod(metaClass, metaMethod, null);
     }
 
     @Override
-    public MetaMethod transformMetaMethod(final MetaClass metaClass, final MetaMethod metaMethod) {
-        return transformMetaMethod(metaClass, metaMethod, null);
+    public MetaMethod transformMetaMethod(final MetaClass metaClass, final MetaMethod metaMethod, final Class<?> caller) {
+        return metaMethod;
     }
 
     @Override
@@ -662,79 +634,53 @@ public class Java8 implements VMPlugin {
 
     @Override
     public Object getInvokeSpecialHandle(final Method method, final Object receiver) {
-        final Class<?> receiverType = receiver.getClass();
+        final Class<?> receiverClass = receiver.getClass();
         try {
-            return of(receiverType).unreflectSpecial(method, receiverType).bindTo(receiver);
-        } catch (ReflectiveOperationException e) {
-            return getInvokeSpecialHandleFallback(method, receiver);
-        }
-    }
-
-    private Object getInvokeSpecialHandleFallback(final Method method, final Object receiver) {
-        if (getLookupConstructor() == null) {
-            throw new GroovyBugError("getInvokeSpecialHandle requires at least JDK 7 for private access to Lookup");
-        }
-        if (!method.isAccessible()) {
-            AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
-                ReflectionUtils.trySetAccessible(method);
-                return null;
-            });
-        }
-        Class<?> declaringClass = method.getDeclaringClass();
-        try {
-            final int TRUSTED = -1;
-            return getLookupConstructor()
-                    .newInstance(declaringClass, TRUSTED)
-                    .unreflectSpecial(method, declaringClass)
-                    .bindTo(receiver);
-        } catch (ReflectiveOperationException e) {
-            throw new GroovyBugError(e);
+            return newLookup(receiverClass).unreflectSpecial(method, receiverClass).bindTo(receiver);
+        } catch (ReflectiveOperationException e1) {
+            if (!method.isAccessible()) {
+                doPrivilegedInternal(() -> ReflectionUtils.trySetAccessible(method));
+            }
+            final Class<?> declaringClass = method.getDeclaringClass();
+            try {
+                return newLookup(declaringClass).unreflectSpecial(method, declaringClass).bindTo(receiver);
+            } catch (ReflectiveOperationException e2) {
+                var e3 = new GroovyBugError(e1);
+                e3.addSuppressed(e2);
+                throw e3;
+            }
         }
     }
 
     @Override
-    public Object invokeHandle(final Object handle, final Object[] args) throws Throwable {
-        return ((MethodHandle) handle).invokeWithArguments(args);
+    public Object invokeHandle(final Object handle, final Object[] arguments) throws Throwable {
+        return ((MethodHandle) handle).invokeWithArguments(arguments);
     }
 
+    //--------------------------------------------------------------------------
+
+    @Deprecated(since = "5.0.0")
     public static MethodHandles.Lookup of(final Class<?> targetClass) {
-        try {
-            return getLookupConstructor().newInstance(targetClass, MethodHandles.Lookup.PRIVATE).in(targetClass);
-        } catch (final IllegalAccessException | InstantiationException e) {
-            throw new IllegalArgumentException(e);
-        } catch (final InvocationTargetException e) {
-            throw new GroovyRuntimeException(e);
-        }
+        return ((Java8) VMPluginFactory.getPlugin()).newLookup(targetClass);
     }
 
-    private static Constructor<MethodHandles.Lookup> getLookupConstructor() {
-        return LookupHolder.LOOKUP_Constructor;
+    protected MethodHandles.Lookup newLookup(final Class<?> targetClass) {
+        throw new IllegalStateException();
     }
 
-    private static class LookupHolder {
-        private static final Constructor<MethodHandles.Lookup> LOOKUP_Constructor;
+    @Override
+    @Deprecated(since = "4.0.2")
+    public <T> T doPrivileged(final java.security.PrivilegedAction<T> action) {
+        throw new UnsupportedOperationException("doPrivileged is no longer supported");
+    }
 
-        static {
-            Constructor<MethodHandles.Lookup> lookup;
-            try {
-                lookup = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, Integer.TYPE);
-            } catch (final NoSuchMethodException e) {
-                throw new IllegalStateException("Incompatible JVM", e);
-            }
-            try {
-                if (!lookup.isAccessible()) {
-                    final Constructor<MethodHandles.Lookup> finalReference = lookup;
-                    AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
-                        ReflectionUtils.trySetAccessible(finalReference);
-                        return null;
-                    });
-                }
-            } catch (SecurityException ignore) {
-                lookup = null;
-            } catch (RuntimeException e) {
-                throw e;
-            }
-            LOOKUP_Constructor = lookup;
-        }
+    @Override
+    @Deprecated(since = "4.0.2")
+    public <T> T doPrivileged(final java.security.PrivilegedExceptionAction<T> action) {
+        throw new UnsupportedOperationException("doPrivileged is no longer supported");
+    }
+
+    private static <T> T doPrivilegedInternal(final java.security.PrivilegedAction<T> action) {
+        return java.security.AccessController.doPrivileged(action);
     }
 }

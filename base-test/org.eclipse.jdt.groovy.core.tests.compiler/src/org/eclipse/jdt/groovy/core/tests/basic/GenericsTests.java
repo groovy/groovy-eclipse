@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2645,6 +2645,50 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\t      ^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? super Integer>\n" +
             "----------\n");
+    }
+
+    @Test // GROOVY-10671
+    public void testWildcards8() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.Assert.assertThat\n" +
+            "def strings = (Collection<String>) ['a','b']\n" +
+            "assertThat(strings).as('assertion description')\n" +
+            "  .containsExactlyInAnyOrderElementsOf(['a','b'])\n",
+
+            "p/Assert.java",
+            "package p;\n" +
+            "class Assert {\n" +
+            "  public static <E> CollectionAssert<?> assertThat(java.util.Collection<? extends E> c) {\n" +
+            "    return new CollectionAssert() {};\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/ObjectAssert.java",
+            "package p;\n" +
+            "abstract class ObjectAssert<SELF extends ObjectAssert<SELF>> {\n" +
+            "  SELF as(String description) {\n" +
+            "    return (SELF) this;\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/IterableAssert.java",
+            "package p;\n" +
+            "abstract class IterableAssert<SELF extends IterableAssert<SELF>> extends ObjectAssert<SELF> {\n" +
+            "}\n",
+
+            "p/CollectionAssert.java",
+            "package p;\n" +
+            "abstract class CollectionAssert<SELF extends CollectionAssert<SELF>> extends IterableAssert<SELF> {\n" +
+            "  void containsExactlyInAnyOrderElementsOf(java.util.Collection<?> expect) {\n" +
+            "    System.out.print(expect);\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[a, b]");
     }
 
     @Test
