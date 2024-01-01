@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.IntStream.range;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -198,9 +199,11 @@ public class TypeLookupResult {
                 GenericsMapper mapper;
 
                 if (scope.getEnclosingNode() instanceof MethodPointerExpression) {
-                    // apply type arguments from the object expression to the referenced method
-                    mapper = GenericsMapper.gatherGenerics(argumentTypes, objectType, method);
-                    method = VariableScope.resolveTypeParameterization(mapper, method);
+                    if (!isStatic && !method.isStatic()) {
+                        // apply type arguments from the object expression to the referenced method
+                        mapper = GenericsMapper.gatherGenerics(argumentTypes, objectType, method);
+                        method = VariableScope.resolveTypeParameterization(mapper, method);
+                    }
 
                     // check for Closure or SAM-type coercion of the method pointer/reference
                     VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
@@ -236,10 +239,13 @@ public class TypeLookupResult {
                             mapper = GenericsMapper.gatherGenerics(singletonList(returnType), declaringType, returnTypeStub(method));
                             method = VariableScope.resolveTypeParameterization(mapper, method);
                         } else {
-                            MethodNode sam = ClassHelper.findSAM(targetType);
-                            if (sam != null) {
+                            if (ClassHelper.isSAMType(targetType)) {
+                                ClassNode[] pt = GenericsUtils.parameterizeSAM(targetType).getV1();
+                                if (isStatic && !method.isStatic()) { // GROOVY-10734, GROOVY-11259
+                                    objectType = pt[0];  pt = Arrays.copyOfRange(pt, 1, pt.length);
+                                }
                                 // use parameter types of SAM as "argument types" for referenced method to help resolve type parameters
-                                mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(sam.getParameters()), declaringType, method);
+                                mapper = GenericsMapper.gatherGenerics(Arrays.asList(pt), objectType, method);
                                 method = VariableScope.resolveTypeParameterization(mapper, method);
 
                                 mapper = GenericsMapper.gatherGenerics(targetType);

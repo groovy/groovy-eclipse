@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1100,6 +1100,27 @@ public final class GenericInferencingTests extends InferencingTestSuite {
                 "m(x -> x.intValue().toString())\n";
             assertType(contents, "x", "java.lang.Number");
         }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1527
+    public void testClosure25() {
+        String contents =
+            "void test(Map<String, String> map) {\n" +
+            "  def eSet = map.entrySet()\n" +
+            "  def eStr = eSet.stream()\n" +
+            "  def kStr = eStr.map(Map.Entry.&getKey)\n" +
+            "  def kSet = kStr.toSet()\n" +
+            "}\n";
+        assertType(contents, "eSet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.String>>");
+        assertType(contents, "eStr", "java.util.stream.Stream<java.util.Map$Entry<java.lang.String,java.lang.String>>");
+        assertType(contents, "kStr", "java.util.stream.Stream<java.lang.String>"); // GROOVY-11259: not java.lang.Object
+        assertType(contents, "kSet", "java.util.Set<java.lang.String>");
+
+        contents = contents.replace("Map.Entry.&getKey", isParrotParser() ? "e -> e.key" : "{e -> e.key}");
+        assertType(contents, "eSet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.String>>");
+        assertType(contents, "eStr", "java.util.stream.Stream<java.util.Map$Entry<java.lang.String,java.lang.String>>");
+        assertType(contents, "kStr", "java.util.stream.Stream<java.lang.String>");
+        assertType(contents, "kSet", "java.util.Set<java.lang.String>");
     }
 
     @Test

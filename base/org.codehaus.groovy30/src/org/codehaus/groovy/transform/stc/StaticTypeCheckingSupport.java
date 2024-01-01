@@ -1937,7 +1937,7 @@ public abstract class StaticTypeCheckingSupport {
             return applyGenericsContext(spec, type.getComponentType()).makeArray();
         }
 
-        GenericsType[] gt = type.getGenericsTypes();
+        GenericsType[] gt = type.getGenericsTypes(); if (gt == null) return type;
         if (asBoolean(spec)) {
             gt = applyGenericsContext(spec, gt);
         }
