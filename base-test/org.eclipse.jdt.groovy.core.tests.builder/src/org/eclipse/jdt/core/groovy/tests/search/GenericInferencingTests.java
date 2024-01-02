@@ -964,12 +964,9 @@ public final class GenericInferencingTests extends InferencingTestSuite {
                 "interface F<X,Y> {\n" +
                 "  Y apply(X x)\n" +
                 "}\n" +
-                "@groovy.transform.TypeChecked\n" +
-                "void test() {\n" +
-                "  def c = C.of(123)\n" +
-                "  def d = c.map(" + toSet + ")\n" +
-                "  def e = d.map{x -> x.first()}\n" +
-                "}\n";
+                "def c = C.of(123)\n" +
+                "def d = c.map(" + toSet + ")\n" +
+                "def e = d.map{x -> x.first()}\n";
             assertType(contents, "d", "C<java.util.Set<java.lang.Integer>>");
             assertType(contents, "x", "java.util.Set<java.lang.Integer>");
             assertType(contents, "e", "C<java.lang.Integer>");

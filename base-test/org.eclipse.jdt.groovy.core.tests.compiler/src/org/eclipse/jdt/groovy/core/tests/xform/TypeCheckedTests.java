@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2894,6 +2894,41 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked9803() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def <E> Set<E> asSet(E element) {Collections.singleton(element)}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "Try<String> test() {\n" +
+            "  def try_of_str = Try.success('WORKS')\n" +
+            "  def try_of_opt = try_of_str.map(this.&asSet)\n" +
+            "      try_of_str = try_of_opt.map{it.first().toLowerCase()}\n" +
+            "}\n" +
+            "print(test().x)\n",
+
+            "Try.groovy",
+            "import java.util.function.Function\n" +
+            "class Try<X> { X x\n" +
+            "  static <Y> Try<Y> success(Y y) {\n" +
+            "    new Try<Y>(x: y)\n" +
+            "  }\n" +
+            "  def <Z> Try<Z> map(Function<? super X, ? extends Z> f) {\n" +
+            "    new Try<Z>(x: f.apply(x))\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+        if (isParrotParser()) {
+            sources[1] = sources[1]
+                        .replace(".&", "::");
+            runConformTest(sources, "works");
+        }
     }
 
     @Test
@@ -7095,9 +7130,33 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked10975() {
-        assumeTrue(isParrotParser());
+    public void testTypeChecked10974() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.stream.*\n" +
+            "import java.util.function.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def test(DoubleStream x, ObjDoubleConsumer<Boolean> y, BiConsumer<Boolean, Boolean> z) {\n" +
+            "  def b = x.collect({ -> true}, y.&accept, z.&accept) // b should infer as Boolean\n" +
+            "  //  <R> R collect(Supplier<R>,ObjDoubleConsumer<R>,BiConsumer<R,R>)\n" +
+            "  Spliterator.OfDouble s_of_d = Arrays.spliterator(new double[0])\n" +
+            "  StreamSupport.doubleStream(s_of_d, /*parallel:*/b)\n" +
+            "}\n" +
+            "test(DoubleStream.of(0d), {Boolean b, double d -> }, {Boolean e, Boolean f -> })\n",
+        };
+        //@formatter:on
 
+        runConformTest(sources);
+        if (isParrotParser()) {
+            sources[1] = sources[1]
+                        .replace(".&", "::");
+            runConformTest(sources);
+        }
+    }
+
+    @Test
+    public void testTypeChecked10975() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -7105,13 +7164,18 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "void test() {\n" +
             "  Collection<Integer> c = [1]\n" +
             "  Map<Integer,Integer> m = [1:1]\n" +
-            "  new Hashtable(Collections.min(c, m::put))\n" + // Cannot find matching constructor Hashtable(Object)
+            "  new Hashtable(Collections.min(c, m.&put))\n" + // Cannot find matching constructor Hashtable(Object)
             "}\n" +
             "test()\n",
         };
         //@formatter:on
 
         runConformTest(sources);
+        if (isParrotParser()) {
+            sources[1] = sources[1]
+                        .replace(".&", "::");
+            runConformTest(sources);
+        }
     }
 
     @Test
@@ -7237,5 +7301,64 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTypeChecked11241() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "Try<String> test() {\n" +
+            "  def try_of = Try.of{Optional.of('works')}\n" +
+            "  def result = try_of.mapTry(Optional.&get)\n" +
+            "  return result\n" +
+            "}\n" +
+            "print(test().x)\n",
+
+            "Try.groovy",
+            "import java.util.function.*\n" +
+            "class Try<X> { X x\n" +
+            "  static <Y> Try<Y> of(Supplier<? extends Y> s) {\n" +
+            "    new Try<Y>(x: s.get())\n" +
+            "  }\n" +
+            "  def <Z> Try<Z> mapTry(Function<? super X, ? extends Z> f) {\n" +
+            "    new Try<Z>(x: f.apply(x))\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+        if (isParrotParser()) {
+            sources[1] = sources[1]
+                        .replace(".&", "::");
+            runConformTest(sources, "works");
+        }
+    }
+
+    @Test
+    public void testTypeChecked11259() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "void consume(Set<String> keys){print(keys)}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<String, String> map) {\n" +
+            "  def keys = map.entrySet().stream()\n" +
+            "    .map(Map.Entry.&getKey)\n" +
+            "    .toSet()\n" +
+            "  consume(keys)\n" +
+            "}\n" +
+            "test(foo:'bar', fizz:'buzz')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[foo, fizz]");
+        if (isParrotParser()) {
+            sources[1] = sources[1]
+                        .replace(".&", "::");
+            runConformTest(sources, "[foo, fizz]");
+        }
     }
 }
