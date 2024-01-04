@@ -7338,6 +7338,32 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked11257() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I<U> extends MaybeThing<U> {}\n" +
+            "def <V> I<V> forge(V v) { new I(){} }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def opt = forge(1G).thing\n" +
+            "  def num = opt.orElse(42G)\n" +
+            "  print num.intValue()\n" +
+            "}\n" +
+            "test()\n",
+
+            "MaybeThing.java",
+            "import java.util.Optional;\n" +
+            "public interface MaybeThing<T> {\n" +
+            "  default Optional<T> getThing() { return Optional.empty(); }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testTypeChecked11259() {
         //@formatter:off
         String[] sources = {

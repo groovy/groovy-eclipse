@@ -1548,7 +1548,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (readMode) {
                         if (getter != null // GRECLIPSE add -- GROOVY-6277
                                 && hasAccessToMember(enclosingTypes.iterator().next(), getter.getDeclaringClass(), getter.getModifiers())) {
-                            ClassNode returnType = inferReturnTypeGenerics(current, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
+                            ClassNode returnType = inferReturnTypeGenerics(receiverType, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                             storeInferredTypeForPropertyExpression(pexp, returnType);
                             storeTargetMethod(pexp, getter);
                             String delegationData = receiver.getData();
