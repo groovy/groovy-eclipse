@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -793,6 +793,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             MethodNode innerCandidate = null;
             List<MethodNode> candidates = getMethods(name, type);
             candidates.removeIf(m -> m.isPrivate() && !m.getDeclaringClass().equals(declaringType)); // GROOVY-8859
+            if (type.isInterface() && !Traits.isTrait(type) && !type.equals(declaringType)) candidates.removeIf(m -> m.isStatic()); // GROOVY-8164
             if (!candidates.isEmpty()) {
                 innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
                 if (innerCandidate != null && outerCandidate == null) {

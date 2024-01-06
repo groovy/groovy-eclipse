@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -679,6 +679,19 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
         String contents = "Other.&getName"; // not from Class
         assertKnown(contents, "getName", "Other", "java.lang.Object");
+    }
+
+    @Test // GROOVY-8164, GROOVY-11268
+    public void testStaticReference36() {
+        String contents =
+            "abstract class A implements Comparator<A> {\n" +
+            "  def c = comparing(this.&getP)\n" + // interface static method
+            "  int p\n" +
+            "}\n";
+        assertUnknown(contents, "comparing");
+
+        contents = contents.replace("comparing", "Comparator.comparing");
+        assertKnown(contents, "comparing", "java.util.Comparator", "java.util.Comparator<java.lang.Object>");
     }
 
     //
