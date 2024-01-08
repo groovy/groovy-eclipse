@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -398,8 +398,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     // visit methods relocated by @Trait
                     List<MethodNode> traitMethods = node.redirect().getNodeMetaData("trait.methods");
                     if (isNotEmpty(traitMethods)) {
-                        for (MethodNode method : traitMethods) {
-                            visitMethodInternal(method);
+                        ClassNode helper = Traits.findHelper(node); // Type$Trait$Helper hosts trait methods
+                        scopes.getLast().addVariable("this", VariableScope.newClassClassNode(helper), node);
+                        try {
+                            for (MethodNode method : traitMethods) {
+                                visitMethodInternal(method);
+                            }
+                        } finally {
+                            scopes.getLast().addVariable("this", VariableScope.newClassClassNode(node), node);
                         }
                     }
                 }

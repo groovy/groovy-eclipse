@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1128,10 +1128,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
     void testTraitMethods1() {
         String contents = '''\
             |trait T {
-            |  def m1() { x }
-            |  private def m2() {}
-            |  public static def m3() {}
-            |  private static def m4() {}
+            |  public  m1() { x }
+            |  private m2() {   }
+            |  public  static m3() {}
+            |  private static m4() {}
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
@@ -1145,9 +1145,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     void testTraitMethods2() {
         String contents = '''\
             |trait T {
-            |  def m1() {}
-            |  private def m2() { x }
-            |  public static def m3() {}
+            |  public  m1() {   }
+            |  private m2() { x }
+            |  public  static def m3() {}
             |  private static def m4() {}
             |}
             |'''.stripMargin()
@@ -1162,10 +1162,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
     void testTraitMethods3() {
         String contents = '''\
             |trait T {
-            |  def m1() {}
-            |  private def m2() {}
-            |  public static def m3() { x }
-            |  private static def m4() {}
+            |  public  m1() {}
+            |  private m2() {}
+            |  public  static m3() { x }
+            |  private static m4() {   }
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
@@ -1179,10 +1179,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
     void testTraitMethods4() {
         String contents = '''\
             |trait T {
-            |  def m1() {}
-            |  private def m2() {}
-            |  public static def m3() {}
-            |  private static def m4() { x }
+            |  public  m1() {}
+            |  private m2() {}
+            |  public  static m3() {   }
+            |  private static m4() { x }
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
@@ -1196,10 +1196,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
     void testTraitMethods5() {
         String contents = '''\
             |trait T {
-            |  def m1() {}
-            |  private def m2() {}
-            |  public static def m3() {}
-            |  private static def m4() {}
+            |  public  m1() {}
+            |  private m2() {}
+            |  public  static m3() {}
+            |  private static m4() {}
             |}
             |class C implements T {
             |  def m() {
@@ -1218,13 +1218,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
     void testTraitMethods6() {
         String contents = '''\
             |trait T {
-            |  def m1() {}
-            |  private def m2() {}
-            |  public static def m3() {}
-            |  private static def m4() {}
+            |  public  m1() {}
+            |  private m2() {}
+            |  public  static m3() {}
+            |  private static m4() {}
             |}
             |class C implements T {
-            |  static def m() {
+            |  static m() {
             |    x
             |  }
             |}

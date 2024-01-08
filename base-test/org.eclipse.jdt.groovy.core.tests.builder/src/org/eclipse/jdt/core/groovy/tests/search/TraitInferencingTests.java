@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -823,56 +823,21 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, offset, offset + 1, "T");
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8854
     public void testPublicStaticMethod2() {
         //@formatter:off
         String contents =
             "trait T {\n" +
             "  static m() {}\n" +
-            "}\n" +
-            "class C implements T {\n" +
-            "  void x() {\n" +
+            "  static x() {\n" +
             "    T.m()\n" +
-            "    C.m()\n" +
-            "    m()\n" +
+            "    m()\n" + // this.m($static$self)
             "  }\n" +
             "}\n";
         //@formatter:on
 
         int offset = contents.indexOf("T.m()") + 2;
         assertUnknownConfidence(contents, offset, offset + 1);
-
-        /**/offset = contents.indexOf("C.m()") + 2;
-        assertDeclaringType(contents, offset, offset + 1, "T");
-
-        /**/offset = contents.lastIndexOf("m()");
-        assertDeclaringType(contents, offset, offset + 1, "T");
-    }
-
-    @Test
-    public void testPublicStaticMethod2a() {
-        createUnit("T",
-            "trait T {\n" +
-            "  static m() {}\n" +
-            "}\n");
-        incrementalBuild();
-
-        //@formatter:off
-        String contents =
-            "class C implements T {\n" +
-            "  void x() {\n" +
-            "    T.m()\n" +
-            "    C.m()\n" +
-            "    m()\n" +
-            "  }\n" +
-            "}\n";
-        //@formatter:on
-
-        int offset = contents.indexOf("T.m()") + 2;
-        assertUnknownConfidence(contents, offset, offset + 1);
-
-        /**/offset = contents.indexOf("C.m()") + 2;
-        assertDeclaringType(contents, offset, offset + 1, "T");
 
         /**/offset = contents.lastIndexOf("m()");
         assertDeclaringType(contents, offset, offset + 1, "T");
@@ -886,6 +851,61 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  static m() {}\n" +
             "}\n" +
             "class C implements T {\n" +
+            "  void x() {\n" +
+            "    T.m()\n" +
+            "    C.m()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("T.m()") + 2;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+        /**/offset = contents.indexOf("C.m()") + 2;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+
+        /**/offset = contents.lastIndexOf("m()");
+        assertDeclaringType(contents, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod4() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n");
+        incrementalBuild();
+
+        //@formatter:off
+        String contents =
+            "class C implements T {\n" +
+            "  void x() {\n" +
+            "    T.m()\n" +
+            "    C.m()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("T.m()") + 2;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+        /**/offset = contents.indexOf("C.m()") + 2;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+
+        /**/offset = contents.lastIndexOf("m()");
+        assertDeclaringType(contents, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod5() {
+        //@formatter:off
+        String contents =
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n" +
+            "class C implements T {\n" +
             "}\n" +
             "T.m()\n" +
             "C.m()\n";
@@ -899,7 +919,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPublicStaticMethod3a() {
+    public void testPublicStaticMethod6() {
         createUnit("T",
             "trait T {\n" +
             "  static m() {}\n" +
@@ -922,7 +942,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPublicStaticMethod4() {
+    public void testPublicStaticMethod7() {
         //@formatter:off
         String contents =
             "trait T {\n" +
@@ -940,7 +960,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPublicStaticMethod4a() {
+    public void testPublicStaticMethod8() {
         createUnit("T",
             "trait T {\n" +
             "  static m() {'T'}\n" +
@@ -961,7 +981,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-10106
-    public void testPublicStaticMethod5() {
+    public void testPublicStaticMethod9() {
         for (String mods : new String[] {"", "@groovy.transform.TypeChecked ", "@groovy.transform.CompileStatic "}) {
             //@formatter:off
             String contents =
@@ -982,7 +1002,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1509
-    public void testPublicStaticMethod6() {
+    public void testPublicStaticMethod10() {
         //@formatter:off
         String contents =
             "trait T {\n" +
