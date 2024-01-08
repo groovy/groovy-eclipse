@@ -21,6 +21,7 @@ import org.codehaus.groovy.ast.expr.*
 
 import static org.apache.groovy.util.BeanUtils.capitalize
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName
+import static org.codehaus.groovy.transform.AbstractASTTransformation.getMemberStringList
 import static org.codehaus.groovy.transform.NamedVariantASTTransformation.NAMED_PARAM_TYPE
 
 @Field static final ClassNode NAMED_PARAMS_TYPE = ClassHelper.makeWithoutCaching(NamedParams)
@@ -45,8 +46,21 @@ contribute(currentType(annos: annotatedBy(Category))) {
 //@groovy.lang.Delegate
 contribute(currentType(fields: fields(annotatedBy(Delegate)))) {
     provider = '{@link groovy.lang.Delegate Delegate} AST transform'
-    for (FieldNode field : fields) {
-        delegatesTo type: field.type
+    for (FieldNode field : fields) { AnnotationNode node = field.getAnnotations(new ClassNode(Delegate))[0]
+        List<String> excludes = getMemberStringList(node, 'excludes')
+        List<String> includes = getMemberStringList(node, 'includes')
+        if (!excludes && includes) {
+            excludes = field.type.methods*.name - includes // inverse
+        }
+
+        Boolean deprecated = node.getMember('deprecated')?.value
+        Boolean interfaces = node.getMember('interfaces')?.value
+        if (!deprecated && (!field.type.isInterface() || Boolean.FALSE.equals(interfaces))) {
+            def names = field.type.methods.findAll(org.eclipse.jdt.groovy.core.util.GroovyUtils.&isDeprecated)*.name
+            if (names) excludes = (excludes ? excludes + names : names) // TODO: What if name is deprecated and not?
+        }
+
+        delegatesTo type: field.type, except: excludes
     }
 }
 
@@ -106,7 +120,7 @@ contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: an
             def resolveNewifyType = { String name ->
                 if (name.split('\\.')[-1].matches(expr.text)) {
                     ClassNode type = currentType.module.context.resolver.resolve(name)
-                    if (type != ClassHelper.DYNAMIC_TYPE) {
+                    if (!ClassHelper.isDynamicTyped(type)) {
                         addNewifyMethods(type)
                     }
                 }

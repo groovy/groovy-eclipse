@@ -21,6 +21,7 @@ import org.codehaus.groovy.ast.expr.*
 
 import static org.apache.groovy.util.BeanUtils.capitalize
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName
+import static org.codehaus.groovy.transform.AbstractASTTransformation.getMemberStringList
 
 // http://groovy-lang.org/metaprogramming.html#_available_ast_transformations
 
@@ -42,8 +43,21 @@ contribute(currentType(annos: annotatedBy(Category))) {
 //@groovy.lang.Delegate
 contribute(currentType(fields: fields(annotatedBy(Delegate)))) {
     provider = '{@link groovy.lang.Delegate Delegate} AST transform'
-    for (FieldNode field : fields) {
-        delegatesTo type: field.type
+    for (FieldNode field : fields) { AnnotationNode node = field.getAnnotations(new ClassNode(Delegate))[0]
+        List<String> excludes = getMemberStringList(node, 'excludes')
+        List<String> includes = getMemberStringList(node, 'includes')
+        if (!excludes && includes) {
+            excludes = field.type.methods*.name - includes // inverse
+        }
+
+        Boolean deprecated = node.getMember('deprecated')?.value
+        Boolean interfaces = node.getMember('interfaces')?.value
+        if (!deprecated && (!field.type.isInterface() || Boolean.FALSE.equals(interfaces))) {
+            def names = field.type.methods.findAll(org.eclipse.jdt.groovy.core.util.GroovyUtils.&isDeprecated)*.name
+            if (names) excludes = (excludes ? excludes + names : names) // TODO: What if name is deprecated and not?
+        }
+
+        delegatesTo type: field.type, except: excludes
     }
 }
 
@@ -218,8 +232,8 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | ha
         }
 
         Map<String, ?> requiredParams = [:], optionalParams = [:]
-        for (AnnotationNode anno : parm.getAnnotations(ClassHelper.make(NamedParam)) ?:
-                parm.getAnnotations(ClassHelper.make(NamedParams)).collectMany { it.getMember('value').expressions*.value }) {
+        for (AnnotationNode anno : parm.getAnnotations(new ClassNode(NamedParam)) ?:
+                parm.getAnnotations(new ClassNode(NamedParams)).collectMany { it.getMember('value').expressions*.value }) {
             String name = anno.getMember('value').value
             def type = anno.getMember('type')?.type
             if (type == null) NamedParam.getMethod('type').defaultValue

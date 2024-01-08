@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,8 +61,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         }
 
         assert pluginEntry != null : "Did not find the Plugin DSLD classpath entry.  Exsting resolved roots: [\n${ -> elements.join(', ')}\n]\nOther DSLD fragments: [\n${ -> possibleFrags.join('\n')}\n]"
-        assert root != null : "Plugin DSLD classpath entry should exist.  Exsting resolved roots: [\n${ -> elements.join(', ')}\n]\nOther DSLD fragments: [\n${ -> possibleFrags.join('\n')}\n]"
-        assert root.exists() : 'Plugin DSLD classpath entry should exist'
+        assert root != null && root.exists() : "Plugin DSLD classpath entry should exist.  Exsting resolved roots: [\n${ -> elements.join(', ')}\n]\nOther DSLD fragments: [\n${ -> possibleFrags.join('\n')}\n]"
 
         root.resource().refreshLocal(IResource.DEPTH_INFINITE, null)
         root.close(); root.open(null)
@@ -90,10 +89,57 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     @Test
     void testDelegate2() {
         String contents = '''\
-            |class Bar {
+            |class Foo {
+            |  @Delegate List<Integer> list
+            |}
+            |new Foo().spliterator() // default method of List
+            |'''.stripMargin()
+
+        inferType(contents, 'spliterator').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'java.util.List<java.lang.Integer>'
+            assert typeName == 'java.util.Spliterator<java.lang.Integer>'
+        }
+    }
+
+    @Test
+    void testDelegate3() {
+        String contents = '''\
+            |class Foo {
+            |  @Delegate List<Integer> list
+            |}
+            |new Foo().stream() // default method of Collection
+            |'''.stripMargin()
+
+        inferType(contents, 'stream').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'java.util.List<java.lang.Integer>'
+            assert typeName == 'java.util.stream.Stream<java.lang.Integer>'
+        }
+    }
+
+    @Test
+    void testDelegate4() {
+        String contents = '''\
+            |class Foo {
+            |  @Delegate List<Integer> list
+            |}
+            |new Foo()./**/equals(null) // method of List and Object
+            |'''.stripMargin()
+
+        inferType(contents, 'equals').with {
+            assert declaringTypeName == 'java.lang.Object'
+            assert result.extraDoc == null
+        }
+    }
+
+    @Test
+    void testDelegate5() {
+        String contents = '''\
+            |class Foo {
             |  @Delegate URL url
             |}
-            |new Bar().file
+            |new Foo().file // getFile() as property
             |'''.stripMargin()
 
         inferType(contents, 'file').with {
@@ -104,7 +150,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test // GROOVY-5204
-    void testDelegate3() {
+    void testDelegate6() {
         String contents = '''\
             |class Bar {
             |  def baz() {}
@@ -123,7 +169,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test // GROOVY-5204
-    void testDelegate4() {
+    void testDelegate7() {
         String contents = '''\
             |class Bar {
             |  def baz() {}
@@ -143,19 +189,122 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test // GROOVY-3917
-    void testDelegate5() {
+    void testDelegate8() {
         String contents = '''\
             |class Bar {
             |}
             |class Foo {
             |  @Delegate Bar bar = new Bar()
             |}
-            |new Foo().getProperty('baz')
+            |new Foo().getProperty('baz') // method of GroovyObject
             |'''.stripMargin()
 
         inferType(contents, 'getProperty').with {
             assert declaringTypeName != 'Bar'
             assert result.extraDoc == null
+        }
+    }
+
+    @Test // GROOVY-8164
+    void testDelegate9() {
+        String contents = '''\
+            |class Bar {
+            |  def baz
+            |}
+            |class Foo {
+            |  @Delegate Comparator<Bar> cmp
+            |}
+            |new Foo().comparing(Bar.&getBaz) // static method of Comparator
+            |'''.stripMargin()
+
+        inferType(contents, 'comparing').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testDelegate10() {
+        String contents = '''\
+            |class Bar {
+            |  def baz
+            |}
+            |class Foo {
+            |  @Delegate(excludes=['compare','equals']) Comparator<Bar> cmp
+            |}
+            |new Foo().compare(null, null)
+            |'''.stripMargin()
+
+        inferType(contents, 'compare').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testDelegate11() {
+        String contents = '''\
+            |class Bar {
+            |  def baz
+            |}
+            |class Foo {
+            |  @Delegate(includes='compare') Comparator<Bar> cmp
+            |}
+            |new Foo().compare(null, null)
+            |'''.stripMargin()
+
+        inferType(contents, 'compare').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'java.util.Comparator<Bar>'
+            assert typeName == 'java.lang.Integer'
+        }
+    }
+
+    @Test
+    void testDelegate12() {
+        addGroovySource '''\
+            |class Bar {
+            |  @Deprecated
+            |  int baz(){}
+            |}
+            |'''.stripMargin(), 'Bar'
+
+        String contents = '''\
+            |class Foo {
+            |  @Delegate Bar bar
+            |}
+            |new Foo().baz()
+            |'''.stripMargin()
+
+        inferType(contents, 'baz').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+
+        contents = contents.replace('@Delegate', '@Delegate(deprecated=true)')
+
+        inferType(contents, 'baz').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'Bar'
+            assert typeName == 'java.lang.Integer'
+        }
+    }
+
+    @Test
+    void testDelegate13() {
+        addGroovySource '''\
+            |interface Bar {
+            |  @Deprecated
+            |  int baz()
+            |}
+            |'''.stripMargin(), 'Bar'
+
+        String contents = '''\
+            |class Foo {
+            |  @Delegate(interfaces=false) Bar bar
+            |}
+            |new Foo().baz()
+            |'''.stripMargin()
+
+        inferType(contents, 'baz').with {
+            assert result.confidence.name() == 'UNKNOWN'
         }
     }
 
@@ -382,7 +531,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |class E {
             |  String value
             |}
-            |new E().compareTo(null)
+            |new E()./**/compareTo(null)
             |'''.stripMargin()
 
         inferType(contents, 'compareTo').with {
