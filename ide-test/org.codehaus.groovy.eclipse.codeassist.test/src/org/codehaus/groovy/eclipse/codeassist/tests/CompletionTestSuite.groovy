@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.groovy.search.ITypeRequestor
@@ -55,6 +56,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     @Before
     final void setUpCompletionTestCase() {
+        setJavaPreference(JavaCore.CODEASSIST_SUBWORD_MATCH, 'disabled')
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, true)
         setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, true)
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)

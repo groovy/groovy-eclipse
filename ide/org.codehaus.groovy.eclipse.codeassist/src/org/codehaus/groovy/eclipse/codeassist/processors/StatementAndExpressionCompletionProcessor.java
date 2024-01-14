@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,12 +132,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         ExpressionCompletionRequestor requestor = new ExpressionCompletionRequestor();
         AssistOptions options = new AssistOptions(getJavaContext().getProject().getOptions(true));
 
-        // if completion node is null, then it is likely because of a syntax error
+        // if completion node is null, it is likely because of a syntax error
         if (completionNode != null) {
             visitor.visitCompilationUnit(requestor);
         }
 
-        List<IGroovyProposal> groovyProposals = new ArrayList<>();
+        List<IGroovyProposal> groovyProposals = new ArrayList<>(64);
         boolean isStatic, isPrimary = (context.location == ContentAssistLocation.STATEMENT ||
             context.location == ContentAssistLocation.METHOD_CONTEXT && isReceiverImplicit(context));
         ClassNode completionType;
@@ -175,7 +175,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             completionType = (context.containingDeclaration instanceof ClassNode
                 ? (ClassNode) context.containingDeclaration : context.unit.getModuleNode().getScriptClassDummy());
 
-            // we are at the statement location of a script
+            // if we are at the statement location of a script,
             // return the category proposals only
             AnnotatedNode node = context.containingDeclaration;
             ClassNode containingClass;
@@ -187,9 +187,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 containingClass = null;
             }
             if (containingClass != null) {
-                Set<ClassNode> categories = context.unit.getModuleNode().getNodeMetaData(VariableScope.DGM_CLASS_NODE.getTypeClass());
-                groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(
-                    containingClass, categories, context.getPerceivedCompletionExpression(), false, isPrimary));
+                Collection<IProposalCreator> creators = Collections.singleton(new CategoryProposalCreator());
+                requestor.categories = new VariableScope(null, context.unit.getModuleNode(), true).getCategoryNames();
+                proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic, isPrimary);
             } else if (node instanceof ImportNode) {
                 ImportNode importNode = (ImportNode) node;
                 if (importNode.isStatic()) {
@@ -320,12 +320,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 ((AbstractProposalCreator) creator).setCurrentScope(requestor.currentScope);
                 ((AbstractProposalCreator) creator).setFavoriteStaticMembers(context.getFavoriteStaticMembers());
                 ((AbstractProposalCreator) creator).setNameMatchingStrategy((String pattern, String candidate) -> {
-                    return ProposalUtils.matches(pattern, candidate, options.camelCaseMatch, options.substringMatch);
+                    return ProposalUtils.matches(pattern, candidate, options.camelCaseMatch, options.subwordMatch);
                 });
             }
-            String completionExpression = context.getPerceivedCompletionExpression();
+            String completionString = context.getPerceivedCompletionExpression();
             groovyProposals.addAll(
-                creator.findAllProposals(completionType, requestor.categories, completionExpression, isStatic, isPrimary));
+                creator.findAllProposals(completionType, requestor.categories, completionString, isStatic, isPrimary));
         }
     }
 
@@ -337,7 +337,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         CompletionEngine engine = new CompletionEngine(getNameEnvironment(), completionRequestor, javaContext.getProject().getOptions(true), javaContext.getProject(), null, monitor);
         //@formatter:on
 
-        Map<String, List<IJavaCompletionProposal>> javaProposals = new HashMap<>(groovyProposals.size());
+        Map<String, List<IJavaCompletionProposal>> javaProposals = new HashMap<>(groovyProposals.size() * 3 / 2);
         for (IGroovyProposal groovyProposal : groovyProposals) {
             try {
                 IJavaCompletionProposal javaProposal = groovyProposal.createJavaProposal(engine, context, javaContext);
@@ -368,7 +368,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             if (n == 1) {
                 completionProposals.add(group.get(0));
             } else { // de-duplicate the proposal group
-                Map<String, IJavaCompletionProposal> map = new HashMap<>(n);
+                Map<String, IJavaCompletionProposal> map = new HashMap<>();
                 for (IJavaCompletionProposal jcp : group) {
                     String key = jcp.getDisplayString();
                     int i = key.indexOf(" - ") + 3;

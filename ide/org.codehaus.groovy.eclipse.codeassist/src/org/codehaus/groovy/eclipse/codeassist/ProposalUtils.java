@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
@@ -249,13 +250,18 @@ public class ProposalUtils {
         return matches(prefix, target, true, false);
     }
 
-    public static boolean matches(String pattern, String candidate, boolean camelCaseMatch, boolean substringMatch) {
+    public static boolean matches(String pattern, String candidate, boolean cmlCaseMatch, boolean subWordMatch) {
         if (pattern.isEmpty()) {
             return true;
         }
-        if (camelCaseMatch && SearchPattern.camelCaseMatch(pattern, candidate)) {
+        if (cmlCaseMatch && SearchPattern.camelCaseMatch(pattern, candidate)) {
+            return true;
+        }
+        if (subWordMatch && CharOperation.getSubWordMatchingRegions(pattern, candidate) != null) {
             return true;
         }
         return substringMatch ? CharOperation.substringMatch(pattern, candidate) : candidate.startsWith(pattern);
     }
+
+    static boolean substringMatch = !("false".equals(System.getProperty(AssistOptions.PROPERTY_SubstringMatch)));
 }

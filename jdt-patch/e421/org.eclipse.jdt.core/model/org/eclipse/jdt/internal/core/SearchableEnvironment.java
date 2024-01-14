@@ -550,12 +550,6 @@ private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, I
 		findTypes(prefix, findMembers, camelCaseMatch ? SearchPattern.R_PREFIX_MATCH | SearchPattern.R_CAMELCASE_MATCH : SearchPattern.R_PREFIX_MATCH, searchFor, storage, null);
 	}
 
-	// GROOVY add
-	public void findTypes(final char[] prefix, final boolean findMembers, final boolean camelCaseMatch, final int searchFor, final ISearchRequestor storage, final IProgressMonitor monitor) {
-		findTypes(prefix, findMembers, SearchPattern.R_CAMELCASE_MATCH, searchFor, storage, monitor);
-	}
-	// GROOVY end
-
 	/**
 	 * Must be used only by CompletionEngine.
 	 * The progress monitor is used to be able to cancel completion operations
@@ -742,8 +736,8 @@ private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, I
 	}
 
 	// GROOVY add
-	public void findConstructorDeclarations(final char[] prefix, final boolean camelCaseMatch, final ISearchRequestor storage, final IProgressMonitor monitor) {
-		findConstructorDeclarations(prefix, SearchPattern.R_CAMELCASE_MATCH, storage, monitor);
+	public void findConstructorDeclarations(char[] prefix, int matchRule, boolean unused, ISearchRequestor storage, IProgressMonitor monitor) {
+		findConstructorDeclarations(prefix, matchRule, storage, monitor);
 	}
 	// GROOVY end
 

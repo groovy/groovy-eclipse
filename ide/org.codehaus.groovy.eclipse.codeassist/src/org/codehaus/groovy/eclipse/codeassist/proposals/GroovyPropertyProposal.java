@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,27 +53,24 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
     }
 
     protected StyledString createDisplayString(PropertyNode property) {
-        StyledString ss = new StyledString();
-
-        ss.append(property.getName())
-          .append(" : ")
-          .append(ProposalUtils.createSimpleTypeName(property.getType()))
-          .append(" - ")
-          .append(ProposalUtils.createSimpleTypeName(property.getDeclaringClass()), StyledString.QUALIFIER_STYLER)
-          .append(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
-        return ss;
+        return new StyledString()
+            .append(property.getName())
+            .append(" : ")
+            .append(ProposalUtils.createSimpleTypeName(property.getType()))
+            .append(" - ")
+            .append(ProposalUtils.createSimpleTypeName(property.getDeclaringClass()), StyledString.QUALIFIER_STYLER)
+            .append(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
     }
 
     private CompletionProposal createProposal(ContentAssistContext context) {
-        InternalCompletionProposal proposal = (InternalCompletionProposal) CompletionProposal.create(CompletionProposal.FIELD_REF, context.completionLocation);
+        var proposal = (InternalCompletionProposal) CompletionProposal.create(CompletionProposal.FIELD_REF, context.completionLocation);
         proposal.setFlags(property.getModifiers() | (GroovyUtils.isDeprecated(property) ? Flags.AccDeprecated : 0));
         proposal.setName(property.getName().toCharArray());
         proposal.setCompletion(proposal.getName());
+        proposal.setRelevance(computeRelevance(context));
         proposal.setSignature(ProposalUtils.createTypeSignature(property.getType()));
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(property.getDeclaringClass()));
-        proposal.setRelevance(computeRelevance(context));
-        int startIndex = context.completionLocation-context.completionExpression.length();
-        proposal.setReplaceRange(startIndex, context.completionEnd);
+        proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
         return proposal;
     }
 }

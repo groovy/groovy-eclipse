@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -232,7 +232,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
             private <T extends AbstractProposalCreator> T initProposalCreator(T proposalCreator) {
                 AssistOptions options = new AssistOptions(javaContext.getProject().getOptions(true));
                 proposalCreator.setNameMatchingStrategy((String pattern, String candidate) -> {
-                    return ProposalUtils.matches(pattern, candidate, options.camelCaseMatch, options.substringMatch);
+                    return ProposalUtils.matches(pattern, candidate, options.camelCaseMatch, options.subwordMatch);
                 });
                 return proposalCreator;
             }

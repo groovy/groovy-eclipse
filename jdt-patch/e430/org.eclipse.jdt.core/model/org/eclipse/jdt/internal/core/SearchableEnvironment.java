@@ -1,4 +1,3 @@
-// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
@@ -564,6 +563,7 @@ private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, I
 	public void findTypes(char[] prefix, final boolean findMembers, boolean camelCaseMatch, int searchFor, final ISearchRequestor storage) {
 		findTypes(prefix, findMembers, camelCaseMatch ? SearchPattern.R_PREFIX_MATCH | SearchPattern.R_CAMELCASE_MATCH : SearchPattern.R_PREFIX_MATCH, searchFor, storage, null);
 	}
+
 	/**
 	 * Must be used only by CompletionEngine.
 	 * The progress monitor is used to be able to cancel completion operations
@@ -585,12 +585,6 @@ private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, I
 	public void findTypes(char[] prefix, final boolean findMembers, int matchRule, int searchFor, final ISearchRequestor storage, IProgressMonitor monitor) {
 		findTypes(prefix, findMembers, matchRule, searchFor, true, storage, monitor);
 	}
-
-	// GROOVY add
-	public void findTypes(final char[] prefix, final boolean findMembers, final boolean camelCaseMatch, final int searchFor, final ISearchRequestor storage, final IProgressMonitor monitor) {
-		findTypes(prefix, findMembers, SearchPattern.R_CAMELCASE_MATCH, searchFor, storage, monitor);
-	}
-	// GROOVY end
 
 	/**
 	 * Must be used only by CompletionEngine.
@@ -779,12 +773,6 @@ private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, I
 				this.timeSpentInFindTypes += System.currentTimeMillis()-start;
 		}
 	}
-
-	// GROOVY add
-	public void findConstructorDeclarations(final char[] prefix, final boolean camelCaseMatch, final ISearchRequestor storage, final IProgressMonitor monitor) {
-		findConstructorDeclarations(prefix, SearchPattern.R_CAMELCASE_MATCH, false, storage, monitor);
-	}
-	// GROOVY end
 
 	/**
 	 * Must be used only by CompletionEngine.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilterExtension;
-import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -32,52 +31,51 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 public class DSLDProposalFilter implements IProposalFilterExtension {
 
     @Override
-    public List<IGroovyProposal> filterProposals(List<IGroovyProposal> proposals,
-            ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
-        return null;
-    }
+    public List<ICompletionProposal> filterExtendedProposals(final List<ICompletionProposal> proposals,
+            final ContentAssistContext context, final JavaContentAssistInvocationContext javaContext) {
+        if (!org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
+            Map<String, ICompletionProposal> map = new LinkedHashMap<>(proposals.size() * 3 / 2);
 
-    @Override
-    public List<ICompletionProposal> filterExtendedProposals(List<ICompletionProposal> proposals,
-                    ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
-        Map<String, ICompletionProposal> map = new LinkedHashMap<>();
-
-        for (ICompletionProposal proposal : proposals) {
-            String key = getKeyString(proposal);
-            ICompletionProposal previous = map.put(key, proposal);
-            if (previous instanceof IJavaCompletionProposal && proposal instanceof IJavaCompletionProposal) {
-                int r1 = ((IJavaCompletionProposal) previous).getRelevance();
-                int r2 = ((IJavaCompletionProposal) proposal).getRelevance();
-                if (r1 > r2) {
-                    map.put(key, previous);
+            for (ICompletionProposal proposal : proposals) {
+                String key = getKeyString(proposal);
+                ICompletionProposal previous = map.put(key, proposal);
+                if (previous instanceof IJavaCompletionProposal && proposal instanceof IJavaCompletionProposal) {
+                    int r1 = ((IJavaCompletionProposal) previous).getRelevance();
+                    int r2 = ((IJavaCompletionProposal) proposal).getRelevance();
+                    if (r1 > r2) {
+                        map.put(key, previous);
+                    }
                 }
             }
-        }
 
-        if (map.size() != proposals.size()) {
-            return new ArrayList<>(map.values());
+            if (map.size() != proposals.size()) {
+                return new ArrayList<>(map.values());
+            }
         }
         return null;
     }
 
-    private static String getKeyString(ICompletionProposal proposal) {
+    private static String getKeyString(final ICompletionProposal proposal) {
         String key = proposal.getDisplayString();
         Matcher m = BASE_DESC.matcher(key);
         if (m.find()) key = m.group();
 
         // key for method: "printf(String format, Object[] values) : void - DefaultGroovyMethods"
-        String[] tokens = key.split("\\(|\\)|,");
-        if (tokens.length > 1) {
-            StringBuilder buf = new StringBuilder(tokens[0]).append('(');
-            for (int i = 1; i < tokens.length - 1; i += 1) {
-                if (i > 1) buf.append(',');
-                // remove parameter name from key string
-                buf.append(tokens[i].replaceFirst(" \\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*$", ""));
+        int lparen = key.indexOf('('), rparen = key.indexOf(')', lparen);
+        if (lparen > 0 && rparen > lparen + 1) {
+            StringBuilder buf = new StringBuilder(key.length()).append(key, 0, lparen + 1);
+            String[] tokens = key.substring(lparen + 1, rparen).split(", ");
+            for (int i = 0; i < tokens.length; ++i) {
+                if (i != 0) buf.append(',');
+                // remove parameter name (if present)
+                int end = tokens[i].lastIndexOf(' ');
+                if (end < 0) end= tokens[i].length();
+                buf.append(tokens[i], 0, end);
             }
-            buf.append(')').append(tokens[tokens.length - 1]);
+            buf.append(key, rparen, key.length());
             key = buf.toString();
         }
-        // key for method: "printf(String, Object[]) : void - DefaultGroovyMethods"
+        // key for method: "printf(String,Object[]) : void - DefaultGroovyMethods"
 
         return key;
     }

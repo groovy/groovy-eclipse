@@ -572,7 +572,7 @@ public class DSLContributionGroup extends ContributionGroup {
             }
         }
 
-        Map<String, ClassNode> params = new LinkedHashMap<>(parameters.length);
+        Map<String, ClassNode> params = new LinkedHashMap<>();
         for (int i = 0; i < parameters.length; i += 1) {
             params.put(names != null ? names[i] : parameters[i].getName(), parameters[i].getType());
         }

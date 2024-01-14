@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -258,6 +258,7 @@ public class GroovyDSLDContext {
     public void setTargetType(ClassNode targetType) {
         if (currentScope.isPrimaryNode() && VariableScope.CLASS_CLASS_NODE.equals(targetType) && targetType.isUsingGenerics()) {
             targetType = targetType.getGenericsTypes()[0].getType();
+            this.isStatic = true; // not a Class instance anymore
         }
         this.targetType = targetType;
         cachedHierarchy = null;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.dsl.proposals;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -25,6 +24,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -37,29 +37,29 @@ import org.codehaus.groovy.eclipse.dsl.contributions.IContributionElement;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 
 public class DSLDProposalProvider implements IProposalProvider {
 
     @Override
-    public List<String> getNewFieldProposals(ContentAssistContext context) {
+    public List<String> getNewFieldProposals(final ContentAssistContext context) {
         return null;
     }
 
     @Override
-    public List<MethodNode> getNewMethodProposals(ContentAssistContext context) {
+    public List<MethodNode> getNewMethodProposals(final ContentAssistContext context) {
         return null;
     }
 
     @Override
-    public List<IGroovyProposal> getStatementAndExpressionProposals(ContentAssistContext context,
-            ClassNode completionType, boolean isStatic, Set<ClassNode> categories) {
+    public List<IGroovyProposal> getStatementAndExpressionProposals(final ContentAssistContext context,
+            final ClassNode completionType, final boolean isStatic, final Set<ClassNode> categoryTypes) {
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Getting DSL proposals for " + context.fullCompletionExpression);
             event = "DSL proposals";
             GroovyLogManager.manager.logStart(event);
         }
-        List<IContributionElement> contributions;
         List<IGroovyProposal> proposals = new ArrayList<>();
         try {
             DSLDStore store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(context.unit.getJavaProject().getProject());
@@ -68,28 +68,32 @@ public class DSLDProposalProvider implements IProposalProvider {
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Null module node for " + context.unit.getElementName());
                 }
-                return Collections.EMPTY_LIST;
-            }
+            } else {
+                GroovyDSLDContext dsldContext = new GroovyDSLDContext(context.unit, info.module, info.resolver);
+                dsldContext.setCurrentScope(context.currentScope);
+                dsldContext.setPrimaryNode(
+                    (context.location == ContentAssistLocation.SCRIPT) ||
+                    (context.location == ContentAssistLocation.STATEMENT) ||
+                    (context.location == ContentAssistLocation.METHOD_CONTEXT && context.currentScope.isPrimaryNode()));
+                dsldContext.setStatic(isStatic);
+                dsldContext.setTargetType(completionType);
 
-            GroovyDSLDContext pattern = new GroovyDSLDContext(context.unit, info.module, info.resolver);
-            pattern.setCurrentScope(context.currentScope);
-            pattern.setPrimaryNode(context.location == ContentAssistLocation.SCRIPT || context.location == ContentAssistLocation.STATEMENT ||
-                (context.location == ContentAssistLocation.METHOD_CONTEXT && context.currentScope.isPrimaryNode()));
-            pattern.setStatic(isStatic);
-            pattern.setTargetType(completionType);
+                List<IContributionElement> contributions = store.findContributions(dsldContext, DSLPreferences.getDisabledScriptsAsSet());
 
-            contributions = store.findContributions(pattern, DSLPreferences.getDisabledScriptsAsSet());
+                String completionString = context.getPerceivedCompletionExpression();
+                boolean isMethodContext = context instanceof MethodInfoContentAssistContext;
+                AssistOptions   options = new AssistOptions(context.unit.getJavaProject().getOptions(true));
 
-            boolean isMethodContext = (context instanceof MethodInfoContentAssistContext);
-            for (IContributionElement element : contributions) {
-                if (element.getContributionName().startsWith(context.getPerceivedCompletionExpression())) {
-                    IGroovyProposal proposal = element.toProposal(completionType, pattern.getResolverCache());
-                    if (proposal != null) {
-                        proposals.add(proposal);
-                    }
-                    if (isMethodContext) {
-                        // also add any related proposals, like those for method parameters
-                        proposals.addAll(element.extraProposals(completionType, pattern.getResolverCache(), (Expression) context.completionNode));
+                for (IContributionElement element : contributions) {
+                    if (ProposalUtils.matches(completionString, element.getContributionName(), options.camelCaseMatch, options.subwordMatch)) {
+                        IGroovyProposal proposal = element.toProposal(completionType, dsldContext.getResolverCache());
+                        if (proposal != null) {
+                            proposals.add(proposal);
+                        }
+                        if (isMethodContext) {
+                            // also add any related proposals, like those for method parameters
+                            proposals.addAll(element.extraProposals(completionType, dsldContext.getResolverCache(), (Expression) context.completionNode));
+                        }
                     }
                 }
             }

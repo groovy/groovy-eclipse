@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -190,7 +190,7 @@ public class MethodContributionElement implements IContributionElement {
     }
 
     private Map<String, ClassNode> collectAvailableParameters(final ResolverCache resolver) {
-        Map<String, ClassNode> available = new HashMap<>(namedParams.length + optionalParams.length);
+        Map<String, ClassNode> available = new HashMap<>();
 
         for (ParameterContribution param : namedParams) {
             available.put(param.name, param.toParameter(resolver).getType());

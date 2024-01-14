@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -189,7 +189,7 @@ public class PropertyAccessRenameParticipant extends RenameParticipant {
     }
 
     private SearchResultGroup[] convertMatches() {
-        Map<IResource, SearchResultGroup> groups = new HashMap<>(matches.size());
+        Map<IResource, SearchResultGroup> groups = new HashMap<>();
 
         for (SearchMatch match : matches) {
             if (match.getResource() != null) {
@@ -287,7 +287,7 @@ public class PropertyAccessRenameParticipant extends RenameParticipant {
     }
 
     private Map<String, String> getNameMap() {
-        Map<String, String> nameMap = new HashMap<>(4);
+        Map<String, String> nameMap = new HashMap<>();
         String newBaseName = propertyName(getArguments().getNewName());
         String oldBaseName = propertyName(renameTarget.getElementName());
 

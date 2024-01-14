@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1293,7 +1293,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         proposalExists(proposals, 'string', 1)
 
         proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getStr'))
-        proposalExists(proposals, 'getString()', 1)
+        proposalExists(proposals, 'getString', 1)
     }
 
     @Test
@@ -1317,7 +1317,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         proposalExists(proposals, 'string', 1)
 
         proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getStr'))
-        proposalExists(proposals, 'getString()', 1)
+        proposalExists(proposals, 'getString', 1)
     }
 
     @Test
@@ -1346,11 +1346,24 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     void testSortableTransform1() {
         String contents = '''\
             |import groovy.transform.*
-            |@Sortable class Foo {}
+            |@Sortable class Foo { }
             |new Foo().com
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'com'))
         // contributed by built-in DLSD for @Sortable AST transform
-        proposalExists(proposals, 'compareTo(Foo other) : int', 1)
+        proposalExists(proposals, 'compareTo', 1)
+    }
+
+    @Test
+    void testSortableTransform2() {
+        String contents = '''\
+            |import groovy.transform.*
+            |@Sortable class Foo { def bar }
+            |Foo.com
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'com'))
+        // contributed by built-in DLSD for @Sortable AST transform
+        proposalExists(proposals, 'comparatorByBar', 1)
+        proposalExists(proposals, 'compareTo', 0)
     }
 }
