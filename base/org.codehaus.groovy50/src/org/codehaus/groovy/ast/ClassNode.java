@@ -152,15 +152,16 @@ public class ClassNode extends AnnotatedNode {
     private List<Statement> objectInitializers;
     // GRECLIPSE private->protected
     protected List<ConstructorNode> constructors;
+    // TODO: initialize for primary nodes only!
     // GRECLIPSE private->protected
-    protected final MapOfLists methods;
-    private List<MethodNode> methodsList;
+    protected final MapOfLists methods = new MapOfLists();
+    private List<MethodNode> methodsList = Collections.EMPTY_LIST;
     private List<FieldNode> fields;
     private List<PropertyNode> properties;
     private Map<String, FieldNode> fieldIndex;
     private ClassNode superClass;
     protected boolean isPrimaryNode;
-    // TODO: initialize for primary nodes only!!
+    // TODO: initialize for primary nodes only!
     private List<ClassNode> permittedSubclasses = new ArrayList<>();
     private List<RecordComponentNode> recordComponents = Collections.EMPTY_LIST;
 
@@ -197,7 +198,7 @@ public class ClassNode extends AnnotatedNode {
 
     /**
      * @param name       the fully-qualified name of the class
-     * @param modifiers  the modifiers; see {@link java.lang.reflect.Modifier Modifier} or {@link groovyjarjarasm.asm.Opcodes}
+     * @param modifiers  the modifiers; see {@link java.lang.reflect.Modifier Modifier} or {@link groovyjarjarasm.asm.Opcodes Opcodes}
      * @param superClass the base class; use "java.lang.Object" if no direct base class
      * @param interfaces the interfaces
      * @param mixins     the mixins
@@ -205,8 +206,7 @@ public class ClassNode extends AnnotatedNode {
     public ClassNode(final String name, final int modifiers, final ClassNode superClass, final ClassNode[] interfaces, final MixinNode[] mixins) {
         this.name = name;
         this.modifiers = modifiers;
-        methods = new MapOfLists();
-        methodsList = Collections.emptyList();
+
         this.isPrimaryNode = true;
         setSuperClass(superClass);
         setInterfaces(interfaces);
@@ -215,7 +215,7 @@ public class ClassNode extends AnnotatedNode {
 
     /**
      * @param name       the fully-qualified name of the class
-     * @param modifiers  the modifiers; see {@link java.lang.reflect.Modifier Modifier} or {@link groovyjarjarasm.asm.Opcodes}
+     * @param modifiers  the modifiers; see {@link java.lang.reflect.Modifier Modifier} or {@link groovyjarjarasm.asm.Opcodes Opcodes}
      * @param superClass the base class; use "java.lang.Object" if no direct base class
      */
     public ClassNode(final String name, final int modifiers, final ClassNode superClass) {
@@ -679,7 +679,7 @@ public class ClassNode extends AnnotatedNode {
         ClassNode r = redirect();
         node.setDeclaringClass(r);
         if (r.methodsList.isEmpty()) {
-            r.methodsList = new ArrayList<>(4);
+            r.methodsList = new ArrayList<>(8);
         }
         r.methodsList.add(node);
         r.methods.put(node.getName(), node);

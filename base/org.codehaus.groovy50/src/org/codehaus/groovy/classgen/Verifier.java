@@ -266,6 +266,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             if (node.getNodeMetaData(ClassNodeSkip.class) == null) {
                 node.setNodeMetaData(ClassNodeSkip.class, Boolean.TRUE);
             }
+            if (node.isInterface()) {
+                // GROOVY-11273
+                checkFinalVariables(node);
+            }
             return;
         }
 

@@ -1364,28 +1364,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         throw createParsingFailedException("Unsupported type declaration: " + ctx.getText(), ctx);
     }
 
-    private void initUsingGenerics(final ClassNode classNode) {
-        if (classNode.isUsingGenerics()) {
-            return;
-        }
-
-        if (!classNode.isEnum()) {
-            classNode.setUsingGenerics(classNode.getSuperClass().isUsingGenerics());
-        }
-
-        if (!classNode.isUsingGenerics() && null != classNode.getInterfaces()) {
-            for (ClassNode anInterface : classNode.getInterfaces()) {
-                classNode.setUsingGenerics(classNode.isUsingGenerics() || anInterface.isUsingGenerics());
-
-                if (classNode.isUsingGenerics())
-                    break;
-            }
-        }
-    }
-
     @Override
     public ClassNode visitClassDeclaration(final ClassDeclarationContext ctx) {
-        String packageName = Optional.ofNullable(moduleNode.getPackageName()).orElse("");
+        String packageName = Optional.ofNullable(this.moduleNode.getPackageName()).orElse("");
         String className = this.visitIdentifier(ctx.identifier());
         if ("var".equals(className)) {
             throw createParsingFailedException("var cannot be used for type declarations", ctx.identifier());
@@ -1477,7 +1458,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         boolean syntheticPublic = ((modifiers & Opcodes.ACC_SYNTHETIC) != 0);
         modifiers &= ~Opcodes.ACC_SYNTHETIC;
 
-        ClassNode classNode, outerClass = classNodeStack.peek();
+        ClassNode classNode, outerClass = this.classNodeStack.peek();
 
         if (isEnum) {
             classNode = EnumHelper.makeEnumNode(
@@ -1564,17 +1545,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 classNode.setSuperClass(scs[0]);
             }
             classNode.setInterfaces(this.visitTypeList(ctx.is));
-            this.initUsingGenerics(classNode);
+            this.checkUsingGenerics(classNode);
 
         } else if (isInterface) {
             classNode.setModifiers(classNode.getModifiers() | Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT);
             classNode.setInterfaces(this.visitTypeList(ctx.scs));
-            this.initUsingGenerics(classNode);
+            this.checkUsingGenerics(classNode);
             this.hackMixins(classNode);
 
         } else if (isEnum || isRecord) {
             classNode.setInterfaces(this.visitTypeList(ctx.is));
-            this.initUsingGenerics(classNode);
+            this.checkUsingGenerics(classNode);
             if (isRecord) {
                 this.transformRecordHeaderToProperties(ctx, classNode);
             }
@@ -1588,30 +1569,43 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             throw createParsingFailedException("Unsupported class declaration: " + ctx.getText(), ctx);
         }
 
-        // we put the class already in output to avoid the most inner classes
-        // will be used as first class later in the loader. The first class
-        // there determines what GCL#parseClass for example will return, so we
-        // have here to ensure it won't be the inner class
-        if (asBoolean(ctx.CLASS()) || asBoolean(ctx.TRAIT())) {
-            classNodeList.add(classNode);
-        }
-
-        classNodeStack.push(classNode);
+        this.classNodeStack.push(classNode);
         ctx.classBody().putNodeMetaData(CLASS_DECLARATION_CLASS_NODE, classNode);
         this.visitClassBody(ctx.classBody());
         if (isRecord) {
             classNode.getFields().stream().filter(f -> !isTrue(f, IS_RECORD_GENERATED) && !f.isStatic()).findFirst()
                     .ifPresent(fn -> this.createParsingFailedException("Instance field is not allowed in `record`", fn));
         }
-        classNodeStack.pop();
+        this.classNodeStack.pop();
 
-        if (!(asBoolean(ctx.CLASS()) || asBoolean(ctx.TRAIT()))) {
-            classNodeList.add(classNode);
+        // The first element in classNodeList determines what GCL#parseClass for
+        // example will return. So we have to ensure it won't be an inner class.
+        if (outerClass == null) {
+            this.addToClassNodeList(classNode);
         }
-
-        groovydocManager.handle(classNode, ctx);
+        this.groovydocManager.handle(classNode, ctx);
 
         return classNode;
+    }
+
+    private void addToClassNodeList(final ClassNode classNode) {
+        this.classNodeList.add(classNode); // GROOVY-11117: outer class first
+        classNode.getInnerClasses().forEachRemaining(this::addToClassNodeList);
+    }
+
+    private void checkUsingGenerics(final ClassNode classNode) {
+        if (!classNode.isUsingGenerics()) {
+            if (!classNode.isEnum() && classNode.getSuperClass().isUsingGenerics()) {
+                classNode.setUsingGenerics(true);
+            } else if (classNode.getInterfaces() != null) {
+                for (ClassNode interfaceNode : classNode.getInterfaces()) {
+                    if (interfaceNode.isUsingGenerics()) {
+                        classNode.setUsingGenerics(true);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private void transformRecordHeaderToProperties(final ClassDeclarationContext ctx, final ClassNode classNode) {
@@ -3785,7 +3779,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public InnerClassNode visitAnonymousInnerClassDeclaration(final AnonymousInnerClassDeclarationContext ctx) {
         ClassNode superClass = Objects.requireNonNull(ctx.getNodeMetaData(ANONYMOUS_INNER_CLASS_SUPER_CLASS), "superClass should not be null");
-        ClassNode outerClass = Optional.ofNullable(classNodeStack.peek()).orElse(moduleNode.getScriptClassDummy());
+        ClassNode outerClass = Optional.ofNullable(this.classNodeStack.peek()).orElse(this.moduleNode.getScriptClassDummy());
         String innerClassName = nextAnonymousClassName(outerClass);
 
         InnerClassNode anonymousInnerClass;
@@ -3801,12 +3795,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         anonymousInnerClass.setUsingGenerics(false);
         anonymousInnerClass.putNodeMetaData(CLASS_NAME, innerClassName);
         configureAST(anonymousInnerClass, ctx);
-        classNodeList.add(anonymousInnerClass);
 
-        classNodeStack.push(anonymousInnerClass);
+        this.classNodeStack.push(anonymousInnerClass);
         ctx.classBody().putNodeMetaData(CLASS_DECLARATION_CLASS_NODE, anonymousInnerClass);
         this.visitClassBody(ctx.classBody());
-        classNodeStack.pop();
+        this.classNodeStack.pop();
+
+        if (this.classNodeStack.isEmpty())
+            this.addToClassNodeList(anonymousInnerClass);
 
         return anonymousInnerClass;
     }
@@ -5289,7 +5285,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     // GRECLIPSE add
     private final TryWithResourcesASTTransformation tryWithResourcesASTTransformation;
 
-    private final List<ClassNode> classNodeList = new LinkedList<>();
+    private final List<ClassNode> classNodeList = new ArrayList<>();
     private final Deque<ClassNode> classNodeStack = new ArrayDeque<>();
     private final Deque<List<InnerClassNode>> anonymousInnerClassesDefinedInMethodStack = new ArrayDeque<>();
     private final Deque<GroovyParserRuleContext> switchExpressionRuleContextStack = new ArrayDeque<>();
