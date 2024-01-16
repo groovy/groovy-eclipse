@@ -1209,7 +1209,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm1', 2)
-        proposalExists(proposals, 'm2', 0)
+        proposalExists(proposals, 'm2', 0) // GROOVY-7213
         proposalExists(proposals, 'm3', 1)
         proposalExists(proposals, 'm4', isAtLeastGroovy(50) ? 0 : 1) // GROOVY-8859
     }

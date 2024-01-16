@@ -183,8 +183,7 @@ public class ClassNode extends AnnotatedNode {
     // use this to synchronize access for the lazy init
     protected final Object lazyInitLock = new Object();
 
-    // clazz!=null when resolved
-    protected Class clazz;
+    protected Class clazz; // not null when resolved
     // only false when this classNode is constructed from a class
     // GRECLIPSE private->protected
     protected volatile boolean lazyInitDone = true;
@@ -399,7 +398,7 @@ public class ClassNode extends AnnotatedNode {
             }
         }
         methods = new MapOfLists();
-        methodsList = Collections.emptyList();
+        methodsList = Collections.EMPTY_LIST;
     }
 
     /**
@@ -675,7 +674,7 @@ public class ClassNode extends AnnotatedNode {
         ClassNode r = redirect();
         node.setDeclaringClass(r);
         if (r.methodsList.isEmpty()) {
-            r.methodsList = new ArrayList<>();
+            r.methodsList = new ArrayList<>(8);
         }
         r.methodsList.add(node);
         r.methods.put(node.getName(), node);

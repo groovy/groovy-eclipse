@@ -358,7 +358,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected static final ClassNode MAP_ENTRY_TYPE = ClassHelper.make(Map.Entry.class);
     protected static final ClassNode ITERABLE_TYPE = ClassHelper.ITERABLE_TYPE;
 
-    private static List<ClassNode> TUPLE_TYPES = Arrays.stream(ClassHelper.TUPLE_CLASSES).map(ClassHelper::makeWithoutCaching).collect(Collectors.toList());
+    private static final List<ClassNode> TUPLE_TYPES = Arrays.stream(ClassHelper.TUPLE_CLASSES).map(ClassHelper::makeWithoutCaching).collect(Collectors.toList());
 
     public static final MethodNode CLOSURE_CALL_NO_ARG  = CLOSURE_TYPE.getDeclaredMethod("call", Parameter.EMPTY_ARRAY);
     public static final MethodNode CLOSURE_CALL_ONE_ARG = CLOSURE_TYPE.getDeclaredMethod("call", new Parameter[]{new Parameter(OBJECT_TYPE, "arg")});
@@ -5486,11 +5486,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                     MethodPointerExpression methodPointer = (MethodPointerExpression) argument;
                                     p = collateMethodReferenceParameterTypes(methodPointer, candidates.get(0));
                                     if (p.length > 0 && GenericsUtils.hasUnresolvedGenerics(returnType)) {
-                                        // GRECLIPSE add -- GROOVY-11241, GROOVY-11259
-                                        returnType = candidates.get(0).getReturnType();
-                                        if (!candidates.get(0).isStatic() && methodPointer.getExpression() instanceof ClassExpression)
+                                        returnType = candidates.get(0).getReturnType(); // GROOVY-11259: #
+                                        // GROOVY-11241: implicit receiver for "Optional::get" is resolved
+                                        if (!candidates.get(0).isStatic() && methodPointer.getExpression() instanceof ClassExpression) {
                                             extractGenericsConnections(connections, q[0], p[0].redirect());
-                                        // GRECLIPSE end
+                                        }
                                         for (int j = 0; j < q.length; j += 1) {
                                             // SAM parameters are like arguments in this case
                                             extractGenericsConnections(connections, q[j], p[j]);
@@ -5652,17 +5652,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             System.arraycopy(target.getParameters(), 0, params, 1, n);
         } else {
             params = target.getParameters();
-            // GRECLIPSE add -- GROOVY-10974, GROOVY-10975
+            // GROOVY-10974, GROOVY-10975: propagate type args
             if (!target.isStatic() && target.getDeclaringClass().getGenericsTypes() != null) {
                 ClassNode objectExprType = source.getExpression().getNodeMetaData(INFERRED_TYPE);
                 if (objectExprType == null && source.getExpression() instanceof VariableExpression) {
                     Variable variable = ((VariableExpression) source.getExpression()).getAccessedVariable();
                     if (variable instanceof ASTNode) objectExprType = ((ASTNode) variable).getNodeMetaData(INFERRED_TYPE);
                 }
+                if (objectExprType == null) objectExprType = source.getExpression().getType();
                 Map<GenericsTypeName,GenericsType> spec = extractPlaceHolders(objectExprType, target.getDeclaringClass());
                 return applyGenericsContext(spec, extractTypesFromParameters(params));
             }
-            // GRECLIPSE end
         }
 
         return extractTypesFromParameters(params);

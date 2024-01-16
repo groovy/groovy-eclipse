@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.control.CompilationUnit;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class TraitsTests extends GroovyCompilerTestSuite {
@@ -56,6 +55,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "C.groovy",
             "class C implements T {\n" +
             "}\n",
+
             "T.groovy",
             "trait T {\n" +
             "  final String foo = 'foo'\n" +
@@ -187,6 +187,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def g = new GreetingMachine()\n" +
             "try {\n" +
             "  g.greetingMessage()\n" +
+            "  throw new AssertionError()\n" +
             "} catch (MissingMethodException e) {\n" +
             "}\n",
         };
@@ -302,7 +303,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "trait Named {\n" +
-            "    public String name\n" +
+            "  public String name\n" +
             "}\n" +
             "class Person implements Named {}\n" +
             "def p = new Person()\n" +
@@ -1691,7 +1692,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: static T.m() is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+            "No signature of method: static T.m() is applicable for argument types: () values: []");
     }
 
     @Test
@@ -1778,7 +1780,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Ignore @Test
+    @Test // trait forwarding
     public void testTraits7135() {
         //@formatter:off
         String[] sources = {
@@ -1786,18 +1788,56 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "@groovy.transform.TypeChecked\n" +
             "trait T {\n" +
             "  def foo() {\n" +
-            "    super.bar()\n" + // $self.Ttrait$super$bar(); should fail STC
+            "    super.bar()\n" + // $self.Ttrait$super$bar(); could fail STC...
             "  }\n" +
             "}\n" +
             "class C implements T {\n" +
             "}\n" +
-            "new C().foo()\n", // MissingMethodException
+            "new C().foo()\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
-        /*runNegativeTest(sources,
-            "No such method Object#bar()");*/
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+            "No signature of method: C.Ttrait$super$bar() is applicable for argument types: () values: []");
+    }
+
+    @Test
+    public void testTraits7191() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static Number bar() { 1 }\n" +
+            "         Number foo() { bar() }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "class D extends C {\n" +
+            "}\n" +
+            "print(new C().foo())\n" +
+            "print(new D().foo())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "11");
+    }
+
+    @Test
+    public void testTraits7213() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  private String secret() { 'secret' }\n" +
+            "  String foo() { secret() }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "print(new C().foo())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "secret");
     }
 
     @Test
@@ -1847,6 +1887,27 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits7255() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static List stuff = [1,2,3]\n" +
+            "  static initStuff(List list) {\n" +
+            "    stuff = stuff + list\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "C.initStuff([4,5,6])\n" +
+            "print(C.stuff)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[1, 2, 3, 4, 5, 6]");
+    }
+
+    @Test
     public void testTraits7288() {
         //@formatter:off
         String[] sources = {
@@ -1889,6 +1950,29 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def ct = new C() as T\n" +
             "assert ct.classLongComputation(1) == ct.classLongComputation(1)\n"+
             "assert ct.traitLongComputation(1) == ct.traitLongComputation(1)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTraits7322() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static String bar() { 'static method' }\n" +
+            "  static String foo() { bar() }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "class D extends C {\n" +
+            "}\n" +
+            "assert C.foo() == 'static method'\n" +
+            "assert D.foo() == 'static method'\n" +
+            "assert new C().foo() == 'static method'\n" +
+            "assert new D().foo() == 'static method'\n",
         };
         //@formatter:on
 
@@ -2081,7 +2165,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "OneTwoThreeFour");
     }
 
-    @Ignore @Test
+    @Test
     public void testTraits7950() {
         //@formatter:off
         String[] sources = {
@@ -2089,15 +2173,17 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "trait T {\n" +
             "  String bar\n" +
             "}\n" +
-            "@groovy.transform.TupleConstructor(includes='foo,bar')\n" +
+            "@groovy.transform.TupleConstructor(includes='foo,bar', allProperties=true)\n" +
             "class C implements T {\n" +
             "  String foo\n" +
             "}\n" +
-            "new C('foo','bar')\n",
+            "def c = new C('foo','bar')\n" +
+            "print c.foo\n" +
+            "print c.bar\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
+        runConformTest(sources, "foobar");
     }
 
     @Test
@@ -2119,7 +2205,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Ignore @Test // see also GROOVY-7135
+    @Test // see also GROOVY-7135
     public void testTraits8021() {
         //@formatter:off
         String[] sources = {
@@ -2133,11 +2219,12 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class C implements T {\n" +
             "}\n" +
-            "new C().m()\n", // MissingMethodException
+            "new C().m()\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+            "No signature of method: java.lang.Object.m() is applicable for argument types: () values: []");
     }
 
     @Test
@@ -2229,7 +2316,31 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "1,2");
     }
 
-    @Ignore @Test
+    @Test
+    public void testTraits8272() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  static sm() {\n" +
+            "    'A'\n" +
+            "  }\n" +
+            "}\n" +
+            "trait B extends A {\n" +
+            "  String m() {\n" +
+            "    sm().toLowerCase()\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "}\n" +
+            "print(new C().m())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "a");
+    }
+
+    @Test
     public void testTraits8587() {
         //@formatter:off
         String[] sources = {
@@ -2244,14 +2355,19 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class C implements B {\n" +
             "  @Override\n" +
             "  def m() {\n" +
-            "    B.super.m()\n" + // MissingMethodException: No signature of method: static B.m() is applicable for argument types: (C) values: [C@8bd6f15]
+            "    B.super.m()\n" + // MissingMethodException
             "  }\n" +
             "}\n" +
             "print new C().m()\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "A");
+        if (isAtLeastGroovy(50)) {
+            runConformTest(sources, "A");
+        } else {
+            runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+                "No signature of method: " + (isAtLeastGroovy(40) ? "B$Trait$Helper" : "static B") + ".m() is applicable for argument types: (C) values: [C");
+        }
     }
 
     @Test
@@ -2276,7 +2392,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "0");
     }
 
-    @Ignore @Test
+    @Test
     public void testTraits8854() {
         //@formatter:off
         String[] sources = {
@@ -2307,7 +2423,12 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "checked audited");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "checked audited");
+        } else {
+            runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+                "No signature of method: static Main.check() is applicable for argument types: () values: []");
+        }
     }
 
     @Test
@@ -2330,6 +2451,54 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "\t       ^\n" +
             "Groovy:unable to resolve class T\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testTraits8859() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  public  String bar() {\n" +
+            "    'public '\n" +
+            "  }\n" +
+            "  private String baz() {\n" +
+            "    'private'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  def foo() {\n" +
+            "    bar() + baz()\n" +
+            "  }\n" +
+            "}\n" +
+            "print(new C().foo())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+            "No signature of method: C.baz() is applicable for argument types: () values: []");
+    }
+
+    @Test
+    public void testTraits8954() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "interface DomainProp {\n" +
+            "  boolean isNullable()\n" +
+            "}\n" +
+            "abstract class OrderedProp implements DomainProp {\n" +
+            "}\n" +
+            "trait Nullable {\n" +
+            "  boolean nullable = true\n" +
+            "}\n" +
+            "abstract class CustomProp extends OrderedProp implements Nullable {\n" +
+            "}\n" +
+            "new CustomProp() {}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
@@ -3022,26 +3191,26 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "trait T1 {\n" +
-            "  static void staticMethod(input) {\n" +
-            "    print input\n" +
+            "trait A {\n" +
+            "  static staticMethod(object) {\n" +
+            "    object\n" +
             "  }\n" +
             "}\n" +
-            "trait T2 extends T1 {\n" +
-            "  static void staticMethodWithDefaultArgument(String string = 'x') {\n" +
+            "trait B extends A {\n" +
+            "  static staticMethodWithDefaultArgument(String string = 'x') {\n" +
             "    staticMethod(string)\n" + // MissingMethodException
             "  }\n" +
             "}\n" +
-            "class X implements T2 {\n" +
-            "  static test1() {\n" +
+            "class C implements B {\n" +
+            "  static one() {\n" +
             "    staticMethodWithDefaultArgument()\n" +
             "  }\n" +
-            "  void test2() {\n" +
+            "  def two() {\n" +
             "    staticMethodWithDefaultArgument()\n" +
             "  }\n" +
             "}\n" +
-            "X.test1()\n" +
-            "new X().test2()\n",
+            "print(C.one())\n" +
+            "print(new C().two())\n",
         };
         //@formatter:on
 
@@ -3053,24 +3222,24 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "trait T1 {\n" +
+            "trait A {\n" +
             "  public static final String BANG = '!'\n" +
             "}\n" +
-            "trait T2 implements T1 {\n" +
-            "  static void staticMethodWithDefaultArgument(String string = 'x') {\n" +
-            "    print(string + T1__BANG)\n" + // MissingPropertyException
+            "trait B implements A {\n" +
+            "  static staticMethodWithDefaultArgument(String string = 'x') {\n" +
+            "    string + A__BANG\n" + // MissingPropertyException
             "  }\n" +
             "}\n" +
-            "class X implements T2 {\n" +
-            "  static test1() {\n" +
+            "class C implements B {\n" +
+            "  static one() {\n" +
             "    staticMethodWithDefaultArgument()\n" +
             "  }\n" +
-            "  void test2() {\n" +
+            "  def two() {\n" +
             "    staticMethodWithDefaultArgument()\n" +
             "  }\n" +
             "}\n" +
-            "X.test1()\n" +
-            "new X().test2()\n",
+            "print(C.one())\n" +
+            "print(new C().two())\n",
         };
         //@formatter:on
 
@@ -3192,5 +3361,38 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "C");
+    }
+
+    @Test
+    public void testTraits11267() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static one() {\n" +
+            "    def me = this\n" +
+            "    two('good') + ' ' +\n" +
+            "    'bad '.with { me.two(it) } +\n" +
+            "    'ugly'.with {    two(it) }  \n" +
+            "  }\n" +
+            "  static two(String s) {\n" +
+            "    three(s)\n" +
+            "  }\n" +
+            "  static three(String s) {\n" +
+            "    s\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "print(C.one())\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "good bad ugly");
+        } else {
+            runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+                "No signature of method: static T.three() is applicable for argument types: (String) values: [ugly]");
+        }
     }
 }

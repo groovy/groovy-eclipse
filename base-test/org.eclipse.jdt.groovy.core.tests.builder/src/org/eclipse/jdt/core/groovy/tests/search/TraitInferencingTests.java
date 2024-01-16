@@ -749,7 +749,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
         //@formatter:on
 
-        if (isAtLeastGroovy(50)) {
+        if (isAtLeastGroovy(40)) {
             assertDeclType(contents, "method", "A");
             assertExprType(contents, "method", "java.lang.Void");
         } else {

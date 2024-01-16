@@ -781,7 +781,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         Set<ClassNode> types = new LinkedHashSet<>();
         types.add(declaringType);
-        if (isTraitHelper(declaringType) && GroovyUtils.getGroovyVersion().getMajor() >= 5) { // GROOVY-8272, GROOVY-8587
+        if (isTraitHelper(declaringType) && GroovyUtils.getGroovyVersion().getMajor() >= 4) { // GROOVY-8272, GROOVY-8587
             Traits.findTraits(declaringType.getOuterClass()).stream().map(Traits::findHelper).forEachOrdered(types::add);
         }
         types.addAll(interfaces);

@@ -59,7 +59,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -340,9 +339,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         GroovyClassLoader transformLoader = compilationUnit.getTransformLoader();
         Map<String, URL> transformNames = new LinkedHashMap<String, URL>();
         try {
-            Enumeration<URL> globalServices = transformLoader.getResources("META-INF/services/org.codehaus.groovy.transform.ASTTransformation");
-            while (globalServices.hasMoreElements()) {
-                URL service = globalServices.nextElement();
+            for (URL service : DefaultGroovyMethods.toSet(transformLoader.getResources("META-INF/services/org.codehaus.groovy.transform.ASTTransformation"))) {
                 try (BufferedReader svcIn = new BufferedReader(new InputStreamReader(URLStreams.openUncachedStream(service), StandardCharsets.UTF_8))) {
                     String className;
                     try {

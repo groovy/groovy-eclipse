@@ -69,7 +69,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tls.add('abc')\n" +
             "\t^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n"
+                : "find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n");
     }
 
@@ -1366,26 +1369,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "class Repository<T, S extends Serializable> {\n" +
-            "  void delete(T arg) { assert true }\n" +
-            "  void delete(S arg) { assert false: 'wrong method invoked' }\n" +
+            "class C<K, V extends Serializable> {\n" +
+            "  void delete(K key) { print( key ) }\n" +
+            "  void delete(V val) { assert false }\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  Repository<String, Long> r = new Repository<String, Long>()\n" +
-            "  r.delete('foo')\n" +
+            "  def c = new C<String,Number>()\n" +
+            "  c.delete('key')\n" +
             "}\n" +
             "test()\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 8)\n" +
-            "\tr.delete('foo')\n" +
-            "\t^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Repository#delete(java.lang.Long) with arguments [java.lang.String]\n" +
-            "----------\n");
+        if (!isAtLeastGroovy(50)) {
+            runConformTest(sources, "key");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 8)\n" +
+                "\tc.delete('key')\n" +
+                "\t^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot call C#delete(java.lang.Number) with arguments [java.lang.String]\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -2623,6 +2630,38 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testCompileStatic8059() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<K extends Serializable, V> {\n" +
+            "  void delete(K key) { assert false }\n" +
+            "  void delete(V val) { print( val ) }\n" +
+            "}\n" +
+            "class D extends C<String,Number> {\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" + // GROOVY-6804 sends primitive value:
+            "  new D().delete(Integer.valueOf(1))\n" + // Cannot call delete(K) with arguments [Integer]
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        if (!isAtLeastGroovy(50)) {
+            runConformTest(sources, "1");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 9)\n" +
+                "\tnew D().delete(Integer.valueOf(1))\n" +
+                "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot call D#delete(java.lang.String) with arguments [java.lang.Integer]\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -6052,7 +6091,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class W {\n" +
             "  enum X {\n" +
-            "        Y {\n" +
+            "    Y {\n" +
             "      def z() {\n" +
             "        truncate('123', 2)\n" +
             "      }\n" +
@@ -8396,5 +8435,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "[x, y, z]");
+    }
+
+    @Test
+    public void testCompileStatic11254() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C { String s }\n" +
+            "@FunctionalInterface\n" +
+            "interface I<T> { T m(C c) }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(I<String> i_string) {\n" +
+            "  I<String> i = i_string::m\n" +
+            "  print(i.m(new C(s:'xx')))\n" +
+            "}\n" +
+            "test(c -> c.s)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "xx");
     }
 }

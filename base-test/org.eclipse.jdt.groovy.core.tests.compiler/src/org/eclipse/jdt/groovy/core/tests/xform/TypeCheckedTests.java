@@ -79,7 +79,10 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tints.add(\'abc\')\n" +
             "\t^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n"
+                : "find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 6)\n" +
             "\tints << 'def'\n" +
@@ -764,6 +767,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked32() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface A {}\n" +
+            "interface B extends A {}\n" +
+            "class AB implements B {}\n" +
+            "Thread foo(A a) { print 'A' }\n" +
+            "System foo(B b) { print 'B' }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def ab = new AB();\n" +
+            "  System s = foo(ab)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked5450() {
         //@formatter:off
         String[] sources = {
@@ -806,6 +831,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t        ^\n" +
             "Groovy:[Static type checking] - Cannot set read-only property: f\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked5482() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def foo = [new Date(), 1, new C()]\n" + // List<Object>
+            "  foo.add(new Date())\n" +
+            "  foo.add(new C())\n" +
+            "  foo.add(2)\n" +
+            "  foo = [new Date(), 1]\n" + // List<(Serializable or Comparable)>
+            "  foo.add(2) // STC err\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
@@ -1107,6 +1154,29 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot call <T extends java.util.List<? super java.lang.CharSequence>> Main#bar(T) with arguments [U]\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked6804() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C<K extends Serializable, V> {\n" +
+            "  void delete(K key) { assert false }\n" +
+            "  void delete(V val) { print( val ) }\n" +
+            "}\n" +
+            "class D extends C<String,Number> {\n" +
+            // add overrides to help runtime choose -- see GROOVY-7204
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new D().delete(1)\n" + // GROOVY-8059 sends boxed value
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "Assertion failed");
     }
 
     @Test
@@ -1449,6 +1519,42 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked7204() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface A<K, V extends Serializable> {\n" +
+            "  void delete(K key)\n" +
+            "  void delete(V val)\n" +
+            "}\n" +
+            "interface B extends A<String,Number> {\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "  @Override void delete(String key) { assert true }\n" +
+            "  @Override void delete(Number val) { assert false: 'wrong method invoked' }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(B b) {\n" +
+            "  b.delete('xx')\n" +
+            "}\n" +
+            "test(new C())\n",
+        };
+        //@formatter:on
+
+        if (!isAtLeastGroovy(50)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 13)\n" +
+                "\tb.delete('xx')\n" +
+                "\t^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot call B#delete(java.lang.Number) with arguments [java.lang.String]\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -1861,10 +1967,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8090() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.TypeChecked\n" +
+            "import static java.util.Arrays.asList\n" +
+            "@TypeChecked <T> Iterable<T     > foo(T      it) { asList(it) }\n" +
+            "@TypeChecked <U> Iterable<U     > bar(U      it) { asList(it) }\n" +
+            "@TypeChecked     Iterable<String> baz(String it) { asList(it) }\n" +
+            "void test() {\n" +
+            "  print(foo('A') + bar('B') + baz('C'))\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[A, B, C]");
+    }
+
+    @Test
     public void testTypeChecked8103() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
+            "Main.groovy",
             "import Util.Ours\n" +
             "import static Fluent.*\n" +
             "@groovy.transform.TypeChecked\n" +
@@ -3278,12 +3404,18 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "2. ERROR in Main.groovy (at line 21)\n" +
             "\tstringProperty.eq(1234)\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.String) with arguments [int]\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call TypedProperty#eq(java.lang.String) with arguments [int]\n"
+                : "find matching method TypedProperty#eq(int). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n" +
             "3. ERROR in Main.groovy (at line 22)\n" +
             "\tnumberProperty.eq('xx')\n" +
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call TypedProperty#eq(java.lang.Number) with arguments [java.lang.String]\n" +
+            "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
+                ? "call TypedProperty#eq(java.lang.Number) with arguments [java.lang.String]\n"
+                : "find matching method TypedProperty#eq(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n");
     }
 
@@ -7386,5 +7518,23 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
                         .replace(".&", "::");
             runConformTest(sources, "[foo, fizz]");
         }
+    }
+
+    @Test
+    public void testTypeChecked11267() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def map = new HashMap<String,List<String>>()\n" +
+            "  map.put('foo', Collections.emptyList())\n" +
+            "  map.put('bar', [])\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }
