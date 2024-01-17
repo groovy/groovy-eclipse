@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -41,6 +42,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -278,6 +280,17 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         if (type.isGenericsPlaceHolder()) {
             return type.getUnresolvedName() + arraySuffix;
         }
+        if (type.getUnresolvedName().startsWith("<UnionType:")) {
+            ClassNode[] types = type.asGenericsType().getUpperBounds();
+            if (types == null) types = ReflectionUtils.executePrivateMethod(type.getClass(), "getDelegates", type);
+
+            var spec = new StringJoiner(" & ", arraySuffix.isEmpty() ? "" : "(", arraySuffix.isEmpty() ? "" : ")" + arraySuffix);
+            for (ClassNode t : types) {
+                spec.add(printTypeName(t));
+            }
+            return spec.toString();
+        }
+
         String name = type.getText();
         if (name.charAt(0) == '(') // Groovy 4.0.0-rc-1+
             name = name.substring(1, name.length() - 1);
@@ -346,14 +359,16 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             if (this.result == null &&
                     (
                         (visitorNode.getStart() == start && visitorNode.getEnd() == end) ||
-                        (visitorNode instanceof AnnotatedNode && ((AnnotatedNode) visitorNode).getNameStart() == start && ((AnnotatedNode) visitorNode).getNameEnd() + 1 == end)
+                        (visitorNode instanceof AnnotatedNode && ((AnnotatedNode) visitorNode).getNameStart() == start &&
+                                                                    ((AnnotatedNode) visitorNode).getNameEnd() + 1 == end)
                     ) &&
                     !(visitorNode instanceof MethodNode /* ignore run() method */) &&
                     !(visitorNode instanceof ClassNode && isScript((ClassNode) visitorNode) /* ignore the script */) &&
                     !(visitorNode instanceof Statement || visitorNode instanceof ImportNode /* ignore any statement */) &&
                     !(visitorNode instanceof ArrayExpression || visitorNode instanceof TupleExpression /* ignore wrapper */)) {
                 if (visitorResult.type != null && ClassHelper.isPrimitiveType(visitorResult.type)) {
-                    this.result = new TypeLookupResult(ClassHelper.getWrapper(visitorResult.type), visitorResult.declaringType, visitorResult.declaration, visitorResult);
+                    ClassNode boxedType = ClassHelper.getWrapper(visitorResult.type); // wrap primitive type
+                    this.result = new TypeLookupResult(boxedType, visitorResult.declaringType, visitorResult.declaration, visitorResult);
                 } else {
                     this.result = visitorResult;
                 }

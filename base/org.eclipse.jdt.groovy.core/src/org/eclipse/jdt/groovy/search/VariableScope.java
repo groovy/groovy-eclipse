@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -635,8 +635,17 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                         break;
                     }
                 }
-            } else if (type.isGenericsPlaceHolder()) {
+            } else if (GroovyUtils.getBaseType(type).isGenericsPlaceHolder()) {
+                int dims = 0;
+                while (type.isArray()) {
+                    type = type.getComponentType();
+                    dims += 1;
+                }
                 type = mapper.findParameter(type.getUnresolvedName(), type.redirect());
+                while (dims > 0) {
+                    type = type.makeArray();
+                    dims -= 1;
+                }
             }
         }
         return type;

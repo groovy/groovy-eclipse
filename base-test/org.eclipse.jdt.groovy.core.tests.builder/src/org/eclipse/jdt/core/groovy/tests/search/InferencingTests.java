@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -178,8 +178,13 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testLocalVar14() {
-        String contents = "def x = predicate() ? 'literal' : something.toString(); x";
+        String contents = "def x = predicate() ? 'literal' : something.toString()";
         assertType(contents, "x", "java.lang.String");
+
+        contents = "def x = predicate() ? 'literal' : 42";
+        float version = Float.parseFloat(System.getProperty("java.specification.version"));
+        assertType(contents, "x", "java.io.Serializable or java.lang.Comparable" +
+            (version > 11 ? " or java.lang.constant.Constable or java.lang.constant.ConstantDesc" : ""));
     }
 
     @Test
@@ -3303,7 +3308,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLIPSE-1638
-    public void testInstanceOf1a() {
+    public void testInstanceOf2() {
         String contents =
             "def m(Object obj) {\n" +
             "  def val = obj\n" +
@@ -3335,7 +3340,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLIPSE-1638
-    public void testInstanceOf1b() {
+    public void testInstanceOf3() {
         String contents =
             "def m(Object obj) {\n" +
             "  def val = obj\n" +
@@ -3367,135 +3372,135 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf2() {
-        String contents =
-            "def m(Object obj) {\n" +
-            "  def val = obj\n" +
-            "  if (!(val instanceof String)) {\n" +
-            "    println val\n" +
-            "  }\n" +
-            "  val\n" +
-            "}\n";
-
-        int start = contents.indexOf("val");
-        int end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-    }
-
-    @Test
-    public void testInstanceOf2a() {
-        assumeTrue(isParrotParser());
-
-        String contents =
-            "def m(Object obj) {\n" +
-            "  def val = obj\n" +
-            "  if (val !instanceof String) {\n" +
-            "    println val\n" +
-            "  }\n" +
-            "  val\n" +
-            "}\n";
-
-        int start = contents.indexOf("val");
-        int end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-    }
-
-    @Test
-    public void testInstanceOf3() {
-        String contents =
-            "def m(Object obj) {\n" +
-            "  def val = obj\n" +
-            "  if (!(val instanceof String)) {\n" +
-            "    println val\n" +
-            "  } else {\n" +
-            "    val\n" +
-            "  }\n" +
-            "  val\n" +
-            "}\n";
-
-        int start = contents.indexOf("val");
-        int end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.String");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-    }
-
-    @Test
-    public void testInstanceOf3a() {
-        assumeTrue(isParrotParser());
-
-        String contents =
-            "def m(Object obj) {\n" +
-            "  def val = obj\n" +
-            "  if (val !instanceof String) {\n" +
-            "    println val\n" +
-            "  } else {\n" +
-            "    val\n" +
-            "  }\n" +
-            "  val\n" +
-            "}\n";
-
-        int start = contents.indexOf("val");
-        int end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.String");
-
-        start = contents.indexOf("val", end + 1);
-        end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
-    }
-
-    @Test
     public void testInstanceOf4() {
+        String contents =
+            "def m(Object obj) {\n" +
+            "  def val = obj\n" +
+            "  if (!(val instanceof String)) {\n" +
+            "    println val\n" +
+            "  }\n" +
+            "  val\n" +
+            "}\n";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test
+    public void testInstanceOf5() {
+        assumeTrue(isParrotParser());
+
+        String contents =
+            "def m(Object obj) {\n" +
+            "  def val = obj\n" +
+            "  if (val !instanceof String) {\n" +
+            "    println val\n" +
+            "  }\n" +
+            "  val\n" +
+            "}\n";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test
+    public void testInstanceOf6() {
+        String contents =
+            "def m(Object obj) {\n" +
+            "  def val = obj\n" +
+            "  if (!(val instanceof String)) {\n" +
+            "    println val\n" +
+            "  } else {\n" +
+            "    val\n" +
+            "  }\n" +
+            "  val\n" +
+            "}\n";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test
+    public void testInstanceOf7() {
+        assumeTrue(isParrotParser());
+
+        String contents =
+            "def m(Object obj) {\n" +
+            "  def val = obj\n" +
+            "  if (val !instanceof String) {\n" +
+            "    println val\n" +
+            "  } else {\n" +
+            "    val\n" +
+            "  }\n" +
+            "  val\n" +
+            "}\n";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test
+    public void testInstanceOf8() {
         String contents =
             "def m(Object obj) {\n" +
             "  def val = obj\n" +
@@ -3544,7 +3549,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf5() {
+    public void testInstanceOf9() {
         String contents =
             "def val = new Object()\n" +
             "if (val instanceof Number) {\n" +
@@ -3580,7 +3585,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf6() {
+    public void testInstanceOf10() {
         String contents =
             "def val = new Object()\n" +
             "if (val instanceof Number || val instanceof CharSequence) {\n" +
@@ -3610,7 +3615,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf7() {
+    public void testInstanceOf11() {
         String contents =
             "def val = new Object()\n" +
             "if (val instanceof Number) {\n" +
@@ -3642,7 +3647,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf8() {
+    public void testInstanceOf12() {
         String contents =
             "def val = new Object()\n" +
             "if (val instanceof String) {\n" +
@@ -3674,7 +3679,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf9() {
+    public void testInstanceOf13() {
         String contents =
             "def val\n" +
             "def str = val instanceof String ? val : val.toString()\n" +
@@ -3702,7 +3707,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf10() {
+    public void testInstanceOf14() {
         String contents =
             "def val\n" +
             "def str = !(val instanceof String) ? val.toString() : val\n" +
@@ -3730,7 +3735,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf10a() {
+    public void testInstanceOf15() {
         assumeTrue(isParrotParser());
 
         String contents =
@@ -3760,7 +3765,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf11() {
+    public void testInstanceOf16() {
         String contents =
             "def val = File.createTempDir()\n" +
             "if (!val.exists()) val = ''.toURL()\n" +
@@ -3794,7 +3799,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/977
-    public void testInstanceOf12() {
+    public void testInstanceOf17() {
         String contents =
             "class C {\n" +
             "  private Number value = 42\n" +
@@ -3817,7 +3822,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1101
-    public void testInstanceOf13() {
+    public void testInstanceOf18() {
         String contents =
             "class C {\n" +
             "  private Number one, two\n" +
@@ -3839,7 +3844,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1122
-    public void testInstanceOf14() {
+    public void testInstanceOf19() {
         String contents =
             "void test(flag, x) {\n" +
             "  if (flag && x instanceof java.util.regex.Matcher) {\n" +
@@ -3856,7 +3861,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf15() {
+    public void testInstanceOf20() {
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "def test(value) {\n" +
@@ -3871,7 +3876,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-7971
-    public void testInstanceOf16() {
+    public void testInstanceOf21() {
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "def test(value) {\n" +
@@ -3887,10 +3892,9 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-9769
-    public void testInstanceOf17() {
+    public void testInstanceOf22() {
         String contents =
-            "interface A {\n" +
-            "}\n" +
+            "interface A {}\n" +
             "interface B extends A {\n" +
             "  def foo()\n" +
             "}\n" +
@@ -3902,6 +3906,34 @@ public final class InferencingTests extends InferencingTestSuite {
             "}\n";
 
         assertType(contents, "a", "B"); // not <UnionType:A+B>
+    }
+
+    @Test
+    public void testInstanceOf23() {
+        String contents =
+            "void test(CharSequence chars) {\n" +
+            "  if (chars instanceof Cloneable) {\n" +
+            "    chars\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "chars", "java.lang.CharSequence & java.lang.Cloneable");
+        assertType("@groovy.transform.TypeChecked " + contents, "chars", "java.lang.CharSequence & java.lang.Cloneable");
+    }
+
+    @Test
+    public void testInstanceOf24() {
+        String contents =
+            "void test(CharSequence chars) {\n" +
+            "  if (chars instanceof Cloneable) {\n" +
+            "    if (chars instanceof Closeable) {\n" +
+            "      chars\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "chars", "java.io.Closeable & java.lang.CharSequence & java.lang.Cloneable");
+        assertType("@groovy.transform.TypeChecked " + contents, "chars", "java.lang.CharSequence & java.io.Closeable"); // TODO
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1101
@@ -3931,7 +3963,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1101
-    public void testEqualsClassTest1a() {
+    public void testEqualsClassTest2() {
         String contents =
             "class C {\n" +
             "  def foo, bar, baz\n" +
@@ -3957,7 +3989,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testEqualsClassTest2() {
+    public void testEqualsClassTest3() {
         String contents =
             "class C {\n" +
             "  def foo, bar, baz\n" +
@@ -3983,7 +4015,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testEqualsClassTest2a() {
+    public void testEqualsClassTest4() {
         String contents =
             "class C {\n" +
             "  def foo, bar, baz\n" +
@@ -4009,7 +4041,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testEqualsClassTest3() {
+    public void testEqualsClassTest5() {
         assumeTrue(isParrotParser());
 
         String contents =
@@ -4037,7 +4069,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testEqualsClassTest4() {
+    public void testEqualsClassTest6() {
         String contents =
             "class C {\n" +
             "  def foo, bar, baz\n" +

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -317,7 +317,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String contents =
             "[key:1].inject(1.0) { acc, entry -> null }";
         //@formatter:on
-        assertExprType(contents, "acc", isAtLeastGroovy(50) ? "T" : "java.math.BigDecimal");
+        assertExprType(contents, "acc", isAtLeastGroovy(50) ? "java.lang.Object" : "java.math.BigDecimal");
         assertExprType(contents, "entry", "java.util.Map$Entry<java.lang.String,java.lang.Integer>");
     }
 
@@ -327,7 +327,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String contents =
             "[key:1].inject('prefix') { acc, key, value -> acc + key.toUpperCase() + value.intValue() }";
         //@formatter:on
-        assertExprType(contents, "acc", isAtLeastGroovy(50) ? "T" : "java.lang.String");
+        assertExprType(contents, "acc", isAtLeastGroovy(50) ? "java.lang.Object" : "java.lang.String");
         assertExprType(contents, "key", "java.lang.String");
         assertExprType(contents, "value", "java.lang.Integer");
     }

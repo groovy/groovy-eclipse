@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.eclipse.jdt.groovy.core.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -53,6 +52,7 @@ import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
+import org.codehaus.groovy.ast.tools.WideningCategories.LowestUpperBoundClassNode;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.transform.ASTTransformation;
@@ -164,8 +164,13 @@ public class GroovyUtils {
     }
 
     public static GenericsType[] getGenericsTypes(ClassNode classNode) {
-        GenericsType[] generics = getBaseType(classNode).getGenericsTypes();
-        if (generics == null) return GenericsType.EMPTY_ARRAY;
+        classNode = getBaseType(classNode); // discard array(s)
+        GenericsType[] generics = classNode.getGenericsTypes();
+        if (generics == null ||
+                classNode.isGenericsPlaceHolder() ||
+                classNode instanceof LowestUpperBoundClassNode) {
+            generics = GenericsType.EMPTY_ARRAY;
+        }
         return generics;
     }
 
@@ -221,7 +226,9 @@ public class GroovyUtils {
      */
     public static String getTypeSignature(ClassNode node, boolean qualified, boolean resolved) {
         ClassNode baseType = getBaseType(node);
-        if (baseType.getName().startsWith("<UnionType:")) {
+        if (baseType.getName().startsWith("<UnionType:") ||
+                (baseType instanceof LowestUpperBoundClassNode &&
+                !baseType.getUnresolvedName().startsWith("CommonAssignOf$"))) {
             return getUnionTypeSignature(node, type -> getTypeSignature(type, qualified, resolved));
         }
         if (baseType instanceof IntersectionType) {
@@ -230,28 +237,26 @@ public class GroovyUtils {
 
         String signature = getTypeSignatureWithoutGenerics(node, qualified, resolved);
 
-        if (baseType.getGenericsTypes() != null && !baseType.isGenericsPlaceHolder()) {
-            GenericsType[] generics = getGenericsTypes(node);
-            if (generics.length > 0) {
-                StringBuilder builder = new StringBuilder(signature);
+        GenericsType[] generics = getGenericsTypes(baseType);
+        if (generics.length > 0) {
+            StringBuilder builder = new StringBuilder(signature);
 
-                builder.setCharAt(builder.length() - 1, Signature.C_GENERIC_START);
-                for (GenericsType gt : generics) {
-                    if (gt.isPlaceholder() || !gt.isWildcard()) {
-                        // TODO: Can lower bound or upper bounds exist in this case?
-                        builder.append(getTypeSignature(gt.getType(), qualified, resolved));
-                    } else if (gt.getLowerBound() != null) {
-                        builder.append(Signature.C_SUPER).append(getTypeSignature(gt.getLowerBound(), qualified, resolved));
-                    } else if (gt.getUpperBounds() != null && gt.getUpperBounds().length == 1) {
-                        builder.append(Signature.C_EXTENDS).append(getTypeSignature(gt.getUpperBounds()[0], qualified, resolved));
-                    } else {
-                        builder.append(Signature.C_STAR);
-                    }
+            builder.setCharAt(builder.length() - 1, Signature.C_GENERIC_START);
+            for (GenericsType gt : generics) {
+                if (gt.isPlaceholder() || !gt.isWildcard()) {
+                    // TODO: Can lower bound or upper bounds exist in this case?
+                    builder.append(getTypeSignature(gt.getType(), qualified, resolved));
+                } else if (gt.getLowerBound() != null) {
+                    builder.append(Signature.C_SUPER).append(getTypeSignature(gt.getLowerBound(), qualified, resolved));
+                } else if (gt.getUpperBounds() != null && gt.getUpperBounds().length > 0) {
+                    builder.append(Signature.C_EXTENDS).append(getTypeSignature(gt.getUpperBounds()[0], qualified, resolved));
+                } else {
+                    builder.append(Signature.C_STAR);
                 }
-                builder.append(Signature.C_GENERIC_END).append(Signature.C_NAME_END);
-
-                return builder.toString();
             }
+            builder.append(Signature.C_GENERIC_END).append(Signature.C_NAME_END);
+
+            return builder.toString();
         }
 
         return signature;
@@ -259,7 +264,9 @@ public class GroovyUtils {
 
     public static String getTypeSignatureWithoutGenerics(ClassNode node, boolean qualified, boolean resolved) {
         ClassNode baseType = getBaseType(node);
-        if (baseType.getName().startsWith("<UnionType:")) {
+        if (baseType.getName().startsWith("<UnionType:") ||
+                (baseType instanceof LowestUpperBoundClassNode &&
+                !baseType.getUnresolvedName().startsWith("CommonAssignOf$"))) {
             return getUnionTypeSignature(node, type -> getTypeSignatureWithoutGenerics(type, qualified, resolved));
         }
         if (baseType instanceof IntersectionType) {
@@ -310,7 +317,9 @@ public class GroovyUtils {
             node = node.getComponentType();
         }
 
-        ClassNode[] types = ReflectionUtils.executePrivateMethod(node.getClass(), "getDelegates", node);
+        ClassNode[] types = node instanceof LowestUpperBoundClassNode
+                            ? node.asGenericsType().getUpperBounds() // non-Object super and interface(s)
+                            : ReflectionUtils.executePrivateMethod(node.getClass(), "getDelegates", node);
         String signature = Signature.createUnionTypeSignature(Stream.of(types).map(signer).toArray(String[]::new));
 
         return builder.append(signature).toString();
@@ -431,7 +440,7 @@ public class GroovyUtils {
         return concreteType.getNodeMetaData(Traits.class, x -> {
             ClassNode type = concreteType.redirect();
             do {
-                if (Traits.isTrait(type) || Arrays.stream(type.getInterfaces()).anyMatch(Traits::isTrait)) {
+                if (Traits.isTrait(type) || Stream.of(type.getInterfaces()).anyMatch(Traits::isTrait)) {
                     return Boolean.TRUE;
                 }
                 type = type.getSuperClass();

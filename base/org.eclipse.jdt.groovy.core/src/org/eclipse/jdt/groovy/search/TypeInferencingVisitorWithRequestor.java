@@ -133,6 +133,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyCodeVisitorAdapter;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -1850,8 +1851,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 }
                 node.getTrueExpression().visit(this);
-                // arbitrarily choose the 'true' expression
-                // to hold the type of the ternary expression
                 exprType = primaryTypeStack.removeLast();
             } finally {
                 scopes.removeLast().bubbleUpdates();
@@ -1865,6 +1864,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 }
                 node.getFalseExpression().visit(this);
+                exprType = WideningCategories.lowestUpperBound(exprType, primaryTypeStack.removeLast());
             } finally {
                 scopes.removeLast().bubbleUpdates();
             }
@@ -2753,7 +2753,7 @@ out:    if (inferredTypes[0] == null) {
                 }
 
                 @Override public void visitTernaryExpression(final TernaryExpression expression) {
-                    result[0] = (expr == expression.getTrueExpression());
+                    result[0] = (expr == expression.getTrueExpression() || expr == expression.getFalseExpression());
                 }
 
                 @Override public void visitTupleExpression(final TupleExpression expression) {
@@ -3215,18 +3215,37 @@ out:    if (inferredTypes[0] == null) {
                 if (types.isEmpty()) types = inferInstanceOfType(be.getRightExpression(), scope);
                 return types;
             case Types.KEYWORD_IN:
-            case 129/*Types.COMPARE_NOT_IN*/:
+            case Types.COMPARE_NOT_IN:
                 if (!(be.getRightExpression() instanceof ClassExpression)) {
                     break;
                 }
                 // fall through
             case Types.KEYWORD_INSTANCEOF:
-            case 130/*Types.COMPARE_NOT_INSTANCEOF*/:
+            case Types.COMPARE_NOT_INSTANCEOF:
                 if (be.getLeftExpression() instanceof VariableExpression) {
                     String name = be.getLeftExpression().getText();
                     ClassNode type = be.getRightExpression().getType();
                     if (isSubType.test(name, type))
                         return instanceOfBinding(name, type, be.getOperation());
+
+                    if (type.isInterface()) { // maybe it's available at runtime
+                        ClassNode vt = scope.lookupName(name).type;
+                        if (vt.implementsInterface(type)) break;
+                        ClassNode   superclass;
+                        ClassNode[] interfaces;
+                        if (vt instanceof WideningCategories.LowestUpperBoundClassNode) {
+                            superclass = vt.getSuperClass();
+                            interfaces = (ClassNode[]) ArrayUtils.add(vt.getInterfaces(), type);
+                        } else if (vt.isInterface()) {
+                            superclass = VariableScope.OBJECT_CLASS_NODE;
+                            interfaces = new ClassNode[] {vt, type};
+                        } else {
+                            superclass = vt;
+                            interfaces = new ClassNode[] {type};
+                        }
+                        type = new WideningCategories.LowestUpperBoundClassNode("<UnionType:", superclass, interfaces);
+                        return instanceOfBinding(name, type, be.getOperation());
+                    }
                 }
                 break;
             case Types.COMPARE_EQUAL:
