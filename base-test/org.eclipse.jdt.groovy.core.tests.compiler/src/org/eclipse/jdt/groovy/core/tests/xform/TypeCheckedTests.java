@@ -789,6 +789,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked33() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "int foo(int i) { print i }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(object) {\n" +
+            "  if (object instanceof String) {\n" +
+            "    object = 12\n" +
+            "    foo(object)\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked5450() {
         //@formatter:off
         String[] sources = {
@@ -2153,6 +2173,77 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8686() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def meth(obj) {\n" +
+            "  boolean isA = (obj instanceof String && obj.equalsIgnoreCase('a'))\n" +
+            "  obj.toLowerCase()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tobj.toLowerCase()\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked8686a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def meth(obj) {\n" +
+            "  def str = obj instanceof String ? obj : obj.toString()\n" +
+            "  obj.toLowerCase()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tobj.toLowerCase()\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked8686b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "def meth(obj) {\n" +
+            "  def str\n" +
+            "  if (obj instanceof String) {\n" +
+            "    str = obj\n" +
+            "  } else {\n" +
+            "    str = obj.toString()\n" +
+            "  }\n" +
+            "  obj.toLowerCase()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 9)\n" +
+            "\tobj.toLowerCase()\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked8693() {
         assumeTrue(isAtLeastGroovy(40));
 
@@ -2767,6 +2858,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked9327() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def runner = new Runnable() {\n" +
+            "    @Override void run() {\n" +
+            "      unknown\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tunknown\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - The variable [unknown] is undeclared.\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked9412() {
         //@formatter:off
         String[] sources = {
@@ -3008,18 +3124,19 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "void test(A a) {\n" +
             "  if (a instanceof B) {\n" +
             "    @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
-            "      def type = node.rightExpression.objectExpression.getNodeMetaData(\n" +
-            "        org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
-            "      assert type.toString(false) == 'B'\n" + // not <UnionType:A+B>
+            "      def type = node.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
+            "      assert type.toString(false) == 'B'\n" + // not <UnionType:A+B> nor <UnionType:B+B>
             "    })\n" +
-            "    def x = a.m()\n" +
-            "    def y = a.n()\n" +
+            "    def x = a\n" +
+            "    def y = x.m()\n" +
+            "    def z = x.n()\n" +
             "  }\n" +
-            "}\n",
+            "}\n" +
+            "test([m: { -> print 'foo' }, n: { -> print 'bar' }] as B)\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
+        runConformTest(sources, "foobar");
     }
 
     @Test

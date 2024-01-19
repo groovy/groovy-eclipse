@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -3195,7 +3196,38 @@ out:    if (inferredTypes[0] == null) {
     private static Map<String, ClassNode[]> inferInstanceOfType(final Expression expression, final VariableScope scope) {
         java.util.function.BiPredicate<String, ClassNode> isSubType = (name, type) -> {
             VariableScope.VariableInfo vi = scope.lookupName(name); // known type of "name"
-            return (vi != null && (vi.type == null || GroovyUtils.isAssignable(type, vi.type)));
+            return (vi != null && (vi.type == null || StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type, vi.type)));
+        };
+
+        java.util.function.BinaryOperator<ClassNode> unionOfTypes = (type1, type2) -> {
+            // TODO: sealed interface and trait with self type(s)
+            ClassNode   superclass = null;
+            ClassNode[] interfaces = null;
+            if (!type2.isInterface()) {
+                if (type1 instanceof WideningCategories.LowestUpperBoundClassNode) {
+                    if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type2, type1.getSuperClass())) {
+                        superclass = type2;
+                        interfaces = Stream.of(type1.getInterfaces()).filter(i -> !type2.implementsInterface(i)).toArray(ClassNode[]::new);
+                    }
+                } else if (type1.isInterface()) {
+                    superclass = type2;
+                    interfaces = !type2.implementsInterface(type1) ? new ClassNode[] {type1} : ClassNode.EMPTY_ARRAY;
+                }
+            } else if (!GeneralUtils.isOrImplements(type1, type2)) {
+                if (type1 instanceof WideningCategories.LowestUpperBoundClassNode) {
+                    superclass = type1.getSuperClass();
+                    interfaces = (ClassNode[]) ArrayUtils.add(type1.getInterfaces(), type2);
+                } else if (type1.isInterface()) {
+                    superclass = VariableScope.OBJECT_CLASS_NODE;
+                    interfaces = new ClassNode[] {type1, type2};
+                } else {
+                    superclass = type1;
+                    interfaces = new ClassNode[] {type2};
+                }
+            }
+            if (interfaces == null) return type1;
+            if (interfaces.length == 0) return type2;
+            return new WideningCategories.LowestUpperBoundClassNode("<UnionType:", superclass, interfaces);
         };
 
         // check for "if (x instanceof T) { ... }" or "if (x.getClass() == T) { ... }" flow typing
@@ -3212,7 +3244,27 @@ out:    if (inferredTypes[0] == null) {
                 // check for "x instanceof T && ... && ..." flow typing
                 Map<String, ClassNode[]> types = inferInstanceOfType(be.getLeftExpression(), scope);
                 //        or "... && ... && x instanceof T" flow typing
-                if (types.isEmpty()) types = inferInstanceOfType(be.getRightExpression(), scope);
+                Map<String, ClassNode[]> other = inferInstanceOfType(be.getRightExpression(), scope);
+                if (types.isEmpty()) {
+                    types = other;
+                } else if (!other.isEmpty()) {
+                    types = new HashMap<>(types); // make map mutable
+                    for (Map.Entry<String, ClassNode[]> entry : other.entrySet()) {
+                        types.merge(entry.getKey(), entry.getValue(), (t1, t2) -> {
+                            ClassNode[] merged = new ClassNode[2];
+                            for (int i = 0; i < merged.length; i += 1) {
+                                if (t1[i] == null || t2[i] == null) {
+                                    merged[i] = t1[i] != null ? t1[i] : t2[i];
+                                } else if (!(t2[i] instanceof WideningCategories.LowestUpperBoundClassNode)) {
+                                    merged[i] = unionOfTypes.apply(t1[i], t2[i]);
+                                } else {
+                                    merged[i] = Stream.of(t2[i].asGenericsType().getUpperBounds()).reduce(t1[i], unionOfTypes);
+                                }
+                            }
+                            return merged;
+                        });
+                    }
+                }
                 return types;
             case Types.KEYWORD_IN:
             case Types.COMPARE_NOT_IN:
@@ -3228,23 +3280,11 @@ out:    if (inferredTypes[0] == null) {
                     if (isSubType.test(name, type))
                         return instanceOfBinding(name, type, be.getOperation());
 
-                    if (type.isInterface()) { // maybe it's available at runtime
-                        ClassNode vt = scope.lookupName(name).type;
-                        if (vt.implementsInterface(type)) break;
-                        ClassNode   superclass;
-                        ClassNode[] interfaces;
-                        if (vt instanceof WideningCategories.LowestUpperBoundClassNode) {
-                            superclass = vt.getSuperClass();
-                            interfaces = (ClassNode[]) ArrayUtils.add(vt.getInterfaces(), type);
-                        } else if (vt.isInterface()) {
-                            superclass = VariableScope.OBJECT_CLASS_NODE;
-                            interfaces = new ClassNode[] {vt, type};
-                        } else {
-                            superclass = vt;
-                            interfaces = new ClassNode[] {type};
-                        }
-                        type = new WideningCategories.LowestUpperBoundClassNode("<UnionType:", superclass, interfaces);
-                        return instanceOfBinding(name, type, be.getOperation());
+                    VariableScope.VariableInfo vi = scope.lookupName(name);
+                    if (vi != null) {
+                        type = unionOfTypes.apply(vi.type, type);
+                        if (vi.type != type)
+                            return instanceOfBinding(name, type, be.getOperation());
                     }
                 }
                 break;

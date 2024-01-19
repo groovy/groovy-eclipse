@@ -3156,77 +3156,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic8686() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
-            "def meth(obj) {\n" +
-            "  boolean isA = (obj instanceof String && obj.equalsIgnoreCase('a'))\n" +
-            "  obj.toLowerCase()\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 4)\n" +
-            "\tobj.toLowerCase()\n" +
-            "\t^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testCompileStatic8686a() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
-            "def meth(obj) {\n" +
-            "  def str = obj instanceof String ? obj : obj.toString()\n" +
-            "  obj.toLowerCase()\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 4)\n" +
-            "\tobj.toLowerCase()\n" +
-            "\t^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testCompileStatic8686b() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
-            "def meth(obj) {\n" +
-            "  def str\n" +
-            "  if (obj instanceof String) {\n" +
-            "    str = obj\n" +
-            "  } else {\n" +
-            "    str = obj.toString()\n" +
-            "  }\n" +
-            "  obj.toLowerCase()\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 9)\n" +
-            "\tobj.toLowerCase()\n" +
-            "\t^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
-            "----------\n");
-    }
-
-    @Test
     public void testCompileStatic8693() {
         //@formatter:off
         String[] sources = {
@@ -5341,31 +5270,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "void test() {\n" +
-            "  def runner = new Runnable() {\n" +
-            "    @Override void run() {\n" +
-            "      unknown\n" +
-            "    }\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 5)\n" +
-            "\tunknown\n" +
-            "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - The variable [unknown] is undeclared.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testCompileStatic9327a() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
             "  def runner = new Runnable() {\n" +
             "    @Override void run() {\n" +

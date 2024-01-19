@@ -3798,8 +3798,31 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.io.Serializable");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/977
+    @Test
     public void testInstanceOf17() {
+        String contents = // dynamic variable
+            "if (xxx instanceof List) xxx.size()\n";
+
+        int offset = contents.indexOf("xxx");
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.lastIndexOf("xxx");
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        //
+
+        contents = // dynamic property
+            "if (x.y instanceof List) x.y.size()\n";
+
+        offset = contents.indexOf("y");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.lastIndexOf("y");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/977
+    public void testInstanceOf18() {
         String contents =
             "class C {\n" +
             "  private Number value = 42\n" +
@@ -3822,7 +3845,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1101
-    public void testInstanceOf18() {
+    public void testInstanceOf19() {
         String contents =
             "class C {\n" +
             "  private Number one, two\n" +
@@ -3844,7 +3867,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1122
-    public void testInstanceOf19() {
+    public void testInstanceOf20() {
         String contents =
             "void test(flag, x) {\n" +
             "  if (flag && x instanceof java.util.regex.Matcher) {\n" +
@@ -3861,44 +3884,40 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInstanceOf20() {
+    public void testInstanceOf21() {
         String contents =
-            "@groovy.transform.CompileStatic\n" +
-            "def test(value) {\n" +
-            "  def out = new StringBuilder()\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(value) {\n" +
             "  if (value instanceof Number || value instanceof String || value instanceof Map) {\n" +
             "    value\n" +
             "  }\n" +
-            "  out\n" +
             "}\n";
 
         assertType(contents, "value", "java.lang.Object");
     }
 
     @Test // GROOVY-7971
-    public void testInstanceOf21() {
+    public void testInstanceOf22() {
         String contents =
-            "@groovy.transform.CompileStatic\n" +
-            "def test(value) {\n" +
-            "  def out = new StringBuilder()\n" +
-            "  def isString = value.class == String\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(value) {\n" +
+            "  def isString = (value.class == String);\n" +
             "  if (isString || value instanceof Map) {\n" +
             "    value\n" +
             "  }\n" +
-            "  out\n" +
             "}\n";
 
         assertType(contents, "value", "java.lang.Object");
     }
 
     @Test // GROOVY-9769
-    public void testInstanceOf22() {
+    public void testInstanceOf23() {
         String contents =
             "interface A {}\n" +
             "interface B extends A {\n" +
             "  def foo()\n" +
             "}\n" +
-            "@groovy.transform.CompileStatic\n" +
+            "@groovy.transform.TypeChecked\n" +
             "void test(A a) {\n" +
             "  if (a instanceof B) {\n" +
             "    a.foo()\n" +
@@ -3908,32 +3927,120 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "a", "B"); // not <UnionType:A+B>
     }
 
-    @Test
-    public void testInstanceOf23() {
-        String contents =
-            "void test(CharSequence chars) {\n" +
-            "  if (chars instanceof Cloneable) {\n" +
-            "    chars\n" +
-            "  }\n" +
-            "}\n";
-
-        assertType(contents, "chars", "java.lang.CharSequence & java.lang.Cloneable");
-        assertType("@groovy.transform.TypeChecked " + contents, "chars", "java.lang.CharSequence & java.lang.Cloneable");
-    }
-
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1534
     public void testInstanceOf24() {
         String contents =
-            "void test(CharSequence chars) {\n" +
-            "  if (chars instanceof Cloneable) {\n" +
-            "    if (chars instanceof Closeable) {\n" +
-            "      chars\n" +
-            "    }\n" +
+            "void test(one, two) {\n" +
+            "  if (one instanceof Cloneable && two instanceof Closeable) {\n" +
+            "    print(one)\n" +
+            "    print(two)\n" +
             "  }\n" +
             "}\n";
 
-        assertType(contents, "chars", "java.io.Closeable & java.lang.CharSequence & java.lang.Cloneable");
-        assertType("@groovy.transform.TypeChecked " + contents, "chars", "java.lang.CharSequence & java.io.Closeable"); // TODO
+        assertType(contents, "one", "java.lang.Cloneable");
+        assertType(contents, "two",   "java.io.Closeable");
+        assertType("@groovy.transform.TypeChecked " + contents, "one", "java.lang.Cloneable");
+        assertType("@groovy.transform.TypeChecked " + contents, "two",   "java.io.Closeable");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1534
+    public void testInstanceOf25() {
+        //@formatter:off
+        String[][] spec = {
+            {"Object"      , "Object"                          , "java.lang.Object"                                                , },
+            {"String"      , "String"                          , "java.lang.String"                                                , },
+            {"Object"      , "Object[]"                        , "java.lang.Object[]"                                              , },
+            {"Object[]"    , "Number[]"                        , "java.lang.Number[]"                                              , },
+            {"Object[]"    , "Object[][]"                      , "java.lang.Object[][]"                                            , },
+            {"CharSequence", "String"                          , "java.lang.String"                                                , },
+            {"CharSequence", "Cloneable"                       , "java.lang.CharSequence & java.lang.Cloneable"                    , },
+            {"CharSequence", "Cloneable,Closeable"             , "java.lang.CharSequence & java.lang.Cloneable & java.io.Closeable", "java.lang.CharSequence & java.io.Closeable"}, // GROOVY-11290
+            {"Object"      , "CharSequence,Cloneable"          , "java.lang.CharSequence & java.lang.Cloneable"                    , "java.lang.Cloneable"                       },
+            {"Object"      , "CharSequence,Cloneable,Closeable", "java.lang.CharSequence & java.lang.Cloneable & java.io.Closeable", "java.io.Closeable"                         },
+            {"Number"      , "BigInteger,Cloneable"            , "java.math.BigInteger & java.lang.Cloneable"                      , "java.lang.Number & java.lang.Cloneable"    },
+            {"Cloneable"   , "Number"                          , "java.lang.Number & java.lang.Cloneable"                          , },
+            {"Cloneable"   , "Number,Short"                    , "java.lang.Short & java.lang.Cloneable"                           , },
+            {"Comparable"  , "Number,Short"                    , "java.lang.Short"                                                 , },
+            {"Object"      , "Comparable,Short"                , "java.lang.Short"                                                 , },
+            {"Object"      , "Comparable,Number,Short"         , "java.lang.Short"                                                 , },
+            {"Object"      , "Float,Short"                     , "java.lang.Float"                                                 , "java.lang.Short"                           },
+            {"Cloneable"   , "Float,Short"                     , "java.lang.Float & java.lang.Cloneable"                           , "java.lang.Short & java.lang.Cloneable"     },
+        };
+        //@formatter:on
+
+        for (String[] test : spec) {
+            String[] types = test[1].split(",");
+
+            var contents = new StringBuilder("void test(").append(test[0]).append(" object) {\n ");
+            for (String type : types) {
+                contents.append(" if (object instanceof ").append(type).append(")");
+            }
+            contents.append(" object\n");
+            contents.append("}\n");
+
+            assertType(contents.toString(), "object", test[2]);
+            assertType("@groovy.transform.TypeChecked " + contents, "object", test[test.length - 1]);
+
+            //
+
+            if (types.length > 1) { // try "if (object instanceof Type0 && object instanceof Type1)"
+                contents = new StringBuilder("void test(").append(test[0]).append(" object) {\n ");
+                contents.append(" if (object instanceof ").append(types[0]);
+                for (int i = 1; i < types.length; i += 1) {
+                    contents.append(" && object instanceof ").append(types[i]);
+                }
+                contents.append(") object\n");
+                contents.append("}\n");
+
+                assertType(contents.toString(), "object", test[2]);
+                var expect = test[2];
+                if (types[types.length - 1].equals("Short")) { // TODO: STC won't reduce
+                    if (!types[0].equals("Comparable")) {
+                        expect = "java.lang." + types[0] + " & " + test[test.length - 1];
+                    } else {
+                        expect = java.util.Arrays.stream(types).skip(1).map(type -> "java.lang." + type)
+                            .collect(java.util.stream.Collectors.joining(" & ")) + " & java.lang.Comparable";
+                    }
+                }
+                assertType("@groovy.transform.TypeChecked " + contents, "object", expect);
+            }
+
+            //
+
+            contents = new StringBuilder("void test(").append(test[0]).append(" object) {\n ");
+            contents.append(" if (!(object instanceof ").append(types[0]).append(")");
+            for (int i = 1; i < types.length; i += 1) {
+                contents.append(" && !(object instanceof ").append(types[i]).append(")");
+            }
+            contents.append(") object; else object\n");
+            contents.append("}\n");
+
+            int offset = contents.indexOf("object;");
+            assertType(contents.toString(), offset, offset + 6, "java.lang." + test[0]);
+            assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, "java.lang." + test[0]);
+            offset = contents.lastIndexOf("object");
+            assertType(contents.toString(), offset, offset + 6, test[2]);
+            assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, test[2]);
+
+            //
+
+            if (isParrotParser()) {
+                contents = new StringBuilder("void test(").append(test[0]).append(" object) {\n ");
+                contents.append(" if (object !instanceof ").append(types[0]);
+                for (int i = 1; i < types.length; i += 1) {
+                    contents.append(" && object !instanceof ").append(types[i]);
+                }
+                contents.append(") object; else object\n");
+                contents.append("}\n");
+
+                offset = contents.indexOf("object;");
+                assertType(contents.toString(), offset, offset + 6, "java.lang." + test[0]);
+                assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, "java.lang." + test[0]);
+                offset = contents.lastIndexOf("object");
+                assertType(contents.toString(), offset, offset + 6, test[2]);
+                assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, test[2]);
+            }
+        }
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1101

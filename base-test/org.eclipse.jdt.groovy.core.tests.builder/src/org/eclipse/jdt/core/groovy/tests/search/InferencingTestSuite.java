@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -283,7 +285,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         if (type.getUnresolvedName().startsWith("<UnionType:")) {
             ClassNode[] types = type.asGenericsType().getUpperBounds();
             if (types == null) types = ReflectionUtils.executePrivateMethod(type.getClass(), "getDelegates", type);
-
+            Arrays.sort(types, Comparator.comparing(ClassNode::isInterface).thenComparing(ClassNode::getNameWithoutPackage));
             var spec = new StringJoiner(" & ", arraySuffix.isEmpty() ? "" : "(", arraySuffix.isEmpty() ? "" : ")" + arraySuffix);
             for (ClassNode t : types) {
                 spec.add(printTypeName(t));
