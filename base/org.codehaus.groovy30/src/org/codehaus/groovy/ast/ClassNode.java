@@ -957,6 +957,13 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (type.equals(ClassHelper.OBJECT_TYPE)) {
             return true;
         }
+        // GRECLIPSE add -- GROOVY-11290
+        if (this.isArray() && type.isArray()
+                && type.getComponentType().equals(ClassHelper.OBJECT_TYPE)
+                && !ClassHelper.isPrimitiveType(this.getComponentType())){
+            return true;
+        }
+        // GRECLIPSE end
         ClassNode node = this;
         while (node != null) {
             if (type.equals(node)) {

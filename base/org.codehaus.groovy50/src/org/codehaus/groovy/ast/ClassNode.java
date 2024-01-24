@@ -998,6 +998,13 @@ public class ClassNode extends AnnotatedNode {
         if (ClassHelper.isObjectType(type)) {
             return true;
         }
+        // GRECLIPSE add -- GROOVY-11290
+        if (this.isArray() && type.isArray()
+                && ClassHelper.isObjectType(type.getComponentType())
+                && !ClassHelper.isPrimitiveType(this.getComponentType())) {
+            return true;
+        }
+        // GRECLIPSE end
         for (ClassNode node = this; node != null; node = node.getSuperClass()) {
             if (type.equals(node)) {
                 return true;

@@ -3954,17 +3954,18 @@ public final class InferencingTests extends InferencingTestSuite {
             {"Object[]"    , "Object[][]"                      , "java.lang.Object[][]"                                            , },
             {"CharSequence", "String"                          , "java.lang.String"                                                , },
             {"CharSequence", "Cloneable"                       , "java.lang.CharSequence & java.lang.Cloneable"                    , },
-            {"CharSequence", "Cloneable,Closeable"             , "java.lang.CharSequence & java.lang.Cloneable & java.io.Closeable", "java.lang.CharSequence & java.io.Closeable"}, // GROOVY-11290
-            {"Object"      , "CharSequence,Cloneable"          , "java.lang.CharSequence & java.lang.Cloneable"                    , "java.lang.Cloneable"                       },
-            {"Object"      , "CharSequence,Cloneable,Closeable", "java.lang.CharSequence & java.lang.Cloneable & java.io.Closeable", "java.io.Closeable"                         },
-            {"Number"      , "BigInteger,Cloneable"            , "java.math.BigInteger & java.lang.Cloneable"                      , "java.lang.Number & java.lang.Cloneable"    },
+            {"CharSequence", "Cloneable,Closeable"             , "java.lang.CharSequence & java.lang.Cloneable & java.io.Closeable", },
+            {"Object"      , "CharSequence,Cloneable"          , "java.lang.CharSequence & java.lang.Cloneable"                    , },
+            {"Object"      , "CharSequence,Cloneable,Closeable", "java.lang.CharSequence & java.lang.Cloneable & java.io.Closeable", },
+            {"Number"      , "BigInteger,Cloneable"            , "java.math.BigInteger & java.lang.Cloneable"                      , },
             {"Cloneable"   , "Number"                          , "java.lang.Number & java.lang.Cloneable"                          , },
             {"Cloneable"   , "Number,Short"                    , "java.lang.Short & java.lang.Cloneable"                           , },
             {"Comparable"  , "Number,Short"                    , "java.lang.Short"                                                 , },
             {"Object"      , "Comparable,Short"                , "java.lang.Short"                                                 , },
             {"Object"      , "Comparable,Number,Short"         , "java.lang.Short"                                                 , },
-            {"Object"      , "Float,Short"                     , "java.lang.Float"                                                 , "java.lang.Short"                           },
-            {"Cloneable"   , "Float,Short"                     , "java.lang.Float & java.lang.Cloneable"                           , "java.lang.Short & java.lang.Cloneable"     },
+            {"Object"      , "Float,Short"                     , "java.lang.Float"                                                 , "java.lang.Float & java.lang.Short"                      },
+            {"Cloneable"   , "Float,Short"                     , "java.lang.Float & java.lang.Cloneable"                           , "java.lang.Float & java.lang.Short & java.lang.Cloneable"},
+            {"List<java.lang.String>", "Iterable,Collection,List", "java.util.List<java.lang.String>"                              , },
         };
         //@formatter:on
 
@@ -3993,16 +3994,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 contents.append("}\n");
 
                 assertType(contents.toString(), "object", test[2]);
-                var expect = test[2];
-                if (types[types.length - 1].equals("Short")) { // TODO: STC won't reduce
-                    if (!types[0].equals("Comparable")) {
-                        expect = "java.lang." + types[0] + " & " + test[test.length - 1];
-                    } else {
-                        expect = java.util.Arrays.stream(types).skip(1).map(type -> "java.lang." + type)
-                            .collect(java.util.stream.Collectors.joining(" & ")) + " & java.lang.Comparable";
-                    }
-                }
-                assertType("@groovy.transform.TypeChecked " + contents, "object", expect);
+                assertType("@groovy.transform.TypeChecked " + contents, "object", test[test.length - 1]);
             }
 
             //
@@ -4016,11 +4008,12 @@ public final class InferencingTests extends InferencingTestSuite {
             contents.append("}\n");
 
             int offset = contents.indexOf("object;");
-            assertType(contents.toString(), offset, offset + 6, "java.lang." + test[0]);
-            assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, "java.lang." + test[0]);
+            var expect = test[0].startsWith("List") ? "java.util." + test[0] : "java.lang." + test[0];
+            assertType(contents.toString(), offset, offset + 6, expect);
+            assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, expect);
             offset = contents.lastIndexOf("object");
             assertType(contents.toString(), offset, offset + 6, test[2]);
-            assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, test[2]);
+            assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, isAtLeastGroovy(50) ? test[test.length - 1] : test[2]);
 
             //
 
@@ -4034,11 +4027,12 @@ public final class InferencingTests extends InferencingTestSuite {
                 contents.append("}\n");
 
                 offset = contents.indexOf("object;");
-                assertType(contents.toString(), offset, offset + 6, "java.lang." + test[0]);
-                assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, "java.lang." + test[0]);
+                expect = test[0].startsWith("List") ? "java.util." + test[0] : "java.lang." + test[0];
+                assertType(contents.toString(), offset, offset + 6, expect);
+                assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, expect);
                 offset = contents.lastIndexOf("object");
                 assertType(contents.toString(), offset, offset + 6, test[2]);
-                assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, test[2]);
+                assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, isAtLeastGroovy(50) ? test[test.length - 1] : test[2]);
             }
         }
     }

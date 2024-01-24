@@ -213,6 +213,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.elvisX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getGetterName;
@@ -2174,7 +2175,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     public void visitExpressionStatement(final ExpressionStatement statement) {
         typeCheckingContext.pushTemporaryTypeInfo();
         super.visitExpressionStatement(statement);
+        /* GRECLIPSE edit -- GROOVY-11290
         typeCheckingContext.popTemporaryTypeInfo();
+        */
+        Map<?,List<ClassNode>> tti = typeCheckingContext.temporaryIfBranchTypeInformation.pop();
+        if (!tti.isEmpty() && !typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) {
+            tti.forEach((k, tempTypes) -> {
+                if (tempTypes.contains(VOID_TYPE))
+                    typeCheckingContext.temporaryIfBranchTypeInformation.peek()
+                        .computeIfAbsent(k, x -> new LinkedList<>()).add(VOID_TYPE);
+            });
+        }
+        // GRECLIPSE end
     }
 
     @Override
@@ -4448,12 +4460,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 List<ClassNode> assignedTypes = typeCheckingContext.closureSharedVariablesAssignmentTypes.computeIfAbsent(var, k -> new LinkedList<>());
                 assignedTypes.add(cn);
             }
+            /* GRECLIPSE edit -- GROOVY-11290
             List<ClassNode> temporaryTypesForExpression = getTemporaryTypesForExpression(var);
             if (asBoolean(temporaryTypesForExpression)) {
                 // a type inference has been made on a variable whose type was defined in an instanceof block
                 // erase available information with the new type
                 temporaryTypesForExpression.clear();
             }
+            */
+            if (!var.isThisExpression() && !var.isSuperExpression() && !typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) {
+                pushInstanceOfTypeInfo(var, classX(VOID_TYPE));
+            }
+            // GRECLIPSE end
         }
     }
 
@@ -6040,6 +6058,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected List<ClassNode> getTemporaryTypesForExpression(final Expression expression) {
+        /* GRECLIPSE edit -- GROOVY-11290
         List<ClassNode> types = null;
         int depth = typeCheckingContext.temporaryIfBranchTypeInformation.size();
         while (types == null && depth > 0) {
@@ -6052,11 +6071,23 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         }
         return types;
+        */
+        Object key = extractTemporaryTypeInfoKey(expression);
+        List<ClassNode> tempTypes = typeCheckingContext.temporaryIfBranchTypeInformation.stream().flatMap(tti ->
+            tti.getOrDefault(key, Collections.emptyList()).stream()
+        ).collect(Collectors.toList());
+        int i = tempTypes.lastIndexOf(VOID_TYPE);
+        if (i != -1) { // assignment overwrites instanceof
+            tempTypes = tempTypes.subList(i + 1, tempTypes.size());
+        }
+        return tempTypes.size() <= 1 ? tempTypes : DefaultGroovyMethods.unique(tempTypes); // GROOVY-6429
+        // GRECLIPSE end
     }
 
     private ClassNode getInferredTypeFromTempInfo(final Expression expression, final ClassNode expressionType) {
-        if (expression instanceof VariableExpression && !typeCheckingContext.temporaryIfBranchTypeInformation.isEmpty()) {
+        if (expression instanceof VariableExpression) {
             List<ClassNode> tempTypes = getTemporaryTypesForExpression(expression);
+            /* GRECLIPSE edit -- GROOVY-11290
             if (tempTypes != null && !tempTypes.isEmpty()) {
                 Set<ClassNode> types = new LinkedHashSet<>(tempTypes.size() + 1);
                 if (expressionType != null && !isObjectType(expressionType) // GROOVY-7333
@@ -6073,6 +6104,51 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     return new UnionTypeClassNode(types.toArray(ClassNode.EMPTY_ARRAY));
                 }
             }
+            */
+            if (!tempTypes.isEmpty()) {
+                ClassNode   superclass;
+                ClassNode[] interfaces;
+                if (expressionType instanceof WideningCategories.LowestUpperBoundClassNode) {
+                    superclass = expressionType.getSuperClass();
+                    interfaces = expressionType.getInterfaces();
+                } else if (expressionType != null && expressionType.isInterface()) {
+                    superclass = OBJECT_TYPE;
+                    interfaces = new ClassNode[]{expressionType};
+                } else {
+                    superclass = expressionType;
+                    interfaces = ClassNode.EMPTY_ARRAY;
+                }
+
+                List<ClassNode> types = new ArrayList<>();
+                if (superclass != null && !superclass.equals(OBJECT_TYPE) // GROOVY-7333
+                        && tempTypes.stream().noneMatch(t -> !t.equals(superclass) && t.isDerivedFrom(superclass))) { // GROOVY-9769
+                    types.add(superclass);
+                }
+                for (ClassNode anInterface : interfaces) {
+                    if (tempTypes.stream().noneMatch(t -> t.implementsInterface(anInterface))) { // GROOVY-9769
+                        types.add(anInterface);
+                    }
+                }
+                int tempTypesCount = tempTypes.size();
+                if (tempTypesCount == 1 && types.isEmpty()) {
+                    types.add(tempTypes.get(0));
+                } else for (ClassNode tempType : tempTypes) {
+                    if (!tempType.isInterface() // GROOVY-11290: keep most-specific types
+                            ? (superclass == null || !superclass.isDerivedFrom(tempType))
+                                    && (tempTypesCount == 1 || tempTypes.stream().noneMatch(t -> !t.equals(tempType) && t.isDerivedFrom(tempType)))
+                            : (expressionType == null || !isOrImplements(expressionType, tempType))
+                                    && (tempTypesCount == 1 || tempTypes.stream().noneMatch(t -> t != tempType && t.implementsInterface(tempType)))) {
+                        types.add(tempType);
+                    }
+                }
+
+                if (types.size() == 1) {
+                    return types.get(0);
+                } else if (types.size() > 1) {
+                    return new UnionTypeClassNode(types.toArray(ClassNode.EMPTY_ARRAY));
+                }
+            }
+            // GRECLIPSE end
         }
         return expressionType;
     }

@@ -50,9 +50,6 @@ import java.util.Set;
 import static java.util.stream.Collectors.toList;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 import static org.codehaus.groovy.ast.ClassHelper.SEALED_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
-import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveBoolean;
-import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveVoid;
 import static org.codehaus.groovy.ast.tools.ParameterUtils.parametersEqual;
 import static org.codehaus.groovy.transform.RecordTypeASTTransformation.recordNative;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
@@ -985,12 +982,19 @@ public class ClassNode extends AnnotatedNode {
      * @return true if this node is derived from the given ClassNode
      */
     public boolean isDerivedFrom(ClassNode type) {
-        if (isPrimitiveVoid(this)) {
-            return isPrimitiveVoid(type);
+        if (ClassHelper.isPrimitiveVoid(this)) {
+            return ClassHelper.isPrimitiveVoid(type);
         }
-        if (isObjectType(type)) {
+        if (ClassHelper.isObjectType(type)) {
             return true;
         }
+        // GRECLIPSE add -- GROOVY-11290
+        if (this.isArray() && type.isArray()
+                && ClassHelper.isObjectType(type.getComponentType())
+                && !ClassHelper.isPrimitiveType(this.getComponentType())) {
+            return true;
+        }
+        // GRECLIPSE end
         ClassNode node = this;
         while (node != null) {
             if (type.equals(node)) {
@@ -1212,7 +1216,7 @@ public class ClassNode extends AnnotatedNode {
         boolean booleanReturnOnly = getterName.startsWith("is");
         for (MethodNode method : getDeclaredMethods(getterName)) {
             if (method.getName().equals(getterName) && method.getParameters().length == 0
-                    && (booleanReturnOnly ? isPrimitiveBoolean(method.getReturnType()) : !method.isVoidMethod())) {
+                    && (booleanReturnOnly ? ClassHelper.isPrimitiveBoolean(method.getReturnType()) : !method.isVoidMethod())) {
                 // GROOVY-7363: There can be multiple matches for a getter returning a generic parameter type, due to
                 // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
                 // has the most specific and exact return type of the two. Picking the bridge method results in loss of

@@ -3196,7 +3196,7 @@ out:    if (inferredTypes[0] == null) {
     private static Map<String, ClassNode[]> inferInstanceOfType(final Expression expression, final VariableScope scope) {
         java.util.function.BiPredicate<String, ClassNode> isSubType = (name, type) -> {
             VariableScope.VariableInfo vi = scope.lookupName(name); // known type of "name"
-            return (vi != null && (vi.type == null || StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type, vi.type)));
+            return (vi != null && (vi.type == null || (!vi.type.equals(type) && StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type, vi.type))));
         };
 
         java.util.function.BinaryOperator<ClassNode> unionOfTypes = (type1, type2) -> {
@@ -3205,7 +3205,7 @@ out:    if (inferredTypes[0] == null) {
             ClassNode[] interfaces = null;
             if (!type2.isInterface()) {
                 if (type1 instanceof WideningCategories.LowestUpperBoundClassNode) {
-                    if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type2, type1.getSuperClass())) {
+                    if (!type2.equals(type1.getSuperClass()) && StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type2, type1.getSuperClass())) {
                         superclass = type2;
                         interfaces = Stream.of(type1.getInterfaces()).filter(i -> !type2.implementsInterface(i)).toArray(ClassNode[]::new);
                     }
