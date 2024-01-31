@@ -256,24 +256,28 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |@Field Number one
             |@Field static Double TWO
             |
-            |one + TWO;
-            |{ -> one + TWO }
-            |{ -> one = 1; TWO = 2.0d }
+            |one * TWO ;
+            |{ -> one + TWO };
+            |{ -> one = 1; TWO = 2.0 }
             |'''.stripMargin()
 
+        def prefs = org.eclipse.core.runtime.preferences.InstanceScope.INSTANCE.getNode('org.codehaus.groovy.eclipse.dsl')
+        def xdsld = prefs.getBoolean('org.codehaus.groovy.eclipse.dsl.disabled', false) ||
+                    !prefs.getBoolean('org.codehaus.groovy.eclipse.dsl.auto.add.support', true)
+
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
-            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('Double'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('TWO'), 3, STATIC_FIELD),
-            new HighlightedTypedPosition(contents.indexOf('one '), 3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('TWO;'), 3, STATIC_FIELD),
-            new HighlightedTypedPosition(contents.indexOf('one', contents.indexOf('->')), 3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('TWO', contents.indexOf('->')), 3, STATIC_FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('1'), 1, NUMBER),
-            new HighlightedTypedPosition(contents.lastIndexOf('TWO'), 3, STATIC_FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('2'), 4, NUMBER))
+            new HighlightedTypedPosition(contents.indexOf('Number' ), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'    ), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Double' ), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('TWO'    ), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('one *'  ), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('TWO ;'  ), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('one +'  ), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('TWO }'  ), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, xdsld ? FIELD : METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('1'  ), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('TWO'), 3, xdsld ? STATIC_FIELD : STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('2.0'), 3, NUMBER))
     }
 
     @Test
