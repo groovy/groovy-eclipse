@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -5080,8 +5080,33 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('setString'), 9, METHOD_CALL))
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1539
     void testTraits8() {
+        String contents = '''\
+            |trait T {
+            |  public static final
+            |  String string = 'x'
+            |  static method() {
+            |    string;
+            |  }
+            |  def nonStatic() {
+            |    string
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('string;'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('nonStatic'), 9, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, STATIC_VALUE))
+    }
+
+    @Test
+    void testTraits9() {
         addGroovySource '''\
             |trait T {
             |  String getFoo() { 'foo' }
@@ -5109,7 +5134,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits9() {
+    void testTraits10() {
         String contents = '''\
             |trait T {
             |  def whatever() {}
@@ -5133,7 +5158,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits10() {
+    void testTraits11() {
         String contents = '''\
             |trait T {
             |  def foo
@@ -5163,7 +5188,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/961
-    void testTraits11() {
+    void testTraits12() {
         // http://docs.groovy-lang.org/latest/html/documentation/#_semantics_of_super_inside_a_trait
         String contents = '''\
             |trait Filtering {
@@ -5194,7 +5219,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1159
-    void testTraits12() {
+    void testTraits13() {
         addGroovySource '''\
             |package p
             |trait T {
@@ -5241,20 +5266,20 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('I'), 1, INTERFACE),
-            new HighlightedTypedPosition(contents.indexOf('bar'), 3, STATIC_METHOD),
-            new HighlightedTypedPosition(contents.indexOf('baz'), 3, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('foo'), 3, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('I.'), 1, INTERFACE),
-            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL),
-            new HighlightedTypedPosition(contents.indexOf('I.this.'), 1, INTERFACE),
-            new HighlightedTypedPosition(contents.lastIndexOf('baz'), 3, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('I{'), 1, INTERFACE),
-            new HighlightedTypedPosition(contents.lastIndexOf('foo() {'), 3, METHOD),
-            new HighlightedTypedPosition(contents.lastIndexOf('I.'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('I'),         1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('bar'),       3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('baz'),       3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo'),       3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('I.bar()'),   1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'),   3, isAtLeastGroovy(50) ? STATIC_CALL : UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('I.this.'),   1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('baz'),   3, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('C'),         1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('I{'),        1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('def foo')+4, 3, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('I.'),    1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
           //new HighlightedTypedPosition(contents.lastIndexOf('super'), 5, UNKNOWN),
-            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, METHOD_CALL))
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'),   3, METHOD_CALL))
     }
 
     //

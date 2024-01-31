@@ -3247,6 +3247,35 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits10312b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "interface A {\n" +
+            "  public static final String BANG = '!'\n" +
+            "}\n" +
+            "trait B implements A {\n" +
+            "  static staticMethodWithDefaultArgument(String string = 'x') {\n" +
+            "    string + BANG\n" + // MissingPropertyException
+            "  }\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "  static one() {\n" +
+            "    staticMethodWithDefaultArgument()\n" +
+            "  }\n" +
+            "  def two() {\n" +
+            "    staticMethodWithDefaultArgument()\n" +
+            "  }\n" +
+            "}\n" +
+            "print(C.one())\n" +
+            "print(new C().two())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x!x!");
+    }
+
+    @Test
     public void testTraits10521() {
         //@formatter:off
         String[] sources = {

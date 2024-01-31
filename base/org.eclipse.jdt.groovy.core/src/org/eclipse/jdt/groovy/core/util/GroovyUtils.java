@@ -64,6 +64,8 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.Signature;
 import org.osgi.framework.Version;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+
 /**
  * Helper methods - can be made more eclipse friendly or replaced if the groovy infrastructure provides the information.
  */
@@ -419,11 +421,17 @@ public class GroovyUtils {
         if (objExpr instanceof TernaryExpression) {
             objExpr = ((TernaryExpression) objExpr).getTrueExpression();
         }
-        if (objExpr.getType().getName().endsWith("$Trait$FieldHelper")) {
+        ClassNode objType = objExpr.getType();
+        if (objType.getName().endsWith("$Trait$FieldHelper")) {
+            objType = objType.getOuterClass(); // look for ((T$Trait$FieldHelper)$self).T__name$get()
+        } else if (objType.equals(ClassHelper.CLASS_Type) && asBoolean(objType.getGenericsTypes())) {
+            objType = objType.getGenericsTypes()[0].getType(); // look for $static$self.T__name$get()
+        }
+        if (Traits.isTrait(objType)) {
             Matcher m = Pattern.compile(".+__(\\p{javaJavaIdentifierPart}+)\\$[gs]et").matcher(call.getMethodAsString());
             if (m.matches()) {
                 String fieldName = m.group(1);
-                List<FieldNode> traitFields = objExpr.getType().getOuterClass().getNodeMetaData("trait.fields");
+                List<FieldNode> traitFields = objType.redirect().getNodeMetaData("trait.fields");
                 for (FieldNode field : traitFields) {
                     if (field.getName().equals(fieldName)) {
                         VariableExpression expr = new VariableExpression(field);
