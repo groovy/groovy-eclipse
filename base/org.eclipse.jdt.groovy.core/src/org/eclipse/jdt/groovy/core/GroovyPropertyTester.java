@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,14 +52,14 @@ public class GroovyPropertyTester extends PropertyTester {
     public boolean test(Object receiver, String property, Object[] arguments, Object expectedValue) {
         if (receiver instanceof IAdaptable) {
             ModuleNode node = Adapters.adapt(receiver, ModuleNode.class);
-            if (node != null) {
+            if (node != null && !Boolean.TRUE.equals(node.getNodeMetaData("ParseError"))) {
                 switch (property) {
                 case "hasMain":
                     return node.getClasses().stream().flatMap(cn -> cn.getDeclaredMethods("main").stream()).anyMatch(JAVA_MAIN);
                 case "isScript":
-                    return !node.getStatementBlock().isEmpty() ||
-                        (getGroovyVersion().getMajor() >= 5 && node.getClasses().get(0).getNameEnd() < 1 && // un-named
-                            node.getClasses().get(0).getDeclaredMethods("main").stream().anyMatch(JEP_445_MAIN.and(JAVA_MAIN.negate())));
+                    return !node.getStatementBlock().isEmpty() || (!node.getClasses().isEmpty() &&
+                        node.getClasses().get(0).getNameEnd() < 1 /* un-named */ && getGroovyVersion().getMajor() >= 5 &&
+                        node.getClasses().get(0).getDeclaredMethods("main").stream().anyMatch(JEP_445_MAIN.and(JAVA_MAIN.negate())));
                 }
             }
         }
