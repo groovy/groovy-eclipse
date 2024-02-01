@@ -151,6 +151,9 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             }
             if (vexp.isThisExpression()) {
                 VariableExpression variableExpression = varX(weaved);
+                // GRECLIPSE add -- prevent semantic highlighting
+                variableExpression.setNodeMetaData("this", true);
+                // GRECLIPSE end
                 variableExpression.setSourcePosition(exp);
                 return variableExpression;
             }

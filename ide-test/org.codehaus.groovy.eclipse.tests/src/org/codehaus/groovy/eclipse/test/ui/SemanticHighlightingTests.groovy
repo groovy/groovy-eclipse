@@ -5091,7 +5091,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |  public static final
             |  String string = 'x'
             |  static method() {
-            |    string;
+            |    this.string
             |  }
             |  def nonStatic() {
             |    string
@@ -5104,7 +5104,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('string'), 6, STATIC_VALUE),
             new HighlightedTypedPosition(contents.indexOf('method'), 6, STATIC_METHOD),
-            new HighlightedTypedPosition(contents.indexOf('string;'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('.string')+1, 6, STATIC_VALUE),
             new HighlightedTypedPosition(contents.indexOf('nonStatic'), 9, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, STATIC_VALUE))
     }
@@ -5246,6 +5246,27 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, TRAIT),
             new HighlightedTypedPosition(contents.lastIndexOf('getFoo'), 6, METHOD_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1540
+    void testTraits14() {
+        String contents = '''\
+            |trait T {
+            |  def m() {
+            |    def that = this
+            |  }
+            |  static sm() {
+            |    def that = this
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('that'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('sm'), 2, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('that'), 4, VARIABLE))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1526
