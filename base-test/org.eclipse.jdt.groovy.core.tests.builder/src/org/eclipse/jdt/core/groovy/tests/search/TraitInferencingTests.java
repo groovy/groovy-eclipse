@@ -1021,6 +1021,37 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, offset, offset + 1, "T");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1540
+    public void testPublicStaticMethod11() {
+        //@formatter:off
+        String contents =
+            "trait T {\n" +
+            "  static m() {\n" +
+            "    this.m()\n" +
+            "    def that = this\n" +
+            "    that.m()\n" +
+            "  }\n" +
+            "  def foo() {\n" +
+            "    this.m()\n" +
+            "    def that = this\n" +
+            "    that.m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("this.m()") + 5;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+
+        /**/offset = contents.indexOf("that.m()") + 5;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+
+        /**/offset = contents.lastIndexOf("this.m()") + 5;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+
+        /**/offset = contents.lastIndexOf("that.m()") + 5;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-8272
     public void testPublicStaticSuperMethod1() {
         //@formatter:off

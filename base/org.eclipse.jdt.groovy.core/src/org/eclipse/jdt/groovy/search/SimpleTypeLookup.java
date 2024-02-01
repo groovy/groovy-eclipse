@@ -355,7 +355,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         TypeConfidence confidence = TypeConfidence.EXACT;
         int fieldAccessPolicy = (!scope.isFieldAccessDirect() || !(isThisObjectExpression(scope) || isSuperObjectExpression(scope)) ? 0 : isThisObjectExpression(scope) ? 1 : 2);
         // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations; StatementAndExpressionCompletionProcessor circa line 275 has similar check for proposals
-        ClassNode declaring = isStaticObjectExpression && (!Traits.isTrait(getBaseDeclaringType(declaringType)) || "$static$self".equals(getObjectExpression(scope).getText())) ? getBaseDeclaringType(declaringType) : declaringType;
+        ClassNode declaring = isStaticObjectExpression && (!Traits.isTrait(getBaseDeclaringType(declaringType)) || getObjectExpression(scope) instanceof Variable) ? getBaseDeclaringType(declaringType) : declaringType;
         ASTNode declaration = findDeclaration(name, declaring, isLhsExpression, isStaticObjectExpression, fieldAccessPolicy, scope.getEnclosingNode() instanceof MethodPointerExpression ? UNKNOWN_TYPES : scope.getMethodCallArgumentTypes());
         if (declaration instanceof MethodNode && scope.getEnclosingNode() instanceof PropertyExpression && !scope.isMethodCall() &&
                 (!AccessorSupport.isGetter((MethodNode) declaration) || name.equals(((MethodNode) declaration).getName()))) {
