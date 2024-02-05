@@ -46,6 +46,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
@@ -427,7 +428,7 @@ public class GroovyUtils {
         } else if (objType.equals(ClassHelper.CLASS_Type) && asBoolean(objType.getGenericsTypes())) {
             objType = objType.getGenericsTypes()[0].getType(); // look for $static$self.T__name$get()
         }
-        if (Traits.isTrait(objType)) {
+        if (Traits.isTrait(objType) && call.getMethod() instanceof ConstantExpression) {
             Matcher m = Pattern.compile(".+__(\\p{javaJavaIdentifierPart}+)\\$[gs]et").matcher(call.getMethodAsString());
             if (m.matches()) {
                 String fieldName = m.group(1);

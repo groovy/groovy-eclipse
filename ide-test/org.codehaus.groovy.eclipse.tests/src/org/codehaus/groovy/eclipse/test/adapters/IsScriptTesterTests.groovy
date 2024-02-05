@@ -23,8 +23,8 @@ import org.junit.Test
 
 final class IsScriptTesterTests extends GroovyEclipseTestSuite {
 
-    private void doTest(String name = 'Main', String text, boolean expected) {
-        boolean isScript = new GroovyPropertyTester().test(addGroovySource(text, name), 'isScript', null, null)
+    private void doTest(String text, boolean expected) {
+        boolean isScript = new GroovyPropertyTester().test(addGroovySource(text, nextUnitName()), 'isScript', null, null)
         assert (isScript == expected) : "Should have ${expected ? '' : '*not*'} found a script class in:\n$text"
     }
 

@@ -2071,14 +2071,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     primaryType = null; // implicit-this calls are handled like free variables
                     isStatic = scope.isStatic();
                 } else {
-                    isStatic = mce.getObjectExpression() instanceof ClassExpression || primaryType.equals(VariableScope.CLASS_CLASS_NODE);
+                    isStatic = mce.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(primaryType);
                 }
             } else if (enclosingNode instanceof PropertyExpression) {
                 PropertyExpression pe = (PropertyExpression) enclosingNode;
-                isStatic = pe.getObjectExpression() instanceof ClassExpression || primaryType.equals(VariableScope.CLASS_CLASS_NODE);
+                isStatic = pe.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(primaryType);
             } else if (enclosingNode instanceof MethodPointerExpression) {
                 MethodPointerExpression mpe = (MethodPointerExpression) enclosingNode;
-                isStatic = mpe.getExpression() instanceof ClassExpression || primaryType.equals(VariableScope.CLASS_CLASS_NODE);
+                isStatic = mpe.getExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(primaryType);
             } else /*if (enclosingNode instanceof ImportNode)*/ {
                 isStatic = true;
             }
