@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.isGenerated;
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.plus;
 import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
 
 import java.io.PrintWriter;
@@ -1523,10 +1525,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (!variables.isEmpty()) constructorDecl.statements = createStatements(variables.values());
                 }
                 if (constructorNode.hasDefaultValue()) {
-                    Annotation[] generated = createAnnotations(ClassHelper.make(groovy.transform.Generated.class));
                     for (Argument[] variantArgs : getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments)) {
                         ConstructorDeclaration variantDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                        variantDecl.annotations = constructorDecl.annotations == null ? generated : ArrayUtils.concat(constructorDecl.annotations, generated);
+                        variantDecl.annotations = createAnnotations(isGenerated(constructorNode) ? constructorNode.getAnnotations()
+                            : plus(constructorNode.getAnnotations(), new AnnotationNode(ClassHelper.make(groovy.transform.Generated.class))));
                         variantDecl.arguments = variantArgs;
                         variantDecl.bits = constructorDecl.bits;
                         variantDecl.javadoc = constructorDecl.javadoc;
@@ -1601,10 +1603,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                     if (methodNode.hasDefaultValue()) {
-                        Annotation[] generated = createAnnotations(ClassHelper.make(groovy.transform.Generated.class));
                         for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
                             AbstractMethodDeclaration variantDecl = createMethodDeclaration(classNode, methodNode);
-                            variantDecl.annotations = variantDecl.annotations == null ? generated : ArrayUtils.concat(variantDecl.annotations, generated);
+                            variantDecl.annotations = ArrayUtils.concat(
+                                variantDecl.annotations != null ? variantDecl.annotations : new Annotation[0],
+                                createAnnotations(ClassHelper.make(groovy.transform.Generated.class)));
                             variantDecl.arguments = variantArgs;
 
                             variantDecl.declarationSourceStart = 0;

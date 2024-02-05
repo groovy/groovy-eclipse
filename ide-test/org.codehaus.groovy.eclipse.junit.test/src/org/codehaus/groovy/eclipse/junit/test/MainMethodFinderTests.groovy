@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.internal.core.search.JavaWorkspaceScope
 import org.eclipse.jdt.internal.ui.util.MainMethodSearchEngine
@@ -24,7 +25,7 @@ import org.junit.Test
 /**
  * Tests for {@link org.eclipse.jdt.internal.ui.util.MainMethodSearchEngine}.
  */
-final class MainMethodFinderTests extends JUnitTestSuite {
+final class MainMethodFinderTests extends GroovyEclipseTestSuite {
 
     /**
      * @param expected fully-qualified type names
@@ -42,21 +43,21 @@ final class MainMethodFinderTests extends JUnitTestSuite {
     @Test
     void testMainMethodFinder1() {
         addGroovySource '''
-            class A {
-                static def main(args) {}
+            class C {
+                static main(args) { }
             }
-            '''
+        '''
 
-        expectTypesWithMain 'p.A'
+        expectTypesWithMain('C')
     }
 
     @Test
     void testMainMethodFinder2() {
         addGroovySource '''
-            class B {
-                static def main(String... args) {}
+            class C {
+                static main(String... args) { }
             }
-            '''
+        '''
 
         expectTypesWithMain()
     }
@@ -65,9 +66,9 @@ final class MainMethodFinderTests extends JUnitTestSuite {
     void testMainMethodFinder3() {
         addGroovySource '''
             class C {
-                static def main(String[] args) {}
+                static main(String[] args) { }
             }
-            '''
+        '''
 
         expectTypesWithMain()
     }
@@ -75,10 +76,10 @@ final class MainMethodFinderTests extends JUnitTestSuite {
     @Test
     void testMainMethodFinder4() {
         addGroovySource '''
-            class D {
-                private static def main(String[] args) {}
+            class C {
+                private static main(String[] args) { }
             }
-            '''
+        '''
 
         expectTypesWithMain()
     }
@@ -86,10 +87,10 @@ final class MainMethodFinderTests extends JUnitTestSuite {
     @Test
     void testMainMethodFinder5() {
         addGroovySource '''
-            class E {
-                def main(String[] args) {}
+            class C {
+                def main(String[] args) { }
             }
-            '''
+        '''
 
         expectTypesWithMain()
     }
@@ -98,7 +99,7 @@ final class MainMethodFinderTests extends JUnitTestSuite {
     void testMainMethodFinder6() {
         addGroovySource 'print "hello"', 'script1'
 
-        expectTypesWithMain 'p.script1'
+        expectTypesWithMain('script1')
     }
 
     @Test
@@ -106,12 +107,12 @@ final class MainMethodFinderTests extends JUnitTestSuite {
         addGroovySource '''
             print 'Hello'
 
-            class F {
-                static def main(args) {}
+            class C {
+                static def main(args) { }
             }
-            ''', 'script2'
+        ''', 'script2'
 
-        expectTypesWithMain 'p.script2', 'p.F'
+        expectTypesWithMain('script2', 'C')
     }
 
     @Test
@@ -119,14 +120,14 @@ final class MainMethodFinderTests extends JUnitTestSuite {
         addGroovySource '''
             print 'Hello'
 
-            class G {
-                static def main(args) {}
+            class A {
+                static main(args) { }
             }
-            class H {
-                static def main(args) {}
+            class B {
+                static main(args) { }
             }
-            ''', 'script3'
+        ''', 'script3'
 
-        expectTypesWithMain 'p.script3', 'p.G', 'p.H'
+        expectTypesWithMain('script3', 'A', 'B')
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,87 +15,119 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.internal.junit.launcher.JUnit3TestFinder
+import org.junit.Before
 import org.junit.Test
 
-final class JUnit3TestFinderTests extends JUnitTestSuite {
+final class JUnit3TestFinderTests extends GroovyEclipseTestSuite {
 
-    private void assertTypeIsTest(boolean expected, ICompilationUnit unit, String typeName, String reasonText = '') {
+    @Before
+    void setUp() {
+        addJUnit(3)
+    }
+
+    private Set<IType> getAllTests() {
+        Set<IType> testTypes = []
+        SynchronizationUtils.waitForIndexingToComplete()
+        new JUnit3TestFinder().findTestsInContainer(packageFragmentRoot, testTypes, null)
+        return testTypes
+    }
+
+    private boolean isTest(ICompilationUnit unit, String typeName = unit.types[0].elementName) {
         def type = unit.getType(typeName)
         assert type.exists() : "Groovy type $typeName should exist"
-        assert new JUnit3TestFinder().isTest(type) == expected : "Groovy type $typeName should${expected ? '' : 'n\'t'} be a JUnit 3 test $reasonText"
+        return new JUnit3TestFinder().isTest(type)
     }
 
+    //--------------------------------------------------------------------------
+
     @Test
-    void testFinderWithSuite() {
-        def test = addGroovySource '''
-            class A {
-                static junit.framework.Test suite() throws Exception {}
+    void testIsTest0() {
+        def unit = addGroovySource '''
+            class C {
+                void test() { }
             }
-            '''
-
-        assertTypeIsTest(true, test, 'A')
+        ''', 'C', 'p'
+        assert !isTest(unit)
     }
 
     @Test
-    void testFinderOfSubclass() {
-        def base = addGroovySource '''
+    void testIsTest1() {
+        def unit = addGroovySource '''
+            class C extends junit.framework.TestCase {
+                void test() { }
+            }
+        ''', 'C', 'p'
+        assert isTest(unit)
+    }
+
+    @Test
+    void testIsTest2() {
+        def unit = addGroovySource '''
+            class C {
+                static junit.framework.Test suite() { }
+            }
+        ''', 'C', 'p'
+        assert isTest(unit)
+    }
+
+    @Test
+    void testIsTest3() {
+        def unit = addGroovySource '''
             abstract class TestBase extends junit.framework.TestCase {
             }
-            '''
+        ''', 'TestBase', 'p'
+        assert !isTest(unit)
 
-        def test = addGroovySource '''
-            class B extends TestBase {
+        unit = addGroovySource '''
+            class C extends TestBase {
             }
-            '''
-
-        assertTypeIsTest(false, base, 'TestBase', '(it is abstract)')
-        assertTypeIsTest(true, test, 'B')
+        ''', 'C', 'p'
+        assert isTest(unit)
     }
 
     @Test
-    void testFinderOfNonPublicSubclass() {
-        def base = addGroovySource '''
+    void testIsTest4() {
+        def unit = addGroovySource '''
             abstract class TestBase extends junit.framework.TestCase {
             }
-            '''
+        ''', 'TestBase', 'p'
+        assert !isTest(unit)
 
-        def test = addGroovySource '''
+        unit = addGroovySource '''
             @groovy.transform.PackageScope class C extends TestBase {
             }
-            '''
-
-        assertTypeIsTest(false, base, 'TestBase', '(it is abstract)')
-        assertTypeIsTest(true, test, 'C')
+        ''', 'C', 'p'
+        assert isTest(unit)
     }
 
+    //
+
     @Test
-    void testFindAllTestSuites() {
+    void testFindTests() {
         addGroovySource '''
             abstract class TestBase extends junit.framework.TestCase {
             }
-            '''
-
+        ''', 'TestBase', 'p'
         addGroovySource '''
             class X extends TestBase {
             }
-            '''
-
+        ''', 'X', 'p'
         addGroovySource '''
             class Y extends junit.framework.TestCase {
             }
-            '''
-
+        ''', 'Y', 'p'
         addGroovySource '''
             class Z {
                 static junit.framework.Test suite() throws Exception {}
             }
-            '''
+        ''', 'Z', 'p'
 
-        Set<IType> testTypes = []
-        new JUnit3TestFinder().findTestsInContainer(packageFragmentRoot, testTypes, null)
+        Set<IType> testTypes = allTests
 
         assert testTypes.any { it.elementName == 'X' } : 'X should be a test type'
         assert testTypes.any { it.elementName == 'Y' } : 'Y should be a test type'
