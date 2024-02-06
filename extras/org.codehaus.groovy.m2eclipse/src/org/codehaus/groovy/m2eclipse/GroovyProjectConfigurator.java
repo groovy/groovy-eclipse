@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.maven.plugin.MojoExecution;
-import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -30,29 +29,56 @@ import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
+import org.eclipse.m2e.core.project.configurator.AbstractProjectConfigurator;
 import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
 import org.eclipse.m2e.jdt.IClasspathDescriptor;
-import org.eclipse.m2e.jdt.internal.AbstractJavaProjectConfigurator;
+import org.eclipse.m2e.jdt.IJavaProjectConfigurator;
 
-public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator {
+public class GroovyProjectConfigurator extends AbstractProjectConfigurator implements IJavaProjectConfigurator {
 
     // copy from org.codehaus.jdt.groovy.model.GroovyNature
     private static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature";
 
     // copy from org.codehaus.groovy.eclipse.core.model.GroovyRuntime
-    private static final IPath DSLD_CONTAINER_ID = new Path("GROOVY_DSL_SUPPORT");
+    private static final IPath DSLD_CONTAINER = new org.eclipse.core.runtime.Path("GROOVY_DSL_SUPPORT");
 
     @Override
     public void configure(ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
-        super.configure(request, monitor); // drives calls to configureClasspath and configureRawClasspath
-
         IMavenProjectFacade mavenProject = getMavenProjectFacade(request);
+
+        // configure Java and drive calls to configureClasspath and configureRawClasspath
+        var javaConfigurator = new org.eclipse.m2e.jdt.internal.JavaProjectConfigurator() {
+            @Override
+            protected void addJavaProjectOptions(Map<String, String> options, ProjectConfigurationRequest request, IProgressMonitor pm) throws CoreException {
+                String configScript = null;
+
+                for (MojoExecution me : mavenProject.getMojoExecutions("org.apache.maven.plugins", "maven-compiler-plugin", pm, "compile", "testCompile")) {
+                    Map<String, String> m = maven.getMojoParameterValue(mavenProject.getMavenProject(), me, "compilerArguments", Map.class, pm);
+                    if (m != null && m.get("configScript") != null) {
+                        configScript = m.get("configScript").trim();
+                    } else {
+                        String s = maven.getMojoParameterValue(mavenProject.getMavenProject(), me, "compilerArgument", String.class, pm);
+                        if (s != null && s.contains("configScript")) {
+                            String[] tokens = s.split("=");
+                            if (tokens.length == 2 && tokens[0].trim().matches("-?configScript")) {
+                                configScript = tokens[1].trim();
+                            }
+                        }
+                    }
+                }
+
+                // see org.eclipse.jdt.internal.compiler.impl.CompilerOptions.OPTIONG_GroovyCompilerConfigScript
+                options.put("org.eclipse.jdt.core.compiler.groovy.groovyCompilerConfigScript", configScript);
+
+                super.addJavaProjectOptions(options, request, pm);
+            }
+        };
+        javaConfigurator.configure(request, monitor);
 
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(mavenProject);
         if (sourceType != null) {
@@ -98,9 +124,9 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator {
 
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(mavenProject);
         if (sourceType != null) {
-            if (isAbsent(classpath, DSLD_CONTAINER_ID) && isAddDslSupport()) {
+            if (isAbsent(classpath, DSLD_CONTAINER) && isAddDslSupport()) {
                 classpath.addEntry(JavaCore.newContainerEntry(
-                    DSLD_CONTAINER_ID,
+                    DSLD_CONTAINER,
                     null, // access rules
                     new IClasspathAttribute[] {JavaCore.newClasspathAttribute("maven.pomderived", "true")},
                     false // exported
@@ -108,52 +134,25 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator {
             }
 
             IProject project = mavenProject.getProject();
-            IPath mainOutput = getFolder(project, mavenProject.getMavenProject().getBuild().getOutputDirectory()).getFullPath();
-            IPath testOutput = getFolder(project, mavenProject.getMavenProject().getBuild().getTestOutputDirectory()).getFullPath();
 
             IFolder srcMainGroovy = project.getFolder("src/main/groovy");
             if (srcMainGroovy.exists() && (sourceType == ProjectSourceType.MAIN || sourceType == ProjectSourceType.BOTH)) {
                 if (isAbsent(classpath, srcMainGroovy.getFullPath())) {
-                    classpath.addSourceEntry(srcMainGroovy.getFullPath(), mainOutput, /*generated:*/ true);
+                    IPath out = mavenProject.getProjectRelativePath(mavenProject.getMavenProject().getBuild().getOutputDirectory());
+                    classpath.addSourceEntry(srcMainGroovy.getFullPath(), project.getFolder(out).getFullPath(), /*generated:*/ true);
                 }
             }
 
             IFolder srcTestGroovy = project.getFolder("src/test/groovy");
             if (srcTestGroovy.exists() && (sourceType == ProjectSourceType.TEST || sourceType == ProjectSourceType.BOTH)) {
                 if (isAbsent(classpath, srcTestGroovy.getFullPath())) {
-                    classpath.addSourceEntry(srcTestGroovy.getFullPath(), testOutput, /*generated:*/ true).setClasspathAttribute("test", "true");
+                    IPath out = mavenProject.getProjectRelativePath(mavenProject.getMavenProject().getBuild().getTestOutputDirectory());
+                    classpath.addSourceEntry(srcTestGroovy.getFullPath(), project.getFolder(out).getFullPath(), /*generated:*/ true).setClasspathAttribute("test", "true");
                 }
             }
 
             classpath.removeEntry(project.getFullPath().append("target/generated-sources/groovy-stubs/main"));
         }
-    }
-
-    @Override
-    protected void addJavaProjectOptions(Map<String, String> options, ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
-        String configScript = null;
-
-        MavenProject mavenProject = getMavenProjectFacade(request).getMavenProject(monitor);
-
-        for (MojoExecution me : getCompilerMojoExecutions(request, monitor)) {
-            Map<String, String> m = maven.getMojoParameterValue(mavenProject, me, "compilerArguments", Map.class, monitor);
-            if (m != null && m.get("configScript") != null) {
-                configScript = m.get("configScript").trim();
-            } else {
-                String s = maven.getMojoParameterValue(mavenProject, me, "compilerArgument", String.class, monitor);
-                if (s != null && s.contains("configScript")) {
-                    String[] tokens = s.split("=");
-                    if (tokens.length == 2 && tokens[0].trim().matches("-?configScript")) {
-                        configScript = tokens[1].trim();
-                    }
-                }
-            }
-        }
-
-        // see org.eclipse.jdt.internal.compiler.impl.CompilerOptions.OPTIONG_GroovyCompilerConfigScript
-        options.put("org.eclipse.jdt.core.compiler.groovy.groovyCompilerConfigScript", configScript);
-
-        super.addJavaProjectOptions(options, request, monitor);
     }
 
     //--------------------------------------------------------------------------
