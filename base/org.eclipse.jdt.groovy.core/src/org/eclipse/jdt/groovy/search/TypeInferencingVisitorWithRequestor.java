@@ -2875,6 +2875,12 @@ out:    if (inferredTypes[0] == null) {
 
         if (p0.length == p1.length && Arrays.equals(Arrays.stream(p0).map(Parameter::getType).toArray(),
                                                     Arrays.stream(p1).map(Parameter::getType).toArray())) {
+            if (p0.length == 0 &&
+                    next.scope.isMethodCall() &&
+                    m0.getName().startsWith("get") &&
+                    m1.getName().equalsIgnoreCase(m0.getName().substring(3))) {
+                return true; // length() better than getLength() for "length()"
+            }
             return !t0.isDerivedFrom(t1) && !t0.implementsInterface(t1);
         } else {
             long d0 = SimpleTypeLookup.calculateParameterDistance(args, p0);

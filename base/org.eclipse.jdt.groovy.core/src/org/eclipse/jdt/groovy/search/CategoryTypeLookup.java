@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.reflection.ParameterTypes;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
-import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
  * Looks up the type of an expression in the currently applicable categories.
@@ -103,8 +102,12 @@ public class CategoryTypeLookup implements ITypeLookup {
                             }
                         }
                     }
-                    TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method,
-                        isDefaultGroovyMethod(method, scope) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
+                    TypeLookupResult.TypeConfidence confidence = TypeLookupResult.TypeConfidence.INFERRED;
+                    if (isDefaultGroovyMethod(method, scope) ||
+                            (!method.getName().equals(simpleName) && method.getName().startsWith("get") && scope.isMethodCall())) {
+                        confidence = TypeLookupResult.TypeConfidence.LOOSELY_INFERRED;
+                    }
+                    TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method, confidence, scope);
                     result.isGroovy = true; // enable semantic highlighting for category/extension method
                     return result;
                 }

@@ -2616,6 +2616,46 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaration(contents, offset, offset + 3, "Cat", isAtLeastGroovy(40) ? "isAbc" : "getAbc", DeclarationKind.METHOD);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1545
+    public void testCategoryMethod4() {
+        String contents =
+            "class Cat {\n" +
+            "  static int getLength(Foo foo) {}\n" +
+            "}\n" +
+            "class Foo {\n" +
+            "  int length() {}\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  def foo = new Foo()\n" +
+            "  foo.length()\n" +
+            "  foo.length\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("length()");
+        assertDeclaration(contents, offset, offset + 6, "Foo", "length", DeclarationKind.METHOD);
+        /**/offset = contents.lastIndexOf("length");
+        assertDeclaration(contents, offset, offset + 6, "Cat", "getLength", DeclarationKind.METHOD);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1545
+    public void testCategoryMethod5() {
+        String contents =
+            "class Cat {\n" +
+            "  static int length(Foo foo) {}\n" +
+            "}\n" +
+            "class Foo {\n" +
+            "  int getLength() {}\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  def foo = new Foo()\n" +
+            "  foo.length()\n" +
+            "  foo.length\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("length()");
+        assertDeclaration(contents, offset, offset + 6, "Cat", "length", DeclarationKind.METHOD);
+        /**/offset = contents.lastIndexOf("length");
+        assertDeclaration(contents, offset, offset + 6, "Foo", "getLength", DeclarationKind.METHOD);
+    }
+
     @Test // GROOVY-5609
     public void testVariadicCategoryMethods() {
         String contents =
