@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1062,6 +1062,7 @@ private IBinaryMethod[] createMethods(IBinaryMethod[] iMethods, IBinaryType bina
 					methods1[index++] = method;
 				}
 			}
+			this.methods = methods1;
 			// GROOVY add -- save the bridge methods; Groovy needs to see them
 			if (this.environment.globalOptions.buildGroovyFiles == 2) {
 				int skipped = (initialTotal - total - (iClinit == -1 ? 0 : 1));
@@ -1081,7 +1082,6 @@ private IBinaryMethod[] createMethods(IBinaryMethod[] iMethods, IBinaryType bina
 				}
 			}
 			// GROOVY end
-			this.methods = methods1;
 			return mappedBinaryMethods;
 		}
 	} finally {

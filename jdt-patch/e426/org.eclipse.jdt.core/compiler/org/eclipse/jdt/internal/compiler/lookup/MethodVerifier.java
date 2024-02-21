@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -92,6 +92,9 @@ boolean areReturnTypesCompatible(MethodBinding one, MethodBinding two) {
 }
 public static boolean areReturnTypesCompatible(MethodBinding one, MethodBinding two, LookupEnvironment environment) {
 	if (TypeBinding.equalsEquals(one.returnType, two.returnType)) return true;
+	// GROOVY add
+	if (one.returnType == null || two.returnType == null) return false;
+	// GROOVY end
 	if (environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_5) {
 		// short is compatible with int, but as far as covariance is concerned, its not
 		if (one.returnType.isBaseType()) return false;
