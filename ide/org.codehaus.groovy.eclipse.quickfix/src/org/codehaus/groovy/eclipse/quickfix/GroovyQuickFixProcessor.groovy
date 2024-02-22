@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ class GroovyQuickFixProcessor implements IQuickFixProcessor {
                 if (location.problemId != 0) {
                     continue
                 }
-                def matcher = location.problemArguments[0] =~ /(?:Groovy:unable to resolve class |Groovy:\[Static type checking\] - The variable \[)(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*)/
+                def matcher = location.problemArguments[0] =~ /Groovy:(?:unable to resolve class |class \S+ is not an annotation in @|\[Static type checking\] - The variable \[)(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*)/
                 if (matcher) {
                     def typeName = matcher.group(1)
                     boolean isAnnotation = (locations.any { IProblemLocation it -> it.problemArguments && it.problemArguments[0] =~ / (an|for) annotation/ })
