@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2020, 2023 Stephan Hermmann and others.
+
+    This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License 2.0
+    which accompanies this distribution, and is available at
+    https://www.eclipse.org/legal/epl-2.0/
+
+    SPDX-License-Identifier: EPL-2.0
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<project name="build-parser" default="build" basedir=".">
+
+	<!-- Usage hints:
+		1. In your workspace please create a String Substitution named JIKESPG pointing to the jikespg executable.
+		   See  Preferences > Run/Debug > String Substitutions
+		2. Invoke the script via build-parser.launch
+	 -->
+	<target name="build">
+ 		<javac srcdir="${basedir}" includes="GenerateParserScript.java" destdir="${basedir}"
+ 					classpath="${basedir}/../bin"
+					debuglevel="lines,source"
+					source="17"
+					target="17">
+			<compilerarg/>
+		</javac>
+		<java classname="GenerateParserScript" classpath=".:${basedir}/../bin">
+			<sysproperty key="JIKESPG" value="${JIKESPG}"/>
+		</java>
+	</target>
+</project>

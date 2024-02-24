@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.IClassFileReader;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.compiler.env.IElementInfo;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.AbstractClassFile;
 import org.eclipse.jdt.internal.core.BinaryType;
@@ -142,10 +143,6 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         return this.classFile.resource(root);
     }
 
-    /**
-     * @see Openable#openBuffer(IProgressMonitor, Object)
-     */
-    @Override
     protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelException {
 
         // create buffer
@@ -176,8 +173,15 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         return buffer;
     }
 
-    @Override
+    protected IBuffer openBuffer(IProgressMonitor pm, IElementInfo info) throws JavaModelException {
+        return openBuffer(pm, (Object) info);
+    }
+
     protected void toStringName(StringBuffer buffer) {
+        buffer.append(this.classFile.getElementName());
+    }
+
+    protected void toStringName(StringBuilder buffer) {
         buffer.append(this.classFile.getElementName());
     }
 

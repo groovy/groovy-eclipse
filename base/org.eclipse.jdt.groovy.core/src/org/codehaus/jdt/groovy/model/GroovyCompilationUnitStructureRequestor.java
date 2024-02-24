@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,13 @@ import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.CompilationUnitStructureRequestor;
 import org.eclipse.jdt.internal.core.JavaElement;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 class GroovyCompilationUnitStructureRequestor extends CompilationUnitStructureRequestor {
 
     protected GrapesContainer grapesContainer;
     protected GrapesContainerInfo grapesContainerInfo;
 
-    protected GroovyCompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUnitElementInfo unitInfo, @SuppressWarnings("rawtypes") Map elements) {
+    protected GroovyCompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUnitElementInfo unitInfo, Map elements) {
         super(unit, unitInfo, elements);
     }
 
@@ -88,17 +89,15 @@ class GroovyCompilationUnitStructureRequestor extends CompilationUnitStructureRe
     }
 
     private   void addToChildren(Object parentInfo, JavaElement handle) {
-        @SuppressWarnings("unchecked")
-        List<JavaElement> list = (List<JavaElement>) children.computeIfAbsent(parentInfo, x -> new ArrayList<>());
-        list.add(handle);
+        List elements = (List) children.computeIfAbsent(parentInfo, x -> new ArrayList());
+        elements.add(handle);
     }
 
     @Override
     public    void exitCompilationUnit(int unitDeclarationEnd) {
         super.exitCompilationUnit(unitDeclarationEnd);
         if (grapesContainerInfo != null) {
-            @SuppressWarnings("unchecked")
-            List<JavaElement> elements = (List<JavaElement>) children.get(grapesContainerInfo);
+            List<?> elements = (List) children.get(grapesContainerInfo);
             grapesContainerInfo.children = elements.toArray(new IJavaElement[elements.size()]);
         }
     }

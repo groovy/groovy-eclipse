@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.ResolvedSourceField;
+import org.eclipse.jdt.internal.core.SourceFieldElementInfo;
 
 /**
  * A resolved java element suitable for hovers. Includes extra Javadoc information to appear in the hover.
@@ -46,15 +47,15 @@ public class GroovyResolvedSourceField extends ResolvedSourceField implements IG
     }
 
     @Override
-    public Object getElementInfo() throws JavaModelException {
+    public SourceFieldElementInfo getElementInfo() throws JavaModelException {
         try {
-            return super.getElementInfo();
+            return (SourceFieldElementInfo) super.getElementInfo();
         } catch (JavaModelException jme) {
             if (!jme.getJavaModelStatus().isDoesNotExist() || !(inferredElement instanceof FieldNode)) {
                 throw jme;
             }
             // @formatter:off
-            return new org.eclipse.jdt.internal.core.SourceFieldElementInfo() {{
+            return new SourceFieldElementInfo() {{
                 FieldNode field = (FieldNode) inferredElement;
 
                 setTypeName(field.getType().toString(false).toCharArray());

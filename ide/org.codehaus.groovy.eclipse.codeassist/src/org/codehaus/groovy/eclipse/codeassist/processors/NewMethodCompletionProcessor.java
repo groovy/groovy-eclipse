@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,6 @@ import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.OverrideCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -166,11 +165,10 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
     }
 
     private static char[] createMethodCompletion(MethodNode method, char[][] parameterNames) {
-        StringBuffer completion = new StringBuffer();
+        StringBuilder completion = new StringBuilder();
 
         //// Modifiers
-        // flush uninteresting modifiers
-        ASTNode.printModifiers(method.getModifiers() & ~(Flags.AccNative | Flags.AccAbstract | Flags.AccPublic), completion);
+        completion.append(Flags.toString(method.getModifiers() & ~(Flags.AccAbstract | Flags.AccNative | Flags.AccPublic)));
 
         //// Return type
         completion.append(ProposalUtils.createSimpleTypeName(method.getReturnType()));
@@ -195,9 +193,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         //// Exceptions
         ClassNode[] exceptions = method.getExceptions();
         if (exceptions != null && exceptions.length > 0) {
-            completion.append(' ');
-            completion.append("throws");
-            completion.append(' ');
+            completion.append(" throws ");
             for (int i = 0; i < exceptions.length; i += 1) {
                 if (i != 0) {
                     completion.append(' ');

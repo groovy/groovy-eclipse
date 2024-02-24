@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,12 @@ public class AliasImportReference extends ImportReference {
 
     @Override
     public String toString() {
-        return print(0, new StringBuffer(42)).append(" as ").append(alias).toString();
+        StringBuilder builder = new StringBuilder(64);
+        for (int i = 0; i < tokens.length; i += 1) {
+            if (i > 0) builder.append('.');
+            builder.append(tokens[i]);
+        }
+        builder.append(" as ").append(alias);
+        return builder.toString();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
+import org.eclipse.jdt.internal.core.SourceMethodElementInfo;
 
 /**
  * A resolved Java element suitable for hovers.  May include extra Javadoc
@@ -50,9 +51,9 @@ public class GroovyResolvedSourceMethod extends ResolvedSourceMethod implements 
     }
 
     @Override
-    public Object getElementInfo() throws JavaModelException {
+    public SourceMethodElementInfo getElementInfo() throws JavaModelException {
         try {
-            return super.getElementInfo();
+            return (SourceMethodElementInfo) super.getElementInfo();
         } catch (JavaModelException jme) {
             if (!jme.getJavaModelStatus().isDoesNotExist() || !(inferredElement instanceof MethodNode)) {
                 throw jme;

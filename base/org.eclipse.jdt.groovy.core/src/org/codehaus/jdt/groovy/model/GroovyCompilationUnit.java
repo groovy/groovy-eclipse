@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -177,6 +177,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
     private static final ThreadLocalAtomicInteger depth = new ThreadLocalAtomicInteger();
 
     @Override
+    @SuppressWarnings("rawtypes")
     protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource)
             throws JavaModelException {
         depth.increment();
@@ -206,7 +207,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 createAST = astHolder.astLevel != NO_AST;
                 resolveBindings = astHolder.resolveBindings;
                 reconcileFlags = astHolder.reconcileFlags;
-                problems = astHolder.problems;
+                problems = (HashMap) astHolder.problems;
             } else {
                 createAST = false;
                 resolveBindings = false;

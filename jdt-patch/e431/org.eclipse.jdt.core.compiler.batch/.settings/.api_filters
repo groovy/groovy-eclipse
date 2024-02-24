@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.jdt.core.compiler.batch" version="2">
+    <resource path="src/org/eclipse/jdt/core/compiler/CategorizedProblem.java" type="org.eclipse.jdt.core.compiler.CategorizedProblem">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="IProblem"/>
+                <message_argument value="CategorizedProblem"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>
