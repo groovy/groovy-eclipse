@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1644,8 +1644,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, "insuper", "A");
     }
 
-    @Test
-    public void testGRECLIPSE1348() {
+    @Test // GRECLIPSE-1348
+    public void testClosureSpecialNameShadowing1() {
         //@formatter:off
         String contents =
             "class C {\n" +
@@ -1657,16 +1657,13 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "owner", "java.lang.String");
     }
 
-    @Test
-    public void testGRECLIPSE1348a() {
+    @Test // GRECLIPSE-1348 and GROOVY-11313
+    public void testClosureSpecialNameShadowing2() {
         //@formatter:off
         String contents =
-            "class C {\n" +
-            "  def m(String notOwner) {\n" +
-            "    return { return owner }\n" +
-            "  }\n" +
-            "}";
+            "List<String> list = ['a','b','c']\n" +
+            "list.each { owner -> { -> return owner } }\n";
         //@formatter:on
-        assertType(contents, "owner", "C");
+        assertType(contents, "owner", "java.lang.String");
     }
 }

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -947,41 +948,36 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VariableScope scope = new VariableScope(parent, node, false);
         scopes.add(scope);
         try {
-            // if enclosing closure, owner type is 'Closure', otherwise it's 'typeof(this)'
+            // GRECLIPSE-1348 and GROOVY-11313: don't override variable named "owner"
+            BiConsumer<String, ClassNode> impliedVariableDeclarator = (name, type) -> {
+                VariableScope.VariableInfo info = scope.lookupName(name);
+                if (info == null || info.type == null || info.declaringType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
+                    scope.addVariable(name, type, VariableScope.CLOSURE_CLASS_NODE);
+                }
+                scope.addVariable("get" + org.apache.groovy.util.BeanUtils.capitalize(name), type, VariableScope.CLOSURE_CLASS_NODE);
+            };
+
+            // if enclosing closure, owner type is 'Closure', otherwise it is 'typeof(this)'
             if (parent.getEnclosingClosure() != null) {
                 ClassNode closureType = VariableScope.CLOSURE_CLASS_NODE.getPlainNodeReference();
                 closureType.putNodeMetaData("outer.scope", parent.getEnclosingClosureScope());
 
-                scope.addVariable("owner", closureType, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getOwner", closureType, VariableScope.CLOSURE_CLASS_NODE);
+                impliedVariableDeclarator.accept("owner", closureType);
             } else {
                 ClassNode ownerType = parent.getThis();
-                // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
-                VariableScope.VariableInfo info = scope.lookupName("owner");
-                if (info == null || info.type == null || info.scopeNode instanceof ClosureExpression) {
-                    scope.addVariable("owner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
-                }
-                scope.addVariable("getOwner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
-
-                // only set this if not already in a closure; type doesn't vary with nesting
-                scope.addVariable("thisObject", ownerType, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getThisObject", ownerType, VariableScope.CLOSURE_CLASS_NODE);
+                impliedVariableDeclarator.accept("owner", ownerType);
+                // only set this for first closure; its type doesn't vary
+                impliedVariableDeclarator.accept("thisObject", ownerType);
             }
 
-            // if enclosing method call, delegate type can be specified by the method, otherwise it's 'typeof(owner)'
+            // if enclosing method call, delegate type can be specified by the method, otherwise it is 'typeof(owner)'
             VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
             if (cat != null && cat.getDelegateType(node) != null) {
                 ClassNode delegateType = cat.getDelegateType(node);
-                scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+                impliedVariableDeclarator.accept("delegate", delegateType);
             } else {
                 ClassNode delegateType = scope.getOwner();
-                // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
-                VariableScope.VariableInfo info = scope.lookupName("delegate");
-                if (info == null || info.type == null || info.scopeNode instanceof ClosureExpression) {
-                    scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-                }
-                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+                impliedVariableDeclarator.accept("delegate", delegateType);
             }
 
             ClassNode[] inferredParamTypes = inferClosureParamTypes(node, scope);
