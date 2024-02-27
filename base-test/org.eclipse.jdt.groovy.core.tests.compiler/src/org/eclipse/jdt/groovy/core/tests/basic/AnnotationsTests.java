@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1142,7 +1142,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        float version = Float.parseFloat(System.getProperty("java.specification.version"));
+        int version = Runtime.version().feature();
         runConformTest(sources, version < 9 ? "@Anno(value=abc)" : (version < 13 ? "@Anno(value=\"abc\")" : "@Anno(\"abc\")"));
     }
 

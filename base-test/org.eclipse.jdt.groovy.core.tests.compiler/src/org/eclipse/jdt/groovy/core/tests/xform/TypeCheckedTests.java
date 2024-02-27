@@ -1345,7 +1345,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked7003() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+        if (Runtime.version().feature() > 8)
             vmArguments = new String[] {"--add-opens", "java.desktop/java.beans=ALL-UNNAMED"};
 
         //@formatter:off
@@ -2598,7 +2598,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked9006() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+        if (Runtime.version().feature() > 8)
             vmArguments = new String[] {"--add-opens", "java.sql/java.sql=ALL-UNNAMED"};
 
         //@formatter:off
@@ -4360,13 +4360,26 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        String type = "java.io.Serializable";
+        if (isAtLeastGroovy(40)) {
+            type += " & java.lang.Comparable";
+            type += "<? extends " + type + "<java.lang.String>";
+            if (Runtime.version().feature() > 11) {
+                type += " & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
+                type += "> & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
+            } else {
+                type += ">";
+            }
+        } else {
+            type += "<? extends java.io.Serializable<java.lang.String>>";
+        }
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\tList<String> list = ['a','b',3]\n" +
             "\t                    ^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Incompatible generic argument types." +
-            " Cannot assign java.util.ArrayList<java.io.Serializable<? extends java.io.Serializable<java.lang.String>>> to: java.util.List<java.lang.String>\n" +
+            " Cannot assign java.util.ArrayList<" + type + "> to: java.util.List<java.lang.String>\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 4)\n" +
             "\tDeque<String> deque = ['x','y']\n" +
@@ -5339,7 +5352,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked10235() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+        if (Runtime.version().feature() > 8)
             vmArguments = new String[] {"--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED"};
 
         for (String x : new String[] {"", "true?new HashSet<>():", "false?new HashSet<>():"}) {
@@ -6067,9 +6080,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         String type = "java.io.Serializable";
         if (isAtLeastGroovy(40)) {
-            type += " or java.lang.Comparable";
-            if (Float.parseFloat(System.getProperty("java.specification.version")) > 11) {
-                type += " or java.lang.constant.Constable or java.lang.constant.ConstantDesc";
+            type += " & java.lang.Comparable";
+            if (Runtime.version().feature() > 11) {
+                type += " & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
             }
             type = "(" + type + ")";
         } else {
@@ -7653,5 +7666,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked11289() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  void setP(java.util.regex.Matcher matcher) {}\n" +
+            "  void setP(java.util.regex.Pattern pattern) {}\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  new C(p: new Object())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
+            "\tnew C(p: new Object())\n" +
+            "\t      ^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.lang.Object to variable of type java.util.regex.Matcher or java.util.regex.Pattern\n" +
+            "----------\n");
     }
 }

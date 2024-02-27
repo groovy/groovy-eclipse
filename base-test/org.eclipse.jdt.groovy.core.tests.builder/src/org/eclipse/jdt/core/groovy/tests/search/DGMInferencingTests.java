@@ -746,9 +746,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "'''.stripIndent()\n";
         //@formatter:on
         assertExprType(contents, "stripIndent", "java.lang.String");
-        float version = Float.parseFloat(System.getProperty("java.specification.version"));
         // Java 13+: @jdk.internal.PreviewFeature(feature=jdk.internal.PreviewFeature.Feature.TEXT_BLOCKS,essentialAPI=true)
-        assertDeclType(contents, "stripIndent", version > 12 ? "java.lang.String" : "org.codehaus.groovy.runtime.StringGroovyMethods");
+        assertDeclType(contents, "stripIndent", Runtime.version().feature() >= 13 ? "java.lang.String" : "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test // GRECLIPSE-1131

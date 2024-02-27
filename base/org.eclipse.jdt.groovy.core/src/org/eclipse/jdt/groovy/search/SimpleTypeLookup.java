@@ -434,7 +434,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         // if arguments and parameters are mismatched, a category method may make a better match
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(resolvedDeclaringType))) {
+                    if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(method.getDeclaringClass()))) {
                         resolvedDeclaringType = method.getOriginal().getDeclaringClass();
                         declaration = method.getOriginal(); // the trait method
                     }
@@ -529,10 +529,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (argumentTypes != null && isLooseMatch(argumentTypes, method.getParameters())) {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if (method.isPrivate() && isNotThisOrOuterClass(implicitThisType, method.getDeclaringClass())) {
+                    if (method.isPrivate() && isNotThisOrOuterClass(implicitThisType,method.getOriginal().getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
                     }
-                    if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(resolvedDeclaringType))) {
+                    if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(method.getDeclaringClass()))) {
                         candidate = method.getOriginal(); // the trait method
                     }
                 } else if (candidate instanceof PropertyNode) {
@@ -781,10 +781,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         Set<ClassNode> types = new LinkedHashSet<>();
         types.add(declaringType);
-        if (isTraitHelper(declaringType) && GroovyUtils.getGroovyVersion().getMajor() >= 4) { // GROOVY-8272, GROOVY-8587
-            Traits.findTraits(declaringType.getOuterClass()).stream().map(Traits::findHelper).forEachOrdered(types::add);
-        }
         types.addAll(interfaces);
+        if (Traits.isTrait(declaringType) && GroovyUtils.getGroovyVersion().getMajor() >= 4) { // GROOVY-8272, GROOVY-8587
+            Traits.findTraits(declaringType).stream().map(Traits::findHelper).forEachOrdered(types::add);
+        }
         if (declaringType.isInterface() && !implementsTrait(declaringType))
             types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super class
 
@@ -792,7 +792,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         for (ClassNode type : types) {
             MethodNode innerCandidate = null;
             List<MethodNode> candidates = getMethods(name, type);
-            candidates.removeIf(m -> m.isPrivate() && !m.getDeclaringClass().equals(declaringType)); // GROOVY-8859
+            candidates.removeIf(m -> m.isPrivate() && !m.getOriginal().getDeclaringClass().equals(declaringType)); // GROOVY-8859
             if (type.isInterface() && !Traits.isTrait(type) && !type.equals(declaringType)) candidates.removeIf(m -> m.isStatic()); // GROOVY-8164
             if (!candidates.isEmpty()) {
                 innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);

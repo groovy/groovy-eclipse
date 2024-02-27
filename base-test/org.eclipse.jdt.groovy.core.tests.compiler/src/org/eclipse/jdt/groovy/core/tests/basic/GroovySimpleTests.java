@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -6616,7 +6616,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         try {
             System.setProperty("groovy.target.indy", "false");
 
-            String fail = Float.parseFloat(System.getProperty("java.specification.version")) > 8 ? "failed" : "tried";
+            String fail = Runtime.version().feature() > 8 ? "failed" : "tried";
             runConformTest(sources, "", "java.lang.IllegalAccessError: " + fail + " to access class q.Bar from class p.Foo");
         } finally {
             if (old == null) {

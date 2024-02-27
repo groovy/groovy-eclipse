@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testLog() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+        if (Runtime.version().feature() > 8)
             vmArguments = new String[] {"--add-opens", "java.logging/java.util.logging=ALL-UNNAMED"};
 
         //@formatter:off

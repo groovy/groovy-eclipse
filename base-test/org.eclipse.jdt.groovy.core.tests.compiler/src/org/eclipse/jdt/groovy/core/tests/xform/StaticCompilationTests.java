@@ -3244,7 +3244,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  [0].each { -> }\n" +
+            "  [0].each {->}\n" +
             "}\n" +
             "test()\n",
         };
@@ -3253,8 +3253,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 3)\n" +
-            "\t[0].each { -> }\n" +
-            "\t         ^^^^^^\n" +
+            "\t[0].each {->}\n" +
+            "\t         ^^^^\n" +
             "Groovy:Incorrect number of parameters. Expected 1 but found 0\n" +
             "----------\n");
     }
@@ -5211,7 +5211,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                     //@formatter:on
 
                     String stderr = "", stdout = "value";
-                    if ("b".equals(p) && mod.endsWith("PackageScope") && Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
+                    if ("b".equals(p) && mod.endsWith("PackageScope") && Runtime.version().feature() > 8) {
                         stderr = "groovy.lang.MissingPropertyException: No such property: f for class: " + (!q.isEmpty() ? "b.B" : "java.lang.String");
                         stdout = "";
                     }
@@ -5254,7 +5254,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                     //@formatter:on
 
                     String stderr = "", stdout = "value";
-                    if ("b".equals(p) && mod.endsWith("PackageScope") && Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
+                    if ("b".equals(p) && mod.endsWith("PackageScope") && Runtime.version().feature() > 8) {
                         stderr = "groovy.lang.MissingPropertyException: No such property: f for class: b.B";
                         stdout = "";
                     }

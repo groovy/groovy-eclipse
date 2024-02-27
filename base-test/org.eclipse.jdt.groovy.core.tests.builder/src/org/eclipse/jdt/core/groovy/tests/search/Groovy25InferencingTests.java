@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,9 +63,8 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
 
-        float version = Float.parseFloat(System.getProperty("java.specification.version"));
-        assertType(contents, "list", "java.util.ArrayList<java.io.Serializable or java.lang.Comparable" +
-            (version > 11 ? " or java.lang.constant.Constable or java.lang.constant.ConstantDesc" : "") + ">");
+        assertType(contents, "list", "java.util.ArrayList<java.io.Serializable & java.lang.Comparable" +
+            (Runtime.version().feature() > 11 ? " & java.lang.constant.Constable & java.lang.constant.ConstantDesc" : "") + ">");
     }
 
     @Test
@@ -112,8 +111,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
 
-        float version = Float.parseFloat(System.getProperty("java.specification.version"));
-        assertType(contents, "map", "java.util.LinkedHashMap<java.lang.String,java.io.Serializable or java.lang.Comparable" +
-                            (version > 11 ? " or java.lang.constant.Constable or java.lang.constant.ConstantDesc" : "") + ">");
+        assertType(contents, "map", "java.util.LinkedHashMap<java.lang.String,java.io.Serializable & java.lang.Comparable" +
+            (Runtime.version().feature() > 11 ? " & java.lang.constant.Constable & java.lang.constant.ConstantDesc" : "") + ">");
     }
 }
