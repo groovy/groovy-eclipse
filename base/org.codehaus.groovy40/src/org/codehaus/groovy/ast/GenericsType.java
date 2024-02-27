@@ -103,6 +103,15 @@ public class GenericsType extends ASTNode {
     }
 
     private static String genericsBounds(final ClassNode theType, final Set<String> visited) {
+        // GRECLIPSE add -- GROOVY-11289
+        if (theType instanceof WideningCategories.LowestUpperBoundClassNode) {
+            java.util.StringJoiner ret = new java.util.StringJoiner(" & ");
+            for (ClassNode type : theType.asGenericsType().getUpperBounds()) {
+                ret.add(genericsBounds(type, visited));
+            }
+            return ret.toString();
+        }
+        // GRECLIPSE end
         StringBuilder ret = appendName(theType, new StringBuilder());
         GenericsType[] genericsTypes = theType.getGenericsTypes();
         if (genericsTypes != null && genericsTypes.length > 0

@@ -302,7 +302,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveOrFail(t, node);
             }
         }
-
+        /* GRECLIPSE edit
+        checkGenericsCyclicInheritance(node.getGenericsTypes());
+        */
         MethodNode oldCurrentMethod = currentMethod;
         currentMethod = node;
         super.visitConstructorOrMethod(node, isConstructor);
@@ -884,7 +886,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     currentClass.getCompileUnit().addClassNodeToCompile(type, lr.getSourceUnit());
                     throw new Interrupt(compilationUnit); // GROOVY-10300, et al.: restart resolve
                 } else {
-                    type.setRedirect(lr.getClassNode());
+                    ClassNode cn = lr.getClassNode(); // GRECLIPSE edit
+                    if (cn != ClassNodeResolver.NO_CLASS) type.setRedirect(cn);
                 }
                 return true;
             }
@@ -1072,15 +1075,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     private boolean directlyImplementsTrait(final ClassNode trait) {
         ClassNode[] interfaces = currentClass.getInterfaces();
-        if (interfaces == null) {
-            return currentClass.getSuperClass().equals(trait);
-        }
-        for (ClassNode node : interfaces) {
-            if (node.equals(trait)) {
-                return true;
+        if (interfaces != null) {
+            for (ClassNode face : interfaces) {
+                if (face.equals(trait)) {
+                    return true;
+                }
             }
         }
-        return currentClass.getSuperClass().equals(trait);
+        return currentClass.getUnresolvedSuperClass().equals(trait);
     }
 
     private void checkThisAndSuperAsPropertyAccess(final PropertyExpression expression) {
@@ -1420,15 +1422,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ClassNode in : node.getInterfaces()) {
                 checkCyclicInheritance(node, in);
             }
-            if (node.getGenericsTypes() != null) {
-                for (GenericsType gt : node.getGenericsTypes()) {
-                    if (gt != null && gt.getUpperBounds() != null) {
-                        for (ClassNode variant : gt.getUpperBounds()) {
-                            if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType());
-                        }
-                    }
-                }
-            }
+            /* GRECLIPSE edit
+            checkGenericsCyclicInheritance(node.getGenericsTypes());
+            */
           case 2:
             // VariableScopeVisitor visits anon. inner class body inline, so resolve now
             for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
@@ -1479,6 +1475,23 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // template method
     }
     // GRECLIPSE end
+
+    /* GRECLIPSE edit
+    private void checkGenericsCyclicInheritance(GenericsType[] genericsTypes) {
+        if (genericsTypes == null) return;
+
+        for (GenericsType gt : genericsTypes) {
+            if (gt == null) continue;
+            ClassNode[] upperBounds = gt.getUpperBounds();
+            if (upperBounds == null) continue;
+            for (ClassNode variant : upperBounds) {
+                if (variant.isGenericsPlaceHolder()) {
+                    checkCyclicInheritance(variant, gt.getType());
+                }
+            }
+        }
+    }
+    */
 
     private void addFatalError(final String text, final ASTNode node) {
         source.addFatalError(text, node);
@@ -1551,18 +1564,15 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     private void resolveGenericsHeader(final GenericsType[] types) {
-        resolveGenericsHeader(types, null, 0);
+        if (types != null) resolveGenericsHeader(types, null, 0);
     }
 
     private void resolveGenericsHeader(final GenericsType[] types, final GenericsType rootType, final int level) {
-        if (types == null) return;
         currentClass.setUsingGenerics(true);
-        List<Tuple2<ClassNode, GenericsType>> upperBoundsWithGenerics = new LinkedList<>();
         List<Tuple2<ClassNode, ClassNode>> upperBoundsToResolve = new LinkedList<>();
+        List<Tuple2<ClassNode, GenericsType>> upperBoundsWithGenerics = new LinkedList<>();
         for (GenericsType type : types) {
-            if (level > 0 && type.getName().equals(rootType.getName())) {
-                continue;
-            }
+            if (level > 0 && type.getName().equals(rootType.getName())) continue; // cycle!
 
             String name = type.getName();
             ClassNode typeType = type.getType();
@@ -1574,7 +1584,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (type.getUpperBounds() != null) {
                 boolean nameAdded = false;
                 for (ClassNode upperBound : type.getUpperBounds()) {
-                    if (upperBound == null) continue;
+                    if (upperBound == null) continue; // TODO: error
                     // GRECLIPSE add
                     if (upperBound.hasInconsistentHierarchy()) continue;
                     // GRECLIPSE end
@@ -1589,7 +1599,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         }
                         upperBoundsToResolve.add(tuple(upperBound, typeType));
                     }
-                    if (upperBound.isUsingGenerics()) {
+                    if (upperBound.getGenericsTypes() != null) {
                         upperBoundsWithGenerics.add(tuple(upperBound, type));
                     }
                 }
@@ -1602,16 +1612,18 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
         }
 
-        for (Tuple2<ClassNode, ClassNode> tp : upperBoundsToResolve) {
-            ClassNode upperBound = tp.getV1();
-            ClassNode classNode = tp.getV2();
-            resolveOrFail(upperBound, classNode);
+        for (Tuple2<ClassNode, ClassNode> tuple : upperBoundsToResolve) {
+            ClassNode upperBound = tuple.getV1();
+            ClassNode sourceType = tuple.getV2();
+            resolveOrFail(upperBound, sourceType);
+            if (upperBound.isGenericsPlaceHolder()) {
+                checkCyclicInheritance(upperBound, sourceType); // GROOVY-10113,GROOVY-10998
+            }
         }
 
-        for (Tuple2<ClassNode, GenericsType> tp : upperBoundsWithGenerics) {
-            ClassNode upperBound = tp.getV1();
-            GenericsType gt = tp.getV2();
-            resolveGenericsHeader(upperBound.getGenericsTypes(), 0 == level ? gt : rootType, level + 1);
+        for (Tuple2<ClassNode, GenericsType> tuple : upperBoundsWithGenerics) {
+            GenericsType[] bounds = tuple.getV1().getGenericsTypes();
+            resolveGenericsHeader(bounds, level == 0 ? tuple.getV2() : rootType, level + 1);
         }
     }
 
