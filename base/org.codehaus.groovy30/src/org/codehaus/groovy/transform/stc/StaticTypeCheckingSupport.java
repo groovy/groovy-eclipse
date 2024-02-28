@@ -867,7 +867,13 @@ public abstract class StaticTypeCheckingSupport {
      * with trailing "[]".
      */
     static String prettyPrintType(final ClassNode type) {
-        // GRECLIPSE add -- GROOVY-10067
+        // GRECLIPSE add -- GROOVY-11289, GROOVY-10067
+        if (type instanceof UnionTypeClassNode) {
+            StringJoiner joiner = new StringJoiner(" or ");
+            for (ClassNode cn : ((UnionTypeClassNode) type).getDelegates())
+                joiner.add(prettyPrintType(cn));
+            return joiner.toString();
+        }
         if (type.getUnresolvedName().charAt(0) == '#') {
             return type.redirect().toString(false);
         }

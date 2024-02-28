@@ -4360,18 +4360,13 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        String type = "java.io.Serializable";
-        if (isAtLeastGroovy(40)) {
-            type += " & java.lang.Comparable";
-            type += "<? extends " + type + "<java.lang.String>";
-            if (Runtime.version().feature() > 11) {
-                type += " & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
-                type += "> & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
-            } else {
-                type += ">";
-            }
+        String type = "java.io.Serializable & java.lang.Comparable";
+        type += "<? extends " + type + "<java.lang.String>";
+        if (Runtime.version().feature() > 11) {
+            type += " & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
+            type += "> & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
         } else {
-            type += "<? extends java.io.Serializable<java.lang.String>>";
+            type += ">";
         }
         runNegativeTest(sources,
             "----------\n" +
@@ -6078,16 +6073,11 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        String type = "java.io.Serializable";
-        if (isAtLeastGroovy(40)) {
-            type += " & java.lang.Comparable";
-            if (Runtime.version().feature() > 11) {
-                type += " & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
-            }
-            type = "(" + type + ")";
-        } else {
-            type += "<? extends java.io.Serializable<java.lang.String>>";
+        String type = "java.io.Serializable & java.lang.Comparable";
+        if (Runtime.version().feature() > 11) {
+            type += " & java.lang.constant.Constable & java.lang.constant.ConstantDesc";
         }
+        type = "(" + type + ")";
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 7)\n" +

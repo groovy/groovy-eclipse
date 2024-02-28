@@ -1130,7 +1130,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
         //@formatter:on
 
         int offset = contents.lastIndexOf("method");
@@ -1151,7 +1151,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    A.super.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
         //@formatter:on
 
         assertDeclType(contents, "method", "A");
@@ -1172,7 +1172,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    B.super.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
         //@formatter:on
 
         assertDeclType(contents, "method", "B");

@@ -37,7 +37,7 @@
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy</artifactId>
 			<classifier>indy</classifier>
-			<version>3.0.20</version>
+			<version>3.0.21</version>
 		</dependency>
 	</dependencies>
 
@@ -72,7 +72,7 @@
 					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-batch</artifactId>
-						<version>3.0.20-02</version>
+						<version>3.0.21-02</version>
 					</dependency>
 				</dependencies>
 			</plugin>

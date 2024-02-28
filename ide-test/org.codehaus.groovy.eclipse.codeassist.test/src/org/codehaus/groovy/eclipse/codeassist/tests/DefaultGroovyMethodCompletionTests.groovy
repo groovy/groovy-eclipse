@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,7 +161,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testDGMParameters() {
         String contents = '[].collect'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'collect'))
-        proposalExists(proposals, "collect(${isAtLeastGroovy(40)?'C':'Collection<T>'} collector, Closure<? extends T> transform)", 1)
+        proposalExists(proposals, 'collect(C collector, Closure<? extends T> transform)', 1)
         proposalExists(proposals, 'collect(Closure<T> transform)', 1)
         proposalExists(proposals, 'collect()', 1)
     }

@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.ParameterUtils;
 import org.codehaus.groovy.control.CompilePhase;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
@@ -47,6 +48,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
@@ -168,8 +170,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // use this to synchronize access for the lazy init
     protected final Object lazyInitLock = new Object();
 
-    // clazz!=null when resolved
-    protected Class clazz;
+    protected Class clazz; // not null when resolved
     // only false when this classNode is constructed from a class
     // GRECLIPSE private->protected
     protected volatile boolean lazyInitDone = true;
@@ -384,7 +385,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
         }
         methods = new MapOfLists();
-        methodsList = Collections.emptyList();
+        methodsList = Collections.EMPTY_LIST;
     }
 
     /**
@@ -640,7 +641,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         node.setDeclaringClass(this);
         ClassNode r = redirect();
         if (r.methodsList.isEmpty()) {
-            r.methodsList = new ArrayList<>();
+            r.methodsList = new ArrayList<>(8);
         }
         r.methodsList.add(node);
         r.methods.put(node.getName(), node);
@@ -957,19 +958,15 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (type.equals(ClassHelper.OBJECT_TYPE)) {
             return true;
         }
-        // GRECLIPSE add -- GROOVY-11290
         if (this.isArray() && type.isArray()
                 && type.getComponentType().equals(ClassHelper.OBJECT_TYPE)
                 && !ClassHelper.isPrimitiveType(this.getComponentType())){
             return true;
         }
-        // GRECLIPSE end
-        ClassNode node = this;
-        while (node != null) {
+        for (ClassNode node = this; node != null; node = node.getSuperClass()) {
             if (type.equals(node)) {
                 return true;
             }
-            node = node.getSuperClass();
         }
         return false;
     }
@@ -1279,7 +1276,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             ret.append(" <");
             ret.append(stream(genericsTypes).map(this::genericTypeAsString).collect(joining(", ")));
             ret.append(">");
-             */
+            */
             ret.append('<');
             for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
                 if (i != 0) ret.append(", ");
@@ -1329,13 +1326,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public MethodNode tryFindPossibleMethod(final String name, final Expression arguments) {
-        if (!(arguments instanceof TupleExpression)) {
-            return null;
-        }
-
-        // TODO: this won't strictly be true when using list expansion in argument calls
-        TupleExpression args = (TupleExpression) arguments;
-        int nArgs = args.getExpressions().size();
+        List<Expression> args = arguments instanceof TupleExpression ? ((TupleExpression) arguments).getExpressions() : Collections.singletonList(arguments);
+        int nArgs = args.size(); // TODO: this isn't strictly accurate when using spread argument expansion
         MethodNode method = null;
 
         for (ClassNode cn = this; cn != null; cn = cn.getSuperClass()) {
@@ -1343,7 +1335,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 if (hasCompatibleNumberOfArgs(mn, nArgs)) {
                     boolean match = true;
                     for (int i = 0; i < nArgs; i += 1) {
-                        if (!hasCompatibleType(args, mn, i)) {
+                        if (!hasCompatibleType(args.get(i), mn, i)) {
                             match = false;
                             break;
                         }
@@ -1367,6 +1359,18 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
         }
 
+faces:  if (method == null && DefaultGroovyMethods.asBoolean(getInterfaces())) { // GROOVY-11323
+            for (ClassNode cn : getAllInterfaces()) {
+                for (MethodNode mn : cn.getDeclaredMethods(name)) {
+                    if (mn.isPublic() && !mn.isStatic() && hasCompatibleNumberOfArgs(mn, nArgs) && (nArgs == 0
+                            || IntStream.range(0,nArgs).allMatch(i -> hasCompatibleType(args.get(i),mn,i)))) {
+                        method = mn;
+                        break faces;
+                    }
+                }
+            }
+        }
+
         return method;
     }
 
@@ -1376,10 +1380,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 || (i >= lastParamIndex && isPotentialVarArg(maybe, lastParamIndex) && match.getParameters()[i].getType().equals(maybe.getParameters()[lastParamIndex].getType().getComponentType()));
     }
 
-    private static boolean hasCompatibleType(final TupleExpression args, final MethodNode method, final int i) {
+    private static boolean hasCompatibleType(final Expression arg, final MethodNode method, final int i) {
         int lastParamIndex = method.getParameters().length - 1;
-        return (i <= lastParamIndex && args.getExpression(i).getType().isDerivedFrom(method.getParameters()[i].getType()))
-                || (i >= lastParamIndex && isPotentialVarArg(method, lastParamIndex) && args.getExpression(i).getType().isDerivedFrom(method.getParameters()[lastParamIndex].getType().getComponentType()));
+        return (i <= lastParamIndex && arg.getType().isDerivedFrom(method.getParameters()[i].getType()))
+                || (i >= lastParamIndex && isPotentialVarArg(method, lastParamIndex) && arg.getType().isDerivedFrom(method.getParameters()[lastParamIndex].getType().getComponentType()));
     }
 
     private static boolean hasCompatibleNumberOfArgs(final MethodNode method, final int nArgs) {

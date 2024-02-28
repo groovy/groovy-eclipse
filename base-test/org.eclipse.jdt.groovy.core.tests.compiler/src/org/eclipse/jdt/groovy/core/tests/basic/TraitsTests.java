@@ -2102,6 +2102,24 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits7797() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  void m() { { -> pm('works') }.call() }\n" +
+            "  private pm(String string) { print string }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testTraits7843() {
         //@formatter:off
         String[] sources = {

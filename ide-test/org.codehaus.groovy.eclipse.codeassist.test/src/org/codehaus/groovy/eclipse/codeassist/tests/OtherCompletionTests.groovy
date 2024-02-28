@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
             p2.displayString.length() <=> p1.displayString.length()
         }
         proposalExists(proposals, 'collect', 3)
-        assert proposals[0].displayString == "collect(${isAtLeastGroovy(40)?'C':'Collection<T>'} collector, Closure<? extends T> transform) : ${isAtLeastGroovy(40)?'C':'Collection<T>'} - DefaultGroovyMethods (Groovy)"
+        assert proposals[0].displayString == 'collect(C collector, Closure<? extends T> transform) : C - DefaultGroovyMethods (Groovy)'
         assert proposals[1].displayString == 'collect(Closure<T> transform) : List<T> - DefaultGroovyMethods (Groovy)'
         assert proposals[2].displayString == 'collect() : Collection - DefaultGroovyMethods (Groovy)'
     }

@@ -864,7 +864,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "java.lang.IncompatibleClassChangeError: Class java.lang.Class does not implement the requested interface groovy.lang.GroovyObject");
+        runConformTest(sources, "", "java.lang.IncompatibleClassChangeError: " +
+            "Class java.lang.Class does not implement the requested interface groovy.lang.GroovyObject");
     }
 
     @Test // GROOVY-8385
@@ -6331,7 +6332,18 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, isAtLeastGroovy(40) ? "abcbar" : "", isAtLeastGroovy(40) ? "" : "java.lang.ClassFormatError: Duplicate method name");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "abcbar");
+        } else {
+            var descriptor = "public void <init>(java.lang.Integer i)  { ... }"; // TODO
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in p\\G.groovy (at line 2)\n" +
+                "\tclass G {\n" +
+                "\t^\n" +
+                "Groovy:The constructor " + descriptor + " duplicates another constructor of the same signature\n" +
+                "----------\n");
+        }
     }
 
     @Test

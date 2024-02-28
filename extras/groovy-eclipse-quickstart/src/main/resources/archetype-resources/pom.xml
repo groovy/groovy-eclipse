@@ -19,13 +19,13 @@
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>3.0.20</version>
+      <version>3.0.21</version>
       <classifier>indy</classifier>
     </dependency>
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy-test</artifactId>
-      <version>3.0.20</version>
+      <version>3.0.21</version>
       <classifier>indy</classifier>
       <exclusions>
         <exclusion>
@@ -64,7 +64,7 @@
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-eclipse-batch</artifactId>
-            <version>3.0.20-02</version>
+            <version>3.0.21-02</version>
           </dependency>
         </dependencies>
       </plugin>
