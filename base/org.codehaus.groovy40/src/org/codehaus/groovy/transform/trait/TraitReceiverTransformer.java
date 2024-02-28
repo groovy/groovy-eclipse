@@ -52,6 +52,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isInstanceOfX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ternaryX;
@@ -72,6 +73,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
     private final VariableExpression weaved;
     private final SourceUnit unit;
     private final ClassNode traitClass;
+    private final ClassNode traitHelperClass;
     private final ClassNode fieldHelper;
     private final Collection<String> knownFields;
 
@@ -82,6 +84,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         this.weaved = thisObject;
         this.unit = unit;
         this.traitClass = traitClass;
+        this.traitHelperClass = traitHelperClass;
         this.fieldHelper = fieldHelper;
         this.knownFields = knownFields;
     }
@@ -317,9 +320,9 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             // GROOVY-7191, GROOVY-7213, GROOVY-7214, GROOVY-8282, GROOVY-8854, GROOVY-8859, et al.
             for (MethodNode methodNode : traitClass.getDeclaredMethods(call.getMethodAsString())) {
                 if (methodNode.isPrivate()) {
-                    // this.m(x) --> this.m($self or $static$self or (Class) $self.getClass(), x)
+                    // this.m(x) --> (this or T$Trait$Helper).m($self or $static$self or (Class) $self.getClass(), x)
                     Expression selfClassOrObject = methodNode.isStatic() && !ClassHelper.isClassType(weaved.getOriginType()) ? castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(weaved, "getClass")) : weaved;
-                    MethodCallExpression newCall = callX(thisExpr, method, createArgumentList(selfClassOrObject, arguments));
+                    MethodCallExpression newCall = callX(inClosure ? classX(traitHelperClass) : thisExpr, method, createArgumentList(selfClassOrObject, arguments));
                     newCall.setGenericsTypes(call.getGenericsTypes());
                     newCall.setImplicitThis(call.isImplicitThis());
                     newCall.setSpreadSafe(call.isSpreadSafe());
