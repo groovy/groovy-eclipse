@@ -170,6 +170,9 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                     varX(weaved)
             ));
             mce.setImplicitThis(false);
+            // GRECLIPSE add
+            mce.setMethodTarget(ClassHelper.CLOSURE_TYPE.getMethods("rehydrate").get(0));
+            // GRECLIPSE end
             mce.setSourcePosition(exp);
             boolean oldInClosure = inClosure;
             inClosure = true;

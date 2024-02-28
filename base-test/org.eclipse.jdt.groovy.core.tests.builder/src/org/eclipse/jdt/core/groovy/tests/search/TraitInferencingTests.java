@@ -1179,6 +1179,21 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "method", "java.lang.Void");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7486
+    public void testPrivateMethod5() {
+        //@formatter:off
+        String contents =
+            "trait T {\n" +
+            "  private String f(String s) { s }\n" +
+            "  void test() {\n" +
+            "    ['x'].collect { String s -> f(s) }\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(contents, "collect", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-8854
     public void testPrivateStaticMethod() {
         //@formatter:off
