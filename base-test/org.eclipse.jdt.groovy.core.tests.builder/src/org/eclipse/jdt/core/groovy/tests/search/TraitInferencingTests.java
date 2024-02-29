@@ -1191,6 +1191,9 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
         //@formatter:on
 
+        assertDeclType(contents, "f", "T");
+        assertExprType(contents, "f", "java.lang.String");
+
         assertDeclType(contents, "collect", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
