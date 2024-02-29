@@ -1025,7 +1025,7 @@ public class ClassScope extends Scope {
 	public void checkParameterizedSuperTypeCollisions() {
 		// check for parameterized interface collisions (when different parameterizations occur)
 		SourceTypeBinding sourceType = this.referenceContext.binding;
-		ReferenceBinding[] interfaces = sourceType.superInterfaces;
+		ReferenceBinding[] interfaces = sourceType.superInterfaces(); // GROOVY edit
 		Map invocations = new HashMap(2);
 		ReferenceBinding itsSuperclass = sourceType.isInterface() ? null : sourceType.superclass;
 		nextInterface: for (int i = 0, length = interfaces.length; i < length; i++) {

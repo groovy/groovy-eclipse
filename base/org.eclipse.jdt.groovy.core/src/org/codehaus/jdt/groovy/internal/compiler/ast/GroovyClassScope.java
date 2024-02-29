@@ -103,15 +103,13 @@ public class GroovyClassScope extends ClassScope {
 
         boolean implementsGroovyObject = false;
         ReferenceBinding[] superInterfaces = sourceType.superInterfaces();
-        if (superInterfaces != null && superInterfaces.length > 0) {
-            if (superInterfaces.length > 1)
-                Collections.reverse(Arrays.asList(superInterfaces));
+        if (superInterfaces == null) superInterfaces = new ReferenceBinding[0];
+        if (superInterfaces.length > 1) Collections.reverse(Arrays.asList(superInterfaces));
 
-            for (ReferenceBinding superInterface : superInterfaces) {
-                if (CharOperation.equals(superInterface.compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
-                    implementsGroovyObject = true;
-                    break;
-                }
+        for (ReferenceBinding superInterface : superInterfaces) {
+            if (CharOperation.equals(superInterface.compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
+                implementsGroovyObject = true;
+                break;
             }
         }
 
