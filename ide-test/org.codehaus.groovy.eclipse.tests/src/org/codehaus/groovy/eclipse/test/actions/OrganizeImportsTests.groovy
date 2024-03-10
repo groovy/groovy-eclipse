@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -575,8 +575,21 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1556
     void testRetainImport13() {
+        String contents = '''\
+            |import groovy.transform.NamedParam
+            |import groovy.transform.NamedVariant
+            |
+            |// multiple NamedParam contained within NamedParams
+            |@NamedVariant foo(@NamedParam bar, @NamedParam baz) {
+            |}
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testRetainImport14() {
         String contents = '''\
             |import p.T
             |def m(T t) {}
@@ -585,7 +598,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // JSR 308
-    void testRetainImport14() {
+    void testRetainImport15() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(40))
 
         String contents = '''\
@@ -596,7 +609,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // JEP 409
-    void testRetainImport15() {
+    void testRetainImport16() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(40))
 
         String contents = '''\

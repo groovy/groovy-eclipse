@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -531,14 +530,6 @@ public class OrganizeGroovyImports {
                 handleTypeReference(expression.getType(), false);
             }
             super.visitClassExpression(expression);
-        }
-
-        @Override
-        public void visitConstantExpression(ConstantExpression expression) {
-            if (expression.getEnd() > 0 && expression instanceof AnnotationConstantExpression) {
-                handleTypeReference(expression.getType(), true);
-            }
-            super.visitConstantExpression(expression);
         }
 
         @Override
