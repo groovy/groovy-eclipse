@@ -224,11 +224,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                         super.transform(rightExpression)
                 );
                 mce.setImplicitThis(false);
-                /* GRECLIPSE edit
-                mce.setSourcePosition(exp);
-                */
                 mce.setSourcePosition(leftExpression instanceof PropertyExpression ? ((PropertyExpression) leftExpression).getProperty() : leftExpression);
-                // GRECLIPSE end
                 markDynamicCall(mce, staticField, isStatic);
                 return mce;
             }
@@ -251,11 +247,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
 
         MethodCallExpression mce = callX(receiver, Traits.helperGetterName(fn));
         mce.setImplicitThis(false);
-        /* GRECLIPSE edit
-        mce.setSourcePosition(exp);
-        */
         mce.setSourcePosition(exp instanceof PropertyExpression ? ((PropertyExpression) exp).getProperty() : exp);
-        // GRECLIPSE end
         markDynamicCall(mce, fn, isStatic);
         return mce;
     }
@@ -303,13 +295,9 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                 Traits.getSuperTraitMethodName(traitClass, method),
                 superCallArgs
         );
-        /* GRECLIPSE edit
-        newCall.setSourcePosition(call);
-        */
         newCall.getMethod().setSourcePosition(call.getMethod());
-        // GRECLIPSE end
-        newCall.setSafe(call.isSafe());
         newCall.setSpreadSafe(call.isSpreadSafe());
+        newCall.setSafe(call.isSafe());
         newCall.setImplicitThis(false);
         return newCall;
     }
