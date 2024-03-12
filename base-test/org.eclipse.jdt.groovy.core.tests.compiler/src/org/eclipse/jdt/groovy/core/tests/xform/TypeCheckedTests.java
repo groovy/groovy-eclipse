@@ -7683,4 +7683,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Groovy:[Static type checking] - Cannot assign value of type java.lang.Object to variable of type java.util.regex.Matcher or java.util.regex.Pattern\n" +
             "----------\n");
     }
+
+    @Test
+    public void testTypeChecked11335() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Collection<String> collection) {\n" +
+            "  if (collection instanceof Serializable) {\n" +
+            "    for (item in collection) {\n" +
+            "      print item.toLowerCase()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test(['Works'])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }

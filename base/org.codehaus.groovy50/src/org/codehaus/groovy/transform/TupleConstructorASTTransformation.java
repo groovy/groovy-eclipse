@@ -283,7 +283,7 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
                 tupleCtor.addAnnotations(cNode.getAnnotations());
                 tupleCtor.putNodeMetaData("_SKIPPABLE_ANNOTATIONS", Boolean.TRUE);
                 // GRECLIPSE add -- apply compact constructor source position to primary constructor
-                java.util.Optional.<ASTNode>ofNullable(cNode.getNodeMetaData("compact.constructor")).ifPresent(tupleCtor::setSourcePosition);
+                java.util.Optional.ofNullable(cNode.<ASTNode>getNodeMetaData("compact.constructor")).ifPresent(tupleCtor::setSourcePosition);
                 // GRECLIPSE end
             }
             if (namedVariant) {
