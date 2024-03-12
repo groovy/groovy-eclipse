@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -336,5 +336,18 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
         unit = unit.reconcile(AST_LEVEL, true, null, null)
         def elem = NodeFinder.perform(unit, source.indexOf('node'), 4)
         assert !(elem instanceof Annotation) : 'expect closure placeholder'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/15xx
+    void testCodeSelectOnAttributeValue12() {
+        String source = '''import groovy.transform.*
+            |class C {
+            |  @NamedVariant m(@NamedParam( type = String) p) {  }
+            |}
+            |'''.stripMargin()
+
+        assertCodeSelect([source], 'type')
+        def elem = assertCodeSelect([source], 'String')
+        assert elem.inferredElement instanceof ClassNode
     }
 }

@@ -2039,6 +2039,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
 
                 visitAnnotations(param);
+                Optional.ofNullable(param.<AnnotationNode>getNodeMetaData("met@")).ifPresent(this::visitAnnotation);
+
                 visitClassReference(param.getOriginType());
                 Expression init = Optional.ofNullable(param.getInitialExpression()).orElse(param.getNodeMetaData(Verifier.INITIAL_EXPRESSION));
                 if (init != null) {

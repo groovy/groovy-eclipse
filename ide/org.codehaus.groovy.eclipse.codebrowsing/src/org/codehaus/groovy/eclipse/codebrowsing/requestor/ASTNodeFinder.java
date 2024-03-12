@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -337,7 +337,16 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     protected void visitParameter(Parameter parameter) {
         super.visitParameter(parameter);
-        checkParameter(parameter);
+        AnnotationNode ann = parameter.getNodeMetaData("met@");
+        if (ann != null) { // visit @NamedParam inline
+            visitAnnotation(ann);
+        }
+        if (parameter.getEnd() > 0) {
+            checkNameRange(parameter);
+            int start = parameter.getStart();
+            int until = parameter.getNameStart() - 1;
+            check(parameter.getOriginType(), start, until);
+        }
     }
 
     @Override
@@ -551,13 +560,6 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                         start = upper.getEnd() + 1;
                 }
             }
-        }
-    }
-
-    private void checkParameter(Parameter param) {
-        if (param != null && param.getEnd() > 0) {
-            checkNameRange(param);
-            check(param.getOriginType(), param.getStart(), param.getNameStart() - 1);
         }
     }
 

@@ -2698,8 +2698,25 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1155
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1556
     void testAnnoElems10() {
+        String contents = '''\
+            |import groovy.transform.*
+            |@NamedVariant(coerce=false)
+            |def foo(@NamedParam(type=String) bar) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('coerce'), 6, TAG_KEY  ),
+            new HighlightedTypedPosition(contents.indexOf('foo'   ), 3, METHOD   ),
+            new HighlightedTypedPosition(contents.indexOf('type'  ), 4, TAG_KEY  ),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS    ),
+            new HighlightedTypedPosition(contents.indexOf('bar'   ), 3, PARAMETER))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1155
+    void testAnnoElems11() {
         String contents = '''\
             |import org.codehaus.groovy.control.*
             |class C {
@@ -2738,7 +2755,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1197
-    void testAnnoElems11() {
+    void testAnnoElems12() {
         String contents = '''\
             |@groovy.transform.AutoImplement(code={
             |  throw new UnsupportedOperationException()
@@ -2757,7 +2774,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/421
-    void testAnnoElems12() {
+    void testAnnoElems13() {
         String contents = '''\
             |@groovy.transform.TupleConstructor(pre={
             |  assert number.intValue() >= 42
@@ -2791,7 +2808,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/421
-    void testAnnoElems13() {
+    void testAnnoElems14() {
         for (annotation in ['Canonical','Immutable']) {
             String contents = """\
                 |@groovy.transform.$annotation(pre={
