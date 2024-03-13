@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,15 +185,21 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
         List<ASTNode> mods = body.modifiers();
         if (mods != null && !mods.isEmpty()) {
+            for (ASTNode mod : mods) {
+                if (mod instanceof Annotation) {
+                    var name = ((Annotation) mod).getTypeName();
+                    assertEquals(mod.getStartPosition() + 1, name.getStartPosition());
+                    assertEquals(name.getFullyQualifiedName().length(), name.getLength());
+                }
+            }
             if (!isParrotParser() && last(mods) instanceof Annotation) {
                 modsEnd += modsEndTag.length(); // antlr2 includes comment
             }
-            int one = mods.get(0).getStartPosition(), two = last(mods).getStartPosition() + last(mods).getLength();
-            assertEquals(decl + "\nhas incorrect modifiers start value", modsStart, one);
-            assertEquals(decl + "\nhas incorrect modifiers end value", modsEnd, two);
+            assertEquals(decl + "\nhas incorrect modifiers start value", modsStart, mods.get(0).getStartPosition());
+            assertEquals(decl + "\nhas incorrect modifiers end value",   modsEnd,   last(mods).getStartPosition() + last(mods).getLength());
         } else {
             assertEquals(decl + "\nhas incorrect modifiers start value", modsStart, start);
-            assertEquals(decl + "\nhas incorrect modifiers end value", modsEnd, start);
+            assertEquals(decl + "\nhas incorrect modifiers end value",   modsEnd,   start);
         }
 
         String nameStartTag = "/*" + astKind + memberNumber + "sn*/";

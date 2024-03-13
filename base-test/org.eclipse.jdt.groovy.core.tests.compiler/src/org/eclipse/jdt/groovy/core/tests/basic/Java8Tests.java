@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,12 +185,12 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 1)\n" +
             "\t@Anno('one')\n" +
-            "\t^^^^^^^^^^^^\n" +
+            "\t^^^^^\n" +
             "Duplicate annotation of non-repeatable type @Anno. Only annotation types marked @Repeatable can be used multiple times at one target.\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 2)\n" +
             "\t@Anno('two')\n" +
-            "\t^^^^^^^^^^^^\n" +
+            "\t^^^^^\n" +
             "Duplicate annotation of non-repeatable type @Anno. Only annotation types marked @Repeatable can be used multiple times at one target.\n" +
             "----------\n");
     }

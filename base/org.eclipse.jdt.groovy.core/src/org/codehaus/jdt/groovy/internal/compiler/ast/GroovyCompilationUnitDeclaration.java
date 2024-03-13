@@ -1798,24 +1798,22 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             int i = 0;
             for (AnnotationNode annotationNode : annotationNodes) {
                 TypeReference annotationType = createTypeReferenceForClassNode(annotationNode.getClassNode());
-                annotationType.sourceStart = annotationNode.getStart();
-                annotationType.sourceEnd = annotationNode.getEnd() - 1;
 
                 Map<String, Expression> memberValuePairs = annotationNode.getMembers();
                 if (memberValuePairs == null || memberValuePairs.isEmpty()) {
-                    MarkerAnnotation annotation = new MarkerAnnotation(annotationType, annotationType.sourceStart);
+                    MarkerAnnotation annotation = new MarkerAnnotation(annotationType, annotationNode.getStart());
                     annotations[i] = annotation;
                 } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
-                    SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationType, annotationType.sourceStart);
+                    SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationType, annotationNode.getStart());
                     annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"), null);
                     annotations[i] = annotation;
                 } else {
-                    NormalAnnotation annotation = new NormalAnnotation(annotationType, annotationType.sourceStart);
+                    NormalAnnotation annotation = new NormalAnnotation(annotationType, annotationNode.getStart());
                     annotation.memberValuePairs = createAnnotationMemberValuePairs(memberValuePairs);
                     annotations[i] = annotation;
                 }
                 // TODO: declarationSourceEnd should be rparen position; antlr2 includes trailing comment
-                annotations[i++].declarationSourceEnd = annotationType.sourceEnd;
+                annotations[i++].declarationSourceEnd = annotationNode.getEnd() - 1;
             }
             return annotations;
         }
