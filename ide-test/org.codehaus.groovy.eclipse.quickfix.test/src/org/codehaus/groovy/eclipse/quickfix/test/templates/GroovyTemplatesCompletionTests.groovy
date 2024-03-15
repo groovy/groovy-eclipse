@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         // find proposal
         def proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
         assert proposals != null && !proposals.empty : 'Expected some proposals, but got none'
-        def matches = proposals.findAll { it.displayString.startsWith(which + ' - ') }
+        def matches = proposals.findAll { it.displayString.startsWith(which) }
         assert matches.size() == 1 : 'Expected a match, but got ' + matches.size()
 
         // apply template
@@ -98,7 +98,7 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         String output = '''\
             |try {
             |  #
-            |} catch (Exception e) {
+            |} catch (e) {
             |  e.printStackTrace()
             |}
             |'''.stripMargin()
@@ -110,44 +110,210 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     void testJUnitBefore() {
         //@formatter:off
         String input = '''\
-            |final class SomeTest {
+            |final class Spec {
             |  Bef
             |}
             |'''.stripMargin()
         String output = '''\
             |import org.junit.Before
             |
-            |final class SomeTest {
+            |final class Spec {
             |  @Before
-            |  void before() {
+            |  void setUp() {
             |    #
             |  }
             |}
             |'''.stripMargin()
         //@formatter:on
-        runTest(input, output, 'Bef', 'Before')
+        runTest(input, output, 'Bef', 'Before ')
+    }
+
+    @Test
+    void testJUnitBeforeEach() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Bef
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import org.junit.jupiter.api.BeforeEach
+            |
+            |final class Spec {
+            |  @BeforeEach
+            |  void setUp() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Bef', 'BeforeEach')
     }
 
     @Test
     void testJUnitAfter() {
         //@formatter:off
         String input = '''\
-            |final class SomeTest {
+            |final class Spec {
             |  Aft
             |}
             |'''.stripMargin()
         String output = '''\
             |import org.junit.After
             |
-            |final class SomeTest {
+            |final class Spec {
             |  @After
-            |  void after() {
+            |  void tearDown() {
             |    #
             |  }
             |}
             |'''.stripMargin()
         //@formatter:on
-        runTest(input, output, 'Aft', 'After')
+        runTest(input, output, 'Aft', 'After ')
+    }
+
+    @Test
+    void testJUnitAfterEach() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Aft
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import org.junit.jupiter.api.AfterEach
+            |
+            |final class Spec {
+            |  @AfterEach
+            |  void tearDown() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Aft', 'AfterEach')
+    }
+
+    @Test
+    void testJUnit3TestCase() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |final class Spec {
+            |  void testName() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'tes', 'test')
+    }
+
+    @Test
+    void testJUnit4TestCase() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import static org.junit.Assert.*
+            |import static org.junit.Assume.*
+            |
+            |import org.junit.Test
+            |
+            |final class Spec {
+            |  @Test
+            |  void testName() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Tes', 'Test - test method (JUnit 4)')
+    }
+
+    @Test
+    void testJUnit5TestCase() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import static org.junit.jupiter.api.Assertions.*
+            |import static org.junit.jupiter.api.Assumptions.*
+            |
+            |import org.junit.jupiter.api.DisplayName
+            |import org.junit.jupiter.api.Test
+            |
+            |final class Spec {
+            |  @Test @DisplayName('scenario_description')
+            |  void testName() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Tes', 'Test - test method (JUnit 5)')
+    }
+
+    @Test
+    void testJUnit5TestCases() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import org.junit.jupiter.params.ParameterizedTest
+            |import org.junit.jupiter.params.provider.*
+            |
+            |final class Spec {
+            |  @ParameterizedTest @MethodSource()
+            |  void testName(input) {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Tes', 'Test - tests method (JUnit 5)')
+    }
+
+    @Test
+    void testJUnit5TestFactory() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import static org.junit.jupiter.api.Assertions.*
+            |import static org.junit.jupiter.api.Assumptions.*
+            |import static org.junit.jupiter.api.DynamicContainer.*
+            |import static org.junit.jupiter.api.DynamicTest.*
+            |
+            |import org.junit.jupiter.api.DynamicNode
+            |import org.junit.jupiter.api.TestFactory
+            |
+            |final class Spec {
+            |  @TestFactory
+            |  DynamicNode testFactoryName() {
+            |    // TODO: generate dynamic tests
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Tes', 'Test - test factory method (JUnit 5)')
     }
 
     @Test

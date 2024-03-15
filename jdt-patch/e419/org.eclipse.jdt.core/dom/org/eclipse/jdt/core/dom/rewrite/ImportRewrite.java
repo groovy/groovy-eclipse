@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -81,7 +80,6 @@ import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
-
 
 /**
  * The {@link ImportRewrite} helps updating imports following a import order and on-demand imports threshold as configured by a project.
@@ -414,7 +412,7 @@ public final class ImportRewrite {
 			List imports= astRoot.imports();
 			for (int i= 0; i < imports.size(); i++) {
 				ImportDeclaration curr= (ImportDeclaration) imports.get(i);
-				StringBuffer buf= new StringBuffer();
+				StringBuilder buf= new StringBuilder();
 				buf.append(curr.isStatic() ? STATIC_PREFIX : NORMAL_PREFIX).append(curr.getName().getFullyQualifiedName());
 				if (curr.isOnDemand()) {
 					if (buf.length() > 1)
@@ -439,7 +437,7 @@ public final class ImportRewrite {
 		}
 		this.filterImplicitImports= true;
 		// consider that no contexts are used
-		this.useContextToFilterImplicitImports = false;
+		this.useContextToFilterImplicitImports= false;
 
 		this.defaultContext= new ImportRewriteContext() {
 			@Override
@@ -449,28 +447,17 @@ public final class ImportRewrite {
 		};
 		this.addedImports= new ArrayList<>();
 		this.removedImports= new ArrayList<>();
-		this.typeExplicitSimpleNames = new HashSet<>();
-		this.staticExplicitSimpleNames = new HashSet<>();
-		this.createdImports= null;
-		this.createdStaticImports= null;
+		this.typeExplicitSimpleNames= new HashSet<>();
+		this.staticExplicitSimpleNames= new HashSet<>();
 
 		this.importOrder= CharOperation.NO_STRINGS;
 		this.importOnDemandThreshold= 99;
 		this.staticImportOnDemandThreshold= 99;
 
 		this.importsKindMap = new HashMap();
-		// GROOVY add -- load default imports so disambiguation import(s) can be added/retained
-		if (cu != null && LanguageSupportFactory.isInterestingSourceFile(cu.getElementName())){
-			for (String p : LanguageSupportFactory.getImplicitImportContainers(cu)){
-				this.addedImports.add(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
-			}
-			this.useContextToFilterImplicitImports= true;
-		}
-		// GROOVY end
 	}
 
-
-	 /**
+	/**
 	 * Defines the import groups and order to be used by the {@link ImportRewrite}.
 	 * Imports are added to the group matching their qualified name most. The empty group name groups all imports not matching
 	 * any other group. Static imports are managed in separate groups. Static import group names are prefixed with a '#' character.
@@ -483,7 +470,7 @@ public final class ImportRewrite {
 		this.importOrder= order;
 	}
 
-	 /**
+	/**
 	 *	Sets the on-demand import threshold for normal (non-static) imports.
 	 *	This threshold defines the number of imports that need to be in a group to use
 	 * a on-demand (star) import declaration instead.
@@ -492,14 +479,14 @@ public final class ImportRewrite {
 	 * for normal (non-static) imports.
 	 * @throws IllegalArgumentException a {@link IllegalArgumentException} is thrown
 	 * if the number is not positive.
-     */
+	 */
 	public void setOnDemandImportThreshold(int threshold) {
 		if (threshold <= 0)
 			throw new IllegalArgumentException("Threshold must be positive."); //$NON-NLS-1$
 		this.importOnDemandThreshold= threshold;
 	}
 
-	 /**
+	/**
 	 *	Sets the on-demand import threshold for static imports.
 	 *	This threshold defines the number of imports that need to be in a group to use
 	 * a on-demand (star) import declaration instead.
@@ -508,7 +495,7 @@ public final class ImportRewrite {
 	 * for normal (non-static) imports.
 	 * @throws IllegalArgumentException a {@link IllegalArgumentException} is thrown
 	 * if the number is not positive.
-     */
+	 */
 	public void setStaticOnDemandImportThreshold(int threshold) {
 		if (threshold <= 0)
 			throw new IllegalArgumentException("Threshold must be positive."); //$NON-NLS-1$
@@ -551,11 +538,6 @@ public final class ImportRewrite {
 	 */
 	public void setFilterImplicitImports(boolean filterImplicitImports) {
 		this.filterImplicitImports= filterImplicitImports;
-		// GROOVY add
-		if (!filterImplicitImports && LanguageSupportFactory.isInterestingSourceFile(this.compilationUnit.getElementName()))
-			for (String p : LanguageSupportFactory.getImplicitImportContainers(this.compilationUnit))
-				this.addedImports.remove(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
-		// GROOVY end
 	}
 
 	/**
@@ -824,8 +806,6 @@ public final class ImportRewrite {
 		}
 	}
 
-
-
 	/**
 	 * Adds a new import to the rewriter's record and returns a type reference that can be used
 	 * in the code. The type binding can be an array binding, type variable or wildcard.
@@ -876,7 +856,7 @@ public final class ImportRewrite {
 			return "invalid"; //$NON-NLS-1$
 		}
 		if (normalizedBinding.isWildcardType()) {
-			StringBuffer res= new StringBuffer("?"); //$NON-NLS-1$
+			StringBuilder res= new StringBuilder("?"); //$NON-NLS-1$
 			ITypeBinding bound= normalizedBinding.getBound();
 			if (bound != null && !bound.isWildcardType() && !bound.isCapture()) { // bug 95942
 				if (normalizedBinding.isUpperbound()) {
@@ -890,7 +870,7 @@ public final class ImportRewrite {
 		}
 
 		if (normalizedBinding.isArray()) {
-			StringBuffer res= new StringBuffer(addImport(normalizedBinding.getElementType(), context));
+			StringBuilder res= new StringBuilder(addImport(normalizedBinding.getElementType(), context));
 			for (int i= normalizedBinding.getDimensions(); i > 0; i--) {
 				res.append("[]"); //$NON-NLS-1$
 			}
@@ -903,7 +883,7 @@ public final class ImportRewrite {
 
 			ITypeBinding[] typeArguments= normalizedBinding.getTypeArguments();
 			if (typeArguments.length > 0) {
-				StringBuffer res= new StringBuffer(str);
+				StringBuilder res= new StringBuilder(str);
 				res.append('<');
 				for (int i= 0; i < typeArguments.length; i++) {
 					if (i > 0) {
@@ -1307,7 +1287,6 @@ public final class ImportRewrite {
 		return normalizedBinding.getTypeDeclaration().getQualifiedName();
 	}
 
-
 	/**
 	 * Converts all modifications recorded by this rewriter into an object representing the corresponding text
 	 * edits to the source code of the rewrite's compilation unit. The compilation unit itself is not modified.
@@ -1322,7 +1301,6 @@ public final class ImportRewrite {
 	 * @throws CoreException the exception is thrown if the rewrite fails.
 	 */
 	public final TextEdit rewriteImports(IProgressMonitor monitor) throws CoreException {
-
 		SubMonitor subMonitor = SubMonitor.convert(monitor,
 				Messages.bind(Messages.importRewrite_processDescription), 2);
 		if (!hasRecordedChanges()) {
@@ -1416,7 +1394,7 @@ public final class ImportRewrite {
 	 * <p>
 	 * Note that this list doesn't need to be the same as the added static imports ({@link #getAddedStaticImports()}) as
 	 * implicit imports are not created and some imports are represented by on-demand imports instead.
-	 * </p
+	 * </p>
 	 * @return the created imports
 	 */
 	public String[] getCreatedStaticImports() {

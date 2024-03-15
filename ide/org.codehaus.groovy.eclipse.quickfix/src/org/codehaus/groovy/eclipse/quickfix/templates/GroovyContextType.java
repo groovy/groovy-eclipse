@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@ import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.corext.template.java.AbstractJavaContextType;
 import org.eclipse.jdt.internal.corext.template.java.CompilationUnitContext;
+import org.eclipse.jdt.internal.corext.template.java.ImportsResolver;
 import org.eclipse.jdt.internal.corext.template.java.JavaContext;
+import org.eclipse.jdt.internal.corext.template.java.LinkResolver;
 import org.eclipse.jdt.internal.corext.template.java.StaticImportResolver;
 import org.eclipse.jdt.internal.corext.template.java.TypeResolver;
 import org.eclipse.jface.text.IDocument;
@@ -30,7 +32,7 @@ public class GroovyContextType extends AbstractJavaContextType {
 
     public GroovyContextType() {
         setId(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
-        setName("Groovy surround-with templates");
+        setName("Groovy code templates");
         initializeContextTypeResolvers();
     }
 
@@ -56,7 +58,8 @@ public class GroovyContextType extends AbstractJavaContextType {
         // global
         addResolver(new GlobalTemplateVariables.Cursor());
         addResolver(new GlobalTemplateVariables.WordSelection());
-        addResolver(new GlobalTemplateVariables.Selection(GlobalTemplateVariables.LineSelection.NAME, /*org.eclipse.jdt.internal.corext.template.java.JavaTemplateMessages.CompilationUnitContextType_variable_description_line_selection:*/
+        addResolver(new GlobalTemplateVariables.Selection(GlobalTemplateVariables.LineSelection.NAME,
+            //org.eclipse.jdt.internal.corext.template.java.JavaTemplateMessages.CompilationUnitContextType_variable_description_line_selection:
             "<b>${id\\:line_selection[(default)]}</b><br>Evaluates to the selected text for multiple lines. 'default' is an optional parameter, which specifies the text if the selected text is empty.<br><br>Templates that contain this variable will also be shown in the 'Source &gt; Surround With > ...' menu.<br><br><b>Examples:</b><br><code>${line_selection}</code><br><code>${currentLine:line_selection(myStringVariable)}</code><br><code>${currentLine:line_selection('\"A default text\"')}</code>"));
         addResolver(new GlobalTemplateVariables.Dollar());
         addResolver(new GlobalTemplateVariables.Date());
@@ -66,13 +69,13 @@ public class GroovyContextType extends AbstractJavaContextType {
 
         // compilation unit
         addResolver(new File());
-      //addResolver(new PrimaryTypeName());
-      //addResolver(new ReturnType());
-      //addResolver(new Method());
+        addResolver(new PrimaryTypeName());
+        addResolver(new ReturnType());
+        addResolver(new Method());
         addResolver(new Type());
         addResolver(new Package());
         addResolver(new Project());
-      //addResolver(new Arguments());
+        addResolver(new Arguments());
 
         // java
         addResolver(new Array());
@@ -87,7 +90,9 @@ public class GroovyContextType extends AbstractJavaContextType {
         addResolver(new Todo());
 
         // groovy
-        addResolver(new StaticImportResolver("importStatic", "adds a static import"));
+        addResolver(new StaticImportResolver("importStatic", "adds static import(s)"));
+        addResolver(new ImportsResolver("import", "adds type import(s)"));
+        addResolver(new LinkResolver("link", "list of choices"));
         TypeResolver resolver = new TypeResolver();
         resolver.setType("newType");
         addResolver(resolver);

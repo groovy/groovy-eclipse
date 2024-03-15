@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2014, 2015 Google Inc and others.
+ * Copyright (c) 2014, 2024 Google Inc and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -85,8 +86,13 @@ public class ConflictIdentifier {
 			Set<String> typeExplicitSimpleNames,
 			Set<String> staticExplicitSimpleNames,
 			IProgressMonitor progressMonitor) throws JavaModelException {
+		// GROOVY add -- https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2170
+		Set<ImportName> currentImports = new HashSet<>(imports);
+		for (String ii : this.implicitImportContainers) if (!ii.isEmpty())
+			currentImports.add(ImportName.createFor(false, ii + ".*"));//$NON-NLS-1$
+		// GROOVY end
 		Collection<OnDemandReduction> onDemandCandidates = this.onDemandComputer.identifyPossibleReductions(
-				imports, addedImports, typeExplicitSimpleNames, staticExplicitSimpleNames);
+				/*imports*/currentImports, addedImports, typeExplicitSimpleNames, staticExplicitSimpleNames);
 
 		Set<String> typeOnDemandContainers = new HashSet<>(extractContainerNames(onDemandCandidates, false));
 		Set<String> staticOnDemandContainers = new HashSet<>(extractContainerNames(onDemandCandidates, true));

@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -375,8 +374,7 @@ public final class ImportRewrite {
 		if (restoreExistingImports) {
 			existingImport= new ArrayList();
 			IImportDeclaration[] imports= cu.getImports();
-			for (int i= 0; i < imports.length; i++) {
-				IImportDeclaration curr= imports[i];
+			for (IImportDeclaration curr : imports) {
 				char prefix= Flags.isStatic(curr.getFlags()) ? STATIC_PREFIX : NORMAL_PREFIX;
 				existingImport.add(prefix + curr.getElementName());
 			}
@@ -455,14 +453,6 @@ public final class ImportRewrite {
 		this.staticImportOnDemandThreshold= 99;
 
 		this.importsKindMap = new HashMap();
-		// GROOVY add -- load default imports so disambiguation import(s) can be added/retained
-		if (cu != null && LanguageSupportFactory.isInterestingSourceFile(cu.getElementName())){
-			for (String p : LanguageSupportFactory.getImplicitImportContainers(cu)){
-				this.addedImports.add(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
-			}
-			this.useContextToFilterImplicitImports= true;
-		}
-		// GROOVY end
 	}
 
 	/**
@@ -546,11 +536,6 @@ public final class ImportRewrite {
 	 */
 	public void setFilterImplicitImports(boolean filterImplicitImports) {
 		this.filterImplicitImports= filterImplicitImports;
-		// GROOVY add
-		if (!filterImplicitImports && LanguageSupportFactory.isInterestingSourceFile(this.compilationUnit.getElementName()))
-			for (String p : LanguageSupportFactory.getImplicitImportContainers(this.compilationUnit))
-				this.addedImports.remove(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
-		// GROOVY end
 	}
 
 	/**
@@ -598,10 +583,7 @@ public final class ImportRewrite {
 		return ImportRewriteContext.RES_NAME_FOUND;
 	}
 
-	/**
-	 * Not API, package visibility as accessed from an anonymous type
-	 */
-	/* package */ final int findInImports(String qualifier, String name, int kind) {
+	private final int findInImports(String qualifier, String name, int kind) {
 		boolean allowAmbiguity=  (kind == ImportRewriteContext.KIND_STATIC_METHOD) || (name.length() == 1 && name.charAt(0) == '*');
 		List imports= this.existingImports;
 		char prefix= (kind == ImportRewriteContext.KIND_TYPE) ? NORMAL_PREFIX : STATIC_PREFIX;
@@ -713,8 +695,7 @@ public final class ImportRewrite {
 		} else {
 			NormalAnnotation result = ast.newNormalAnnotation();
 			result.setTypeName(name);
-			for (int i= 0; i < mvps.length; i++) {
-				IMemberValuePairBinding mvp = mvps[i];
+			for (IMemberValuePairBinding mvp : mvps) {
 				MemberValuePair mvpNode = ast.newMemberValuePair();
 				mvpNode.setName(ast.newSimpleName(mvp.getName()));
 				Object value = mvp.getValue();
@@ -791,8 +772,7 @@ public final class ImportRewrite {
 				if (typeArguments.length > 0) {
 					ParameterizedType type= ast.newParameterizedType(baseType);
 					List argNodes= type.typeArguments();
-					for (int i= 0; i < typeArguments.length; i++) {
-						String curr= typeArguments[i];
+					for (String curr : typeArguments) {
 						if (containsNestedCapture(curr)) { // see bug 103044
 							argNodes.add(ast.newWildcardType());
 						} else {
@@ -934,8 +914,8 @@ public final class ImportRewrite {
 			return containsNestedCapture(binding.getElementType(), true);
 		}
 		ITypeBinding[] typeArguments= binding.getTypeArguments();
-		for (int i= 0; i < typeArguments.length; i++) {
-			if (containsNestedCapture(typeArguments[i], true)) {
+		for (ITypeBinding typeArgument : typeArguments) {
+			if (containsNestedCapture(typeArgument, true)) {
 				return true;
 			}
 		}
@@ -1478,8 +1458,8 @@ public final class ImportRewrite {
 		if (context == null)
 			context= this.defaultContext;
 		annotationBindings = context.removeRedundantTypeAnnotations(annotationBindings, location, type);
-		for (int i = 0; i< annotationBindings.length; i++) {
-			Annotation annotation = addAnnotation(annotationBindings[i], ast, context);
+		for (IAnnotationBinding annotationBinding : annotationBindings) {
+			Annotation annotation = addAnnotation(annotationBinding, ast, context);
 			if (annotation != null) annotations.add(annotation);
 		}
 	}
@@ -1605,8 +1585,7 @@ public final class ImportRewrite {
 		if (typeArguments.length > 0) {
 			ParameterizedType paramType = ast.newParameterizedType(type);
 			List arguments = paramType.typeArguments();
-			for (int i = 0; i < typeArguments.length; i++) {
-				ITypeBinding curr = typeArguments[i];
+			for (ITypeBinding curr : typeArguments) {
 				if (containsNestedCapture(curr, false)) { // see bug 103044
 					arguments.add(ast.newWildcardType());
 				} else {

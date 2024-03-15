@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2023 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -455,14 +454,6 @@ public final class ImportRewrite {
 		this.staticImportOnDemandThreshold= 99;
 
 		this.importsKindMap = new HashMap();
-		// GROOVY add -- load default imports so disambiguation import(s) can be added/retained
-		if (cu != null && LanguageSupportFactory.isInterestingSourceFile(cu.getElementName())){
-			for (String p : LanguageSupportFactory.getImplicitImportContainers(cu)){
-				this.addedImports.add(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
-			}
-			this.useContextToFilterImplicitImports= true;
-		}
-		// GROOVY end
 	}
 
 	/**
@@ -546,11 +537,6 @@ public final class ImportRewrite {
 	 */
 	public void setFilterImplicitImports(boolean filterImplicitImports) {
 		this.filterImplicitImports= filterImplicitImports;
-		// GROOVY add
-		if (!filterImplicitImports && LanguageSupportFactory.isInterestingSourceFile(this.compilationUnit.getElementName()))
-			for (String p : LanguageSupportFactory.getImplicitImportContainers(this.compilationUnit))
-				this.addedImports.remove(NORMAL_PREFIX + p + ".*"); //$NON-NLS-1$
-		// GROOVY end
 	}
 
 	/**
@@ -1407,7 +1393,7 @@ public final class ImportRewrite {
 	 * <p>
 	 * Note that this list doesn't need to be the same as the added static imports ({@link #getAddedStaticImports()}) as
 	 * implicit imports are not created and some imports are represented by on-demand imports instead.
-	 * </p
+	 * </p>
 	 * @return the created imports
 	 */
 	public String[] getCreatedStaticImports() {
