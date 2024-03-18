@@ -239,7 +239,7 @@ void ${testName}() {
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->@${type:newType(org.junit.jupiter.params.ParameterizedTest)} ${params:import('org.junit.jupiter.params.provider.*')}@${values:link('MethodSource','ValueSource','EmptySource','NullSource')}()
+>@${type:newType(org.junit.jupiter.params.ParameterizedTest)} ${params:import('org.junit.jupiter.params.provider.*')}@${values:link('MethodSource','ValueSource','EmptySource','NullSource','EnumSource')}()
 void ${testName}(${input:var}) {
 	${:importStatic('org.junit.jupiter.api.Assertions.*','org.junit.jupiter.api.Assumptions.*')}${cursor}
 }</template>
