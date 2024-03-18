@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -344,7 +344,10 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
         String methodName = kind.createAccessorName(name);
         if (methodName != null) {
             int params = (kind == AccessorSupport.SETTER ? 1 : 0);
+            // index "isName()", "getName()" or "setName(x)"
             requestor.acceptMethodReference(methodName.toCharArray(), params, offset);
+            // index "isName(x)", "getName(x)" or "setName(x,x)" for groovy method search
+            requestor.acceptMethodReference(methodName.toCharArray(), params + 1, offset);
         }
     }
 

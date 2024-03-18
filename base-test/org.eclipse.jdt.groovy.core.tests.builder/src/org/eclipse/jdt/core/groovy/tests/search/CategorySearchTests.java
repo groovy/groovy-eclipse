@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.junit.Test;
@@ -144,15 +146,41 @@ public final class CategorySearchTests extends SearchTestSuite {
             "}", 1);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1545
+    public void testCategorySearch8() throws Exception {
+        GroovyCompilationUnit unit = createUnit("stuff",
+            "class Cat {\n" +
+            "  static int getLength(Foo foo) {}\n" +
+            "}\n" +
+            "class Foo {\n" +
+            "  int length() {}\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  def foo = new Foo()\n" +
+            "  foo.length()\n" + // no
+            "  foo.length\n" + // yes
+            "}\n");
+
+        IMethod searchFor = unit.getType("Cat").getMethods()[0];
+        assertEquals("getLength", searchFor.getElementName());
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(searchFor, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {unit.getPackageFragmentRoot()}));
+
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals(String.valueOf(unit.getContents()).lastIndexOf("length"), matches.get(0).getOffset());
+    }
+
     //--------------------------------------------------------------------------
 
-    private void doCategorySearchTest(final String contents, final int numMatches) throws JavaModelException {
+    private void doCategorySearchTest(String contents, int numMatches) throws JavaModelException {
         checkMatches(findMatches(contents), numMatches, contents);
     }
 
-    private List<SearchMatch> findMatches(final String contents) throws JavaModelException {
+    private List<SearchMatch> findMatches(String contents) throws JavaModelException {
         GroovyCompilationUnit catUnit = createUnit("Cat", CATEGORY_CLASSES);
-        GroovyCompilationUnit unit = createUnit("Script", contents);
+        GroovyCompilationUnit unit = createUnit("script", contents);
         expectingNoProblems();
 
         IMethod searchFor = (IMethod) catUnit.getElementAt(CATEGORY_CLASSES.indexOf("printMessage"));
@@ -160,7 +188,7 @@ public final class CategorySearchTests extends SearchTestSuite {
         return search(SearchPattern.createPattern(searchFor, IJavaSearchConstants.REFERENCES), unit);
     }
 
-    private void checkMatches(final List<SearchMatch> matches, final int nExpected, final String contents) {
+    private void checkMatches(List<SearchMatch> matches, int nExpected, String contents) {
         assertEquals("Wrong number of matches found:\n" + toString(matches), nExpected, matches.size());
         if (nExpected > 0) {
             Iterator<SearchMatch> it = matches.iterator();
