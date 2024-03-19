@@ -215,7 +215,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     while (field == null && clazz != null) {
                         field = clazz.getDeclaredField(node.getText());
                         if (field != null && (field.isPrivate() || (!field.isPublic() && !field.isProtected() &&
-                                !Objects.equals(clazz.getPackage(), scope.getEnclosingTypeDeclaration().getPackage())))) {
+                                !Objects.equals(clazz.getPackageName(), scope.getEnclosingTypeDeclaration().getPackageName())))) {
                             field = null; // field is inaccessible; continue searching for accessible field
                         }
                         clazz = clazz.getSuperClass();
@@ -392,14 +392,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     FieldNode field = (FieldNode) declaration;
                     if (isStaticObjectExpression && !field.isStatic()) {
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (field.isPrivate()) {
-                        // "super.field" reference to private field yields MissingPropertyException
-                        if (isSuperObjectExpression(scope)) {
-                            confidence = TypeConfidence.UNKNOWN;
-                        // "this.field" reference to private field of super class yields MissingPropertyException
-                        } else if (isThisObjectExpression(scope) && isNotThisOrOuterClass(declaring, resolvedDeclaringType)) {
-                            confidence = TypeConfidence.UNKNOWN;
-                        }
+                    } else if (field.isPrivate() && (isSuperObjectExpression(scope) || isNotThisOrOuterClass(declaring, resolvedDeclaringType))) {
+                        // "super.field" or "other.field" reference to private field yields MissingPropertyException
+                        confidence = TypeConfidence.UNKNOWN;
+                    } else if (!field.isPublic() && !field.isPrivate() && !field.isProtected() && !declaring.equals(resolvedDeclaringType) &&
+                            !Objects.equals(resolvedDeclaringType.getPackageName(), scope.getEnclosingTypeDeclaration().getPackageName())) {
+                        // indirect other-package reference to package-private field yields MissingPropertyException
+                        confidence = TypeConfidence.UNKNOWN;
                     }
                 } else if (declaration instanceof PropertyNode) {
                     PropertyNode property = (PropertyNode) declaration;
@@ -419,8 +418,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                             if (scope.getEnclosingNode() instanceof MethodPointerExpression || // GROOVY-8999
                                                 GroovyUtils.getGroovyVersion().getMajor() > 3) // GROOVY-9851
                                 confidence = TypeConfidence.UNKNOWN;
-                        // "this.method()" reference to private method of super class yields MissingMethodException
-                        } else if (isThisObjectExpression(scope) && isNotThisOrOuterClass(declaring, resolvedDeclaringType)) {
+                        // "other.method()" reference to private method yields MissingMethodException
+                        } else if (isNotThisOrOuterClass(declaring, resolvedDeclaringType)) {
                             confidence = TypeConfidence.UNKNOWN;
                         }
                     } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 4) {
@@ -513,7 +512,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             ASTNode candidate = findDeclarationForDynamicVariable(var, declaringType, scope, isAssignTarget, resolveStrategy);
             if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
                     ((AccessorSupport.isGetter((MethodNode) candidate) || AccessorSupport.isSetter((MethodNode) candidate)) && !var.getName().equals(((MethodNode) candidate).getName())))) {
-                ClassNode implicitThisType = VariableScope.CLOSURE_CLASS_NODE.equals(declaringType) ? scope.getEnclosingTypeDeclaration() : declaringType;
+                ClassNode implicitThisType = Optional.ofNullable((ClassNode) var.putNodeMetaData("_from_type_", null)).orElse(declaringType);
                 if (candidate instanceof FieldNode) {
                     FieldNode field = (FieldNode) candidate;
                     ClassNode owner = field.getDeclaringClass();
@@ -521,6 +520,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         candidate = findTraitField(field.getName(), owner).orElse(field);
                     } else if (field.isPrivate() && isNotThisOrOuterClass(implicitThisType, owner)) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private field of super class yields MissingPropertyException
+                    } else if (!field.isPublic() && !field.isPrivate() && !field.isProtected() &&
+                            !owner.equals(implicitThisType) && !Objects.equals(owner.getPackageName(), scope.getEnclosingTypeDeclaration().getPackageName())) {
+                        confidence = TypeConfidence.UNKNOWN; // extern reference to package-private field yields MissingPropertyException
                     }
                 } else if (candidate instanceof MethodNode) {
                     MethodNode method = (MethodNode) candidate;
@@ -584,6 +586,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
             // TODO: If strategy is DELEGATE_ONLY and delegate is enclosing closure, do outer search.
             candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, 0, callArgs);
+            if (candidate != null) var.putNodeMetaData("_from_type_", scope.getDelegate());
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
             VariableScope outer = owner.getNodeMetaData("outer.scope");
@@ -596,9 +599,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             } else {
                 candidate = findDeclaration(var.getName(), owner, isAssignTarget, scope.isOwnerStatic(), scope.isFieldAccessDirect() ? 1 : 0, callArgs);
+                if (candidate != null) var.putNodeMetaData("_from_type_", owner);
             }
             if (candidate == null && resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
                 candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, 0, callArgs);
+                if (candidate != null) var.putNodeMetaData("_from_type_", scope.getDelegate());
             }
             if (candidate == null && scope.getEnclosingClosure() == null && scope.getEnclosingMethodDeclaration() != null) {
                 for (Parameter parameter : scope.getEnclosingMethodDeclaration().getParameters()) {

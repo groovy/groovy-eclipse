@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -608,7 +608,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("xxx", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
 
-        offset = contents.lastIndexOf("xxx");
+        /**/offset = contents.lastIndexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
     }
 
@@ -635,7 +635,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("xxx", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
 
-        offset = contents.lastIndexOf("xxx");
+        /**/offset = contents.lastIndexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
     }
 
@@ -661,7 +661,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("xxx", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
 
-        offset = contents.lastIndexOf("xxx");
+        /**/offset = contents.lastIndexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
     }
 
@@ -688,7 +688,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("xxx", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
 
-        offset = contents.lastIndexOf("xxx");
+        /**/offset = contents.lastIndexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
     }
 
@@ -723,16 +723,16 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.lastIndexOf("a");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("b");
+        /**/offset = contents.lastIndexOf("b");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("c");
+        /**/offset = contents.lastIndexOf("c");
         assertDeclaration(contents, offset, offset + 1, "Foo", "c", DeclarationKind.FIELD);
 
-            offset = contents.lastIndexOf("d");
+        /**/offset = contents.lastIndexOf("d");
         assertDeclaration(contents, offset, offset + 1, "Foo", "d", DeclarationKind.FIELD);
 
-            offset = contents.lastIndexOf("e");
+        /**/offset = contents.lastIndexOf("e");
         assertDeclaration(contents, offset, offset + 1, "Foo", "e", DeclarationKind.FIELD);
     }
 
@@ -769,16 +769,16 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.lastIndexOf("a");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("b");
+        /**/offset = contents.lastIndexOf("b");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("c");
+        /**/offset = contents.lastIndexOf("c");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("d");
+        /**/offset = contents.lastIndexOf("d");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("e");
+        /**/offset = contents.lastIndexOf("e");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
     }
 
@@ -818,31 +818,31 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("a", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
 
-            offset = contents.indexOf("b", offset);
+        /**/offset = contents.indexOf("b", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
 
-            offset = contents.indexOf("c", offset);
+        /**/offset = contents.indexOf("c", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
 
-            offset = contents.indexOf("d", offset);
+        /**/offset = contents.indexOf("d", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
 
-            offset = contents.indexOf("e", offset);
+        /**/offset = contents.indexOf("e", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("a");
+        /**/offset = contents.lastIndexOf("a");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("b");
+        /**/offset = contents.lastIndexOf("b");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("c");
+        /**/offset = contents.lastIndexOf("c");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("d");
+        /**/offset = contents.lastIndexOf("d");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("e");
+        /**/offset = contents.lastIndexOf("e");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
     }
 
@@ -884,31 +884,31 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("a", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
 
-            offset = contents.indexOf("b", offset);
+        /**/offset = contents.indexOf("b", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
 
-            offset = contents.indexOf("c", offset);
+        /**/offset = contents.indexOf("c", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
 
-            offset = contents.indexOf("d", offset);
+        /**/offset = contents.indexOf("d", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
 
-            offset = contents.indexOf("e", offset);
+        /**/offset = contents.indexOf("e", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("a");
+        /**/offset = contents.lastIndexOf("a");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("b");
+        /**/offset = contents.lastIndexOf("b");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("c");
+        /**/offset = contents.lastIndexOf("c");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("d");
+        /**/offset = contents.lastIndexOf("d");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("e");
+        /**/offset = contents.lastIndexOf("e");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
     }
 
@@ -945,16 +945,16 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.lastIndexOf("a");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("b");
+        /**/offset = contents.lastIndexOf("b");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("c");
+        /**/offset = contents.lastIndexOf("c");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("d");
+        /**/offset = contents.lastIndexOf("d");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
 
-            offset = contents.lastIndexOf("e");
+        /**/offset = contents.lastIndexOf("e");
         assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
     }
 
@@ -998,32 +998,232 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("a", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 1, "Foo", "a", DeclarationKind.FIELD);
 
-            offset = contents.indexOf("b", offset);
+        /**/offset = contents.indexOf("b", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "b", DeclarationKind.FIELD);
 
-            offset = contents.indexOf("c", offset);
+        /**/offset = contents.indexOf("c", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "c", DeclarationKind.FIELD);
 
-            offset = contents.indexOf("d", offset);
+        /**/offset = contents.indexOf("d", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "d", DeclarationKind.FIELD);
 
-            offset = contents.indexOf("e", offset);
+        /**/offset = contents.indexOf("e", offset);
         assertDeclaration(contents, offset, offset + 1, "Foo", "e", DeclarationKind.FIELD);
 
-            offset = contents.lastIndexOf("a");
+        /**/offset = contents.lastIndexOf("a");
         assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "a", DeclarationKind.PROPERTY);
 
-            offset = contents.lastIndexOf("b");
+        /**/offset = contents.lastIndexOf("b");
         assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "b", DeclarationKind.PROPERTY);
 
-            offset = contents.lastIndexOf("c");
+        /**/offset = contents.lastIndexOf("c");
         assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "c", DeclarationKind.PROPERTY);
 
-            offset = contents.lastIndexOf("d");
+        /**/offset = contents.lastIndexOf("d");
         assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "d", DeclarationKind.PROPERTY);
 
-            offset = contents.lastIndexOf("e");
+        /**/offset = contents.lastIndexOf("e");
         assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "e", DeclarationKind.PROPERTY);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1559
+    public void testGetterAndField42() {
+        //@formatter:off
+        String contents =
+            "import groovy.transform.PackageScope\n" +
+            "class Foo {\n" +
+            "  def           a\n" +
+            "  public        b\n" +
+            "  private       c\n" +
+            "  protected     d\n" +
+            "  @PackageScope e\n" +
+            "  def getA() { 'A' }\n" +
+            "  def getB() { 'B' }\n" +
+            "  def getC() { 'C' }\n" +
+            "  def getD() { 'D' }\n" +
+            "  def getE() { 'E' }\n" +
+            "}\n" +
+            "class Bar extends Foo {\n" +
+            "}\n" +
+            "void test(Foo foo, Bar bar) {\n" +
+            "  foo.a = null\n" +
+            "  foo.b = null\n" +
+            "  foo.c = null\n" +
+            "  foo.d = null\n" +
+            "  foo.e = null\n" +
+            "  bar.a = null\n" +
+            "  bar.b = null\n" +
+            "  bar.c = null\n" +
+            "  bar.d = null\n" +
+            "  bar.e = null\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("foo.a") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "a", DeclarationKind.PROPERTY);
+
+        /**/offset = contents.indexOf("foo.b") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "b", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("foo.c") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "c", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("foo.d") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "d", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("foo.e") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "e", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("bar.a") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "a", DeclarationKind.PROPERTY);
+
+        /**/offset = contents.indexOf("bar.b") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "b", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("bar.c") + 4;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+        /**/offset = contents.indexOf("bar.d") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "d", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("bar.e") + 4;
+        assertDeclaration(contents, offset, offset + 1, "Foo", "e", DeclarationKind.FIELD);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1559
+    public void testGetterAndField43() {
+        //@formatter:off
+        createUnit("foo", "Bar", "package foo\n" +
+            "import groovy.transform.PackageScope\n" +
+            "class Bar {\n" +
+            "  def           a\n" +
+            "  public        b\n" +
+            "  private       c\n" +
+            "  protected     d\n" +
+            "  @PackageScope e\n" +
+            "  def getA() { 'A' }\n" +
+            "  def getB() { 'B' }\n" +
+            "  def getC() { 'C' }\n" +
+            "  def getD() { 'D' }\n" +
+            "  def getE() { 'E' }\n" +
+            "}\n");
+
+        String contents =
+            "class Baz extends foo.Bar {\n" +
+            "}\n" +
+            "void test(foo.Bar bar, Baz baz) {\n" +
+            "  bar.a = null\n" +
+            "  bar.b = null\n" +
+            "  bar.c = null\n" +
+            "  bar.d = null\n" +
+            "  bar.e = null\n" +
+            "  baz.a = null\n" +
+            "  baz.b = null\n" +
+            "  baz.c = null\n" +
+            "  baz.d = null\n" +
+            "  baz.e = null\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("bar.a") + 4;
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "a", DeclarationKind.PROPERTY);
+
+        /**/offset = contents.indexOf("bar.b") + 4;
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "b", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("bar.c") + 4;
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "c", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("bar.d") + 4;
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "d", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("bar.e") + 4;
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "e", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("baz.a") + 4;
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "a", DeclarationKind.PROPERTY);
+
+        /**/offset = contents.indexOf("baz.b") + 4;
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "b", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("baz.c") + 4;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+        /**/offset = contents.indexOf("baz.d") + 4;
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "d", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("baz.e") + 4;
+        assertUnknownConfidence(contents, offset, offset + 1);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1559
+    public void testGetterAndField44() {
+        //@formatter:off
+        createUnit("foo", "Bar", "package foo\n" +
+            "import groovy.transform.PackageScope\n" +
+            "class Bar {\n" +
+            "  def           a\n" +
+            "  public        b\n" +
+            "  private       c\n" +
+            "  protected     d\n" +
+            "  @PackageScope e\n" +
+            "  def getA() { 'A' }\n" +
+            "  def getB() { 'B' }\n" +
+            "  def getC() { 'C' }\n" +
+            "  def getD() { 'D' }\n" +
+            "  def getE() { 'E' }\n" +
+            "}\n");
+
+        String contents =
+            "class Baz extends foo.Bar {\n" +
+            "}\n" +
+            "void test(foo.Bar bar, Baz baz) {\n" +
+            "  bar.with {\n" +
+            "    a = null\n" +
+            "    b = null\n" +
+            "    c = null\n" +
+            "    d = null\n" +
+            "    e = null\n" +
+            "  }\n" +
+            "  baz.with {\n" +
+            "    a = null\n" +
+            "    b = null\n" +
+            "    c = null\n" +
+            "    d = null\n" +
+            "    e = null\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = contents.indexOf("a = ");
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "a", DeclarationKind.PROPERTY);
+
+        /**/offset = contents.indexOf("b = ");
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "b", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("c = ");
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "c", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("d = ");
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "d", DeclarationKind.FIELD);
+
+        /**/offset = contents.indexOf("e = ");
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "e", DeclarationKind.FIELD);
+
+        /**/offset = contents.lastIndexOf("a = ");
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "a", DeclarationKind.PROPERTY);
+
+        /**/offset = contents.lastIndexOf("b = ");
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "b", DeclarationKind.FIELD);
+
+        /**/offset = contents.lastIndexOf("c = ");
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+        /**/offset = contents.lastIndexOf("d = ");
+        assertDeclaration(contents, offset, offset + 1, "foo.Bar", "d", DeclarationKind.FIELD);
+
+        /**/offset = contents.lastIndexOf("e = ");
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
@@ -1040,7 +1240,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("xxx", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 3, "Foo", "setXxx", DeclarationKind.METHOD);
 
-        offset = contents.lastIndexOf("xxx");
+        /**/offset = contents.lastIndexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Foo", "setXxx", DeclarationKind.METHOD);
     }
 
@@ -1066,13 +1266,13 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Foo", "setXxx", DeclarationKind.METHOD);
 
-        offset = contents.indexOf("yyy", contents.indexOf("meth"));
+        /**/offset = contents.indexOf("yyy", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 3, "Bar", "yyy", DeclarationKind.FIELD);
 
-        offset = contents.lastIndexOf("xxx");
+        /**/offset = contents.lastIndexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Foo", "setXxx", DeclarationKind.METHOD);
 
-        offset = contents.lastIndexOf("yyy");
+        /**/offset = contents.lastIndexOf("yyy");
         assertDeclaration(contents, offset, offset + 3, "Bar", "yyy", DeclarationKind.PROPERTY);
     }
 
@@ -1098,7 +1298,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("xxx", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
 
-        offset = contents.lastIndexOf("xxx");
+        /**/offset = contents.lastIndexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
     }
 
@@ -1124,7 +1324,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("xxx", contents.indexOf("meth"));
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
 
-        offset = contents.lastIndexOf("xxx");
+        /**/offset = contents.lastIndexOf("xxx");
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
     }
 
