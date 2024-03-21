@@ -19,7 +19,6 @@ import static org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration.
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -103,11 +102,10 @@ public class GroovyClassScope extends ClassScope {
 
         boolean implementsGroovyObject = false;
         ReferenceBinding[] superInterfaces = sourceType.superInterfaces();
-        if (superInterfaces == null) superInterfaces = new ReferenceBinding[0];
-        if (superInterfaces.length > 1) Collections.reverse(Arrays.asList(superInterfaces));
+        if (superInterfaces == null) superInterfaces = Binding.NO_SUPERINTERFACES;
 
-        for (ReferenceBinding superInterface : superInterfaces) {
-            if (CharOperation.equals(superInterface.compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
+        for (int i = superInterfaces.length; i != 0;) {
+            if (CharOperation.equals(superInterfaces[--i].compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
                 implementsGroovyObject = true;
                 break;
             }

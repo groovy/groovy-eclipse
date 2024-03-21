@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2023 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -292,7 +292,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 			superInterfaceNames = hierarchyType.superInterfaceNames;
 		}
 		separator = '.';
-	} else{
+	} else {
 		return null;
 	}
 
@@ -300,7 +300,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 	int bindingIndex = 0;
 	int bindingLength = interfaceBindings == null ? 0 : interfaceBindings.length;
 	int length = superInterfaceNames == null ? 0 : superInterfaceNames.length;
-	IType[] superinterfaces = new IType[length];
+	IType[] superinterfaces = new IType[Math.max(bindingLength, length)];
 	int index = 0;
 	next : for (int i = 0; i < length; i += 1) {
 		char[] superInterfaceName = superInterfaceNames[i];
@@ -338,7 +338,19 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 		}
 		this.builder.hierarchy.missingTypes.add(String.valueOf(simpleName));
 	}
-	if (index != length)
+	// GROOVY add
+	while (bindingIndex < bindingLength) {
+		ReferenceBinding interfaceBinding = (ReferenceBinding) interfaceBindings[bindingIndex++].erasure();
+		IGenericType genericType = this.bindingMap.get(interfaceBinding);
+		if (genericType != null) {
+			var handle = this.builder.getHandle(genericType, interfaceBinding);
+			if (handle != null) {
+				superinterfaces[index++] = handle;
+			}
+		}
+	}
+	// GROOVY end
+	if (index != superinterfaces.length)
 		System.arraycopy(superinterfaces, 0, superinterfaces = new IType[index], 0, index);
 	return superinterfaces;
 }

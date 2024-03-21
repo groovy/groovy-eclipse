@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -149,9 +149,8 @@ public void accept(ICompilationUnit sourceUnit, AccessRestriction accessRestrict
 		this.lookupEnvironment.buildTypeBindings(parsedUnit, accessRestriction);
 		this.lookupEnvironment.completeTypeBindings(parsedUnit, true); // work done inside checkAndSetImports()
 	} else {
-		//System.out.println("Cannot accept compilation units inside the HierarchyResolver.");
 		this.lookupEnvironment.problemReporter.abortDueToInternalError(
-			new StringBuffer(Messages.accept_cannot)
+			new StringBuilder(Messages.accept_cannot)
 				.append(sourceUnit.getFileName())
 				.toString());
 	}
@@ -226,7 +225,7 @@ private IType findSuperClass(IGenericType type, ReferenceBinding typeBinding) {
 		if (typeBinding.isHierarchyInconsistent()) {
 			if (superBinding.problemId() == ProblemReasons.NotFound) {
 				this.hasMissingSuperClass = true;
-				this.builder.hierarchy.missingTypes.add(new String(superBinding.sourceName)); // note: this could be Map$Entry
+				this.builder.hierarchy.missingTypes.add(String.valueOf(superBinding.sourceName)); // note: this could be Map$Entry
 				return null;
 			} else if ((superBinding.id == TypeIds.T_JavaLangObject)) {
 				char[] superclassName;
@@ -249,7 +248,7 @@ private IType findSuperClass(IGenericType type, ReferenceBinding typeBinding) {
 					char[] simpleName = lastSeparator == -1 ? superclassName : CharOperation.subarray(superclassName, lastSeparator+1, superclassName.length);
 					if (!CharOperation.equals(simpleName, TypeConstants.OBJECT)) {
 						this.hasMissingSuperClass = true;
-						this.builder.hierarchy.missingTypes.add(new String(simpleName));
+						this.builder.hierarchy.missingTypes.add(String.valueOf(simpleName));
 						return null;
 					}
 				}
@@ -299,7 +298,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 			superInterfaceNames = hierarchyType.superInterfaceNames;
 		}
 		separator = '.';
-	} else{
+	} else {
 		return null;
 	}
 
@@ -307,9 +306,9 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 	int bindingIndex = 0;
 	int bindingLength = interfaceBindings == null ? 0 : interfaceBindings.length;
 	int length = superInterfaceNames == null ? 0 : superInterfaceNames.length;
-	IType[] superinterfaces = new IType[length];
+	IType[] superinterfaces = new IType[Math.max(bindingLength, length)];
 	int index = 0;
-	next : for (int i = 0; i < length; i++) {
+	next : for (int i = 0; i < length; i += 1) {
 		char[] superInterfaceName = superInterfaceNames[i];
 		int end = superInterfaceName.length;
 
@@ -332,7 +331,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 
 			// ensure that the binding corresponds to the interface defined by the user
 			if (CharOperation.equals(simpleName, interfaceBinding.sourceName)) {
-				bindingIndex++;
+				bindingIndex += 1;
 				IGenericType genericType = this.bindingMap.get(interfaceBinding);
 				if (genericType != null) {
 					IType handle = this.builder.getHandle(genericType, interfaceBinding);
@@ -343,9 +342,21 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 				}
 			}
 		}
-		this.builder.hierarchy.missingTypes.add(new String(simpleName));
+		this.builder.hierarchy.missingTypes.add(String.valueOf(simpleName));
 	}
-	if (index != length)
+	// GROOVY add
+	while (bindingIndex < bindingLength) {
+		ReferenceBinding interfaceBinding = (ReferenceBinding) interfaceBindings[bindingIndex++].erasure();
+		IGenericType genericType = this.bindingMap.get(interfaceBinding);
+		if (genericType != null) {
+			var handle = this.builder.getHandle(genericType, interfaceBinding);
+			if (handle != null) {
+				superinterfaces[index++] = handle;
+			}
+		}
+	}
+	// GROOVY end
+	if (index != superinterfaces.length)
 		System.arraycopy(superinterfaces, 0, superinterfaces = new IType[index], 0, index);
 	return superinterfaces;
 }
@@ -413,7 +424,7 @@ private void fixSupertypeBindings() {
 			} catch (AbortCompilation e) {
 				// allow subsequent call to superclass() to succeed so that we don't have to catch AbortCompilation everywhere
 				((BinaryTypeBinding) typeBinding).tagBits &= ~TagBits.HasUnresolvedSuperclass;
-				this.builder.hierarchy.missingTypes.add(new String(typeBinding.superclass().sourceName()));
+				this.builder.hierarchy.missingTypes.add(String.valueOf(typeBinding.superclass().sourceName()));
 				this.hasMissingSuperClass = true;
 			}
 			try {
@@ -511,7 +522,7 @@ private void rememberAllTypes(CompilationUnitDeclaration parsedUnit, org.eclipse
 	if (types != null) {
 		for (int i = 0, length = types.length; i < length; i++) {
 			TypeDeclaration type = types[i];
-			rememberWithMemberTypes(type, cu.getType(new String(type.name)));
+			rememberWithMemberTypes(type, cu.getType(String.valueOf(type.name)));
 		}
 	}
 	if (!includeLocalTypes || (parsedUnit.localTypes == null && parsedUnit.functionalExpressions == null))
@@ -549,7 +560,7 @@ private void rememberWithMemberTypes(TypeDeclaration typeDecl, IType typeHandle)
 	if (memberTypes != null) {
 		for (int i = 0, length = memberTypes.length; i < length; i++) {
 			TypeDeclaration memberType = memberTypes[i];
-			rememberWithMemberTypes(memberType, typeHandle.getType(new String(memberType.name)));
+			rememberWithMemberTypes(memberType, typeHandle.getType(String.valueOf(memberType.name)));
 		}
 	}
 }

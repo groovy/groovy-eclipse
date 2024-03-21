@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3784,5 +3784,28 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p2.Script");
         expectingNoProblems();
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1560
+    public void testTypeHierarchy() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        //@formatter:off
+        IPath path = env.addGroovyClass(paths[1], "Runs",
+            "class Runs implements Runnable {\n" +
+            "  @Override void run() {\n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
+
+        IType type = env.getUnit(path).findPrimaryType();
+        var region = JavaCore.newRegion();
+        region.add(type);
+
+        IType[] interfaces = JavaCore.newTypeHierarchy(region, null, null).getSuperInterfaces(type);
+
+        assertEquals(2, interfaces.length);
+        assertEquals("Runnable", interfaces[0].getElementName());
+        assertEquals("GroovyObject", interfaces[1].getElementName());
     }
 }

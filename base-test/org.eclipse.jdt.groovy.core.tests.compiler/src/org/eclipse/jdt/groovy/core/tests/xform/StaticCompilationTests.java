@@ -7721,7 +7721,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 2)\n" +
             "\tclass C implements p.A, p.B {\n" +
             "\t      ^\n" +
-            "Duplicate default methods named m with the parameters () and () are inherited from the types A and B\n" +
+            "Duplicate default methods named m with the parameters () and () are inherited from the types B and A\n" +
             "----------\n");
     }
 
