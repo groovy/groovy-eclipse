@@ -36,6 +36,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
@@ -249,13 +250,23 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
                 return t;
             }
         }
+
+        var context = module.getContext();
+        if (context instanceof EclipseSourceUnit) {
+            ClassNode typeNode = ((EclipseSourceUnit) context).resolver.resolve(typeName);
+            if (typeNode.equals(ClassHelper.OBJECT_TYPE) &&
+                    !typeName.equals(ClassHelper.OBJECT)) {
+                return null;
+            }
+            return typeNode;
+        }
+
         try {
-            //ClassNode type = ((EclipseSourceUnit) module.getContext()).resolver.resolve(typeName);
-            Class<?> t = module.getContext().getClassLoader().loadClass(typeName, true, true, true);
+            Class<?> t = context.getClassLoader().loadClass(typeName, true, true, true);
             ClassNode typeNode = ClassHelper.make(t);
             typeNode.lazyClassInit();
             return typeNode;
-        } catch (ClassNotFoundException | NoClassDefFoundError e) {
+        } catch (ClassNotFoundException | LinkageError ignore) {
             return null;
         }
     }
