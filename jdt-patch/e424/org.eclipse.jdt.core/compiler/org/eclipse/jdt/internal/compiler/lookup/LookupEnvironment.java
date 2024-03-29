@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -516,19 +516,42 @@ public void completeTypeBindings() {
 	this.stepCompleted = BUILD_TYPE_HIERARCHY;
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
+		/* GROOVY edit
 	    (this.unitBeingCompleted = this.units[i]).scope.checkAndSetImports();
+		*/
+		CompilationUnitDeclaration cud = (this.unitBeingCompleted = this.units[i]);
+		CompilationUnitScope unitScope = (cud != null ? cud.scope : null);
+		if (unitScope != null)
+			unitScope.checkAndSetImports();
+		// GROOVY end
 	}
 	this.stepCompleted = CHECK_AND_SET_IMPORTS;
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
+		/* GROOVY edit
 	    (this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy();
+		*/
+		CompilationUnitDeclaration cud = (this.unitBeingCompleted = this.units[i]);
+		CompilationUnitScope unitScope = (cud != null ? cud.scope : null);
+		if (unitScope != null)
+			unitScope.connectTypeHierarchy();
+		// GROOVY end
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY;
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
+		/* GROOVY edit
 		CompilationUnitScope unitScope = (this.unitBeingCompleted = this.units[i]).scope;
+		*/
+		CompilationUnitDeclaration cud = (this.unitBeingCompleted = this.units[i]);
+		CompilationUnitScope unitScope = (cud != null ? cud.scope : null);
+		if (unitScope != null) {
+		// GROOVY end
 		unitScope.checkParameterizedTypes();
 		unitScope.buildFieldsAndMethods();
+		// GROOVY add
+		}
+		// GROOVY end
 		this.units[i] = null; // release unnecessary reference to the parsed unit
 	}
 	this.stepCompleted = BUILD_FIELDS_AND_METHODS;

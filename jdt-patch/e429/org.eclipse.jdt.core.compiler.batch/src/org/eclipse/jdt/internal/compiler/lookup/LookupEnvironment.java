@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2023 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -520,28 +520,55 @@ public void completeTypeBindings() {
 	this.stepCompleted = BUILD_TYPE_HIERARCHY;
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		(this.unitBeingCompleted = this.units[i]).scope.checkAndSetImports();
+		/* GROOVY edit
+	    (this.unitBeingCompleted = this.units[i]).scope.checkAndSetImports();
+		*/
+		CompilationUnitDeclaration cud = (this.unitBeingCompleted = this.units[i]);
+		CompilationUnitScope unitScope = (cud != null ? cud.scope : null);
+		if (unitScope != null)
+			unitScope.checkAndSetImports();
+		// GROOVY end
 	}
 	this.stepCompleted = CHECK_AND_SET_IMPORTS;
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		(this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy1();
+		/* GROOVY edit
+	    (this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy1();
+		*/
+		CompilationUnitDeclaration cud = (this.unitBeingCompleted = this.units[i]);
+		CompilationUnitScope unitScope = (cud != null ? cud.scope : null);
+		if (unitScope != null)
+			unitScope.connectTypeHierarchy1();
+		// GROOVY end
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY1;
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		(this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy2();
+		/* GROOVY edit
+	    (this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy2();
+		*/
+		CompilationUnitDeclaration cud = (this.unitBeingCompleted = this.units[i]);
+		CompilationUnitScope unitScope = (cud != null ? cud.scope : null);
+		if (unitScope != null)
+			unitScope.connectTypeHierarchy2();
+		// GROOVY end
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY2;
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		var unit = (this.unitBeingCompleted = this.units[i]); // GROOVY null test
-		if (unit != null) {
-			CompilationUnitScope unitScope = unit.scope;
-			unitScope.checkParameterizedTypes();
-			unitScope.buildFieldsAndMethods();
-			this.units[i] = null; // release
+		// GROOVY add
+		CompilationUnitScope unitScope = (this.unitBeingCompleted = this.units[i]).scope;
+		*/
+		CompilationUnitDeclaration cud = (this.unitBeingCompleted = this.units[i]); // GROOVY null test
+		CompilationUnitScope unitScope = (cud != null ? cud.scope : null);
+		if (unitScope != null) {
+		// GROOVY end
+		unitScope.checkParameterizedTypes();
+		unitScope.buildFieldsAndMethods();
+		// GROOVY add
 		}
+		// GROOVY end
+		this.units[i] = null; // release unnecessary reference to the parsed unit
 	}
 	this.stepCompleted = BUILD_FIELDS_AND_METHODS;
 

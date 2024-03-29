@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import groovy.lang.MissingClassException;
 
@@ -585,7 +586,9 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             } else if (jdtBinding instanceof ParameterizedTypeBinding) {
                 generics = new JDTClassNodeBuilder(resolver).configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
             } else { // BinaryTypeBinding, SourceTypeBinding, TypeVariableBinding, WildcardBinding
-                generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(jdtBinding.typeVariables());
+                TypeVariableBinding[] typeVariables = jdtBinding.typeVariables();
+                assert Arrays.stream( typeVariables ).allMatch(Objects::nonNull);
+                generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(typeVariables);
             }
             setGenericsTypes(generics);
         }

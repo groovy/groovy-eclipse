@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMA
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -184,11 +185,11 @@ public class ConvertToPropertyAction extends Action {
             TypeLookupResult after = lookupNodeType(new ASTNodeFinder(new Region(node.getStart(), 0)).doVisit(unit.getModuleNode()), unit);
             unit.applyTextEdit(undo, null);
 
-            if (!before.declaringType.equals(after.declaringType) || (after.declaration instanceof Variable &&
-                    !(after.declaration instanceof FieldNode || after.declaration instanceof PropertyNode))) {
-                if (!before.scope.getThis().isDerivedFrom(before.declaringType)) { // "this" or "super"
+            if (!Objects.equals(before.declaringType, after.declaringType) || (after.declaration instanceof Variable &&
+                                !(after.declaration instanceof FieldNode || after.declaration instanceof PropertyNode))) {
+                if (before.declaringType == null || !before.scope.getThis().isDerivedFrom(before.declaringType)) { // "this" or "super"
                     ASTNode call = (node instanceof MethodCall ? node : before.scope.getEnclosingNode()); // TODO: refactor side-effect solution!
-                    call.getNodeMetaData(IMPLICIT_RECEIVER, x -> before.declaringType.equals(before.scope.getDelegate()) ? "delegate" : "owner");
+                    call.getNodeMetaData(IMPLICIT_RECEIVER, x -> before.scope.getDelegate().equals(before.declaringType) ? "delegate" : "owner");
                 }
                 return true;
             }

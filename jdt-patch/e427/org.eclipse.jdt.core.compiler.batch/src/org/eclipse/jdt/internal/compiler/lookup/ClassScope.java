@@ -1023,7 +1023,7 @@ public class ClassScope extends Scope {
 		ReferenceBinding[] interfaces = sourceType.superInterfaces(); // GROOVY edit
 		Map invocations = new HashMap(2);
 		ReferenceBinding itsSuperclass = sourceType.isInterface() ? null : sourceType.superclass;
-		nextInterface: for (int i = 0, length = interfaces.length; i < length; i++) {
+		nextInterface: for (int i = 0, length = (interfaces != null ? interfaces.length : 0); i < length; i++) { // GROOVY edit
 			ReferenceBinding one =  interfaces[i];
 			if (one == null) continue nextInterface;
 			if (itsSuperclass != null && hasErasedCandidatesCollisions(itsSuperclass, one, invocations, sourceType, this.referenceContext))

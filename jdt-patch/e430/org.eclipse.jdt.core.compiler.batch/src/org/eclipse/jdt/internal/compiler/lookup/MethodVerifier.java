@@ -663,6 +663,9 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 					// in a subclass is guaranteed to have the same erasure as an existing method.
 					for (int e = 0; e < length; e++) {
 						if (isInterfaceMethodImplemented(inheritedMethod, existingMethods[e], superType)) {
+							// GROOVY add
+							if (inheritedMethod.returnType != null && existingMethods[e].returnType != null)
+							// GROOVY end
 							if (TypeBinding.notEquals(inheritedMethod.returnType.erasure(), existingMethods[e].returnType.erasure())) {
 								// overridden, but with different return type, need to check
 								// for bridge method
