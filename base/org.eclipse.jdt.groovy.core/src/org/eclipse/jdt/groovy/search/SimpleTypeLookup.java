@@ -1093,10 +1093,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             declaringType = VariableScope.OBJECT_CLASS_NODE;
         }
         // retain inferredDeclaringType's generics if possible
-        if (inferredDeclaringType.equals(declaringType)) {
+        if (inferredDeclaringType.equals(declaringType) &&
+                !inferredDeclaringType.isGenericsPlaceHolder()) {
             return inferredDeclaringType;
         } else {
-            return declaringType;
+            return declaringType.getPlainNodeReference();
         }
     }
 

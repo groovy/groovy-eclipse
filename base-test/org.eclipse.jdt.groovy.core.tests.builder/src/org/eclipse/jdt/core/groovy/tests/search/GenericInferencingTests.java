@@ -1133,6 +1133,55 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertEquals("First parameter type should be resolved from object expression", "java.lang.String[]", printTypeName(dgm.getParameters()[0].getType()));
     }
 
+    @Test
+    public void testTypeVariable1() {
+        String contents =
+            "class C<T> {\n" +
+            "  void test(T t) {\n" +
+            "    t.notify()\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "notify", "java.lang.Void");
+        assertDeclaringType(contents, "notify", "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1563
+    public void testTypeVariable2() {
+        String contents =
+            "class C<T extends Thread> {\n" +
+            "  void test(T thread) {\n" +
+            "    thread.getName()\n" +
+            "    thread.name\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "name", "java.lang.String");
+        assertDeclaringType(contents, "name", "java.lang.Thread");
+
+        assertType(contents, "getName", "java.lang.String");
+        assertDeclaringType(contents, "getName", "java.lang.Thread");
+    }
+
+    @Test
+    public void testTypeVariable3() {
+        String contents =
+            "class C<T extends Thread> {\n" +
+            "  void test(T thread) {\n" +
+            "    thread.with {" +
+            "      getName()\n" +
+            "      name\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "name", "java.lang.String");
+        assertDeclaringType(contents, "name", "java.lang.Thread");
+
+        assertType(contents, "getName", "java.lang.String");
+        assertDeclaringType(contents, "getName", "java.lang.Thread");
+    }
+
     @Test // GRECLIPSE-997
     public void testNestedGenerics1() {
         String contents =
