@@ -98,12 +98,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     @Override
     public TypeLookupResult lookupType(final FieldNode node, final VariableScope scope) {
-        return new TypeLookupResult(node.getType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
+        return new TypeLookupResult(node.getType(), getDeclaringTypeFromDeclaration(node, null), node, TypeConfidence.EXACT, scope);
     }
 
     @Override
     public TypeLookupResult lookupType(final MethodNode node, final VariableScope scope) {
-        return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
+        return new TypeLookupResult(node.getReturnType(), getDeclaringTypeFromDeclaration(node, null), node, TypeConfidence.EXACT, scope);
     }
 
     @Override
@@ -118,7 +118,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 type = node.getOuterClass();
             }
         }
-        return new TypeLookupResult(type, type, node, TypeConfidence.EXACT, scope);
+        return new TypeLookupResult(type, type.getPlainNodeReference(), node, TypeConfidence.EXACT, scope);
     }
 
     @Override
@@ -173,7 +173,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         MethodNode target; // use value from node metadata if it's available
         if (scope.isMethodCall() && (target = getMethodTarget(node)) != null) {
-            return new TypeLookupResult(target.getReturnType(), target.getDeclaringClass(), target, confidence, scope);
+            return new TypeLookupResult(target.getReturnType(), getDeclaringTypeFromDeclaration(target, declaringType), target, confidence, scope);
         }
 
         if (node instanceof VariableExpression) {
@@ -434,7 +434,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
                     if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(method.getDeclaringClass()))) {
-                        resolvedDeclaringType = method.getOriginal().getDeclaringClass();
+                        resolvedDeclaringType = getDeclaringTypeFromDeclaration(method.getOriginal(), resolvedDeclaringType);
                         declaration = method.getOriginal(); // the trait method
                     }
                 }
@@ -505,7 +505,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
 
                 type = getTypeFromDeclaration(decl);
-                resolvedDeclaringType = ((AnnotatedNode) decl).getDeclaringClass();
+                resolvedDeclaringType = getDeclaringTypeFromDeclaration(decl, declaringType);
                 if (decl instanceof MethodNode || !((Variable) decl).isDynamicTyped()) variableInfo = null;
             }
         } else if (accessedVar instanceof DynamicVariable) {
@@ -641,6 +641,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
             // otherwise search on object
             return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, isStaticExpression, 0, methodCallArgumentTypes);
+        }
+
+        if (declaringType.isGenericsPlaceHolder()) {
+            ClassNode[] bounds = GroovyUtils.getTypeParameterBounds(declaringType);
+            for (ClassNode tvb : bounds) {
+                ASTNode decl = findDeclaration(name, tvb, isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
+                if (decl != null) {
+                    return decl;
+                }
+            }
+            if (bounds.length > 0) return null;
         }
 
         boolean isCallExpression = (!isLhsExpression && methodCallArgumentTypes != null);
@@ -1092,13 +1103,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             declaringType = VariableScope.OBJECT_CLASS_NODE;
         }
-        // retain inferredDeclaringType's generics if possible
-        if (inferredDeclaringType.equals(declaringType) &&
-                !inferredDeclaringType.isGenericsPlaceHolder()) {
-            return inferredDeclaringType;
-        } else {
-            return declaringType.getPlainNodeReference();
-        }
+        return declaringType.getPlainNodeReference(); // Java includes type args
     }
 
     protected static Optional<FieldNode> findTraitField(final String name, final ClassNode type) {

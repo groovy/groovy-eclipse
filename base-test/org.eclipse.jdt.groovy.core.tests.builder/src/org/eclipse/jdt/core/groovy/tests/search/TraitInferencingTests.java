@@ -799,7 +799,8 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
         //@formatter:on
 
-        assertDeclType(source, "m", "A<java.lang.Number>");
+        assertDeclType(source, "m", "A");
+        assertExprType(source, "m", "java.lang.Number");
         assertExprType(source, "x", "java.lang.Number");
     }
 

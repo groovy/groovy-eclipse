@@ -170,6 +170,10 @@ public class TypeLookupResult {
             }
             if (ClassHelper.isPrimitiveType(objectType)) {
                 objectType = ClassHelper.getWrapper(objectType);
+            } else if (objectType.isGenericsPlaceHolder()) { // T extends Type & Face; select Type or Face
+                objectType = Arrays.stream(GroovyUtils.getTypeParameterBounds(objectType)).filter(bound ->
+                    bound.isDerivedFrom(declaringType) || bound.implementsInterface(declaringType)
+                ).findFirst().orElse(objectType);
             } else if (objectType.equals(VariableScope.CLASS_CLASS_NODE) &&
                    !declaringType.equals(VariableScope.CLASS_CLASS_NODE) && !isGroovy) {
                 objectType = VariableScope.getFirstGenerics(objectType); // peel Class<>
@@ -186,7 +190,7 @@ public class TypeLookupResult {
                 if (!isStatic && method.getName().equals("getClass") && method.getParameters().length == 0) {
                     ClassNode classType = VariableScope.clone(method.getReturnType());
                     classType.getGenericsTypes()[0].setUpperBounds(new ClassNode[] {objectType});
-                    return new TypeLookupResult(classType, method.getDeclaringClass(), method, confidence, scope, extraDoc);
+                    return new TypeLookupResult(classType, declaringType, method, confidence, scope, extraDoc);
                 }
                 if (!GroovyUtils.isUsingGenerics(method) || !(GenericsUtils.hasUnresolvedGenerics(method.getReturnType()) ||
                         GroovyUtils.getParameterTypes(method.getParameters()).stream().anyMatch(GenericsUtils::hasUnresolvedGenerics))) {
@@ -220,7 +224,7 @@ public class TypeLookupResult {
                                 MethodNode source = method; // effectively final version
                                 Parameter  target = params[Math.min(index, params.length - 1)];
                                 method = findClosureSignature(target, source, scope.getEnclosingModuleNode().getContext(), cat.call).map(types -> {
-                                    GenericsMapper gm = GenericsMapper.gatherGenerics(java.util.Arrays.asList(types), cat.declaringType, source);
+                                    GenericsMapper gm = GenericsMapper.gatherGenerics(Arrays.asList(types), cat.declaringType, source);
                                     MethodNode mn = VariableScope.resolveTypeParameterization(gm, source);
                                     return mn;
                                 }).orElse(method);
@@ -280,7 +284,7 @@ public class TypeLookupResult {
                 }
 
                 if (method != declaration || returnType != method.getReturnType()) {
-                    return new TypeLookupResult(returnType, method.getDeclaringClass(), method, this);
+                    return new TypeLookupResult(returnType, declaringType, method, this);
                 }
             }
         }

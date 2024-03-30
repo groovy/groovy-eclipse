@@ -1790,7 +1790,7 @@ public final class InferencingTests extends InferencingTestSuite {
             assertUnknown(contents, "reversed");
         } else {
             assertType(contents, "reversed", "java.util.Comparator<java.lang.String>");
-            assertDeclaringType(contents, "reversed", "java.util.Comparator<java.lang.String>");
+            assertDeclaringType(contents, "reversed", "java.util.Comparator");
         }
     }
 
@@ -2314,7 +2314,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testAnonInner6() {
         String contents = "def aic = new Comparable<String>() {\n int compareTo(String that) {}\n}\n" +
             "aic.compareTo('x')";
-        assertDeclaringType(contents, "compareTo", "java.lang.Comparable<java.lang.String>");
+        assertDeclaringType(contents, "compareTo", "java.lang.Comparable");
     }
 
     @Test
@@ -2322,7 +2322,7 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "def aic = new Comparable<Integer>() {\n int compareTo(Integer that) {}\n}\n" +
             "aic = new Comparable<String>() {\n int compareTo(String that) {}\n}\n" +
             "aic.compareTo('x')";
-        assertDeclaringType(contents, "compareTo", "java.lang.Comparable<java.lang.String>");
+        assertDeclaringType(contents, "compareTo", "java.lang.Comparable");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/378
@@ -2543,7 +2543,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "} as Comparator)\n";
         int offset = contents.lastIndexOf("sort");
         assertType(contents, offset, offset + 4, jdkListSort ? "java.lang.Void" : "java.util.List<java.lang.Object>");
-        assertDeclaringType(contents, offset, offset + 4, jdkListSort ? "java.util.List<java.lang.Object>" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        assertDeclaringType(contents, offset, offset + 4, jdkListSort ? "java.util.List" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/368
@@ -2561,7 +2561,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.indexOf("a.remove") + 2;
-        MethodNode m = assertDeclaration(contents, offset, offset + "remove".length(), "java.util.List<java.lang.Object>", "remove", DeclarationKind.METHOD);
+        MethodNode m = assertDeclaration(contents, offset, offset + "remove".length(), "java.util.List", "remove", DeclarationKind.METHOD);
         assertEquals("Should resolve to remove(int) due to return type of inner call", "int", printTypeName(m.getParameters()[0].getType()));
     }
 

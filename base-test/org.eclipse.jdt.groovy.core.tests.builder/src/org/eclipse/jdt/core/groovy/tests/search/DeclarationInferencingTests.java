@@ -1613,11 +1613,11 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         int offset = contents.indexOf("toArray");
         try { // Java 11 adds default method toArray(IntFunction) to the Collection interface
             java.util.Collection.class.getDeclaredMethod("toArray", java.util.function.IntFunction.class);
-            MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.Collection<java.lang.String>", "toArray", DeclarationKind.METHOD);
+            MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.Collection", "toArray", DeclarationKind.METHOD);
             assertEquals("java.util.function.IntFunction<T[]>", printTypeName(method.getParameters()[0].getType()));
             assertType(contents, "n", "java.lang.Integer");
         } catch (Exception e) {
-            MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.List<java.lang.String>", "toArray", DeclarationKind.METHOD);
+            MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.List", "toArray", DeclarationKind.METHOD);
             assertEquals("T[]", printTypeName(method.getParameters()[0].getType()));
         }
     }

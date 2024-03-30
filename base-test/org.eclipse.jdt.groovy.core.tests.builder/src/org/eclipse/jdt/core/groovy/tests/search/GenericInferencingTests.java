@@ -584,7 +584,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.util.LinkedHashMap<java.lang.String,java.lang.String>");
 
             offset = contents.indexOf(".&put") + 2;
-        assertDeclaration(contents, offset, offset + 3, "java.util.HashMap<java.lang.String,java.lang.String>", "put", DeclarationKind.METHOD);
+        assertDeclaration(contents, offset, offset + 3, "java.util.HashMap", "put", DeclarationKind.METHOD);
 
             offset = contents.indexOf("put(");
         assertType(contents, offset, offset + 3, "groovy.lang.Closure<java.lang.String>");
@@ -601,7 +601,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         //
 
             offset = contents.lastIndexOf(".&put") + 2;
-        assertDeclaration(contents, offset, offset + 3, "java.util.HashMap<java.lang.String,java.lang.String>", "put", DeclarationKind.METHOD);
+        assertDeclaration(contents, offset, offset + 3, "java.util.HashMap", "put", DeclarationKind.METHOD);
 
             offset = contents.lastIndexOf("put(");
         assertType(contents, offset, offset + 3, "groovy.lang.Closure<java.lang.String>");
@@ -1011,7 +1011,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assumeTrue(isParrotParser());
         String contents = "Optional.of(21).map(num -> num * 2).get()\n";
         assertType(contents, "get", "java.lang.Integer");
-        assertDeclaringType(contents, "get", "java.util.Optional<java.lang.Integer>");
+        assertDeclaringType(contents, "get", "java.util.Optional");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1199
@@ -1182,6 +1182,45 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, "getName", "java.lang.Thread");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1564
+    public void testTypeVariable4() {
+        String contents =
+            "class C<T extends Object & Runnable> {\n" +
+            "  void test(T thingy) {\n" +
+            "    thingy.run()\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "run", "java.lang.Void");
+        assertDeclaringType(contents, "run", "java.lang.Runnable");
+    }
+
+    @Test
+    public void testTypeVariable5() {
+        String contents =
+            "class C<T extends List<String>> {\n" +
+            "  void test(T thingy) {\n" +
+            "    thingy.get(0)\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "get", "java.lang.String");
+        assertDeclaringType(contents, "get", "java.util.List");
+    }
+
+    @Test
+    public void testTypeVariable6() {
+        String contents =
+            "class C<T extends Thread & List<String>> {\n" +
+            "  void test(T thingy) {\n" +
+            "    thingy.get(0)\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "get", "java.lang.String");
+        assertDeclaringType(contents, "get", "java.util.List");
+    }
+
     @Test // GRECLIPSE-997
     public void testNestedGenerics1() {
         String contents =
@@ -1288,7 +1327,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "use(Cat){new DirectChannelSpec().m()}\n";
 
         assertType(contents, "prop", "X");
-        assertDeclaringType(contents, "prop", "ChannelSpec<X,Y>");
+        assertDeclaringType(contents, "prop", "ChannelSpec");
 
         assertType(contents, "m", "DirectChannelSpec"); // GROOVY-10887
     }
@@ -1602,7 +1641,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String toFind = "removeAll";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
-        MethodNode m = assertDeclaration(contents, start, end, "java.util.List<java.lang.String>", toFind, DeclarationKind.METHOD);
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.List", toFind, DeclarationKind.METHOD);
         assertEquals("java.util.Collection<?>", printTypeName(m.getParameters()[0].getType()));
     }
 
@@ -1613,7 +1652,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String toFind = "addAll";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
-        MethodNode m = assertDeclaration(contents, start, end, "java.util.List<java.lang.String>", toFind, DeclarationKind.METHOD);
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.List", toFind, DeclarationKind.METHOD);
         assertEquals("Parameter type should be resolved", "java.util.Collection<java.lang.String>", printTypeName(m.getParameters()[0].getType()));
     }
 

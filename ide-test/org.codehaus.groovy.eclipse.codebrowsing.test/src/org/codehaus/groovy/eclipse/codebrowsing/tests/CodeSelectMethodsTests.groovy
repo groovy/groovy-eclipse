@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assert element.declaringType.fullyQualifiedName == 'SuperInterface'
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/145x
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1457
     void testCodeSelectMethodInParameterizedClass() {
         String contents = '''\
             |class Foo<Bar> {
@@ -196,7 +196,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()
         IJavaElement element = assertCodeSelect([contents], 'meth')
-        assert element.key == 'LFoo<TBar;>;.meth(Ljava/util/Set<TBar;>;)Ljava/util/Set<TBar;>;'
+        assert element.key == 'LFoo;.meth(Ljava/util/Set<TBar;>;)Ljava/util/Set<TBar;>;'
     }
 
     @Test

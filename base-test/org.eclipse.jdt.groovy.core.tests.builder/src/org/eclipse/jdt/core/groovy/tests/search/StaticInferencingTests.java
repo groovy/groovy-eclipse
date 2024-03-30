@@ -173,42 +173,42 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testClassReference22() {
         String contents = "String.getPackage()";
         assertType(contents, "getPackage", "java.lang.Package");
-        assertDeclaringType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+        assertDeclaringType(contents, "getPackage", "java.lang.Class");
     }
 
     @Test
     public void testClassReference23() {
         String contents = "String.package";
         assertType(contents, "package", "java.lang.Package");
-        assertDeclaringType(contents, "package", "java.lang.Class<java.lang.String>");
+        assertDeclaringType(contents, "package", "java.lang.Class");
     }
 
     @Test
     public void testClassReference24() {
         String contents = "String.class.getPackage()";
         assertType(contents, "getPackage", "java.lang.Package");
-        assertDeclaringType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+        assertDeclaringType(contents, "getPackage", "java.lang.Class");
     }
 
     @Test
     public void testClassReference25() {
         String contents = "String.class.package";
         assertType(contents, "package", "java.lang.Package");
-        assertDeclaringType(contents, "package", "java.lang.Class<java.lang.String>");
+        assertDeclaringType(contents, "package", "java.lang.Class");
     }
 
     @Test
     public void testClassReference26() {
         String contents = "def clazz = String; clazz.getPackage()";
         assertType(contents, "getPackage", "java.lang.Package");
-        assertDeclaringType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+        assertDeclaringType(contents, "getPackage", "java.lang.Class");
     }
 
     @Test
     public void testClassReference27() {
         String contents = "def clazz = String; clazz.package";
         assertType(contents, "package", "java.lang.Package");
-        assertDeclaringType(contents, "package", "java.lang.Class<java.lang.String>");
+        assertDeclaringType(contents, "package", "java.lang.Class");
     }
 
     @Test

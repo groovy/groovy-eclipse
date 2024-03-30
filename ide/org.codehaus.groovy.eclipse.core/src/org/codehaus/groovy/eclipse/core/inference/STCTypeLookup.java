@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -153,6 +153,7 @@ public class STCTypeLookup implements ITypeLookup {
             }
 
             if (inferredType instanceof ClassNode) {
+                if (declaringType != null) declaringType = declaringType.getPlainNodeReference();
                 // compound assignment (+=, ?=, etc.) may involve separate declarations for read and write
                 if (confidence.isAtLeast(TypeConfidence.INFERRED) && isCompoundAssignTarget(expr, scope)) {
                     if (declaration instanceof MethodNode) {

@@ -147,8 +147,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         return requestor;
     }
 
-    protected <N extends ASTNode> N assertDeclaration(String contents, int exprStart, int exprUntil, String expectedType, String name, DeclarationKind kind) {
-        SearchRequestor requestor = assertDeclaringType(createUnit(DEFAULT_UNIT_NAME, contents), exprStart, exprUntil, expectedType, false);
+    protected <N extends ASTNode> N assertDeclaration(String contents, int exprStart, int exprUntil, String expectedDeclType, String name, DeclarationKind kind) {
+        SearchRequestor requestor = assertDeclaringType(createUnit(DEFAULT_UNIT_NAME, contents), exprStart, exprUntil, expectedDeclType, false);
 
         switch (kind) {
         case CLASS:
