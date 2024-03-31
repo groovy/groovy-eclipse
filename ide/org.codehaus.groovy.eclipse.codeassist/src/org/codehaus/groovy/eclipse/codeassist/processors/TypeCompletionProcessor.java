@@ -15,9 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -197,6 +195,5 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
         return !FIELD_MODIFIERS.contains(nameAndLocation.name.trim());
     }
 
-    protected static final Set<String> FIELD_MODIFIERS = Collections.unmodifiableSet(
-        new HashSet<>(Arrays.asList("private", "protected", "public", "static", "final")));
+    protected static final Set<String> FIELD_MODIFIERS = Set.of("private", "protected", "public", "static", "final");
 }

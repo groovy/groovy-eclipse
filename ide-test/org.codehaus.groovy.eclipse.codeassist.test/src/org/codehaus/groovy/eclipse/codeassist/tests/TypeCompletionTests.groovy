@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ final class TypeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testCompletionTypesInScript() {
-        String contents = 'HTML'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HTML'))
-        proposalExists(proposals, 'HTML - javax.swing.text.html', 1)
+        String contents = 'List'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'List'))
+        assertProposalOrdering(orderByRelevance(proposals), 'List - java.util', 'ListenerList - groovy.beans', 'ListIterator - java.util')
     }
 
     @Test

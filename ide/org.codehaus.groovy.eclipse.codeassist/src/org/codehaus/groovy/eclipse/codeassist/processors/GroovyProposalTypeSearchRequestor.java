@@ -489,7 +489,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setDeclarationSignature(type.packageName);
         proposal.setFlags(type.modifiers);
         proposal.setPackageName(type.packageName);
-        proposal.setRelevance(computeRelevanceForTypeProposal(type.fullyQualifiedName, type.accessibility, type.modifiers));
+        proposal.setRelevance(computeRelevanceForTypeProposal(type.fullyQualifiedName, type.simpleTypeName, type.accessibility, type.modifiers));
         proposal.setReplaceRange(completionOffset, context.completionLocation);
         proposal.setSignature(Signature.createCharArrayTypeSignature(type.fullyQualifiedName, true));
         proposal.setTokenRange(completionOffset, context.completionEnd);
@@ -697,7 +697,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
         // TODO: Leverage IRelevanceRule for this?
         float relevanceMultiplier = (ctor.accessibility == IAccessRule.K_ACCESSIBLE ? 3 : 0);
-        relevanceMultiplier += computeRelevanceForCaseMatching(completionExpressionChars, ctor.simpleTypeName);
+        relevanceMultiplier += computeRelevanceForCaseMatching(CharOperation.lastSegment(completionExpressionChars, '.'), ctor.simpleTypeName);
         proposal.setRelevance(Relevance.MEDIUM_HIGH.getRelevance(relevanceMultiplier));
 
         GroovyJavaMethodCompletionProposal lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, getProposalOptions(), javaContext, null);
@@ -789,9 +789,20 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         return 0;
     }
 
-    private int computeRelevanceForTypeProposal(char[] fullyQualifiedName, int accessibility, int modifiers) {
+    private int computeRelevanceForTypeProposal(char[] fullyQualifiedName, char[] simpleTypeName, int accessibility, int modifiers) {
         IRelevanceRule rule = Optional.ofNullable(relevanceRule).orElse(IRelevanceRule.DEFAULT);
-        return rule.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers);
+        int r = rule.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers);
+
+        final char[] expression = context.completionExpression.toCharArray();
+        if (CharOperation.equals(expression, simpleTypeName, /*case*/true)) {
+            r += RelevanceConstants.R_CASE + RelevanceConstants.R_EXACT_NAME;
+        } else if (CharOperation.equals(expression, simpleTypeName, false)) {
+            r += RelevanceConstants.R_EXACT_NAME;
+        } else if (!CharOperation.prefixEquals(expression, simpleTypeName)) {
+            r -= 5;
+        }
+
+        return Math.max(1, r);
     }
 
     private void initializeRelevanceRule(JDTResolver resolver) {
