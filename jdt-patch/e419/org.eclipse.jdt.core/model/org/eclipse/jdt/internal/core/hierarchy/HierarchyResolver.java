@@ -349,7 +349,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 		ReferenceBinding interfaceBinding = (ReferenceBinding) interfaceBindings[bindingIndex++].erasure();
 		IGenericType genericType = this.bindingMap.get(interfaceBinding);
 		if (genericType != null) {
-			var handle = this.builder.getHandle(genericType, interfaceBinding);
+			IType handle = this.builder.getHandle(genericType, interfaceBinding);
 			if (handle != null) {
 				superinterfaces[index++] = handle;
 			}

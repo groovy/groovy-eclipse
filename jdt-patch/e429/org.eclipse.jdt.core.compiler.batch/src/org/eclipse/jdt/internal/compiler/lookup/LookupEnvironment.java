@@ -556,7 +556,7 @@ public void completeTypeBindings() {
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY2;
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
-		// GROOVY add
+		/* GROOVY edit
 		CompilationUnitScope unitScope = (this.unitBeingCompleted = this.units[i]).scope;
 		*/
 		CompilationUnitDeclaration cud = (this.unitBeingCompleted = this.units[i]); // GROOVY null test

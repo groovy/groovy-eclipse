@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codehaus.groovy.eclipse</groupId>
 	<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-	<version>5.3.0-SNAPSHOT</version>
+	<version>5.4.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<!-- To run this build, use the following commands (depending on what you are trying to do):
@@ -12,9 +12,9 @@
 
 	<properties>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
-		<tycho-version>2.5.0</tycho-version>
+		<tycho-version>2.7.5</tycho-version>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/tycho-extras/index.html -->
-		<tycho-extras-version>2.5.0</tycho-extras-version>
+		<tycho-extras-version>2.7.5</tycho-extras-version>
 
 		<!-- Versions of groovy compiler components to use for building. Some bundles,
 			mostly test related, have Groovy code that can't be compiled with standard
@@ -116,9 +116,6 @@
 			<properties>
 				<deploy.target>e4.31</deploy.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2403'</greclipse.build.qualifier>
-
-				<tycho-version>2.7.5</tycho-version>
-				<tycho-extras-version>2.7.5</tycho-extras-version>
 			</properties>
 		</profile>
 
@@ -146,9 +143,6 @@
 			<properties>
 				<deploy.target>e4.30</deploy.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2312'</greclipse.build.qualifier>
-
-				<tycho-version>2.7.5</tycho-version>
-				<tycho-extras-version>2.7.5</tycho-extras-version>
 			</properties>
 		</profile>
 
@@ -176,9 +170,6 @@
 			<properties>
 				<deploy.target>e4.29</deploy.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2309'</greclipse.build.qualifier>
-
-				<tycho-version>2.7.5</tycho-version>
-				<tycho-extras-version>2.7.5</tycho-extras-version>
 			</properties>
 		</profile>
 
@@ -206,9 +197,6 @@
 			<properties>
 				<deploy.target>e4.28</deploy.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2306'</greclipse.build.qualifier>
-
-				<tycho-version>2.7.5</tycho-version>
-				<tycho-extras-version>2.7.5</tycho-extras-version>
 			</properties>
 		</profile>
 
@@ -236,9 +224,6 @@
 			<properties>
 				<deploy.target>e4.27</deploy.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2303'</greclipse.build.qualifier>
-
-				<tycho-version>2.7.5</tycho-version>
-				<tycho-extras-version>2.7.5</tycho-extras-version>
 			</properties>
 		</profile>
 
@@ -265,9 +250,6 @@
 			<properties>
 				<deploy.target>e4.26</deploy.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2212'</greclipse.build.qualifier>
-
-				<tycho-version>2.7.5</tycho-version>
-				<tycho-extras-version>2.7.5</tycho-extras-version>
 			</properties>
 		</profile>
 
@@ -294,9 +276,6 @@
 			<properties>
 				<deploy.target>e4.25</deploy.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2209'</greclipse.build.qualifier>
-
-				<tycho-version>2.7.5</tycho-version>
-				<tycho-extras-version>2.7.5</tycho-extras-version>
 			</properties>
 		</profile>
 
