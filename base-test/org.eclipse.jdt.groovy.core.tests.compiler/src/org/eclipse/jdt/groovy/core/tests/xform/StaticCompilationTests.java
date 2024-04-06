@@ -1473,7 +1473,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 11)\n" +
             "\tsuper.@field = 'reset'\n" +
             "\t       ^^^^^\n" +
-            "Groovy:[Static type checking] - The field A.field is not accessible\n" +
+            "Groovy:[Static type checking] - Cannot access field: field of class: A\n" +
             "----------\n");
     }
 
@@ -3689,8 +3689,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                 "----------\n" +
                 "1. ERROR in Main.groovy (at line 6)\n" +
                 "\tprint E.ONE.name\n" +
-                "\t      ^^^^^\n" +
-                "Groovy:Access to E#name is forbidden\n" +
+                "\t      ^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - No such property: name for class: E\n" +
                 "----------\n");
         }
     }
@@ -3718,8 +3718,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                 "----------\n" +
                 "1. ERROR in Main.groovy (at line 6)\n" +
                 "\tprint E.ONE.ordinal\n" +
-                "\t      ^^^^^\n" +
-                "Groovy:Access to E#ordinal is forbidden\n" +
+                "\t      ^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - No such property: ordinal for class: E\n" +
                 "----------\n");
         }
     }
@@ -7053,7 +7053,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                 "2. ERROR in Main.groovy (at line 5)\n" +
                 "\tA.super.m()\n" +
                 "\t^^^^^^^\n" +
-                "Groovy:[Static type checking] - No such property: super for class: java.lang.Class\n" +
+                "Groovy:[Static type checking] - No such property: super for class: p.A\n" +
                 "----------\n");
         }
     }
