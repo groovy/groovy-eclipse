@@ -3682,17 +3682,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastGroovy(40)) {
-            runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: name for class: E");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Main.groovy (at line 6)\n" +
-                "\tprint E.ONE.name\n" +
-                "\t      ^^^^^^^^^^\n" +
-                "Groovy:[Static type checking] - No such property: name for class: E\n" +
-                "----------\n");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tprint E.ONE.name\n" +
+            "\t      ^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - No such property: name for class: E\n" +
+            "----------\n");
     }
 
     @Test
@@ -3711,17 +3707,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastGroovy(40)) {
-            runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: ordinal for class: E");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Main.groovy (at line 6)\n" +
-                "\tprint E.ONE.ordinal\n" +
-                "\t      ^^^^^^^^^^^^^\n" +
-                "Groovy:[Static type checking] - No such property: ordinal for class: E\n" +
-                "----------\n");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tprint E.ONE.ordinal\n" +
+            "\t      ^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - No such property: ordinal for class: E\n" +
+            "----------\n");
     }
 
     @Test
