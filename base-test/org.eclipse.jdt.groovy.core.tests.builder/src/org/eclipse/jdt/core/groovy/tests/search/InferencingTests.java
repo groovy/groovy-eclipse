@@ -1142,7 +1142,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference1a() {
+    public void testSuperFieldReference2() {
         String contents =
             "class A {\n" +
             "  public Number field\n" +
@@ -1156,7 +1156,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference1b() {
+    public void testSuperFieldReference3() {
         String contents =
             "class A {\n" +
             "  public Number field\n" +
@@ -1170,7 +1170,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference1c() {
+    public void testSuperFieldReference4() {
         String contents =
             "class A {\n" +
             "  public Number field\n" +
@@ -1184,7 +1184,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference1d() {
+    public void testSuperFieldReference5() {
         String contents =
             "class A {\n" +
             "  public Number field\n" +
@@ -1198,7 +1198,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference2() {
+    public void testSuperFieldReference6() {
         String contents =
             "class A {\n" +
             "  protected Number field\n" +
@@ -1212,7 +1212,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference2a() {
+    public void testSuperFieldReference7() {
         String contents =
             "class A {\n" +
             "  protected Number field\n" +
@@ -1226,7 +1226,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference2b() {
+    public void testSuperFieldReference8() {
         String contents =
             "class A {\n" +
             "  protected Number field\n" +
@@ -1240,7 +1240,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference2c() {
+    public void testSuperFieldReference9() {
         String contents =
             "class A {\n" +
             "  protected Number field\n" +
@@ -1254,7 +1254,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference2d() {
+    public void testSuperFieldReference10() {
         String contents =
             "class A {\n" +
             "  protected Number field\n" +
@@ -1268,7 +1268,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
-    public void testSuperFieldReference3() {
+    public void testSuperFieldReference11() {
         String contents =
             "class A {\n" +
             "  private String field\n" +
@@ -1282,7 +1282,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
-    public void testSuperFieldReference3a() {
+    public void testSuperFieldReference12() {
         String contents =
             "class A {\n" +
             "  private Number field\n" +
@@ -1296,7 +1296,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
-    public void testSuperFieldReference3b() {
+    public void testSuperFieldReference13() {
         String contents =
             "class A {\n" +
             "  private Number field\n" +
@@ -1310,7 +1310,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
-    public void testSuperFieldReference3c() {
+    public void testSuperFieldReference14() {
         String contents =
             "class A {\n" +
             "  private Number field\n" +
@@ -1324,7 +1324,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
-    public void testSuperFieldReference3d() {
+    public void testSuperFieldReference15() {
         String contents =
             "class A {\n" +
             "  private Number field\n" +
@@ -1338,7 +1338,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference4() {
+    public void testSuperFieldReference16() {
         String contents =
             "public interface Constants {\n" +
             "  int FIRST = 1;\n" +
@@ -1352,7 +1352,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference5() {
+    public void testSuperFieldReference17() {
         createJavaUnit("foo", "Bar",
             "package foo;\n" +
             "public class Bar {\n" +
@@ -1371,7 +1371,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference5a() {
+    public void testSuperFieldReference18() {
         createJavaUnit("foo", "Bar",
             "package foo;\n" +
             "public class Bar {\n" +
@@ -1390,7 +1390,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference5b() {
+    public void testSuperFieldReference19() {
         createJavaUnit("foo", "Bar",
             "package foo;\n" +
             "public class Bar {\n" +
@@ -1500,7 +1500,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-1736
-    public void testSuperPropertyReference6a() {
+    public void testSuperPropertyReference7() {
         for (String qual : new String[] {"", "this.", "super."}) {
             String contents =
                 "class A {\n" +
@@ -1522,7 +1522,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperPropertyReference6b() {
+    public void testSuperPropertyReference8() {
         for (String qual : new String[] {"", "this.", "super."}) {
             String contents =
                 "class A {\n" +
@@ -1540,7 +1540,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // isX only applies to [Bb]oolean
-    public void testSuperPropertyReference7() {
+    public void testSuperPropertyReference9() {
         for (String qual : new String[] {"", "this.", "super."}) {
             String contents =
                 "class A {\n" +
@@ -1558,7 +1558,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperPropertyReference8() {
+    public void testSuperPropertyReference10() {
         for (String qual : new String[] {"", "this.", "super."}) {
             String contents =
                 "class A {\n" +
@@ -1578,7 +1578,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-6097
-    public void testSuperPropertyReference9() {
+    public void testSuperPropertyReference11() {
         for (String qual : new String[] {"", "this.", "super."}) {
             String contents =
                 "class A {\n" +
@@ -1602,7 +1602,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperPropertyReference9a() {
+    public void testSuperPropertyReference12() {
         for (String qual : new String[] {"", "this.", "super."}) {
             String contents =
                 "class A {\n" +
@@ -1620,6 +1620,70 @@ public final class InferencingTests extends InferencingTestSuite {
             /**/offset = contents.lastIndexOf("getValue");
             assertDeclaration(contents, offset, offset + 8, "A", "getValue", DeclarationKind.METHOD);
         }
+    }
+
+    @Test
+    public void testSuperPropertyReference13() {
+        for (String mods : new String[] {"", "public ", "protected "}) {
+            createJavaUnit("A",
+                "public abstract class A {\n" +
+                "  " + mods + "int getValue() {\n" +
+                "    return 0;\n" +
+                "  }\n" +
+                "}\n");
+
+            String contents =
+                "class B extends A {\n" +
+                "  void test() {\n" +
+                "    value\n" +
+                "    getValue()\n" +
+                "  }\n" +
+                "}\n";
+            int offset = contents.lastIndexOf("value");
+            assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
+            /**/offset = contents.lastIndexOf("getValue");
+            assertDeclaration(contents, offset, offset + 8, "A", "getValue", DeclarationKind.METHOD);
+        }
+    }
+
+    @Test
+    public void testSuperPropertyReference14() {
+        for (String mods : new String[] {"", "public ", "protected "}) {
+            createJavaUnit("p", "A",
+                "public abstract class A {\n" +
+                "  " + mods + "int getValue() {\n" +
+                "    return 0;\n" +
+                "  }\n" +
+                "}\n");
+
+            String contents =
+                "class B extends p.A {\n" +
+                "  void test() {\n" +
+                "    value\n" +
+                "    getValue()\n" +
+                "  }\n" +
+                "}\n";
+            int offset = contents.lastIndexOf("value");
+            assertDeclaration(contents, offset, offset + 5, "p.A", "getValue", DeclarationKind.METHOD);
+            /**/offset = contents.lastIndexOf("getValue");
+            assertDeclaration(contents, offset, offset + 8, "p.A", "getValue", DeclarationKind.METHOD);
+        }
+    }
+
+    @Test // GROOVY-11356
+    public void testSuperPropertyReference15() {
+        String contents =
+            "class A {\n" +
+            "  private getValue() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  void test() {\n" +
+            "    value\n" +
+            "    getValue()\n" +
+            "  }\n" +
+            "}\n";
+        assertUnknown(contents, "value");
+        assertUnknown(contents, "getValue");
     }
 
     @Test

@@ -633,6 +633,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         } else if (accessedVariable instanceof FieldNode) {
             FieldNode accessedField = (FieldNode) accessedVariable;
             ClassNode temporaryType = getInferredTypeFromTempInfo(vexp, null); // GROOVY-9454
+            /* GRECLIPSE edit -- GROOVY-11356
             if (enclosingClosure != null) {
                 tryVariableExpressionAsProperty(vexp, name);
             } else if (getOutermost(accessedField.getDeclaringClass()) == getOutermost(typeCheckingContext.getEnclosingClassNode())
@@ -643,6 +644,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (temporaryType != null && !isObjectType(temporaryType)) {
                 vexp.putNodeMetaData(INFERRED_TYPE, temporaryType);
             }
+            */
+            boolean declaredInScope = (enclosingClosure == null && getOutermost(accessedField.getDeclaringClass()) == getOutermost(typeCheckingContext.getEnclosingClassNode()));
+            if (declaredInScope || tryVariableExpressionAsProperty(vexp, name)) {
+                if (temporaryType == null) {
+                    storeType(vexp, getType(vexp));
+                } else if (!isObjectType(temporaryType)) {
+                    vexp.putNodeMetaData(INFERRED_TYPE, temporaryType);
+                }
+                if (declaredInScope) {
+                    checkOrMarkPrivateAccess(vexp, accessedField, typeCheckingContext.isTargetOfEnclosingAssignment(vexp));
+                }
+            } else if (!extension.handleUnresolvedVariableExpression(vexp)) {
+                addStaticTypeError("No such property: " + name + " for class: " + prettyPrintTypeName(typeCheckingContext.getEnclosingClassNode()), vexp);
+            }
+            // GRECLIPSE end
         } else if (accessedVariable instanceof PropertyNode) {
             // we must be careful, because the property node may be of a wrong type:
             // if a class contains a getter and a setter of different types or
@@ -658,6 +674,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
+            // GRECLIPSE add -- GROOVY-11356
+            else if (!extension.handleUnresolvedVariableExpression(vexp)) {
+                addStaticTypeError("No such property: " + name + " for class: " + prettyPrintTypeName(typeCheckingContext.getEnclosingClassNode()), vexp);
+            }
+            // GRECLIPSE end
         } else if (accessedVariable != null) {
             VariableExpression localVariable;
             if (accessedVariable instanceof Parameter) {
@@ -1671,7 +1692,21 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (delegationData != null) pexp.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
             return true;
         }
-
+        // GRECLIPSE add -- GROOVY-11356
+        if (pexp.isImplicitThis() && isThisExpression(objectExpression)) {
+            Iterator<ClassNode> iter = enclosingTypes.iterator(); // first enclosing is "this" type
+            boolean staticOnly = Modifier.isStatic(iter.next().getModifiers()) || staticOnlyAccess;
+            while (iter.hasNext()) { ClassNode outer = iter.next();
+                // GROOVY-7994, GROOVY-11198: try "this.propertyName" as "Outer.propertyName" or "Outer.this.propertyName"
+                PropertyExpression pe = propX(staticOnly ? classX(outer) : propX(classX(outer), "this"), pexp.getProperty());
+                if (existsProperty(pe, readMode, visitor)) {
+                    pexp.copyNodeMetaData(pe);
+                    return true;
+                }
+                staticOnly = staticOnly || Modifier.isStatic(outer.getModifiers());
+            }
+        }
+        // GRECLIPSE end
         return foundGetterOrSetter;
     }
 
@@ -1810,7 +1845,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (!accessible) {
             if (expressionToStoreOn instanceof AttributeExpression) {
                 addStaticTypeError("Cannot access field: " + field.getName() + " of class: " + prettyPrintTypeName(field.getDeclaringClass()), expressionToStoreOn.getProperty());
-            } else if (field.isPrivate()) {
+            } else if (!field.isProtected()) { // private or package-private
                 return false;
             }
         }

@@ -466,7 +466,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return new TypeLookupResult(resolvedType, resolvedDeclaringType, declaration, confidence, scope);
     }
 
-    protected TypeLookupResult findTypeForVariable(final VariableExpression var, final VariableScope scope, final ClassNode declaringType) {
+    protected TypeLookupResult findTypeForVariable(final VariableExpression var, final VariableScope scope, ClassNode declaringType) {
         ASTNode decl = var;
         ClassNode type = var.getType();
         ClassNode resolvedDeclaringType = declaringType;
@@ -486,7 +486,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (accessedVar instanceof Parameter && ((Parameter) accessedVar).getEnd() < 1 && var.getEnd() > 0 && // explicit reference to implicit parameter
                 variableInfo != null && variableInfo.scopeNode instanceof ConstructorNode) {
             // could be field reference from pre- or post-condition block (incl. record compact constructor)
-            accessedVar = ((MethodNode) variableInfo.scopeNode).getDeclaringClass().getField(var.getName());
+            declaringType = ((ConstructorNode) variableInfo.scopeNode).getDeclaringClass();
+            accessedVar = declaringType.getField(var.getName());
         }
 
         if (accessedVar instanceof ASTNode) {
@@ -507,6 +508,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 type = getTypeFromDeclaration(decl);
                 resolvedDeclaringType = getDeclaringTypeFromDeclaration(decl, declaringType);
                 if (decl instanceof MethodNode || !((Variable) decl).isDynamicTyped()) variableInfo = null;
+
+                int mods = (decl instanceof MethodNode ? ((MethodNode) decl).getModifiers() : ((Variable) decl).getModifiers());
+                if (Flags.isPrivate(mods) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) { // GROOVY-11356, ...
+                    confidence = TypeConfidence.UNKNOWN; // reference to private member of super class yields MissingPropertyException
+                }
             }
         } else if (accessedVar instanceof DynamicVariable) {
             ASTNode candidate = findDeclarationForDynamicVariable(var, declaringType, scope, isAssignTarget, resolveStrategy);

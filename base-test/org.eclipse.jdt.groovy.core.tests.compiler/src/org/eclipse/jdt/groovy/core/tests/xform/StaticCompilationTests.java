@@ -3855,9 +3855,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "      print value\n" +
             "    }\n" +
             "  }\n" +
-            "  static main(args) {\n" +
-            "    new Inner().meth()\n" +
-            "  }\n" +
             "}\n",
         };
         //@formatter:on
@@ -4200,7 +4197,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in q\\More.groovy (at line 5)\n" +
             "\tprint VALUE\n" +
             "\t      ^^^^^\n" +
-            "Groovy:Access to q.More#VALUE is forbidden\n" +
+            "Groovy:[Static type checking] - No such property: VALUE for class: q.More\n" +
             "----------\n");
     }
 
@@ -4225,17 +4222,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastGroovy(40)) {
-            runConformTest(sources);
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in q\\More.groovy (at line 5)\n" +
-                "\tprint VALUE\n" +
-                "\t      ^^^^^\n" +
-                "Groovy:Access to q.More#VALUE is forbidden\n" +
-                "----------\n");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:[Static type checking] - No such property: VALUE for class: q.More\n" +
+            "----------\n");
     }
 
     @Test
@@ -4267,8 +4260,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in q\\Test.groovy (at line 5)\n" +
             "\tp.More.VALUE\n" +
-            "\t^^^^^^\n" +
-            "Groovy:Access to p.More#VALUE is forbidden\n" +
+            "\t^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - No such property: VALUE for class: p.More\n" +
             "----------\n");
     }
 
@@ -4352,7 +4345,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in q\\More.groovy (at line 5)\n" +
             "\tprint VALUE\n" +
             "\t      ^^^^^\n" +
-            "Groovy:Access to q.More#VALUE is forbidden\n" +
+            "Groovy:[Static type checking] - No such property: VALUE for class: q.More\n" +
             "----------\n");
     }
 
@@ -4377,17 +4370,73 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastGroovy(40)) {
-            runConformTest(sources);
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in q\\More.groovy (at line 5)\n" +
-                "\tprint VALUE\n" +
-                "\t      ^^^^^\n" +
-                "Groovy:Access to q.More#VALUE is forbidden\n" +
-                "----------\n");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:[Static type checking] - No such property: VALUE for class: q.More\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPrivate3() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  private static String getVALUE() { 'value' }\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:[Static type checking] - No such property: VALUE for class: q.More\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPrivate4() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  private static void setVALUE(String value) { print value }\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  void meth() {\n" +
+            "    VALUE = 'value'\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tVALUE = 'value'\n" +
+            "\t^^^^^\n" +
+            "Groovy:[Static type checking] - No such property: VALUE for class: q.More\n" +
+            "----------\n");
     }
 
     @Test
@@ -5202,12 +5251,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                     };
                     //@formatter:on
 
-                    String stderr = "", stdout = "value";
-                    if ("b".equals(p) && mod.endsWith("PackageScope") && Runtime.version().feature() > 8) {
-                        stderr = "groovy.lang.MissingPropertyException: No such property: f for class: " + (!q.isEmpty() ? "b.B" : "java.lang.String");
-                        stdout = "";
+                    if ("b".equals(p) && mod.endsWith("PackageScope")) {
+                        runNegativeTest(sources,
+                            "----------\n" +
+                            "1. ERROR in b\\B.groovy (at line 7)\n" +
+                            "\treturn " + q + "f\n" +
+                            "\t       " + ("^".repeat(q.length())) + "^\n" +
+                            "Groovy:[Static type checking] - No such property: f for class: b.B\n" +
+                            "----------\n");
+                    } else {
+                        runConformTest(sources, "value");
                     }
-                    runConformTest(sources, stdout, stderr);
                 }
             }
         }
@@ -5245,12 +5299,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                     };
                     //@formatter:on
 
-                    String stderr = "", stdout = "value";
-                    if ("b".equals(p) && mod.endsWith("PackageScope") && Runtime.version().feature() > 8) {
-                        stderr = "groovy.lang.MissingPropertyException: No such property: f for class: b.B";
-                        stdout = "";
+                    if ("b".equals(p) && mod.endsWith("PackageScope")) {
+                        runNegativeTest(sources,
+                            "----------\n" +
+                            "1. ERROR in b\\B.groovy (at line 7)\n" +
+                            "\treturn " + q + "f\n" +
+                            "\t       " + ("^".repeat(q.length())) + "^\n" +
+                            "Groovy:[Static type checking] - No such property: f for class: b.B\n" +
+                            "----------\n");
+                    } else {
+                        runConformTest(sources, "value");
                     }
-                    runConformTest(sources, stdout, stderr);
                 }
             }
         }
