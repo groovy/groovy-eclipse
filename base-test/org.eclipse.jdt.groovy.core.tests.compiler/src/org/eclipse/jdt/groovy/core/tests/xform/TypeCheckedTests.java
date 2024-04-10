@@ -7703,4 +7703,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testTypeChecked11358() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class A {\n" +
+            "  private int f\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(A a) {\n" +
+            "  int i = a.@f\n" +
+            "  int j = a.f\n" +
+            "}\n" +
+            "test(new A() {})\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tint i = a.@f\n" +
+            "\t           ^\n" +
+            "Groovy:[Static type checking] - Cannot access field: f of class: A\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 7)\n" +
+            "\tint j = a.f\n" +
+            "\t        ^^^\n" +
+            "Groovy:[Static type checking] - No such property: f for class: A\n" +
+            "----------\n");
+    }
 }

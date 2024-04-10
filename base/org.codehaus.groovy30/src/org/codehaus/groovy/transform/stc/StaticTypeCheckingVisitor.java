@@ -1920,7 +1920,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private boolean storeField(final FieldNode field, final PropertyExpression expressionToStoreOn, final ClassNode receiver, final ClassCodeVisitorSupport visitor, final String delegationData, final boolean lhsOfAssignment) {
         if (visitor != null) visitor.visitField(field);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
-        /* GRECLIPSE edit -- GROOVY-11319
+        /* GRECLIPSE edit -- GROOVY-11319, GROOVY-11358
         boolean accessible = hasAccessToMember(isSuperExpression(expressionToStoreOn.getObjectExpression()) ? typeCheckingContext.getEnclosingClassNode() : receiver, field.getDeclaringClass(), field.getModifiers());
 
         if (expressionToStoreOn instanceof AttributeExpression) { // TODO: expand to include PropertyExpression
@@ -1930,7 +1930,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         */
         boolean superField = isSuperExpression(expressionToStoreOn.getObjectExpression());
-        boolean accessible = ( !superField && receiver.equals(field.getDeclaringClass()) ) // GROOVY-7300
+        boolean accessible = (!superField && receiver.equals(field.getDeclaringClass()) && !field.getDeclaringClass().isAbstract())
                 || hasAccessToMember(typeCheckingContext.getEnclosingClassNode(), field.getDeclaringClass(), field.getModifiers());
         if (!accessible) {
             if (expressionToStoreOn instanceof AttributeExpression) {
