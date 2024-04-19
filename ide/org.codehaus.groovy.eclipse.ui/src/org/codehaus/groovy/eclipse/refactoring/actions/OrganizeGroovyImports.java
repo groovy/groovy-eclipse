@@ -704,9 +704,10 @@ public class OrganizeGroovyImports {
                     name = name.replaceAll(Pattern.quote(name.substring(i)) + "(?= |$)", "");
                 }
                 doNotRemoveImport(name.replace('$', '.'));
-            } else if (length < 1 || current.getModule().getClasses().contains(node)) {
+            } else if (length < 1 || current.getModule().getClasses().contains(node) &&
+                    (node.getOuterClass() == null || node.getOuterClasses().contains(current))) {
                 // keep in importsSlatedForRemoval and leave out of missingTypes
-            } else if (!node.isResolved()) {
+            } else if (!node.isResolved() && !node.isPrimaryClassNode()) {
                 String[] parts = name.split("\\.");
                 if (Character.isUpperCase(name.charAt(0))) {
                     name = parts[0]; // 'Map.Entry' -> 'Map'

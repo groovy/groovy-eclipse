@@ -424,6 +424,33 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1566
+    void testRemoveImport7() {
+        String originalContents = '''\
+            |import B.C
+            |
+            |class A {
+            |  B.C c
+            |}
+            |class B {
+            |  C c
+            |  static class C {
+            |  }
+            |}
+            |'''
+        String expectedContents = '''\
+            |class A {
+            |  B.C c
+            |}
+            |class B {
+            |  C c
+            |  static class C {
+            |  }
+            |}
+            |'''
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
     @Test
     void testRepeatImport() {
         String originalContents = '''\
@@ -615,6 +642,23 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             |import p.T
             |sealed class C permits T {}
+            |'''
+        doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1566
+    void testRetainImport17() {
+        String contents = '''\
+            |import B.C
+            |
+            |class A {
+            |  C c
+            |}
+            |class B {
+            |  C c
+            |  static class C {
+            |  }
+            |}
             |'''
         doContentsCompareTest(contents)
     }

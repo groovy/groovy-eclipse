@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -463,6 +463,31 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "\tthrow new NonStaticInner()\n" +
             "\t          ^^^^^^^^^^^^^^\n" +
             "Groovy:No enclosing instance passed in constructor call of a non-static inner class\n" +
+            "----------\n");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1566
+    public void testInnerClass12() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Other {\n" +
+            "  Inner inner\n" + // requires import or qualifier
+            "}\n" +
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "  }\n" +
+            "  Inner inner\n" + // resolved
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 2)\n" +
+            "\tInner inner\n" +
+            "\t^^^^^\n" +
+            "Groovy:unable to resolve class Inner\n" +
             "----------\n");
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -193,7 +194,12 @@ public class JDTResolver extends ResolveVisitor {
             nodeCache  = new IdentityHashMap<>();
         }
         try {
-            unresolvables.computeIfAbsent(classNode.getModule().getMainClassName(), x -> new HashSet<>());
+            Set<String> names = unresolvables.computeIfAbsent(classNode.getModule().getMainClassName(), x -> new HashSet<>());
+            for (Iterator<? extends ClassNode> nodes = classNode.getInnerClasses(); nodes.hasNext();) {
+                String name = nodes.next().getNameWithoutPackage();
+                name = name.substring(name.lastIndexOf('$') + 1);
+                names.remove(name);
+            }
             super.startResolving(classNode, sourceUnit);
         } catch (AbortResolutionException ignore) {
             // probably syntax error(s)
