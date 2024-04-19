@@ -207,7 +207,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 if (scope.getEnclosingNode() instanceof AttributeExpression) {
                     ClassNode clazz = !isStaticObjectExpression ? declaringType : declaringType.getGenericsTypes()[0].getType();
                     FieldNode field = null;
-                    if (!isSuperObjectExpression(scope)) {
+                    if (!isSuperObjectExpression(scope) && (!clazz.isAbstract() || clazz.equals(scope.getEnclosingTypeDeclaration()))) {
                         field = clazz.getDeclaredField(node.getText());
                         // no access checks; even private is allowed
                         clazz = clazz.getSuperClass();
@@ -392,7 +392,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     FieldNode field = (FieldNode) declaration;
                     if (isStaticObjectExpression && !field.isStatic()) {
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (field.isPrivate() && (isSuperObjectExpression(scope) || isNotThisOrOuterClass(declaring, resolvedDeclaringType))) {
+                    } else if (field.isPrivate() && (isSuperObjectExpression(scope) || isNotThisOrOuterClass(declaring, resolvedDeclaringType) || (resolvedDeclaringType.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), resolvedDeclaringType)))) {
                         // "super.field" or "other.field" reference to private field yields MissingPropertyException
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (!field.isPublic() && !field.isPrivate() && !field.isProtected() && !declaring.equals(resolvedDeclaringType) &&
@@ -410,6 +410,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 } else if (declaration instanceof MethodNode) {
                     MethodNode method = (MethodNode) declaration;
+                    if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(method.getDeclaringClass()))) {
+                        resolvedDeclaringType = getDeclaringTypeFromDeclaration(method.getOriginal(), resolvedDeclaringType);
+                        declaration = method.getOriginal(); // the trait method
+                    }
                     if (isStaticObjectExpression && !method.isStatic() && !isStaticReferenceToInstanceMethod(scope)) {
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (method.isPrivate()) {
@@ -419,7 +423,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                                                 GroovyUtils.getGroovyVersion().getMajor() > 3) // GROOVY-9851
                                 confidence = TypeConfidence.UNKNOWN;
                         // "other.method()" reference to private method yields MissingMethodException
-                        } else if (isNotThisOrOuterClass(declaring, resolvedDeclaringType)) {
+                        } else if (isNotThisOrOuterClass(declaring, resolvedDeclaringType) || (resolvedDeclaringType.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), resolvedDeclaringType))) {
                             confidence = TypeConfidence.UNKNOWN;
                         }
                     } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 4) {
@@ -432,10 +436,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                             !(AccessorSupport.isGetter(method) && !scope.isMethodCall() && scope.getEnclosingNode() instanceof PropertyExpression)) {
                         // if arguments and parameters are mismatched, a category method may make a better match
                         confidence = TypeConfidence.LOOSELY_INFERRED;
-                    }
-                    if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(method.getDeclaringClass()))) {
-                        resolvedDeclaringType = getDeclaringTypeFromDeclaration(method.getOriginal(), resolvedDeclaringType);
-                        declaration = method.getOriginal(); // the trait method
                     }
                 }
                 // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write
@@ -524,7 +524,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     ClassNode owner = field.getDeclaringClass();
                     if (field.getName().contains("__") && implementsTrait(owner)) {
                         candidate = findTraitField(field.getName(), owner).orElse(field);
-                    } else if (field.isPrivate() && isNotThisOrOuterClass(implicitThisType, owner)) {
+                    } else if (field.isPrivate() && (isNotThisOrOuterClass(implicitThisType, owner) ||
+                                                        (owner.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), owner)))) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private field of super class yields MissingPropertyException
                     } else if (!field.isPublic() && !field.isPrivate() && !field.isProtected() &&
                             !owner.equals(implicitThisType) && !Objects.equals(owner.getPackageName(), scope.getEnclosingTypeDeclaration().getPackageName())) {
@@ -537,8 +538,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (argumentTypes != null && isLooseMatch(argumentTypes, method.getParameters())) {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if (method.isPrivate() && isNotThisOrOuterClass(implicitThisType,method.getOriginal().getDeclaringClass())) {
-                        confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
+                    ClassNode owner = method.getOriginal().getDeclaringClass();
+                    if (method.isPrivate() && (isNotThisOrOuterClass(implicitThisType, owner) ||
+                            (owner.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), owner)))) {
+                        confidence = TypeConfidence.UNKNOWN; // reference to private method of other class yields MissingMethodException
                     }
                     if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(method.getDeclaringClass()))) {
                         candidate = method.getOriginal(); // the trait method

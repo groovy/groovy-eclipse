@@ -1128,6 +1128,70 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testOtherFieldReference1() {
+        for (String mods : List.of("public", "protected", "@groovy.transform.PackageScope")) {
+            String contents =
+                "abstract class A {\n" +
+                "  " + mods + " Number field\n" +
+                "}\n" +
+                "void test(A a) {\n" +
+                "  a.@field\n" +
+                "}\n";
+            assertType(contents, "field", "java.lang.Number");
+        }
+    }
+
+    @Test
+    public void testOtherFieldReference2() {
+        for (String mods : List.of("public", "protected", "@groovy.transform.PackageScope")) {
+            String contents =
+                "abstract class A {\n" +
+                "  " + mods + " Number field\n" +
+                "}\n" +
+                "void test(A a) {\n" +
+                "  a.field\n" +
+                "}\n";
+            assertType(contents, "field", "java.lang.Number");
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1567
+    public void testOtherFieldReference3() {
+        String contents =
+            "abstract class A {\n" +
+            "  private Number field\n" +
+            "}\n" +
+            "void test(A a) {\n" +
+            "  a.@field\n" +
+            "}\n";
+        assertUnknown(contents, "field");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1567
+    public void testOtherFieldReference4() {
+        String contents =
+            "abstract class A {\n" +
+            "  private Number field\n" +
+            "}\n" +
+            "void test(A a) {\n" +
+            "  a.field\n" +
+            "}\n";
+        assertUnknown(contents, "field");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1567
+    public void testOtherFieldReference5() {
+        String contents =
+            "abstract class A {\n" +
+            "  private Number field\n" +
+            "}\n" +
+            "void test(A a) {\n" +
+            "  a.with {field}\n" +
+            "}\n";
+        assertUnknown(contents, "field");
+    }
+
+    @Test
     public void testSuperFieldReference1() {
         String contents =
             "class A {\n" +
@@ -1482,7 +1546,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // GROOVY-6097
     public void testSuperPropertyReference6() {
-        for (String qual : new String[] {"", "this.", "super."}) {
+        for (String qual : List.of("", "this.", "super.")) {
             String contents =
                 "class A {\n" +
                 "  boolean isValue() {}\n" +
@@ -1501,7 +1565,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // GROOVY-1736
     public void testSuperPropertyReference7() {
-        for (String qual : new String[] {"", "this.", "super."}) {
+        for (String qual : List.of("", "this.", "super.")) {
             String contents =
                 "class A {\n" +
                 "  boolean isValue() {}\n" +
@@ -1523,7 +1587,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testSuperPropertyReference8() {
-        for (String qual : new String[] {"", "this.", "super."}) {
+        for (String qual : List.of("", "this.", "super.")) {
             String contents =
                 "class A {\n" +
                 "  boolean value\n" +
@@ -1541,7 +1605,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // isX only applies to [Bb]oolean
     public void testSuperPropertyReference9() {
-        for (String qual : new String[] {"", "this.", "super."}) {
+        for (String qual : List.of("", "this.", "super.")) {
             String contents =
                 "class A {\n" +
                 "  Number isValue() {}\n" +
@@ -1559,7 +1623,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testSuperPropertyReference10() {
-        for (String qual : new String[] {"", "this.", "super."}) {
+        for (String qual : List.of("", "this.", "super.")) {
             String contents =
                 "class A {\n" +
                 "  boolean value\n" +
@@ -1579,7 +1643,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // GROOVY-6097
     public void testSuperPropertyReference11() {
-        for (String qual : new String[] {"", "this.", "super."}) {
+        for (String qual : List.of("", "this.", "super.")) {
             String contents =
                 "class A {\n" +
                 "  boolean value\n" +
@@ -1603,7 +1667,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testSuperPropertyReference12() {
-        for (String qual : new String[] {"", "this.", "super."}) {
+        for (String qual : List.of("", "this.", "super.")) {
             String contents =
                 "class A {\n" +
                 "  Boolean value\n" +
@@ -1624,7 +1688,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testSuperPropertyReference13() {
-        for (String mods : new String[] {"", "public ", "protected "}) {
+        for (String mods : List.of("", "public ", "protected ")) {
             createJavaUnit("A",
                 "public abstract class A {\n" +
                 "  " + mods + "int getValue() {\n" +
@@ -1648,7 +1712,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testSuperPropertyReference14() {
-        for (String mods : new String[] {"", "public ", "protected "}) {
+        for (String mods : List.of("", "public ", "protected ")) {
             createJavaUnit("p", "A",
                 "public abstract class A {\n" +
                 "  " + mods + "int getValue() {\n" +
@@ -1678,6 +1742,36 @@ public final class InferencingTests extends InferencingTestSuite {
             "}\n" +
             "class B extends A {\n" +
             "  void test() {\n" +
+            "    value\n" +
+            "    getValue()\n" +
+            "  }\n" +
+            "}\n";
+        assertUnknown(contents, "value");
+        assertUnknown(contents, "getValue");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1567
+    public void testOtherPropertyReference1() {
+        String contents =
+            "abstract class A {\n" +
+            "  private getValue() {}\n" +
+            "}\n" +
+            "void test(A a) {\n" +
+            "  a.value\n" +
+            "  a.getValue()\n" +
+            "}\n";
+        assertUnknown(contents, "value");
+        assertUnknown(contents, "getValue");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1567
+    public void testOtherPropertyReference2() {
+        String contents =
+            "abstract class A {\n" +
+            "  private getValue() {}\n" +
+            "}\n" +
+            "void test(A a) {\n" +
+            "  a.with {\n" +
             "    value\n" +
             "    getValue()\n" +
             "  }\n" +
@@ -1860,7 +1954,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // super-interface static method requires qualifier
     public void testSuperInterfaceMethod3() {
-        for (String qual : new String[]{"", "this.", "super.", "Comparator.", "Comparator.<String>"}) {
+        for (String qual : List.of("", "this.", "super.", "Comparator.", "Comparator.<String>")) {
             String contents =
                 "class C implements Comparator<String> {\n" +
                 "  static m() {\n" +
@@ -2352,7 +2446,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1523
     public void testAnonInner3() {
-        for (String mode : new String[] {"TypeChecked", "CompileStatic", "CompileDynamic"}) {
+        for (String mode : List.of("TypeChecked", "CompileStatic", "CompileDynamic")) {
             String contents = "@groovy.transform." + mode + " m() {\n" +
                 "  def aic = new Number() {}\n" +
                 "  def cia = new Cloneable() {}\n" +
