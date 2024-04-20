@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -179,7 +179,7 @@ public abstract class BuilderTestSuite {
         TestVerifier verifier = new TestVerifier(false);
         verifier.execute(className, classpath.toArray(new String[classpath.size()]));
 
-        String actualError = StringGroovyMethods.normalize((CharSequence) verifier.getExecutionError());
+        String actualError = StringGroovyMethods.normalize(verifier.getExecutionError());
         if (expectedError == null && actualError.length() != 0) {
             Assert.fail("unexpected error : " + actualError);
         }
@@ -195,7 +195,7 @@ public abstract class BuilderTestSuite {
             System.out.println("OUTPUT\n");
             System.out.println(org.eclipse.jdt.core.tests.util.Util.displayString(actualOutput));
         }
-        actualOutput = StringGroovyMethods.normalize((CharSequence) actualOutput);
+        actualOutput = StringGroovyMethods.normalize(actualOutput);
         Assert.assertTrue("unexpected output.\nExpected:\n" + expectingOutput + "\nActual:\n" + actualOutput, actualOutput.indexOf(expectingOutput) != -1);
     }
 

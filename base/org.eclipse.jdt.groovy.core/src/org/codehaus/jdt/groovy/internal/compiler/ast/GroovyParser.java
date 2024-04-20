@@ -321,7 +321,6 @@ public class GroovyParser {
             hasErrors = true;
         }
 
-        @Override
         public void tagAsHavingIgnoredMandatoryErrors(final int problemId) {
             // no-op
         }

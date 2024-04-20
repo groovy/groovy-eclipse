@@ -91,6 +91,9 @@
       storageURI="scope://Workspace"
       label="Target Platform">
     <choice
+        value="2024-06"
+        label="Eclipse 4.32 (2024-06)"/>
+    <choice
         value="2024-03"
         label="Eclipse 4.31 (2024-03)"/>
     <choice
@@ -105,9 +108,6 @@
     <choice
         value="2023-03"
         label="Eclipse 4.27 (2023-03)"/>
-    <choice
-        value="2022-12"
-        label="Eclipse 4.26 (2022-12)"/>
     <description>Choose the compatibility level of the target platform</description>
   </setupTask>
   <setupTask
@@ -144,7 +144,15 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2024-03) (scope.product.version.name=latest) (scope.product.version.name=latest.released))">
+      filter="(| (scope.product.version.name=2024-06) (scope.product.version.name=latest))">
+    <requirement
+        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
+    <repository
+        url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.32"/>
+  </setupTask>
+  <setupTask
+      xsi:type="setup.p2:P2Task"
+      filter="(| (scope.product.version.name=2024-03) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -181,14 +189,6 @@
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
         url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.27"/>
-  </setupTask>
-  <setupTask
-      xsi:type="setup.p2:P2Task"
-      filter="(scope.product.version.name=2022-12)">
-    <requirement
-        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
-    <repository
-        url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.26"/>
   </setupTask>
   <setupTask
       xsi:type="git:GitCloneTask"
@@ -245,9 +245,9 @@
   </setupTask>
   <setupTask
       xsi:type="projects:ProjectsImportTask"
-      filter="(eclipse.target.platform=2023-12)">
+      filter="(eclipse.target.platform=2024-06)">
     <sourceLocator
-        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e430"
+        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e432"
         locateNestedProjects="true"/>
   </setupTask>
   <setupTask
@@ -255,6 +255,13 @@
       filter="(eclipse.target.platform=2024-03)">
     <sourceLocator
         rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e431"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
+      xsi:type="projects:ProjectsImportTask"
+      filter="(eclipse.target.platform=2023-12)">
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e430"
         locateNestedProjects="true"/>
   </setupTask>
   <setupTask
@@ -279,13 +286,6 @@
         locateNestedProjects="true"/>
   </setupTask>
   <setupTask
-      xsi:type="projects:ProjectsImportTask"
-      filter="(eclipse.target.platform=2022-12)">
-    <sourceLocator
-        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e426"
-        locateNestedProjects="true"/>
-  </setupTask>
-  <setupTask
       xsi:type="setup.targlets:TargletTask">
     <targlet
         name="Eclipse ${eclipse.target.platform}"
@@ -304,6 +304,13 @@
           name="org.eclipse.buildship.feature.group"/>
       <requirement
           name="org.eclipse.test.feature.group"/>
+      <repositoryList
+          name="2024-06">
+        <repository
+            url="https://download.eclipse.org/releases/2024-05"/>
+        <repository
+            url="https://download.eclipse.org/eclipse/updates/4.32"/>
+      </repositoryList>
       <repositoryList
           name="2024-03">
         <repository
@@ -338,13 +345,6 @@
             url="https://download.eclipse.org/releases/2023-03"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.27"/>
-      </repositoryList>
-      <repositoryList
-          name="2022-12">
-        <repository
-            url="https://download.eclipse.org/releases/2022-12"/>
-        <repository
-            url="https://download.eclipse.org/eclipse/updates/4.26"/>
       </repositoryList>
     </targlet>
   </setupTask>
