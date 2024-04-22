@@ -225,8 +225,14 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         // visit lazy field initializer inline with field
         for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), LazyASTTransformation.class)) {
             if (node.getAnnotations().contains(anno)) {
-                MethodNode init = node.getDeclaringClass().getDeclaredMethod(
-                    "get" + org.apache.groovy.util.BeanUtils.capitalize(node.getName().substring(1)), Parameter.EMPTY_ARRAY);
+                String name = node.getName().substring(1);
+                if (!node.isStatic()) {
+                    name = "get" + org.apache.groovy.util.BeanUtils.capitalize(name);
+                } else {
+                    name = node.getDeclaringClass().getName().replace('.', '_') + "$" +
+                        node.getType().getNameWithoutPackage() + "Holder_" + name + "_initExpr";
+                }
+                MethodNode init = node.getDeclaringClass().getDeclaredMethod(name, Parameter.EMPTY_ARRAY);
                 if (init != null && init.getEnd() < 1) {
                     visitMethod(init);
                 }

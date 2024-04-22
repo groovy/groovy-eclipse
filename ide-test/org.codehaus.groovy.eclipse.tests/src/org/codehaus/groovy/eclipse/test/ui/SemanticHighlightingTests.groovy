@@ -4128,6 +4128,28 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testLazyInitExpr3() {
+        String contents = '''\
+            |package p
+            |class X {
+            |  @Lazy static Map values = new HashMap().tap {
+            |    it.put('foo','bar')
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('values'), 6, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('tap'), 3, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('it'),  2, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('put'), 3, METHOD_CALL))
+    }
+
+    @Test
     void testFieldInitExpr() {
         addGroovySource '''\
             |abstract class A {

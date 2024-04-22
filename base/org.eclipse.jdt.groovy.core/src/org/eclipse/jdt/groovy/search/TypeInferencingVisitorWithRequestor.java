@@ -2316,7 +2316,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     private MethodNode findLazyMethod(final String fieldName) {
         ClassNode classNode = (ClassNode) enclosingDeclarationNode;
-        return classNode.getDeclaredMethod("get" + org.apache.groovy.util.BeanUtils.capitalize(fieldName), NO_PARAMETERS);
+        FieldNode fieldNode = classNode.getDeclaredField("$" + fieldName);
+        String methodName;
+        if (!fieldNode.isStatic()) {
+            methodName = "get" + org.apache.groovy.util.BeanUtils.capitalize(fieldName);
+        } else {
+            methodName = classNode.getName().replace('.', '_') + "$" + fieldNode.getType().getNameWithoutPackage() + "Holder_" + fieldName + "_initExpr";
+        }
+        return classNode.getDeclaredMethod(methodName, NO_PARAMETERS);
     }
 
     private Expression findLeafNode(final Expression expression) {
