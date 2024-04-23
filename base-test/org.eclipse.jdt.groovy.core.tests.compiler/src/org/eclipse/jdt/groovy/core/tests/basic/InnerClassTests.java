@@ -2318,6 +2318,31 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "ok");
     }
 
+    @Test // GROOVY-11352
+    public void testAccessOuterClassMemberFromInnerClassConstructor4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Super {\n" +
+            "  protected final String s\n" +
+            "  Super(String s) { this.s = s }\n" +
+            "}\n" +
+            "class Outer {\n" +
+            "  static String initValue() { 'ok' }\n" +
+            "  static class Inner extends Super {\n" +
+            "    Inner() {\n" +
+            "      super(initValue())\n" + // here
+            "    }\n" +
+            "  }\n" +
+            "  String test() { new Inner().s }\n" +
+            "}\n" +
+            "print new Outer().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "ok");
+    }
+
     @Test // GROOVY-9501
     public void testAccessOuterClassMemberFromInnerClassMethod1() {
         //@formatter:off
