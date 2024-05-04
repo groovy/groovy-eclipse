@@ -156,10 +156,20 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGM10() {
         //@formatter:off
         String contents =
-            "Integer.metaClass { this }"; // static MetaClass metaClass(Class self, Closure closure)
+            "Integer.metaClass { this }"; // MetaClass metaClass(Class, Closure)
         //@formatter:on
         assertExprType(contents, "this", DEFAULT_UNIT_NAME);
         // TODO: When 'closure' has @ClosureParams and/or @DelegatesTo, check param(s) and delegate
+    }
+
+    @Test
+    public void testDGM10a() {
+        //@formatter:off
+        String contents =
+            "def obj = new Object(); obj.metaClass = null"; // void setMetaClass(Object, MetaClass)
+        //@formatter:on
+        assertExprType(contents, "metaClass", "java.lang.Void");
+        assertDeclType(contents, "metaClass", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test
