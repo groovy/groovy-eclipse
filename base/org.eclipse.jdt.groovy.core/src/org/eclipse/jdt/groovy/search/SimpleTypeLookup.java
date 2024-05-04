@@ -710,12 +710,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // look for field
         FieldNode field = declaringType.getField(name);
-        if (isCompatible(field, isStaticExpression) &&
-                !(Flags.isSynthetic(field.getModifiers()) && field.getType().equals(ClassHelper.REFERENCE_TYPE)) &&
-                // no indirect, non-private accessor (map get or put if no non-final public/protected field exists)
-                (!(nonPrivateAccessor || (dynamicProperty && !(isLhsExpression && !field.isFinal() && (field.isPublic()||field.isProtected())))) ||
-                    directFieldAccess >= 1 && declaringType.equals(field.getDeclaringClass()) && (directFieldAccess == 1 || !field.isPrivate()))) {
-            return field;
+        if (isCompatible(field, isStaticExpression) && !(Flags.isSynthetic(field.getModifiers()) && field.getType().equals(ClassHelper.REFERENCE_TYPE))) {
+            boolean direct = directFieldAccess >= 1 && declaringType.equals(field.getDeclaringClass()) && (directFieldAccess == 1 || !field.isPrivate());
+            boolean expose = isLhsExpression // GROOVY-11367: get and set incongruent
+                    ? (!field.isFinal() && (field.isPublic() || field.isProtected())) // GROOVY-8065
+                    : (field.isPublic() && GroovyUtils.getGroovyVersion().getMajor() >= 5); // GROOVY-5001
+            if (direct || !(nonPrivateAccessor || (dynamicProperty && !expose))) {
+                return field;
+            }
         }
 
         if (dynamicProperty && !(nonPrivateAccessor && (isLhsExpression || GroovyUtils.getGroovyVersion().getMajor() >= 5))) { // GROOVY-5001, GROOVY-5491

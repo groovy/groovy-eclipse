@@ -889,6 +889,16 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "value", "java.lang.Number");
     }
 
+    @Test // GROOVY-5001
+    public void testNotMapProperty2() {
+        String contents =
+            "class Pogo extends HashMap<String,String> {\n" +
+            "  public Number name\n" +
+            "}\n" +
+            "new Pogo().name\n";
+        assertType(contents, "name", isAtLeastGroovy(50) ? "java.lang.Number" : "java.lang.String");
+    }
+
     @Test
     public void testBoolean1() {
         assertType("!x", "java.lang.Boolean");
