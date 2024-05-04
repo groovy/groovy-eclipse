@@ -864,7 +864,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testMapProperty() {
         createJavaUnit("Pojo",
             "interface Pojo {\n" +
-            "  java.util.Map<String, ? extends java.lang.Number> getMap();\n" +
+            "  java.util.Map<String, ? extends Number> getMap();\n" +
             "}\n");
 
         String contents =
@@ -874,6 +874,22 @@ public final class InferencingTests extends InferencingTestSuite {
             "}\n";
         assertType(contents, "map", "java.util.Map<java.lang.String,? extends java.lang.Number>");
         assertType(contents, "result", "java.lang.Number");
+    }
+
+    @Test // GROOVY-11357
+    public void testMapProperty2() {
+        createJavaUnit("p", "Pojo",
+            "package p;" +
+            "abstract public class Pojo {\n" +
+            "  String getName() {return null;}\n" +
+            "}\n");
+
+        String contents =
+            "class Pogo extends p.Pojo implements Map<String, Number> {\n" +
+            "  @Delegate Map<String, Number> map" +
+            "}\n" +
+            "new Pogo().name\n";
+        assertType(contents, "name", isAtLeastGroovy(50) ? "java.lang.Number" : "java.lang.String");
     }
 
     @Test
@@ -1711,7 +1727,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testSuperPropertyReference13() {
-        for (String mods : List.of("", "public ", "protected ")) {
+        for (String mods : List.of("", "private ", "public ", "protected ")) {
             createJavaUnit("A",
                 "public abstract class A {\n" +
                 "  " + mods + "int getValue() {\n" +
@@ -1726,10 +1742,15 @@ public final class InferencingTests extends InferencingTestSuite {
                 "    getValue()\n" +
                 "  }\n" +
                 "}\n";
-            int offset = contents.lastIndexOf("value");
-            assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
-            /**/offset = contents.lastIndexOf("getValue");
-            assertDeclaration(contents, offset, offset + 8, "A", "getValue", DeclarationKind.METHOD);
+            if (mods.startsWith("private")) { // GROOVY-11356
+                assertUnknown(contents, "value");
+                assertUnknown(contents, "getValue");
+            } else {
+                int offset = contents.lastIndexOf("value");
+                assertDeclaration(contents, offset, offset + 5, "A", "getValue", DeclarationKind.METHOD);
+                /**/offset = contents.lastIndexOf("getValue");
+                assertDeclaration(contents, offset, offset + 8, "A", "getValue", DeclarationKind.METHOD);
+            }
         }
     }
 
@@ -1750,27 +1771,16 @@ public final class InferencingTests extends InferencingTestSuite {
                 "    getValue()\n" +
                 "  }\n" +
                 "}\n";
-            int offset = contents.lastIndexOf("value");
-            assertDeclaration(contents, offset, offset + 5, "p.A", "getValue", DeclarationKind.METHOD);
-            /**/offset = contents.lastIndexOf("getValue");
-            assertDeclaration(contents, offset, offset + 8, "p.A", "getValue", DeclarationKind.METHOD);
+            if (mods.isEmpty() && isAtLeastGroovy(50)) { // GROOVY-11357
+                assertUnknown(contents, "value");
+                assertUnknown(contents, "getValue");
+            } else {
+                int offset = contents.lastIndexOf("value");
+                assertDeclaration(contents, offset, offset + 5, "p.A", "getValue", DeclarationKind.METHOD);
+                /**/offset = contents.lastIndexOf("getValue");
+                assertDeclaration(contents, offset, offset + 8, "p.A", "getValue", DeclarationKind.METHOD);
+            }
         }
-    }
-
-    @Test // GROOVY-11356
-    public void testSuperPropertyReference15() {
-        String contents =
-            "class A {\n" +
-            "  private getValue() {}\n" +
-            "}\n" +
-            "class B extends A {\n" +
-            "  void test() {\n" +
-            "    value\n" +
-            "    getValue()\n" +
-            "  }\n" +
-            "}\n";
-        assertUnknown(contents, "value");
-        assertUnknown(contents, "getValue");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1567
@@ -1801,6 +1811,77 @@ public final class InferencingTests extends InferencingTestSuite {
             "}\n";
         assertUnknown(contents, "value");
         assertUnknown(contents, "getValue");
+    }
+
+    @Test
+    public void testOtherPropertyReference3() {
+        createJavaUnit("p", "A",
+            "public abstract class A {\n" +
+            "  int getValue() {\n" +
+            "    return 0;\n" +
+            "  }\n" +
+            "}\n");
+
+        createJavaUnit("p", "C",
+            "public class C extends A {\n" +
+            "}\n");
+
+        // A and C are in same package
+        // Groovy 1.5+ propagates package-private methods
+
+        String contents =
+            "def pojo = new p.C()\n" +
+            "pojo.value\n" +
+            "pojo.getValue()\n";
+
+        int offset = contents.lastIndexOf("value");
+        assertDeclaration(contents, offset, offset + 5, "p.A", "getValue", DeclarationKind.METHOD);
+        /**/offset = contents.lastIndexOf("getValue");
+        assertDeclaration(contents, offset, offset + 8, "p.A", "getValue", DeclarationKind.METHOD);
+    }
+
+    @Test // GROOVY-11357
+    public void testOtherPropertyReference4() {
+        createJavaUnit("p", "A",
+            "public abstract class A {\n" +
+            "  int field\n" +
+            "  int getValue() {\n" +
+            "    return 0;\n" +
+            "  }\n" +
+            "}\n");
+
+        createJavaUnit("q", "C",
+            "public class C extends p.A {\n" +
+            "}\n");
+
+        // A and C are not in same package
+        // Groovy doesn't propagate package-private fields
+        // Groovy 5+ doesn't propagate package-private methods
+
+        String contents =
+            "def pojo = new q.C()\n" +
+            "pojo.field\n" +
+            "pojo.@field\n" +
+            "pojo.with{field}\n" +
+            "pojo.value\n" +
+            "pojo.getValue()\n";
+
+        int offset = contents.indexOf("field");
+        assertUnknownConfidence(contents, offset, offset + 5);
+        /**/offset = contents.indexOf("@field") + 1;
+        assertUnknownConfidence(contents, offset, offset + 5);
+        /**/offset = contents.lastIndexOf("field");
+        assertUnknownConfidence(contents, offset, offset + 5);
+
+        if (isAtLeastGroovy(50)) {
+            assertUnknown(contents, "value");
+            assertUnknown(contents, "getValue");
+        } else {
+            /**/offset = contents.lastIndexOf("value");
+            assertDeclaration(contents, offset, offset + 5, "p.A", "getValue", DeclarationKind.METHOD);
+            /**/offset = contents.lastIndexOf("getValue");
+            assertDeclaration(contents, offset, offset + 8, "p.A", "getValue", DeclarationKind.METHOD);
+        }
     }
 
     @Test

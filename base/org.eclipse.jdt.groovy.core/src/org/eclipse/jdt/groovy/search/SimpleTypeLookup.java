@@ -426,6 +426,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         } else if (isNotThisOrOuterClass(declaring, resolvedDeclaringType) || (resolvedDeclaringType.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), resolvedDeclaringType))) {
                             confidence = TypeConfidence.UNKNOWN;
                         }
+                    } else if (Flags.isPackageDefault(method.getModifiers()) && !declaring.equals(resolvedDeclaringType) &&
+                            !Objects.equals(declaringType.getPackageName(), resolvedDeclaringType.getPackageName()) && GroovyUtils.getGroovyVersion().getMajor() > 4) {
+                        // GROOVY-11357: indirect reference to package-private method yields MissingMethodException
+                        confidence = TypeConfidence.UNKNOWN;
                     } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 4) {
                         // GROOVY-1736, GROOVY-6097: "super.name" => "super.getName()" in AsmClassGenerator
                         String newName = "get" + org.apache.groovy.util.BeanUtils.capitalize(name);
@@ -512,6 +516,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 int mods = (decl instanceof MethodNode ? ((MethodNode) decl).getModifiers() : ((Variable) decl).getModifiers());
                 if (Flags.isPrivate(mods) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) { // GROOVY-11356, ...
                     confidence = TypeConfidence.UNKNOWN; // reference to private member of super class yields MissingPropertyException
+                } else if (Flags.isPackageDefault(mods) && !declaringType.equals(resolvedDeclaringType) &&
+                        !Objects.equals(declaringType.getPackageName(), resolvedDeclaringType.getPackageName()) &&
+                        GroovyUtils.getGroovyVersion().getMajor() > 4) { // GROOVY-11357: package-private was indexed for same package
+                    confidence = TypeConfidence.UNKNOWN; // extern reference to package-private member yields MissingPropertyException
                 }
             }
         } else if (accessedVar instanceof DynamicVariable) {
@@ -542,6 +550,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (method.isPrivate() && (isNotThisOrOuterClass(implicitThisType, owner) ||
                             (owner.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), owner)))) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of other class yields MissingMethodException
+                    } else if (Flags.isPackageDefault(method.getModifiers()) && !implicitThisType.equals(owner) &&
+                            !Objects.equals(implicitThisType.getPackageName(), owner.getPackageName()) &&
+                            GroovyUtils.getGroovyVersion().getMajor() > 4) { // GROOVY-11357: package-private was indexed for local subs
+                        confidence = TypeConfidence.UNKNOWN; // extern reference to package-private method yields MissingMethodException
                     }
                     if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(method.getDeclaringClass()))) {
                         candidate = method.getOriginal(); // the trait method
@@ -685,7 +697,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // look for canonical accessor method
         Optional<MethodNode> accessor = findPropertyAccessorMethod(name, declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes).filter(it -> !isSynthetic(it));
-        boolean nonPrivateAccessor = accessor.filter(it -> !it.isPrivate() || declaringType.equals(it.getDeclaringClass())).isPresent();
+        boolean nonPrivateAccessor = accessor.filter(it -> (!it.isPrivate() && (!it.isPackageScope() || Objects.equals(declaringType.getPackageName(), it.getDeclaringClass().getPackageName()) || GroovyUtils.getGroovyVersion().getMajor() < 5)) || // GROOVY-11357
+                                                            declaringType.equals(it.getDeclaringClass()) // direct access
+                                                    ).isPresent();
         if (nonPrivateAccessor && directFieldAccess == 0) {
             return accessor.get();
         }
