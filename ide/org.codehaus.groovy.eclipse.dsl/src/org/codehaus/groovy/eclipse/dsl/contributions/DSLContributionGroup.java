@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.dsl.contributions;
 import static java.beans.Introspector.decapitalize;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asType;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -249,7 +250,7 @@ public class DSLContributionGroup extends ContributionGroup {
                                                 staticMethod, provider, null, useNamedArgs, noParens, myDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
                         // add the associated property if applicable
                         name = isAccessor(method, name, asCategory);
-                        if (name != null) {
+                        if (name != null && !(name.equals("empty") && isOrImplements(type, VariableScope.MAP_CLASS_NODE))) { // GROOVY-5001, et al.
                             int modifiers = 0;
                             if (staticMethod) modifiers |= Flags.AccStatic;
                             if (type.getMethods(getSetterName(name)).isEmpty()) modifiers |= Flags.AccFinal;

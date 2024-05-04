@@ -149,8 +149,24 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         }
     }
 
-    @Test // GROOVY-5204
+    @Test
     void testDelegate6() {
+        String contents = '''\
+            |class Foo {
+            |  @Delegate Map<String,Object> map
+            |}
+            |new Foo().empty // *not* isEmpty() as property
+            |'''.stripMargin()
+
+        inferType(contents, 'empty').with {
+            assert result.extraDoc == null
+            assert declaringTypeName == 'Foo'
+            assert typeName == 'java.lang.Object'
+        }
+    }
+
+    @Test // GROOVY-5204
+    void testDelegate7() {
         String contents = '''\
             |class Bar {
             |  def baz() {}
@@ -169,7 +185,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test // GROOVY-5204
-    void testDelegate7() {
+    void testDelegate8() {
         String contents = '''\
             |class Bar {
             |  def baz() {}
@@ -189,7 +205,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test // GROOVY-3917
-    void testDelegate8() {
+    void testDelegate9() {
         String contents = '''\
             |class Bar {
             |}
@@ -206,7 +222,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test // GROOVY-8164
-    void testDelegate9() {
+    void testDelegate10() {
         String contents = '''\
             |class Bar {
             |  def baz
@@ -223,7 +239,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
-    void testDelegate10() {
+    void testDelegate11() {
         String contents = '''\
             |class Bar {
             |  def baz
@@ -240,7 +256,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
-    void testDelegate11() {
+    void testDelegate12() {
         String contents = '''\
             |class Bar {
             |  def baz
@@ -259,7 +275,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
-    void testDelegate12() {
+    void testDelegate13() {
         addGroovySource '''\
             |class Bar {
             |  @Deprecated
@@ -288,7 +304,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
-    void testDelegate13() {
+    void testDelegate14() {
         addGroovySource '''\
             |interface Bar {
             |  @Deprecated
