@@ -889,7 +889,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  @Delegate Map<String, Number> map" +
             "}\n" +
             "new Pogo().name\n";
-        assertType(contents, "name", isAtLeastGroovy(50) ? "java.lang.Number" : "java.lang.String");
+        assertType(contents, "name", "java.lang.Number");
     }
 
     @Test
