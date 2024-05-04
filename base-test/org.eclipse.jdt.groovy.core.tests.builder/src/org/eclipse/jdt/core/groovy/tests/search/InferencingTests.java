@@ -1817,6 +1817,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testOtherPropertyReference3() {
         createJavaUnit("p", "A",
             "public abstract class A {\n" +
+            "  int field\n" +
             "  int getValue() {\n" +
             "    return 0;\n" +
             "  }\n" +
@@ -1827,14 +1828,24 @@ public final class InferencingTests extends InferencingTestSuite {
             "}\n");
 
         // A and C are in same package
+        // Groovy 2.4+ propagates package-private fields
         // Groovy 1.5+ propagates package-private methods
 
         String contents =
             "def pojo = new p.C()\n" +
+            "pojo.field\n" +
+            "pojo.@field\n" +
+            "pojo.with{field}\n" +
             "pojo.value\n" +
             "pojo.getValue()\n";
 
-        int offset = contents.lastIndexOf("value");
+        int offset = contents.indexOf("field");
+        assertDeclaration(contents, offset, offset + 5, "p.A", "field", DeclarationKind.FIELD);
+        /**/offset = contents.indexOf("@field") + 1;
+        assertDeclaration(contents, offset, offset + 5, "p.A", "field", DeclarationKind.FIELD);
+        /**/offset = contents.lastIndexOf("field");
+        assertDeclaration(contents, offset, offset + 5, "p.A", "field", DeclarationKind.FIELD);
+        /**/offset = contents.lastIndexOf("value");
         assertDeclaration(contents, offset, offset + 5, "p.A", "getValue", DeclarationKind.METHOD);
         /**/offset = contents.lastIndexOf("getValue");
         assertDeclaration(contents, offset, offset + 8, "p.A", "getValue", DeclarationKind.METHOD);

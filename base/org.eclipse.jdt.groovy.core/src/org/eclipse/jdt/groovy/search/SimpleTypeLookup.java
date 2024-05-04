@@ -215,7 +215,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     while (field == null && clazz != null) {
                         field = clazz.getDeclaredField(node.getText());
                         if (field != null && (field.isPrivate() || (!field.isPublic() && !field.isProtected() &&
-                                !Objects.equals(clazz.getPackageName(), scope.getEnclosingTypeDeclaration().getPackageName())))) {
+                                    !Objects.equals(clazz.getPackageName(), declaringType.getPackageName())))) {
                             field = null; // field is inaccessible; continue searching for accessible field
                         }
                         clazz = clazz.getSuperClass();
@@ -395,8 +395,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     } else if (field.isPrivate() && (isSuperObjectExpression(scope) || isNotThisOrOuterClass(declaring, resolvedDeclaringType) || (resolvedDeclaringType.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), resolvedDeclaringType)))) {
                         // "super.field" or "other.field" reference to private field yields MissingPropertyException
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (!field.isPublic() && !field.isPrivate() && !field.isProtected() && !declaring.equals(resolvedDeclaringType) &&
-                            !Objects.equals(resolvedDeclaringType.getPackageName(), scope.getEnclosingTypeDeclaration().getPackageName())) {
+                    } else if (Flags.isPackageDefault(field.getModifiers()) && !declaring.equals(resolvedDeclaringType) &&
+                                    !Objects.equals(declaring.getPackageName(), resolvedDeclaringType.getPackageName())) {
                         // indirect other-package reference to package-private field yields MissingPropertyException
                         confidence = TypeConfidence.UNKNOWN;
                     }
@@ -533,10 +533,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (field.getName().contains("__") && implementsTrait(owner)) {
                         candidate = findTraitField(field.getName(), owner).orElse(field);
                     } else if (field.isPrivate() && (isNotThisOrOuterClass(implicitThisType, owner) ||
-                                                        (owner.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), owner)))) {
+                            (owner.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), owner)))) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private field of super class yields MissingPropertyException
-                    } else if (!field.isPublic() && !field.isPrivate() && !field.isProtected() &&
-                            !owner.equals(implicitThisType) && !Objects.equals(owner.getPackageName(), scope.getEnclosingTypeDeclaration().getPackageName())) {
+                    } else if (Flags.isPackageDefault(field.getModifiers()) && !owner.equals(implicitThisType) &&
+                                    !Objects.equals(owner.getPackageName(), implicitThisType.getPackageName())) {
                         confidence = TypeConfidence.UNKNOWN; // extern reference to package-private field yields MissingPropertyException
                     }
                 } else if (candidate instanceof MethodNode) {
