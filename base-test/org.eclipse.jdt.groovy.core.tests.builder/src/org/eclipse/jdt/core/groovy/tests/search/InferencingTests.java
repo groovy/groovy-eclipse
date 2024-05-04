@@ -877,6 +877,19 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testNotMapProperty() {
+        String contents =
+            "class Pogo extends HashMap<String,String> {\n" +
+            "  private Number name\n" +
+            "  void test() {\n" +
+            "    def value = this.name\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "name", "java.lang.Number");
+        assertType(contents, "value", "java.lang.Number");
+    }
+
+    @Test
     public void testBoolean1() {
         assertType("!x", "java.lang.Boolean");
     }

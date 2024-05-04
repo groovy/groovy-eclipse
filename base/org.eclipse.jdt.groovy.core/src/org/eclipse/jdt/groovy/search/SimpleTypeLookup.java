@@ -679,7 +679,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         boolean dynamicProperty = (!isCallExpression && !isStaticExpression && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE));
 
-        if (dynamicProperty && !isLhsExpression && (GroovyUtils.getGroovyVersion().getMajor() < 5 || name.matches("empty|class|metaClass"))) { // GROOVY-5001, GROOVY-5491, GROOVY-6144
+        if (dynamicProperty && !isLhsExpression && (directFieldAccess != 1 || declaringType.getDeclaredField(name) == null) && (GroovyUtils.getGroovyVersion().getMajor() < 5 || name.matches("empty|class|metaClass"))) { // GROOVY-5001, GROOVY-5491, GROOVY-6144
             return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 
