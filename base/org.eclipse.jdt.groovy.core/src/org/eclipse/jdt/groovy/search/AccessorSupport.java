@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package org.eclipse.jdt.groovy.search;
-
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
-import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -106,7 +103,7 @@ public enum AccessorSupport {
                 methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, declaringType, isCategory, kind));
 
                 // abstract types do not track undeclared abstract methods; concrete types do not track interface default methods
-                if (declaringType.isAbstract() || asBoolean(declaringType.getInterfaces()) || implementsTrait(declaringType)) {
+                if (declaringType.isAbstract() || declaringType.getInterfaces().length > 0 || declaringType.isDerivedFromGroovyObject()) {
                     Set<ClassNode> faces = new LinkedHashSet<>();
                     VariableScope.findAllInterfaces(declaringType, faces, false);
                     faces.remove(declaringType); // checked already

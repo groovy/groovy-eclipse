@@ -173,6 +173,27 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testDGM10b() {
+        //@formatter:off
+        String contents =
+            "class M implements Map {\n" +
+            "  @Delegate Map m= [:]  \n" +
+            "}\n" +
+            "new M().metaClass = null\n" ; // void setMetaClass(Object, MetaClass)
+        //@formatter:on
+        assertExprType(contents, "metaClass", "java.lang.Void");
+        assertDeclType(contents, "metaClass", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+
+        //@formatter:off
+        contents +=
+            "class MM extends M { }\n" +
+            "new MM().metaClass = null"; // void setMetaClass(Object, MetaClass)
+        //@formatter:on
+        assertExprType(contents, "metaClass", "java.lang.Void");
+        assertDeclType(contents, "metaClass", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test
     public void testDGM11() {
         //@formatter:off
         String contents =
