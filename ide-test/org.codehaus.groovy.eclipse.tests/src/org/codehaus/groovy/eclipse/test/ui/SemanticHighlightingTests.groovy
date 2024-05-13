@@ -913,46 +913,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testMethodsAsProperties7() {
-        String contents = '''\
-            |void test(foo) {
-            |  foo.metaClass ;
-            |  foo.metaClass = null
-            |}
-            |'''.stripMargin()
-
-        assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('foo)'), 3, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('foo.'), 3, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('foo.'), 3, PARAMETER),
-            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, GROOVY_CALL))
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1579
-    void testMethodsAsProperties8() {
-        addGroovySource 'class Foo {}'
-
-        String contents = '''\
-            |@groovy.transform.TypeChecked
-            |void test(Foo foo) {
-            |  foo.metaClass ;
-            |  foo.metaClass = null
-            |}
-            |'''.stripMargin()
-
-        assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('Foo '), 3, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('foo)'), 3, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('foo.'), 3, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, METHOD_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('foo.'), 3, PARAMETER),
-            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, METHOD_CALL))
-    }
-
-    @Test
     void testDefaultGroovyMethods1() {
         String contents = '["one", "two"].grep().first()'
 
@@ -997,6 +957,46 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testMetaClassProperty1() {
+        String contents = '''\
+            |void test(foo) {
+            |  foo.metaClass ;
+            |  foo.metaClass = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo)'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, GROOVY_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1579
+    void testMetaClassProperty2() {
+        addGroovySource 'class Foo {}'
+
+        String contents = '''\
+            |@groovy.transform.TypeChecked
+            |void test(Foo foo) {
+            |  foo.metaClass ;
+            |  foo.metaClass = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Foo '), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('foo)'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, METHOD_CALL))
+    }
+
+    @Test
+    void testMetaClassProperty3() {
         String contents = 'String.metaClass.constructor << { p1, p2 -> "foo" }'
 
         assertHighlighting(contents,
@@ -1008,7 +1008,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testMetaClassProperty2() {
+    void testMetaClassProperty4() {
         String contents = 'String.metaClass.static.hello = { -> "world" }'
 
         assertHighlighting(contents,
@@ -1095,6 +1095,59 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('x'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('y'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1580
+    void testDynamicSelector() {
+        String contents = '''\
+            |void test(foo, bar, baz) {
+            |  foo."$bar"(baz)
+            |  foo. (bar)(baz)
+            |  foo.@(bar)(baz)
+            |
+            |  foo.(bar) = baz
+            |  foo.@(bar) = 42
+            |  baz = foo.(bar)
+            |
+            |  def ptr = foo.&(bar)
+            |}
+            |'''.stripMargin()
+
+        int a = contents.indexOf('foo."$bar"(baz)')
+        int b = contents.indexOf('foo. (bar)(baz)')
+        int c = contents.indexOf('foo.@(bar)(baz)')
+
+        int d = contents.indexOf('foo.(bar) = baz')
+        int e = contents.indexOf('foo.@(bar) = 42')
+        int f = contents.indexOf('baz = foo.(bar)')
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, PARAMETER),
+            new HighlightedTypedPosition(a,      3, PARAMETER),
+            new HighlightedTypedPosition(a +  4, 6, GSTRING),
+            new HighlightedTypedPosition(a +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(a + 11, 3, PARAMETER),
+            new HighlightedTypedPosition(b,      3, PARAMETER),
+            new HighlightedTypedPosition(b +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(b + 11, 3, PARAMETER),
+            new HighlightedTypedPosition(c,      3, PARAMETER),
+            new HighlightedTypedPosition(c +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(c + 11, 3, PARAMETER),
+            new HighlightedTypedPosition(d,      3, PARAMETER),
+            new HighlightedTypedPosition(d +  5, 3, PARAMETER),
+            new HighlightedTypedPosition(d + 12, 3, PARAMETER),
+            new HighlightedTypedPosition(e,      3, PARAMETER),
+            new HighlightedTypedPosition(e +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(e + 13, 2, NUMBER),
+            new HighlightedTypedPosition(f,      3, PARAMETER),
+            new HighlightedTypedPosition(f +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(f + 11, 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('ptr'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, PARAMETER))
     }
 
     @Test

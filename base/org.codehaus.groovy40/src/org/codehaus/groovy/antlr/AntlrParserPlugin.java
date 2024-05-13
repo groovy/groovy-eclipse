@@ -2267,12 +2267,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // method doesn't know we want a ConstantExpression instead of a
             // VariableExpression
             VariableExpression ve = (VariableExpression) expression;
+            /* GRECLIPSE edit
             if (!ve.isThisExpression() && !ve.isSuperExpression()) {
                 expression = new ConstantExpression(ve.getName());
-                // GRECLIPSE add
-                configureAST(expression, node);
-                // GRECLIPSE end
             }
+            */
+            expression = new ConstantExpression(ve.getName());
+            expression.setSourcePosition(ve);
+            // GRECLIPSE end
         }
         /* GRECLIPSE edit -- each case of expressionSwitch does this already
         configureAST(expression, node);
@@ -2284,7 +2286,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         switch (node.getType()) {
           case EXPR:
             Expression expression = expression(node.getFirstChild());
-            // GRECLIPSE add -- enclosing parentheses
+            // GRECLIPSE add -- command expression or enclosing parentheses
             int offset = locations.findOffset(node.getLine(), node.getColumn());
             if (offset < expression.getStart()) {
                 if (expression instanceof ArrayExpression ||
@@ -3023,7 +3025,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             if (identifierNode != null) {
                 Expression leftExpression = expression(leftNode);
                 if (isType(SELECT_SLOT, identifierNode)) {
+                    /* GRECLIPSE edit
                     Expression field = expression(identifierNode.getFirstChild(), true);
+                    */
+                    Expression field = expression(identifierNode.getFirstChild(), !isType(DYNAMIC_MEMBER, identifierNode.getFirstChild()));
+                    // GRECLIPSE end
                     AttributeExpression attributeExpression = new AttributeExpression(leftExpression, field, node.getType() != DOT);
                     if (node.getType() == SPREAD_DOT) {
                         attributeExpression.setSpreadSafe(true);
@@ -3042,6 +3048,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     configureAST(propertyExpression, node);
                     return chomp(propertyExpression);
                 }
+                /* GRECLIPSE edit
                 Expression property = expression(identifierNode, true);
 
 
@@ -3052,7 +3059,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     property = new ConstantExpression(ve.getName());
                     property.setSourcePosition(ve);
                 }
-
+                */
+                Expression property = expression(identifierNode, !isType(DYNAMIC_MEMBER, identifierNode));
+                // GRECLIPSE end
                 PropertyExpression propertyExpression = new PropertyExpression(leftExpression, property, node.getType() != DOT);
                 if (node.getType() == SPREAD_DOT) {
                     propertyExpression.setSpreadSafe(true);
@@ -3126,7 +3135,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         } else if (isPrimitiveTypeLiteral(selector)) {
             throw new ASTRuntimeException(selector, "Primitive type literal: " + selector.getText() + " cannot be used as a method name");
         } else if (isType(SELECT_SLOT, selector)) {
+            /* GRECLIPSE edit
             Expression field = expression(selector.getFirstChild(), true);
+            */
+            Expression field = expression(selector.getFirstChild(), !isType(DYNAMIC_MEMBER, selector.getFirstChild()));
+            // GRECLIPSE end
             AttributeExpression attributeExpression = new AttributeExpression(objectExpression, field, node.getType() != DOT);
             configureAST(attributeExpression, node);
             Expression arguments = arguments(elist);
@@ -3136,7 +3149,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             return expression;
         } else if (!implicitThis || isType(DYNAMIC_MEMBER, selector) || isType(IDENT, selector) ||
                 isType(STRING_CONSTRUCTOR, selector) || isType(STRING_LITERAL, selector)) {
+            /* GRECLIPSE edit
             name = expression(selector, true);
+            */
+            name = expression(selector, !isType(DYNAMIC_MEMBER, selector));
+            // GRECLIPSE end
         } else {
             implicitThis = false;
             name = new ConstantExpression("call");

@@ -3300,7 +3300,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else if (asBoolean(ctx.stringLiteral())) {
             return configureAST(this.visitStringLiteral(ctx.stringLiteral()), ctx);
         } else if (asBoolean(ctx.dynamicMemberName())) {
+            /* GRECLIPSE edit
             return configureAST(this.visitDynamicMemberName(ctx.dynamicMemberName()), ctx);
+            */
+            return this.visitDynamicMemberName(ctx.dynamicMemberName());
+            // GRECLIPSE end
         } else if (asBoolean(ctx.keywords())) {
             return configureAST(new ConstantExpression(ctx.keywords().getText()), ctx);
         }
@@ -3311,7 +3315,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public Expression visitDynamicMemberName(final DynamicMemberNameContext ctx) {
         if (asBoolean(ctx.parExpression())) {
+            /* GRECLIPSE edit
             return configureAST(this.visitParExpression(ctx.parExpression()), ctx);
+            */
+            return this.visitParExpression(ctx.parExpression());
+            // GRECLIPSE end
         } else if (asBoolean(ctx.gstring())) {
             return configureAST(this.visitGstring(ctx.gstring()), ctx);
         }
