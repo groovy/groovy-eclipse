@@ -28,6 +28,8 @@ import org.codehaus.groovy.ast.MethodNode;
 import java.util.Collections;
 import java.util.List;
 
+import static org.codehaus.groovy.tools.Utilities.isJavaIdentifier;
+
 /**
  * A method call on an object or class.
  */
@@ -43,7 +45,6 @@ public class MethodCallExpression extends Expression implements MethodCall {
 
     // type spec for generics
     private GenericsType[] genericsTypes;
-    private boolean usesGenerics;
 
     private MethodNode target;
 
@@ -138,12 +139,49 @@ public class MethodCallExpression extends Expression implements MethodCall {
 
     @Override
     public String getText() {
+        /* GRECLIPSE edit -- GROOVY-11374
         String object = objectExpression.getText();
         String meth = method.getText();
         String args = arguments.getText();
         String spread = spreadSafe ? "*" : "";
         String dereference = safe ? "?" : "";
         return object + spread + dereference + "." + meth + args;
+        */
+        StringBuilder builder = new StringBuilder( 64 );
+        builder.append(getObjectExpression().getText());
+        if (isSpreadSafe()) builder.append('*');
+        if (isSafe()) builder.append('?');
+        builder.append('.');
+
+        if (isUsingGenerics()) {
+            builder.append('<');
+            boolean first = true;
+            for (GenericsType t : getGenericsTypes()) {
+                if (!first) builder.append(", ");
+                else first = false;
+                builder.append(t);
+            }
+            builder.append('>');
+        }
+
+        Expression method = getMethod();
+        if (method instanceof GStringExpression) {
+            builder.append('"').append(method.getText()).append('"');
+        } else if (!(method instanceof ConstantExpression)) {
+            builder.append('(').append(method.getText()).append(')');
+        } else {
+            Object value = ((ConstantExpression) method).getValue();
+            if (!(value instanceof String) || !isJavaIdentifier((String) value)) {
+                builder.append("'").append(value).append("'");
+            } else {
+                builder.append((String) value);
+            }
+        }
+
+        builder.append(getArguments().getText());
+
+        return builder.toString();
+        // GRECLIPSE end
     }
 
     /**
@@ -184,12 +222,11 @@ public class MethodCallExpression extends Expression implements MethodCall {
     }
 
     public void setGenericsTypes(GenericsType[] genericsTypes) {
-        usesGenerics = usesGenerics || genericsTypes != null;
         this.genericsTypes = genericsTypes;
     }
 
     public boolean isUsingGenerics() {
-        return usesGenerics;
+        return (genericsTypes != null && genericsTypes.length > 0);
     }
 
     /**
