@@ -643,7 +643,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 8)\n" +
             "\tit.age >= 18\n" +
-            "\t^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "\t^^^^^^\n" +
             "Groovy:[Static type checking] - No such property: age for class: java.lang.Object\n" +
             "----------\n");
     }
@@ -833,12 +833,12 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 9)\n" +
             "\tc.f = 'x'\n" +
-            "\t^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "\t^^^\n" +
             "Groovy:[Static type checking] - Cannot set read-only property: f\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 10)\n" +
             "\tc.@f = 'x'\n" +
-            "\t^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "\t^^^^\n" +
             "Groovy:[Static type checking] - Cannot set read-only property: f\n" +
             "----------\n" +
             "3. ERROR in Main.groovy (at line 11)\n" +
@@ -5960,7 +5960,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tmap*.key = null\n" +
-            "\t^^^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "\t^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot set read-only property: key\n" +
             "----------\n");
     }

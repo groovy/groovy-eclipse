@@ -2993,6 +2993,28 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return booleanExpression;
     }
 
+    // GRECLIPSE add
+    private PropertyExpression chomp(PropertyExpression propertyExpression) {
+        if (propertyExpression.getEnd() > propertyExpression.getProperty().getEnd() && getController() != null) {
+            char[] sourceChars = getController().readSourceRange(propertyExpression.getStart(), propertyExpression.getLength());
+            if (sourceChars != null) {
+                int idx = (sourceChars.length - 1);
+                int off = propertyExpression.getEnd();
+                while (idx >= 0 && Character.isWhitespace(sourceChars[idx])) {
+                    idx -= 1; off -= 1;
+                }
+                if (off < propertyExpression.getEnd()) {
+                    int[] row_col = locations.getRowCol(off);
+                    propertyExpression.setEnd(off);
+                    propertyExpression.setLastLineNumber(row_col[0]);
+                    propertyExpression.setLastColumnNumber(row_col[1]);
+                }
+            }
+        }
+        return propertyExpression;
+    }
+    // GRECLIPSE end
+
     protected Expression dotExpression(AST node) {
         // let's decide if this is a property invocation or a method call
         AST leftNode = node.getFirstChild();
@@ -3007,7 +3029,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                         attributeExpression.setSpreadSafe(true);
                     }
                     configureAST(attributeExpression, node);
-                    return attributeExpression;
+                    return chomp(attributeExpression);
                 }
                 if (isType(SLIST, identifierNode)) {
                     Statement code = statementList(identifierNode);
@@ -3018,7 +3040,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                         propertyExpression.setSpreadSafe(true);
                     }
                     configureAST(propertyExpression, node);
-                    return propertyExpression;
+                    return chomp(propertyExpression);
                 }
                 Expression property = expression(identifierNode, true);
 
@@ -3036,7 +3058,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     propertyExpression.setSpreadSafe(true);
                 }
                 configureAST(propertyExpression, node);
-                return propertyExpression;
+                return chomp(propertyExpression);
             }
         }
         return methodCallExpression(node);
