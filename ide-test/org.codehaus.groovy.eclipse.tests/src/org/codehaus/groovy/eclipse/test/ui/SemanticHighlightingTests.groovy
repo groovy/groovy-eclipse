@@ -913,6 +913,46 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testMethodsAsProperties7() {
+        String contents = '''\
+            |void test(foo) {
+            |  foo.metaClass ;
+            |  foo.metaClass = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo)'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, GROOVY_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1579
+    void testMethodsAsProperties8() {
+        addGroovySource 'class Foo {}'
+
+        String contents = '''\
+            |@groovy.transform.TypeChecked
+            |void test(Foo foo) {
+            |  foo.metaClass ;
+            |  foo.metaClass = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Foo '), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('foo)'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, METHOD_CALL))
+    }
+
+    @Test
     void testDefaultGroovyMethods1() {
         String contents = '["one", "two"].grep().first()'
 

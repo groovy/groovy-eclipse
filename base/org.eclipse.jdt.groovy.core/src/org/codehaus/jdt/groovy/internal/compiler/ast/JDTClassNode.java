@@ -398,6 +398,17 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
             methodNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
             methodNode.setSynthetic((modifiers & 0x400000) != 0); // see GroovyClassScope
+            if (methodNode.isSynthetic()) { // linkage for non-property synthetic methods
+                switch (methodNode.getName()) {
+                case "getMetaClass":
+                case "setMetaClass":
+                case "getProperty" :
+                case "setProperty" :
+                case "invokeMethod":
+                    methodNode.setOriginal(ClassHelper.GROOVY_OBJECT_TYPE.getMethod(methodNode.getName(), parameters));
+                    break;
+                }
+            }
             return methodNode;
         } catch (AbortCompilation e) {
             throw e;
