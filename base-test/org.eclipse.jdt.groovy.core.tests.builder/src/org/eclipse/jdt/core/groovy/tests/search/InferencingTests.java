@@ -4323,7 +4323,8 @@ public final class InferencingTests extends InferencingTestSuite {
             assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, expect);
             offset = contents.lastIndexOf("object");
             assertType(contents.toString(), offset, offset + 6, test[2]);
-            assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, isAtLeastGroovy(50) ? test[test.length - 1] : test[2]);
+            if (isAtLeastGroovy(50))
+                assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, test[test.length - 1]);
 
             //
 
@@ -4342,7 +4343,8 @@ public final class InferencingTests extends InferencingTestSuite {
                 assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, expect);
                 offset = contents.lastIndexOf("object");
                 assertType(contents.toString(), offset, offset + 6, test[2]);
-                assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, isAtLeastGroovy(50) ? test[test.length - 1] : test[2]);
+                if (isAtLeastGroovy(50))
+                    assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, test[test.length - 1]);
             }
         }
     }

@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 
 import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE;
@@ -50,9 +51,15 @@ class PropertyExpressionTransformer {
                 mce.setSafe(pe.isSafe());
                 mce.copyNodeMetaData(pe);
                 return mce;
-            } else if (!isThisOrSuper(pe.getObjectExpression())) { // GRECLIPSE add
-                pe.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             }
+            // GRECLIPSE add
+            else if (!isThisOrSuper(pe.getObjectExpression())) {
+                pe.removeNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                pe.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
+                pe.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                pe.getObjectExpression().removeNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER);
+            }
+            // GRECLIPSE end
         }
 
         return scTransformer.superTransform(pe);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests instanceof flow typing
-    public void testCompileStatic7a() {
+    public void testCompileStatic8() {
         assumeTrue(isParrotParser());
 
         String contents = "@groovy.transform.CompileStatic\n" +
@@ -124,7 +124,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests instanceof flow typing
-    public void testCompileStatic8() {
+    public void testCompileStatic9() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "class Groovy20 {\n" +
             "  def meth(def x) {\n" +
@@ -135,7 +135,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests instanceof flow typing
-    public void testCompileStatic9() {
+    public void testCompileStatic10() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "class Groovy20 {\n" +
             "  def meth(def x) {\n" +
@@ -146,7 +146,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests instanceof flow typing
-    public void testCompileStatic9a() {
+    public void testCompileStatic11() {
         assumeTrue(isParrotParser());
 
         String contents = "@groovy.transform.CompileStatic\n" +
@@ -159,7 +159,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLIPSE-1720
-    public void testCompileStatic10() {
+    public void testCompileStatic12() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "public class Groovy20 {\n" +
             "  enum Letter {\n" +
@@ -174,7 +174,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // indirect static-star method reference
-    public void testCompileStatic11() {
+    public void testCompileStatic13() {
         String contents = "import static B.*\n" +
             "class A {\n" +
             "  static boolean isOne() {}\n" +
@@ -192,7 +192,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // indirect static-star property reference
-    public void testCompileStatic12() {
+    public void testCompileStatic14() {
         String contents = "import static B.*\n" +
             "class A {\n" +
             "  static boolean isOne() {}\n" +
@@ -210,7 +210,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testCompileStatic13() {
+    public void testCompileStatic15() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "class X {\n" +
             "  Number getReadOnly() {}\n" +
@@ -224,12 +224,12 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
 
         int offset = contents.indexOf("readOnly");
         assertType(contents, offset, offset + "readOnly".length(), "java.lang.Number");
-            offset = contents.lastIndexOf("readOnly");
+        /**/offset = contents.lastIndexOf("readOnly");
         assertUnknownConfidence(contents, offset, offset + "readOnly".length());
     }
 
     @Test
-    public void testCompileStatic14() {
+    public void testCompileStatic16() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "class X {\n" +
             "  void setWriteOnly(Number value) {}\n" +
@@ -243,12 +243,12 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
 
         int offset = contents.indexOf("writeOnly");
         assertType(contents, offset, offset + "writeOnly".length(), "java.lang.Void");
-            offset = contents.lastIndexOf("writeOnly");
+        /**/offset = contents.lastIndexOf("writeOnly");
         assertUnknownConfidence(contents, offset, offset + "writeOnly".length());
     }
 
     @Test
-    public void testCompileStatic15() {
+    public void testCompileStatic17() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
             "  java.util.concurrent.Callable<String> task = { ->\n" +
@@ -259,12 +259,12 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("task");
         assertType(contents, offset, offset + "task".length(), "java.util.concurrent.Callable<java.lang.String>");
-            offset = contents.lastIndexOf("result");
+        /**/offset = contents.lastIndexOf("result");
         assertType(contents, offset, offset + "result".length(), "java.lang.String");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/872
-    public void testCompileStatic16() {
+    public void testCompileStatic18() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "void meth(ObjectInputStream ois) {\n" +
             "  Map<String,Object> props = (Map) ois.readObject()\n" +
@@ -279,12 +279,12 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("e.");
         assertType(contents, offset, offset + 1, "java.util.Map$Entry<java.lang.String,java.lang.Object>");
-            offset = contents.lastIndexOf("entry");
+        /**/offset = contents.lastIndexOf("entry");
         assertType(contents, offset, offset + "entry".length(), "java.util.Map$Entry<java.lang.String,java.lang.String>");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-9265
-    public void testCompileStatic17() {
+    public void testCompileStatic19() {
         String contents =
             //@formatter:off
             "class Outer {\n" +
@@ -391,7 +391,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests instanceof flow typing
-    public void testTypeChecked7a() {
+    public void testTypeChecked8() {
         assumeTrue(isParrotParser());
 
         String contents = "@groovy.transform.TypeChecked\n" +
@@ -406,7 +406,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests instanceof flow typing
-    public void testTypeChecked8() {
+    public void testTypeChecked9() {
         String contents = "@groovy.transform.TypeChecked\n" +
             "class Groovy20 {\n" +
             "  def meth(def x) {\n" +
@@ -417,7 +417,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests instanceof flow typing
-    public void testTypeChecked9() {
+    public void testTypeChecked10() {
         String contents = "@groovy.transform.TypeChecked\n" +
             "class Groovy20 {\n" +
             "  def meth(def x) {\n" +
@@ -428,7 +428,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests instanceof flow typing
-    public void testTypeChecked9a() {
+    public void testTypeChecked11() {
         assumeTrue(isParrotParser());
 
         String contents = "@groovy.transform.TypeChecked\n" +

@@ -136,7 +136,10 @@ public class StaticCompilationTransformer extends ClassCodeExpressionTransformer
                     mce.copyNodeMetaData(pe);
                     return mce;
                 } else if (!isThisOrSuper(pe.getObjectExpression())) {
-                    expr.removeNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                    pe.removeNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE);
+                    pe.removeNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.READONLY_PROPERTY);
+                    pe.removeNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                    pe.getObjectExpression().removeNodeMetaData(org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PROPERTY_OWNER);
                 }
             }
             return super.transform(expr);
