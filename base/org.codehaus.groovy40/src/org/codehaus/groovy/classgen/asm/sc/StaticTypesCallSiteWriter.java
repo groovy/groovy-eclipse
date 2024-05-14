@@ -819,7 +819,13 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter {
                     }
                 }
             }
+            /* GRECLIPSE edit -- GROOVY-11376
             if (isOrImplements(receiverType, MAP_TYPE) && !isClassReceiver[0]) {
+            */
+            if (!isClassReceiver[0] && isOrImplements(receiverType, MAP_TYPE) &&
+                    !java.util.Optional.ofNullable(getField(receiverType, name))
+                    .filter(f -> f.isPublic() || f.isProtected()).isPresent()) {
+            // GRECLIPSE end
                 MethodVisitor mv = controller.getMethodVisitor();
 
                 // store value in temporary variable

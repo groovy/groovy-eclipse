@@ -1318,6 +1318,41 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6954() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class C extends HashMap<String,String> {\n" +
+            "  def           a\n" +
+            "  public        b\n" +
+            "  protected     c\n" +
+            "  @PackageScope d\n" +
+            "  private       e\n" +
+            "  C() {\n" +
+            "    this.a = 'a'\n" +
+            "    this.b = 'b'\n" +
+            "    this.c = 'c'\n" +
+            "    this.d = 'd'\n" +
+            "    this.e = 'e'\n" +
+            "    print(this);\n" +
+            "def that = this;\n" +
+            "    that.a = 'a'\n" + // not put
+            "    that.b = 'b'\n" + // not put
+            "    that.c = 'c'\n" + // not put
+            "    that.d = 'd'\n" +
+            "    that.e = 'e'\n" +
+            "    print(that);\n" +
+            "  }\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[:][d:d, e:e]");
+    }
+
+    @Test
     public void testCompileStatic6921() {
         //@formatter:off
         String[] sources = {

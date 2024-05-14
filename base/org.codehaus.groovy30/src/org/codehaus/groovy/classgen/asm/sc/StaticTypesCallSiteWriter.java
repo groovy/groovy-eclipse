@@ -824,8 +824,10 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
                     }
                 }
             }
-            // GRECLIPSE add -- GROOVY-6954
-            if (isOrImplements(receiverType, MAP_TYPE) && !isClassReceiver[0]) {
+            // GRECLIPSE add -- GROOVY-6954, GROOVY-11376
+            if (!isClassReceiver[0] && isOrImplements(receiverType, MAP_TYPE) &&
+                    !java.util.Optional.ofNullable(getField(receiverType, name))
+                    .filter(f -> f.isPublic() || f.isProtected()).isPresent()) {
                 MethodVisitor mv = controller.getMethodVisitor();
 
                 // store value in temporary variable
