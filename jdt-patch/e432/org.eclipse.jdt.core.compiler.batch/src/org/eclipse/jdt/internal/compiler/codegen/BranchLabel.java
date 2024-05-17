@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.codegen;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 
@@ -29,6 +28,8 @@ public class BranchLabel extends Label {
 	protected int targetStackDepth = -1;
 	public final static int WIDE = 1;
 	public final static int USED = 2;
+	private OperandStack switchSaveTypeBindings;
+
 
 public BranchLabel() {
 	// for creating labels ahead of code generation
@@ -132,8 +133,11 @@ protected void trackStackDepth(boolean branch) {
 				this.codeStream.classFile.referenceBinding.scope.problemReporter()
 						.operandStackSizeInappropriate(this.codeStream.classFile.referenceBinding.scope.referenceContext);
 				this.codeStream.stackDepth = 0; // FWIW
+				this.codeStream.operandStack.clear();
 			}
 			this.targetStackDepth = this.codeStream.stackDepth;
+			this.switchSaveTypeBindings = this.codeStream.operandStack.copy();
+			// TODO: check that contents slot count matches targetStackDepth
 		} // else: previous instruction completes abruptly via goto/return/throw: Wait for a backward branch to be emitted.
 	} else {
 		// Stack depth known at label having encountered a previous branch and/or having fallen through to label
@@ -144,8 +148,10 @@ protected void trackStackDepth(boolean branch) {
 				if (this.targetStackDepth < this.codeStream.stackDepth)
 					this.targetStackDepth = this.codeStream.stackDepth; // FWIW, pick the higher water mark.
 			}
+			// TODO: check that contents slot count matches targetStackDepth
 		}
 		this.codeStream.stackDepth = this.targetStackDepth;
+		this.codeStream.operandStack = this.switchSaveTypeBindings.copy();
 	}
 }
 /*

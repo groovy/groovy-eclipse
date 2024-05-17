@@ -171,7 +171,7 @@ public class StackMapFrameCodeStream extends CodeStream {
 	public void generateClassLiteralAccessForType(Scope scope, TypeBinding accessedType,
 			FieldBinding syntheticFieldBinding) {
 		if (accessedType.isBaseType() && accessedType != TypeBinding.NULL) {
-			getTYPE(accessedType.id);
+			getClass(accessedType);
 			return;
 		}
 

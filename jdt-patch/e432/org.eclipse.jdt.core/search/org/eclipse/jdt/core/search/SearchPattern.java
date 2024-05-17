@@ -2453,10 +2453,19 @@ private static char[][] enclosingTypeNames(IType type) {
 		case IJavaElement.FIELD:
 		case IJavaElement.INITIALIZER:
 		case IJavaElement.METHOD:
+			char[] typeName = IIndexConstants.ONE_STAR;
+			try {
+				String superclassName = type.getSuperclassName();
+				if (superclassName != null) {
+					typeName = (type.getOccurrenceCount() + ".new " + superclassName + "(){}").toCharArray(); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			} catch (JavaModelException e) {
+				// fall back to using '*'
+			}
 			IType declaringClass = ((IMember) parent).getDeclaringType();
 			return CharOperation.arrayConcat(
 				enclosingTypeNames(declaringClass),
-				new char[][] {declaringClass.getElementName().toCharArray(), IIndexConstants.ONE_STAR});
+				new char[][] {declaringClass.getElementName().toCharArray(), typeName});
 		case IJavaElement.TYPE:
 			return CharOperation.arrayConcat(
 				enclosingTypeNames((IType)parent),

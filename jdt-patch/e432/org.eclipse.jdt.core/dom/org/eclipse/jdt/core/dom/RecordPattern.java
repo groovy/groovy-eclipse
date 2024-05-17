@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2023 IBM Corporation and others.
+ * Copyright (c) 2022, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -30,7 +30,6 @@ import org.eclipse.jdt.internal.core.dom.util.DOMASTUtil;
  *
  * @since 3.31
  * @noinstantiate This class is not intended to be instantiated by clients.
- * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("rawtypes")
 public class RecordPattern extends Pattern {
@@ -93,7 +92,7 @@ public class RecordPattern extends Pattern {
 	 * <code>AST.JLS*</code> constants
 	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
-	 * @noreference This method is not intended to be referenced by clients.
+	 * @since 3.38
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return null;
@@ -108,7 +107,7 @@ public class RecordPattern extends Pattern {
 	 * @param previewEnabled the previewEnabled flag
 	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
-	 * @noreference This method is not intended to be referenced by clients.
+	 * @since 3.38
 	 */
 	public static List propertyDescriptors(int apiLevel, boolean previewEnabled) {
 		if (DOMASTUtil.isPatternSupported(apiLevel, previewEnabled)) {
@@ -160,9 +159,9 @@ public class RecordPattern extends Pattern {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 * @exception UnsupportedOperationException if this operation is used other than JLS19
+	 * @exception UnsupportedOperationException if this operation is used other than JLS21
 	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
-	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
+	 * @since 3.38
 	 */
 	public void setPatternType(Type patternType) {
 		supportedOnlyIn21();
@@ -179,9 +178,9 @@ public class RecordPattern extends Pattern {
 	 * Returns the pattern type of Types Pattern.
 	 *
 	 * @return the pattern type
-	 * @exception UnsupportedOperationException if this operation is used other than JLS19
+	 * @exception UnsupportedOperationException if this operation is used other than JLS21
 	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
-	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
+	 * @since 3.38
 	 */
 	public Type getPatternType() {
 		supportedOnlyIn21();
@@ -203,9 +202,9 @@ public class RecordPattern extends Pattern {
 	 *
 	 * @return the live list of pattern nodes
 	 *    (element type: {@link Pattern})
-	 * @exception UnsupportedOperationException if this operation is used other than JLS19
+	 * @exception UnsupportedOperationException if this operation is used other than JLS21
 	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
-	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
+	 * @since 3.38
 	 */
 	@SuppressWarnings("unchecked")
 	public List<Pattern> patterns() {

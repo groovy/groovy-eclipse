@@ -1,11 +1,56 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.eclipse.jdt.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="3.38.0"/>
+                <message_argument value="3.38.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.eclipse.jdt.core.dom.EnhancedForWithRecordPattern">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.EnhancedForWithRecordPattern"/>
+                <message_argument value="org.eclipse.jdt.core_3.38.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="dom/org/eclipse/jdt/core/dom/AST.java" type="org.eclipse.jdt.core.dom.AST">
-        <filter comment="moving to Java 22 version as latest" id="388194388">
+        <filter id="388194388">
             <message_arguments>
                 <message_argument value="org.eclipse.jdt.core.dom.AST"/>
                 <message_argument value="JLS_Latest"/>
                 <message_argument value="21"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ASTNode.java" type="org.eclipse.jdt.core.dom.ASTNode">
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.ASTNode"/>
+                <message_argument value="ENHANCED_FOR_WITH_RECORD_PATTERN"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.ASTNode"/>
+                <message_argument value="STRING_FRAGMENT"/>
+                <message_argument value="116"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.ASTNode"/>
+                <message_argument value="STRING_TEMPLATE_COMPONENT"/>
+                <message_argument value="117"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.ASTNode"/>
+                <message_argument value="STRING_TEMPLATE_EXPRESSION"/>
+                <message_argument value="115"/>
             </message_arguments>
         </filter>
     </resource>
@@ -220,6 +265,14 @@
             <message_arguments>
                 <message_argument value="ASTNode"/>
                 <message_argument value="TypeParameter"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/TypePattern.java" type="org.eclipse.jdt.core.dom.TypePattern">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.TypePattern"/>
+                <message_argument value="patternVariables()"/>
             </message_arguments>
         </filter>
     </resource>

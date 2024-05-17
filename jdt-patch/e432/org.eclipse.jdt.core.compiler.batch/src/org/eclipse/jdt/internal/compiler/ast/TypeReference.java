@@ -687,7 +687,7 @@ protected TypeBinding updateParameterizedTypeWithAnnotations(Scope scope, TypeBi
 			ParameterizedTypeBinding parameterizedType = (ParameterizedTypeBinding) type;
 			TypeBinding[] argumentBindings = parameterizedType.arguments;
 			TypeBinding[] updatedArgs = null;
-			if (argumentBindings.length == argRefs.length) {
+			if (argumentBindings != null && argumentBindings.length == argRefs.length) {
 				for (int i = 0; i < argRefs.length; i++) {
 					TypeReference argRef = argRefs[i];
 					TypeBinding argBinding = argumentBindings[i];

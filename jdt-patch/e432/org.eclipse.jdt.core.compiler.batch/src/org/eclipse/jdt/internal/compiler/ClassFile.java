@@ -91,6 +91,7 @@ import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
 import org.eclipse.jdt.internal.compiler.codegen.ExceptionLabel;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
+import org.eclipse.jdt.internal.compiler.codegen.OperandStack;
 import org.eclipse.jdt.internal.compiler.codegen.StackMapFrame;
 import org.eclipse.jdt.internal.compiler.codegen.StackMapFrameCodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.StackMapFrameCodeStream.ExceptionMarker;
@@ -814,6 +815,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 		this.codeStream.init(this);
 		this.codeStream.preserveUnusedLocals = true;
+		this.codeStream.operandStack = new OperandStack.NullStack();
 		this.codeStream.initializeMaxLocals(methodBinding);
 
 		// return codeStream.generateCodeAttributeForProblemMethod(comp.options.runtimeExceptionNameForCompileError, "")
@@ -1197,7 +1199,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForRecordCanonicalConstructor(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1226,7 +1228,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		switch (purpose) {
 			case SyntheticMethodBinding.RecordCanonicalConstructor:
 				this.codeStream.generateSyntheticBodyForRecordCanonicalConstructor(methodBinding);
@@ -1265,7 +1267,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForArrayConstructor(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1288,7 +1290,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForArrayClone(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1311,7 +1313,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForFactoryMethod(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1340,7 +1342,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForConstructorAccess(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1370,7 +1372,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForEnumValueOf(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1403,7 +1405,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForEnumValues(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1427,7 +1429,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForEnumInitializationMethod(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1457,7 +1459,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForFieldReadAccess(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1488,7 +1490,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForFieldWriteAccess(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1518,7 +1520,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForMethodAccess(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
@@ -1542,7 +1544,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForSwitchTable(methodBinding);
 		int code_length = this.codeStream.position;
 		if (code_length > 65535) {
@@ -4605,7 +4607,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		this.codeStream.init(this);
+		this.codeStream.reset(methodBinding, this);
 		this.codeStream.generateSyntheticBodyForDeserializeLambda(methodBinding, syntheticMethodBindings);
 		int code_length = this.codeStream.position;
 		if (code_length > 65535) {

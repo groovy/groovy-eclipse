@@ -276,10 +276,16 @@ public class CompletionNodeDetector extends ASTVisitor {
 	@Override
 	public void endVisit(SwitchStatement switchStatement, BlockScope scope) {
 		endVisit(switchStatement);
+		if (this.parent == switchStatement && !isOnCompletingOnCaseLabel(switchStatement)) {
+			this.parent = NOT_A_PARENT;
+		}
 	}
 	@Override
 	public void endVisit(SwitchExpression switchExpression, BlockScope scope) {
 		endVisit(switchExpression);
+		if (this.parent == switchExpression && !isOnCompletingOnCaseLabel(switchExpression)) {
+			this.parent = NOT_A_PARENT;
+		}
 	}
 	@Override
 	public void endVisit(ThisReference thisReference, BlockScope scope) {
@@ -528,6 +534,20 @@ public class CompletionNodeDetector extends ASTVisitor {
 			}
 			checkUpdateOuter(astNode);
 		}
+	}
+
+	private boolean isOnCompletingOnCaseLabel(SwitchStatement statement) {
+		for (Statement stmt : statement.statements) {
+			if (stmt instanceof CaseStatement cs) {
+				for (Expression expr : cs.constantExpressions) {
+					if (this.searchedNode == expr
+							|| (expr instanceof RecordPattern rp && rp.type == this.searchedNode)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	protected void checkUpdateOuter(ASTNode astNode) {

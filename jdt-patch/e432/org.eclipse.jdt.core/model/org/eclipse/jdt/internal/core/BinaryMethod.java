@@ -320,11 +320,11 @@ public String[] getParameterNames() throws JavaModelException {
 		if ((modifiers & ClassFileConstants.AccSynthetic) != 0) {
 			return this.parameterNames = getRawParameterNames(paramCount);
 		}
-		JavadocContents javadocContents = null;
+		IJavadocContents javadocContents = null;
 		IType declaringType = getDeclaringType();
 		PerProjectInfo projectInfo = JavaModelManager.getJavaModelManager().getPerProjectInfoCheckExistence(getJavaProject().getProject());
 		synchronized (projectInfo.javadocCache) {
-			javadocContents = (JavadocContents) projectInfo.javadocCache.get(declaringType);
+			javadocContents = (IJavadocContents) projectInfo.javadocCache.get(declaringType);
 			if (javadocContents == null) {
 				projectInfo.javadocCache.put(declaringType, BinaryType.EMPTY_JAVADOC);
 			}
@@ -769,7 +769,7 @@ protected void toStringName(StringBuilder buffer, int flags) {
 }
 @Override
 public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelException {
-	JavadocContents javadocContents = ((BinaryType) this.getDeclaringType()).getJavadocContents(monitor);
+	IJavadocContents javadocContents = ((BinaryType) this.getDeclaringType()).getJavadocContents(monitor);
 	if (javadocContents == null) return null;
 	return javadocContents.getMethodDoc(this);
 }

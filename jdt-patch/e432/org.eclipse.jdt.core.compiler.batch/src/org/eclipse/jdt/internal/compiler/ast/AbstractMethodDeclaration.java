@@ -83,7 +83,6 @@ public abstract class AbstractMethodDeclaration
 
 	AbstractMethodDeclaration(CompilationResult compilationResult){
 		this.compilationResult = compilationResult;
-		this.containsSwitchWithTry = false;
 	}
 
 	/*

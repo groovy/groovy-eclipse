@@ -552,7 +552,7 @@ public class FakedTrackingVariable extends LocalDeclaration {
 		}
 	}
 
-	private static boolean isFluentMethod(MethodBinding binding) {
+	static boolean isFluentMethod(MethodBinding binding) {
 		if (binding.isStatic())
 			return false;
 		ReferenceBinding declaringClass = binding.declaringClass;

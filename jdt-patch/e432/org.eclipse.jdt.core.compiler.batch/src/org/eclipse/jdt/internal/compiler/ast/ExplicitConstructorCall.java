@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -348,7 +348,10 @@ public class ExplicitConstructorCall extends Statement implements Invocation {
 			}
 			if (receiverType != null) {
 				// prevent (explicit) super constructor invocation from within enum
-				if (this.accessMode == ExplicitConstructorCall.Super && receiverType.erasure().id == TypeIds.T_JavaLangEnum) {
+				MethodBinding mBinding = methodScope.referenceMethod().binding;
+ 				if (this.accessMode == ExplicitConstructorCall.Super &&
+ 						(mBinding != null && (mBinding.tagBits & TagBits.HasMissingType) == 0)
+						&& receiverType.erasure().id == TypeIds.T_JavaLangEnum) {
 					scope.problemReporter().cannotInvokeSuperConstructorInEnum(this, methodScope.referenceMethod().binding);
 				}
 				// qualification should be from the type of the enclosingType

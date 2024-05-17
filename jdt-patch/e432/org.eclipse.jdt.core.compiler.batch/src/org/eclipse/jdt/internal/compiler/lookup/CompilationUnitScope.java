@@ -586,7 +586,7 @@ void faultInImports() {
 			recordImportBinding(new ImportBinding(compoundName, true, importBinding, importReference));
 		} else {
 			Binding importBinding = findSingleImport(compoundName, Binding.TYPE | Binding.FIELD | Binding.METHOD, importReference.isStatic());
-			if (importBinding instanceof SplitPackageBinding && !inJdtDebugCompileMode) {
+			if (importBinding instanceof SplitPackageBinding) {
 				SplitPackageBinding splitPackage = (SplitPackageBinding) importBinding;
 				int sourceEnd = (int)(importReference.sourcePositions[splitPackage.compoundName.length-1] & 0xFFFF);
 				problemReporter().conflictingPackagesFromModules((SplitPackageBinding) importBinding, module(), importReference.sourceStart, sourceEnd);
@@ -617,15 +617,17 @@ void faultInImports() {
 						problemReporter().importProblem(importReference, importedPackage);
 						continue nextImport;
 					}
-					// re-get to find a possible split package:
-					importedPackage = (PackageBinding) findImport(importedPackage.compoundName, false, true);
-					if (importedPackage != null)
-						importedPackage = importedPackage.getVisibleFor(module(), true);
-					if (importedPackage instanceof SplitPackageBinding && !inJdtDebugCompileMode) {
-						SplitPackageBinding splitPackage = (SplitPackageBinding) importedPackage;
-						int sourceEnd = (int) importReference.sourcePositions[splitPackage.compoundName.length-1];
-						problemReporter().conflictingPackagesFromModules(splitPackage, module(), importReference.sourceStart, sourceEnd);
-						continue nextImport;
+					if (!inJdtDebugCompileMode ) {
+						// re-get to find a possible split package:
+						importedPackage = (PackageBinding) findImport(importedPackage.compoundName, false, true);
+						if (importedPackage != null)
+							importedPackage = importedPackage.getVisibleFor(module(), true);
+						if (importedPackage instanceof SplitPackageBinding) {
+							SplitPackageBinding splitPackage = (SplitPackageBinding) importedPackage;
+							int sourceEnd = (int) importReference.sourcePositions[splitPackage.compoundName.length-1];
+							problemReporter().conflictingPackagesFromModules(splitPackage, module(), importReference.sourceStart, sourceEnd);
+							continue nextImport;
+						}
 					}
 				}
 			}
@@ -702,7 +704,7 @@ private Binding findImport(char[][] compoundName, int length) {
 			}
 			if (!(binding instanceof PackageBinding)) {
 				PackageBinding visibleFor = packageBinding.getVisibleFor(module, false); // filter out empty parent-packages
-				if (visibleFor instanceof SplitPackageBinding)
+				if (visibleFor instanceof SplitPackageBinding && !compilerOptions().enableJdtDebugCompileMode)
 					return visibleFor;
 				break foundNothingOrType;
 			}

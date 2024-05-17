@@ -1041,6 +1041,7 @@ public void test012b(){
 			"		<option key=\"org.eclipse.jdt.core.compiler.codegen.lambda.genericSignature\" value=\"do not generate\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.codegen.methodParameters\" value=\"do not generate\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.codegen.shareCommonFinallyBlocks\" value=\"disabled\"/>\n" +
+			"		<option key=\"org.eclipse.jdt.core.compiler.codegen.simulateOperandStack\" value=\"enabled\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.codegen.targetPlatform\" value=\"1.5\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.codegen.unusedLocal\" value=\"optimize out\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.codegen.useStringConcatFactory\" value=\"enabled\"/>\n" +
@@ -13516,5 +13517,34 @@ public void testGitHub1122(){
 		+ "2 problems (2 errors)\n"
 		+ "",
 		true);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2434
+// Cannot read field "declaringClass" because "this.methodDeclaration.binding" is null
+public void testGH2434(){
+	this.runConformTest(
+		new String[] {
+				"X.java",
+				"public class X {\n"
+				+ "	static {\n"
+				+ "		String a = \"Blah\";\n"
+				+ "		if (a != null) {\n"
+				+ "				String c = a;\n"
+				+ "				if (c != null) {\n"
+				+ "					String[] bundles = new String [0];\n"
+				+ "					for (String bundle : bundles) {\n"
+				+ "						if (bundle == null)\n"
+				+ "							bundle = null;\n"
+				+ "					}\n"
+				+ "				}\n"
+				+ "		}\n"
+				+ "	}\n"
+				+ "}",
+		},
+        "\"" + OUTPUT_DIR +  File.separator + "X.java\""
+        + " -1.5 -g -preserveAllLocals"
+        + " -d \"" + OUTPUT_DIR + "\" -O -Xxxx -O -Jxyz -Xtyu -Jyu",
+		"",
+        "",
+        true);
 }
 }

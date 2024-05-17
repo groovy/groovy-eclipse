@@ -974,9 +974,6 @@ class BoundSet {
 	public boolean reduceOneConstraint(InferenceContext18 context, ConstraintFormula currentConstraint) throws InferenceFailureException {
 		Object result = currentConstraint.reduce(context);
 		if (result == ReductionResult.FALSE) {
-			if (InferenceContext18.DEBUG) {
-				System.out.println("Couldn't reduce constraint "+currentConstraint+ " in\n"+context); //$NON-NLS-1$ //$NON-NLS-2$
-			}
 			return false;
 		}
 		if (result == ReductionResult.TRUE)
@@ -1137,11 +1134,16 @@ class BoundSet {
 		for (TypeBound bound : flattened) {
 			buf.append('\t').append(bound.toString()).append('\n');
 		}
-		buf.append("Capture Bounds:\n"); //$NON-NLS-1$
-		for (Entry<ParameterizedTypeBinding, ParameterizedTypeBinding> entry : this.captures.entrySet()) {
-			String lhs = String.valueOf(((TypeBinding)entry.getKey()).shortReadableName());
-			String rhs = String.valueOf(((TypeBinding)entry.getValue()).shortReadableName());
-			buf.append('\t').append(lhs).append(" = capt(").append(rhs).append(")\n"); //$NON-NLS-1$ //$NON-NLS-2$
+		buf.append("Capture Bounds:"); //$NON-NLS-1$
+		if (this.captures.isEmpty()) {
+			buf.append(" <empty>\n"); //$NON-NLS-1$
+		} else {
+			buf.append('\n');
+			for (Entry<ParameterizedTypeBinding, ParameterizedTypeBinding> entry : this.captures.entrySet()) {
+				String lhs = String.valueOf(((TypeBinding)entry.getKey()).shortReadableName());
+				String rhs = String.valueOf(((TypeBinding)entry.getValue()).shortReadableName());
+				buf.append('\t').append(lhs).append(" = capt(").append(rhs).append(")\n"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 		}
 		return buf.toString();
 	}

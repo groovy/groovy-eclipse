@@ -130,6 +130,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	private boolean assistNode = false;
 	private ReferenceBinding classType;
 	private Set thrownExceptions;
+	public boolean containsSwitchWithTry = false;
 	private static final SyntheticArgumentBinding [] NO_SYNTHETIC_ARGUMENTS = new SyntheticArgumentBinding[0];
 	private static final Block NO_BODY = new Block(0);
 	private HashMap<TypeBinding, LambdaExpression> copiesPerTargetType;
@@ -1285,7 +1286,10 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		}
 		codeStream.pushPatternAccessTrapScope(this.scope);
 		if (this.body instanceof Block) {
+			boolean prev = codeStream.stmtInPreConContext;
+			codeStream.stmtInPreConContext = this.inPreConstructorContext;
 			this.body.generateCode(this.scope, codeStream);
+			codeStream.stmtInPreConContext = prev;
 			if ((this.bits & ASTNode.NeedFreeReturn) != 0) {
 				codeStream.return_();
 			}

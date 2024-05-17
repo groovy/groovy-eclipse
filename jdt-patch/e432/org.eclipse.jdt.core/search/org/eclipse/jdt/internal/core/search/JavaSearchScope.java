@@ -307,9 +307,10 @@ public void add(IJavaElement element) throws JavaModelException {
 private void add(String projectPath, String relativePath, String containerPath, boolean isPackage, AccessRuleSet access) {
 	// normalize containerPath and relativePath
 	containerPath = normalize(containerPath);
+	containerPath = convertInternalToExternalPath(containerPath);
 	relativePath = normalize(relativePath);
-	int length = this.containerPaths.length,
-		index = (containerPath.hashCode()& 0x7FFFFFFF) % length;
+	int length = this.containerPaths.length;
+	int index = (containerPath.hashCode() & 0x7FFFFFFF) % length;
 	String currentRelativePath, currentContainerPath;
 	while ((currentRelativePath = this.relativePaths[index]) != null && (currentContainerPath = this.containerPaths[index]) != null) {
 		if (currentRelativePath.equals(relativePath) && currentContainerPath.equals(containerPath))
@@ -375,6 +376,7 @@ public boolean encloses(String resourcePathString) {
 private int indexOf(String fullPath) {
 	// cannot guess the index of the container path
 	// fallback to sequentially looking at all known paths
+	fullPath = convertInternalToExternalPath(fullPath);
 	for (int i = 0, length = this.relativePaths.length; i < length; i++) {
 		String currentRelativePath = this.relativePaths[i];
 		if (currentRelativePath == null) continue;
@@ -401,9 +403,10 @@ private int indexOf(String fullPath) {
  *   4. (empty)
  */
 private int indexOf(String containerPath, String relativePath) {
+	containerPath = convertInternalToExternalPath(containerPath);
+	int length = this.containerPaths.length;
 	// use the hash to get faster comparison
-	int length = this.containerPaths.length,
-		index = (containerPath.hashCode()& 0x7FFFFFFF) % length;
+	int index = (containerPath.hashCode()& 0x7FFFFFFF) % length;
 	String currentContainerPath;
 	while ((currentContainerPath = this.containerPaths[index]) != null) {
 		if (currentContainerPath.equals(containerPath)) {
@@ -416,6 +419,29 @@ private int indexOf(String containerPath, String relativePath) {
 		}
 	}
 	return -1;
+}
+
+/**
+ * If the given path is internal but represents an external folder,
+ * converts it to the corresponding external path.
+ * No conversion takes place if the given path does not represent an external folder.
+ * @param given the given path to convert if necessary
+
+ * @return the external path that corresponds to the given path,
+ * or the given path itself if no conversion is necessary
+ */
+private String convertInternalToExternalPath(String given) {
+	IPath givenPath = new Path(given);
+	if (ExternalFoldersManager.isInternalPathForExternalFolder(givenPath)) {
+		IResource targetResource = JavaModel.getWorkspaceTarget(givenPath);
+		if (targetResource != null) {
+			IPath targetLocation = targetResource.getLocation();
+			if (targetLocation != null) {
+				return targetLocation.toString();
+			}
+		}
+	}
+	return given;
 }
 
 /*
@@ -632,6 +658,12 @@ public IPackageFragmentRoot packageFragmentRoot(String resourcePathString, int j
 				return project.getPackageFragmentRoot(jarPath);
 			}
 			Object target = JavaModel.getWorkspaceTarget(new Path(this.containerPaths[index]+'/'+this.relativePaths[index]));
+			if (target == null) {
+				Path path = new Path(resourcePathString);
+				if(ExternalFoldersManager.isInternalPathForExternalFolder(path)) {
+					target = JavaModel.getWorkspaceTarget(path);
+				}
+			}
 			if (target != null) {
 				if (target instanceof IProject) {
 					return project.getPackageFragmentRoot((IProject) target);

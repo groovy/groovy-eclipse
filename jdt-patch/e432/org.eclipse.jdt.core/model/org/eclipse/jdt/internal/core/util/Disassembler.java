@@ -191,7 +191,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 					firstModifier = appendModifier(buffer, accessFlags, IModifierConstants.ACC_TRANSITIVE, "transitive", firstModifier); //$NON-NLS-1$
 					break;
 				case IModifierConstants.ACC_STATIC_PHASE :
-					firstModifier = appendModifier(buffer, accessFlags, IModifierConstants.ACC_STATIC_PHASE, "protected", firstModifier); //$NON-NLS-1$
+					firstModifier = appendModifier(buffer, accessFlags, IModifierConstants.ACC_STATIC_PHASE, "static", firstModifier); //$NON-NLS-1$
 					break;
 			}
 		}

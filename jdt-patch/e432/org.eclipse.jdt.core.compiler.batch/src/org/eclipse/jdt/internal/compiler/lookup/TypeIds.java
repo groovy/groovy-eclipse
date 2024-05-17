@@ -55,7 +55,7 @@ public interface TypeIds {
 	final int T_JavaLangError = 19;
 	final int T_JavaLangReflectConstructor = 20;
 	final int T_JavaLangThrowable = 21;
-	final int T_JavaLangNoClassDefError = 22;
+	final int T_JavaLangNoClassDefFoundError = 22;
 	final int T_JavaLangClassNotFoundException = 23;
 	final int T_JavaLangRuntimeException = 24;
 	final int T_JavaLangException = 25;

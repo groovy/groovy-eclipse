@@ -93,8 +93,6 @@ public class TryStatement extends SubRoutineStatement {
 	private ExceptionLabel[] resourceExceptionLabels;
 	private int[] caughtExceptionsCatchBlocks;
 
-	public SwitchExpression enclosingSwitchExpression = null;
-
 @Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 
@@ -1161,15 +1159,19 @@ public void resolve(BlockScope upperScope) {
 			}
 		} else { // expression
 			Expression node = (Expression) this.resources[i];
-			TypeBinding resourceType = node.resolvedType;
-			if (resourceType instanceof ReferenceBinding) {
-				if (resourceType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangAutoCloseable, false /*AutoCloseable is not a class*/) == null && resourceType.isValidBinding()) {
+			if (node instanceof NameReference && (node.bits & Binding.VARIABLE) == 0) {
+				upperScope.problemReporter().resourceNotAValue((NameReference) node);
+			} else {
+				TypeBinding resourceType = node.resolvedType;
+				if (resourceType instanceof ReferenceBinding) {
+					if (resourceType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangAutoCloseable, false /*AutoCloseable is not a class*/) == null && resourceType.isValidBinding()) {
+						upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, node);
+						((Expression) this.resources[i]).resolvedType = new ProblemReferenceBinding(CharOperation.splitOn('.', resourceType.shortReadableName()), null, ProblemReasons.InvalidTypeForAutoManagedResource);
+					}
+				} else if (resourceType != null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=349862, avoid secondary error in problematic null case
 					upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, node);
 					((Expression) this.resources[i]).resolvedType = new ProblemReferenceBinding(CharOperation.splitOn('.', resourceType.shortReadableName()), null, ProblemReasons.InvalidTypeForAutoManagedResource);
 				}
-			} else if (resourceType != null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=349862, avoid secondary error in problematic null case
-				upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, node);
-				((Expression) this.resources[i]).resolvedType = new ProblemReferenceBinding(CharOperation.splitOn('.', resourceType.shortReadableName()), null, ProblemReasons.InvalidTypeForAutoManagedResource);
 			}
 		}
 	}

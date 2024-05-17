@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2023 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -7297,5 +7297,35 @@ public void testBug388314() throws Exception {
 	if (index == -1) {
 		assertEquals("Wrong contents", expectedOutput, actualOutput);
 	}
+}
+public void testGHIssue2398() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return;
+	this.runNegativeTest(new String[] {
+			"com/test/X.java",
+			"""
+			package com.test;
+			public class X {
+				public static void main(String[] args) {
+					System.out.println("Success");
+				}
+				enum Inner extends com.test.Option {
+					private String s;
+					Inner(com.test.Option.Missing v) {
+						super();
+					}
+				}
+			}"""},
+			"----------\n" +
+			"1. ERROR in com\\test\\X.java (at line 6)\n" +
+			"	enum Inner extends com.test.Option {\n" +
+			"	^^^^\n" +
+			"Syntax error on token \"enum\", class expected\n" +
+			"----------\n" +
+			"2. ERROR in com\\test\\X.java (at line 8)\n" +
+			"	Inner(com.test.Option.Missing v) {\n" +
+			"	      ^^^^^^^^^^^^^^^\n" +
+			"com.test.Option cannot be resolved to a type\n" +
+			"----------\n");
 }
 }

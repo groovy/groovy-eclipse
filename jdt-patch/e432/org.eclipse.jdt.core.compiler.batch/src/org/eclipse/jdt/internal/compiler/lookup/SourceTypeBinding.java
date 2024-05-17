@@ -1252,13 +1252,12 @@ private void checkPermitsInType() {
 			else if (this.isInterface())
 				this.scope.problemReporter().sealedMissingInterfaceModifier(this, typeDecl, sealedEntry.getValue());
 		}
-		List<SourceTypeBinding> typesInCU = collectAllTypeBindings(typeDecl, this.scope.compilationUnitScope());
-		if (!typeDecl.isRecord() && typeDecl.superclass != null && !checkPermitsAndAdd(this.superclass, typesInCU)) {
+		if (!typeDecl.isRecord() && typeDecl.superclass != null && !checkPermitsAndAdd(this.superclass)) {
 			reportSealedSuperTypeDoesNotPermitProblem(typeDecl.superclass, this.superclass);
 		}
 		for (int i = 0, l = this.superInterfaces.length; i < l; ++i) {
 			ReferenceBinding superInterface = this.superInterfaces[i];
-			if (superInterface != null && !checkPermitsAndAdd(superInterface, typesInCU)) {
+			if (superInterface != null && !checkPermitsAndAdd(superInterface)) {
 				TypeReference superInterfaceRef = typeDecl.superInterfaces[i];
 				reportSealedSuperTypeDoesNotPermitProblem(superInterfaceRef, superInterface);
 			}
@@ -1390,7 +1389,7 @@ public List<SourceTypeBinding> collectAllTypeBindings(TypeDeclaration typeDecl, 
 	return typeCollector.types;
 }
 
-private boolean checkPermitsAndAdd(ReferenceBinding superType, List<SourceTypeBinding> types) {
+private boolean checkPermitsAndAdd(ReferenceBinding superType) {
 	if (superType == null
 			|| superType.equals(this.scope.getJavaLangObject())
 			|| !superType.isSealed())

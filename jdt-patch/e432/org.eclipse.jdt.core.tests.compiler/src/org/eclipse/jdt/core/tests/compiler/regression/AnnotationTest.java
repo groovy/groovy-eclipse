@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -12366,6 +12366,47 @@ public void testBugVisibility() {
 			"}",
 		},
 		"");
+}
+public void testIssue2400() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) {
+		return;
+	}
+	Map customOptions = getCompilerOptions();
+	Object bkup = customOptions.get(CompilerOptions.OPTION_AnnotationBasedNullAnalysis);
+	customOptions.put(CompilerOptions.OPTION_AnnotationBasedNullAnalysis, CompilerOptions.ENABLED);
+	try {
+		runNegativeTest(
+			new String[] {
+				"TestClass.java",
+				"package test;\n"
+				+ "@com.Missing\n"
+				+ "@java.lang.Deprecated\n"
+				+ "public class TestClass {\n"
+				+ "}",
+				"com.java",
+				"package test;\n"
+				+ "public class com {\n"
+				+ "	test.TestClass value;"
+				+ "}",
+			},
+			"----------\n" +
+			"1. ERROR in TestClass.java (at line 2)\n" +
+			"	@com.Missing\n" +
+			"	 ^^^^^^^^^^^\n" +
+			"com.Missing cannot be resolved to a type\n" +
+			"----------\n" +
+			"----------\n" +
+			"1. WARNING in com.java (at line 3)\n" +
+			"	test.TestClass value;}\n" +
+			"	     ^^^^^^^^^\n" +
+			"The type TestClass is deprecated\n" +
+			"----------\n",
+			null,
+			true,
+			customOptions);
+	} finally {
+		customOptions.put(CompilerOptions.OPTION_AnnotationBasedNullAnalysis, bkup);
+	}
 }
 
 }

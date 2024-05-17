@@ -603,6 +603,10 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 			return true;
 		}
 
+		protected boolean mustRemoveEndKeywordWhenEmpty() {
+			return false;
+		}
+
 		private int rewriteList(
 				ASTNode parent,
 				StructuralPropertyDescriptor property,
@@ -760,6 +764,17 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 						}
 						currPos= end;
 						prevEnd= currEnd;
+						// if all removed and we are removing last item - we must remove end keyword
+						if (mustRemoveEndKeywordWhenEmpty() && nextIndex == total && lastNonDelete == -1 && endKeyword != null && endKeyword.length() > 0) {
+							try {
+								TokenScanner scanner = getScanner();
+								int tempOffset = scanner.getNextEndOffset(currPos, true);
+								doTextRemove(currPos, tempOffset - currPos, editGroup);
+								currPos = tempOffset;
+							} catch (CoreException e) {
+								// ignore
+							}
+						}
 						separatorState= NEW;
 					}
 				} else { // replaced or unchanged
@@ -837,6 +852,13 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		public final int rewriteList(ASTNode parent, StructuralPropertyDescriptor property, int offset, String keyword, String endKeyword, String separator) {
 			this.constantSeparator= separator;
 			return rewriteList(parent, property, keyword, endKeyword, offset);
+		}
+	}
+
+	class ResourcesListRewriter extends ListRewriter {
+		@Override
+		protected boolean mustRemoveEndKeywordWhenEmpty() {
+			return true;
 		}
 	}
 
@@ -1360,6 +1382,14 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		RewriteEvent event= getEvent(parent, property);
 		if (event != null && event.getChangeKind() != RewriteEvent.UNCHANGED) {
 			return new ListRewriter().rewriteList(parent, property, pos, keyword, endKeyword, separator);
+		}
+		return doVisit(parent, property, pos);
+	}
+
+	private int rewriteResourcesNodeList(ASTNode parent, StructuralPropertyDescriptor property, int pos, String keyword, String endKeyword, String separator) {
+		RewriteEvent event= getEvent(parent, property);
+		if (event != null && event.getChangeKind() != RewriteEvent.UNCHANGED) {
+			return new ResourcesListRewriter().rewriteList(parent, property, pos, keyword, endKeyword, separator);
 		}
 		return doVisit(parent, property, pos);
 	}
@@ -4034,7 +4064,7 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 				int indent= getIndent(node.getStartPosition());
 				String prefix= this.formatter.TRY_RESOURCES.getPrefix(indent);
 				String newParen = this.formatter.TRY_RESOURCES_PAREN.getPrefix(indent) + "("; //$NON-NLS-1$
-				pos= rewriteNodeList(node, desc, getPosAfterTry(pos), newParen, ")", ";" + prefix); //$NON-NLS-1$ //$NON-NLS-2$
+				pos= rewriteResourcesNodeList(node, desc, getPosAfterTry(pos), newParen, ")", ";" + prefix); //$NON-NLS-1$ //$NON-NLS-2$
 
 			} else {
 				pos= doVisit(node, desc, pos);

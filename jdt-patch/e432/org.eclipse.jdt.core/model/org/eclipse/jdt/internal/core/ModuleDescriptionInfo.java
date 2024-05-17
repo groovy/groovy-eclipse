@@ -13,8 +13,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
@@ -63,7 +65,41 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements ISourceMod
 		public int getModifiers() {
 			return this.modifiers;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + Arrays.hashCode(this.name);
+			result = prime * result + Objects.hash(this.modifiers);
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof ModuleReferenceInfo)) {
+				return false;
+			}
+			ModuleReferenceInfo other = (ModuleReferenceInfo) obj;
+			return this.modifiers == other.modifiers && Arrays.equals(this.name, other.name);
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("ModuleReferenceInfo ["); //$NON-NLS-1$
+			if (this.name() != null) {
+				builder.append("name="); //$NON-NLS-1$
+				builder.append(String.valueOf(this.name()));
+			}
+			builder.append("]"); //$NON-NLS-1$
+			return builder.toString();
+		}
 	}
+
 	static class PackageExportInfo extends MemberElementInfo implements IModule.IPackageExport {
 		char[] pack;
 		char[][] target;
@@ -115,6 +151,28 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements ISourceMod
 			}
 			buffer.append(';');
 			return buffer.toString();
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + Arrays.deepHashCode(this.implNames);
+			result = prime * result + Arrays.hashCode(this.serviceName);
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof ServiceInfo)) {
+				return false;
+			}
+			ServiceInfo other = (ServiceInfo) obj;
+			return Arrays.deepEquals(this.implNames, other.implNames)
+					&& Arrays.equals(this.serviceName, other.serviceName);
 		}
 	}
 

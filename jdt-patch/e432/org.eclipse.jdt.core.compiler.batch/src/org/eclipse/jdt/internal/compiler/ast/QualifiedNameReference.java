@@ -351,6 +351,7 @@ public void generateAssignment(BlockScope currentScope, CodeStream codeStream, A
 
 @Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
+	emitDeclaringClassOfConstant(codeStream);
 	int pc = codeStream.position;
 	if (this.constant != Constant.NotAConstant) {
 		if (valueRequired) {

@@ -1094,7 +1094,7 @@ public class InferenceContext18 {
 		}
 		this.initialConstraints = null;
 		if (DEBUG) {
-			System.out.println("reduced to\n"+this); //$NON-NLS-1$
+			System.out.println("Reduced all to:\n"+this); //$NON-NLS-1$
 		}
 		return true;
 	}

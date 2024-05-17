@@ -470,6 +470,22 @@ public final class AST {
 	 */
 	public static final int JLS22 = 22;
 	/**
+	 * Constant for indicating the AST API that handles JLS23.
+	 * <p>
+	 * This API is capable of handling all constructs in the
+	 * Java language as described in the Java Language
+	 * Specification, Java SE 23 Edition (JLS23).
+	 * JLS23 is a superset of all earlier versions of the
+	 * Java language, and the JLS23 API can be used to manipulate
+	 * programs written in all versions of the Java language
+	 * up to and including Java SE 23(aka JDK 23).
+	 * </p>
+	 *
+	 * @noreference This field is not intended to be referenced by clients. Java 23 support is WIP.
+	 * @since 3.38
+	 */
+	public static final int JLS23 = 23;
+	/**
 	 * Internal synonym for {@link #JLS15}. Use to alleviate
 	 * deprecation warnings once JLS15 is deprecated
 	 */
@@ -506,9 +522,14 @@ public final class AST {
 	static final int JLS21_INTERNAL = JLS21;
 	/**
 	 * Internal synonym for {@link #JLS22}. Use to alleviate
-	 * deprecation warnings once JLS21 is deprecated
+	 * deprecation warnings once JLS22 is deprecated
 	 */
 	static final int JLS22_INTERNAL = JLS22;
+	/**
+	 * Internal synonym for {@link #JLS23}. Use to alleviate
+	 * deprecation warnings once JLS23 is deprecated
+	 */
+	static final int JLS23_INTERNAL = JLS23;
 	/**
 	 * Internal property for latest supported JLS level
 	 * This provides the latest JLS level.
@@ -1260,6 +1281,7 @@ public final class AST {
         t.put(JavaCore.VERSION_20, ClassFileConstants.JDK20);
         t.put(JavaCore.VERSION_21, ClassFileConstants.JDK21);
         t.put(JavaCore.VERSION_22, ClassFileConstants.JDK22);
+        t.put(JavaCore.VERSION_23, ClassFileConstants.JDK23);
         return Collections.unmodifiableMap(t);
 	}
 	private static Map<String, Integer> getApiLevelMapTable() {
@@ -1286,6 +1308,7 @@ public final class AST {
         t.put(JavaCore.VERSION_20, JLS20_INTERNAL);
         t.put(JavaCore.VERSION_21, JLS21_INTERNAL);
         t.put(JavaCore.VERSION_22, JLS22_INTERNAL);
+        t.put(JavaCore.VERSION_23, JLS23_INTERNAL);
         return Collections.unmodifiableMap(t);
 	}
 	/**

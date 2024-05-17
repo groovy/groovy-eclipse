@@ -326,54 +326,58 @@ public class SearchableEnvironment
 			new String(prefix),
 			true,
 			new SearchableEnvironmentRequestor(requestor), moduleContext);
-	if (followRequires && this.knownModuleLocations != null) {
-		try {
-			boolean isMatchAllPrefix = CharOperation.equals(CharOperation.ALL_PREFIX, prefix);
-			Set<IModuleDescription> modDescs = new HashSet<>();
-			for (IPackageFragmentRoot root : moduleContext) {
-				IModuleDescription desc = root.getJavaProject().getModuleDescription();
-				if (desc instanceof AbstractModule)
-					modDescs.add(desc);
-			}
-			for (IModuleDescription md : modDescs) {
-				IModuleReference[] reqModules = ((AbstractModule) md).getRequiredModules();
-				char[] modName = md.getElementName().toCharArray();
-				for (IModuleReference moduleReference : reqModules) {
-					findPackagesFromRequires(prefix, isMatchAllPrefix, requestor, moduleReference, modName);
+		if (followRequires && this.knownModuleLocations != null) {
+			try {
+				boolean isMatchAllPrefix = CharOperation.equals(CharOperation.ALL_PREFIX, prefix);
+				Set<IModuleDescription> modDescs = new HashSet<>();
+				for (IPackageFragmentRoot root : moduleContext) {
+					IModuleDescription desc = root.getJavaProject().getModuleDescription();
+					if (desc instanceof AbstractModule)
+						modDescs.add(desc);
 				}
-			}
-		} catch (JavaModelException e) {
-			// silent
-		}
-	}
-}
-
-private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, ISearchRequestor requestor, IModuleReference moduleReference, char[] clientModuleName) {
-	IPackageFragmentRoot[] fragmentRoots = findModuleContext(moduleReference.name());
-	if (fragmentRoots == null) return;
-	for (IPackageFragmentRoot root : fragmentRoots) {
-		IJavaProject requiredProject = root.getJavaProject();
-		try {
-			IModuleDescription module = requiredProject.getModuleDescription();
-			if (module instanceof AbstractModule) {
-				AbstractModule requiredModule = (AbstractModule) module;
-				for (IPackageExport packageExport : requiredModule.getExportedPackages()) {
-					if (!packageExport.isQualified() || CharOperation.containsEqual(packageExport.targets(), clientModuleName)) {
-						char[] exportName = packageExport.name();
-						if (isMatchAllPrefix || CharOperation.prefixEquals(prefix, exportName))
-							requestor.acceptPackage(exportName);
+				for (IModuleDescription md : modDescs) {
+					IModuleReference[] reqModules = ((AbstractModule) md).getRequiredModules();
+					char[] modName = md.getElementName().toCharArray();
+					Set<IModuleReference> visited = new HashSet<>();
+					for (IModuleReference moduleReference : reqModules) {
+						findPackagesFromRequires(prefix, isMatchAllPrefix, requestor, moduleReference, modName, visited);
 					}
 				}
-				for (IModuleReference ref : requiredModule.getRequiredModules()) {
-					if (ref.isTransitive())
-						findPackagesFromRequires(prefix, isMatchAllPrefix, requestor, ref, clientModuleName);
-				}
+			} catch (JavaModelException e) {
+				// silent
 			}
-		} catch (JavaModelException e) {
-			// silent
 		}
 	}
-}
+
+	private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, ISearchRequestor requestor, IModuleReference moduleReference, char[] clientModuleName, Set<IModuleReference> visited) {
+		if (!visited.add(moduleReference)) {
+			return;
+		}
+		IPackageFragmentRoot[] fragmentRoots = findModuleContext(moduleReference.name());
+		if (fragmentRoots == null) return;
+		for (IPackageFragmentRoot root : fragmentRoots) {
+			IJavaProject requiredProject = root.getJavaProject();
+			try {
+				IModuleDescription module = requiredProject.getModuleDescription();
+				if (module instanceof AbstractModule) {
+					AbstractModule requiredModule = (AbstractModule) module;
+					for (IPackageExport packageExport : requiredModule.getExportedPackages()) {
+						if (!packageExport.isQualified() || CharOperation.containsEqual(packageExport.targets(), clientModuleName)) {
+							char[] exportName = packageExport.name();
+							if (isMatchAllPrefix || CharOperation.prefixEquals(prefix, exportName))
+								requestor.acceptPackage(exportName);
+						}
+					}
+					for (IModuleReference ref : requiredModule.getRequiredModules()) {
+						if (ref.isTransitive())
+							findPackagesFromRequires(prefix, isMatchAllPrefix, requestor, ref, clientModuleName, visited);
+					}
+				}
+			} catch (JavaModelException e) {
+				// silent
+			}
+		}
+	}
 	/**
 	 * Find the top-level types that are defined
 	 * in the current environment and whose simple name matches the given name.

@@ -21,17 +21,14 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,11 +43,7 @@ import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 
 public class JrtFileSystem extends Archive {
 
-	private static URI JRT_URI = URI.create("jrt:/"); //$NON-NLS-1$
-
-	static final String BOOT_MODULE = "jrt-fs.jar"; //$NON-NLS-1$
-
-	public HashMap<String, Path> modulePathMap;
+	Map<String, Path> modulePathMap;
 	Path modules;
 	private java.nio.file.FileSystem jrtfs;
 
@@ -62,15 +55,9 @@ public class JrtFileSystem extends Archive {
 	public void initialize() throws IOException {
 		// initialize packages
 		this.modulePathMap = new HashMap<>();
-		URL jrtPath = null;
-
 		if (this.file.exists()) {
-			jrtPath = Paths.get(this.file.toPath().toString(), "lib", JRTUtil.JRT_FS_JAR).toUri().toURL(); //$NON-NLS-1$
-			try (URLClassLoader loader = new URLClassLoader(new URL[] { jrtPath })) {
-				HashMap<String, ?> env = new HashMap<>();
-				this.jrtfs = FileSystems.newFileSystem(JRT_URI, env, loader);
-				this.modules = this.jrtfs.getPath("/modules"); //$NON-NLS-1$
-			}
+			this.jrtfs = JRTUtil.getJrtFileSystem(this.file.toPath());
+			this.modules = this.jrtfs.getPath(JRTUtil.MODULES_SUBDIR);
 		} else {
 			return;
 		}

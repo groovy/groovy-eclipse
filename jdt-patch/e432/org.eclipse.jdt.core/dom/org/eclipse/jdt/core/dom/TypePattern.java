@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2023 IBM Corporation and others.
+ * Copyright (c) 2021, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.dom;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.jdt.internal.core.dom.util.DOMASTUtil;
@@ -29,7 +28,6 @@ import org.eclipse.jdt.internal.core.dom.util.DOMASTUtil;
  *
  * @since 3.27
  * @noinstantiate This class is not intended to be instantiated by clients.
- * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("rawtypes")
 public class TypePattern extends Pattern {
@@ -77,7 +75,7 @@ public class TypePattern extends Pattern {
 	 * <code>AST.JLS*</code> constants
 	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
-	 * @noreference This method is not intended to be referenced by clients.
+	 * @since 3.38
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return null;
@@ -92,7 +90,7 @@ public class TypePattern extends Pattern {
 	 * @param previewEnabled the previewEnabled flag
 	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
-	 * @noreference This method is not intended to be referenced by clients.
+	 * @since 3.38
 	 */
 	public static List propertyDescriptors(int apiLevel, boolean previewEnabled) {
 		if (DOMASTUtil.isPatternSupported(apiLevel, previewEnabled)) {
@@ -120,11 +118,6 @@ public class TypePattern extends Pattern {
 		return super.internalGetSetChildProperty(property, get, child);
 	}
 
-	public List<SingleVariableDeclaration> patternVariables() {
-		supportedOnlyIn20();
-		return new ArrayList<>(Arrays.asList(getPatternVariable()));
-	}
-
 	/**
 	 * Sets the pattern variable.
 	 *
@@ -137,7 +130,7 @@ public class TypePattern extends Pattern {
 	 * </ul>
 	 * @exception UnsupportedOperationException if this operation is used other than JLS19
 	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
-	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
+	 * @since 3.38
 	 */
 	public void setPatternVariable(SingleVariableDeclaration patternVariable) {
 		supportedOnlyIn20();
@@ -156,7 +149,7 @@ public class TypePattern extends Pattern {
 	 * @return the pattern variable
 	 * @exception UnsupportedOperationException if this operation is used other than JLS19
 	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
-	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
+	 * @since 3.38
 	 */
 	public SingleVariableDeclaration getPatternVariable() {
 		supportedOnlyIn20();

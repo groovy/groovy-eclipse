@@ -740,6 +740,32 @@ public void testBug577128_1() {
 		"close() call\n" +
 		"close() call");
 }
+public void testGH1825() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			import java.io.*;
+			class X {
+				protected X read() throws IOException {
+					InputStream is = null;
+
+					try (InputStream ){
+					}
+					return null;
+				}
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in X.java (at line 6)
+			try (InputStream ){
+			     ^^^^^^^^^^^
+		InputStream cannot be resolved to a variable
+		----------
+		""");
+}
 
 public static Class testClass() {
 	return TryStatement9Test.class;

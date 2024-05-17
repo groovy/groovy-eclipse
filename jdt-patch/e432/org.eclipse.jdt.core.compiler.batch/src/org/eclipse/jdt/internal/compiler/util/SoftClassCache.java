@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 class SoftClassCache {
 
-	private final ConcurrentMap<String, JdkClasses> jdks = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Path, JdkClasses> jdks = new ConcurrentHashMap<>();
 
 	void clear() {
 		this.jdks.clear();
@@ -37,9 +37,9 @@ class SoftClassCache {
 
 	private static final class JdkClasses {
 		private final ConcurrentMap<Path, ClassBytes> classes = new ConcurrentHashMap<>(10007);
-		private final String jdkPath;
+		private final Path jdkPath;
 
-		public JdkClasses(String jdkPath) {
+		public JdkClasses(Path jdkPath) {
 			this.jdkPath = jdkPath;
 		}
 

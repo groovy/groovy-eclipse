@@ -7135,6 +7135,67 @@ public void testGH1867() {
 		"----------\n",
 		options);
 }
+public void testGH1867_dupes() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8) // uses lambda
+		return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"GH1867.java",
+			"""
+			import java.io.IOException;
+			import java.nio.file.*;
+			import java.util.Map;
+
+			class CtSym {
+				public CtSym(Path x) throws IOException { }
+				public FileSystem getFs() {
+					return null;
+				}
+			}
+			class RuntimeIOException extends RuntimeException {
+				private static final long serialVersionUID = 1L;
+				public RuntimeIOException(IOException cause) {
+					super(cause);
+				}
+				@Override
+				public synchronized IOException getCause() {
+					return (IOException) super.getCause();
+				}
+			}
+			public class GH1867 {
+				public static CtSym getCtSym(Path jdkHome, Map<Path, CtSym> ctSymFiles) throws IOException {
+					CtSym ctSym;
+					try {
+						ctSym = ctSymFiles.compute(jdkHome, (Path x, CtSym current) -> {
+							if (current == null || !current.getFs().isOpen()) {
+								try {
+									return new CtSym(x);
+								} catch (IOException e) {
+									throw new RuntimeIOException(e);
+								}
+							}
+							return current;
+						});
+					} catch (RuntimeIOException rio) {
+						throw rio.getCause();
+					}
+					return ctSym;
+				}
+			}
+			"""
+		},
+		"----------\n" +
+		"1. ERROR in GH1867.java (at line 26)\n" +
+		"	if (current == null || !current.getFs().isOpen()) {\n" +
+		"	                        ^^^^^^^^^^^^^^^\n" +
+		potentialOrDefiniteLeak("<unassigned Closeable value>") +
+		"----------\n",
+		options);
+}
 public void testGH2207_1() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_8)
 		return;

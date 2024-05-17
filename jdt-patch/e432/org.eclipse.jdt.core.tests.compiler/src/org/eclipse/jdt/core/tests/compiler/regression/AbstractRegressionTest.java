@@ -307,6 +307,10 @@ static class JavacCompiler {
 			return JavaCore.VERSION_19;
 		} else if(rawVersion.startsWith("20")) {
 			return JavaCore.VERSION_20;
+		} else if(rawVersion.startsWith("21")) {
+			return JavaCore.VERSION_21;
+		} else if(rawVersion.startsWith("22")) {
+			return JavaCore.VERSION_22;
 		} else {
 			throw new RuntimeException("unknown javac version: " + rawVersion);
 		}
@@ -544,6 +548,11 @@ static class JavacCompiler {
 			}
 			if ("20.0.2".equals(rawVersion)) {
 				return 0200;
+			}
+		}
+		if (version == JavaCore.VERSION_22) {
+			if ("22".equals(rawVersion)) {
+				return 0000;
 			}
 		}
 		throw new RuntimeException("unknown raw javac version: " + rawVersion);

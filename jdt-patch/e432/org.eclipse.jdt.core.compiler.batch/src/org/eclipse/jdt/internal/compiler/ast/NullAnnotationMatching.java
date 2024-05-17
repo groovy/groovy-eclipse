@@ -816,6 +816,26 @@ public class NullAnnotationMatching {
 		return mainType;
 	}
 
+	/**
+	 * Help Scope.mostSpecificMethodBinding(MethodBinding[], int, TypeBinding[], InvocationSite, ReferenceBinding):
+	 * If choice between equivalent methods would otherwise be arbitrary, determine if m1 should be preferred due
+	 * to a more specific null contract.
+	 */
+	public static boolean hasMoreSpecificNullness(MethodBinding m1, MethodBinding m2) {
+		long nullness1 = m1.returnType.tagBits & TagBits.AnnotationNullMASK;
+		long nullness2 = m2.returnType.tagBits & TagBits.AnnotationNullMASK;
+		if (nullness1 == TagBits.AnnotationNonNull && nullness2 != TagBits.AnnotationNonNull)
+			return true;
+		int len = Math.max(m1.parameters.length, m2.parameters.length);
+		for (int i=0; i<len; i++) {
+			nullness1 = m1.parameters[i].tagBits & TagBits.AnnotationNullMASK;
+			nullness2 = m2.parameters[i].tagBits & TagBits.AnnotationNullMASK;
+			if (nullness1 == TagBits.AnnotationNullable && nullness2 != TagBits.AnnotationNullable)
+				return true;
+		}
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		if (this == NULL_ANNOTATIONS_OK) return "OK"; //$NON-NLS-1$

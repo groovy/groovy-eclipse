@@ -10682,4 +10682,186 @@ public void testBug508834_comment0() {
 			"----------\n",
 			null, true, customOptions);
 	}
+	public void testGH1475() {
+		runConformTest(
+			new String[] {
+				"CannotInferTypeArguments.java",
+				"""
+				public class CannotInferTypeArguments<V extends java.util.concurrent.Semaphore> {
+					class Fish {
+						public V getFlavour() {
+							return null;
+						}
+					}
+
+					class Shark<E extends Fish> {
+					}
+
+					<E extends Fish> Shark<E> fish() {
+						// This compiles fine with javac, but will only work in Eclipse with new Shark<E>();
+						return new Shark<>();
+					}
+
+					<E extends Fish> Shark<E> fish2() {
+						Shark<E> s = new Shark<>();
+						return s;
+					}
+				}
+				"""
+			});
+	}
+
+	public void testBug569231() {
+		runConformTest(
+			new String[] {
+				"GenericsBug.java",
+				"""
+				import java.util.function.Function;
+				import java.util.function.Predicate;
+
+				public class GenericsBug<S> {
+					public static interface MyInterface<U> {}
+
+					public static class SubClass<U,V> implements MyInterface<V>{
+						public SubClass(Function<U,V> g, MyInterface<V>... i) { }
+					}
+
+					public static class OptSubClass<U> implements MyInterface<U> {
+						public OptSubClass(String s, Predicate<U> p, MyInterface<U>... i) { }
+
+					}
+
+					public static class ParamClass<T> {
+						public T    getU()    { return null;}
+					}
+
+					GenericsBug(MyInterface<S> in1, MyInterface<S> in2) { }
+
+
+					public static class MySubClass extends SubClass<ParamClass<Boolean>,Boolean> {
+						public MySubClass() {
+							super(ParamClass::getU);
+						}
+					}
+
+					public static void foo() {
+						SubClass<ParamClass<Boolean>,Boolean> sc = new SubClass<>(ParamClass::getU);
+						new GenericsBug<>(new MySubClass(),
+										  new OptSubClass<>("foo", t->t, sc));
+					}
+				};
+				"""
+			});
+	}
+
+	public void testBug566989() {
+		runConformTest(
+			new String[] {
+				"InferTypeTest.java",
+				"""
+				import java.util.*;
+				public class InferTypeTest<T> {
+
+					@FunctionalInterface
+					interface DataLoader<T> {
+						List<T> loadData(int offset, int limit);
+					}
+
+					class DataList<T> extends ArrayList<T>{
+						public DataList(DataLoader<T> dataLoader) {
+						}
+					}
+
+					void testDataList() {
+						List<String> list = new ArrayList<>(new DataList<>((offset, limit) -> Collections.emptyList()));
+					}
+
+				}
+				"""
+			});
+	}
+
+	public void testBug509848() {
+		runConformTest(
+			new String[] {
+				"Generics.java",
+				"""
+				public class Generics {
+
+					public MyGeneric<?> test() {
+						boolean maybe = false;
+
+						return lambda((String result) -> {
+							if (maybe) {
+								return new MyGeneric<>(MyGeneric.of(null));
+							}
+							else {
+								return new MyGeneric<>(MyGeneric.of(""));
+							}
+						});
+					}
+
+					static class MyGeneric <T> {
+						T t;
+						public MyGeneric(MyGeneric<T> t) {
+						}
+						public static <R> MyGeneric<R> of(R t) {
+							return null;
+						}
+					}
+
+					public <R> MyGeneric<R> lambda(java.util.function.Function<String, MyGeneric<R>> mapper) {
+						return null;
+					}
+				}
+				"""
+			});
+	}
+
+	public void testGH2386() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"TestClass.java",
+			"""
+			public class TestClass<E> {
+			    class Itr { }
+			    class C123172 extends TestClass.Itr<Missing<E>> { }
+			}
+			"""
+		};
+		runner.expectedCompilerLog = """
+			----------
+			1. ERROR in TestClass.java (at line 3)
+				class C123172 extends TestClass.Itr<Missing<E>> { }
+				                      ^^^^^^^^^^^^^
+			The type TestClass.Itr is not generic; it cannot be parameterized with arguments <Missing<E>>
+			----------
+			2. ERROR in TestClass.java (at line 3)
+				class C123172 extends TestClass.Itr<Missing<E>> { }
+				                                    ^^^^^^^
+			Missing cannot be resolved to a type
+			----------
+			""";
+		runner.runNegativeTest();
+	}
+
+	public void testGH2399() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"TestClass.java",
+			"""
+			public class TestClass implements TestClass.Missing1<TestClass.Missing2<TestClass.Missing3>> {
+			}
+			"""
+		};
+		runner.expectedCompilerLog = """
+			----------
+			1. ERROR in TestClass.java (at line 1)
+				public class TestClass implements TestClass.Missing1<TestClass.Missing2<TestClass.Missing3>> {
+				                                  ^^^^^^^^^^^^^^^^^^
+			Cycle detected: the type TestClass cannot extend/implement itself or one of its own member types
+			----------
+			""";
+		runner.runNegativeTest();
+	}
 }

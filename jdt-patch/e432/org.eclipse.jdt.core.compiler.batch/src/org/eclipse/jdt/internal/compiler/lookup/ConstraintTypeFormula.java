@@ -113,6 +113,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 					return ConstraintTypeFormula.create(this.left, this.right, SAME, this.isSoft);
 				} else {
 					// TODO: speculative addition:
+					//       see also note in BoundSet.combineSameSameWithProperType(..)
 					if (this.right instanceof InferenceVariable)
 						return new TypeBound((InferenceVariable) this.right, this.left, SAME, this.isSoft);
 					return FALSE;
@@ -423,8 +424,8 @@ class ConstraintTypeFormula extends ConstraintFormula {
 	// debugging
 	@Override
 	public String toString() {
-		StringBuilder buf = new StringBuilder("Type Constraint:\n"); //$NON-NLS-1$
-		buf.append('\t').append(LEFT_ANGLE_BRACKET);
+		StringBuilder buf = new StringBuilder();
+		buf.append(LEFT_ANGLE_BRACKET);
 		appendTypeName(buf, this.left);
 		buf.append(relationToString(this.relation));
 		appendTypeName(buf, this.right);

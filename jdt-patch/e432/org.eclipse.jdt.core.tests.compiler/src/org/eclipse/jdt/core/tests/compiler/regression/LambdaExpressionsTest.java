@@ -8533,6 +8533,31 @@ public void testIssue2065() {
 			"");
 }
 
+public void testGHIssue2302() {
+    this.runConformTest(
+            new String[] {
+                "TestRecord.java",
+                """
+                public class TestRecord {
+                    public void test() {
+                        A<B<?>> a = null;
+                        call(a, this::error);
+                    }
+
+                    public void error(A<B<?>> a) {
+                    }
+
+                    public <T> void call(A<T> a, C<T> c) {}
+
+                    private static interface C<T> {
+                        void run(A<T> arg);
+                    }
+                    private static class A<T> {}
+                    private static class B<T> {}
+                }
+                """});
+}
+
 
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

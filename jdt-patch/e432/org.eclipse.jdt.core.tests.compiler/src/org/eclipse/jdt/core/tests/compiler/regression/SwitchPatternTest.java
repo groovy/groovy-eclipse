@@ -3514,12 +3514,12 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					" }\n"+
 					"}",
 				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	case 0 : \n" +
-				"	     ^\n" +
-				"Type mismatch: cannot convert from int to float\n" +
-				"----------\n");
+				"----------\n"
+				+ "1. ERROR in X.java (at line 3)\n"
+				+ "	switch (c) {\n"
+				+ "	        ^\n"
+				+ "Cannot switch on a value of type float. Only convertible int values, strings or enum variables are permitted\n"
+				+ "----------\n");
 	}
 	public void testBug575047_06() {
 		runNegativeTest(
@@ -7814,5 +7814,65 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 			"Local variable y referenced from a guard must be final or effectively final\n" +
 			"----------\n");
 		    // We throw AbortMethod after first error, so second error doesn't surface
+	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2318
+	// [Switch Expression] Assertion Error compiling switch + try + string concat at target platforms levels < 9
+	public void testIssue2318() {
+		Map<String,String> options = getCompilerOptions();
+		String tpf = options.get(CompilerOptions.OPTION_TargetPlatform);
+		try {
+			options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
+			String [] sourceFiles =
+				new String[] {
+				"X.java",
+				"public class X {\n" +
+				"	public static void main(String [] args) {\n" +
+				"		int i = 123;\n" +
+				"		System.out.println(\"\" + switch (args) {\n" +
+				"			case null -> { try {\n" +
+				"							throw new NullPointerException(\"Value in position \"+ i +\" must not be null\");\n" +
+				"						} finally {\n" +
+				"							yield \"exception\";\n" +
+				"						}\n" +
+				"						}\n" +
+				"			default -> \"Hello\";\n" +
+				"		});\n" +
+				"	}\n" +
+				"}\n",
+			};
+			this.runConformTest(sourceFiles, "Hello", options);
+		} finally {
+			options.put(CompilerOptions.OPTION_TargetPlatform, tpf);
+		}
+	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2319
+	// [Switch Expression] Verify error when using non-indy string concat
+	public void testIssue2319() {
+		Map<String,String> options = getCompilerOptions();
+		String uscf = options.get(CompilerOptions.OPTION_UseStringConcatFactory);
+		try {
+			options.put(CompilerOptions.OPTION_UseStringConcatFactory, CompilerOptions.DISABLED);
+			String [] sourceFiles =
+				new String[] {
+				"X.java",
+				"public class X {\n" +
+				"	public static void main(String [] args) {\n" +
+				"		int i = 123;\n" +
+				"		System.out.println(\"\" + switch (args) {\n" +
+				"			case null -> { try {\n" +
+				"							throw new NullPointerException(\"Value in position \"+ i +\" must not be null\");\n" +
+				"						} finally {\n" +
+				"							yield \"exception\";\n" +
+				"						}\n" +
+				"						}\n" +
+				"			default -> \"Hello\";\n" +
+				"		});\n" +
+				"	}\n" +
+				"}\n",
+			};
+			this.runConformTest(sourceFiles, "Hello", options);
+		} finally {
+			options.put(CompilerOptions.OPTION_UseStringConcatFactory, uscf);
+		}
 	}
 }

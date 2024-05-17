@@ -171,7 +171,7 @@ public interface TypeConstants {
 	char[][] JAVA_LANG_ILLEGALARGUMENTEXCEPTION = {JAVA, LANG, "IllegalArgumentException".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_INCOMPATIBLECLASSCHANGEERROR = {JAVA, LANG, "IncompatibleClassChangeError".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_ITERABLE = {JAVA, LANG, "Iterable".toCharArray()}; //$NON-NLS-1$
-	char[][] JAVA_LANG_NOCLASSDEFERROR = {JAVA, LANG, "NoClassDefError".toCharArray()}; //$NON-NLS-1$
+	char[][] JAVA_LANG_NOCLASSDEFFOUNDERROR = {JAVA, LANG, "NoClassDefFoundError".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_OBJECT = {JAVA, LANG, OBJECT};
 	char[][] JAVA_LANG_RECORD = {JAVA, LANG, RECORD_CLASS};
 	char[][] JAVA_LANG_STRING = {JAVA, LANG, "String".toCharArray()}; //$NON-NLS-1$

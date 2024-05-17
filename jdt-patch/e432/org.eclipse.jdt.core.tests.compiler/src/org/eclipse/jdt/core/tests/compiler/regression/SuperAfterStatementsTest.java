@@ -27,7 +27,7 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 	static {
 //		TESTS_NUMBERS = new int [] { 1 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "test037" };
+//		TESTS_NAMES = new String[] { "test038" };
 	}
 	private String extraLibPath;
 	public static Class<?> testClass() {
@@ -873,7 +873,7 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 					class B {
 						B(Object o) {}
 					 }
-					class X<T> extends B {
+					public class X<T> extends B {
 				    	X() {
 			        		super(this); // Error - refers to 'this'
 			   			}
@@ -1264,7 +1264,8 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 		"----------\n"
 			);
 	}
-	public void test037() {
+	// Disabled till https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2373 is fixed
+	public void _test037() {
 		runConformTest(new String[] {
 			"X.java",
 				"""
@@ -1294,6 +1295,100 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 					}
       			"""
 			},
+			"true"
+		);
+	}
+	public void test038() {
+		runConformTest(new String[] {
+			"X.java",
+				"""
+					interface I {
+						void foo();
+					}
+
+					public class X {
+						public static boolean b;
+
+						static class Y {
+							boolean b = true;
+						}
+						X() {}
+						X(boolean b) {
+							I l = () -> {
+								X.b = new Y() {
+									public boolean b() {
+										return this.b;
+									}
+								}.b();
+								System.out.println(switch (42) {
+								default -> {
+									try {
+										yield 42;
+									} finally {
+
+									}
+								}
+								});
+							};
+							l.foo();
+							super();
+						}
+
+						public static void main(String argv[]) {
+							new X(true);
+							System.out.println(X.b);
+						}
+					}
+				"""
+			},
+			"42\n" +
+			"true"
+		);
+	}
+	public void test039() {
+		runConformTest(new String[] {
+			"X.java",
+				"""
+					interface I {
+						void foo();
+					}
+
+					public class X {
+						public static boolean b;
+
+						static class Y {
+							boolean b = true;
+						}
+						X() {}
+						X(boolean b) {
+							I l = () -> {
+								X.b = new Y() {
+									public boolean b() {
+										return this.b;
+									}
+								}.b();
+								System.out.println(switch (42) {
+								default -> {
+									try {
+										yield 42;
+									} finally {
+
+									}
+								}
+								});
+							};
+							l.foo();
+							super();
+						}
+
+						public static void main(String argv[]) {
+							new X(true);
+							System.out.println(X.b);
+						}
+					}
+				"""
+			},
+			"42\n" +
 			"true"
 		);
 	}

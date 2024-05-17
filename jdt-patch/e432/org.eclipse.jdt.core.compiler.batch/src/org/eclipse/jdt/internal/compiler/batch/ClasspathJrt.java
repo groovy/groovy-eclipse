@@ -46,9 +46,9 @@ import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry {
-	public File file;
+	public final File file;
 	protected ZipFile annotationZipFile;
-	protected boolean closeZipFileAtEnd;
+	protected final boolean closeZipFileAtEnd;
 	protected static Map<String, Map<String,IModule>> ModulesCache = new ConcurrentHashMap<>();
 	public final Set<String> moduleNamesCache;
 	//private Set<String> packageCache;

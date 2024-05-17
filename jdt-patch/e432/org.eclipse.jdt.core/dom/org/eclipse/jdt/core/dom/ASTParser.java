@@ -602,7 +602,9 @@ public class ASTParser {
 	 *
 	 * <p>This method automatically sets the project (and compiler
 	 * options) based on the given compilation unit, in a manner
-	 * equivalent to {@link #setProject(IJavaProject) setProject(source.getJavaProject())}.</p>
+	 * equivalent to {@link #setProject(IJavaProject) setProject(source.getJavaProject())}
+	 * and the custom compiler options supported by the compilation unit through
+	 * {@link ICompilationUnit#getCustomOptions() getCustomOptions()}.</p>
 	 *
 	 * <p>This source is not used when the AST is built using
 	 * {@link #createASTs(ICompilationUnit[], String[], ASTRequestor, IProgressMonitor)}.</p>
@@ -612,6 +614,9 @@ public class ASTParser {
 	 */
 	public void setSource(ICompilationUnit source) {
 		setSource((ITypeRoot)source);
+		if (source != null) {
+			setCompilerOptions(source.getOptions(true));
+		}
 	}
 
 	/**

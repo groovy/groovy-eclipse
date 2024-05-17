@@ -307,9 +307,11 @@
       <repositoryList
           name="2024-06">
         <repository
-            url="https://download.eclipse.org/releases/2024-05"/>
+            url="https://download.eclipse.org/releases/2024-06"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.32"/>
+        <repository
+            url="https://download.eclipse.org/eclipse/updates/4.32-I-builds/I20240516-1800"/>
       </repositoryList>
       <repositoryList
           name="2024-03">

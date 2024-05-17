@@ -320,8 +320,8 @@ void checkForRedundantSuperinterfaces(ReferenceBinding superclass, ReferenceBind
 				redundantInterfaces.add(implementedInterface);
 				TypeReference[] refs = this.type.scope.referenceContext.superInterfaces;
 				for (TypeReference ref : refs) {
-					if (TypeBinding.equalsEquals(ref.resolvedType, toCheck)) { // implementedInterface?
-						problemReporter().redundantSuperInterface(this.type, refs[j], implementedInterface, toCheck); // refs[j] -> ref ?
+					if (TypeBinding.equalsEquals(ref.resolvedType, toCheck)) {
+						problemReporter().redundantSuperInterface(this.type, refs[j], implementedInterface, toCheck);
 						break; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=320911
 					}
 				}

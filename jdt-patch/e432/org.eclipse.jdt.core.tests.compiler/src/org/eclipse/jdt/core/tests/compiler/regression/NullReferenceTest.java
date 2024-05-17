@@ -18737,4 +18737,33 @@ public void testGH1461_d() {
 			----------
 			""");
 }
+public void testGH1755() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return;
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			import java.util.function.Supplier;
+
+			public class X {
+				public static void main(String[] args) {
+					String a = "Hello";
+					if (((Supplier<String>) () -> a) instanceof Supplier)
+						System.out.print("yes");
+					if (((Supplier<String>) () -> a) != null)
+						System.out.print("yes");
+				}
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in X.java (at line 8)
+			if (((Supplier<String>) () -> a) != null)
+			    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+		Redundant null check: this expression cannot be null
+		----------
+		""");
+}
 }

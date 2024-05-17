@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2023 IBM Corporation and others.
+ * Copyright (c) 2003, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -14,6 +14,7 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 import junit.framework.Test;
 
@@ -1638,6 +1639,118 @@ public void testGH1256() throws Exception {
 		 },
 	"2345");
 }
+public void testGH1382_singleName() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5)
+		return;
+	this.runConformTest(
+		new String[] {
+			"api/Constants.java",
+			"""
+			package api;
+			public class Constants {
+				public static final boolean B = false;
+				public interface C1 {
+					int I = 1;
+				}
+				public interface C2 {
+					long L = 2l;
+				}
+				public interface C3 {
+					String S = "string";
+				}
+			}
+			""",
+			"X.java",
+			"""
+			import static api.Constants.B;
+			import static api.Constants.C1.I;
+			import static api.Constants.C2.L;
+			import static api.Constants.C3.S;
+			public class X {
+				static final String STRING = S+"suffix";
+				void test() {
+					System.out.print(B);
+					System.out.print(I);
+					System.out.print(L);
+				}
+			}
+			""",
+		},
+		"");
+
+	File f = new File(OUTPUT_DIR + File.separator + "X.class");
+	byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
+	ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+	String result = disassembler.disassemble(classFileBytes, "\n", ClassFileBytesDisassembler.SYSTEM);
+	assertContainsClassConstant(result, "api/Constants");
+	assertContainsClassConstant(result, "api/Constants$C1");
+	assertContainsClassConstant(result, "api/Constants$C2");
+	assertContainsClassConstant(result, "api/Constants$C3");
+}
+
+public void testGH1382_qualifiedName() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5)
+		return;
+	this.runConformTest(
+		new String[] {
+			"api/Constants.java",
+			"""
+			package api;
+			public class Constants {
+				public static final boolean B = false;
+			}
+			""",
+			"api/Constants1.java",
+			"""
+			package api;
+			public interface Constants1 {
+				int I = 1;
+			}
+			""",
+			"api/Constants2.java",
+			"""
+			package api;
+			public interface Constants2 {
+				long L = 2l;
+			}
+			""",
+			"api/Constants3.java",
+			"""
+			package api;
+			public interface Constants3 {
+				String S = "string";
+			}
+			""",
+			"X.java",
+			"""
+			public class X {
+				static final boolean BOOL = !api.Constants.B;
+				void test() {
+					System.out.print(api.Constants1.I);
+					System.out.print(api.Constants2.L);
+					System.out.print(api.Constants3.S);
+				}
+			}
+			""",
+		},
+		"");
+
+	File f = new File(OUTPUT_DIR + File.separator + "X.class");
+	byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
+	ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+	String result = disassembler.disassemble(classFileBytes, "\n", ClassFileBytesDisassembler.SYSTEM);
+	assertContainsClassConstant(result, "api/Constants");
+	assertContainsClassConstant(result, "api/Constants1");
+	assertContainsClassConstant(result, "api/Constants2");
+	assertContainsClassConstant(result, "api/Constants3");
+}
+
+void assertContainsClassConstant(String disassembled, String className) {
+	className = className.replace("/", "\\/").replace("$", "\\$");
+	Pattern pattern = Pattern.compile(".*constant #[0-9]+ class: #[0-9]+ "+className+".*", Pattern.DOTALL);
+	assertTrue("Should contain class constant for "+className, pattern.matcher(disassembled).matches());
+}
+
 public static Class testClass() {
 	return ConstantTest.class;
 }

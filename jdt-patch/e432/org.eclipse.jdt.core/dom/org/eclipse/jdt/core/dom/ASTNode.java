@@ -1069,20 +1069,12 @@ public abstract class ASTNode {
 
 	/**
 	 * Node type constant indicating a node of type
-	 * <code>EnhancedForWithRecordPattern</code>.
-	 * @see EnhancedForWithRecordPattern
-	 * @since 3.34
-	 * @noreference This field is not intended to be referenced by clients.
-	 */
-	public static final int ENHANCED_FOR_WITH_RECORD_PATTERN = 114;
-	/**
-	 * Node type constant indicating a node of type
 	 * <code>StringTemplateExpression</code>.
 	 * @see org.eclipse.jdt.internal.compiler.ast.TemplateExpression
 	 * @since 3.37
 	 * @noreference This field is not intended to be referenced by clients.
 	 */
-	public static final int STRING_TEMPLATE_EXPRESSION = 115;
+	public static final int STRING_TEMPLATE_EXPRESSION = 114;
 	/**
 	 * Node type constant indicating a node of type
 	 * <code>StringFragment</code>.
@@ -1090,14 +1082,14 @@ public abstract class ASTNode {
 	 * @since 3.37
 	 * @noreference This field is not intended to be referenced by clients.
 	 */
-	public static final int STRING_FRAGMENT = 116;
+	public static final int STRING_FRAGMENT = 115;
 	/**
 	 * Node type constant indicating a node of type
 	 * <code>StringTemplateComponent</code>.
 	 * @since 3.37
 	 * @noreference This field is not intended to be referenced by clients.
 	 */
-	public static final int STRING_TEMPLATE_COMPONENT = 117;
+	public static final int STRING_TEMPLATE_COMPONENT = 116;
 
 	/**
 	 * Node type constant indicating a node of type
@@ -1105,14 +1097,14 @@ public abstract class ASTNode {
 	 * @since 3.38
 	 * @noreference This field is not intended to be referenced by clients.
 	 */
-	public static final int EitherOr_MultiPattern = 118;
+	public static final int EitherOr_MultiPattern = 117;
 
 	/**
 	 * @see ImplicitTypeDeclaration
 	 * @since 3.38
 	 * @noreference This field is not intended to be referenced by clients.
 	 */
-	public static final int UNNAMED_CLASS = 119;
+	public static final int UNNAMED_CLASS = 118;
 
 	/**
 	 * Returns the node class for the corresponding node type.
@@ -1180,8 +1172,6 @@ public abstract class ASTNode {
 				return EmptyStatement.class;
 			case ENHANCED_FOR_STATEMENT :
 				return EnhancedForStatement.class;
-			case ENHANCED_FOR_WITH_RECORD_PATTERN :
-				return EnhancedForWithRecordPattern.class;
 			case ENUM_CONSTANT_DECLARATION :
 				return EnumConstantDeclaration.class;
 			case ENUM_DECLARATION :
@@ -2610,6 +2600,21 @@ public abstract class ASTNode {
 	final void supportedOnlyIn22() {
 		if (this.ast.apiLevel < AST.JLS22_INTERNAL) {
 			throw new UnsupportedOperationException("Operation only supported in JLS22 AST"); //$NON-NLS-1$
+		}
+	}
+	/**
+ 	 * Checks that this AST operation is only used when
+     * building JLS23 level ASTs.
+     * <p>
+     * Use this method to prevent access to new properties available only in JLS23.
+     * </p>
+     *
+	 * @exception UnsupportedOperationException if this operation is not used in JLS23
+	 * @since 3.38
+	 */
+	final void supportedOnlyIn23() {
+		if (this.ast.apiLevel < AST.JLS23_INTERNAL) {
+			throw new UnsupportedOperationException("Operation only supported in JLS23 AST"); //$NON-NLS-1$
 		}
 	}
 	/**

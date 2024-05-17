@@ -326,7 +326,7 @@ public static Classpath getClasspath(String classpathName, String encoding,
 						convertPathSeparators(destinationPath));
 			} else if (destinationPath == null) {
 				// class file only mode
-				if (classpathName.endsWith(JRTUtil.JRT_FS_JAR)) {
+				if (Util.isJrt(classpathName)) {
 					if (JRT_CLASSPATH_CACHE == null) {
 						JRT_CLASSPATH_CACHE = new HashMap<>();
 					} else {

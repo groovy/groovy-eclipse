@@ -15,6 +15,7 @@
 package org.eclipse.jdt.internal.core.search.indexing;
 
 import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
+import static org.eclipse.jdt.internal.compiler.util.Util.isJrt;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -65,7 +66,6 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
-import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
@@ -742,9 +742,6 @@ private IndexRequest getRequest(Object target, IPath jPath, IndexLocation indexF
 		new AddJarFileToIndex(jPath, indexFile, this, updateIndex);
 }
 
-private boolean isJrt(String fileName) {
-	return fileName != null && fileName.endsWith(JRTUtil.JRT_FS_JAR);
-}
 /**
  * Trigger addition of a library to an index
  * Note: the actual operation is performed in background

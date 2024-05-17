@@ -796,11 +796,10 @@ public class Util implements SuffixConstants {
 	}
 
 	/**
-	 * Returns true iff str.toLowerCase().endsWith("jrt-fs.jar")
-	 * implementation is not creating extra strings.
+	 * @return true if name.endsWith("jrt-fs.jar")
 	 */
 	public final static boolean isJrt(String name) {
-		return name.endsWith(JRTUtil.JRT_FS_JAR);
+		return name != null && name.endsWith(JRTUtil.JRT_FS_JAR);
 	}
 
 	public static void reverseQuickSort(char[][] list, int left, int right) {

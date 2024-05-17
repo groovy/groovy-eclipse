@@ -19316,4 +19316,97 @@ public void testGH2158() {
 		TypeDeclaration.TESTING_GH_2158 = false;
 	}
 }
+public void testGH2325() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
+	runner.testFiles = new String[] {
+		"Sample.java",
+		"""
+		import org.eclipse.jdt.annotation.NonNull;
+		import org.eclipse.jdt.annotation.Nullable;
+		interface InterfaceA {
+			@Nullable Object get();
+		}
+		interface InterfaceB {
+			@NonNull Object get();
+		}
+		interface InterfaceAB extends InterfaceA, InterfaceB {}
+		interface InterfaceBA extends InterfaceB, InterfaceA {}
+		class Sample {
+			void ab(InterfaceAB ab) {
+				@NonNull Object obj = ab.get();
+								   // ^^^^^^^^
+								   // ⚠ Null type mismatch (type annotations): required '@NonNull Object' but this expression has type '@Nullable Object'
+								   // Expected: no "Null type mismatch" problem,
+								   //		   because the union of the two null constraints has to be @Nullable, the most restrictive null constraint
+								   //		   (@Nullable violates the null constraint given by InterfaceB; @NonNull fulfills both null constraints from InterfaceA and InterfaceB)
+			}
+			void ba(InterfaceBA ba) {
+				@NonNull Object obj = ba.get(); // (no "Null type mismatch" as expected)
+			}
+		}
+		"""
+	};
+	runner.classLibraries = this.LIBS;
+	runner.runConformTest();
+}
+public void testGH2325_a() {
+	// argument nullness variance
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
+	runner.testFiles = new String[] {
+		"Sample.java",
+		"""
+		import org.eclipse.jdt.annotation.NonNull;
+		import org.eclipse.jdt.annotation.Nullable;
+		interface InterfaceA {
+			void perform(@NonNull Object o);
+		}
+		interface InterfaceB {
+			void perform(@Nullable Object o);
+		}
+		interface InterfaceC {
+			void perform(@NonNull Object o);
+		}
+		interface InterfaceAB extends InterfaceA, InterfaceB, InterfaceC {}
+		interface InterfaceBA extends InterfaceB, InterfaceA, InterfaceC {}
+		class Sample {
+			void ab(InterfaceAB ab) {
+				ab.perform(null);
+			}
+			void ba(InterfaceBA ba) {
+				ba.perform(null);
+			}
+		}
+		"""
+	};
+	runner.classLibraries = this.LIBS;
+	runner.runConformTest();
+}
+public void testGH2325_b() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.testFiles = new String[] {
+		"Test.java",
+		"""
+		interface EntityManager {
+			public <T> T merge(T entity);
+		}
+		interface HibernateEntityManager extends EntityManager { }
+		interface Session extends HibernateEntityManager, EntityManager {
+			@SuppressWarnings("unchecked")
+			Object merge(Object object);
+		}
+		public class Test {
+			void f(Session session) {
+				session.merge(new Test()); // Error: The method merge(Object) is ambiguous for the type Session
+			}
+		}
+		"""
+	};
+	runner.classLibraries = this.LIBS;
+	runner.runConformTest();
+}
 }

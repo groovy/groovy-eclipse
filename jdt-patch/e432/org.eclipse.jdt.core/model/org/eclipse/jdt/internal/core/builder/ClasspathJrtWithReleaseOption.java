@@ -18,7 +18,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,7 +29,6 @@ import java.util.function.Predicate;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
@@ -74,10 +73,9 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		}
 		this.release = getReleaseOptionFromCompliance(release);
 		try {
-			this.ctSym = JRTUtil.getCtSym(Paths.get(this.zipFilename).getParent().getParent());
+			this.ctSym = JRTUtil.getCtSym(Path.of(this.zipFilename).getParent().getParent());
 		} catch (IOException e) {
-			throw new CoreException(new Status(IStatus.ERROR, ClasspathJrtWithReleaseOption.class,
-					"Failed to init ct.sym for " + this.zipFilename, e)); //$NON-NLS-1$
+			throw new CoreException(Status.error("Failed to init ct.sym for " + this.zipFilename, e)); //$NON-NLS-1$
 		}
 		initialize();
 		loadModules();
@@ -98,8 +96,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 			if (comp.indexOf('.') == -1) {
 				return comp;
 			}
-			throw new CoreException(new Status(IStatus.ERROR, ClasspathJrtWithReleaseOption.class,
-						"Invalid value for --release argument:" + comp)); //$NON-NLS-1$
+			throw new CoreException(Status.error("Invalid value for --release argument:" + comp)); //$NON-NLS-1$
 		}
 	}
 
@@ -121,7 +118,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 
 		if (!Files.exists(this.releasePath.resolve(this.releaseCode))) {
 			Exception e = new IllegalArgumentException("release " + this.release + " is not found in the system"); //$NON-NLS-1$//$NON-NLS-2$
-			throw new CoreException(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, e.getMessage(), e));
+			throw new CoreException(Status.error(e.getMessage(), e));
 		}
 		if (Files.exists(this.fs.getPath(this.releaseCode, "system-modules"))) { //$NON-NLS-1$
 			this.fs = null;  // Fallback to default version, all classes are on jrt fs, not here.
@@ -162,7 +159,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 			Map<String, IModule> newCache = new HashMap<>();
 			for (Path root : releaseRoots) {
 				try {
-					Files.walkFileTree(root, Collections.emptySet(), 2, new JRTUtil.AbstractFileVisitor<Path>() {
+					Files.walkFileTree(root, Collections.emptySet(), 2, new SimpleFileVisitor<Path>() {
 						@Override
 						public FileVisitResult visitFile(Path f, BasicFileAttributes attrs)	throws IOException {
 							if (attrs.isDirectory() || f.getNameCount() < 3) {

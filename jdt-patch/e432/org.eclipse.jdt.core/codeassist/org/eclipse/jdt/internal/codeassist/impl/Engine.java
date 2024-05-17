@@ -141,7 +141,7 @@ public abstract class Engine implements ITypeRequestor {
 
 		if (unit != null) {
 			environment.buildTypeBindings(unit, accessRestriction);
-			environment.completeTypeBindings(unit, true);
+			environment.completeTypeBindings(unit, true, false /* no annotations */);
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2022 IBM Corporation and others.
+ * Copyright (c) 2016, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -5894,5 +5894,78 @@ public void testBug521362_emptyFile() {
 				"3 problems (3 errors)\n",
 				false,
 				"conflict");
+	}
+	public void testIssue2357_001() throws Exception {
+		File outputDirectory = new File(OUTPUT_DIR);
+		Util.flushDirectoryContent(outputDirectory);
+		String out = "bin";
+		String directory = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = directory + File.separator + "mod.one";
+		List<String> files = new ArrayList<>();
+		writeFileCollecting(files, moduleLoc, "module-info.java",
+						"module mod.one { \n" +
+								"    exports pack1;\n" +
+								"    exports pack2 to second;\n" +
+								"    opens pack3;\n" +
+								"    opens pack4 to third;\n" +
+								"    uses pack5.X51;\n" +
+								"    provides pack1.I11 with pack1.X11;\n" +
+								"    requires static java.sql;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "pack1", "I11.java",
+				"package pack1;\n" +
+						"public interface I11 {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "pack1", "X11.java",
+						"package pack1;\n" +
+						"public class X11 implements I11{\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "pack2", "X21.java",
+				"package pack2;\n" +
+				"public class X21 {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "pack3", "X31.java",
+				"package pack3;\n" +
+				"public class X31 {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "pack4", "X41.java",
+				"package pack4;\n" +
+				"public class X41 {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "pack5", "X51.java",
+				"package pack5;\n" +
+				"public class X51 {\n" +
+				"}");
+		StringBuilder buffer = new StringBuilder();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ");
+		files.forEach(name -> buffer.append(" \"" + name + "\""));
+		runConformTest(new String[0],
+				buffer.toString(),
+				"",
+				"",
+				false);
+		String expectedOutput = "// Compiled from module-info.java (version 9 : 53.0, no super bit)\n" +
+				" module mod.one  {\n" +
+				"  // Version: \n" +
+				"\n" +
+				"  requires static java.sql;\n" +
+				"  requires java.base;\n" +
+				"\n" +
+				"  exports pack1;\n" +
+				"  exports pack2 to second;\n" +
+				"\n" +
+				"  opens pack3;\n" +
+				"  opens pack4 to third;\n" +
+				"\n" +
+				"  uses pack5.X51\n" +
+				"\n" +
+				"  provides pack1.I11 with pack1.X11;\n" +
+				"\n" +
+				"}";
+		checkDisassembledClassFile(OUTPUT_DIR + File.separator + out + File.separator + "module-info.class", "module-info", expectedOutput);
 	}
 }

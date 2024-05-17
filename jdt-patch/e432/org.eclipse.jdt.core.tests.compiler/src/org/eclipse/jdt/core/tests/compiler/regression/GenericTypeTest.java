@@ -20571,37 +20571,42 @@ public void test0617() {
 				"	}\n" +
 				"}\n",
 	        },
-	        "----------\n" +
-			"1. WARNING in X.java (at line 3)\n" +
-			"	Outer.Inner inner = new Outer().new Inner();\n" +
-			"	^^^^^^^^^^^\n" +
-			"Outer.Inner is a raw type. References to generic type Outer.Inner<U> should be parameterized\n" +
-			"----------\n" +
-			"2. WARNING in X.java (at line 3)\n" +
-			"	Outer.Inner inner = new Outer().new Inner();\n" +
-			"	                        ^^^^^\n" +
-			"Outer is a raw type. References to generic type Outer<T> should be parameterized\n" +
-			"----------\n" +
-			"3. WARNING in X.java (at line 3)\n" +
-			"	Outer.Inner inner = new Outer().new Inner();\n" +
-			"	                                    ^^^^^\n" +
-			"Outer.Inner is a raw type. References to generic type Outer.Inner<U> should be parameterized\n" +
-			"----------\n" +
-			"4. WARNING in X.java (at line 4)\n" +
-			"	X x = inner.set(new X());\n" +
-			"	      ^^^^^^^^^^^^^^^^^^\n" +
-			"Type safety: The method set(Object) belongs to the raw type Outer.Inner. References to generic type Outer.Inner<U> should be parameterized\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 4)\n" +
-			"	X x = inner.set(new X());\n" +
-			"	      ^^^^^^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from Object to X\n" +
-			"----------\n" +
-			"6. ERROR in X.java (at line 6)\n" +
-			"	Outer<String>.Inner innerS = inner;\n" +
-			"	^^^^^^^^^^^^^^^^^^^\n" +
-			"The member type Outer.Inner<U> cannot be qualified with a parameterized type, since it is static. Remove arguments from qualifying type Outer<String>\n" +
-			"----------\n");
+            "----------\n" +
+    		"1. WARNING in X.java (at line 3)\n" +
+    		"	Outer.Inner inner = new Outer().new Inner();\n" +
+    		"	^^^^^^^^^^^\n" +
+    		"Outer.Inner is a raw type. References to generic type Outer.Inner<U> should be parameterized\n" +
+    		"----------\n" +
+    		"2. ERROR in X.java (at line 3)\n" +
+    		"	Outer.Inner inner = new Outer().new Inner();\n" +
+    		"	                    ^^^^^^^^^^^\n" +
+    		"Illegal enclosing instance specification for type Outer.Inner\n" +
+    		"----------\n" +
+    		"3. WARNING in X.java (at line 3)\n" +
+    		"	Outer.Inner inner = new Outer().new Inner();\n" +
+    		"	                        ^^^^^\n" +
+    		"Outer is a raw type. References to generic type Outer<T> should be parameterized\n" +
+    		"----------\n" +
+    		"4. WARNING in X.java (at line 3)\n" +
+    		"	Outer.Inner inner = new Outer().new Inner();\n" +
+    		"	                                    ^^^^^\n" +
+    		"Outer.Inner is a raw type. References to generic type Outer.Inner<U> should be parameterized\n" +
+    		"----------\n" +
+    		"5. WARNING in X.java (at line 4)\n" +
+    		"	X x = inner.set(new X());\n" +
+    		"	      ^^^^^^^^^^^^^^^^^^\n" +
+    		"Type safety: The method set(Object) belongs to the raw type Outer.Inner. References to generic type Outer.Inner<U> should be parameterized\n" +
+    		"----------\n" +
+    		"6. ERROR in X.java (at line 4)\n" +
+    		"	X x = inner.set(new X());\n" +
+    		"	      ^^^^^^^^^^^^^^^^^^\n" +
+    		"Type mismatch: cannot convert from Object to X\n" +
+    		"----------\n" +
+    		"7. ERROR in X.java (at line 6)\n" +
+    		"	Outer<String>.Inner innerS = inner;\n" +
+    		"	^^^^^^^^^^^^^^^^^^^\n" +
+    		"The member type Outer.Inner<U> cannot be qualified with a parameterized type, since it is static. Remove arguments from qualifying type Outer<String>\n" +
+    		"----------\n");
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=94644 - variation
 	public void test0648() {
@@ -28634,27 +28639,47 @@ public void test0872() {
 			"	^^^^^^^^\n" +
 			"The member type X.M3.N3<U> cannot be qualified with a parameterized type, since it is static. Remove arguments from qualifying type X.M3<X>\n" +
 			"----------\n" +
-			"2. ERROR in X.java (at line 25)\n" +
+			"2. ERROR in X.java (at line 22)\n" +
+			"	M3<X>.N3<X> n = m.new N3<X>();\n" +
+			"	                ^\n" +
+			"Illegal enclosing instance specification for type X.M3.N3<X>\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 25)\n" +
 			"	static class N3<U> {\n" +
 			"	             ^^\n" +
 			"The member type N3 cannot be declared static; static types can only be declared in static or top level types\n" +
 			"----------\n" +
-			"3. ERROR in X.java (at line 30)\n" +
+			"4. ERROR in X.java (at line 30)\n" +
 			"	M4<X>.N4<X> n = m.new N4<X>();\n" +
 			"	^^^^^^^^\n" +
 			"The member type X.M4.N4<U> cannot be qualified with a parameterized type, since it is static. Remove arguments from qualifying type X.M4<X>\n" +
+			"----------\n" +
+			"5. ERROR in X.java (at line 30)\n" +
+			"	M4<X>.N4<X> n = m.new N4<X>();\n" +
+			"	                ^\n" +
+			"Illegal enclosing instance specification for type X.M4.N4<X>\n" +
 			"----------\n" :
-			"----------\n" +
-			"1. ERROR in X.java (at line 22)\n" +
-			"	M3<X>.N3<X> n = m.new N3<X>();\n" +
-			"	^^^^^^^^\n" +
-			"The member type X.M3.N3<U> cannot be qualified with a parameterized type, since it is static. Remove arguments from qualifying type X.M3<X>\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 30)\n" +
-			"	M4<X>.N4<X> n = m.new N4<X>();\n" +
-			"	^^^^^^^^\n" +
-			"The member type X.M4.N4<U> cannot be qualified with a parameterized type, since it is static. Remove arguments from qualifying type X.M4<X>\n" +
-			"----------\n";
+						"----------\n" +
+						"1. ERROR in X.java (at line 22)\n" +
+						"	M3<X>.N3<X> n = m.new N3<X>();\n" +
+						"	^^^^^^^^\n" +
+						"The member type X.M3.N3<U> cannot be qualified with a parameterized type, since it is static. Remove arguments from qualifying type X.M3<X>\n" +
+						"----------\n" +
+						"2. ERROR in X.java (at line 22)\n" +
+						"	M3<X>.N3<X> n = m.new N3<X>();\n" +
+						"	                ^\n" +
+						"Illegal enclosing instance specification for type X.M3.N3<X>\n" +
+						"----------\n" +
+						"3. ERROR in X.java (at line 30)\n" +
+						"	M4<X>.N4<X> n = m.new N4<X>();\n" +
+						"	^^^^^^^^\n" +
+						"The member type X.M4.N4<U> cannot be qualified with a parameterized type, since it is static. Remove arguments from qualifying type X.M4<X>\n" +
+						"----------\n" +
+						"4. ERROR in X.java (at line 30)\n" +
+						"	M4<X>.N4<X> n = m.new N4<X>();\n" +
+						"	                ^\n" +
+						"Illegal enclosing instance specification for type X.M4.N4<X>\n" +
+						"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			"X.java", // =================

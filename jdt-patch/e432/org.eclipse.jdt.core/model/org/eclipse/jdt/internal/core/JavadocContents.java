@@ -13,6 +13,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
@@ -22,55 +25,61 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
-import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToIntArray;
 import org.eclipse.jdt.internal.core.util.Util;
 
-public class JavadocContents {
-	private static final int[] UNKNOWN_FORMAT = new int[0];
+import static org.eclipse.jdt.internal.core.ExternalJavadocSupport.*;
 
-	private BinaryType type;
-	private final char[] content;
+/**
+ * Javadoc tool format compatible with Java 11 and earlier versions
+ */
+public class JavadocContents implements IJavadocContents {
+	protected static final Range UNKNOWN_FORMAT = new Range(-1, -1);
 
-	private int childrenStart;
+	protected BinaryType type;
+	protected final char[] content;
 
-	private boolean hasComputedChildrenSections = false;
-	private int indexOfFieldDetails;
-	private int indexOfConstructorDetails;
-	private int indexOfMethodDetails;
-	private int indexOfEndOfClassData;
+	protected int childrenStart;
 
-	private int indexOfFieldsBottom;
-	private int indexOfAllMethodsTop;
-	private int indexOfAllMethodsBottom;
+	protected boolean hasComputedChildrenSections;
+	protected int indexOfFieldDetails;
+	protected int indexOfConstructorDetails;
+	protected int indexOfMethodDetails;
+	protected int indexOfEndOfClassData;
 
-	private int[] typeDocRange;
-	private HashtableOfObjectToIntArray fieldDocRanges;
-	private HashtableOfObjectToIntArray methodDocRanges;
+	protected int indexOfFieldsBottom;
+	protected int indexOfAllMethodsTop;
+	protected int indexOfAllMethodsBottom;
 
-	private int[] fieldAnchorIndexes;
-	private int fieldAnchorIndexesCount;
-	private int fieldLastAnchorFoundIndex;
-	private int[] methodAnchorIndexes;
-	private int methodAnchorIndexesCount;
-	private int methodLastAnchorFoundIndex;
-	private int[] unknownFormatAnchorIndexes;
-	private int unknownFormatAnchorIndexesCount;
-	private int unknownFormatLastAnchorFoundIndex;
-	private int[] tempAnchorIndexes;
-	private int tempAnchorIndexesCount;
-	private int tempLastAnchorFoundIndex;
+	protected Range typeDocRange;
+	protected Map<IField, Range> fieldDocRanges;
+	protected Map<BinaryMethod, Range> methodDocRanges;
 
-	public JavadocContents(BinaryType type, String content) {
-		this(content);
+	protected int[] fieldAnchorIndexes;
+	protected int fieldAnchorIndexesCount;
+	protected int fieldLastAnchorFoundIndex;
+	protected int[] methodAnchorIndexes;
+	protected int methodAnchorIndexesCount;
+	protected int methodLastAnchorFoundIndex;
+	protected int[] unknownFormatAnchorIndexes;
+	protected int unknownFormatAnchorIndexesCount;
+	protected int unknownFormatLastAnchorFoundIndex;
+	protected int[] tempAnchorIndexes;
+	protected int tempAnchorIndexesCount;
+	protected int tempLastAnchorFoundIndex;
+
+	public static record Range(int start, int end) {
+		public int length() {
+			return end() - start();
+		}
+	}
+
+	JavadocContents(BinaryType type, String content) {
+		this.content = content != null ? content.toCharArray() : null;
 		this.type = type;
 	}
 
-	public JavadocContents(String content) {
-		this.content = content != null ? content.toCharArray() : null;
-	}
-	/*
-	 * Returns the part of the javadoc that describe the type
-	 */
+
+	@Override
 	public String getTypeDoc() throws JavaModelException {
 		if (this.content == null) return null;
 
@@ -82,56 +91,56 @@ public class JavadocContents {
 
 		if (this.typeDocRange != null) {
 			if (this.typeDocRange == UNKNOWN_FORMAT) throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.UNKNOWN_JAVADOC_FORMAT, this.type));
-			return new String(this.content, this.typeDocRange[0], this.typeDocRange[1] - this.typeDocRange[0]);
+			return new String(this.content, this.typeDocRange.start(), this.typeDocRange.length());
 		}
 		return null;
 	}
 
+	@Override
 	public String getPackageDoc() throws JavaModelException {
 		if (this.content == null) return null;
-		int index = CharOperation.indexOf(JavadocConstants.PACKAGE_DESCRIPTION_START2, this.content, false, 0);
+		int index = CharOperation.indexOf(PACKAGE_DESCRIPTION_START2, this.content, false, 0);
 		if (index == -1) {
-			index = CharOperation.indexOf(JavadocConstants.PACKAGE_DESCRIPTION_START, this.content, false, 0);
+			index = CharOperation.indexOf(PACKAGE_DESCRIPTION_START, this.content, false, 0);
 		}
 		if (index != -1) {
-			index = CharOperation.indexOf(JavadocConstants.ANCHOR_SUFFIX, this.content, false, index);
+			index = CharOperation.indexOf(ANCHOR_SUFFIX, this.content, false, index);
 			if (index == -1) return null;
 
-			int start = CharOperation.indexOf(JavadocConstants.H2_PREFIX, this.content, false, index);
+			int start = CharOperation.indexOf(H2_PREFIX, this.content, false, index);
 			if (start != -1) {
-				start = CharOperation.indexOf(JavadocConstants.H2_SUFFIX, this.content, false, start);
-				if (start != -1) index = start + JavadocConstants.H2_SUFFIX_LENGTH;
+				start = CharOperation.indexOf(H2_SUFFIX, this.content, false, start);
+				if (start != -1) index = start + H2_SUFFIX_LENGTH;
 			}
 		} else {
-			index = CharOperation.indexOf(JavadocConstants.PACKAGE_DESCRIPTION_START3, this.content, false, 0);
+			index = CharOperation.indexOf(PACKAGE_DESCRIPTION_START3, this.content, false, 0);
 		}
 		if (index != -1) {
-			int end = CharOperation.indexOf(JavadocConstants.BOTTOM_NAVBAR, this.content, false, index);
+			int end = CharOperation.indexOf(BOTTOM_NAVBAR, this.content, false, index);
 			if (end == -1) end = this.content.length -1;
 			return new String(this.content, index, end - index);
 		}
 		return null;
 	}
 
+	@Override
 	public String getModuleDoc() throws JavaModelException {
 		if (this.content == null) return null;
-		int index = CharOperation.indexOf(JavadocConstants.MODULE_DESCRIPTION_START, this.content, false, 0);
+		int index = CharOperation.indexOf(MODULE_DESCRIPTION_START, this.content, false, 0);
 		if (index == -1) return null;
-		int end = CharOperation.indexOf(JavadocConstants.BOTTOM_NAVBAR, this.content, false, index);
+		int end = CharOperation.indexOf(BOTTOM_NAVBAR, this.content, false, index);
 		if (end == -1) end = this.content.length -1;
 		return new String(this.content, index, end - index);
 	}
 
-	/*
-	 * Returns the part of the javadoc that describe a field of the type
-	 */
+	@Override
 	public String getFieldDoc(IField child) throws JavaModelException {
 		if (this.content == null) return null;
 
-		int[] range = null;
+		Range range = null;
 		synchronized (this) {
 			if (this.fieldDocRanges == null) {
-				this.fieldDocRanges = new HashtableOfObjectToIntArray();
+				this.fieldDocRanges = new HashMap<>();
 			} else {
 				range = this.fieldDocRanges.get(child);
 			}
@@ -144,28 +153,26 @@ public class JavadocContents {
 
 		if (range != null) {
 			if (range == UNKNOWN_FORMAT) throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.UNKNOWN_JAVADOC_FORMAT, child));
-			return new String(this.content, range[0], range[1] - range[0]);
+			return new String(this.content, range.start(), range.length());
 		}
 		return null;
 	}
 
-	/*
-	 * Returns the part of the javadoc that describe a method of the type
-	 */
+	@Override
 	public String getMethodDoc(IMethod child) throws JavaModelException {
-		if (this.content == null) return null;
+		if (this.content == null || !(child instanceof BinaryMethod binaryMethod)) return null;
 
-		int[] range = null;
+		Range range = null;
 		synchronized (this) {
 			if (this.methodDocRanges == null) {
-				this.methodDocRanges = new HashtableOfObjectToIntArray();
+				this.methodDocRanges = new HashMap<>();
 			} else {
-				range = this.methodDocRanges.get(child);
+				range = this.methodDocRanges.get(binaryMethod);
 			}
 
 			if (range == null) {
-				range = computeMethodRange(child);
-				this.methodDocRanges.put(child, range);
+				range = computeMethodRange(binaryMethod);
+				this.methodDocRanges.put(binaryMethod, range);
 			}
 		}
 
@@ -173,7 +180,7 @@ public class JavadocContents {
 			if (range == UNKNOWN_FORMAT) {
 				throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.UNKNOWN_JAVADOC_FORMAT, child));
 			}
-			return new String(this.content, range[0], range[1] - range[0]);
+			return new String(this.content, range.start(), range.length());
 		}
 		return null;
 	}
@@ -181,7 +188,7 @@ public class JavadocContents {
 	/*
 	 * Compute the ranges of the parts of the javadoc that describe each method of the type
 	 */
-	private int[] computeChildRange(char[] anchor, int indexOfSectionBottom) throws JavaModelException {
+	protected Range computeChildRange(char[] anchor, int indexOfSectionBottom) throws JavaModelException {
 
 		// checks each known anchor locations
 		if (this.tempAnchorIndexesCount > 0) {
@@ -223,34 +230,36 @@ public class JavadocContents {
 
 		return null;
 	}
-	private int[] getAnchorIndex(int fromIndex) {
-		int index = CharOperation.indexOf(JavadocConstants.ANCHOR_PREFIX_START, this.content, false, fromIndex);
+
+	protected int[] getAnchorIndex(int fromIndex) {
+		int index = CharOperation.indexOf(ANCHOR_PREFIX_START, this.content, false, fromIndex);
 		if (index != -1) {
-			return new int[]{index, JavadocConstants.ANCHOR_PREFIX_START_LENGTH};
+			return new int[]{index, ANCHOR_PREFIX_START_LENGTH};
 		}
 		if (index == -1) {
-			index = CharOperation.indexOf(JavadocConstants.ANCHOR_PREFIX_START_2, this.content, false, fromIndex);
+			index = CharOperation.indexOf(ANCHOR_PREFIX_START_2, this.content, false, fromIndex);
 		}
 		if (index == -1) {
 			return new int[]{-1, -1};
 		} else {
-			return new int[]{index, JavadocConstants.ANCHOR_PREFIX_START2_LENGTH};
+			return new int[]{index, ANCHOR_PREFIX_START2_LENGTH};
 		}
 	}
-	private int[] computeChildRange(int anchorEndStart, char[] anchor, int indexOfBottom) {
-		int[] range = null;
+
+	protected Range computeChildRange(int anchorEndStart, char[] anchor, int indexOfBottom) {
+		Range range = null;
 
 		// try to find the bottom of the section
 		if (indexOfBottom != -1) {
 			// try to find the end of the anchor
-			int indexOfEndLink = CharOperation.indexOf(JavadocConstants.ANCHOR_SUFFIX, this.content, false, anchorEndStart + anchor.length);
+			int indexOfEndLink = CharOperation.indexOf(ANCHOR_SUFFIX, this.content, false, anchorEndStart + anchor.length);
 			if (indexOfEndLink != -1) {
 				// try to find the next anchor
 				int indexOfNextElement = getAnchorIndex(indexOfEndLink)[0];
 
-				int javadocStart = indexOfEndLink + JavadocConstants.ANCHOR_SUFFIX_LENGTH;
+				int javadocStart = indexOfEndLink + ANCHOR_SUFFIX_LENGTH;
 				int javadocEnd = indexOfNextElement == -1 ? indexOfBottom : Math.min(indexOfNextElement, indexOfBottom);
-				range = new int[]{javadocStart, javadocEnd};
+				range = new Range(javadocStart, javadocEnd);
 			} else {
 				// the anchor has no suffix
 				range = UNKNOWN_FORMAT;
@@ -263,25 +272,25 @@ public class JavadocContents {
 		return range;
 	}
 
-	private void computeChildrenSections() {
+	protected void computeChildrenSections() {
 		// try to find the next separator part
-		int lastIndex = CharOperation.indexOf(JavadocConstants.SEPARATOR_START, this.content, false, this.childrenStart);
+		int lastIndex = CharOperation.indexOf(SEPARATOR_START, this.content, false, this.childrenStart);
 		lastIndex = lastIndex == -1 ? this.childrenStart : lastIndex;
 
 		// try to find field detail start
-		this.indexOfFieldDetails = CharOperation.indexOf(JavadocConstants.FIELD_DETAIL, this.content, false, lastIndex);
+		this.indexOfFieldDetails = CharOperation.indexOf(FIELD_DETAIL, this.content, false, lastIndex);
 		lastIndex = this.indexOfFieldDetails == -1 ? lastIndex : this.indexOfFieldDetails;
 
 		// try to find constructor detail start
-		this.indexOfConstructorDetails = CharOperation.indexOf(JavadocConstants.CONSTRUCTOR_DETAIL, this.content, false, lastIndex);
+		this.indexOfConstructorDetails = CharOperation.indexOf(CONSTRUCTOR_DETAIL, this.content, false, lastIndex);
 		lastIndex = this.indexOfConstructorDetails == -1 ? lastIndex : this.indexOfConstructorDetails;
 
 		// try to find method detail start
-		this.indexOfMethodDetails = CharOperation.indexOf(JavadocConstants.METHOD_DETAIL, this.content, false, lastIndex);
+		this.indexOfMethodDetails = CharOperation.indexOf(METHOD_DETAIL, this.content, false, lastIndex);
 		lastIndex = this.indexOfMethodDetails == -1 ? lastIndex : this.indexOfMethodDetails;
 
 		// we take the end of class data
-		this.indexOfEndOfClassData = CharOperation.indexOf(JavadocConstants.END_OF_CLASS_DATA, this.content, false, lastIndex);
+		this.indexOfEndOfClassData = CharOperation.indexOf(END_OF_CLASS_DATA, this.content, false, lastIndex);
 
 		// try to find the field detail end
 		this.indexOfFieldsBottom =
@@ -302,16 +311,16 @@ public class JavadocContents {
 	/*
 	 * Compute the ranges of the parts of the javadoc that describe each child of the type (fields, methods)
 	 */
-	private int[] computeFieldRange(IField field) throws JavaModelException {
+	protected Range computeFieldRange(IField field) throws JavaModelException {
 		if (!this.hasComputedChildrenSections) {
 			computeChildrenSections();
 		}
 
 		StringBuilder buffer = new StringBuilder(field.getElementName());
-		buffer.append(JavadocConstants.ANCHOR_PREFIX_END);
+		buffer.append(ANCHOR_PREFIX_END);
 		char[] anchor = String.valueOf(buffer).toCharArray();
 
-		int[] range = null;
+		Range range = null;
 
 		if (this.indexOfFieldDetails == -1 || this.indexOfFieldsBottom == -1) {
 			// the detail section has no top or bottom, so the doc has an unknown format
@@ -354,14 +363,14 @@ public class JavadocContents {
 	/*
 	 * Compute the ranges of the parts of the javadoc that describe each method of the type
 	 */
-	private int[] computeMethodRange(IMethod method) throws JavaModelException {
+	protected Range computeMethodRange(BinaryMethod method) throws JavaModelException {
 		if (!this.hasComputedChildrenSections) {
 			computeChildrenSections();
 		}
 
-		char[] anchor = computeMethodAnchorPrefixEnd((BinaryMethod)method).toCharArray();
+		char[] anchor = computeMethodAnchorPrefixEnd(method).toCharArray();
 
-		int[] range = null;
+		Range range = null;
 
 		if (this.indexOfAllMethodsTop == -1 || this.indexOfAllMethodsBottom == -1) {
 			// the detail section has no top or bottom, so the doc has an unknown format
@@ -435,38 +444,11 @@ public class JavadocContents {
 		return anchor8;
 	}
 
-	private String computeMethodAnchorPrefixEnd(BinaryMethod method) throws JavaModelException {
-		String typeQualifiedName = null;
-		if (this.type.isMember()) {
-			IType currentType = this.type;
-			StringBuilder buffer = new StringBuilder();
-			while (currentType != null) {
-				buffer.insert(0, currentType.getElementName());
-				currentType = currentType.getDeclaringType();
-				if (currentType != null) {
-					buffer.insert(0, '.');
-				}
-			}
-			typeQualifiedName = buffer.toString();
-		} else {
-			typeQualifiedName = this.type.getElementName();
-		}
-
-		String methodName = method.getElementName();
-		if (method.isConstructor()) {
-			methodName = typeQualifiedName;
-		}
+	protected String computeMethodAnchorPrefixEnd(BinaryMethod method) throws JavaModelException {
+		String methodName = getMethodName(method);
 		IBinaryMethod info = (IBinaryMethod) method.getElementInfo();
 
-		char[] genericSignature = info.getGenericSignature();
-		String anchor = null;
-		if (genericSignature != null) {
-			genericSignature = CharOperation.replaceOnCopy(genericSignature, '/', '.');
-			anchor = Util.toAnchor(0, genericSignature, methodName, Flags.isVarargs(method.getFlags()));
-			if (anchor == null) throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.UNKNOWN_JAVADOC_FORMAT, method));
-		} else {
-			anchor = Signature.toString(method.getSignature().replace('/', '.'), methodName, null, true, false, Flags.isVarargs(method.getFlags()));
-		}
+		String anchor = createSignatureAnchor(method, methodName, info);
 		IType declaringType = this.type;
 		if (declaringType.isMember()) {
 			// might need to remove a part of the signature corresponding to the synthetic argument (only for constructor)
@@ -488,52 +470,89 @@ public class JavadocContents {
 				anchor = anchor.substring(0, indexOfOpeningParen) + anchor.substring(index);
 			}
 		}
-		return anchor + JavadocConstants.ANCHOR_PREFIX_END;
+		return anchor + ANCHOR_PREFIX_END;
+	}
+
+	protected String createSignatureAnchor(BinaryMethod method, String methodName, IBinaryMethod info) throws JavaModelException {
+		char[] genericSignature = info.getGenericSignature();
+		String anchor = null;
+		if (genericSignature != null) {
+			genericSignature = CharOperation.replaceOnCopy(genericSignature, '/', '.');
+			anchor = Util.toAnchor(0, genericSignature, methodName, Flags.isVarargs(method.getFlags()));
+			if (anchor == null) throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.UNKNOWN_JAVADOC_FORMAT, method));
+		} else {
+			anchor = Signature.toString(method.getSignature().replace('/', '.'), methodName, null, true, false, Flags.isVarargs(method.getFlags()));
+		}
+		return anchor;
+	}
+
+	protected String getMethodName(BinaryMethod method) throws JavaModelException {
+		String typeQualifiedName = null;
+		if (this.type.isMember()) {
+			IType currentType = this.type;
+			StringBuilder buffer = new StringBuilder();
+			while (currentType != null) {
+				buffer.insert(0, currentType.getElementName());
+				currentType = currentType.getDeclaringType();
+				if (currentType != null) {
+					buffer.insert(0, '.');
+				}
+			}
+			typeQualifiedName = buffer.toString();
+		} else {
+			typeQualifiedName = this.type.getElementName();
+		}
+
+		String methodName = method.getElementName();
+		if (method.isConstructor()) {
+			methodName = typeQualifiedName;
+		}
+		return methodName;
 	}
 
 	/*
 	 * Compute the range of the part of the javadoc that describe the type
 	 */
-	private void computeTypeRange() throws JavaModelException {
-		final int indexOfStartOfClassData = CharOperation.indexOf(JavadocConstants.START_OF_CLASS_DATA, this.content, false);
+	protected void computeTypeRange() throws JavaModelException {
+		final int indexOfStartOfClassData = CharOperation.indexOf(START_OF_CLASS_DATA, this.content, false);
 		if (indexOfStartOfClassData == -1) {
 			this.typeDocRange = UNKNOWN_FORMAT;
 			return;
 		}
-		int indexOfNextSeparator = CharOperation.indexOf(JavadocConstants.SEPARATOR_START, this.content, false, indexOfStartOfClassData);
+		int indexOfNextSeparator = CharOperation.indexOf(SEPARATOR_START, this.content, false, indexOfStartOfClassData);
 		if (indexOfNextSeparator == -1) {
 			this.typeDocRange = UNKNOWN_FORMAT;
 			return;
 		}
-		int indexOfNextSummary = CharOperation.indexOf(JavadocConstants.NESTED_CLASS_SUMMARY, this.content, false, indexOfNextSeparator);
+		int indexOfNextSummary = CharOperation.indexOf(NESTED_CLASS_SUMMARY, this.content, false, indexOfNextSeparator);
 		if (indexOfNextSummary == -1 && this.type.isEnum()) {
 			// try to find enum constant summary start
-			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.ENUM_CONSTANT_SUMMARY, this.content, false, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(ENUM_CONSTANT_SUMMARY, this.content, false, indexOfNextSeparator);
 		}
 		if (indexOfNextSummary == -1 && this.type.isAnnotation()) {
 			// try to find required enum constant summary start
-			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.ANNOTATION_TYPE_REQUIRED_MEMBER_SUMMARY, this.content, false, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(ANNOTATION_TYPE_REQUIRED_MEMBER_SUMMARY, this.content, false, indexOfNextSeparator);
 			if (indexOfNextSummary == -1) {
 				// try to find optional enum constant summary start
-				indexOfNextSummary = CharOperation.indexOf(JavadocConstants.ANNOTATION_TYPE_OPTIONAL_MEMBER_SUMMARY, this.content, false, indexOfNextSeparator);
+				indexOfNextSummary = CharOperation.indexOf(ANNOTATION_TYPE_OPTIONAL_MEMBER_SUMMARY, this.content, false, indexOfNextSeparator);
 			}
 		}
 		if (indexOfNextSummary == -1) {
 			// try to find field summary start
-			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.FIELD_SUMMARY, this.content, false, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(FIELD_SUMMARY, this.content, false, indexOfNextSeparator);
 		}
 		if (indexOfNextSummary == -1) {
 			// try to find constructor summary start
-			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.CONSTRUCTOR_SUMMARY, this.content, false, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(CONSTRUCTOR_SUMMARY, this.content, false, indexOfNextSeparator);
 		}
 		if (indexOfNextSummary == -1) {
 			// try to find method summary start
-			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.METHOD_SUMMARY, this.content, false, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(METHOD_SUMMARY, this.content, false, indexOfNextSeparator);
 		}
 
 		if (indexOfNextSummary == -1) {
 			// we take the end of class data
-			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.END_OF_CLASS_DATA, this.content, false, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(END_OF_CLASS_DATA, this.content, false, indexOfNextSeparator);
 		} else {
 			// improve performance of computation of children ranges
 			this.childrenStart = indexOfNextSummary + 1;
@@ -548,9 +567,9 @@ public class JavadocContents {
 		 * We remove the contents between the start of class data and where
 		 * we guess the actual class comment starts.
 		 */
-		int start = indexOfStartOfClassData + JavadocConstants.START_OF_CLASS_DATA_LENGTH;
-		int indexOfFirstParagraph = CharOperation.indexOf(JavadocConstants.P.toCharArray(), this.content, false, start, indexOfNextSummary);
-		int indexOfFirstDiv = CharOperation.indexOf(JavadocConstants.DIV_CLASS_BLOCK.toCharArray(), this.content, false, start, indexOfNextSummary);
+		int start = indexOfStartOfClassData + START_OF_CLASS_DATA_LENGTH;
+		int indexOfFirstParagraph = CharOperation.indexOf(P.toCharArray(), this.content, false, start, indexOfNextSummary);
+		int indexOfFirstDiv = CharOperation.indexOf(DIV_CLASS_BLOCK.toCharArray(), this.content, false, start, indexOfNextSummary);
 		int afterHierarchy = indexOfNextSummary;
 		if (indexOfFirstParagraph != -1 && indexOfFirstParagraph < afterHierarchy) {
 			afterHierarchy = indexOfFirstParagraph;
@@ -562,6 +581,6 @@ public class JavadocContents {
 			start = afterHierarchy;
 		}
 
-		this.typeDocRange = new int[]{start, indexOfNextSummary};
+		this.typeDocRange = new Range(start, indexOfNextSummary);
 	}
 }

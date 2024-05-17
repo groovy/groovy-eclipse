@@ -533,21 +533,23 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 
 	@Override
 	public void updateWithAnnotations(Scope scope, int location) {
-		int lastToken = this.tokens.length - 1;
-		TypeBinding updatedLeaf;
-		if (this.typesPerToken != null && this.typesPerToken[lastToken] != null) {
-			for (int i = 0; i <= lastToken; i++) {
-				this.typesPerToken[i] = (ReferenceBinding) updateParameterizedTypeWithAnnotations(scope, this.typesPerToken[i], this.typeArguments[i]);
-			}
-			updatedLeaf = this.typesPerToken[lastToken];
-		} else {
-			updatedLeaf = updateParameterizedTypeWithAnnotations(scope, this.resolvedType, this.typeArguments[lastToken]);
-		}
-		if (updatedLeaf != this.resolvedType.leafComponentType()) { //$IDENTITY-COMPARISON$
-			if (this.dimensions > 0 && this.dimensions <= 255) {
-				this.resolvedType = scope.createArrayType(updatedLeaf, this.dimensions);
+		if (this.resolvedType != null) {
+			int lastToken = this.tokens.length - 1;
+			TypeBinding updatedLeaf;
+			if (this.typesPerToken != null && this.typesPerToken[lastToken] != null) {
+				for (int i = 0; i <= lastToken; i++) {
+					this.typesPerToken[i] = (ReferenceBinding) updateParameterizedTypeWithAnnotations(scope, this.typesPerToken[i], this.typeArguments[i]);
+				}
+				updatedLeaf = this.typesPerToken[lastToken];
 			} else {
-				this.resolvedType = updatedLeaf;
+				updatedLeaf = updateParameterizedTypeWithAnnotations(scope, this.resolvedType, this.typeArguments[lastToken]);
+			}
+			if (updatedLeaf != this.resolvedType.leafComponentType()) { //$IDENTITY-COMPARISON$
+				if (this.dimensions > 0 && this.dimensions <= 255) {
+					this.resolvedType = scope.createArrayType(updatedLeaf, this.dimensions);
+				} else {
+					this.resolvedType = updatedLeaf;
+				}
 			}
 		}
 		resolveAnnotations(scope, location); // see comment in super TypeReference.updateWithAnnotations()

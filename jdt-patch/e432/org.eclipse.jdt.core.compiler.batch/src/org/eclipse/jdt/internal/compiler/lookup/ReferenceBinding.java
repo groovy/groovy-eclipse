@@ -712,8 +712,8 @@ public void computeId() {
 						this.id = TypeIds.T_JavaLangLong;
 					return;
 				case 'N' :
-					if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_NOCLASSDEFERROR[2]))
-						this.id = TypeIds.T_JavaLangNoClassDefError;
+					if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_NOCLASSDEFFOUNDERROR[2]))
+						this.id = TypeIds.T_JavaLangNoClassDefFoundError;
 					return;
 				case 'O' :
 					switch (typeName.length) {

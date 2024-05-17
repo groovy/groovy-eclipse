@@ -102,6 +102,9 @@ public class TypeDeclaration extends Statement implements ProblemSeverities, Ref
 	// TEST ONLY: disable one fix here to challenge another related fix (in TypeSystem):
 	public static boolean TESTING_GH_2158 = false;
 
+	public boolean initContainsSwitchWithTry = false;
+	public boolean clinitContainsSwitchWithTry = false;
+
 	static {
 		disallowedComponentNames = new HashSet<>(6);
 		disallowedComponentNames.add("clone"); //$NON-NLS-1$

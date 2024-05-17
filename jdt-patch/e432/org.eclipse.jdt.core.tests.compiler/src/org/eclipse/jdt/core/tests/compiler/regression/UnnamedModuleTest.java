@@ -199,7 +199,7 @@ public void testConflictWithUnnamedModule() {
 				"	}\n" +
 				"}"
 			};
-	runner.expectedErrorString =
+	runner.expectedCompilerLog =
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	String s = org.xml.sax.helpers.NamespaceSupport.XMLNS;\n" +
@@ -207,5 +207,61 @@ public void testConflictWithUnnamedModule() {
 			"The package org.xml.sax.helpers is accessible from more than one module: <unnamed>, java.xml\n" +
 			"----------\n";
 	runner.runNegativeTest();
+}
+public void testGH445_1() {
+	// ensure soundness of OPTION_JdtDebugCompileMode
+	String path = this.getCompilerTestsPluginDirectoryPath() + File.separator + "workspace" + File.separator + "ignore-unnamed-module-test.jar";
+	String[] defaultLibs = getDefaultClassPaths();
+	int len = defaultLibs.length;
+	String[] libs = new String[len+1];
+	System.arraycopy(defaultLibs, 0, libs, 0, len);
+	libs[len] = path;
+	Map<String, String> compilerOptions = getCompilerOptions();
+	compilerOptions.put(CompilerOptions.OPTION_JdtDebugCompileMode, CompilerOptions.ENABLED);
+	this.runConformTest(
+			true,
+			new String[] {
+				"X.java",
+				"import org.xml.sax.SAXException;\n" +
+				"public class X {\n" +
+				"	void foo() {\n" +
+				"		SAXException s;\n" +
+				"	}\n" +
+				"}"
+			},
+			libs,
+			compilerOptions,
+			"",
+			"",
+			"",
+			JavacTestOptions.DEFAULT);
+}
+public void testGH445_2() {
+	// ensure soundness of OPTION_JdtDebugCompileMode
+	String path = this.getCompilerTestsPluginDirectoryPath() + File.separator + "workspace" + File.separator + "ignore-unnamed-module-test.jar";
+	String[] defaultLibs = getDefaultClassPaths();
+	int len = defaultLibs.length;
+	String[] libs = new String[len+1];
+	System.arraycopy(defaultLibs, 0, libs, 0, len);
+	libs[len] = path;
+	Map<String, String> compilerOptions = getCompilerOptions();
+	compilerOptions.put(CompilerOptions.OPTION_JdtDebugCompileMode, CompilerOptions.ENABLED);
+	this.runConformTest(
+			true,
+			new String[] {
+				"X.java",
+				"import org.xml.sax.*;\n" +
+				"public class X {\n" +
+				"	void foo() {\n" +
+				"		SAXException s;\n" +
+				"	}\n" +
+				"}"
+			},
+			libs,
+			compilerOptions,
+			"",
+			"",
+			"",
+			JavacTestOptions.DEFAULT);
 }
 }

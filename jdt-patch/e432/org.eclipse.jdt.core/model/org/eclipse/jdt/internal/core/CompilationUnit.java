@@ -1471,11 +1471,13 @@ public void setOptions(Map<String, String> newOptions) {
 
 @Override
 public Map<String, String> getCustomOptions() {
-	try {
-		Map<String, String> customOptions = this.getCompilationUnitElementInfo().getCustomOptions();
-		return customOptions == null ? Collections.emptyMap() : customOptions;
-	} catch (JavaModelException e) {
-		// do nothing
+	if (this.owner != null) {
+		try {
+			Map<String, String> customOptions = this.getCompilationUnitElementInfo().getCustomOptions();
+			return customOptions == null ? Collections.emptyMap() : customOptions;
+		} catch (JavaModelException e) {
+			// do nothing
+		}
 	}
 
 	return Collections.emptyMap();

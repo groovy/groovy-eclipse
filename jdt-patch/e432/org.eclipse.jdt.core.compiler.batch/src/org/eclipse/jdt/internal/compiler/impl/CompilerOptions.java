@@ -223,6 +223,8 @@ public class CompilerOptions {
 
 	public static final String OPTION_UseStringConcatFactory = "org.eclipse.jdt.core.compiler.codegen.useStringConcatFactory"; //$NON-NLS-1$
 
+	public static final String OPTION_SimulateOperandStack = "org.eclipse.jdt.core.compiler.codegen.simulateOperandStack"; //$NON-NLS-1$
+
 	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	public static final String OPTIONG_BuildGroovyFiles           = "org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles"; //$NON-NLS-1$
@@ -602,6 +604,9 @@ public class CompilerOptions {
 
 	/** Should the compiler use the StringConcatFactory for String concatenation expressions in the produced binary */
 	public boolean useStringConcatFactory;
+
+	/** Should the compiler simulate VM's operand stack during code generation? */
+	public boolean simulateOperandStack;
 
 	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
 	public final static String[] warningTokens = {
@@ -1480,6 +1485,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportSuppressWarningNotFullyAnalysed, getSeverityString(SuppressWarningsNotAnalysed));
 		optionsMap.put(OPTION_IgnoreUnnamedModuleForSplitPackage, this.ignoreUnnamedModuleForSplitPackage ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_UseStringConcatFactory, this.useStringConcatFactory ? ENABLED : DISABLED);
+		optionsMap.put(OPTION_SimulateOperandStack, this.simulateOperandStack ? ENABLED : DISABLED);
 		return optionsMap;
 	}
 
@@ -1686,6 +1692,7 @@ public class CompilerOptions {
 		this.enableJdtDebugCompileMode = false;
 		this.ignoreUnnamedModuleForSplitPackage = false;
 		this.useStringConcatFactory = true;
+		this.simulateOperandStack = true;
 	}
 
 	public void set(Map<String, String> optionsMap) {
@@ -2272,6 +2279,14 @@ public class CompilerOptions {
 				this.useStringConcatFactory = false;
 			}
 		}
+
+		if ((optionValue = optionsMap.get(OPTION_SimulateOperandStack)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.simulateOperandStack = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.simulateOperandStack = false;
+			}
+		}
 	}
 
 	private String[] stringToNameList(String optionValue) {
@@ -2419,6 +2434,7 @@ public class CompilerOptions {
 		buf.append("\n\t- SuppressWarnings not fully analysed: ").append(getSeverityString(SuppressWarningsNotAnalysed)); //$NON-NLS-1$
 		buf.append("\n\t- ignore package from unnamed module: ").append(this.ignoreUnnamedModuleForSplitPackage ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- use StringConcatFactory for String concatenation expressions: ").append(this.useStringConcatFactory ? ENABLED : DISABLED); //$NON-NLS-1$
+		buf.append("\n\t- simulate virtual machine's operand stack during code generartion: ").append(this.simulateOperandStack ? ENABLED : DISABLED); //$NON-NLS-1$
 		return buf.toString();
 	}
 

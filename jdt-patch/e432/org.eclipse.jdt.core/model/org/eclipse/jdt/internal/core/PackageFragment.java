@@ -596,14 +596,14 @@ public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelExcep
 		pathBuffer.append('/');
 	}
 	String packPath= getElementName().replace('.', '/');
-	pathBuffer.append(packPath).append('/').append(JavadocConstants.PACKAGE_FILE_NAME);
+	pathBuffer.append(packPath).append('/').append(ExternalJavadocSupport.PACKAGE_FILE_NAME);
 
 	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
 	String contents = getURLContents(baseLocation, String.valueOf(pathBuffer));
 	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
 	if (contents == null) return null;
 
-	contents = (new JavadocContents(contents)).getPackageDoc();
+	contents = ExternalJavadocSupport.forHtml(null, contents).getPackageDoc();
 	if (contents == null) contents = ""; //$NON-NLS-1$
 	synchronized (projectInfo.javadocCache) {
 		projectInfo.javadocCache.put(this, contents);

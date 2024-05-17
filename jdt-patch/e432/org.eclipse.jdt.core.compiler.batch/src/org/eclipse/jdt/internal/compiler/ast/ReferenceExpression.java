@@ -957,18 +957,13 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 		if (this.descriptor == null || this.descriptor.parameters == null || this.descriptor.parameters.length == 0)
 			return Binding.NO_PARAMETERS;
 
-		/* 15.13.1, " ... method reference is treated as if it were an invocation with argument expressions of types P1, ..., Pn;"
-		   This implies/requires wildcard capture. This creates interesting complications, we can't just take the descriptor parameters
-		   and apply captures - where a single wildcard type got "fanned out" and propagated into multiple locations through type variable
-		   substitutions, we will end up creating distinct captures defeating the very idea of capture. We need to first capture and then
-		   fan out. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=432759.
-		*/
-		if (this.expectedType.isParameterizedType()) {
-			ParameterizedTypeBinding type = (ParameterizedTypeBinding) this.expectedType;
-			MethodBinding method = type.getSingleAbstractMethod(this.enclosingScope, true, this.sourceStart, this.sourceEnd);
-			return method.parameters;
+		TypeBinding[] parameters = this.descriptor.parameters;
+		TypeBinding[] result = new TypeBinding[parameters.length];
+
+		for (int i = 0, length = result.length; i < length; i++) {
+			result[i] = parameters[i].capture(this.enclosingScope, this.sourceStart, this.sourceEnd);
 		}
-		return this.descriptor.parameters;
+		return result;
 	}
 
 	private boolean contextHasSyntaxError() {

@@ -91,8 +91,7 @@ public class SwitchStatement extends Expression {
 	public final static int NullCase = ASTNode.Bit2;
 	public final static int TotalPattern = ASTNode.Bit3;
 	public final static int Exhaustive = ASTNode.Bit4;
-	public final static int Enhanced = ASTNode.Bit5;
-	public final static int QualifiedEnum = ASTNode.Bit6;
+	public final static int QualifiedEnum = ASTNode.Bit5;
 
 	// for switch on strings
 	private static final char[] SecretStringVariableName = " switchDispatchString".toCharArray(); //$NON-NLS-1$
@@ -1113,7 +1112,7 @@ public class SwitchStatement extends Expression {
 						isStringSwitch = true;
 						break checkType;
 					}
-					if (!JavaFeature.PATTERN_MATCHING_IN_SWITCH.isSupported(compilerOptions)) {
+					if (!JavaFeature.PATTERN_MATCHING_IN_SWITCH.isSupported(compilerOptions) || (expressionType.isBaseType() && expressionType.id != T_null && expressionType.id != T_void)) {
 						upperScope.problemReporter().incorrectSwitchType(this.expression, expressionType);
 						expressionType = null; // fault-tolerance: ignore type mismatch from constants from hereon
 					} else {
@@ -1308,9 +1307,7 @@ public class SwitchStatement extends Expression {
 	private boolean isExhaustive() {
 		return (this.switchBits & SwitchStatement.Exhaustive) != 0;
 	}
-	public boolean isEnhanced() {
-		return (this.switchBits & SwitchStatement.Enhanced) != 0;
-	}
+
 	private boolean checkAndSetEnhanced(BlockScope upperScope, TypeBinding expressionType) {
 		if (JavaFeature.PATTERN_MATCHING_IN_SWITCH.isSupported(upperScope.compilerOptions())
 				&& expressionType != null && !(this instanceof SwitchExpression )) {
@@ -1321,6 +1318,11 @@ public class SwitchStatement extends Expression {
 				case TypeIds.T_byte:
 				case TypeIds.T_short:
 				case TypeIds.T_int:
+				case TypeIds.T_long:
+				case TypeIds.T_double:
+				case TypeIds.T_boolean:
+				case TypeIds.T_float:
+				case TypeIds.T_void:
 				case TypeIds.T_JavaLangCharacter:
 				case TypeIds.T_JavaLangByte:
 				case TypeIds.T_JavaLangShort:
@@ -1329,7 +1331,6 @@ public class SwitchStatement extends Expression {
 					acceptableType = false;
 			}
 			if (acceptableType || this.containsPatterns || this.containsNull) {
-				this.switchBits |= SwitchStatement.Enhanced;
 				return true;
 			}
 		}

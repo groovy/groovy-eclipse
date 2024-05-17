@@ -822,22 +822,42 @@ public void test021() {
 		"	^^^^^^\n" +
 		"Unnecessary cast from B to A\n" +
 		"----------\n" +
-		"3. ERROR in p1\\C.java (at line 9)\n" +
+		"3. ERROR in p1\\C.java (at line 8)\n" +
+		"	((A)b).new Member4().new M4Member(); // fault tolerance\n" +
+		"	^^^^^^\n" +
+		"Illegal enclosing instance specification for type A.Member4\n" +
+		"----------\n" +
+		"4. ERROR in p1\\C.java (at line 8)\n" +
+		"	((A)b).new Member4().new M4Member(); // fault tolerance\n" +
+		"	^^^^^^^^^^^^^^^^^^^^\n" +
+		"Illegal enclosing instance specification for type A.Member4.M4Member\n" +
+		"----------\n" +
+		"5. ERROR in p1\\C.java (at line 9)\n" +
 		"	((A)zork()).new Member1(); // fault-tolerance\n" +
 		"	    ^^^^\n" +
 		"The method zork() is undefined for the type C\n" +
 		"----------\n" +
-		"4. ERROR in p1\\C.java (at line 12)\n" +
+		"6. ERROR in p1\\C.java (at line 12)\n" +
 		"	((A)b).new Member2(){}; // UNnecessary\n" +
 		"	^^^^^^\n" +
 		"Unnecessary cast from B to A\n" +
 		"----------\n" +
-		"5. ERROR in p1\\C.java (at line 14)\n" +
+		"7. ERROR in p1\\C.java (at line 14)\n" +
 		"	((A)b).new Member4().new M4Member(){}; // fault tolerance\n" +
 		"	^^^^^^\n" +
 		"Unnecessary cast from B to A\n" +
 		"----------\n" +
-		"6. ERROR in p1\\C.java (at line 15)\n" +
+		"8. ERROR in p1\\C.java (at line 14)\n" +
+		"	((A)b).new Member4().new M4Member(){}; // fault tolerance\n" +
+		"	^^^^^^\n" +
+		"Illegal enclosing instance specification for type A.Member4\n" +
+		"----------\n" +
+		"9. ERROR in p1\\C.java (at line 14)\n" +
+		"	((A)b).new Member4().new M4Member(){}; // fault tolerance\n" +
+		"	^^^^^^^^^^^^^^^^^^^^\n" +
+		"Illegal enclosing instance specification for type A.Member4.M4Member\n" +
+		"----------\n" +
+		"10. ERROR in p1\\C.java (at line 15)\n" +
 		"	((A)zork()).new Member1(){}; // fault-tolerance\n" +
 		"	    ^^^^\n" +
 		"The method zork() is undefined for the type C\n" +

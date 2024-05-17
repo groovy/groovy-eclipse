@@ -164,6 +164,7 @@ public static Test suite() {
 	since_1_8.add(LambdaShapeTests.class);
 	since_1_8.add(StringConcatTest.class);
 	since_1_8.add(UseOfUnderscoreTest.class);
+	since_1_8.add(DubiousOutcomeTest.class);
 
 	ArrayList since_9 = new ArrayList();
 	since_9.add(Unicode9Test.class);

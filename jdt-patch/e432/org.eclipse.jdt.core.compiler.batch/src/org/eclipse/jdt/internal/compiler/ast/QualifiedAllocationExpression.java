@@ -590,7 +590,8 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 			scope.problemReporter().missingTypeInConstructor(this, constructorBinding);
 		}
 		if (this.enclosingInstance != null) {
-			ReferenceBinding targetEnclosing = constructorBinding.declaringClass.enclosingType();
+			ReferenceBinding targetEnclosing =
+					!constructorBinding.declaringClass.isNestedType() || constructorBinding.declaringClass.isStatic() ? null : constructorBinding.declaringClass.enclosingType();
 			if (targetEnclosing == null) {
 				scope.problemReporter().unnecessaryEnclosingInstanceSpecification(this.enclosingInstance, receiver);
 				return this.resolvedType;

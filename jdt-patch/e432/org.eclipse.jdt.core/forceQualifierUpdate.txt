@@ -13,3 +13,4 @@ Bug 573283 - don't include javax15api.jar in jdt binaries
 https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/issues/1184
 https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/issues/1659
 https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/issues/1781
+https://github.com/eclipse-jdt/eclipse.jdt.core/pull/2341
