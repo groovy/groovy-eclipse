@@ -915,6 +915,30 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "name", isAtLeastGroovy(50) ? "java.lang.Number" : "java.lang.String");
     }
 
+    @Test // GROOVY-11367
+    public void testNotMapProperty3() {
+        String contents =
+            "Map map= [:]\n" +
+            "map.with {  \n" +
+            "  delegate  \n" +
+            "  directive \n" +
+            "  metaClass \n" +
+            "  thisObject;\n" +
+            "  { -> owner}\n" +
+            "}\n";
+        // DELEGATE_FIRST: Closure really comes first
+        assertType(contents, "delegate", "java.util.Map");
+        assertDeclaringType(contents, "delegate", "groovy.lang.Closure<V extends java.lang.Object>");
+        assertType(contents, "directive", "java.lang.Integer");
+        assertDeclaringType(contents, "directive", "groovy.lang.Closure");
+        assertType(contents, "metaClass", "groovy.lang.MetaClass");
+        assertDeclaringType(contents, "metaClass", "groovy.lang.GroovyObjectSupport");
+        assertType(contents, "thisObject", DEFAULT_UNIT_NAME);
+        assertDeclaringType(contents, "thisObject", "groovy.lang.Closure<V extends java.lang.Object>");
+        assertType(contents, "owner", "groovy.lang.Closure"); // not DEFAULT_UNIT_NAME
+        assertDeclaringType(contents, "owner", "groovy.lang.Closure<V extends java.lang.Object>");
+    }
+
     @Test
     public void testBoolean1() {
         assertType("!x", "java.lang.Boolean");
@@ -4692,29 +4716,6 @@ public final class InferencingTests extends InferencingTestSuite {
 
         assertType(contents, "this", "A");
         assertType(contents, "source", "java.lang.Number");
-    }
-
-    @Test
-    public void testSwitchClosureCase2() {
-        String contents =
-            "switch (123) {\n" +
-            "  case {i -> i > 10}:\n" +
-            "  break\n" +
-            "}\n";
-
-        assertType(contents, "i", "java.lang.Integer");
-    }
-
-    @Test
-    public void testSwitchClosureCase3() {
-        String contents =
-            "switch (123) {\n" +
-            "  case {i,j -> i > 10}:\n" +
-            "  break\n" +
-            "}\n";
-
-        assertType(contents, "i", "java.lang.Integer");
-        assertType(contents, "j", "java.lang.Object");
     }
 
     @Test // GRECLIPSE-1798

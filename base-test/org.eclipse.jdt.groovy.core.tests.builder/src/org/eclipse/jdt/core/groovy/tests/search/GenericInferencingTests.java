@@ -554,7 +554,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + "getMetaClass".length(), "groovy.lang.MetaClass");
 
             offset = contents.lastIndexOf("metaClass");
-        assertType(contents, offset, offset + "metaClass".length(), "java.lang.String");
+        assertType(contents, offset, offset + "metaClass".length(), "groovy.lang.MetaClass");
 
             offset = contents.indexOf("isEmpty");
         assertType(contents, offset, offset + "isEmpty".length(), "java.lang.Boolean");

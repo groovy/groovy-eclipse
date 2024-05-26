@@ -604,7 +604,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         ASTNode candidate = null;
         List<ClassNode> callArgs = scope.getMethodCallArgumentTypes();
 
-        if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
+        if (scope.getEnclosingClosure() != null) {
+            candidate = (!isAssignTarget && callArgs != null) // findDeclaration without the extra stuff
+                ? findMethodDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, callArgs, false)
+                : findPropertyAccessorMethod(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isAssignTarget, false, callArgs).orElse(null);
+        }
+        if (candidate == null && (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY)) {
             // TODO: If strategy is DELEGATE_ONLY and delegate is enclosing closure, do outer search.
             candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, 0, callArgs);
             if (candidate != null) var.putNodeMetaData("_from_type_", scope.getDelegate());
@@ -634,9 +639,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 }
             }
-        }
-        if (candidate == null && resolveStrategy <= Closure.TO_SELF && (resolveStrategy > 0 || scope.getEnclosingClosure() != null)) {
-            candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isAssignTarget, false, 0, callArgs);
         }
 
         return candidate;
@@ -752,7 +754,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        if (!declaringType.equals(VariableScope.CLASS_CLASS_NODE) && !declaringType.equals(VariableScope.OBJECT_CLASS_NODE) && !declaringType.equals(ClassHelper.SCRIPT_TYPE)) {
+        if (!declaringType.equals(VariableScope.CLASS_CLASS_NODE) && !declaringType.equals(VariableScope.OBJECT_CLASS_NODE) &&
+                    !declaringType.equals(VariableScope.CLOSURE_CLASS_NODE) && !declaringType.equals(ClassHelper.SCRIPT_TYPE)) {
             Optional<MethodNode> mopMethod = findMetaObjectMethods(declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes).filter(mm -> {
                 if (isSynthetic(mm)) return false;
                 Parameter[] p = mm.getParameters();
@@ -1224,8 +1227,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * implicit in some sense).
      */
     protected static boolean isSynthetic(final MethodNode method) {
-        return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE) ||
-            GroovyUtils.getAnnotations(method, "groovy.transform.Generated").anyMatch(annotationNode -> true);
+        return method.isSynthetic() || GroovyUtils.getAnnotations(method, "groovy.transform.Generated").anyMatch(annotationNode -> true);
     }
 
     protected static boolean isTraitBridge(final MethodNode method) {

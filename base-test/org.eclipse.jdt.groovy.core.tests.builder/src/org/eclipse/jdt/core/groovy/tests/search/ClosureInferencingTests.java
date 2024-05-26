@@ -1497,6 +1497,29 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testSwitchClosureCase1() {
+        String contents =
+            "switch (123) {\n" +
+            "  case {i -> i > 10}:\n" +
+            "  break\n" +
+            "}\n";
+
+        assertType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test
+    public void testSwitchClosureCase2() {
+        String contents =
+            "switch (123) {\n" +
+            "  case {i,j -> i > 10}:\n" +
+            "  break\n" +
+            "}\n";
+
+        assertType(contents, "i", "java.lang.Integer");
+        assertType(contents, "j", "java.lang.Object");
+    }
+
+    @Test
     public void testClosureParamsAnnotation1() {
         //@formatter:off
         String contents =
