@@ -26,7 +26,6 @@
     <compilerBaselineMode>warn</compilerBaselineMode>
     <compilerBaselineReplace>common</compilerBaselineReplace>
     <defaultSigning-excludeInnerJars>true</defaultSigning-excludeInnerJars>
-    <code.ignoredWarnings>-warn:+fieldHiding,-unavoidableGenericProblems</code.ignoredWarnings>
   </properties>
 
   <build>

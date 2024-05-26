@@ -8001,4 +8001,33 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				},
 				"String = Hello int = 42");
 	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2485
+	// Empty stack error compiling project with broken classpath
+	public void testIssue2485() {
+		if (this.complianceLevel < ClassFileConstants.JDK14)
+			return;
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"""
+				public class X {
+				    public static int convertOpcode(int from, int to) {
+				        return switch (from) {
+				            case 42 ->
+			                    switch (to) {
+			                        case 42 -> 42;
+			                        default -> throw new UnsupportedOperationException();
+			                    };
+				            default -> throw new UnsupportedOperationException();
+				        };
+				    }
+				    public static void main(String [] args) {
+				        System.out.println("With 42 & 42 = " + convertOpcode(42, 42));
+			        }
+				}
+				"""
+				},
+				"With 42 & 42 = 42");
+	}
+
 }

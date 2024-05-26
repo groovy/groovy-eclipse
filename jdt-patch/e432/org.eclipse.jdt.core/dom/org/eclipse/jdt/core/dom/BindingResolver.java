@@ -937,6 +937,10 @@ class BindingResolver {
 		return null;
 	}
 
+	ITypeBinding resolveType(ImplicitTypeDeclaration type) {
+		return null;
+	}
+
 	/**
 	 * Resolves the given type parameter and returns the type binding for the
 	 * type parameter.

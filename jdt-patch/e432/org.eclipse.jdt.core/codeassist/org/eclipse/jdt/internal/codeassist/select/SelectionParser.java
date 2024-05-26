@@ -1929,6 +1929,7 @@ protected boolean restartRecovery() {
 			case K_INSIDE_EXPRESSION_SWITCH:
 			case K_INSIDE_IF:
 			case K_INSIDE_WHILE:
+			case K_INSIDE_FOR_EACH:
 				deferRestartOnLocalType = true;
 				break;
 			case K_TYPE_DELIMITER:

@@ -28,7 +28,7 @@ public class BranchLabel extends Label {
 	protected int targetStackDepth = -1;
 	public final static int WIDE = 1;
 	public final static int USED = 2;
-	private OperandStack switchSaveTypeBindings;
+	private OperandStack operandStack;
 
 
 public BranchLabel() {
@@ -85,6 +85,29 @@ public void becomeDelegateFor(BranchLabel otherLabel) {
 	// other label is delegating to receiver from now on
 	otherLabel.delegate = this;
 
+	if (this.targetStackDepth == -1) {
+		if (this.codeStream.stackDepth < 0) {
+			this.codeStream.classFile.referenceBinding.scope.problemReporter()
+					.operandStackSizeInappropriate(this.codeStream.classFile.referenceBinding.scope.referenceContext);
+			this.codeStream.stackDepth = 0; // FWIW
+			this.codeStream.operandStack.clear();
+		}
+		this.targetStackDepth = this.codeStream.stackDepth;
+		this.operandStack = this.codeStream.operandStack.copy();
+		// TODO: check that operand stack contents slot count matches targetStackDepth
+	} else {
+		// Stack depth known at label having encountered a previous branch and/or having fallen through to label
+		if (this.targetStackDepth != this.codeStream.stackDepth) {
+			this.codeStream.classFile.referenceBinding.scope.problemReporter().operandStackSizeInappropriate(
+					this.codeStream.classFile.referenceBinding.scope.referenceContext);
+			if (this.targetStackDepth < this.codeStream.stackDepth) {
+				this.targetStackDepth = this.codeStream.stackDepth; // FWIW, pick the higher water mark.
+				this.operandStack = this.codeStream.operandStack.copy();
+			}
+		}
+		// TODO: check that operand stacks match.
+	}
+
 	// all existing forward refs to other label are inlined into current label
 	final int otherCount = otherLabel.forwardReferenceCount;
 	if (otherCount == 0) return;
@@ -136,7 +159,7 @@ protected void trackStackDepth(boolean branch) {
 				this.codeStream.operandStack.clear();
 			}
 			this.targetStackDepth = this.codeStream.stackDepth;
-			this.switchSaveTypeBindings = this.codeStream.operandStack.copy();
+			this.operandStack = this.codeStream.operandStack.copy();
 			// TODO: check that contents slot count matches targetStackDepth
 		} // else: previous instruction completes abruptly via goto/return/throw: Wait for a backward branch to be emitted.
 	} else {
@@ -145,13 +168,16 @@ protected void trackStackDepth(boolean branch) {
 			if (this.targetStackDepth != this.codeStream.stackDepth) {
 				this.codeStream.classFile.referenceBinding.scope.problemReporter().operandStackSizeInappropriate(
 						this.codeStream.classFile.referenceBinding.scope.referenceContext);
-				if (this.targetStackDepth < this.codeStream.stackDepth)
+				if (this.targetStackDepth < this.codeStream.stackDepth) {
 					this.targetStackDepth = this.codeStream.stackDepth; // FWIW, pick the higher water mark.
+					this.operandStack = this.codeStream.operandStack.copy();
+				}
 			}
-			// TODO: check that contents slot count matches targetStackDepth
+			// TODO: check that operand stacks match.
+		} else {
+			this.codeStream.stackDepth = this.targetStackDepth;
+			this.codeStream.operandStack = this.operandStack.copy();
 		}
-		this.codeStream.stackDepth = this.targetStackDepth;
-		this.codeStream.operandStack = this.switchSaveTypeBindings.copy();
 	}
 }
 /*

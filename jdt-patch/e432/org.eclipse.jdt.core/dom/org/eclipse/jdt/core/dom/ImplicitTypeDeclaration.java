@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * @since 3.38
  */
-public class ImplicitTypeDeclaration extends AbstractUnnamedTypeDeclaration {
+public class ImplicitTypeDeclaration extends AbstractTypeDeclaration {
 
 	@Deprecated
 	public static final SimplePropertyDescriptor MODIFIERS_PROPERTY =
@@ -20,6 +20,9 @@ public class ImplicitTypeDeclaration extends AbstractUnnamedTypeDeclaration {
 
 	public static final ChildListPropertyDescriptor BODY_DECLARATIONS_PROPERTY =
 			internalBodyDeclarationPropertyFactory(ImplicitTypeDeclaration.class);
+
+	public static final ChildPropertyDescriptor NAME_PROPERTY =
+			new ChildPropertyDescriptor(ImplicitTypeDeclaration.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * A list of property descriptors (element type:
@@ -40,6 +43,7 @@ public class ImplicitTypeDeclaration extends AbstractUnnamedTypeDeclaration {
 	static {
 		List<Object> propertyList = new ArrayList<>(8);
 		createPropertyList(ImplicitTypeDeclaration.class, propertyList);
+		addProperty(NAME_PROPERTY, propertyList);
 		addProperty(BODY_DECLARATIONS_PROPERTY, propertyList);
 		addProperty(JAVADOC_PROPERTY, propertyList);
 		addProperty(MODIFIERS_PROPERTY, propertyList);
@@ -47,6 +51,7 @@ public class ImplicitTypeDeclaration extends AbstractUnnamedTypeDeclaration {
 
 		propertyList = new ArrayList<>(8);
 		createPropertyList(ImplicitTypeDeclaration.class, propertyList);
+		addProperty(NAME_PROPERTY, propertyList);
 		addProperty(BODY_DECLARATIONS_PROPERTY, propertyList);
 		addProperty(JAVADOC_PROPERTY, propertyList);
 		addProperty(MODIFIERS2_PROPERTY, propertyList);
@@ -130,6 +135,13 @@ public class ImplicitTypeDeclaration extends AbstractUnnamedTypeDeclaration {
 				setJavadoc((Javadoc) child);
 				return null;
 			}
+		} else if (property == NAME_PROPERTY) {
+			if (get) {
+				return getName();
+			} else {
+				setName((SimpleName)child);
+				return null;
+			}
 		}
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
@@ -159,6 +171,49 @@ public class ImplicitTypeDeclaration extends AbstractUnnamedTypeDeclaration {
 		}
 		// allow default implementation to flag the error
 		return super.internalGetSetIntProperty(property, get, value);
+	}
+
+	// from AbstractTypeDeclaration
+
+	@Override
+	public SimpleName getName() {
+		if (this.typeName == null) {
+			synchronized (this) {
+				if (this.typeName == null) {
+					preLazyInit();
+					this.typeName = new EmptyName(this.ast);
+					this.typeName.setSourceRange(this.getStartPosition(), 0);
+					postLazyInit(this.typeName, NAME_PROPERTY);
+				}
+			}
+		}
+		return this.typeName;
+	}
+
+	@Override
+	public ChildPropertyDescriptor internalNameProperty() {
+		return NAME_PROPERTY;
+	}
+
+	@Override
+	public ITypeBinding internalResolveBinding() {
+		return this.ast.getBindingResolver().resolveType(this);
+	}
+
+	private final class EmptyName extends SimpleName {
+		private EmptyName(AST ast) {
+			super(ast);
+		}
+
+		@Override
+		public String getIdentifier() {
+			return ""; //$NON-NLS-1$
+		}
+
+		@Override
+		public void setIdentifier(String newIdentifier) {
+			throw new IllegalArgumentException("Cannot change the name of an implicitly declared class; it must be the empty string"); //$NON-NLS-1$
+		}
 	}
 
 }

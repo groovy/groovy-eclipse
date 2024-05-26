@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -126,7 +126,6 @@ import org.eclipse.jdt.internal.compiler.parser.RecoveredMethod;
 import org.eclipse.jdt.internal.compiler.parser.RecoveredModule;
 import org.eclipse.jdt.internal.compiler.parser.RecoveredPackageVisibilityStatement;
 import org.eclipse.jdt.internal.compiler.parser.RecoveredProvidesStatement;
-import org.eclipse.jdt.internal.compiler.parser.RecoveredStatement;
 import org.eclipse.jdt.internal.compiler.parser.RecoveredType;
 import org.eclipse.jdt.internal.compiler.parser.RecoveredUnit;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
@@ -1333,8 +1332,8 @@ private boolean popBlockContaining(ASTNode soughtStatement) {
 	RecoveredElement elem = this.currentElement;
 	while (elem instanceof RecoveredBlock block) {
 		for (int i=0; i<block.statementCount; i++) {
-			if (block.statements[i] instanceof RecoveredStatement stmt) {
-				if (stmt.statement == soughtStatement) {
+			if (block.statements[i] /*instanceof RecoveredStatement stmt*/ != null) { // GROOVY edit
+				if (block.statements[i].statement == soughtStatement) {
 					this.currentElement = block.parent;
 					// also remove block from the new currentElement:
 					if (this.currentElement instanceof RecoveredBlock newBlock) {
