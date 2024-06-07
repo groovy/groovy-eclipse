@@ -4239,6 +4239,33 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('prop'), 4, METHOD_CALL))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1583
+    void testWithBlock9() {
+        addGroovySource '''\
+            |class Pogo {
+            |  Object getBlah() {}
+            |  static getName() {}
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |Pogo.with {
+            |  blah
+            |  name
+            |  getName()
+            |  getPackage()
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('blah'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('name'), 4, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getName'), 7, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getPackage'), 10, METHOD_CALL))
+    }
+
     @Test
     void testLazyInitExpr1() {
         String contents = '''\

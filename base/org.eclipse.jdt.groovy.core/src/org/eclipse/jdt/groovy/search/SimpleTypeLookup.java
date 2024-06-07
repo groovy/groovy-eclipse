@@ -15,9 +15,9 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.unique;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
 
 import java.util.ArrayList;
@@ -603,6 +603,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected ASTNode findDeclarationForDynamicVariable(final VariableExpression var, final ClassNode owner, final VariableScope scope, final boolean isAssignTarget, final int resolveStrategy) {
         ASTNode candidate = null;
         List<ClassNode> callArgs = scope.getMethodCallArgumentTypes();
+        java.util.function.BiFunction<ClassNode, Integer, ASTNode> findDecl = (type, mode) -> {
+            ASTNode node = null;
+            if (type.equals(VariableScope.CLASS_CLASS_NODE)) { // GRECLIPSE-1544: check Type of Class<Type> before Class
+                node = findDeclaration(var.getName(), getBaseDeclaringType(type), isAssignTarget, true, mode, callArgs);
+                if (node != null) var.putNodeMetaData("_from_type_", getBaseDeclaringType(type));
+                mode = 0; // check Class without direct field access
+            }
+            if (node == null) {
+                node = findDeclaration(var.getName(), type, isAssignTarget, false, mode, callArgs);
+                if (node != null) var.putNodeMetaData("_from_type_", type);
+            }
+            return node;
+        };
 
         if (scope.getEnclosingClosure() != null) {
             candidate = (!isAssignTarget && callArgs != null) // findDeclaration without the extra stuff
@@ -611,8 +624,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
         if (candidate == null && (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY)) {
             // TODO: If strategy is DELEGATE_ONLY and delegate is enclosing closure, do outer search.
-            candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, 0, callArgs);
-            if (candidate != null) var.putNodeMetaData("_from_type_", scope.getDelegate());
+            candidate = findDecl.apply(scope.getDelegate(), 0);
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
             VariableScope outer = owner.getNodeMetaData("outer.scope");
@@ -624,12 +636,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     outer.setMethodCallArgumentTypes(null);
                 }
             } else {
-                candidate = findDeclaration(var.getName(), owner, isAssignTarget, scope.isOwnerStatic(), scope.isFieldAccessDirect() ? 1 : 0, callArgs);
-                if (candidate != null) var.putNodeMetaData("_from_type_", owner);
+                candidate = findDecl.apply(scope.isOwnerStatic() ? VariableScope.newClassClassNode(owner) : owner, scope.isFieldAccessDirect() ? 1 : 0);
             }
-            if (candidate == null && resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
-                candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, 0, callArgs);
-                if (candidate != null) var.putNodeMetaData("_from_type_", scope.getDelegate());
+            if (candidate == null && resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null && !scope.getDelegate().equals(scope.getOwner())) {
+                candidate = findDecl.apply(scope.getDelegate(), 0);
             }
             if (candidate == null && scope.getEnclosingClosure() == null && scope.getEnclosingMethodDeclaration() != null) {
                 for (Parameter parameter : scope.getEnclosingMethodDeclaration().getParameters()) {

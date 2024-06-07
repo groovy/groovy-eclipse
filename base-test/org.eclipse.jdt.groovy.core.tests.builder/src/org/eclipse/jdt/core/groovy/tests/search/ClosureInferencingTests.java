@@ -228,24 +228,25 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "bar", "java.lang.Long");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/502
+    @Test
     public void testClosure11() {
         //@formatter:off
         String contents =
             "class Foo {\n" +
-            "  static long bar(String arg) {\n" +
+            "  long bar(String arg) {\n" +
             "  }\n" +
             "  static void baz() {\n" +
             "    String a = 'bc'\n" +
             "    def fn = {\n" +
-            "      [].each {\n" +
-            "        bar(a)\n" + // call static method from closure within closure within static scope
-            "      }\n" +
+            "      bar(a)\n" +
+            "      name\n" +
             "    }\n" +
             "  }\n" +
             "}";
         //@formatter:on
-        assertType(contents, "bar", "java.lang.Long");
+        int offset = contents.lastIndexOf("bar");
+        assertUnknownConfidence(contents, offset, offset + 3);
+        assertDeclaringType(contents, "name", "java.lang.Class");
     }
 
     @Test
@@ -787,8 +788,28 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "this", DEFAULT_UNIT_NAME);
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/809
+    @Test // https://github.com/groovy/groovy-eclipse/issues/502
     public void testNestedClosure10() {
+        //@formatter:off
+        String contents =
+            "class Foo {\n" +
+            "  static long bar(String arg) {\n" +
+            "  }\n" +
+            "  static void baz() {\n" +
+            "    String a = 'bc'\n" +
+            "    def fn = {\n" +
+            "      [].each {\n" +
+            "        bar(a)\n" + // call static method from closure within closure within static scope
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+        assertType(contents, "bar", "java.lang.Long");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/809
+    public void testNestedClosure11() {
         //@formatter:off
         String contents =
             "''.with {\n" +
@@ -803,7 +824,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
-    public void testNestedClosure11() {
+    public void testNestedClosure12() {
         //@formatter:off
         String contents =
             "42.with {\n" +
@@ -818,7 +839,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
-    public void testNestedClosure12() {
+    public void testNestedClosure13() {
         //@formatter:off
         String contents =
             "42.with {\n" +
@@ -833,7 +854,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
-    public void testNestedClosure13() {
+    public void testNestedClosure14() {
         //@formatter:off
         String contents =
             "(~/.../).with {\n" +
@@ -850,7 +871,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
-    public void testNestedClosure14() {
+    public void testNestedClosure15() {
         //@formatter:off
         String contents =
             "class Foo {\n" +
@@ -893,7 +914,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/377
-    public void testNestedClosure15() {
+    public void testNestedClosure16() {
         //@formatter:off
         String contents =
             "import java.beans.*\n" +
@@ -917,7 +938,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/377
-    public void testNestedClosure16() {
+    public void testNestedClosure17() {
         //@formatter:off
         String contents =
             "import java.beans.*\n" +
@@ -939,7 +960,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1141
-    public void testNestedClosure17() {
+    public void testNestedClosure18() {
         //@formatter:off
         String contents =
             "private void process(artifacts, String rev, File jardir) {\n" +
