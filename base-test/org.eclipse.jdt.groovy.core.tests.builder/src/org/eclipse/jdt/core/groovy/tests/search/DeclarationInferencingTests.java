@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 
@@ -964,20 +965,13 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         String contents =
             "import groovy.transform.PackageScope\n" +
             "class Foo {\n" +
-            "  def a\n" +
-            "  private b\n" +
-            "  public  c\n" +
-            "  protected d\n" +
+            "  def           a\n" +
+            "  public        b\n" +
+            "  private       c\n" +
+            "  protected     d\n" +
             "  @PackageScope e\n" +
             "  class Bar {\n" +
             "    def getProperty(String name) {\n" + // GROOVY-10985
-            "      switch (name) {\n" +
-            "        case 'a': return 'A'\n" +
-            "        case 'b': return 'B'\n" +
-            "        case 'c': return 'C'\n" +
-            "        case 'd': return 'D'\n" +
-            "        case 'e': return 'E'\n" +
-            "      }\n" +
             "    }\n" +
             "    void meth() {\n" +
             "      a\n" +
@@ -996,19 +990,19 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = contents.indexOf("a", contents.indexOf("meth"));
-        assertDeclaration(contents, offset, offset + 1, "Foo", "a", DeclarationKind.FIELD);
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "a", DeclarationKind.PROPERTY);
 
         /**/offset = contents.indexOf("b", offset);
-        assertDeclaration(contents, offset, offset + 1, "Foo", "b", DeclarationKind.FIELD);
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "b", DeclarationKind.PROPERTY);
 
         /**/offset = contents.indexOf("c", offset);
-        assertDeclaration(contents, offset, offset + 1, "Foo", "c", DeclarationKind.FIELD);
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "c", DeclarationKind.PROPERTY);
 
         /**/offset = contents.indexOf("d", offset);
-        assertDeclaration(contents, offset, offset + 1, "Foo", "d", DeclarationKind.FIELD);
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "d", DeclarationKind.PROPERTY);
 
         /**/offset = contents.indexOf("e", offset);
-        assertDeclaration(contents, offset, offset + 1, "Foo", "e", DeclarationKind.FIELD);
+        assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "e", DeclarationKind.PROPERTY);
 
         /**/offset = contents.lastIndexOf("a");
         assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "a", DeclarationKind.PROPERTY);
@@ -1024,6 +1018,68 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
         /**/offset = contents.lastIndexOf("e");
         assertDeclaration(contents, offset, offset + 1, "Foo$Bar", "e", DeclarationKind.PROPERTY);
+
+        //@formatter:off
+        contents =
+            "import groovy.transform.PackageScope\n" +
+            "class Foo {\n" +
+            "  static def           a\n" +
+            "  static public        b\n" +
+            "  static private       c\n" +
+            "  static protected     d\n" +
+            "  static @PackageScope e\n" +
+            "  class Bar {\n" +
+            "    def getProperty(String name) {\n" +
+            "    }\n" +
+            "    void meth() {\n" +
+            "      a\n" +
+            "      b\n" +
+            "      c\n" +
+            "      d\n" +
+            "      e\n" +
+            "      this.a\n" +
+            "      this.b\n" +
+            "      this.c\n" +
+            "      this.d\n" +
+            "      this.e\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        // static fields are special case
+        String declType = isAtLeastGroovy(50) ? "Foo$Bar" : "Foo";
+        DeclarationKind declKind = isAtLeastGroovy(50) ? DeclarationKind.PROPERTY : DeclarationKind.FIELD;
+
+        /**/offset = contents.indexOf("a", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 1, declType, "a", declKind);
+
+        /**/offset = contents.indexOf("b", offset);
+        assertDeclaration(contents, offset, offset + 1, declType, "b", declKind);
+
+        /**/offset = contents.indexOf("c", offset);
+        assertDeclaration(contents, offset, offset + 1, declType, "c", declKind);
+
+        /**/offset = contents.indexOf("d", offset);
+        assertDeclaration(contents, offset, offset + 1, declType, "d", declKind);
+
+        /**/offset = contents.indexOf("e", offset);
+        assertDeclaration(contents, offset, offset + 1, declType, "e", declKind);
+
+        /**/offset = contents.lastIndexOf("a");
+        assertDeclaration(contents, offset, offset + 1, declType, "a", declKind);
+
+        /**/offset = contents.lastIndexOf("b");
+        assertDeclaration(contents, offset, offset + 1, declType, "b", declKind);
+
+        /**/offset = contents.lastIndexOf("c");
+        assertDeclaration(contents, offset, offset + 1, declType, "c", declKind);
+
+        /**/offset = contents.lastIndexOf("d");
+        assertDeclaration(contents, offset, offset + 1, declType, "d", declKind);
+
+        /**/offset = contents.lastIndexOf("e");
+        assertDeclaration(contents, offset, offset + 1, declType, "e", declKind);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1559

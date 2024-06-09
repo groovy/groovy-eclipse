@@ -402,11 +402,27 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 } else if (declaration instanceof PropertyNode) {
                     PropertyNode property = (PropertyNode) declaration;
-                    FieldNode underlyingField = property.getField(); // prefer looking at the underlying field
-                    if (isStaticObjectExpression && !(underlyingField != null ? underlyingField.isStatic() : property.isStatic())) {
+                    if (isStaticObjectExpression && !property.isStatic()) {
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (property.isSynthetic()) {
-                        confidence = isLhsExpression || !(scope.isMethodCall() || scope.getEnclosingNode() instanceof MethodPointerExpression) ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
+                        FieldNode outerField = null; // ACG#visitPropertyExpression --> checkStaticOuterField
+                        if (isThisObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 5) {
+                            for (ClassNode outerClass = declaring; outerClass != null; outerClass = outerClass.getOuterClass()) {
+                                outerField = outerClass.getDeclaredField(name);
+                                if (outerField != null) break;
+                                outerField = outerClass.getField(name); // check super(s)
+                                if (outerField != null && !outerField.isPrivate() && (outerField.isPublic() || outerField.isProtected() ||
+                                    Objects.equals(outerClass.getPackageName(), outerField.getDeclaringClass().getPackageName())))  break;
+                                outerField = null;
+                            }
+                        }
+                        if (outerField != null && outerField.isStatic()) {
+                            declaration = outerField; // GROOVY-9501, et al.
+                            resolvedType = getTypeFromDeclaration(declaration);
+                            resolvedDeclaringType = getDeclaringTypeFromDeclaration(declaration, declaring);
+                        } else {
+                            confidence = isLhsExpression || !(scope.isMethodCall() || scope.getEnclosingNode() instanceof MethodPointerExpression) ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
+                        }
                     }
                 } else if (declaration instanceof MethodNode) {
                     MethodNode method = (MethodNode) declaration;
@@ -558,14 +574,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (method != method.getOriginal() && (isTraitBridge(method) || isTraitHelper(method.getDeclaringClass()))) {
                         candidate = method.getOriginal(); // the trait method
                     }
-                } else if (candidate instanceof PropertyNode) {
-                    if (((PropertyNode) candidate).isSynthetic()) {
-                        if (var.getAccessedVariable() instanceof FieldNode && // TODO: GROOVY-10985: fix dynamic property's precedence
-                                declaringType.getOuterClasses().contains(((FieldNode) var.getAccessedVariable()).getDeclaringClass())) {
-                            candidate = (FieldNode) var.getAccessedVariable(); // legacy resolution picks the field from enclosing scope
-                        } else {
-                            confidence = isAssignTarget || !scope.isMethodCall() ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
-                        }
+                } else if (candidate instanceof PropertyNode && ((PropertyNode) candidate).isSynthetic()) {
+                    if (var.getAccessedVariable() instanceof FieldNode && ((FieldNode) var.getAccessedVariable()).isStatic() &&
+                            GroovyUtils.getGroovyVersion().getMajor() < 5) { // ACG#visitPropertyExpression --> checkStaticOuterField
+                        candidate = (FieldNode) var.getAccessedVariable(); // legacy resolution prefers static field from outer class
+                    } else {
+                        confidence = isAssignTarget || !scope.isMethodCall() ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
                     }
                 }
                 // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write
@@ -783,7 +797,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // look for member in outer classes
-        for (ClassNode type = getBaseDeclaringType(declaringType); type != null; type = type.getSuperClass()) {
+        for (ClassNode type = declaringType; type != null; type = type.getSuperClass()) {
             if (type.getOuterClass() != null) {
                 // search only for static declarations if inner class is static
                 boolean isStatic = (isStaticExpression || Flags.isStatic(type.getModifiers()));

@@ -656,6 +656,25 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + "str".length(), "java.lang.String");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1584
+    public void testClosure35() {
+        //@formatter:off
+        String contents =
+            "class C implements Map<String,String> {\n" +
+            "  private static x\n" +
+            "  void test() {\n" +
+            "    { ->\n" +
+            "      this.x\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+
+        assertDeclaringType(contents, "x", "C");
+        // static field has special handling; ACG#checkStaticOuterField
+        assertType(contents, "x", "java.lang." + (isAtLeastGroovy(50) ? "String" : "Object"));
+    }
+
     @Test // closure within closure
     public void testNestedClosure1() {
         //@formatter:off
@@ -1371,6 +1390,11 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         assertDeclaringType(contents, "x", "D");
         assertType(contents, "x", "java.lang.Object");
+
+        // static field has special handling; ACG#checkStaticOuterField
+        contents = contents.replace("Number", "private static Number");
+        assertDeclaringType(contents, "x", isAtLeastGroovy(50) ? "D" : "C");
+        assertType(contents, "x", "java.lang." + (isAtLeastGroovy(50) ? "Object" : "Number"));
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1277
