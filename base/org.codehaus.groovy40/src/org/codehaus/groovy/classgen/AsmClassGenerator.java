@@ -1194,17 +1194,14 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private boolean isGroovyObject(final Expression objectExpression) {
-        if (isThisOrSuper(objectExpression)) return true; //GROOVY-8693
         if (objectExpression instanceof ClassExpression) return false;
-
         // GROOVY-9195, GROOVY-9288: uniform treatment for "foo.bar" and "foo.with { bar }" using TypeChooser (not getType())
         ClassNode objectExpressionType = controller.getTypeChooser().resolveType(objectExpression, controller.getClassNode());
-        return implementsGroovyObject(objectExpressionType) // GROOVY-10540
-            && !isOrImplements(objectExpressionType, ClassHelper.MAP_TYPE); // GROOVY-5517, GROOVY-8074
+        return implementsGroovyObject(objectExpressionType) && !isOrImplements(objectExpressionType, ClassHelper.MAP_TYPE); // GROOVY-5517, GROOVY-8074
     }
 
     private static boolean implementsGroovyObject(final ClassNode cn) {
-        return cn.isDerivedFromGroovyObject() || (cn.getCompileUnit() != null && !cn.isInterface());
+        return cn.isDerivedFromGroovyObject() || (cn.getCompileUnit() != null && !cn.isInterface()); // GROOVY-10540
     }
 
     @Override
@@ -1231,10 +1228,10 @@ public class AsmClassGenerator extends ClassGenerator {
                                 && fieldNode.getType().equals(ClassHelper.REFERENCE_TYPE)) {
                             fieldNode = null;
                         }
-                        // GROOVY-9501, GROOVY-9569, GROOVY-9650, GROOVY-9655, GROOVY-9665, GROOVY-9683, GROOVY-9695
-                        if (fieldNode == null && !isFieldDirectlyAccessible(getField(classNode, name), classNode)) {
-                            if (checkStaticOuterField(expression, name)) return;
-                        }
+                    }
+                    // GROOVY-9501, GROOVY-9569, GROOVY-9650, GROOVY-9655, GROOVY-9665, GROOVY-9683, GROOVY-9695
+                    if (fieldNode == null && !isFieldDirectlyAccessible(getField(classNode, name), classNode)) {
+                        if (checkStaticOuterField(expression, name)) return;
                     }
                 } else {
                     fieldNode = classNode.getSuperClass().getDeclaredField(name);
@@ -1250,8 +1247,9 @@ public class AsmClassGenerator extends ClassGenerator {
         }
 
         if (!visited) {
-            boolean useMetaObjectProtocol = isGroovyObject(objectExpression)
-                    && (!isThisOrSuper(objectExpression) || !controller.isStaticContext() || controller.isInGeneratedFunction());
+            boolean isThis = ExpressionUtils.isThisExpression(objectExpression)
+                    && !(expression.isImplicitThis() && controller.isInGeneratedFunction());
+            boolean useMetaObjectProtocol = isThis ? !controller.isStaticContext() : isGroovyObject(objectExpression);
 
             MethodCallerMultiAdapter adapter;
             if (controller.getCompileStack().isLHS()) {
@@ -1291,9 +1289,11 @@ public class AsmClassGenerator extends ClassGenerator {
         if (!visited) {
             MethodCallerMultiAdapter adapter;
             if (controller.getCompileStack().isLHS()) {
-                adapter = ExpressionUtils.isSuperExpression(objectExpression) ? setFieldOnSuper : isGroovyObject(objectExpression) ? setGroovyObjectField : setField;
+                adapter = ExpressionUtils.isSuperExpression(objectExpression) ? setFieldOnSuper
+                        : (ExpressionUtils.isThisExpression(objectExpression) || isGroovyObject(objectExpression)) ? setGroovyObjectField : setField;
             } else {
-                adapter = ExpressionUtils.isSuperExpression(objectExpression) ? getFieldOnSuper : isGroovyObject(objectExpression) ? getGroovyObjectField : getField;
+                adapter = ExpressionUtils.isSuperExpression(objectExpression) ? getFieldOnSuper
+                        : (ExpressionUtils.isThisExpression(objectExpression) || isGroovyObject(objectExpression)) ? getGroovyObjectField : getField;
             }
             visitAttributeOrProperty(expression, adapter);
         }

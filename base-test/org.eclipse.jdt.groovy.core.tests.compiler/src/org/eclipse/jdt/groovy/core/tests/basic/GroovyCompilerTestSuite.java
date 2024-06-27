@@ -136,7 +136,7 @@ public abstract class GroovyCompilerTestSuite {
                 String[] cps = super.getDefaultClassPaths();
                 String[] newcps = Arrays.copyOf(cps, cps.length + 2);
 
-                String[] groovyVersions = {"5.0.0", "4.0.21", "3.0.21-indy"};
+                String[] groovyVersions = {"5.0.0", "4.0.22", "3.0.21-indy"};
                 String[] ivyVersions = {"2.5.2", "2.5.1", "2.5.0"};
                 try {
                     URL groovyJar = null;

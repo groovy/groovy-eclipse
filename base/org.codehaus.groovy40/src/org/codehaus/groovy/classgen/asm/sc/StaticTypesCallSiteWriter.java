@@ -23,7 +23,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -86,6 +85,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
@@ -148,6 +148,11 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter {
 
     @Override
     public void makeCallSite(final Expression receiver, final String message, final Expression arguments, final boolean safe, final boolean implicitThis, final boolean callCurrent, final boolean callStatic) {
+        throw new GroovyBugError(
+                "at line " + receiver.getLineNumber() + " column " + receiver.getColumnNumber() + "\n" +
+                "On receiver: " + receiver.getText() + " with message: " + message + " and arguments: " + arguments.getText() + "\n" +
+                "StaticTypesCallSiteWriter#makeCallSite should not have been called. Call site lacked method target for static compilation.\n" +
+                "Please try to create a simple example reproducing this error and file a bug report at https://issues.apache.org/jira/browse/GROOVY");
     }
 
     @Override
@@ -430,9 +435,9 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter {
         if (makeGetField(receiver, receiverType, propertyName, safe, implicitThis)) return;
 
         boolean isScriptVariable = (receiverType.isScript() && receiver instanceof VariableExpression && ((VariableExpression) receiver).getAccessedVariable() == null);
-        if (!isScriptVariable && controller.getClassNode().getOuterClass() == null) { // inner class still needs dynamic property sequence
+        // script variables, self entry lookup and outer class property resolution still require the dynamic property sequence
+        if (!isScriptVariable && !isOrImplements(receiverType, MAP_TYPE) && controller.getClassNode().getOuterClass() == null)
             addPropertyAccessError(receiver, propertyName, receiverType);
-        }
 
         MethodCallExpression call = callX(receiver, "getProperty", args(constX(propertyName)));
         call.setImplicitThis(implicitThis);
@@ -453,7 +458,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter {
             getterName = "get" + capitalize(propertyName);
             getterNode = receiverType.getGetterMethod(getterName);
         }
-        if (getterNode != null && receiver instanceof ClassExpression && !isClassType(receiverType) && !getterNode.isStatic()) {
+        if (getterNode != null && !getterNode.isStatic() && receiver instanceof ClassExpression && !isClassType(receiverType)) {
             return false;
         }
 
@@ -472,29 +477,14 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter {
             getterNode.setDeclaringClass(receiverType);
         }
         if (getterNode != null) {
-            // GRECLIPSE add -- GROOVY-6277
-            java.util.function.BiPredicate<MethodNode,ClassNode> accessible = (method, sender) -> {
-                // a public method is accessible from anywhere
-                if (method.isPublic()) return true;
-
-                ClassNode declaringClass = method.getDeclaringClass();
-
-                // any method is accessible from the declaring class
-                if (sender.equals(declaringClass)) return true;
-
-                // a private method isn't accessible beyond the declaring class
-                if (method.isPrivate()) return false;
-
-                // a protected method is accessible from any subclass of the declaring class
-                if (method.isProtected() && sender.isDerivedFrom(declaringClass)) return true;
-
-                // a protected or package-private method is accessible from the declaring package
-                if (java.util.Objects.equals(sender.getPackageName(), declaringClass.getPackageName())) return true;
-
+            // GROOVY-6277, GROOVY-11390: ensure accessibility
+            ClassNode accessingClass = controller.getClassNode();
+            ClassNode declaringClass = getterNode.getDeclaringClass();
+            if (!getterNode.isPublic() && !accessingClass.equals(declaringClass)
+                    && !(getterNode.isProtected() && accessingClass.isDerivedFrom(declaringClass))
+                    && (getterNode.isPrivate() || !inSamePackage(accessingClass, declaringClass))) {
                 return false;
-            };
-            if (!accessible.test(getterNode, controller.getClassNode())) return false;
-            // GRECLIPSE end
+            }
             MethodCallExpression call = callX(receiver, getterName);
             call.setImplicitThis(implicitThis);
             call.setMethodTarget(getterNode);
@@ -504,22 +494,27 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter {
             return true;
         }
 
-        if (receiverType instanceof InnerClassNode && !receiverType.isStaticClass()) {
-            if (makeGetPropertyWithGetter(receiver,  receiverType.getOuterClass(), propertyName,  safe, implicitThis)) {
-                return true;
-            }
-        }
-
         // GROOVY-7149: check direct interfaces
-        for (ClassNode node : receiverType.getInterfaces()) {
-            if (makeGetPropertyWithGetter(receiver, node, propertyName, safe, implicitThis)) {
+        for (ClassNode traitClass : receiverType.getInterfaces()) {
+            if (makeGetPropertyWithGetter(receiver, traitClass, propertyName, safe, implicitThis)) {
                 return true;
             }
         }
-        // go upper level
+        // check super class
         ClassNode superClass = receiverType.getSuperClass();
         if (superClass != null) {
-            return makeGetPropertyWithGetter(receiver, superClass, propertyName, safe, implicitThis);
+            if (makeGetPropertyWithGetter(receiver, superClass, propertyName, safe, implicitThis)) {
+                return true;
+            }
+        }
+        // check outer class
+        ClassNode outerClass = receiverType.getOuterClass();
+        if (implicitThis && outerClass != null
+                && !outerClass.implementsInterface(MAP_TYPE)
+                && (receiverType.getModifiers() & ACC_STATIC) == 0) {
+            if (makeGetPropertyWithGetter(receiver, outerClass, propertyName, safe, implicitThis)) {
+                return true;
+            }
         }
 
         return false;
@@ -599,11 +594,11 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter {
         if (rType!=null && trySubscript(receiver, message, arguments, rType, aType, safe)) {
             return;
         }
-        // todo: more cases
+        // TODO: more cases
         throw new GroovyBugError(
-                "At line " + receiver.getLineNumber() + " column " + receiver.getColumnNumber() + "\n" +
+                "at line " + receiver.getLineNumber() + " column " + receiver.getColumnNumber() + "\n" +
                 "On receiver: " + receiver.getText() + " with message: " + message + " and arguments: " + arguments.getText() + "\n" +
-                "This method should not have been called. Please try to create a simple example reproducing\n" +
+                "This method should not have been called. Please try to create a simple example reproducing " +
                 "this error and file a bug report at https://issues.apache.org/jira/browse/GROOVY");
     }
 
