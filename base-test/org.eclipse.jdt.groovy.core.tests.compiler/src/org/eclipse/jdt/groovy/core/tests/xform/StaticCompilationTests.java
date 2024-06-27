@@ -71,7 +71,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
                 ? "call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n"
-                : "find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+                : "find matching method java.util.ArrayList#add(java.lang.String)\n"
             ) +
             "----------\n");
     }
@@ -315,7 +315,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in r\\Bar.groovy (at line 5)\n" +
             "\tf.m()\n" +
             "\t^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method q.Foo#m(). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method q.Foo#m()\n" +
             "----------\n");
     }
 
@@ -509,8 +509,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 11)\n" +
             "\tx.foo()\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method " + lub + "#foo()." +
-            " Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method " + lub + "#foo()\n" +
             "----------\n");
     }
 
@@ -919,7 +918,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             };
             //@formatter:on
 
-            runConformTest(sources, "123null");
+            runConformTest(sources, (isAtLeastGroovy(50) && mode.contains("o")) ? "123" : "123null");
         }
     }
 
@@ -1339,7 +1338,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "def that = this;\n" +
             "    that.a = 'a'\n" + // not put
             "    that.b = 'b'\n" + // not put
-            "    that.c = 'c'\n" + // not put
+            "    that.c = 'c'\n" + // not put (before Groovy 5)
             "    that.d = 'd'\n" +
             "    that.e = 'e'\n" +
             "    print(that);\n" +
@@ -1349,7 +1348,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "[:][d:d, e:e]");
+        runConformTest(sources, "[:][" + (isAtLeastGroovy(50) ? "c:c, " : "") + "d:d, e:e]");
     }
 
     @Test
@@ -2612,7 +2611,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 9)\n" +
             "\tprint inner.getFoo()\n" +
             "\t      ^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method Outer$Inner#getFoo(). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Outer$Inner#getFoo()\n" +
             "----------\n");
     }
 
@@ -2919,7 +2918,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                 "1. ERROR in Main.groovy (at line 4)\n" +
                 "\tfor (item in list.iterator()) print item.toUpperCase()\n" +
                 "\t                                    ^^^^^^^^^^^^^^^^^^\n" +
-                "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toUpperCase(). Please check if the declared type is correct and if the method exists.\n" +
+                "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toUpperCase()\n" +
                 "----------\n");
         }
     }
@@ -3561,19 +3560,23 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class DelegatesToMap {\n" +
-            "  @Delegate protected Map<String, Object> target = new HashMap<>()\n" +
+            "  @Delegate protected Map<String,Object> target = new HashMap<>()\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "class TaskConfig extends DelegatesToMap implements Cloneable {\n" +
             "  @Override\n" +
             "  TaskConfig clone() {\n" +
             "    def copy = (TaskConfig) super.clone()\n" +
-            "    copy.target = new HashMap<>(this.target)\n" + // NPE
+            "    copy.@target = new HashMap<>(this)\n" +
             "    return copy\n" +
             "  }\n" +
             "}\n" +
-            "def tc = new TaskConfig().clone()\n" +
-            "assert (tc instanceof TaskConfig)\n",
+            "def one = new TaskConfig()\n" +
+            "one.key = 123\n" +
+            "def two = one.clone()\n" +
+            "assert two instanceof TaskConfig\n" +
+            "assert !two.is(one)\n" +
+            "assert two.key == 123\n",
         };
         //@formatter:on
 
@@ -4465,12 +4468,16 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        String error = isAtLeastGroovy(40)
+            ? "No such property: VALUE for class: q.More"
+            : "Cannot access method: setVALUE(java.lang.String) of class: p.Main";
+
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in q\\More.groovy (at line 5)\n" +
             "\tVALUE = 'value'\n" +
             "\t^^^^^\n" +
-            "Groovy:[Static type checking] - No such property: VALUE for class: q.More\n" +
+            "Groovy:[Static type checking] - " + error + "\n" +
             "----------\n");
     }
 
@@ -4917,6 +4924,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "inner delegate");
+    }
+
+    @Test
+    public void testCompileStatic9115() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  File file = File.createTempFile('test', null)\n" +
+            "  try {\n" +
+            "    file.text = 'works'\n" +
+            "    print file.text\n" +
+            "  } finally {\n" +
+            "    file.delete()\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 
     @Test
@@ -7534,10 +7563,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
             "String test(String string) {\n" +
-            "  new StringBuilder().with {\n" +
+            "  new StringBuilder().tap {\n" +
             "    int len = length()\n" + // IllegalAccessError
             "    append(string)\n" +
-            "    toString()\n" +
             "  }\n" +
             "}\n" +
             "print test('works')\n",

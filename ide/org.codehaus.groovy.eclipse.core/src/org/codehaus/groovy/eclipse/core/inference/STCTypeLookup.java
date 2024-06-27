@@ -83,7 +83,8 @@ public class STCTypeLookup implements ITypeLookup {
                             declaringType = ((MethodNode) methodTarget).getDeclaringClass();
                         } else {
                             Variable accessedVariable = vexp.getAccessedVariable();
-                            if (accessedVariable instanceof AnnotatedNode) {
+                            if (accessedVariable instanceof AnnotatedNode && !(vexp.getEnd() > 0 && // explicit reference to
+                                    accessedVariable instanceof Parameter && ((Parameter) accessedVariable).getEnd() < 1)) { // implicit parameter
                                 declaration = (AnnotatedNode) accessedVariable;
                                 declaringType = ((AnnotatedNode) declaration).getDeclaringClass();
 

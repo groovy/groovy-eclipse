@@ -260,7 +260,6 @@ public class AsmClassGenerator extends ClassGenerator {
     private static final MethodCaller createGroovyObjectWrapperMethod = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "createGroovyObjectWrapper");
 
     private final Map<String,ClassNode> referencedClasses = new HashMap<>();
-    private boolean passingParams;
 
     public static final boolean CREATE_DEBUG_INFO = true;
     public static final boolean CREATE_LINE_NUMBER_INFO = true;
@@ -1161,23 +1160,23 @@ public class AsmClassGenerator extends ClassGenerator {
             return;
         }
 
-        if (propertyName != null) {
-            // TODO: spread safe should be handled inside
-            if (adapter == getProperty && !pexp.isSpreadSafe()) {
-                controller.getCallSiteWriter().makeGetPropertySite(objectExpression, propertyName, pexp.isSafe(), pexp.isImplicitThis());
-            } else if (adapter == getGroovyObjectProperty && !pexp.isSpreadSafe()) {
-                controller.getCallSiteWriter().makeGroovyObjectGetPropertySite(objectExpression, propertyName, pexp.isSafe(), pexp.isImplicitThis());
-            } else {
-                controller.getCallSiteWriter().fallbackAttributeOrPropertySite(pexp, objectExpression, propertyName, adapter);
-            }
+        if (adapter == getGroovyObjectProperty && propertyName != null && !pexp.isSpreadSafe()) { // TODO: spread safe should be handled by each
+            controller.getCallSiteWriter().makeGroovyObjectGetPropertySite(objectExpression, propertyName, pexp.isSafe(), pexp.isImplicitThis());
+        } else if (adapter == getProperty && propertyName != null && !pexp.isSpreadSafe()) {
+            controller.getCallSiteWriter().makeGetPropertySite(objectExpression, propertyName, pexp.isSafe(), pexp.isImplicitThis());
         } else {
-            controller.getCallSiteWriter().fallbackAttributeOrPropertySite(pexp, objectExpression, null, adapter);
+            controller.getCallSiteWriter().fallbackAttributeOrPropertySite(pexp, objectExpression, propertyName, adapter);
         }
     }
 
-    private boolean isGroovyObject(final Expression objectExpression) {
+    private boolean isGroovyObject(final PropertyExpression expression) {
+        Expression objectExpression = expression.getObjectExpression();
         if (objectExpression instanceof ClassExpression) return false;
-        if (isThisOrSuper(objectExpression)) return true;//GROOVY-8693
+
+        if (org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression(objectExpression)
+                && !(expression.isImplicitThis() && controller.isInGeneratedFunction())) {
+            return !controller.isStaticContext(); // TODO: not @POJO
+        }
 
         ClassNode objectExpressionType = controller.getTypeChooser().resolveType(objectExpression, controller.getClassNode());
         if (isObjectType(objectExpressionType)) objectExpressionType = objectExpression.getType();
@@ -1241,14 +1240,11 @@ public class AsmClassGenerator extends ClassGenerator {
         }
 
         if (!visited) {
-            boolean useMetaObjectProtocol = isGroovyObject(objectExpression)
-                    && (!isThisOrSuper(objectExpression) || !controller.isStaticContext() || controller.isInGeneratedFunction());
-
             MethodCallerMultiAdapter adapter;
             if (controller.getCompileStack().isLHS()) {
-                adapter = isSuperExpression(objectExpression) ? setPropertyOnSuper : useMetaObjectProtocol ? setGroovyObjectProperty : setProperty;
+                adapter = isSuperExpression(objectExpression) ? setPropertyOnSuper : isGroovyObject(expression) ? setGroovyObjectProperty : setProperty;
             } else {
-                adapter = isSuperExpression(objectExpression) ? getPropertyOnSuper : useMetaObjectProtocol ? getGroovyObjectProperty : getProperty;
+                adapter = isSuperExpression(objectExpression) ? getPropertyOnSuper : isGroovyObject(expression) ? getGroovyObjectProperty : getProperty;
             }
             visitAttributeOrProperty(expression, adapter);
         }
@@ -1282,9 +1278,9 @@ public class AsmClassGenerator extends ClassGenerator {
         if (!visited) {
             MethodCallerMultiAdapter adapter;
             if (controller.getCompileStack().isLHS()) {
-                adapter = isSuperExpression(objectExpression) ? setFieldOnSuper : isGroovyObject(objectExpression) ? setGroovyObjectField : setField;
+                adapter = isSuperExpression(objectExpression) ? setFieldOnSuper : isGroovyObject(expression) ? setGroovyObjectField : setField;
             } else {
-                adapter = isSuperExpression(objectExpression) ? getFieldOnSuper : isGroovyObject(objectExpression) ? getGroovyObjectField : getField;
+                adapter = isSuperExpression(objectExpression) ? getFieldOnSuper : isGroovyObject(expression) ? getGroovyObjectField : getField;
             }
             visitAttributeOrProperty(expression, adapter);
         }
@@ -1410,12 +1406,12 @@ public class AsmClassGenerator extends ClassGenerator {
 
     @Override
     public void visitVariableExpression(final VariableExpression expression) {
-        final String variableName = expression.getName();
+        CompileStack compileStack = controller.getCompileStack();
 
         if (expression.isThisExpression()) {
             // "this" in static context is Class instance
-            if (controller.isStaticMethod() || controller.getCompileStack().isInSpecialConstructorCall()
-                    || (!controller.getCompileStack().isImplicitThis() && controller.isStaticContext())) {
+            if (controller.isStaticMethod() || compileStack.isInSpecialConstructorCall()
+                    || (!compileStack.isImplicitThis() && controller.isStaticContext())) {
                 classX(controller.getThisType()).visit(this);
             } else {
                 loadThis(expression);
@@ -1434,26 +1430,18 @@ public class AsmClassGenerator extends ClassGenerator {
             return;
         }
 
-        BytecodeVariable variable = controller.getCompileStack().getVariable(variableName, false);
+        BytecodeVariable variable = compileStack.getVariable(expression.getName(), /*throwIfMissing*/false);
         if (variable != null) {
             controller.getOperandStack().loadOrStoreVariable(variable, expression.isUseReferenceDirectly());
-        } else if (passingParams && controller.isInScriptBody()) {
-            MethodVisitor mv = controller.getMethodVisitor();
-            mv.visitTypeInsn(NEW, "org/codehaus/groovy/runtime/ScriptReference");
-            mv.visitInsn(DUP);
-            loadThisOrOwner();
-            mv.visitLdcInsn(variableName);
-            mv.visitMethodInsn(INVOKESPECIAL, "org/codehaus/groovy/runtime/ScriptReference", "<init>", "(Lgroovy/lang/Script;Ljava/lang/String;)V", false);
         } else {
-            PropertyExpression pexp = thisPropX(true, variableName);
-            pexp.getObjectExpression().setSourcePosition(expression);
+            PropertyExpression pexp = thisPropX(true, expression.getName());
             pexp.getProperty().setSourcePosition(expression);
             pexp.setType(expression.getType());
             pexp.copyNodeMetaData(expression);
             pexp.visit(this);
         }
 
-        if (!controller.getCompileStack().isLHS()) {
+        if (!compileStack.isLHS()) {
             controller.getAssertionWriter().record(expression);
         }
     }

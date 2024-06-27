@@ -864,8 +864,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "java.lang.IncompatibleClassChangeError: " +
-            "Class java.lang.Class does not implement the requested interface groovy.lang.GroovyObject");
+        runConformTest(sources, "", isAtLeastGroovy(50)
+            ? "groovy.lang.MissingFieldException: No such field: x for class: Main"
+            : "java.lang.IncompatibleClassChangeError: Class java.lang.Class does not implement the requested interface groovy.lang.GroovyObject");
     }
 
     @Test // GROOVY-8385
@@ -5347,7 +5348,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in AandC.groovy (at line 8)\n" +
             "\tx()\n" +
             "\t^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method C#x(). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method C#x()\n" +
             "----------\n");
     }
 

@@ -54,8 +54,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "2. ERROR in Main.groovy (at line 4)\n" +
             "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
             "\t                                          ^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()." +
-            " Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()\n" +
             "----------\n");
     }
 
@@ -81,7 +80,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
                 ? "call java.util.ArrayList#add(java.lang.Integer) with arguments [java.lang.String]\n"
-                : "find matching method java.util.ArrayList#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+                : "find matching method java.util.ArrayList#add(java.lang.String)\n"
             ) +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 6)\n" +
@@ -809,6 +808,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked34() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static org.codehaus.groovy.ast.ClassHelper.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "interface ArrayMaker<ElementType> {\n" +
+            "  ElementType[] newArray()\n" +
+            "}\n" +
+            "def <T> T[] exec(ArrayMaker<T> maker) {\n" +
+            "  maker.newArray()\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    assert node.getNodeMetaData(INFERRED_TYPE) == Integer_TYPE.makeArray()\n" +
+            "  })\n" +
+            "  def array = exec{new Integer[0]}\n" + // closure return is only witness for T
+            "  assert array.length == 0\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked5450() {
         //@formatter:off
         String[] sources = {
@@ -844,7 +871,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "3. ERROR in Main.groovy (at line 11)\n" +
             "\tc.setF('x')\n" +
             "\t^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method C#setF(java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method C#setF(java.lang.String)\n" +
             "----------\n" +
             "4. ERROR in Main.groovy (at line 12)\n" +
             "\tc.with {f  = 'x'}\n" +
@@ -2190,7 +2217,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase()\n" +
             "----------\n");
     }
 
@@ -2212,7 +2239,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase()\n" +
             "----------\n");
     }
 
@@ -2239,7 +2266,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 9)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase()\n" +
             "----------\n");
     }
 
@@ -2358,7 +2385,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tm([1,2,3])\n" +
             "\t^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method Main#m(java.util." + (isAtLeastGroovy(50) ? "Array" : "") + "List<java.lang.Integer>). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Main#m(java.util." + (isAtLeastGroovy(50) ? "Array" : "") + "List<java.lang.Integer>)\n" +
             "----------\n");
     }
 
@@ -2384,8 +2411,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.TypeChecked\n" +
-            "def test() {\n" +
+            "List<String> test() {\n" +
             "  [1, 2, 3].stream().<String>map{i -> null}.limit(1).toList()\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[null]");
+    }
+
+    @Test
+    public void testTypeChecked8917b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "List<String> test() {\n" +
+            "  [1, 2, 3].stream().map{i -> (String)null}.limit(1).toList()\n" +
             "}\n" +
             "print test()\n",
         };
@@ -2413,7 +2456,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\to.floatValue()\n" +
             "\t^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#floatValue(). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#floatValue()\n" +
             "----------\n");
     }
 
@@ -2660,7 +2703,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tmap.add('foo','bar')\n" +
             "\t^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.util.LinkedHashMap#add(java.lang.String, java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.util.LinkedHashMap#add(java.lang.String, java.lang.String)\n" +
             "----------\n");
     }
 
@@ -2928,7 +2971,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
                 "1. ERROR in Main.groovy (at line 6)\n" +
                 "\tprint C[1]\n" +
                 "\t      ^^^^\n" +
-                "Groovy:[Static type checking] - Cannot find matching method java.lang.Class#getAt(int). Please check if the declared type is correct and if the method exists.\n" +
+                "Groovy:[Static type checking] - Cannot find matching method java.lang.Class#getAt(int)\n" +
                 "----------\n");
         }
     }
@@ -3523,7 +3566,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
                 ? "call TypedProperty#eq(java.lang.String) with arguments [int]\n"
-                : "find matching method TypedProperty#eq(int). Please check if the declared type is correct and if the method exists.\n"
+                : "find matching method TypedProperty#eq(int)\n"
             ) +
             "----------\n" +
             "3. ERROR in Main.groovy (at line 22)\n" +
@@ -3531,7 +3574,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot " + (isAtLeastGroovy(50)
                 ? "call TypedProperty#eq(java.lang.Number) with arguments [java.lang.String]\n"
-                : "find matching method TypedProperty#eq(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+                : "find matching method TypedProperty#eq(java.lang.String)\n"
             ) +
             "----------\n");
     }
@@ -4423,7 +4466,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\td(1,'II')\n" +
             "\t^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method Main#d(int, java.lang.String). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Main#d(int, java.lang.String)\n" +
             "----------\n");
     }
 
@@ -7152,7 +7195,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 4)\n" +
             "\tdef proc = pogo.&setFoo\n" +
             "\t                 ^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method C#setFoo. Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method C#setFoo\n" +
             "----------\n");
     }
 
@@ -7467,7 +7510,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  static class Inner {\n" +
             "    @Delegate private Map<String,Object> m = [VALUE:(Object)2]\n" +
             "    void test(int i) {\n" +
-            "      if (i > VALUE) {\n" +
+            "      if (i > " + (isAtLeastGroovy(50)?"Outer.":"") + "VALUE) {\n" +
             "        // ...\n" +
             "      }\n" +
             "      print VALUE\n" +
@@ -7553,6 +7596,37 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTypeChecked11223() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@SuppressWarnings('rawtypes')\n" +
+            "class M extends HashMap {\n" +
+            "  private void setX(x) {}\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(M m) {\n" +
+            "  m.x = 123\n" +
+            "  print m.x\n" +
+            "}\n" +
+            "test(new M())\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, isAtLeastGroovy(50) ? "123" : "null");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 7)\n" +
+                "\tm.x = 123\n" +
+                "\t^^^\n" +
+                "Groovy:[Static type checking] - Cannot access method: setX(java.lang.Object) of class: M\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -7732,6 +7806,50 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\tint j = a.f\n" +
             "\t        ^^^\n" +
             "Groovy:[Static type checking] - No such property: f for class: A\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked11370() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static org.codehaus.groovy.ast.ClassHelper.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<String, ?> m) {\n" +
+            "  @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    assert node.getNodeMetaData(INFERRED_TYPE) == " + (isAtLeastGroovy(50) ? "METACLASS" : "OBJECT") + "_TYPE\n" +
+            "  })\n" +
+            "  def x = m.metaClass\n" +
+            "  print x?.class\n" +
+            "}\n" +
+            "test([:])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, isAtLeastGroovy(50) ? "class org.codehaus.groovy.runtime.HandleMetaClass" : "null");
+    }
+
+    @Test
+    public void testTypeChecked11414() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Map<String, Long> m) {\n" +
+            "  m.computeIfAbsent('k', {k->1})\n" +
+            "}\n" +
+            "test([:])\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tm.computeIfAbsent('k', {k->1})\n" +
+            "\t                           ^\n" +
+            "Groovy:[Static type checking] - Cannot return value of type int for closure expecting java.lang.Long\n" +
             "----------\n");
     }
 }

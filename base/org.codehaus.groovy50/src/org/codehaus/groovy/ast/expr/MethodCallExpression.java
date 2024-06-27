@@ -139,14 +139,6 @@ public class MethodCallExpression extends Expression implements MethodCall {
 
     @Override
     public String getText() {
-        /* GRECLIPSE edit -- GROOVY-11374
-        String object = objectExpression.getText();
-        String meth = method.getText();
-        String args = arguments.getText();
-        String spread = spreadSafe ? "*" : "";
-        String dereference = safe ? "?" : "";
-        return object + spread + dereference + "." + meth + args;
-        */
         StringBuilder builder = new StringBuilder( 64 );
         builder.append(getObjectExpression().getText());
         if (isSpreadSafe()) builder.append('*');
@@ -181,7 +173,6 @@ public class MethodCallExpression extends Expression implements MethodCall {
         builder.append(getArguments().getText());
 
         return builder.toString();
-        // GRECLIPSE end
     }
 
     /**

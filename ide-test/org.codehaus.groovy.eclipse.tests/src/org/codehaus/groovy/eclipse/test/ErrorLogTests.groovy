@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,12 @@ final class ErrorLogTests {
     private static final List<String> KNOWN_MSGS = [
         'Monitor UI start failed',
         'Unable to run embedded server',
+        'Keybinding conflicts occurred',
         'Could not locate the running profile instance',
         'The Proxy Auto-configuration URL was not found',
         'An internal error occurred during: "AutoRegisterSchemeHandlersJob"',
         'The content type with id ".+" specified in the extension point does not exist'
-    ].asImmutable()
+    ].asUnmodifiable()
 
     @Test
     void testNoWarningsOnStartup() {

@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.apache.groovy.util.BeanUtils.capitalize;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.unique;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
@@ -421,7 +422,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                             resolvedType = getTypeFromDeclaration(declaration);
                             resolvedDeclaringType = getDeclaringTypeFromDeclaration(declaration, declaring);
                         } else {
-                            confidence = isLhsExpression || !(scope.isMethodCall() || scope.getEnclosingNode() instanceof MethodPointerExpression) ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
+                            confidence = (!isLhsExpression && GroovyUtils.getGroovyVersion().getMajor() < 5) ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
                         }
                     }
                 } else if (declaration instanceof MethodNode) {
@@ -448,9 +449,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 4) {
                         // GROOVY-1736, GROOVY-6097: "super.name" => "super.getName()" in AsmClassGenerator
-                        String newName = "get" + org.apache.groovy.util.BeanUtils.capitalize(name);
                         scope.setMethodCallArgumentTypes(Collections.emptyList());
-                        return findTypeForNameWithKnownObjectExpression(newName, type, declaringType, scope, isLhsExpression, isStaticObjectExpression);
+                        return findTypeForNameWithKnownObjectExpression("get" + capitalize(name), type, declaringType, scope, isLhsExpression, isStaticObjectExpression);
                     } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters()) &&
                             !(isStaticObjectExpression && isStaticReferenceToUnambiguousMethod(scope, name, declaringType)) &&
                             !(AccessorSupport.isGetter(method) && !scope.isMethodCall() && scope.getEnclosingNode() instanceof PropertyExpression)) {
@@ -579,7 +579,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                             GroovyUtils.getGroovyVersion().getMajor() < 5) { // ACG#visitPropertyExpression --> checkStaticOuterField
                         candidate = (FieldNode) var.getAccessedVariable(); // legacy resolution prefers static field from outer class
                     } else {
-                        confidence = isAssignTarget || !scope.isMethodCall() ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
+                        confidence = (!isAssignTarget && GroovyUtils.getGroovyVersion().getMajor() < 5) ? TypeConfidence.INFERRED : TypeConfidence.LOOSELY_INFERRED;
                     }
                 }
                 // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write
@@ -715,9 +715,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // name may still map to something that is callable; keep looking
         }
 
-        boolean dynamicProperty = (!isCallExpression && !isStaticExpression && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE));
+        boolean dynamicProperty = (!isCallExpression && !isStaticExpression && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE) &&
+            (isLhsExpression || directFieldAccess < 2 || declaringType.getGetterMethod("get" + capitalize(name)) == null || GroovyUtils.getGroovyVersion().getMajor() > 3)); // GROOVY-6097
 
-        if (dynamicProperty && !isLhsExpression && (directFieldAccess != 1 || declaringType.getDeclaredField(name) == null) && (GroovyUtils.getGroovyVersion().getMajor() < 5 || name.matches("empty|class|metaClass"))) { // GROOVY-5001, GROOVY-5491, GROOVY-6144
+        if (dynamicProperty && !isLhsExpression && (directFieldAccess < 1 || declaringType.getDeclaredField(name) == null) && (GroovyUtils.getGroovyVersion().getMajor() < 5 || name.matches("class|empty"))) { // GROOVY-5001, GROOVY-5491, GROOVY-6144
             return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 
@@ -726,7 +727,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         boolean nonPrivateAccessor = accessor.filter(it -> (!it.isPrivate() && (!it.isPackageScope() || Objects.equals(declaringType.getPackageName(), it.getDeclaringClass().getPackageName()) || GroovyUtils.getGroovyVersion().getMajor() < 5)) || // GROOVY-11357
                                                             declaringType.equals(it.getDeclaringClass()) // direct access
                                                     ).isPresent();
-        if (nonPrivateAccessor && directFieldAccess == 0) {
+        if (nonPrivateAccessor && directFieldAccess == 0 &&
+                (!dynamicProperty || accessor.get().isPublic())) { // GROOVY-11367
             return accessor.get();
         }
 
@@ -752,15 +754,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         FieldNode field = declaringType.getField(name);
         if (isCompatible(field, isStaticExpression) && !(Flags.isSynthetic(field.getModifiers()) && field.getType().equals(ClassHelper.REFERENCE_TYPE))) {
             boolean direct = directFieldAccess >= 1 && declaringType.equals(field.getDeclaringClass()) && (directFieldAccess == 1 || !field.isPrivate());
-            boolean expose = isLhsExpression // GROOVY-11367: get and set incongruent
-                    ? (!field.isFinal() && (field.isPublic() || field.isProtected())) // GROOVY-8065
-                    : (field.isPublic() && GroovyUtils.getGroovyVersion().getMajor() >= 5); // GROOVY-5001
+            boolean expose = (GroovyUtils.getGroovyVersion().getMajor() >= 5) ? field.isPublic() // GROOVY-5001, GROOVY-5491, GROOVY-11367, et al.
+                    : (isLhsExpression && !field.isFinal() && (field.isPublic() || field.isProtected())); // GROOVY-8065: get and set incongruent
             if (direct || !(nonPrivateAccessor || (dynamicProperty && !expose))) {
                 return field;
             }
         }
 
-        if (dynamicProperty && !(nonPrivateAccessor && (isLhsExpression || GroovyUtils.getGroovyVersion().getMajor() >= 5))) { // GROOVY-5001, GROOVY-5491
+        if (dynamicProperty && !(nonPrivateAccessor && (GroovyUtils.getGroovyVersion().getMajor() >= 5 ? accessor.get().isPublic() : isLhsExpression))) { // GROOVY-5001, GROOVY-5491
             return createDynamicProperty(name, getMapPropertyType(declaringType), declaringType, isStaticExpression);
         }
 
@@ -979,7 +980,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             (!accessor.isStatic() || !(accessor.getDeclaringClass().isInterface() && !Traits.isTrait(accessor.getDeclaringClass())) || GroovyUtils.getGroovyVersion().getMajor() >= 5)); // GROOVY-10592
         if (isLhsExpression) {
             // use methodCallArgumentTypes to select closer match
-            accessors = accessors.sorted((m1, m2) -> (m1 == closer(m2, m1, methodCallArgumentTypes) ? -1 : +1));
+            accessors = accessors.sorted((m1, m2) -> {
+                return (m1 == closer(m1, m2, methodCallArgumentTypes) ? -1 : +1);
+            });
         }
         return accessors.findFirst();
     }

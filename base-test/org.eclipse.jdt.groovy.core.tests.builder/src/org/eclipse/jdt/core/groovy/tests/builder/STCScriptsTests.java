@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,8 +79,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);
         assertEquals("Should have found one problem in:\n" + Arrays.toString(problems), 1, problems.length);
-        assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String)." +
-            " Please check if the declared type is correct and if the method exists.", problems[0].getMessage());
+        assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String)", problems[0].getMessage());
     }
 
     @Test

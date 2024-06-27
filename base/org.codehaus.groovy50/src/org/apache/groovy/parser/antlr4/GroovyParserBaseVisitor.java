@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.13.1.3
+// Generated from GroovyParser.g4 by ANTLR 4.13.1.5
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -1172,6 +1172,13 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public Result visitExpressionListElement(@NotNull GroovyParser.ExpressionListElementContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public Result visitEnhancedExpression(@NotNull GroovyParser.EnhancedExpressionContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

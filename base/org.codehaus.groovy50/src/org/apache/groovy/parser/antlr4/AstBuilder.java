@@ -2734,6 +2734,21 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     @Override
+    public Expression visitEnhancedExpression(final EnhancedExpressionContext ctx) {
+        Expression expression;
+
+        if (asBoolean(ctx.expression())) {
+            expression = (Expression) this.visit(ctx.expression());
+        } else if (asBoolean(ctx.standardLambdaExpression())) {
+            expression = this.visitStandardLambdaExpression(ctx.standardLambdaExpression());
+        } else {
+            throw createParsingFailedException("Unsupported enhanced expression: " + ctx.getText(), ctx);
+        }
+
+        return configureAST(expression, ctx);
+    }
+
+    @Override
     public Expression visitEnhancedStatementExpression(final EnhancedStatementExpressionContext ctx) {
         Expression expression;
 
@@ -3867,7 +3882,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public MapEntryExpression visitMapEntry(final MapEntryContext ctx) {
         Expression keyExpr;
-        Expression valueExpr = (Expression) this.visit(ctx.expression());
+        Expression valueExpr = this.visitEnhancedExpression(ctx.enhancedExpression());
 
         if (asBoolean(ctx.MUL())) {
             keyExpr = configureAST(new SpreadMapExpression(valueExpr), ctx);

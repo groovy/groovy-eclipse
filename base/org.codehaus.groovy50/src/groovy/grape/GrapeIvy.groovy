@@ -253,7 +253,7 @@ class GrapeIvy implements GrapeEngine {
         conf
     }
 
-    @Override
+    @Override // TODO deprecate
     grab(String endorsedModule) {
         grab(group: 'groovy.endorsed', module: endorsedModule, version: GroovySystem.getVersion())
     }
@@ -463,7 +463,7 @@ class GrapeIvy implements GrapeEngine {
         is.getText().readLines()*.trim().each { String line ->
             if (!line.isEmpty() && line[0] != '#')
             try {
-                registry[name] = (GroovyRunner) loader.loadClass(line).newInstance()
+                registry[name] = (GroovyRunner) loader.loadClass(line).getDeclaredConstructor().newInstance()
             } catch (Exception e) {
                 throw new IllegalStateException("Error registering runner class '$line'", e)
             }

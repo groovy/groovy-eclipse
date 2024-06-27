@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.ast;
 
+import org.apache.groovy.ast.tools.AnnotatedNodeUtils;
 import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.apache.groovy.lang.annotation.Incubating;
 import org.codehaus.groovy.GroovyBugError;
@@ -47,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -57,6 +59,7 @@ import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_ANNOTATION;
 import static groovyjarjarasm.asm.Opcodes.ACC_ENUM;
+import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
 import static groovyjarjarasm.asm.Opcodes.ACC_INTERFACE;
 import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
 import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
@@ -248,9 +251,11 @@ public class ClassNode extends AnnotatedNode {
      */
     private ClassNode(final ClassNode componentType) {
         /* GRECLIPSE edit
-        this(componentType.getName() + "[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+        this(componentType.getName() + "[]", ACC_ABSTRACT | ACC_FINAL | ACC_PUBLIC, ClassHelper.OBJECT_TYPE,
+          new ClassNode[]{ClassHelper.CLONEABLE_TYPE, ClassHelper.SERIALIZABLE_TYPE}, MixinNode.EMPTY_ARRAY);
         */
-        this(computeArrayName(componentType), ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+        this(computeArrayName(componentType), ACC_ABSTRACT | ACC_FINAL | ACC_PUBLIC, ClassHelper.OBJECT_TYPE,
+          new ClassNode[]{ClassHelper.CLONEABLE_TYPE, ClassHelper.SERIALIZABLE_TYPE}, MixinNode.EMPTY_ARRAY);
         // GRECLIPSE end
         this.componentType = componentType.redirect();
         this.isPrimaryNode = false;
@@ -972,8 +977,10 @@ public class ClassNode extends AnnotatedNode {
      * @return method node or null
      */
     public MethodNode getDeclaredMethod(String name, Parameter[] parameters) {
+        boolean zeroParameters = !ArrayGroovyMethods.asBoolean(parameters);
         for (MethodNode method : getDeclaredMethods(name)) {
-            if (parametersEqual(method.getParameters(), parameters)) {
+            if (zeroParameters ? method.getParameters().length == 0
+                    : parametersEqual(method.getParameters(), parameters)) {
                 return method;
             }
         }
@@ -1102,7 +1109,7 @@ public class ClassNode extends AnnotatedNode {
         return getGetterMethod(getterName, true);
     }
 
-    public MethodNode getGetterMethod(String getterName, boolean searchSuperClasses) {
+    public MethodNode getGetterMethod(String getterName, boolean searchSupers) {
         MethodNode getterMethod = null;
 
         java.util.function.Predicate<MethodNode> isNullOrSynthetic = (method) ->
@@ -1110,24 +1117,45 @@ public class ClassNode extends AnnotatedNode {
 
         boolean booleanReturnOnly = getterName.startsWith("is");
         for (MethodNode method : getDeclaredMethods(getterName)) {
-            if (method.getName().equals(getterName) && method.getParameters().length == 0
-                    && (booleanReturnOnly ? ClassHelper.isPrimitiveBoolean(method.getReturnType()) : !method.isVoidMethod())) {
-                // GROOVY-7363, GROOVY-11341: There can be multiple matches if a method returns a non-final type due to
-                // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
-                // has the most specific and exact return type of the two. Picking the bridge method results in loss of
-                // type information, as it down-casts the return type to the lower bound of the generic parameter.
-                if (isNullOrSynthetic.test(getterMethod)) {
-                    getterMethod = method;
+            if (booleanReturnOnly ? ClassHelper.isPrimitiveBoolean(method.getReturnType()) : !method.isVoidMethod()) {
+                if (method.getParameters().length == 0) {
+                    // GROOVY-7363, GROOVY-11341: There can be multiple matches if a method returns a non-final type due to
+                    // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
+                    // has the most specific and exact return type of the two. Picking the bridge method results in loss of
+                    // type information, as it down-casts the return type to the lower bound of the generic parameter.
+                    if (isNullOrSynthetic.test(getterMethod)) {
+                        getterMethod = method;
+                    }
+                } else if (method.hasDefaultValue() && Stream.of(method.getParameters()).allMatch(Parameter::hasInitialExpression)) {
+                    // GROOVY-11380: getter generated later by default arguments
+                    if (isNullOrSynthetic.test(getterMethod)) {
+                        getterMethod = new MethodNode(method.getName(), method.getModifiers() & ~ACC_ABSTRACT, method.getReturnType(), Parameter.EMPTY_ARRAY, method.getExceptions(), null);
+                        getterMethod.setSynthetic(true);
+                        getterMethod.setDeclaringClass(this);
+                        getterMethod.addAnnotations(method.getAnnotations());
+                        AnnotatedNodeUtils.markAsGenerated(this, getterMethod);
+                        getterMethod.setGenericsTypes(method.getGenericsTypes());
+                    }
                 }
             }
         }
 
-        if (searchSuperClasses && isNullOrSynthetic.test(getterMethod)) {
-            ClassNode parent = getSuperClass();
-            if (parent != null) {
-                MethodNode method = parent.getGetterMethod(getterName);
+        if (searchSupers && isNullOrSynthetic.test(getterMethod)) {
+            ClassNode superClass = getSuperClass();
+            if (superClass != null) {
+                MethodNode method = superClass.getGetterMethod(getterName);
                 if (getterMethod == null || !isNullOrSynthetic.test(method)) {
                     getterMethod = method;
+                }
+            }
+            // GROOVY-11381:
+            if (getterMethod == null && ArrayGroovyMethods.asBoolean(getInterfaces())) {
+                for (ClassNode anInterface : getAllInterfaces()) {
+                    MethodNode method = anInterface.getDeclaredMethod(getterName, Parameter.EMPTY_ARRAY);
+                    if (method != null && method.isDefault() && (booleanReturnOnly ? ClassHelper.isPrimitiveBoolean(method.getReturnType()) : !method.isVoidMethod())) {
+                        getterMethod = method;
+                        break;
+                    }
                 }
             }
         }

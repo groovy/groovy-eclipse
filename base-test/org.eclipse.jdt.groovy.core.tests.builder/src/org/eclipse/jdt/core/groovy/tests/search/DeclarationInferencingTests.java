@@ -1620,6 +1620,13 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         assertKnown(contents, "field", "A", "field", DeclarationKind.PROPERTY);
     }
 
+    @Test
+    public void testJavaInterfaceMethodOverride() {
+        String contents = "{-> metaClass = null}\n";
+
+        assertDeclaringType(contents, "metaClass", "groovy.lang.GroovyObjectSupport");
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/967
     public void testJavaInterfaceWithDefaultMethod1() {
         //@formatter:off

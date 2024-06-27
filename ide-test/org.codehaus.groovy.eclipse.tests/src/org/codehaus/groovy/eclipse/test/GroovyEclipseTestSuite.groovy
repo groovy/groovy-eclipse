@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.core.CompilationUnit
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -208,7 +209,9 @@ abstract class GroovyEclipseTestSuite {
         setJavaPreference(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
         EditorUtility.openInEditor(unit).tap {
             final reconcile = new java.util.concurrent.CountDownLatch(1)
-            addReconcileListener(reconcile.&countDown as ReconcileListener)
+            //addReconcileListener(reconcile.&countDown as ReconcileListener)
+            org.eclipse.jdt.groovy.core.util.ReflectionUtils.executePrivateMethod(CompilationUnitEditor, 'addReconcileListener',
+                [org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener] as Class[], it, reconcile.&countDown as ReconcileListener)
             reconcile.await(1500, java.util.concurrent.TimeUnit.MILLISECONDS)
 
             SynchronizationUtils.joinBackgroundActivities()
