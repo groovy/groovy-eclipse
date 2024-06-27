@@ -287,6 +287,12 @@ public class CompilationUnit extends ProcessingUnit {
                 }
             }
         }, Phases.CANONICALIZATION);
+        // GRECLIPSE add -- GROOVY-10540: add GroovyObject before STC
+        addPhaseOperation((source, context, classNode) -> {
+            if (!classNode.isInterface() && !classNode.isDerivedFromGroovyObject()) {
+                classNode.addInterface(ClassHelper.GROOVY_OBJECT_TYPE);
+            }
+        }, Phases.INSTRUCTION_SELECTION);
         // GRECLIPSE add -- GROOVY-10904
         addPhaseOperation(verification, Phases.CLASS_GENERATION);
         // GRECLIPSE end

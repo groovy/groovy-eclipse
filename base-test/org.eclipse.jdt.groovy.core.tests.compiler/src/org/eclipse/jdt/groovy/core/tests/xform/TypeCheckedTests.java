@@ -7847,9 +7847,14 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 3)\n" +
-            "\tm.computeIfAbsent('k', {k->1})\n" +
+            "\tm.computeIfAbsent('k', {k->1})\n" + (isAtLeastGroovy(40)
+            ?
             "\t                           ^\n" +
-            "Groovy:[Static type checking] - Cannot return value of type int for closure expecting java.lang.Long\n" +
+            "Groovy:[Static type checking] - Cannot return value of type int for closure expecting java.lang.Long\n"
+            :
+            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call java.util.Map#computeIfAbsent(java.lang.String, java.util.function.Function<? super java.lang.String, ? extends java.lang.Long>) with arguments [java.lang.String, groovy.lang.Closure<java.lang.Integer>]\n"
+            ) +
             "----------\n");
     }
 }

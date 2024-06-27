@@ -876,7 +876,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     return nodes.stream().anyMatch(it -> it instanceof ConstructorCallExpression && ((ConstructorCallExpression) it).isSpecialCall());
                 }
 
-                private boolean isNonStaticMemberAccess(VariableExpression ve) {
+                private boolean isNonStaticMemberAccess(final VariableExpression ve) {
                     Variable variable = ve.getAccessedVariable();
                     return !inClosure() && variable != null && !isStatic(variable.getModifiers())
                         && !(variable instanceof DynamicVariable) && !(variable instanceof Parameter);

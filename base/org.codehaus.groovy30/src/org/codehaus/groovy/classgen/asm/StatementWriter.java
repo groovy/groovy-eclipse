@@ -20,7 +20,6 @@ package org.codehaus.groovy.classgen.asm;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
@@ -301,12 +300,11 @@ public class StatementWriter {
         */
         writeStatementLabel(statement);
 
-        MethodVisitor mv = controller.getMethodVisitor();
-
         controller.getCompileStack().pushLoop(statement.getStatementLabels());
         Label continueLabel = controller.getCompileStack().getContinueLabel();
         Label breakLabel = controller.getCompileStack().getBreakLabel();
 
+        MethodVisitor mv = controller.getMethodVisitor();
         mv.visitLabel(continueLabel);
 
         statement.getLoopBlock().visit(controller.getAcg());
@@ -367,29 +365,26 @@ public class StatementWriter {
         Label tryEnd = new Label();
         mv.visitLabel(tryEnd);
         tryBlock.closeRange(tryEnd);
-        // pop for "makeBlockRecorder(finallyStatement)"
-        controller.getCompileStack().pop();
+        // pop for BlockRecorder
+        compileStack.pop();
 
         BlockRecorder catches = makeBlockRecorder(finallyStatement);
         for (CatchStatement catchStatement : statement.getCatchStatements()) {
-            ClassNode exceptionType = catchStatement.getExceptionType();
-            String exceptionTypeInternalName = BytecodeHelper.getClassInternalName(exceptionType);
-
             // start catch block, label needed for exception table
             Label catchStart = new Label();
             mv.visitLabel(catchStart);
             catches.startRange(catchStart);
 
             // create exception variable and store the exception
-            Parameter exceptionVariable = catchStatement.getVariable();
             compileStack.pushState();
-            compileStack.defineVariable(exceptionVariable, true);
+            ClassNode type = catchStatement.getExceptionType();
+            compileStack.defineVariable(catchStatement.getVariable(), type, true);
             // handle catch body
             catchStatement.visit(controller.getAcg());
             // place holder to avoid problems with empty catch blocks
             mv.visitInsn(NOP);
             // pop for the variable
-            controller.getCompileStack().pop();
+            compileStack.pop();
 
             // end of catch
             Label catchEnd = new Label();
@@ -398,7 +393,9 @@ public class StatementWriter {
 
             // goto finally start
             mv.visitJumpInsn(GOTO, finallyStart);
-            compileStack.writeExceptionTable(tryBlock, catchStart, exceptionTypeInternalName);
+
+            String typeName = BytecodeHelper.getClassInternalName(type);
+            compileStack.writeExceptionTable(tryBlock, catchStart, typeName);
         }
 
         // used to handle exceptions in catches and regularly visited finals

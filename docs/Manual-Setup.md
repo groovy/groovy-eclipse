@@ -12,7 +12,7 @@ On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Inst
 
 ### Setup Groovy Compiler
 
-If you installed extra Groovy compiler versions, then you must activate Groovy 3.0 compiler for Groovy-Eclipse.  On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 3.0.21* button, and let Eclipse restart.
+If you installed extra Groovy compiler versions, then you must activate Groovy 3.0 compiler for Groovy-Eclipse.  On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 3.0.22* button, and let Eclipse restart.
 
 ### Install Execution Environment Descriptions
 

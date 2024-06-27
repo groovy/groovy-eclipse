@@ -503,13 +503,12 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        String lub = isAtLeastGroovy(40) ? "groovy.lang.GroovyObject" : "java.lang.Object";
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 11)\n" +
             "\tx.foo()\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method " + lub + "#foo()\n" +
+            "Groovy:[Static type checking] - Cannot find matching method groovy.lang.GroovyObject#foo()\n" +
             "----------\n");
     }
 
