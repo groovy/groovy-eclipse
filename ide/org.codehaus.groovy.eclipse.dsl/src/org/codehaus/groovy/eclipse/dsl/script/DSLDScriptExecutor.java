@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ public class DSLDScriptExecutor {
                 Class scriptType = null;
                 try {
                     scriptType = classLoader.parseClass(scriptText, scriptName);
-                } catch (AssertionError | Exception e) {
+                } catch (AssertionError | LinkageError | Exception e) {
                     if (GroovyLogManager.manager.hasLoggers()) {
                         StringWriter writer = new StringWriter();
                         e.printStackTrace(new PrintWriter(writer));
@@ -99,8 +99,7 @@ public class DSLDScriptExecutor {
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
                 }
-            } catch (AssertionError | Exception e) {
-                // log exception to the event console and the error log
+            } catch (AssertionError | LinkageError | Exception e) {
                 GroovyDSLCoreActivator.logException(e);
             }
             return null;

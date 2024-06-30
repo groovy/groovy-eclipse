@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -384,8 +384,24 @@ public final class GroovyClassLoaderFactory {
                                     }
                                 }, this).scanClasspathModules();
                             }
+
+                            java.util.function.Predicate<Class> loads = (c) -> {
+                                try {
+                                    c.getDeclaredFields();
+                                    return true; // primed
+                                } catch (LinkageError e) {
+                                    if (GroovyLogManager.manager.hasLoggers()) {
+                                        GroovyLogManager.manager.log(TraceCategory.CLASSPATH,
+                                            "Failed to init " + c + " with " + this + "\n\t" + e.getMessage());
+                                    }
+                                    return false;
+                                }
+                            };
+
                             staticCategories.add(dgsm);
+                            staticCategories.removeIf(loads.negate());
                             objectCategories.addAll(staticCategories);
+                            objectCategories.removeIf(loads.negate());
 
                             defaultCategories = objectCategories;
                             defaultStaticCategories = staticCategories;

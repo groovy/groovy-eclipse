@@ -48,6 +48,7 @@
         <file-match-pattern match-pattern="groovy/control/ResolveVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/SourceUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/StaticImportVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/runtime/m12n/MetaInfExtensionModule.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/tools/GroovyClass.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/AnnotationCollectorTransform.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/ASTTestTransformation.groovy" include-pattern="false" />
