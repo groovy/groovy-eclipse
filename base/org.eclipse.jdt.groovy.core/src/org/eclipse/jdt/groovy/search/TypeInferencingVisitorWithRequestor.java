@@ -545,7 +545,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             VariableScope scope = scopes.getLast();
             assignmentStorer.storeImport(imp, scope);
             try {
-                TypeLookupResult noLookup = new TypeLookupResult(null, null, imp, TypeConfidence.EXACT, scope);
+                TypeLookupResult noLookup = new TypeLookupResult(imp.getType(), null, imp, TypeConfidence.EXACT, scope);
                 VisitStatus status = notifyRequestor(imp, requestor, noLookup);
                 switch (status) {
                 case CONTINUE:

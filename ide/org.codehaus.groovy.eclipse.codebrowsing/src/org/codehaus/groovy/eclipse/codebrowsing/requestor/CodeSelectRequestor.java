@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -596,18 +596,25 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * Converts the requested element into a resolved element by creating a unique key for it.
      */
     private IJavaElement resolveRequestedElement(final IJavaElement maybeRequested, final TypeLookupResult result) {
-        AnnotatedNode declaration = (AnnotatedNode) result.declaration;
-        if (declaration instanceof PropertyNode) {
-            if (maybeRequested.getElementType() == IJavaElement.METHOD) {
-                String methodName = maybeRequested.getElementName();
-                List<MethodNode> methods = declaration.getDeclaringClass().getMethods(methodName);
-                if (!methods.isEmpty()) declaration = methods.get(0);
-            } else {
-                declaration = ((PropertyNode) declaration).getField();
+        var declaration = (AnnotatedNode) result.declaration;
+        if (declaration instanceof ConstructorNode) {
+            if (maybeRequested.getElementType() == IJavaElement.TYPE) {
+                // implicit default constructor; use type instead
+                declaration = declaration.getDeclaringClass();
             }
-        } else if (declaration instanceof ConstructorNode && maybeRequested.getElementType() == IJavaElement.TYPE) {
-            // implicit default constructor; use type instead
-            declaration = declaration.getDeclaringClass();
+        } else if (declaration instanceof ImportNode) {
+            if (maybeRequested.getElementType() == IJavaElement.TYPE) {
+                declaration = ((ImportNode) declaration).getType();
+            }
+        } else if (declaration instanceof PropertyNode) {
+            if (maybeRequested.getElementType() != IJavaElement.METHOD) {
+                declaration = ((PropertyNode) declaration).getField();
+            } else {
+                ClassNode declaringClass = declaration.getDeclaringClass();
+                List<MethodNode> methods = declaringClass.getMethods(maybeRequested.getElementName());
+                if (!methods.isEmpty())
+                    declaration = methods.get(0);
+            }
         }
 
         String uniqueKey = createUniqueKey(declaration, maybeRequested, result);
@@ -646,50 +653,17 @@ public class CodeSelectRequestor implements ITypeRequestor {
     //--------------------------------------------------------------------------
 
     /**
-     * Creates binding keys for types, fields, methods and properties.
+     * Creates binding keys for types, fields and methods.
      */
     private static String createUniqueKey(final AnnotatedNode declaration, final IJavaElement maybeRequested, final TypeLookupResult result) {
-        ClassNode resolvedDeclaringType = result.declaringType;
-        if (resolvedDeclaringType == null) {
-            resolvedDeclaringType = declaration.getDeclaringClass();
-            if (resolvedDeclaringType == null) {
-                resolvedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
-            }
-        }
-        if (resolvedDeclaringType.getGenericsTypes() != null) {
-            boolean isStatic = false;
-            if (declaration instanceof ClassNode) {
-                isStatic = Flags.isStatic(
-                    ((ClassNode) declaration).getModifiers());
-            } else if (declaration instanceof FieldNode) {
-                isStatic = ((FieldNode) declaration).isStatic();
-            } else if (declaration instanceof MethodNode) {
-                isStatic = ((MethodNode) declaration).isStatic();
-            }
-            if (isStatic) {
-                resolvedDeclaringType = resolvedDeclaringType.getPlainNodeReference();
-            }
-        }
-
         StringBuilder sb = new StringBuilder();
 
         if (declaration instanceof ClassNode) {
             appendUniqueKeyForResolvedType(sb, result.type);
         } else {
-            String declType = GroovyUtils.getTypeSignatureWithoutGenerics(resolvedDeclaringType, true, true).replace('.', '/');
-            sb.append(declType);
-
-            if (resolvedDeclaringType.isPrimaryClassNode()) {
-                GenericsType[] typeParams = resolvedDeclaringType.getGenericsTypes();
-                if (typeParams != null) { // include type parameter specifiction
-                    sb.setCharAt(sb.length() - 1, Signature.C_GENERIC_START);
-                    for (GenericsType tp : typeParams) {
-                        //sb.append(declType).append(Signature.C_COLON); -- IMO a qualifier here is redundant
-                        sb.append(Signature.C_TYPE_VARIABLE).append(tp.getName()).append(Signature.C_NAME_END);
-                    }
-                    sb.append(Signature.C_GENERIC_END).append(Signature.C_NAME_END);
-                }
-            }
+            ClassNode owner = declaration.getDeclaringClass();
+            // TODO: for reference, include any type arguments
+            sb.append(GroovyUtils.getTypeSignatureWithoutGenerics(owner, true, true).replace('.', '/'));
 
             if (declaration instanceof FieldNode) {
                 sb.append(Signature.C_DOT).append(maybeRequested.getElementName()).append(Signature.C_PARAM_END);
@@ -701,14 +675,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     sb.append(Signature.C_DOT).append(maybeRequested.getElementName()).append(Signature.C_PARAM_END);
                     appendUniqueKeyForResolvedType(sb, AccessorSupport.isSetter(node) ? node.getParameters()[0].getType() : result.type);
                 } else {
-                    appendUniqueKeyForMethod(sb, node, result.type, resolvedDeclaringType);
-                    // scrub signature of type parameter qualifier
-                    final String q = declType + Signature.C_COLON;
-                    int p;
-                    do {
-                        p = sb.indexOf(q); if (p > 0)
-                            sb.replace(p, p + q.length(), "");
-                    } while (p > 0);
+                    appendUniqueKeyForMethod(sb, node, result.type, owner);
                 }
             }
         }
@@ -726,8 +693,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         sb.append(Signature.C_DOT).append(methodName);
 
-        java.util.function.Function<ClassNode, String> signer = type ->
-            GroovyUtils.getTypeSignature(type, true, true).replace('.', '/');
+        java.util.function.Function<ClassNode, String> signer = (type) ->
+            GroovyUtils.getTypeSignature(type, true, true).replace('.', '/').replaceAll("L[/\\w]+;:(T\\w+;)", "$1");
+            // omit type parameter qualifiers                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         // type parameters
         GenericsType[] generics = GroovyUtils.getGenericsTypes(node);
@@ -735,18 +703,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
             sb.append(Signature.C_GENERIC_START);
             // see org.eclipse.jdt.core.Signature#createTypeParameterSignature(char[],char[][])
             for (GenericsType gt : generics) {
-                ClassNode lower = gt.getLowerBound();
-                ClassNode[] upper = gt.getUpperBounds();
-
                 sb.append(gt.getName());
-                sb.append(Signature.C_COLON);
-                sb.append(Signature.C_COLON);
-                if (lower != null) {
-                    sb.append(signer.apply(lower));
-                } else if (upper != null && upper.length > 0) {
-                    for (int i = 0; i < upper.length; i += 1) {
-                        if (i > 0) sb.append(Signature.C_COLON);
-                        sb.append(signer.apply(upper[i]));
+                assert gt.getLowerBound() == null;
+                ClassNode[] bounds = gt.getUpperBounds();
+                if (bounds == null || bounds.length < 1){
+                    sb.append(Signature.C_COLON);
+                } else {
+                    for (ClassNode bound : bounds) {
+                        sb.append(Signature.C_COLON);
+                        sb.append(signer.apply(bound));
                     }
                 }
             }

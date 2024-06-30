@@ -199,6 +199,24 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assert element.key == 'LFoo;.meth(Ljava/util/Set<TBar;>;)Ljava/util/Set<TBar;>;'
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1588
+    void testCodeSelectMethodOfParameterizedField() {
+        String contents = '''\
+            |class Foo<Bar> {
+            |  Set<Bar> bars
+            |  void test() {
+            |    bars.add(null)
+            |    bars.findAll()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents], 'add')
+        assert element.key == 'Ljava/util/Set;.add(TBar;)Z'
+
+        element = assertCodeSelect([contents], 'findAll')
+        assert element.key == 'Lorg/codehaus/groovy/runtime/DefaultGroovyMethods;.findAll<T:Ljava/lang/Object;>(Ljava/util/Set<TBar;>;)Ljava/util/Set<TBar;>;%<LFoo;:TBar;>'
+    }
+
     @Test
     void testCodeSelectScriptMethod() {
         // ensure private method is not hidden by script's run() method
