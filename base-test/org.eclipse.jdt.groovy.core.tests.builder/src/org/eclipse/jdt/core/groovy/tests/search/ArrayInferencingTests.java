@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertTrue;
+
+import org.codehaus.groovy.ast.FieldNode;
 import org.junit.Test;
 
 public final class ArrayInferencingTests extends InferencingTestSuite {
@@ -64,12 +67,41 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testArrayClone1() {
+        String contents = "def x = new int[0].clone()";
+        assertType(contents, "x", "int[]");
+        assertDeclaringType(contents, "clone", "int[]");
+    }
+
+    @Test
+    public void testArrayClone2() {
+        String contents = "def x = new Number[0].clone()";
+        assertType(contents, "x", "java.lang.Number[]");
+        assertDeclaringType(contents, "clone", "java.lang.Number[]");
+    }
+
+    @Test
+    public void testArrayClone3() {
+        String contents = "def x = ([] as Number[][]).clone()";
+        assertType(contents, "x", "java.lang.Number[][]");
+        assertDeclaringType(contents, "clone", "java.lang.Number[][]");
+    }
+
+    @Test
+    public void testArrayClone4() {
+        String contents = "def m(String... a) { def x = a.clone()}";
+        assertType(contents, "x", "java.lang.String[]");
+        assertDeclaringType(contents, "clone", "java.lang.String[]");
+    }
+
+    @Test
     public void testArrayLength1() {
         String contents = "int[] x = [1, 2]; x.length";
         assertType(contents, "length", "java.lang.Integer");
 
         int offset = contents.indexOf("length");
-        assertDeclaringType(contents, offset, offset + "length".length(), "int[]");
+        var length = (FieldNode) assertDeclaration(contents, offset, offset + "length".length(), "int[]", "length", DeclarationKind.FIELD);
+        assertTrue(length.isFinal() && length.isPublic() && length.isSynthetic());
     }
 
     @Test

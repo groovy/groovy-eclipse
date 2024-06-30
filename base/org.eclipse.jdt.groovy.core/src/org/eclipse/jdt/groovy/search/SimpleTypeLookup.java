@@ -682,9 +682,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      */
     protected ASTNode findDeclaration(final String name, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final int directFieldAccess, final List<ClassNode> methodCallArgumentTypes) {
         if (declaringType.isArray()) {
-            // only length exists on arrays
-            if ("length".equals(name)) {
+            switch (name) {
+            case "length":
                 return createLengthField(declaringType);
+            case "clone":
+                MethodNode mn = new MethodNode("clone", Flags.AccPublic, declaringType, Parameter.EMPTY_ARRAY, null, null);
+                mn.setDeclaringClass(declaringType);
+                mn.setHasNoRealSourcePosition(true);
+                mn.setSynthetic(true);
+                return mn;
             }
             // otherwise search on object
             return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, isStaticExpression, 0, methodCallArgumentTypes);
@@ -1041,9 +1047,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected static FieldNode createLengthField(final ClassNode declaringType) {
-        FieldNode fn = new FieldNode("length", Flags.AccPublic, ClassHelper.int_TYPE, declaringType, null);
+        FieldNode fn = new FieldNode("length", Flags.AccPublic | Flags.AccFinal, ClassHelper.int_TYPE, declaringType, null);
         fn.setDeclaringClass(declaringType);
         fn.setHasNoRealSourcePosition(true);
+        fn.setSynthetic(true);
         return fn;
     }
 
