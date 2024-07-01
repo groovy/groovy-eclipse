@@ -3,13 +3,13 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codebrowsing; singleton:=true
 Bundle-Name: Groovy Code Browsing
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 5.4.0.qualifier
+Bundle-Version: 5.5.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codebrowsing,
  org.codehaus.groovy.eclipse.codebrowsing.elements,
  org.codehaus.groovy.eclipse.codebrowsing.fragments,
  org.codehaus.groovy.eclipse.codebrowsing.requestor,
  org.codehaus.groovy.eclipse.codebrowsing.selection
-Require-Bundle: org.codehaus.groovy.eclipse.core;bundle-version="5.4.0"
+Require-Bundle: org.codehaus.groovy.eclipse.core;bundle-version="5.5.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.codebrowsing.GroovyBrowsingPlugin
 Bundle-RequiredExecutionEnvironment: JavaSE-11

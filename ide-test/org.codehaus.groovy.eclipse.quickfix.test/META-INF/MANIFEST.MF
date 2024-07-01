@@ -3,13 +3,13 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.quickfix.test;singleton:=true
 Bundle-Name: Groovy Quick Fix Tests
-Bundle-Version: 5.4.0.qualifier
+Bundle-Version: 5.5.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.quickfix.test,
  org.codehaus.groovy.eclipse.quickfix.test.resolvers,
  org.codehaus.groovy.eclipse.quickfix.test.templates
 Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor,
  org.eclipse.jdt.launching.environments
-Require-Bundle: org.codehaus.groovy.eclipse.quickfix;bundle-version="5.4.0",
- org.codehaus.groovy.eclipse.refactoring.test;bundle-version="5.4.0",
- org.codehaus.groovy.eclipse.refactoring;bundle-version="5.4.0",
- org.codehaus.groovy.eclipse.tests;bundle-version="5.4.0"
+Require-Bundle: org.codehaus.groovy.eclipse.quickfix;bundle-version="5.5.0",
+ org.codehaus.groovy.eclipse.refactoring.test;bundle-version="5.5.0",
+ org.codehaus.groovy.eclipse.refactoring;bundle-version="5.5.0",
+ org.codehaus.groovy.eclipse.tests;bundle-version="5.5.0"

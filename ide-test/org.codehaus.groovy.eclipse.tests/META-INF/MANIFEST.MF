@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.tests;singleton:=true
 Bundle-Name: Groovy UI Tests
-Bundle-Version: 5.4.0.qualifier
+Bundle-Version: 5.5.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.test,
  org.codehaus.groovy.eclipse.test.actions,
  org.codehaus.groovy.eclipse.test.adapters,
@@ -32,8 +32,8 @@ Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.ui.console,
  org.eclipse.ui.views.contentoutline
-Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="5.4.0";visibility:=reexport,
- org.eclipse.jdt.groovy.core.tests.builder;bundle-version="5.4.0";visibility:=reexport,
+Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="5.5.0";visibility:=reexport,
+ org.eclipse.jdt.groovy.core.tests.builder;bundle-version="5.5.0";visibility:=reexport,
  org.eclipse.ui.editors;visibility:=reexport,
  org.eclipse.ui.forms;visibility:=reexport,
  org.eclipse.ui.ide;visibility:=reexport

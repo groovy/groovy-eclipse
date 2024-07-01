@@ -3,6 +3,6 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core.test;singleton:=true
 Bundle-Name: Groovy Core Tests
-Bundle-Version: 5.4.0.qualifier
+Bundle-Version: 5.5.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.core.test
-Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="5.4.0"
+Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="5.5.0"

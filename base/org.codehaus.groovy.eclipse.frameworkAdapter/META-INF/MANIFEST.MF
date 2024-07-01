@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.frameworkAdapter;singleton:=true
 Bundle-Name: Groovy OSGi advice
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 5.4.0.qualifier
+Bundle-Version: 5.5.0.qualifier
 Bundle-ActivationPolicy: lazy
 ExtensionBundle-Activator: org.codehaus.groovy.frameworkadapter.Activator
 Fragment-Host: system.bundle;extension:=framework

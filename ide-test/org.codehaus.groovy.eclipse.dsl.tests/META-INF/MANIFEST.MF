@@ -3,10 +3,10 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.dsl.tests;singleton:=true
 Bundle-Name: Groovy DSL Tests
-Bundle-Version: 5.4.0.qualifier
+Bundle-Version: 5.5.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.dsl.tests
-Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="5.4.0",
- org.codehaus.groovy.eclipse.codeassist.test;bundle-version="5.4.0",
- org.codehaus.groovy.eclipse.tests;bundle-version="5.4.0",
- org.codehaus.groovy.eclipse.dsl;bundle-version="5.4.0"
+Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="5.5.0",
+ org.codehaus.groovy.eclipse.codeassist.test;bundle-version="5.5.0",
+ org.codehaus.groovy.eclipse.tests;bundle-version="5.5.0",
+ org.codehaus.groovy.eclipse.dsl;bundle-version="5.5.0"
 Eclipse-BundleShape: dir
