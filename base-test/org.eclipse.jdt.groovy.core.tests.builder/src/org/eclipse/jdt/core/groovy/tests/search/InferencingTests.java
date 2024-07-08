@@ -59,7 +59,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testNumber2() {
-        // same as above, but test that whitespace is not included
+        // same as above, but ensure that whitespace isn't included
         assertType("10 ", 0, 2, "java.lang.Integer");
     }
 
@@ -70,16 +70,26 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testNumber4() {
-        assertType("10++", "java.lang.Integer");
+        assertType("-10", "java.lang.Integer");
     }
 
     @Test
     public void testNumber5() {
-        assertType("++10", "java.lang.Integer");
+        assertType("+10", "java.lang.Integer");
     }
 
     @Test
     public void testNumber6() {
+        assertType("10++", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNumber7() {
+        assertType("++10", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNumber8() {
         assertType("(x <=> y).intValue()", "intValue", "java.lang.Integer");
     }
 
@@ -3476,42 +3486,119 @@ public final class InferencingTests extends InferencingTestSuite {
         assertUnknown(contents, "doesNotExist");
     }
 
-    @Test // nested expressions of various forms
-    public void testNested1() {
+    @Test
+    public void testInfix() {
         String contents =
-            "(true ? 2 : 7) + 9";
-        assertType(contents, "java.lang.Integer");
+            "def n = 1\n" +
+            "def m = 2\n" +
+            "def x = n ** m";
+        assertType(contents, "x", "java.lang.Number");
     }
 
-    @Test // nested expressions of various forms
-    public void testNested2() {
+    @Test
+    public void testPrefix() {
         String contents =
-            "(true ? 2 : 7) + (true ? 2 : 7)";
-        assertType(contents, "java.lang.Integer");
-    }
-
-    @Test // nested expressions of various forms
-    public void testNested3() {
-        String contents =
-            "(8 ?: 7) + (8 ?: 7)";
-        assertType(contents, "java.lang.Integer");
-    }
-
-    @Test // nested expressions of various forms
-    public void testNested4() {
-        createUnit("Foo", "class Foo { int prop;}");
-
-        String contents = "(new Foo().@prop) + (8 ?: 7)";
-        assertType(contents, "java.lang.Integer");
+            "byte n = 1\n" +
+            "def x = -(-n)";
+        assertType(contents, "x", "java.lang.Byte");
     }
 
     @Test
     public void testPostfix() {
         String contents =
-            "int i = 0\n" +
-            "def list = [0]\n" +
-            "list[i]++";
-        assertType(contents, "i", "java.lang.Integer");
+            "def item = 0\n" +
+            "def list = [1]\n" +
+            "def x = list[item]++";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNested1() {
+        assertType("((byte) 1 + (char) 2)", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNested2() {
+        assertType("(((1 + 2) - 3) * 4)", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNested3() {
+        assertType("(((1 + 2L) - 3) * 4)", "java.lang.Long");
+    }
+
+    @Test
+    public void testNested4() {
+        assertType("(((1 + 2f) - 3) * 4)", "java.lang.Double");
+    }
+
+    @Test
+    public void testNested5() {
+        assertType("(((1 + 2d) - 3) * 4)", "java.lang.Double");
+    }
+
+    @Test
+    public void testNested6() {
+        assertType("(((1 + 2g) - 3) * 4)", "java.math.BigInteger");
+    }
+
+    @Test
+    public void testNested7() {
+        assertType("(((1 + 2.0g) - 3) * 4)", "java.math.BigDecimal");
+    }
+
+    @Test
+    public void testNested8() {
+        assertType("(((1 + 2) - 3) / 4)", "java.math.BigDecimal");
+    }
+
+    @Test
+    public void testNested9() {
+        // float or double before BigDecimal or BigInteger
+        assertType("(((1g + 2) - 3) / 4f)", "java.lang.Double");
+    }
+
+    @Test
+    public void testNested10() {
+        assertType("(true ? 2 : 7) + 9", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNested11() {
+        assertType("(true ? 2 : 7) + (true ? 2 : 7)", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNested12() {
+        assertType("(8 ?: 7) + (8 ?: 7)", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNested13() {
+        createUnit("C", "class C {int n}");
+
+        assertType("(new C().@n) + (8 ?: 7)", "java.lang.Integer");
+    }
+
+    @Test
+    public void testNested14() {
+        createUnit("C", "class C {double n}");
+
+        assertType("(new C().@n) + (8 ?: 7)", "java.lang.Double");
+    }
+
+    @Test
+    public void testNested15() {
+        createUnit("C", "class C {String s}");
+
+        assertType("(new C().s.length() + 2) / 3", "java.math.BigDecimal");
+    }
+
+    @Test
+    public void testNested16() {
+        createUnit("C", "class C {String s}");
+
+        assertType("([ new C() ])[(new C().s.length() + 4 - 9) / 7]", "C");
     }
 
     @Test // GRECLIPSE-1302

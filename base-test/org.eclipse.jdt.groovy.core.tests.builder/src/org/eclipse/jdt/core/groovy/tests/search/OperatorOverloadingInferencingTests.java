@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -306,7 +306,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     }
 
     @Test
-    public void testAttributeExpr1() throws Exception {
+    public void testAttributeExpr1() {
         String contents =
             "class Foo { boolean flag\n}\n" +
             "def xxx = new Foo().@flag\n" +
@@ -316,7 +316,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     }
 
     @Test
-    public void testAttributeExpr2() throws Exception {
+    public void testAttributeExpr2() {
         String contents =
             "class Foo { String str\n}\n" +
             "def xxx = new Foo().@str.startsWith('1')\n" +
@@ -326,37 +326,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     }
 
     @Test
-    public void testLongExpr1() throws Exception {
-        String contents =
-            "class Foo { String str\n}\n" +
-            "def xxx = (new Foo().str.length() + 4 - 9) / 7\n" +
-            "xxx";
-
-        assertType(contents, "xxx", "java.lang.Integer");
-    }
-
-    @Test
-    public void testLongExpr2() throws Exception {
-        String contents =
-            "class Foo { String str\n}\n" +
-            "def xxx = ([ new Foo() ])[(new Foo().str.length() + 4 - 9) / 7]\n" +
-            "xxx";
-
-        assertType(contents, "xxx", "Foo");
-    }
-
-    @Test
-    public void testLongExpr3() throws Exception {
-        String contents =
-            "class Foo { Foo next() {}\n int previous() {}\n}\n" +
-            "def xxx = ([new Foo()++][0]--) + 8\n" +
-            "xxx";
-
-        assertType(contents, "xxx", "java.lang.Integer");
-    }
-
-    @Test
-    public void testNumberPlusString() throws Exception {
+    public void testNumberPlusString() {
         String contents =
             "def xxx = 1 + ''\n" +
             "xxx";
@@ -365,7 +335,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     }
 
     @Test
-    public void testNumberPlusGString() throws Exception {
+    public void testNumberPlusGString() {
         String contents =
             "def xxx = 1 + \"${this}\"\n" +
             "xxx";
@@ -374,119 +344,109 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     }
 
     @Test
-    public void testCompleteExpr1() throws Exception {
+    public void testCompleteExpr1() {
         assertType("['']", "java.util.List<java.lang.String>");
     }
 
     @Test
-    public void testCompleteExpr2() throws Exception {
+    public void testCompleteExpr2() {
         assertType("this.class.name", "java.lang.String");
     }
 
     @Test
-    public void testCompleteExpr3() throws Exception {
+    public void testCompleteExpr3() {
         assertType("this.getClass().getName()", "java.lang.String");
     }
 
     @Test
-    public void testCompleteExpr4() throws Exception {
+    public void testCompleteExpr4() {
         assertType("this.getClass().getName() + 3", "java.lang.String");
     }
 
     @Test
-    public void testCompleteExpr5() throws Exception {
+    public void testCompleteExpr5() {
         assertType("4 + this.getClass().getName()", "java.lang.String");
     }
 
     @Test
-    public void testCompleteExpr6() throws Exception {
+    public void testCompleteExpr6() {
         assertType("new LinkedList<String>()[0]", "java.lang.String");
     }
 
     @Test
-    public void testCompleteExpr7() throws Exception {
+    public void testCompleteExpr7() {
         assertType("[1:3]", "java.util.Map<java.lang.Integer,java.lang.Integer>");
     }
 
     @Test
-    public void testCompleteExpr8() throws Exception {
-        assertType("1..3", "groovy.lang.Range<java.lang.Integer>");
-    }
-
-    @Test
-    public void testPrefix1() throws Exception {
-        String contents = "def x = 1\ndef xxx = -x\nxxx";
-
-        assertType(contents, "xxx", "java.lang.Integer");
-    }
-
-    @Test
-    public void testPrefix2() throws Exception {
+    public void testPrefix1() {
         String contents =
             "class Foo { double positive() {}}\n" +
-            "def xxx = +(new Foo())\n" +
-            "xxx";
+            "def xxx = +(new Foo())";
 
         assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
-    public void testPrefix3() throws Exception {
+    public void testPrefix2() {
         String contents =
             "class Foo { double negative() {}}\n" +
-            "def xxx = -(new Foo())\n" +
-            "xxx";
+            "def xxx = -(new Foo())";
 
         assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
-    public void testPrefix4() throws Exception {
+    public void testPrefix3() {
         String contents =
             "class Foo { double next() {}}\n" +
-            "def xxx = ++(new Foo())\n" +
-            "xxx";
+            "def xxx = ++(new Foo())";
 
         assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
-    public void testPrefix5() throws Exception {
+    public void testPrefix4() {
         String contents =
             "class Foo { double previous() {}}\n" +
-            "def xxx = --(new Foo())\n" +
-            "xxx";
+            "def xxx = --(new Foo())";
 
         assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
-    public void testPrefix6() throws Exception {
+    public void testPrefix5() {
         String contents =
             "class Foo { double bitwiseNegate() {}}\n" +
-            "def xxx = ~(new Foo())\n" +
-            "xxx";
+            "def xxx = ~(new Foo())";
 
         assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
-    public void testPostfix1() throws Exception {
+    public void testPostfix1() {
         String contents =
             "class Foo { double next() {}}\n" +
-            "def xxx = (new Foo())++\n" +
-            "xxx";
+            "def xxx = (new Foo())++";
 
         assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
-    public void testPostfix2() throws Exception {
+    public void testPostfix2() {
         String contents =
             "class Foo { double previous() {}}\n" +
-            "def xxx = (new Foo())--\n" +
-            "xxx";
+            "def xxx = (new Foo())--";
 
         assertType(contents, "xxx", "java.lang.Double");
+    }
+
+    @Test
+    public void testPostfix3() {
+        String contents =
+            "class Foo { Foo next() {}\n int previous() {}}\n" +
+            "def xxx = ([new Foo()++][0]--) + 8";
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 }

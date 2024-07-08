@@ -807,8 +807,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             primaryExprType = primaryTypeStack.removeLast();
             if (isAssignment) {
                 assignmentStorer.storeAssignment(node, scopes.getLast(), primaryExprType);
-
-            } else if (node.getOperation().isA(Types.LOGICAL_AND)) { // check for instanceof guard
+            } else if (node.getOperation().isA(Types.LOGICAL_AND)) { // check for an instanceof guard
                 Map<String, ClassNode[]> types = inferInstanceOfType(toVisitPrimary, scopes.getLast());
                 if (!types.isEmpty()) {
                     trueScope = new VariableScope(scopes.getLast(), GeneralUtils.stmt(toVisitPrimary), false);
@@ -827,52 +826,116 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (trueScope != null)
                 scopes.removeLast().bubbleUpdates();
         }
-        ClassNode completeExprType = primaryExprType;
+        ClassNode completeExprType = null;
         ClassNode dependentExprType = primaryTypeStack.removeLast();
 
-        if (!isAssignment && primaryExprType != null && dependentExprType != null) {
-            String associatedMethod;
-            if (node.getOperation().isA(Types.LEFT_SQUARE_BRACKET) && primaryExprType.isArray() && ClassHelper.isNumberType(dependentExprType)) {
-                completeExprType = primaryExprType.getComponentType();
+        if (isAssignment || primaryExprType == null || dependentExprType == null) {
+            completeExprType = primaryExprType;
+        } else {
+            java.util.function.Predicate<ClassNode> floats =
+                (type) -> WideningCategories.isFloatingCategory(ClassHelper.getUnwrapper(type));
+            java.util.function.Predicate<ClassNode> number =
+                // float, double, byte, char, int, long, short, ? extends Number and Character
+                floats.or(type -> WideningCategories.isNumberCategory(ClassHelper.getUnwrapper(type)));
 
-            } else if (isArithmeticOperationOnListOrNumberOrString(node.getOperation().getText(), primaryExprType, dependentExprType)) {
-                // in 1.8 and later, Groovy will not go through the MOP for standard arithmetic operations on numbers
-                completeExprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) || dependentExprType.equals(VariableScope.GSTRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE : primaryExprType;
-
-            } else if ((associatedMethod = findBinaryOperatorName(node.getOperation().getText())) != null) {
-                if (!"getAt".equals(associatedMethod) || node.getNodeMetaData("rhsType") == null) {
-                    scopes.getLast().setMethodCallArgumentTypes(Collections.singletonList(dependentExprType));
-                } else { associatedMethod = "putAt";
-                    scopes.getLast().setMethodCallArgumentTypes(Arrays.asList(dependentExprType, node.getNodeMetaData("rhsType")));
+            switch (node.getOperation().getType()) {
+            case Types.LEFT_SQUARE_BRACKET:
+                if (primaryExprType.isArray() && ClassHelper.isNumberType(dependentExprType)) {
+                    completeExprType = primaryExprType.getComponentType(); // array access
                 }
-                // there is an overloadable method associated with this operation; convert to a constant expression and look it up
-                TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(associatedMethod), primaryExprType, false, scopes.getLast());
-                if (result.confidence != TypeConfidence.UNKNOWN) completeExprType = result.type;
-                // special case DefaultGroovyMethods.getAt -- the problem is that DGM has too many variants of getAt
-                if ("getAt".equals(associatedMethod) && VariableScope.DGM_CLASS_NODE.equals(result.declaringType)) {
-                    if (primaryExprType.getName().equals("java.util.BitSet")) {
-                        completeExprType = VariableScope.BOOLEAN_CLASS_NODE;
+                break;
+            case Types.PLUS:
+                if (primaryExprType.equals(VariableScope.STRING_CLASS_NODE) || primaryExprType.equals(VariableScope.GSTRING_CLASS_NODE)) {
+                    completeExprType = VariableScope.STRING_CLASS_NODE; // string concat
+                }
+                // fall through
+            case Types.MINUS:
+            case Types.MULTIPLY:
+            case Types.MOD/*ULUS*/:
+            case 353 /*REMAINDER*/:
+                // in 1.8 and later, Groovy will not go through the MOP for standard arithmetic operations on numbers
+                if (number.test(primaryExprType) && number.test(dependentExprType)) {
+                    if (floats.test(primaryExprType) ||
+                        floats.test(dependentExprType)) {
+                        completeExprType = VariableScope.DOUBLE_CLASS_NODE;
+                    } else if (
+                        VariableScope.BIG_DECIMAL_CLASS.equals(primaryExprType) ||
+                        VariableScope.BIG_DECIMAL_CLASS.equals(dependentExprType)) {
+                        completeExprType = VariableScope.BIG_DECIMAL_CLASS;
+                    } else if (
+                        VariableScope.BIG_INTEGER_CLASS.equals(primaryExprType) ||
+                        VariableScope.BIG_INTEGER_CLASS.equals(dependentExprType)) {
+                        completeExprType = VariableScope.BIG_INTEGER_CLASS;
+                    } else if (
+                        VariableScope.LONG_CLASS_NODE.equals(ClassHelper.getWrapper(primaryExprType)) ||
+                        VariableScope.LONG_CLASS_NODE.equals(ClassHelper.getWrapper(dependentExprType))) {
+                        completeExprType = VariableScope.LONG_CLASS_NODE;
                     } else {
-                        ClassNode elementType;
-                        if (GeneralUtils.isOrImplements(primaryExprType, VariableScope.MAP_CLASS_NODE)) {
-                            elementType = result.type; // for maps use the value type
-                        } else {
-                            elementType = VariableScope.extractElementType(primaryExprType);
-                        }
-                        if (dependentExprType.isArray() || GeneralUtils.isOrImplements(dependentExprType, VariableScope.LIST_CLASS_NODE)) {
-                            // if RHS is a range or list type, then result is a list of elements
-                            completeExprType = createParameterizedList(elementType);
-                        } else if (ClassHelper.isNumberType(dependentExprType)) {
-                            // if RHS is a number type, then result is a single element
-                            completeExprType = elementType;
-                        }
+                        // byte, char, short --> int
+                        completeExprType = VariableScope.INTEGER_CLASS_NODE;
                     }
                 }
-            } else {
-                // no overloadable associated method
-                completeExprType = findBinaryExpressionType(node.getOperation().getText(), primaryExprType, dependentExprType);
+                break;
+            case Types.DIVIDE:
+                if (number.test(primaryExprType) && number.test(dependentExprType)) {
+                    if (floats.test(primaryExprType) ||
+                        floats.test(dependentExprType)) {
+                        completeExprType = VariableScope.DOUBLE_CLASS_NODE;
+                    } else {
+                        completeExprType = VariableScope.BIG_DECIMAL_CLASS;
+                    }
+                }
+                break;
+            case Types.POWER:
+                // https://docs.groovy-lang.org/latest/html/documentation/#power_operator
+                if (number.test(primaryExprType) && number.test(dependentExprType)) {
+                    // decimal or positive integer exponent:
+                    //  * Double, Long or Integer
+                    // zero or negative integer exponent:
+                    //  * BigDecimal, BigInteger, Long or Integer
+                    completeExprType = VariableScope.NUMBER_CLASS_NODE;
+                }
+                break;
+            }
+
+            if (completeExprType == null) {
+                String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
+                if (associatedMethod != null) {
+                    if (!"getAt".equals(associatedMethod) || node.getNodeMetaData("rhsType") == null) {
+                        scopes.getLast().setMethodCallArgumentTypes(Collections.singletonList(dependentExprType));
+                    } else { associatedMethod = "putAt";
+                        scopes.getLast().setMethodCallArgumentTypes(Arrays.asList(dependentExprType, node.getNodeMetaData("rhsType")));
+                    }
+                    // there is an overloadable method associated with this operation; convert to a constant expression and look it up
+                    TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(associatedMethod), primaryExprType, false, scopes.getLast());
+                    completeExprType = (result.confidence != TypeConfidence.UNKNOWN ? result.type : primaryExprType);
+                    // special case DefaultGroovyMethods.getAt -- the problem is that DGM has too many variants of getAt
+                    if ("getAt".equals(associatedMethod) && VariableScope.DGM_CLASS_NODE.equals(result.declaringType)) {
+                        if (primaryExprType.getName().equals("java.util.BitSet")) {
+                            completeExprType = VariableScope.BOOLEAN_CLASS_NODE;
+                        } else {
+                            ClassNode elementType;
+                            if (GeneralUtils.isOrImplements(primaryExprType, VariableScope.MAP_CLASS_NODE)) {
+                                elementType = result.type; // for maps use the value type
+                            } else {
+                                elementType = VariableScope.extractElementType(primaryExprType);
+                            }
+                            if (dependentExprType.isArray() || GeneralUtils.isOrImplements(dependentExprType, VariableScope.LIST_CLASS_NODE)) {
+                                // if RHS is a range or list type, then result is a list of elements
+                                completeExprType = createParameterizedList(elementType);
+                            } else if (ClassHelper.isNumberType(dependentExprType)) {
+                                // if RHS is a number type, then result is a single element
+                                completeExprType = elementType;
+                            }
+                        }
+                    }
+                } else {
+                    // no overloadable associated method
+                    completeExprType = findBinaryExpressionType(node.getOperation().getText(), primaryExprType, dependentExprType);
+                }
             }
         }
+
         handleCompleteExpression(node, completeExprType, null);
         enclosingAssignment = oldEnclosingAssignment;
     }
@@ -3344,31 +3407,6 @@ out:    if (inferredTypes[0] == null) {
 
     private static Map<String, ClassNode[]> instanceOfBinding(final String name, final ClassNode type, final Token operator) {
         return Collections.singletonMap(name, operator.getText().startsWith("!") ? new ClassNode[] {null, type} : new ClassNode[] {type, null});
-    }
-
-    /**
-     * Makes assumption that no one has overloaded the basic arithmetic operations on numbers.
-     * These operations will bypass the mop in most situations anyway.
-     */
-    private static boolean isArithmeticOperationOnListOrNumberOrString(final String text, final ClassNode lhs, final ClassNode rhs) {
-        if (text.length() != 1) {
-            return false;
-        }
-
-        switch (text.charAt(0)) {
-        case '+':
-        case '-':
-            if (GeneralUtils.isOrImplements(lhs, VariableScope.LIST_CLASS_NODE)) {
-                return true;
-            }
-            // fall through
-        case '*':
-        case '/':
-        case '%':
-            return ClassHelper.getWrapper(lhs).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE) || lhs.equals(VariableScope.STRING_CLASS_NODE) || lhs.equals(VariableScope.GSTRING_CLASS_NODE);
-        default:
-            return false;
-        }
     }
 
     private static boolean isEnumInit(final MethodCallExpression node) {
