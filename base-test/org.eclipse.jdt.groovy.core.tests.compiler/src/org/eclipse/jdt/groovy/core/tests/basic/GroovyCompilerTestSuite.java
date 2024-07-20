@@ -72,23 +72,24 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK8  = ClassFileConstants.JDK1_8;
     protected static final long JDK9  = ClassFileConstants.JDK9;
     protected static final long JDK10 = ClassFileConstants.JDK10;
-    protected static final long JDK11 = (55L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final long JDK12 = (56L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final long JDK13 = (57L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final long JDK14 = (58L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final long JDK15 = (59L << 16) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final long JDK11 = ClassFileConstants.JDK11;
+    protected static final long JDK12 = ClassFileConstants.JDK12;
+    protected static final long JDK13 = ClassFileConstants.JDK13;
+    protected static final long JDK14 = ClassFileConstants.JDK14;
+    protected static final long JDK15 = ClassFileConstants.JDK15;
     protected static final long JDK16 = (60L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK17 = (61L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK18 = (62L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK19 = (63L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK20 = (64L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK21 = (65L << 16) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final long JDK22 = (66L << 16) + ClassFileConstants.MINOR_VERSION_0;
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
         long javaSpec = CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version"));
         List<Object[]> params = new ArrayList<>();
-        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17, JDK18, JDK19, JDK20, JDK21}) {
+        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17, JDK18, JDK19, JDK20, JDK21, JDK22}) {
             if (jdk == javaSpec || (jdk < javaSpec && (/*jdk == JDK8 || */jdk == JDK11 || jdk == JDK17 || jdk == JDK21))) { // current and LTS
                 params.add(new Object[] {jdk, CompilerOptions.versionFromJdkLevel(jdk)});
             }

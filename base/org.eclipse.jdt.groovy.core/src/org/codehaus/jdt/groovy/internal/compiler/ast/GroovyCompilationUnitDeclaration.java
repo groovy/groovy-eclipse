@@ -2509,7 +2509,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         }
 
                         typeParameter.bounds[j - 1] = createTypeReferenceForClassNode(upperBounds[j], offset, offset + length);
-                        typeParameter.bounds[j - 1].bits |= ASTNode.IsSuperType;
+                        typeParameter.bounds[j - 1].bits |= ASTNode.Bit5/*IsSuperType*/;
                     }
                 }
             }
