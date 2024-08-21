@@ -45,7 +45,7 @@ $Terminals
 	abstract assert boolean break byte case catch char class
 	continue const default do double else enum extends false final finally float
 	for goto if implements import instanceof int
-	interface long native new non-sealed null package permits private
+	interface long native new non-sealed null package private
 	protected public return short static strictfp super switch
 	synchronized this throw throws transient true try void
 	volatile while module open requires transitive exports opens to uses provides with
@@ -120,6 +120,7 @@ $Terminals
 	RestrictedIdentifierYield
 	RestrictedIdentifierrecord
 	RestrictedIdentifiersealed
+	RestrictedIdentifierpermits
 	BeginCaseElement
 	RestrictedIdentifierWhen
 	UNDERSCORE
@@ -230,8 +231,9 @@ Goal ::= '@' TypeAnnotations
 -- JSR 354 Reconnaissance mission.
 Goal ::= '->' YieldStatement
 Goal ::= '->' SwitchLabelCaseLhs
--- JSR 360 Restricted
+-- JEP 409 Sealed types Reconnaissance mission.
 Goal ::= RestrictedIdentifiersealed Modifiersopt
+Goal ::= RestrictedIdentifierpermits PermittedTypes
 -- jsr 427 --
 Goal ::= BeginCaseElement Pattern
 Goal ::= RestrictedIdentifierWhen Expression
@@ -2410,10 +2412,14 @@ ClassHeaderImplementsopt ::= $empty
 ClassHeaderImplementsopt -> ClassHeaderImplements
 /:$readableName ClassHeaderImplements:/
 
-PermittedTypesopt -> $empty
-PermittedTypesopt ::= 'permits' ClassTypeList
-/.$putCase consumePermittedTypes(); $break ./
+-- Production name hardcoded in scanner. Must be ::= and not ->
+PermittedTypes ::= ClassTypeList
 /:$readableName PermittedTypes:/
+
+PermittedTypesopt -> $empty
+PermittedTypesopt ::= RestrictedIdentifierpermits ClassTypeList
+/.$putCase consumePermittedTypes(); $break ./
+/:$readableName PermittedTypesopt:/
 /:$compliance 17:/
 
 InterfaceMemberDeclarationsopt ::= $empty
@@ -3199,5 +3205,4 @@ UNDERSCORE ::= '_'
 
 $end
 -- need a carriage return after the $end
-
 

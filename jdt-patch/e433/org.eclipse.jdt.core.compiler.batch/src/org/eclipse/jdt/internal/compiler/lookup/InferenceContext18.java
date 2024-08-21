@@ -180,6 +180,8 @@ public class InferenceContext18 {
 	// the following two flags control to what degree we continue with incomplete information:
 	private boolean isInexactVarargsInference = false;
 	boolean prematureOverloadResolution = false;
+	// during reduction we ignore missing types but record that fact here:
+	boolean hasIgnoredMissingType;
 
 	public static boolean isSameSite(InvocationSite site1, InvocationSite site2) {
 		if (site1 == site2)
@@ -754,6 +756,7 @@ public class InferenceContext18 {
 	protected int getInferenceKind(MethodBinding nonGenericMethod, TypeBinding[] argumentTypes) {
 		switch (this.scope.parameterCompatibilityLevel(nonGenericMethod, argumentTypes)) {
 			case Scope.AUTOBOX_COMPATIBLE:
+			case Scope.COMPATIBLE_IGNORING_MISSING_TYPE: // if in doubt the method with missing types should be accepted to signal its relevance for resolution
 				return CHECK_LOOSE;
 			case Scope.VARARGS_COMPATIBLE:
 				return CHECK_VARARG;

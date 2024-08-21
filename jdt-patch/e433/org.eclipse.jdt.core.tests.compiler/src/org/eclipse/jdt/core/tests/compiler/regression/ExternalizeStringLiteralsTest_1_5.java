@@ -17,7 +17,6 @@ import java.util.Map;
 
 import junit.framework.Test;
 
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -32,7 +31,7 @@ public ExternalizeStringLiteralsTest_1_5(String name) {
 	super(name);
 }
 public static Test suite() {
-	return buildUniqueComplianceTestSuite(testClass(), ClassFileConstants.JDK1_5);
+	return buildUniqueComplianceTestSuite(testClass(), CompilerOptions.getFirstSupportedJdkLevel());
 }
 
 public void test001() {

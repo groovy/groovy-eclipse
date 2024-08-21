@@ -35,6 +35,7 @@ public static Test suite() {
 	testClasses.add(NegativeCodeSnippetTest.class);
 	testClasses.add(NegativeVariableTest.class);
 	testClasses.add(DebugEvaluationTest.class);
+	testClasses.add(EvaluationContextWrapperTest.class);
 
 	return AbstractCompilerTest.buildAllCompliancesTestSuite(TestAll.class, DebugEvaluationSetup.class, testClasses);
 }

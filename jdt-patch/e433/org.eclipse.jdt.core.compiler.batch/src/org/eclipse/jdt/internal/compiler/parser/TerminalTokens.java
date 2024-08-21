@@ -41,7 +41,7 @@ public interface TerminalTokens {
 	static boolean isRestrictedKeyword(int tokenType) {
 		return switch (tokenType) {
 			case TokenNameRestrictedIdentifierYield, TokenNameRestrictedIdentifierrecord,TokenNameRestrictedIdentifierWhen,
-					TokenNameRestrictedIdentifiersealed, TokenNamepermits -> true;
+					TokenNameRestrictedIdentifiersealed, TokenNameRestrictedIdentifierpermits -> true;
 			default -> false;
 		};
 	}
@@ -65,7 +65,7 @@ public interface TerminalTokens {
 			case "record"  -> TokenNameRestrictedIdentifierrecord;  //$NON-NLS-1$
 			case "when"    -> TokenNameRestrictedIdentifierWhen;    //$NON-NLS-1$
 			case "sealed"  -> TokenNameRestrictedIdentifiersealed;  //$NON-NLS-1$
-			case "permits" -> TokenNamepermits; //$NON-NLS-1$
+			case "permits" -> TokenNameRestrictedIdentifierpermits; //$NON-NLS-1$
 			default        -> TokenNameNotAToken;
 		};
 	}
@@ -96,7 +96,7 @@ public interface TerminalTokens {
 							TokenNamefor = 86,
 							TokenNamegoto = 139,
 							TokenNameif = 87,
-							TokenNameimplements = 134,
+							TokenNameimplements = 135,
 							TokenNameimport = 112,
 							TokenNameinstanceof = 16,
 							TokenNameint = 113,
@@ -107,13 +107,12 @@ public interface TerminalTokens {
 							TokenNamenon_sealed = 47,
 							TokenNamenull = 57,
 							TokenNamepackage = 91,
-							TokenNamepermits = 135,
 							TokenNameprivate = 48,
 							TokenNameprotected = 49,
 							TokenNamepublic = 50,
 							TokenNamereturn = 88,
 							TokenNameshort = 115,
-							TokenNamestatic = 38,
+							TokenNamestatic = 39,
 							TokenNamestrictfp = 51,
 							TokenNamesuper = 36,
 							TokenNameswitch = 65,
@@ -206,9 +205,10 @@ public interface TerminalTokens {
 							TokenNameRestrictedIdentifierYield = 81,
 							TokenNameRestrictedIdentifierrecord = 76,
 							TokenNameRestrictedIdentifiersealed = 43,
-							TokenNameBeginCaseElement = 132,
-							TokenNameRestrictedIdentifierWhen = 133,
+							TokenNameRestrictedIdentifierpermits = 132,
+							TokenNameBeginCaseElement = 133,
+							TokenNameRestrictedIdentifierWhen = 134,
 							TokenNameUNDERSCORE = 34,
-							TokenNameEOF = 39,
+							TokenNameEOF = 38,
 							TokenNameERROR = 140;
 }

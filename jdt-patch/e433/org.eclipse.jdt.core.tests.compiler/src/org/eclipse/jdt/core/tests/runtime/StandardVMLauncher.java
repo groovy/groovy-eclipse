@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -126,7 +126,7 @@ public String[] getCommandLine() {
 	// debug mode
 	if (this.debugPort != -1) {
 		addXdebug(commandLine);
-		commandLine.add("-Xnoagent");
+		addXnoagent(commandLine);
 		// commandLine.add("-Djava.compiler=NONE");
 		commandLine.add(
 			"-Xrunjdwp:transport=dt_socket,address=" +
@@ -199,6 +199,14 @@ private void addXdebug(List<String> commandLine, long vmVersion) {
 		commandLine.add("-Xdebug");
 	}
 }
+
+private void addXnoagent(List<String> commandLine) {
+    long vmVersion = Util.getMajorMinorVMVersion();
+    if (vmVersion != -1 && vmVersion < ClassFileConstants.JDK22) {
+        commandLine.add("-Xnoagent");
+    }
+}
+
 /**
  * Sets the name of the batch file used to launch the VM.
  * When this option is set, the launcher writes the command line to the given batch file,

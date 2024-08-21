@@ -8273,4 +8273,34 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"----------\n";
 		runner.runNegativeTest();
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2714
+	// [Sealed types + switch expression] Internal inconsistency warning at compile time and verify error at runtime
+	public void testIssue2714() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"""
+						public interface X {
+
+						  static <T extends AbstractSealedClass> Integer get(T object) {
+						    return switch (object) {
+						      case ClassB ignored -> 42;
+						    };
+						  }
+
+						  public abstract sealed class AbstractSealedClass permits ClassB {
+						  }
+
+						  public final class ClassB extends AbstractSealedClass {
+						  }
+
+						  public static void main(String[] args) {
+						   System.out.println(get(new ClassB()));
+						  }
+						}
+						"""
+				},
+				"42");
+	}
 }

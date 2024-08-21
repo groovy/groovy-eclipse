@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -47,12 +47,18 @@ protected Map getCompilerOptions() {
 	return options;
 }
 public static Test suite() {
-		return buildUniqueComplianceTestSuite(testClass(), ClassFileConstants.JDK1_4);
+		return buildUniqueComplianceTestSuite(testClass(), CompilerOptions.getFirstSupportedJdkLevel());
 }
 public static Class testClass() {
 	return Compliance_1_4.class;
 }
-
+// Use this static initializer to specify subset for tests
+// All specified tests which does not belong to the class are skipped...
+static {
+//		TESTS_NAMES = new String[] { "test079" };
+//		TESTS_NUMBERS = new int[] { 104 };
+//		TESTS_RANGE = new int[] { 85, -1 };
+}
 /* (non-Javadoc)
  * @see junit.framework.TestCase#setUp()
  */
@@ -2062,12 +2068,7 @@ public void test063() {
 			"	}	\n"+
 			"}	\n",
 		},
-		"----------\n" +
-		"1. ERROR in p1\\X.java (at line 5)\n" +
-		"	Z(){	\n" +
-		"	^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n"
+		""
 	);
 }
 
@@ -2092,12 +2093,7 @@ public void test064() {
 			"	}\n" +
 			"}\n"
 		},
-		"----------\n" +
-		"1. ERROR in Foo.java (at line 10)\n" +
-		"	public Baz() {\n" +
-		"	       ^^^^^\n" +
-		"No enclosing instance of type Foo is available due to some intermediate constructor invocation\n" +
-		"----------\n");
+		"");
 }
 
 public void test065() {
@@ -2123,12 +2119,7 @@ public void test065() {
 			"	}	\n"+
 			"}	\n"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 9)\n" +
-		"	Z(){	\n" +
-		"	^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n");
+		"");
 }
 
 /*
@@ -2152,11 +2143,6 @@ public void test066() {
 		},
 		"----------\n" +
 		"1. ERROR in X.java (at line 8)\n" +
-		"	super(new M(){});\n" +
-		"	      ^^^^^^^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 8)\n" +
 		"	super(new M(){});\n" +
 		"	          ^^^\n" +
 		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
@@ -2189,17 +2175,7 @@ public void test067() {
 			"}\n",
 		},
 		"----------\n" +
-		"1. ERROR in X.java (at line 11)\n" +
-		"	super(null); //1\n" +
-		"	^^^^^^^^^^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 14)\n" +
-		"	super(new M());//2\n" +
-		"	^^^^^^^^^^^^^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n" +
-		"3. ERROR in X.java (at line 14)\n" +
+		"1. ERROR in X.java (at line 14)\n" +
 		"	super(new M());//2\n" +
 		"	      ^^^^^^^\n" +
 		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
@@ -2228,12 +2204,7 @@ public void test068() {
 			"	}\n" +
 			"}\n",
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 8)\n" +
-		"	super();	// ko\n" +
-		"	^^^^^^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n");
+		"");
 }
 
 /*
@@ -2264,15 +2235,10 @@ public void test069() {
 		"----------\n" +
 		"1. ERROR in X.java (at line 8)\n" +
 		"	super(new MX4());	// ko\n" +
-		"	^^^^^^^^^^^^^^^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 8)\n" +
-		"	super(new MX4());	// ko\n" +
 		"	      ^^^^^^^^^\n" +
 		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
 		"----------\n" +
-		"3. ERROR in X.java (at line 14)\n" +
+		"2. ERROR in X.java (at line 14)\n" +
 		"	this(new MX4());		// ko\n" +
 		"	     ^^^^^^^^^\n" +
 		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
@@ -2589,9 +2555,57 @@ public void test078() {
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=47227
  */
 public void test079() {
+
+	String problemLog = (this.complianceLevel >= ClassFileConstants.JDK22) ?
+			"""
+			----------
+			1. ERROR in X.java (at line 1)
+				void ___eval() {
+				^
+			Implicitly Declared Classes and Instance Main Methods is a preview feature and disabled by default. Use --enable-preview to enable
+			----------
+			2. ERROR in X.java (at line 1)
+				void ___eval() {
+				^
+			Implicitly declared class must have a candidate main method
+			----------
+			3. ERROR in X.java (at line 4)
+				return blah;
+				       ^^^^
+			blah cannot be resolved to a variable
+			----------
+			""" :
+			"""
+			----------
+			1. ERROR in X.java (at line 1)
+				void ___eval() {
+				^
+			The preview feature Implicitly Declared Classes and Instance Main Methods is only available with source level 22 and above
+			----------
+			2. ERROR in X.java (at line 1)
+				void ___eval() {
+				^
+			Implicitly declared class must have a candidate main method
+			----------
+			3. ERROR in X.java (at line 4)
+				return blah;
+				       ^^^^
+			blah cannot be resolved to a variable
+			----------
+			""";
+
+	if (this.complianceLevel < ClassFileConstants.JDK16) {
+		problemLog += """
+			4. ERROR in X.java (at line 14)
+				public static void main(String[] args) {
+				                   ^^^^^^^^^^^^^^^^^^^
+			The method main cannot be declared static; static methods can only be declared in a static or top level type
+			----------
+			""";
+	}
 	this.runNegativeTest(
 		new String[] {
-			"Hello.java",
+			"X.java",
 			"void ___eval() {\n" +
 			"	new Runnable() {\n" +
 			"		int ___run() throws Throwable {\n" +
@@ -2616,36 +2630,14 @@ public void test079() {
 			"	}\n" +
 			"}\n"
 		},
-		"""
-		----------
-		1. ERROR in Hello.java (at line 1)
-			void ___eval() {
-			^
-		The preview feature Implicitly Declared Classes and Instance Main Methods is only available with source level 22 and above
-		----------
-		2. ERROR in Hello.java (at line 1)
-			void ___eval() {
-			^
-		Implicitly declared class must have a candidate main method
-		----------
-		3. ERROR in Hello.java (at line 4)
-			return blah;
-			       ^^^^
-		blah cannot be resolved to a variable
-		----------
-		4. ERROR in Hello.java (at line 14)
-			public static void main(String[] args) {
-			                   ^^^^^^^^^^^^^^^^^^^
-		The method main cannot be declared static; static methods can only be declared in a static or top level type
-		----------
-		"""
+		problemLog
 	);
 }
 /*
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=67643
  * from 1.5 source level on most specific common super type is allowed
  */
-public void test080() {
+public void _2551_test080() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -2689,12 +2681,7 @@ public void test081() {
 			"    public Y foo() { return this; } \n" +
 			"}\n"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 5)\n" +
-		"	public Y foo() { return this; } \n" +
-		"	       ^\n" +
-		"The return type is incompatible with X.foo()\n" +
-		"----------\n");
+		"");
 }
 // covariance
 public void test082() {
@@ -2718,12 +2705,7 @@ public void test082() {
 			"	}\n" +
 			"}\n"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 13)\n" +
-		"	String foo() {\n" +
-		"	^^^^^^\n" +
-		"The return type is incompatible with X.foo()\n" +
-		"----------\n");
+		"");
 }
 /*
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=66533
@@ -2739,10 +2721,10 @@ public void test084() {
 			"}\n"
 		},
 		"----------\n" +
-		"1. WARNING in X.java (at line 3)\n" +
+		"1. ERROR in X.java (at line 3)\n" +
 		"	Object enum = null;\n" +
 		"	       ^^^^\n" +
-		"\'enum\' should not be used as an identifier, since it is a reserved keyword from source level 1.5 on\n" +
+		"Syntax error on token \"enum\", delete this token\n" +
 		"----------\n");
 }
 /**
@@ -2764,22 +2746,19 @@ public void test085() {
 				"	public static int in;\n" +
 				"}\n"
 		},
-		"----------\n" +
-			"1. ERROR in A.java (at line 1)\n" +
-			"	import static j.l.S.*;\n" +
-			"	^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Syntax error, static imports are only available if source level is 1.5 or greater\n" +
-			"----------\n" +
-			"2. ERROR in A.java (at line 2)\n" +
-			"	import static j.l.S.in;\n" +
-			"	^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Syntax error, static imports are only available if source level is 1.5 or greater\n" +
-			"----------\n" +
-			"3. ERROR in A.java (at line 2)\n" +
-			"	import static j.l.S.in;\n" +
-			"	              ^^^^^^^^\n" +
-			"The import j.l.S.in cannot be resolved\n" +
-			"----------\n"
+		"""
+		----------
+		1. WARNING in A.java (at line 1)
+			import static j.l.S.*;
+			              ^^^^^
+		The import j.l.S is never used
+		----------
+		2. WARNING in A.java (at line 2)
+			import static j.l.S.in;
+			              ^^^^^^^^
+		The import j.l.S.in is never used
+		----------
+		"""
 		);
 }
 /**
@@ -2806,8 +2785,8 @@ public void test086() {
 		"----------\n" +
 			"1. ERROR in X.java (at line 1)\n" +
 			"	import static p.S;\n" +
-			"	^^^^^^^^^^^^^^^^^^\n" +
-			"Syntax error, static imports are only available if source level is 1.5 or greater\n" +
+			"	              ^^^\n" +
+			"The static import p.S must be a field or member type\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 5)\n" +
 			"	System.out.print(full+\" \"+p.S.success);\n" +
@@ -2836,22 +2815,17 @@ public void test087() {
 		"----------\n" +
 			"1. ERROR in X.java (at line 1)\n" +
 			"	import static S;\n" +
-			"	^^^^^^^^^^^^^^^^\n" +
-			"Syntax error, static imports are only available if source level is 1.5 or greater\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 1)\n" +
-			"	import static S;\n" +
 			"	              ^\n" +
 			"The import S cannot be resolved\n" +
 			"----------\n" +
-			"3. ERROR in X.java (at line 5)\n" +
+			"2. ERROR in X.java (at line 5)\n" +
 			"	System.out.print(full+\" \"+S.success);\n" +
 			"	                 ^^^^\n" +
 			"full cannot be resolved to a variable\n" +
 			"----------\n"
 		);
 }
-public void test088() {
+public void _2551_test088() {
 	this.runNegativeTest(
 		new String[] {
 			"p/X.java",
@@ -2937,12 +2911,7 @@ public void test089() {
 			"    }\n" +
 			"}"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 2)\r\n" +
-		"	@interface I1 {}\r\n" +
-		"	           ^^\n" +
-		"Syntax error, annotation declarations are only available if source level is 1.5 or greater\n" +
-		"----------\n");
+		"");
 }
 //78104
 public void test090() {
@@ -2959,12 +2928,7 @@ public void test090() {
 			"}",
 		},
 		"----------\n" +
-		"1. ERROR in X.java (at line 4)\n" +
-		"	ints = ints.clone();\n" +
-		"	       ^^^^^^^^^^^^\n" +
-		"Type mismatch: cannot convert from Object to int[]\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 6)\n" +
+		"1. ERROR in X.java (at line 6)\n" +
 		"	X x = this.clone();\n" +
 		"	      ^^^^^^^^^^^^\n" +
 		"Type mismatch: cannot convert from Object to X\n" +
@@ -2983,12 +2947,7 @@ public void test091() {
 			"	}\n" +
 			"}",
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 4)\r\n" +
-		"	args = args.clone();\r\n" +
-		"	       ^^^^^^^^^^^^\n" +
-		"Type mismatch: cannot convert from Object to String[]\n" +
-		"----------\n"
+		""
 	);
 }
 // check autoboxing only enabled in 5.0 source mode
@@ -3004,12 +2963,7 @@ public void test092() {
 			"	}\n" +
 			"}\n",
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 3)\n" +
-		"	if (b) { \n" +
-		"	    ^\n" +
-		"Type mismatch: cannot convert from Boolean to boolean\n" +
-		"----------\n"
+		""
 	);
 }
 public void test093() {
@@ -3063,8 +3017,8 @@ public void test093() {
 		"----------\n" +
 		"1. ERROR in p\\X_1.java (at line 33)\n" +
 		"	f1=(f1==0.0)?1.0:f1;\n" +
-		"	   ^^^^^^^^^\n" +
-		"Incompatible operand types Float and double\n" +
+		"	   ^^^^^^^^^^^^^^^^\n" +
+		"Type mismatch: cannot convert from double to Float\n" +
 		"----------\n"
 	);
 }
@@ -3088,8 +3042,8 @@ public void test094(){
 		"----------\n" +
 		"1. ERROR in X.java (at line 4)\n" +
 		"	()\n" +
-		"	^^\n" +
-		"Syntax error on tokens, delete these tokens\n" +
+		"	^\n" +
+		"Syntax error on token \"(\", AnnotationName expected before this token\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=84743
@@ -3119,12 +3073,7 @@ public void test095(){
 			"  }\n" +
 			"}\n"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 15)\n" +
-		"	J j = (J) i;\n" +
-		"	      ^^^^^\n" +
-		"Cannot cast from I to J\n" +
-		"----------\n");
+		"");
 }
 /*
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=47074
@@ -3153,12 +3102,7 @@ public void test096() {
 			"    }\n" +
 			"}"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 17)\n" +
-		"	C c = (C)a; //COMPILER ERROR\n" +
-		"	      ^^^^\n" +
-		"Cannot cast from X.A to X.C\n" +
-		"----------\n");
+		"");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=79396
 public void test097() {
@@ -3216,12 +3160,7 @@ public void test098() {
 			"	}\n" +
 			"}\n"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 6)\n" +
-		"	String this$0;\n" +
-		"	       ^^^^^^\n" +
-		"Duplicate field X.Y.this$0\n" +
-		"----------\n");
+		"");
 }
 
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=77349
@@ -3256,15 +3195,10 @@ public void test100() {
 			"}\n"
 		},
 		"----------\n" +
-		"1. ERROR in X.java (at line 2)\n" +
+		"1. WARNING in X.java (at line 4)\n" +
 		"	int \\ud800\\udc05\\ud800\\udc04\\ud800\\udc03\\ud800\\udc02\\ud800\\udc01\\ud800\\udc00;\n" +
-		"	    ^^^^^^\n" +
-		"Invalid unicode\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 4)\n" +
-		"	int \\ud800\\udc05\\ud800\\udc04\\ud800\\udc03\\ud800\\udc02\\ud800\\udc01\\ud800\\udc00;\n" +
-		"	    ^^^^^^\n" +
-		"Invalid unicode\n" +
+		"	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"The local variable \ud800\udc05\ud800\udc04\ud800\udc03\ud800\udc02\ud800\udc01\ud800\udc00 is hiding a field from type X\n" +
 		"----------\n"
 	);
 }
@@ -3285,27 +3219,7 @@ public void test101() {
 			"	}\n" +
 			"}\n"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 2)\n" +
-		"	Character c0 = \'a\';\n" +
-		"	               ^^^\n" +
-		"Type mismatch: cannot convert from char to Character\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 5)\n" +
-		"	c1 = \'b\';\n" +
-		"	     ^^^\n" +
-		"Type mismatch: cannot convert from char to Character\n" +
-		"----------\n" +
-		"3. ERROR in X.java (at line 7)\n" +
-		"	Character c2 = \'c\';\n" +
-		"	               ^^^\n" +
-		"Type mismatch: cannot convert from char to Character\n" +
-		"----------\n" +
-		"4. ERROR in X.java (at line 8)\n" +
-		"	Character[] c3 = { \'d\' };\n" +
-		"	                   ^^^\n" +
-		"Type mismatch: cannot convert from char to Character\n" +
-		"----------\n"
+		""
 	);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=108856
@@ -3327,7 +3241,7 @@ public void test102() {
 			"	}\n" +
 			"}\n"
 		},
-		"X$2");
+		"X$1$1");
 }
 public void test103() throws Exception {
 	this.runConformTest(
@@ -3350,52 +3264,34 @@ public void test103() throws Exception {
 			ClassFileBytesDisassembler.DETAILED);
 
 	String expectedOutput =
-		"// Compiled from X.java (version 1.4 : 48.0, super bit)\n" +
-		"public class X {\n" +
-		"  \n" +
-		"  // Field descriptor #6 Ljava/lang/Class;\n" +
-		"  static synthetic java.lang.Class class$0;\n" +
-		"  \n" +
-		"  // Method descriptor #9 ()V\n" +
-		"  // Stack: 1, Locals: 1\n" +
-		"  public X();\n" +
-		"    0  aload_0 [this]\n" +
-		"    1  invokespecial java.lang.Object() [11]\n" +
-		"    4  return\n" +
-		"      Line numbers:\n" +
-		"        [pc: 0, line: 1]\n" +
-		"      Local variable table:\n" +
-		"        [pc: 0, pc: 5] local: this index: 0 type: X\n" +
-		"  \n" +
-		"  // Method descriptor #18 ([Ljava/lang/String;)V\n" +
-		"  // Stack: 3, Locals: 1\n" +
-		"  public static void main(java.lang.String[] args);\n" +
-		"     0  getstatic java.lang.System.out : java.io.PrintStream [19]\n" +
-		"     3  getstatic X.class$0 : java.lang.Class [25]\n" +
-		"     6  dup\n" +
-		"     7  ifnonnull 35\n" +
-		"    10  pop\n" +
-		"    11  ldc <String \"X\"> [27]\n" +
-		"    13  invokestatic java.lang.Class.forName(java.lang.String) : java.lang.Class [28]\n" +
-		"    16  dup\n" +
-		"    17  putstatic X.class$0 : java.lang.Class [25]\n" +
-		"    20  goto 35\n" +
-		"    23  new java.lang.NoClassDefFoundError [34]\n" +
-		"    26  dup_x1\n" +
-		"    27  swap\n" +
-		"    28  invokevirtual java.lang.Throwable.getMessage() : java.lang.String [36]\n" +
-		"    31  invokespecial java.lang.NoClassDefFoundError(java.lang.String) [42]\n" +
-		"    34  athrow\n" +
-		"    35  invokevirtual java.io.PrintStream.print(java.lang.Object) : void [45]\n" +
-		"    38  return\n" +
-		"      Exception Table:\n" +
-		"        [pc: 11, pc: 16] -> 23 when : java.lang.ClassNotFoundException\n" +
-		"      Line numbers:\n" +
-		"        [pc: 0, line: 3]\n" +
-		"        [pc: 38, line: 4]\n" +
-		"      Local variable table:\n" +
-		"        [pc: 0, pc: 39] local: args index: 0 type: java.lang.String[]\n" +
-		"}";
+		"""
+		// Compiled from X.java (version 1.8 : 52.0, super bit)
+		public class X {
+		 \s
+		  // Method descriptor #6 ()V
+		  // Stack: 1, Locals: 1
+		  public X();
+		    0  aload_0 [this]
+		    1  invokespecial java.lang.Object() [8]
+		    4  return
+		      Line numbers:
+		        [pc: 0, line: 1]
+		      Local variable table:
+		        [pc: 0, pc: 5] local: this index: 0 type: X
+		 \s
+		  // Method descriptor #15 ([Ljava/lang/String;)V
+		  // Stack: 2, Locals: 1
+		  public static void main(java.lang.String[] args);
+		    0  getstatic java.lang.System.out : java.io.PrintStream [16]
+		    3  ldc <Class X> [1]
+		    5  invokevirtual java.io.PrintStream.print(java.lang.Object) : void [22]
+		    8  return
+		      Line numbers:
+		        [pc: 0, line: 3]
+		        [pc: 8, line: 4]
+		      Local variable table:
+		        [pc: 0, pc: 9] local: args index: 0 type: java.lang.String[]
+		}""";
 
 	int index = actualOutput.indexOf(expectedOutput);
 	if (index == -1 || expectedOutput.length() == 0) {
@@ -3432,7 +3328,7 @@ public void test104() {
 			"	}\n" +
 			"}"
 		},
-		"class X$1$Y X$1$Y");
+		"class X$1$1$1Y X$1$1$1Y");
 }
 
 // enclosing instance - note that the behavior is different in 1.5
@@ -3460,12 +3356,7 @@ public void test105() {
 			"    void foo(Y p) { }\n" +
 			"}\n"
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 13)\n" +
-		"	foo(p);\n" +
-		"	^^^^^^\n" +
-		"No enclosing instance of the type X is accessible in scope\n" +
-		"----------\n");
+		"");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=79798
 public void test106() {

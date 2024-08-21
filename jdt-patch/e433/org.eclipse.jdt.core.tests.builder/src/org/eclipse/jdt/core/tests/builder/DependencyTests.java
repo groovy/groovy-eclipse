@@ -20,11 +20,14 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
-import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class DependencyTests extends BuilderTests {
+	static {
+//		TESTS_NAMES = new String[] {"testMissingClassFile"};
+	}
 	public DependencyTests(String name) {
 		super(name);
 	}
@@ -857,7 +860,7 @@ public class DependencyTests extends BuilderTests {
 	}
 
 	public void testMissingClassFile() throws JavaModelException {
-		IPath project1Path = env.addProject("Project1"); //$NON-NLS-1$
+		IPath project1Path = env.addProject("Project1", "1.8"); // tolerance of missing types not fully implemented below 1.8
 		env.addExternalJars(project1Path, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
@@ -871,7 +874,7 @@ public class DependencyTests extends BuilderTests {
 			"public class MissingClass {}" //$NON-NLS-1$
 		);
 
-		IPath project2Path = env.addProject("Project2"); //$NON-NLS-1$
+		IPath project2Path = env.addProject("Project2", "1.8"); // tolerance of missing types not fully implemented below 1.8
 		env.addExternalJars(project2Path, Util.getJavaClassLibs());
 		env.addRequiredProject(project2Path, project1Path);
 
@@ -890,7 +893,7 @@ public class DependencyTests extends BuilderTests {
 			"}\n" //$NON-NLS-1$
 		);
 
-		IPath project3Path = env.addProject("Project3"); //$NON-NLS-1$
+		IPath project3Path = env.addProject("Project3", "1.8"); // tolerance of missing types not fully implemented below 1.8
 		env.addExternalJars(project3Path, Util.getJavaClassLibs());
 		env.addRequiredProject(project3Path, project2Path);
 		// missing required Project1 so MissingClass cannot be found
@@ -906,19 +909,20 @@ public class DependencyTests extends BuilderTests {
 			"import p2.A;\n" +
 			"public class B {\n"+ //$NON-NLS-1$
 			"	public static void main(String[] args) {\n" + //$NON-NLS-1$
-			"		new A().foo(new String());\n" + //$NON-NLS-1$
+			"		new A().foo(new B());\n" + 		// applicability test would like to see MissingClass
+			"		new A().foo(new String());\n" + // exact match to fully resolved method
 			"	}\n" + //$NON-NLS-1$
 			"}\n" //$NON-NLS-1$
 		);
 
 		fullBuild();
-		expectingOnlyProblemsFor(new IPath[] {project3Path, bPath});
-		expectingSpecificProblemFor(project3Path, new Problem("Project3", "The project was not built since its build path is incomplete. Cannot find the class file for p1.MissingClass. Fix the build path then try building this project", project3Path, -1, -1, CategorizedProblem.CAT_BUILDPATH, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingSpecificProblemFor(bPath, new Problem("B", "The type p1.MissingClass cannot be resolved. It is indirectly referenced from required type p2.A", bPath, 86, 111, CategorizedProblem.CAT_BUILDPATH, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlyProblemsFor(new IPath[] {bPath});
+		expectingSpecificProblemFor(bPath, new Problem("B", "The method foo(MissingClass) from the type A refers to the missing type MissingClass", bPath, 94, 97, CategorizedProblem.CAT_MEMBER, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 
 		env.addClass(root2, "p2", "A", //$NON-NLS-1$ //$NON-NLS-2$
 			"package p2;\n"+ //$NON-NLS-1$
 			"public class A {\n"+ //$NON-NLS-1$
+			"	public void foo(Object data) {}\n"+ //$NON-NLS-1$
 			"	public void foo(String data) {}\n"+ //$NON-NLS-1$
 			"}\n" //$NON-NLS-1$
 		);
@@ -1145,9 +1149,7 @@ public class DependencyTests extends BuilderTests {
 	}
 
 	public void testTypeVariable() throws JavaModelException {
-		if ((AbstractCompilerTest.getPossibleComplianceLevels() & AbstractCompilerTest.F_1_5) == 0) return;
-
-		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide

@@ -15331,9 +15331,9 @@ public class GenericTypeTest extends AbstractComparableTest {
 	}
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=84743 - variation in -source 1.4 mode but 1.5 compliance (ignore covariance)
-public void test0498(){
+public void _2551_test0498(){
 	Map customOptions = getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
+	customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
 	runNegativeTest(
 		// test directory preparation
 		true /* flush output directory */,
@@ -15372,7 +15372,7 @@ public void test0498(){
 		"----------\n",
 		// javac options
 		RUN_JAVAC ? /* javac test options */
-			new JavacTestOptions("-source 1.4") :
+			new JavacTestOptions("-source " + CompilerOptions.getFirstSupportedJavaVersion()) :
 			JavacTestOptions.DEFAULT );
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=85157
@@ -29213,9 +29213,9 @@ public void test0885() {
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=124943
-public void test0886() {
+public void _2551_test0886() {
 	Map customOptions= getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
+	customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
 	runConformTest(
 		// test directory preparation
 		true /* flush output directory */,
@@ -29236,7 +29236,7 @@ public void test0886() {
 		"" /* expected output string */,
 		null /* do not check error string */,
 		// javac options
-		new JavacTestOptions("-source 1.4 -Xlint:-options") /* javac test options */);
+		new JavacTestOptions("-source " + CompilerOptions.getFirstSupportedJavaVersion() + " -Xlint:-options") /* javac test options */);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=122775
 public void test0887() {
@@ -43246,6 +43246,11 @@ public void test1222() {
 		"	public class X<T extends Zork & Runnable> {\n" +
 		"	                         ^^^^\n" +
 		"Zork cannot be resolved to a type\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 4)\n" +
+		"	Runnable r = x2.get();\n" +
+		"	                ^^^\n" +
+		"The method get() from the type X<T> refers to the missing type Zork\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=211718

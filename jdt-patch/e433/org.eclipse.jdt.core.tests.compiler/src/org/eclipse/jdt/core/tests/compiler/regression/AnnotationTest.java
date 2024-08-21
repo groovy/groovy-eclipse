@@ -7973,8 +7973,8 @@ public void test237() {
 		"----------\n" +
 		"2. ERROR in X.java (at line 6)\n" +
 		"	List<String> ls = get();\n" +
-		"	                  ^^^^^\n" +
-		"Type mismatch: cannot convert from B to List<String>\n" +
+		"	                  ^^^\n" +
+		"The method get() from the type X<B> refers to the missing type ArrayList\n" +
 		"----------\n");
 }
 public void test238() {
@@ -9134,9 +9134,9 @@ public void test272() throws Exception {
 		return;
 	}
 	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -11015,9 +11015,9 @@ public void test398657() throws Exception {
 		return;
 	}
 	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"p/Annot.java",
@@ -11053,9 +11053,9 @@ public void test398657_2() throws Exception {
 		return;
 	}
 	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"p/Y.java",
@@ -11200,13 +11200,11 @@ public void test416107b() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=427367
 public void test427367() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
+
 	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -11264,9 +11262,7 @@ public void test427367() throws Exception {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=376977
 public void test376977() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
+
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -11366,9 +11362,7 @@ public void test438437() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=434556,  Broken class file generated for incorrect annotation usage
 public void test434556() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
+
 	this.runNegativeTest(
 		new String[] {
 			"A.java",
@@ -11419,9 +11413,6 @@ public void test434556() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=433747, [compiler] TYPE Annotation allowed in package-info instead of only PACKAGE
 public void test433747() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
 	String[] src = new String[] {
 			"p/package-info.java",
 			"@PackageAnnot(\"p123456\")\n" +
@@ -11455,13 +11446,10 @@ public void test433747() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=456960 - Broken classfile generated for incorrect annotation usage - case 2
 public void test456960() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
 	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -12351,9 +12339,7 @@ public void testBug490698_comment16() {
 }
 
 public void testBugVisibility() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
+
 	runConformTest(
 		new String[] {
 			"X.java",

@@ -158,6 +158,9 @@ public class CompilerInvocationTests extends AbstractRegressionTest {
 	}
 
 	static String taskTagsAsCutAndPaste(CategorizedProblem tasks[]) {
+		if (tasks == null) {
+			return "";
+		}
 		StringBuilder result = new StringBuilder();
 		String arguments[];
 		for (int i = 0; i < tasks.length - 1; i++) {
@@ -184,16 +187,18 @@ public class CompilerInvocationTests extends AbstractRegressionTest {
 	static String taskTagsAsStrings(CategorizedProblem tasks[]) {
 		StringBuilder result = new StringBuilder();
 		String arguments[];
-		for (int i = 0; i < tasks.length; i++) {
-			arguments = tasks[i].getArguments();
-			result.append('[');
-			result.append(arguments[0]);
-			result.append(',');
-			result.append(arguments[1]);
-			result.append(',');
-			result.append(arguments[2]);
-			result.append(']');
-			result.append("\n");
+		if (tasks != null) {
+			for (int i = 0; i < tasks.length; i++) {
+				arguments = tasks[i].getArguments();
+				result.append('[');
+				result.append(arguments[0]);
+				result.append(',');
+				result.append(arguments[1]);
+				result.append(',');
+				result.append(arguments[2]);
+				result.append(']');
+				result.append("\n");
+			}
 		}
 		return result.toString();
 	}
@@ -1235,6 +1240,7 @@ public void test011_problem_categories() {
 	    expectedProblemAttributes.put("PreviewFeaturesNotAllowed", new ProblemAttributes(CategorizedProblem.CAT_PREVIEW_RELATED));
 	    expectedProblemAttributes.put("FeatureNotSupported", new ProblemAttributes(CategorizedProblem.CAT_COMPLIANCE));
 	    expectedProblemAttributes.put("PreviewAPIUsed", new ProblemAttributes(CategorizedProblem.CAT_COMPLIANCE));
+	    expectedProblemAttributes.put("JavaVersionNotSupported", new ProblemAttributes(CategorizedProblem.CAT_COMPLIANCE));
 	    expectedProblemAttributes.put("SwitchExpressionsYieldIncompatibleResultExpressionTypes", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 	    expectedProblemAttributes.put("SwitchExpressionsYieldEmptySwitchBlock", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 	    expectedProblemAttributes.put("SwitchExpressionsYieldNoResultExpression", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
@@ -2355,6 +2361,7 @@ public void test012_compiler_problems_tuning() {
 	    expectedProblemAttributes.put("PreviewFeaturesNotAllowed", SKIP);
 	    expectedProblemAttributes.put("FeatureNotSupported", SKIP);
 	    expectedProblemAttributes.put("PreviewAPIUsed", SKIP);
+	    expectedProblemAttributes.put("JavaVersionNotSupported", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsYieldIncompatibleResultExpressionTypes", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsYieldEmptySwitchBlock", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsYieldNoResultExpression", SKIP);

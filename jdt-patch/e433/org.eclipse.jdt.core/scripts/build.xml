@@ -44,6 +44,8 @@
 				<exclude name="META-INF/eclipse.inf"/>
 				<exclude name="META-INF/ECLIPSE_.SF"/>
 				<exclude name="META-INF/ECLIPSE_.RSA"/>
+				<exclude name="META-INF/CODESIGN.SF"/>
+				<exclude name="META-INF/CODESIGN.RSA"/>
 			</fileset>
 		</zip>
 		<delete dir="${output}" />

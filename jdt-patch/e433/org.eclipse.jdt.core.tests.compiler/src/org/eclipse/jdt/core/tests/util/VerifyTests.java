@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -39,7 +39,6 @@ import java.net.URLClassLoader;
  * because {@link TestVerifier#getVerifyTestsCode()} can filter them out dynamically. You should however avoid things
  * like diamonds, multi-catch, catch-with-resources and more recent Java features.
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class VerifyTests {
 	int portNumber;
 	Socket socket;
@@ -55,10 +54,10 @@ private static URL[] classPathToURLs(String[] classPath) throws MalformedURLExce
 public void loadAndRun(String className, String[] classPath) throws Throwable {
 	try (URLClassLoader urlClassLoader = new URLClassLoader(classPathToURLs(classPath))) {
 		//System.out.println("Loading " + className + "...");
-		Class testClass = urlClassLoader.loadClass(className);
+		Class<?> testClass = urlClassLoader.loadClass(className);
 		//System.out.println("Loaded " + className);
 		try {
-			Method main = testClass.getMethod("main", new Class[] {String[].class});
+			Method main = testClass.getMethod("main", String[].class);
 			//System.out.println("Running " + className);
 			main.invoke(null, new Object[] {new String[] {}});
 			//System.out.println("Finished running " + className);
@@ -69,11 +68,13 @@ public void loadAndRun(String className, String[] classPath) throws Throwable {
 		}
 	}
 }
+
 public static void main(String[] args) throws IOException {
 	VerifyTests verify = new VerifyTests();
 	verify.portNumber = Integer.parseInt(args[0]);
 	verify.run();
 }
+
 public void run() throws IOException {
 	this.socket = new Socket("localhost", this.portNumber);
 	this.socket.setTcpNoDelay(true);
@@ -119,4 +120,5 @@ public void run() throws IOException {
 		thread.start();
 	}
 }
+
 }

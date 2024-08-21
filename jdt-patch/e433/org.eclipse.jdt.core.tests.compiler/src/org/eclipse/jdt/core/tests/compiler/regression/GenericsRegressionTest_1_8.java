@@ -9173,45 +9173,40 @@ public void testBug508834_comment0() {
 			"----------\n" +
 			"2. ERROR in org\\a\\a\\g\\d.java (at line 6)\n" +
 			"	T t = (e) cls.newInstance();\n" +
-			"	      ^^^^^^^^^^^^^^^^^^^^^\n" +
-			"e cannot be resolved to a type\n" +
-			"----------\n" +
-			"3. ERROR in org\\a\\a\\g\\d.java (at line 6)\n" +
-			"	T t = (e) cls.newInstance();\n" +
 			"	       ^\n" +
 			"e cannot be resolved to a type\n" +
 			"----------\n" +
-			"4. ERROR in org\\a\\a\\g\\d.java (at line 7)\n" +
+			"3. ERROR in org\\a\\a\\g\\d.java (at line 7)\n" +
 			"	while (size >= 0) {\n" +
 			"	       ^^^^\n" +
 			"size cannot be resolved to a variable\n" +
 			"----------\n" +
-			"5. ERROR in org\\a\\a\\g\\d.java (at line 8)\n" +
-			"	T a = ((b) this.e.m.get(size)).a();\n" +
-			"	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from e to T\n" +
-			"----------\n" +
-			"6. ERROR in org\\a\\a\\g\\d.java (at line 8)\n" +
+			"4. ERROR in org\\a\\a\\g\\d.java (at line 8)\n" +
 			"	T a = ((b) this.e.m.get(size)).a();\n" +
 			"	                ^\n" +
 			"e cannot be resolved or is not a field\n" +
 			"----------\n" +
-			"7. ERROR in org\\a\\a\\g\\d.java (at line 8)\n" +
+			"5. ERROR in org\\a\\a\\g\\d.java (at line 8)\n" +
 			"	T a = ((b) this.e.m.get(size)).a();\n" +
 			"	                        ^^^^\n" +
 			"size cannot be resolved to a variable\n" +
 			"----------\n" +
-			"8. ERROR in org\\a\\a\\g\\d.java (at line 15)\n" +
+			"6. ERROR in org\\a\\a\\g\\d.java (at line 8)\n" +
+			"	T a = ((b) this.e.m.get(size)).a();\n" +
+			"	                               ^\n" +
+			"The method a() from the type d.b refers to the missing type e\n" +
+			"----------\n" +
+			"7. ERROR in org\\a\\a\\g\\d.java (at line 15)\n" +
 			"	<T extends e> T a();\n" +
 			"	           ^\n" +
 			"e cannot be resolved to a type\n" +
 			"----------\n" +
-			"9. ERROR in org\\a\\a\\g\\d.java (at line 17)\n" +
+			"8. ERROR in org\\a\\a\\g\\d.java (at line 17)\n" +
 			"	<T extends j> T b();\n" +
 			"	           ^\n" +
 			"j cannot be resolved to a type\n" +
 			"----------\n" +
-			"10. WARNING in org\\a\\a\\g\\d.java (at line 17)\n" +
+			"9. WARNING in org\\a\\a\\g\\d.java (at line 17)\n" +
 			"	<T extends j> T b();\n" +
 			"	                ^^^\n" +
 			"This method has a constructor name\n" +
@@ -9292,8 +9287,8 @@ public void testBug508834_comment0() {
 				"----------\n" +
 				"3. ERROR in xxxxxx\\iiibii.java (at line 9)\n" +
 				"	return b041D041D041D041DН041DН(new xxxxxx.jjajaa(b, b2));\n" +
-				"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Type mismatch: cannot convert from jajaja to jajaja\n" +
+				"	       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"The method b041D041D041D041DН041DН(jjajaa) from the type iiibii refers to the missing type jajaja\n" +
 				"----------\n" +
 				"----------\n" +
 				"1. ERROR in xxxxxx\\jjajaa.java (at line 3)\n" +

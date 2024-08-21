@@ -135,7 +135,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 							ParameterizedGenericMethodBinding substitute = inferFromArgumentTypes(scope, originalMethod, arguments, parameters, inferenceContext);
 							if (substitute != null && substitute.returnType.isCompatibleWith(expectedType)) {
 								// Do not use the new solution if it results in incompatibilities in parameter types
-								if ((scope.parameterCompatibilityLevel(substitute, arguments, false)) > Scope.NOT_COMPATIBLE) {
+								if ((scope.parameterCompatibilityLevel(substitute, arguments, false)) > Scope.NOT_COMPATIBLE) { // don't worry about COMPATIBLE_IGNORING_MISSING_TYPE in 1.7 context
 									methodSubstitute = substitute;
 								} else {
 									inferenceContext = oldContext;
@@ -307,6 +307,9 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 					if (invocationSite instanceof Invocation && allArgumentsAreProper && (expectedType == null || expectedType.isProperType(true)))
 						infCtx18.forwardResults(result, (Invocation) invocationSite, methodSubstitute, expectedType);
 					try {
+						if (infCtx18.hasIgnoredMissingType) {
+							return new ProblemMethodBinding(originalMethod, originalMethod.selector, parameters, ProblemReasons.MissingTypeInSignature);
+						}
 						if (hasReturnProblem) { // illegally working from the provisional result?
 							MethodBinding problemMethod = infCtx18.getReturnProblemMethodIfNeeded(expectedType, methodSubstitute);
 							if (problemMethod instanceof ProblemMethodBinding) {

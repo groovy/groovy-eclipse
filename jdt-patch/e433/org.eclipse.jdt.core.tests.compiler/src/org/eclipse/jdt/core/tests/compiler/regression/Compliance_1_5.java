@@ -16,14 +16,13 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.File;
 import java.util.Map;
 
-import junit.framework.Test;
-
 import org.eclipse.jdt.core.ToolFactory;
-import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+
+import junit.framework.Test;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class Compliance_1_5 extends AbstractComparableTest {
@@ -2721,7 +2720,9 @@ public void test078() {
 /*
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=47227
  */
+// TODO: Enable after Bug 552769 is fixed
 public void test079() {
+
 	String problemLog = (this.complianceLevel >= ClassFileConstants.JDK22) ?
 			"""
 			----------
@@ -3002,28 +3003,7 @@ public void test087() {
 		);
 }
 public void test088() {
-	String errorMessage =
-		"----------\n" +
-		"1. WARNING in p\\X.java (at line 4)\n" +
-		"	public class X extends Date implements Runnable{\n" +
-		"	             ^\n" +
-		"The serializable class X does not declare a static final serialVersionUID field of type long\n" +
-		"----------\n" +
-		"2. ERROR in p\\X.java (at line 12)\n" +
-		"	this.super();\n" +
-		"	^^^^\n" +
-		"Illegal enclosing instance specification for type Object\n" +
-		"----------\n" +
-		"3. WARNING in p\\X.java (at line 39)\n" +
-		"	Method _getMethod = c.getMethod(\"d\",null);\n" +
-		"	                    ^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Type null of the last argument to method getMethod(String, Class...) doesn't exactly match the vararg parameter type. Cast to Class[] to confirm the non-varargs invocation, or pass individual arguments of type Class for a varargs invocation.\n" +
-		"----------\n";
-	String javaVersion = System.getProperty("java.version");
-	int allPossibleLevels = getPossibleComplianceLevels();
-	boolean isLevelGreaterThan5 = (allPossibleLevels & ~(F_1_3 | F_1_4 | F_1_5)) != 0;
-	if (isLevelGreaterThan5
-			|| (allPossibleLevels == AbstractCompilerTest.F_1_5 && javaVersion.indexOf("1.5") == -1)) {
+	String errorMessage;
 		errorMessage =
 			"----------\n" +
 			"1. WARNING in p\\X.java (at line 4)\n" +
@@ -3046,7 +3026,6 @@ public void test088() {
 			"	                    ^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Type safety: The method getMethod(String, Class...) belongs to the raw type Class. References to generic type Class<T> should be parameterized\n" +
 			"----------\n";
-	}
 	this.runNegativeTest(
 		new String[] {
 			"p/X.java",

@@ -811,6 +811,7 @@ public class EclipseFileManager implements StandardJavaFileManager {
 					}
 				case "-extdirs": //$NON-NLS-1$
 					if (this.isOnJvm9) {
+						// XXX this should check -target == 8, not the running JVM version!
 						throw new IllegalArgumentException();
 					}
 					if (remaining.hasNext()) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2023 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -204,9 +204,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			int catchCount;
 			this.catchExits = new boolean[catchCount = this.catchBlocks.length];
 			this.catchExitInitStateIndexes = new int[catchCount];
+			FlowInfo incoming = tryInfo.copy();
 			for (int i = 0; i < catchCount; i++) {
 				// keep track of the inits that could potentially have led to this exception handler (for final assignments diagnosis)
-				FlowInfo catchInfo = prepareCatchInfo(flowInfo, handlingContext, tryInfo, i);
+				FlowInfo catchInfo = prepareCatchInfo(flowInfo, handlingContext, incoming, i);
 				flowContext.conditionalLevel++;
 				catchInfo =
 					this.catchBlocks[i].analyseCode(
@@ -332,9 +333,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			int catchCount;
 			this.catchExits = new boolean[catchCount = this.catchBlocks.length];
 			this.catchExitInitStateIndexes = new int[catchCount];
+			FlowInfo incoming = tryInfo.copy();
 			for (int i = 0; i < catchCount; i++) {
 				// keep track of the inits that could potentially have led to this exception handler (for final assignments diagnosis)
-				FlowInfo catchInfo = prepareCatchInfo(flowInfo, handlingContext, tryInfo, i);
+				FlowInfo catchInfo = prepareCatchInfo(flowInfo, handlingContext, incoming, i);
 				insideSubContext.conditionalLevel = 1;
 				catchInfo =
 					this.catchBlocks[i].analyseCode(
@@ -499,10 +501,8 @@ private int finallyMode() {
 		return NO_FINALLY;
 	} else if (isSubRoutineEscaping()) {
 		return FINALLY_DOES_NOT_COMPLETE;
-	} else if (this.scope.compilerOptions().inlineJsrBytecode) {
-		return FINALLY_INLINE;
 	} else {
-		return FINALLY_SUBROUTINE;
+		return FINALLY_INLINE;
 	}
 }
 /**
@@ -1188,13 +1188,6 @@ public void resolve(BlockScope upperScope) {
 			// provision for returning and forcing the finally block to run
 			MethodScope methodScope = this.scope.methodScope();
 
-			// the type does not matter as long as it is not a base type
-			if (!upperScope.compilerOptions().inlineJsrBytecode) {
-				this.returnAddressVariable =
-					new LocalVariableBinding(TryStatement.SECRET_RETURN_ADDRESS_NAME, upperScope.getJavaLangObject(), ClassFileConstants.AccDefault, false);
-				finallyScope.addLocalVariable(this.returnAddressVariable);
-				this.returnAddressVariable.setConstant(Constant.NotAConstant); // not inlinable
-			}
 			this.subRoutineStartLabel = new BranchLabel();
 
 			this.anyExceptionVariable =

@@ -68,9 +68,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 
 	String mustOverrideMessage(String method, String type) {
 		return "The method " + method + " of type " + type +
-			(new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6
-				? " must override a superclass method\n"
-				: " must override or implement a supertype method\n");
+			" must override or implement a supertype method\n";
 	}
 	public void test001() {
 		this.runNegativeTest(
@@ -1981,7 +1979,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=81535
 	public void test030() {
 		java.util.Map options = super.getCompilerOptions();
-		options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
+		options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
 
 		this.runConformTest(
 			new String[] {
@@ -6289,11 +6287,10 @@ X.java:7: name clash: <T#1>foo2(T#1) in X and <T#2>foo2(A) in Y have the same er
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=128560
 	public void test078() {
 		Map customOptions = getCompilerOptions();
-		customOptions.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-		customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
-		customOptions.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
-		this.runNegativeTest(
-			true,
+		customOptions.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getLatestVersion());
+		customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+		customOptions.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
+		this.runConformTest(
 			new String[] {
 				"X.java",
 				"public abstract class X implements IAppendable {\n" +
@@ -6306,15 +6303,7 @@ X.java:7: name clash: <T#1>foo2(T#1) in X and <T#2>foo2(A) in Y have the same er
 				"	IAppendable append(char c);\n" +
 				"}\n",
 			},
-			null,
-			customOptions,
-			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	public X append(char c) {\n" +
-			"	       ^\n" +
-			"The return type is incompatible with IAppendable.append(char)\n" +
-			"----------\n",
-			JavacTestOptions.SKIP /* we are altering the compatibility settings */);
+			"");
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=81222
 	public void test079() {
@@ -7342,7 +7331,7 @@ public void test098() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=153874
 public void test099() {
 	Map customOptions= getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
+	customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"TestCharset.java",
@@ -11812,9 +11801,9 @@ public void test212() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850
 public void test213() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Y.java",
@@ -11841,9 +11830,9 @@ public void test213() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -11863,9 +11852,9 @@ public void test213() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850
 public void test213a() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Y.java",
@@ -11892,9 +11881,9 @@ public void test213a() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -11914,9 +11903,9 @@ public void test213a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850
 public void test213b() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"ConsoleSession.java",
@@ -11948,9 +11937,9 @@ public void test213b() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
 	this.runConformTest(
 			new String[] {
@@ -11972,9 +11961,9 @@ public void test213b() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850
 public void test213c() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"ConsoleSession.java",
@@ -12006,9 +11995,9 @@ public void test213c() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
 	this.runConformTest(
 			new String[] {
@@ -12051,9 +12040,9 @@ public void test326354() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=328827
 public void test328827() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Map.java",
@@ -12075,9 +12064,9 @@ public void test328827() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 				"Map.java",
@@ -12100,9 +12089,9 @@ public void test328827() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=329584
 public void test329584() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"I.java",
@@ -12120,9 +12109,9 @@ public void test329584() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -12142,9 +12131,9 @@ public void test329584() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=329588
 public void test329588() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"A.java",
@@ -12164,9 +12153,9 @@ public void test329588() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
 	this.runConformTest(
 		new String[] {
@@ -12190,9 +12179,9 @@ public void test329588() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=330445
 public void test330445() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_9);
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_9);
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_9);
 	this.runConformTest(
 		new String[] {
 			"Y.java",
@@ -12210,11 +12199,11 @@ public void test330445() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
-	this.runConformTest(
+	this.runNegativeTest(
 		new String[] {
 			"X.java",
 			"import java.util.Properties;\n" +
@@ -12224,19 +12213,25 @@ public void test330445() {
 			"    }\n" +
 			"}",
 		},
-		"",
+		"""
+		----------
+		1. ERROR in X.java (at line 4)
+			Y.foo(new Properties());
+			  ^^^
+		The method foo(Map<String,String>) in the type Y is not applicable for the arguments (Properties)
+		----------
+		""",
 		null,
 		false,
-		null,
 		compilerOptions14,
 		null);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=330435
 public void test330435() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"A.java",
@@ -12258,11 +12253,11 @@ public void test330435() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
-	this.runNegativeTest(
+	this.runConformTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -12272,22 +12267,19 @@ public void test330435() {
 			"	}\n" +
 			"}",
 		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 3)\n" +
-		"	String[] a = A.asList(args).toArray(new String[0]);\n" +
-		"	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Type mismatch: cannot convert from Object[] to String[]\n" +
-		"----------\n",
+		"",
 		null,
 		false,
-		compilerOptions14);
+		null,
+		compilerOptions14,
+		null);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=330264
 public void test330264() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"BundleContext.java",
@@ -12305,10 +12297,11 @@ public void test330264() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
+	compilerOptions14.put(JavaCore.COMPILER_PB_RAW_TYPE_REFERENCE, JavaCore.IGNORE);
 	this.runNegativeTest(
 		new String[] {
 			"Activator.java",
@@ -12328,82 +12321,13 @@ public void test330264() {
 		false,
 		compilerOptions14);
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=331446
-public void test331446() {
-	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
-	this.runConformTest(
-		new String[] {
-			"Test.java",
-			"import java.util.Comparator;\n" +
-			"import java.util.List;\n" +
-			"\n" +
-			"public class Test {\n" +
-			"	public static <T> void assertEquals(String message,\n" +
-			"			Comparator<T> comparator, List<T> expected, List<T> actual) {\n" +
-			"		if (expected.size() != actual.size()) {\n" +
-			"			//failNotEquals(message, expected, actual);\n" +
-			"		}\n" +
-			"		for (int i = 0, l = expected.size(); i < l; i++) {\n" +
-			"			assertEquals(message, comparator, expected.get(i), actual.get(i));\n" +
-			"		}\n" +
-			"	}\n" +
-			"	public static <T> void assertEquals(String message,\n" +
-			"			Comparator<T> comparator, T expected, T actual) {\n" +
-			"		if (comparator.compare(expected, actual) == 0) {\n" +
-			"			return;\n" +
-			"		}\n" +
-			"		//failNotEquals(message, expected, actual);\n" +
-			"	}\n" +
-			"}\n" +
-			""
-		},
-		"",
-		null,
-		true,
-		null,
-		compilerOptions15,
-		null);
 
-	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
-	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
-	this.runConformTest(
-		new String[] {
-			"X.java",
-			"import java.util.ArrayList;\n" +
-			"import java.util.Comparator;\n" +
-			"\n" +
-			"public class X {\n" +
-			"	public static void testAmbiguity() {\n" +
-			"		Comparator comparator = new Comparator() {\n" +
-			"			\n" +
-			"			public int compare(Object o1, Object o2) {\n" +
-			"				return 0;\n" +
-			"			}\n" +
-			"		};\n" +
-			"		Test.assertEquals(\"Test\", comparator, new ArrayList(), new ArrayList());\n" +
-			"	}\n" +
-			"}\n" +
-			"",
-		},
-		"",
-		null,
-		false,
-		null,
-		compilerOptions14,
-		null);
-}
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=331446
 public void test331446a() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_4);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_4);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Test.java",
@@ -12438,9 +12362,9 @@ public void test331446a() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
 	this.runConformTest(
 		new String[] {
@@ -12471,9 +12395,9 @@ public void test331446a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=331446 (all 1.4)
 public void test331446b() {
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_4);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Project.java",
@@ -12509,9 +12433,9 @@ public void test331446b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=331446 (1.4/1.5 mix)
 public void test331446c() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Project.java",
@@ -12529,9 +12453,9 @@ public void test331446c() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
 	this.runConformTest(
 		new String[] {
@@ -12552,9 +12476,9 @@ public void test331446c() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=331446 (all 1.5)
 public void test331446d() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Project.java",
@@ -12589,9 +12513,9 @@ public void test331446d() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=331446
 public void test1415Mix() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Abstract.java",
@@ -12609,9 +12533,9 @@ public void test1415Mix() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
 	this.runNegativeTest(
 		new String[] {
@@ -12632,9 +12556,9 @@ public void test1415Mix() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=331446
 public void test1415Mix2() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Abstract.java",
@@ -12652,9 +12576,9 @@ public void test1415Mix2() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
 	this.runConformTest(
 		new String[] {
@@ -12673,9 +12597,9 @@ public void test1415Mix2() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=332744 (all 1.5+)
 public void test332744() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"EList.java",
@@ -12717,9 +12641,9 @@ public void test332744() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=332744 (1.4/1.5 mix)
 public void _test332744b() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"EList.java",
@@ -12743,9 +12667,9 @@ public void _test332744b() {
 		null);
 
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions14.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.IGNORE);
 	this.runConformTest(
 		new String[] {

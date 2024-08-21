@@ -59,6 +59,10 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 
 	@Override
 	public Object reduce(InferenceContext18 inferenceContext) throws InferenceFailureException {
+		if ((this.right.tagBits & TagBits.HasMissingType) != 0) {
+			inferenceContext.hasIgnoredMissingType = true;
+			return TRUE;
+		}
 
 		if (this.relation == POTENTIALLY_COMPATIBLE) {
 			/* 15.12.2.1: ... The definition of potential applicability goes beyond a basic arity check to also take into account the presence and "shape" of functional interface

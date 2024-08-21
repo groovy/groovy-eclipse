@@ -35,6 +35,7 @@ import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.TestVerifier;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.Compiler;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -546,17 +547,13 @@ public class BuilderTests extends TestCase {
 			Bug561287Test.class,
 			Bug562420Test.class,
 			LeakTestsBefore9.class,
+			Java50Tests.class,
+			PackageInfoTest.class,
+			ParticipantBuildTests.class,
+			AnnotationDependencyTests.class,
+			Bug544921Test.class
 		};
 		List<Class<?>> list = new ArrayList<>(Arrays.asList(classes));
-		if (matchesCompliance(F_1_5)) {
-			list.add(Java50Tests.class);
-			list.add(PackageInfoTest.class);
-			list.add(ParticipantBuildTests.class);
-			list.add(AnnotationDependencyTests.class);
-		}
-		if (matchesCompliance(F_1_8)) {
-			list.add(Bug544921Test.class);
-		}
 		if (matchesCompliance(F_9)) {
 			list.add(LeakTestsAfter9.class);
 			list.add(Bug549646Test.class);
@@ -628,7 +625,7 @@ public class BuilderTests extends TestCase {
 	static IPath addEmptyInternalJar(IPath projectPath, String jarName) throws IOException, JavaModelException {
 		IProject project = env.getProject(projectPath);
 		String jarFile = project.getLocation().append(jarName).toOSString();
-		Util.createEmptyJar(jarFile, JavaCore.VERSION_1_4);
+		Util.createEmptyJar(jarFile, CompilerOptions.getFirstSupportedJavaVersion());
 		IPath jarPath = null;
 		try (FileInputStream fis = new FileInputStream(jarFile)) {
 			int length = fis.available();
@@ -650,7 +647,7 @@ public class BuilderTests extends TestCase {
 
 		List<String> expectedProblemMessages = Arrays.asList(expectedProblemMessage);
 		assertEquals("expected compile problem not observed",
-				expectedProblemMessages, actualProblemMessages);
+				expectedProblemMessages.toString(), actualProblemMessages.toString());
 	}
 
 	protected static void expectNoCompileProblems(IPath project) {
@@ -664,6 +661,6 @@ public class BuilderTests extends TestCase {
 
 		List<String> expectedProblemMessages = Collections.EMPTY_LIST;
 		assertEquals("expected no compile problems",
-				expectedProblemMessages, actualProblemMessages);
+				expectedProblemMessages.toString(), actualProblemMessages.toString());
 	}
 }

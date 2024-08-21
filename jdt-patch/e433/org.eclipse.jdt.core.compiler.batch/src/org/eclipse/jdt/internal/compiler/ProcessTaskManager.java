@@ -14,27 +14,41 @@
 
 package org.eclipse.jdt.internal.compiler;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.util.Messages;
 
-public class ProcessTaskManager implements Runnable {
+public class ProcessTaskManager {
 
-	Compiler compiler;
-	private int unitIndex;
-	private Thread processingThread;
+	private final Compiler compiler;
+	private final int startingIndex;
+	private volatile Future<?> processingTask; // synchronized write, volatile read
 	CompilationUnitDeclaration unitToProcess;
 	private Throwable caughtException;
 
 	// queue
 	volatile int currentIndex, availableIndex, size, sleepCount;
-	CompilationUnitDeclaration[] units;
+	private final CompilationUnitDeclaration[] units;
 
 	public static final int PROCESSED_QUEUE_SIZE = 100;
 
+	/** Normally a single thread is created an reused on subsequent builds **/
+	private static final ExecutorService executor = Executors.newCachedThreadPool(r -> {
+		Thread t = new Thread(r, "Compiler Processing Task"); //$NON-NLS-1$
+		t.setDaemon(true);
+		return t;
+	});
+
 public ProcessTaskManager(Compiler compiler, int startingIndex) {
 	this.compiler = compiler;
-	this.unitIndex = startingIndex;
+	this.startingIndex = startingIndex;
 
 	this.currentIndex = 0;
 	this.availableIndex = 0;
@@ -43,9 +57,7 @@ public ProcessTaskManager(Compiler compiler, int startingIndex) {
 	this.units = new CompilationUnitDeclaration[this.size];
 
 	synchronized (this) {
-		this.processingThread = new Thread(this, "Compiler Processing Task"); //$NON-NLS-1$
-		this.processingThread.setDaemon(true);
-		this.processingThread.start();
+		this.processingTask = executor.submit(this::compile);
 	}
 }
 
@@ -77,7 +89,7 @@ public CompilationUnitDeclaration removeNextUnit() throws Error {
 		next = this.units[this.currentIndex];
 		if (next == null || this.caughtException != null) {
 			do {
-				if (this.processingThread == null) {
+				if (this.processingTask == null) {
 					if (this.caughtException != null) {
 						// rethrow the caught exception from the processingThread in the main compiler thread
 						if (this.caughtException instanceof Error)
@@ -112,23 +124,27 @@ public CompilationUnitDeclaration removeNextUnit() throws Error {
 	return next;
 }
 
-@Override
-public void run() {
+private void compile() {
+	int unitIndex = this.startingIndex;
+	synchronized (this) { // wait until processingTask is assigned
+		@SuppressWarnings("unused")
+		Future<?> p = this.processingTask;
+	}
 	boolean noAnnotations = this.compiler.annotationProcessorManager == null;
-	while (this.processingThread != null) {
+	while (this.processingTask != null) {
 		this.unitToProcess = null;
 		int index = -1;
-		boolean cleanup = noAnnotations || this.compiler.shouldCleanup(this.unitIndex);
+		boolean cleanup = noAnnotations || this.compiler.shouldCleanup(unitIndex);
 		try {
 			synchronized (this) {
-				if (this.processingThread == null) return;
+				if (this.processingTask == null) return;
 
-				this.unitToProcess = this.compiler.getUnitToProcess(this.unitIndex);
+				this.unitToProcess = this.compiler.getUnitToProcess(unitIndex);
 				if (this.unitToProcess == null) {
-					this.processingThread = null;
+					this.processingTask = null;
 					return;
 				}
-				index = this.unitIndex++;
+				index = unitIndex++;
 				if (this.unitToProcess.compilationResult.hasBeenAccepted)
 					continue;
 			}
@@ -159,7 +175,7 @@ public void run() {
 			addNextUnit(this.unitToProcess);
 		} catch (Error | RuntimeException e) {
 			synchronized (this) {
-				this.processingThread = null;
+				this.processingTask = null;
 				this.caughtException = e;
 			}
 			return;
@@ -169,17 +185,19 @@ public void run() {
 
 public void shutdown() {
 	try {
-		Thread t = null;
+		Future<?> t = null;
 		synchronized (this) {
-			if (this.processingThread != null) {
-				t = this.processingThread;
-				this.processingThread = null;
+			t = this.processingTask;
+			if (t != null) {
+				// stop processing on error:
+				this.processingTask = null;
 				notifyAll();
 			}
 		}
-		if (t != null)
-			t.join(250); // do not wait forever
-	} catch (InterruptedException ignored) {
+		if (t != null) {
+			t.get(250, TimeUnit.MILLISECONDS); // do not wait forever
+		}
+	} catch (InterruptedException | ExecutionException | TimeoutException ignored) {
 		// ignore
 	}
 }

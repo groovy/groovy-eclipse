@@ -58,6 +58,7 @@ import org.eclipse.jdt.core.tests.builder.mockcompiler.MockCompilerFactory.MockC
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.CompilerConfiguration;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.osgi.framework.Bundle;
@@ -646,7 +647,7 @@ public class BasicBuildTests extends BuilderTests {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=425420
 	public void testBug425420() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 		// don't env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide

@@ -641,7 +641,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 				"  @V(v = A, d = \"\") Map p;\n" +
 				"}\n";
 		Map<String, String> options = JavaCore.getOptions();
-		JavaCore.setComplianceOptions(JavaCore.VERSION_1_7, options);
+		JavaCore.setComplianceOptions(CompilerOptions.getFirstSupportedJavaVersion(), options);
 		ASTParser parser = ASTParser.newParser(AST_JLS_LATEST);
 		parser.setCompilerOptions(options);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
@@ -666,7 +666,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 				"  class InnerClass { }\n" +
 				"}\n";
 		Map<String, String> options = JavaCore.getOptions();
-		JavaCore.setComplianceOptions(JavaCore.VERSION_1_7, options);
+		JavaCore.setComplianceOptions(CompilerOptions.getFirstSupportedJavaVersion(), options);
 		ASTParser parser = ASTParser.newParser(AST.JLS9);
 		parser.setCompilerOptions(options);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);

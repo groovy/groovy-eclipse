@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 GK Software SE, and others.
+ * Copyright (c) 2019, 2024 GK Software SE, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -43,5 +43,11 @@ public class PlainPackageBinding extends PackageBinding {
 		if (this.enclosingModule == moduleBinding)
 			return this;
 		return null;
+	}
+
+	@Override
+	PackageBinding addPackage(PackageBinding element, ModuleBinding module) {
+		assert element instanceof PlainPackageBinding : "PlainPackageBinding cannot be parent of split " + element; //$NON-NLS-1$
+		return super.addPackage(element, module);
 	}
 }

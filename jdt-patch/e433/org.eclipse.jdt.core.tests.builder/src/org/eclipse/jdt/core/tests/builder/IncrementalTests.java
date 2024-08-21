@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class IncrementalTests extends BuilderTests {
@@ -607,10 +608,10 @@ public class IncrementalTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=372418
 	public void testMemberTypeOfOtherProject() throws JavaModelException {
-		IPath projectPath1 = env.addProject("Project1", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
+		IPath projectPath1 = env.addProject("Project1", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 		env.addExternalJars(projectPath1, Util.getJavaClassLibs());
 
-		IPath projectPath2 = env.addProject("Project2", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
+		IPath projectPath2 = env.addProject("Project2", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 		env.addExternalJars(projectPath2, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
@@ -668,10 +669,10 @@ public class IncrementalTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=377401
 	public void test$InTypeName() throws JavaModelException {
-		IPath projectPath1 = env.addProject("Project1", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
+		IPath projectPath1 = env.addProject("Project1", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$ //$NON-NLS-2$
 		env.addExternalJars(projectPath1, Util.getJavaClassLibs());
 
-		IPath projectPath2 = env.addProject("Project2", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
+		IPath projectPath2 = env.addProject("Project2", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$ //$NON-NLS-2$
 		env.addExternalJars(projectPath2, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
@@ -1138,9 +1139,9 @@ public class IncrementalTests extends BuilderTests {
 		try {
 			options = JavaCore.getOptions();
 			Hashtable newOptions = JavaCore.getOptions();
-			newOptions.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-			newOptions.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
-			newOptions.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
+			newOptions.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+			newOptions.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
+			newOptions.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
 			JavaCore.setOptions(newOptions);
 
 			IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

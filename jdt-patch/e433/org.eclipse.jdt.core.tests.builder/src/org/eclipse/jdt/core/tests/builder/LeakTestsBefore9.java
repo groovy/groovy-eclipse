@@ -28,7 +28,7 @@ public class LeakTestsBefore9 extends AbstractLeakTest {
 	}
 
 	String getCompatibilityLevel() {
-		return CompilerOptions.VERSION_1_4;
+		return CompilerOptions.getFirstSupportedJavaVersion();
 	}
 
 	@Override

@@ -42,64 +42,6 @@ public void test426214() {
 		"",
 		options);
 }
-public void test426214_2() {
-	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_7);
-	this.runNegativeTest(
-		false /* skipJavac */,
-		JavacTestOptions.Excuse.JavacCompilesIncorrectSource,
-		new String[] {
-			"X.java",
-			"public class X {\n" +
-			"		int a\\u058f = 0; // new unicode character in 6.2.0 \n" +
-			"		String a41\\u08fc; // new unicode character in 6.2.0\n" +
-			"		float a\\u057f = 1;\n" +
-			"}",
-		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 2)\n" +
-		"	int a\\u058f = 0; // new unicode character in 6.2.0 \n" +
-		"	     ^^^^^^\n" +
-		"Syntax error on token \"Invalid Character\", delete this token\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 3)\n" +
-		"	String a41\\u08fc; // new unicode character in 6.2.0\n" +
-		"	          ^^^^^^\n" +
-		"Syntax error on token \"Invalid Character\", delete this token\n" +
-		"----------\n",
-		null,
-		true,
-		options);
-}
-public void test426214_3() {
-	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_6);
-	this.runNegativeTest(
-		false /* skipJavac */,
-		JavacTestOptions.Excuse.JavacCompilesIncorrectSource,
-		new String[] {
-			"X.java",
-			"public class X {\n" +
-			"		int a\\u058f = 0; // new unicode character in 6.2.0 \n" +
-			"		String a41\\u08fc; // new unicode character in 6.2.0\n" +
-			"		float a\\u057f = 1;\n" +
-			"}",
-		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 2)\n" +
-		"	int a\\u058f = 0; // new unicode character in 6.2.0 \n" +
-		"	     ^^^^^^\n" +
-		"Syntax error on token \"Invalid Character\", delete this token\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 3)\n" +
-		"	String a41\\u08fc; // new unicode character in 6.2.0\n" +
-		"	          ^^^^^^\n" +
-		"Syntax error on token \"Invalid Character\", delete this token\n" +
-		"----------\n",
-		null,
-		true,
-		options);
-}
 public void test426214_4() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_8);

@@ -1408,9 +1408,9 @@ public void test334121() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=337751
 public void test337751() {
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Project.java",
@@ -1429,9 +1429,9 @@ public void test337751() {
 		null);
 
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions15.put(CompilerOptions.OPTION_ReportUnavoidableGenericTypeProblems, CompilerOptions.ENABLED);
 	this.runNegativeTest(
 		new String[] {
@@ -1449,7 +1449,7 @@ public void test337751() {
 		"----------\n" +
 		"1. WARNING in Y.java (at line 5)\n" +
 		"	project != null ? project.getOptions(true) : null;\n" +
-		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"	                  ^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Type safety: The expression of type Map needs unchecked conversion to conform to Map<String,String>\n" +
 		"----------\n" +
 		"2. WARNING in Y.java (at line 6)\n" +
@@ -1459,7 +1459,7 @@ public void test337751() {
 		"----------\n" +
 		"3. WARNING in Y.java (at line 7)\n" +
 		"	options = project == null ? null : project.getOptions(true);\n" +
-		"	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"	                                   ^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Type safety: The expression of type Map needs unchecked conversion to conform to Map<String,String>\n" +
 		"----------\n",
 		null,
@@ -1470,9 +1470,9 @@ public void test337751() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=337751
 public void test337751a() {
 	Map compilerOptions14 = getCompilerOptions();
-	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-	compilerOptions14.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
+	compilerOptions14.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions14.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 		new String[] {
 			"Project.java",
@@ -1491,9 +1491,9 @@ public void test337751a() {
 		null);
 
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions15.put(CompilerOptions.OPTION_ReportUnavoidableGenericTypeProblems, CompilerOptions.DISABLED);
 	this.runNegativeTest(
 		new String[] {
@@ -1518,9 +1518,9 @@ public void test337751a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=337962
 public void test337962() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions15.put(CompilerOptions.OPTION_ReportUnavoidableGenericTypeProblems, CompilerOptions.ENABLED);
 	this.runNegativeTest(
 		new String[] {
@@ -1625,9 +1625,9 @@ public void test337962() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=337962
 public void test337962b() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions15.put(CompilerOptions.OPTION_ReportUnavoidableGenericTypeProblems, CompilerOptions.DISABLED);
 	this.runNegativeTest(
 		new String[] {
@@ -1702,9 +1702,9 @@ public void test337962b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=338011
 public void test338011() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions15.put(CompilerOptions.OPTION_ReportUnavoidableGenericTypeProblems, CompilerOptions.DISABLED);
 	this.runNegativeTest(
 		new String[] {
@@ -1750,9 +1750,9 @@ public void test338011() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=338011
 public void test338011b() {
 	Map compilerOptions15 = getCompilerOptions();
-	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	compilerOptions15.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+	compilerOptions15.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+	compilerOptions15.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
 	compilerOptions15.put(CompilerOptions.OPTION_ReportUnavoidableGenericTypeProblems, CompilerOptions.ENABLED);
 	this.runNegativeTest(
 		new String[] {

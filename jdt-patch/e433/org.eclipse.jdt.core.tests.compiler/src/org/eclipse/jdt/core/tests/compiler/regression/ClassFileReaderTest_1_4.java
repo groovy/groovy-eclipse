@@ -17,8 +17,8 @@ import junit.framework.Test;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "rawtypes" })
 public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
@@ -29,7 +29,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	public static Test suite() {
-		return buildUniqueComplianceTestSuite(testClass(), ClassFileConstants.JDK1_4);
+		return buildUniqueComplianceTestSuite(testClass(), CompilerOptions.getFirstSupportedJdkLevel());
 	}
 	public static Class testClass() {
 		return ClassFileReaderTest_1_4.class;
@@ -59,11 +59,11 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 			"  // Method descriptor #19 ()I\n" +
 			"  // Stack: 3, Locals: 1\n" +
 			"  public int foo();\n" +
-			"     0  new A001$1$A [20]\n" +
+			"     0  new A001$1A [20]\n" +
 			"     3  dup\n" +
 			"     4  aload_0 [this]\n" +
-			"     5  invokespecial A001$1$A(A001) [22]\n" +
-			"     8  invokevirtual A001$1$A.get() : int [25]\n" +
+			"     5  invokespecial A001$1A(A001) [22]\n" +
+			"     8  invokevirtual A001$1A.get() : int [25]\n" +
 			"    11  ireturn\n" +
 			"      Line numbers:\n" +
 			"        [pc: 0, line: 9]\n" +
@@ -1860,45 +1860,51 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 			"	}\n" +
 			"}";
 		String expectedOutput =
-			"  // Method descriptor #15 (Z)I\n" +
-			"  // Stack: 1, Locals: 4\n" +
-			"  static int foo(boolean bool);\n" +
-			"     0  iload_0 [bool]\n" +
-			"     1  ifeq 9\n" +
-			"     4  jsr 20\n" +
-			"     7  iconst_1\n" +
-			"     8  ireturn\n" +
-			"     9  iconst_2\n" +
-			"    10  istore_1 [j]\n" +
-			"    11  goto 25\n" +
-			"    14  astore_3\n" +
-			"    15  jsr 20\n" +
-			"    18  aload_3\n" +
-			"    19  athrow\n" +
-			"    20  astore_2\n" +
-			"    21  iconst_3\n" +
-			"    22  istore_1 [j]\n" +
-			"    23  ret 2\n" +
-			"    25  jsr 20\n" +
-			"    28  iload_1 [j]\n" +
-			"    29  ireturn\n" +
-			"      Exception Table:\n" +
-			"        [pc: 0, pc: 7] -> 14 when : any\n" +
-			"        [pc: 9, pc: 14] -> 14 when : any\n" +
-			"        [pc: 25, pc: 28] -> 14 when : any\n" +
-			"      Line numbers:\n" +
-			"        [pc: 0, line: 6]\n" +
-			"        [pc: 9, line: 7]\n" +
-			"        [pc: 11, line: 8]\n" +
-			"        [pc: 18, line: 10]\n" +
-			"        [pc: 20, line: 8]\n" +
-			"        [pc: 21, line: 9]\n" +
-			"        [pc: 23, line: 10]\n" +
-			"        [pc: 28, line: 11]\n" +
-			"      Local variable table:\n" +
-			"        [pc: 0, pc: 30] local: bool index: 0 type: boolean\n" +
-			"        [pc: 11, pc: 14] local: j index: 1 type: int\n" +
-			"        [pc: 23, pc: 30] local: j index: 1 type: int\n";
+			"""
+			  // Method descriptor #15 (Z)I
+			  // Stack: 1, Locals: 3
+			  static int foo(boolean bool);
+			     0  iload_0 [bool]
+			     1  ifeq 8
+			     4  iconst_3
+			     5  istore_1 [j]
+			     6  iconst_1
+			     7  ireturn
+			     8  iconst_2
+			     9  istore_1 [j]
+			    10  goto 18
+			    13  astore_2
+			    14  iconst_3
+			    15  istore_1 [j]
+			    16  aload_2
+			    17  athrow
+			    18  iconst_3
+			    19  istore_1 [j]
+			    20  iload_1 [j]
+			    21  ireturn
+			      Exception Table:
+			        [pc: 0, pc: 4] -> 13 when : any
+			        [pc: 8, pc: 13] -> 13 when : any
+			      Line numbers:
+			        [pc: 0, line: 6]
+			        [pc: 4, line: 9]
+			        [pc: 6, line: 6]
+			        [pc: 8, line: 7]
+			        [pc: 10, line: 8]
+			        [pc: 14, line: 9]
+			        [pc: 16, line: 10]
+			        [pc: 18, line: 9]
+			        [pc: 20, line: 11]
+			      Local variable table:
+			        [pc: 0, pc: 22] local: bool index: 0 type: boolean
+			        [pc: 6, pc: 8] local: j index: 1 type: int
+			        [pc: 10, pc: 13] local: j index: 1 type: int
+			        [pc: 16, pc: 22] local: j index: 1 type: int
+			      Stack map table: number of frames 3
+			        [pc: 8, same]
+			        [pc: 13, same_locals_1_stack_item, stack: {java.lang.Throwable}]
+			        [pc: 18, append: {int}]
+			""";
 		checkClassFile("A", source, expectedOutput);
 	}
 
@@ -2604,7 +2610,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 			"public interface I {\n" +
 			"}";
 		String expectedOutput =
-			"// Compiled from I.java (version 1.2 : 46.0, no super bit)\n" +
+			"// Compiled from I.java (version 1.8 : 52.0, no super bit)\n" +
 			"public abstract interface I {\n" +
 			"  Constant pool:\n" +
 			"    constant #1 class: #2 I\n" +

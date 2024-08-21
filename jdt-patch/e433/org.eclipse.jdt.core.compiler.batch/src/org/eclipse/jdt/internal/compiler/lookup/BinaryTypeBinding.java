@@ -1987,33 +1987,39 @@ MethodBinding resolveTypesFor(MethodBinding method) {
 
 	if ((method.modifiers & ExtraCompilerModifiers.AccUnresolved) == 0)
 		return method;
+	boolean tolerateSave = this.environment.mayTolerateMissingType;
+	this.environment.mayTolerateMissingType |= this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_8; // tolerance only implemented for 1.8+
+	try {
 
-	if (!method.isConstructor()) {
-		TypeBinding resolvedType = resolveType(method.returnType, this.environment, true /* raw conversion */);
-		method.returnType = resolvedType;
-		if ((resolvedType.tagBits & TagBits.HasMissingType) != 0) {
-			method.tagBits |= TagBits.HasMissingType;
+		if (!method.isConstructor()) {
+			TypeBinding resolvedType = resolveType(method.returnType, this.environment, true /* raw conversion */);
+			method.returnType = resolvedType;
+			if ((resolvedType.tagBits & TagBits.HasMissingType) != 0) {
+				method.tagBits |= TagBits.HasMissingType;
+			}
 		}
-	}
-	for (int i = method.parameters.length; --i >= 0;) {
-		TypeBinding resolvedType = resolveType(method.parameters[i], this.environment, true /* raw conversion */);
-		method.parameters[i] = resolvedType;
-		if ((resolvedType.tagBits & TagBits.HasMissingType) != 0) {
-			method.tagBits |= TagBits.HasMissingType;
+		for (int i = method.parameters.length; --i >= 0;) {
+			TypeBinding resolvedType = resolveType(method.parameters[i], this.environment, true /* raw conversion */);
+			method.parameters[i] = resolvedType;
+			if ((resolvedType.tagBits & TagBits.HasMissingType) != 0) {
+				method.tagBits |= TagBits.HasMissingType;
+			}
 		}
-	}
-	for (int i = method.thrownExceptions.length; --i >= 0;) {
-		ReferenceBinding resolvedType = (ReferenceBinding) resolveType(method.thrownExceptions[i], this.environment, true /* raw conversion */);
-		method.thrownExceptions[i] = resolvedType;
-		if ((resolvedType.tagBits & TagBits.HasMissingType) != 0) {
-			method.tagBits |= TagBits.HasMissingType;
+		for (int i = method.thrownExceptions.length; --i >= 0;) {
+			ReferenceBinding resolvedType = (ReferenceBinding) resolveType(method.thrownExceptions[i], this.environment, true /* raw conversion */);
+			method.thrownExceptions[i] = resolvedType;
+			if ((resolvedType.tagBits & TagBits.HasMissingType) != 0) {
+				method.tagBits |= TagBits.HasMissingType;
+			}
 		}
+		for (int i = method.typeVariables.length; --i >= 0;) {
+			method.typeVariables[i].resolve();
+		}
+		method.modifiers &= ~ExtraCompilerModifiers.AccUnresolved;
+		return method;
+	} finally {
+		this.environment.mayTolerateMissingType = tolerateSave;
 	}
-	for (int i = method.typeVariables.length; --i >= 0;) {
-		method.typeVariables[i].resolve();
-	}
-	method.modifiers &= ~ExtraCompilerModifiers.AccUnresolved;
-	return method;
 }
 @Override
 AnnotationBinding[] retrieveAnnotations(Binding binding) {

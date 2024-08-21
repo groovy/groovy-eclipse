@@ -586,7 +586,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 			scope.problemReporter().invalidConstructor(this, constructorBinding);
 			return this.resolvedType;
 		}
-		if ((constructorBinding.tagBits & TagBits.HasMissingType) != 0) {
+		if ((constructorBinding.tagBits & TagBits.HasMissingType) != 0 && isMissingTypeRelevant()) {
 			scope.problemReporter().missingTypeInConstructor(this, constructorBinding);
 		}
 		if (this.enclosingInstance != null) {

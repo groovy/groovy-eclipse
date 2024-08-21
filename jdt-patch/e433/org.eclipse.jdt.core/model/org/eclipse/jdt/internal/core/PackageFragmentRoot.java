@@ -625,10 +625,8 @@ public IClasspathEntry getResolvedClasspathEntry() throws JavaModelException {
 	IClasspathEntry resolvedEntry = null;
 	JavaProject project = getJavaProject();
 	project.getResolvedClasspath(); // force the resolved entry cache to be populated
-	Map rootPathToResolvedEntries = project.getPerProjectInfo().rootPathToResolvedEntries;
-	if (rootPathToResolvedEntries != null) {
-		resolvedEntry = (IClasspathEntry) rootPathToResolvedEntries.get(getPath());
-	}
+	Map<IPath, IClasspathEntry> rootPathToResolvedEntries = project.getPerProjectInfo().getRootPathToResolvedEntries();
+	resolvedEntry = rootPathToResolvedEntries.get(getPath());
 	if (resolvedEntry == null) {
 		throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH, this));
 	}

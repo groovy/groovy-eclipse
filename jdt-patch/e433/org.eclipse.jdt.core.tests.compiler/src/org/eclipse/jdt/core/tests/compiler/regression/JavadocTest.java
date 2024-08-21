@@ -74,14 +74,10 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 			testSuite.addTest(suite);
 		}
 		int complianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
-		if ((complianceLevels & AbstractCompilerTest.F_1_3) != 0) {
-			testSuite.addTest(buildUniqueComplianceTestSuite(JavadocTest_1_3.class, ClassFileConstants.JDK1_3));
-		}
-		if ((complianceLevels & AbstractCompilerTest.F_1_4) != 0) {
-			testSuite.addTest(buildUniqueComplianceTestSuite(JavadocTest_1_4.class, ClassFileConstants.JDK1_4));
-		}
-		if ((complianceLevels & AbstractCompilerTest.F_1_5) != 0) {
-			testSuite.addTest(buildUniqueComplianceTestSuite(JavadocTest_1_5.class, ClassFileConstants.JDK1_5));
+		if ((complianceLevels & AbstractCompilerTest.F_1_8) != 0) {
+			testSuite.addTest(buildUniqueComplianceTestSuite(JavadocTest_1_3.class, ClassFileConstants.JDK1_8));
+			testSuite.addTest(buildUniqueComplianceTestSuite(JavadocTest_1_4.class, ClassFileConstants.JDK1_8));
+			testSuite.addTest(buildUniqueComplianceTestSuite(JavadocTest_1_5.class, ClassFileConstants.JDK1_8));
 		}
 		if ((complianceLevels & AbstractCompilerTest.F_9) != 0) {
 			testSuite.addTest(buildUniqueComplianceTestSuite(JavadocTestForModule.class, ClassFileConstants.JDK9));

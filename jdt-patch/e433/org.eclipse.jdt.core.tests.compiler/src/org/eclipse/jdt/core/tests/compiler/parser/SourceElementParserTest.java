@@ -5346,9 +5346,9 @@ public void _test80() {
 public void test81() {
 
 	Map options = getCompilerOptions();
-	options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
-	options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-	options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
+	options.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
 
 	String s =
 		"import java.util.Collection;\n" +

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -505,7 +505,7 @@ public TypeBinding resolveType(BlockScope scope) {
 		scope.problemReporter().invalidConstructor(this, this.binding);
 		return this.resolvedType;
 	}
-	if ((this.binding.tagBits & TagBits.HasMissingType) != 0) {
+	if ((this.binding.tagBits & TagBits.HasMissingType) != 0 && isMissingTypeRelevant()) {
 		scope.problemReporter().missingTypeInConstructor(this, this.binding);
 	}
 	if (isMethodUseDeprecated(this.binding, scope, true, this)) {
@@ -537,6 +537,20 @@ public TypeBinding resolveType(BlockScope scope) {
 	}
 	checkPreConstructorContext(scope);
 	return this.resolvedType;
+}
+
+protected boolean isMissingTypeRelevant() {
+	if (this.binding != null && this.binding.isVarargs()) {
+		if (this.arguments.length < this.binding.parameters.length) {
+			// are all but the irrelevant varargs type present?
+			for (int i = 0; i < this.arguments.length; i++) {
+				if ((this.binding.parameters[i].tagBits & TagBits.HasMissingType) != 0)
+					return true; // this one *is* relevant - actually this case is already detected during findConstructorBinding()
+			}
+			return false;
+		}
+	}
+	return true;
 }
 
 protected void checkPreConstructorContext(BlockScope scope) {

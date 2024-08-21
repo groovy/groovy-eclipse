@@ -556,11 +556,15 @@ public class FakedTrackingVariable extends LocalDeclaration {
 		if (binding.isStatic())
 			return false;
 		ReferenceBinding declaringClass = binding.declaringClass;
-		if (declaringClass.equals(binding.returnType)) {
-			for (char[][] compoundName : TypeConstants.FLUENT_RESOURCE_CLASSES) {
-				if (CharOperation.equals(compoundName, declaringClass.compoundName))
-					return true;
+		while (declaringClass != null) {
+			if (declaringClass.equals(binding.returnType)) {
+				for (char[][] compoundName : TypeConstants.FLUENT_RESOURCE_CLASSES) {
+					if (CharOperation.equals(compoundName, declaringClass.compoundName))
+						return true;
+				}
+				return false;
 			}
+			declaringClass = declaringClass.superclass();
 		}
 		return false;
 	}

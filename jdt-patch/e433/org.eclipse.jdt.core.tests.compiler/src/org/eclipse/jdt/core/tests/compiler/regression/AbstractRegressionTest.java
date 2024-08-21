@@ -4018,7 +4018,8 @@ protected void runNegativeTest(
 					String version = JavacCompiler.getVersion(cmdLineHeader.toString());
 					cmdLineHeader.append(" -d ");
 					cmdLineHeader.append(JAVAC_OUTPUT_DIR_NAME.indexOf(" ") != -1 ? "\"" + JAVAC_OUTPUT_DIR_NAME + "\"" : JAVAC_OUTPUT_DIR_NAME);
-					cmdLineHeader.append(" -source 1.5 -deprecation -Xlint "); // enable recommended warnings
+					String firstSupportedVersion = CompilerOptions.getFirstSupportedJavaVersion();
+					cmdLineHeader.append(" -source " + firstSupportedVersion + " -deprecation -Xlint "); // enable recommended warnings
 					// WORK new javac system does not do that... reconsider
 					// REVIEW consider enabling all warnings instead? Philippe does not see
 					//        this as ez to use (too many changes in logs)

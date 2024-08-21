@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.test.OrderedTestSuite;
 
 import junit.framework.Test;
@@ -32,6 +33,10 @@ import junit.framework.Test;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class MultiProjectTests extends BuilderTests {
+
+	static {
+//		TESTS_NAMES = new String[] { "test461074_error_1_8" };
+	}
 
 	public MultiProjectTests(String name) {
 		super(name);
@@ -1928,20 +1933,20 @@ public void test103_missing_required_binaries() throws JavaModelException {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=460993
 public void test104_missing_required_binaries() throws CoreException {
 
-	IPath p0 = env.addProject("JRE17", "1.7");
+	IPath p0 = env.addProject("JRE17", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(p0, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(p0, "");
 	IPath root0 = env.addPackageFragmentRoot(p0, "src");
 	env.setOutputFolder(p0, "bin");
 
-	IPath p1 = env.addProject("org.eclipse.jgit", "1.7");
+	IPath p1 = env.addProject("org.eclipse.jgit", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(p1, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(p1, "");
 	IPath root1 = env.addPackageFragmentRoot(p1, "src");
 	env.addRequiredProject(p1, p0);
 	env.setOutputFolder(p1, "bin");
 
-	IPath p2 = env.addProject("org.eclipse.releng.tools", "1.5");
+	IPath p2 = env.addProject("org.eclipse.releng.tools", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(p2, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(p2, "");
 	IPath root2 = env.addPackageFragmentRoot(p2, "src");
@@ -2093,7 +2098,7 @@ public void test461074() throws JavaModelException {
 	//----------------------------
 	//         Project2
 	//----------------------------
-	IPath p2 = env.addProject("SampleLib", "1.5"); //$NON-NLS-1$
+	IPath p2 = env.addProject("SampleLib", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(p2, Util.getJavaClassLibs());
 	// remove old package fragment root so that names don't collide
 	env.removePackageFragmentRoot(p2, ""); //$NON-NLS-1$
@@ -2118,7 +2123,7 @@ public void test461074() throws JavaModelException {
 	//----------------------------
 	//         Project3
 	//----------------------------
-	IPath p3 = env.addProject("SampleTest", "1.5"); //$NON-NLS-1$
+	IPath p3 = env.addProject("SampleTest", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(p3, Util.getJavaClassLibs());
 	// remove old package fragment root so that names don't collide
 	env.removePackageFragmentRoot(p3, ""); //$NON-NLS-1$
@@ -2144,7 +2149,7 @@ public void test461074() throws JavaModelException {
 	env.removeProject(p3);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=461074, "indirectly referenced from required .class files" error for unreachable reference of type in overriding method declaration in a library on classpath
-public void test461074_error() throws JavaModelException {
+public void _2551_test461074_error() throws JavaModelException {
 	//----------------------------
 	//         Project1
 	//----------------------------
@@ -2164,7 +2169,7 @@ public void test461074_error() throws JavaModelException {
 	//----------------------------
 	//         Project2
 	//----------------------------
-	IPath p2 = env.addProject("SampleLib", "1.5"); //$NON-NLS-1$
+	IPath p2 = env.addProject("SampleLib", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(p2, Util.getJavaClassLibs());
 	// remove old package fragment root so that names don't collide
 	env.removePackageFragmentRoot(p2, ""); //$NON-NLS-1$
@@ -2189,7 +2194,7 @@ public void test461074_error() throws JavaModelException {
 	//----------------------------
 	//         Project3
 	//----------------------------
-	IPath p3 = env.addProject("SampleTest", "1.5"); //$NON-NLS-1$
+	IPath p3 = env.addProject("SampleTest", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(p3, Util.getJavaClassLibs());
 	// remove old package fragment root so that names don't collide
 	env.removePackageFragmentRoot(p3, ""); //$NON-NLS-1$
@@ -2216,6 +2221,78 @@ public void test461074_error() throws JavaModelException {
 				"The type pack.missing.MissingType cannot be resolved. It is indirectly referenced from required type pack.lib.SuperClass",
 				test, 0, 1, CategorizedProblem.CAT_BUILDPATH, IMarker.SEVERITY_ERROR),
 	});
+	env.setBuildOrder(null);
+	env.removeProject(p1);
+	env.removeProject(p2);
+	env.removeProject(p3);
+}
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=461074, "indirectly referenced from required .class files" error for unreachable reference of type in overriding method declaration in a library on classpath
+public void test461074_error_1_8() throws JavaModelException {
+	// as of https://github.com/eclipse-jdt/eclipse.jdt.core/pull/2543 and at 1.8+ we tolerate the missing type
+	//----------------------------
+	//         Project1
+	//----------------------------
+	IPath p1 = env.addProject("SampleMissing", "1.8"); //$NON-NLS-1$
+	env.addExternalJars(p1, Util.getJavaClassLibs());
+	// remove old package fragment root so that names don't collide
+	env.removePackageFragmentRoot(p1, ""); //$NON-NLS-1$
+	IPath root1 = env.addPackageFragmentRoot(p1, "src"); //$NON-NLS-1$
+	env.setOutputFolder(p1, "bin"); //$NON-NLS-1$
+
+	env.addClass(root1, "pack.missing", "MissingType", //$NON-NLS-1$ //$NON-NLS-2$
+			"package pack.missing;\n" +
+			"public class MissingType {\n" +
+			"}\n"
+		);
+
+	//----------------------------
+	//         Project2
+	//----------------------------
+	IPath p2 = env.addProject("SampleLib", "1.8"); //$NON-NLS-1$
+	env.addExternalJars(p2, Util.getJavaClassLibs());
+	// remove old package fragment root so that names don't collide
+	env.removePackageFragmentRoot(p2, ""); //$NON-NLS-1$
+	IPath root2 = env.addPackageFragmentRoot(p2, "src"); //$NON-NLS-1$
+	env.setOutputFolder(p2, "bin"); //$NON-NLS-1$
+
+	env.addClass(root2, "pack.lib", "TopClass", //$NON-NLS-1$ //$NON-NLS-2$
+			"package pack.lib;\n" +
+			"public abstract class TopClass {\n" +
+			"  abstract Object get();\n" +
+			"}\n"
+		);
+	env.addClass(root2, "pack.lib", "SuperClass", //$NON-NLS-1$ //$NON-NLS-2$
+			"package pack.lib;\n" +
+			"import pack.missing.MissingType;\n" +
+			"public class SuperClass extends TopClass {\n" +
+			"  @Override\n" +
+			"  MissingType get() { return null; }\n" +
+			"}\n"
+		);
+
+	//----------------------------
+	//         Project3
+	//----------------------------
+	IPath p3 = env.addProject("SampleTest", "1.8"); //$NON-NLS-1$
+	env.addExternalJars(p3, Util.getJavaClassLibs());
+	// remove old package fragment root so that names don't collide
+	env.removePackageFragmentRoot(p3, ""); //$NON-NLS-1$
+	IPath root3 = env.addPackageFragmentRoot(p3, "src"); //$NON-NLS-1$
+	env.setOutputFolder(p3, "bin"); //$NON-NLS-1$
+
+	env.addClass(root3, "pack.test", "Test", //$NON-NLS-1$ //$NON-NLS-2$
+			"package pack.test;\n" +
+			"import pack.lib.SuperClass;\n" +
+			"public class Test extends SuperClass {/*empty*/}\n"
+		);
+
+	// for Project1
+	env.addRequiredProject(p2, p1);
+	env.addRequiredProject(p3, p2);
+	env.waitForManualRefresh();
+	fullBuild();
+	env.waitForAutoBuild();
+	expectingNoProblemsFor(p3);
 	env.setBuildOrder(null);
 	env.removeProject(p1);
 	env.removeProject(p2);

@@ -109,6 +109,7 @@ public abstract class Scope {
 	public final static int COMPATIBLE = 0;
 	public final static int AUTOBOX_COMPATIBLE = 1;
 	public final static int VARARGS_COMPATIBLE = 2;
+	public final static int COMPATIBLE_IGNORING_MISSING_TYPE = -2;
 
 	/* Type Compatibilities */
 	public static final int EQUAL_OR_MORE_SPECIFIC = -1;
@@ -871,13 +872,16 @@ public abstract class Scope {
 		}
 
 
-		if ((parameterCompatibilityLevel(method, arguments, tiebreakingVarargsMethods)) > NOT_COMPATIBLE) {
+		int level = parameterCompatibilityLevel(method, arguments, tiebreakingVarargsMethods);
+		if (level > NOT_COMPATIBLE) {
 			if (method.hasPolymorphicSignature(this)) {
 				// generate polymorphic method and set polymorphic tagbits as well
 				method.tagBits |= TagBits.AnnotationPolymorphicSignature;
 				return this.environment().createPolymorphicMethod(method, arguments, this);
 			}
 			return method;
+		} else if (level == COMPATIBLE_IGNORING_MISSING_TYPE) {
+			return new ProblemMethodBinding(method, method.selector, method.parameters, ProblemReasons.MissingTypeInSignature);
 		}
 		// if method is generic and type arguments have been supplied, only then answer a problem
 		// of ParameterizedMethodTypeMismatch, else a non-generic method was invoked using type arguments
@@ -978,7 +982,7 @@ public abstract class Scope {
 					} else {
 						typeVariable.setSuperInterfaces(new ReferenceBinding[] {superRefType});
 					}
-					typeVariable.tagBits |= superType.tagBits & TagBits.ContainsNestedTypeReferences;
+					typeVariable.tagBits |= superType.tagBits & (TagBits.ContainsNestedTypeReferences | TagBits.HasMissingType);
 					typeVariable.setFirstBound(superRefType); // first bound used to compute erasure
 				}
 			}
@@ -993,7 +997,7 @@ public abstract class Scope {
 						typeVariable.tagBits |= TagBits.HierarchyHasProblems;
 						continue nextBound;
 					} else {
-						typeVariable.tagBits |= superType.tagBits & TagBits.ContainsNestedTypeReferences;
+						typeVariable.tagBits |= superType.tagBits & (TagBits.ContainsNestedTypeReferences | TagBits.HasMissingType);
 						boolean didAlreadyComplain = !typeRef.resolvedType.isValidBinding();
 						if (isFirstBoundTypeVariable && j == 0) {
 							problemReporter().noAdditionalBoundAfterTypeVariable(typeRef);
@@ -1764,6 +1768,8 @@ public abstract class Scope {
 						if (candidatesCount == 0)
 							candidates = new MethodBinding[foundSize];
 						candidates[candidatesCount++] = compatibleMethod;
+					} else if (compatibleMethod.problemId() == ProblemReasons.MissingTypeInSignature) {
+						return compatibleMethod; // use this method for error message to give a hint about the missing type
 					} else if (problemMethod == null) {
 						problemMethod = compatibleMethod;
 					}
@@ -2495,6 +2501,8 @@ public abstract class Scope {
 				if (compatibleMethod != null) {
 					if (compatibleMethod.isValidBinding())
 						compatible[compatibleIndex++] = compatibleMethod;
+					else if (compatibleMethod.problemId() == ProblemReasons.MissingTypeInSignature)
+						return compatibleMethod; // use this method for error message to give a hint about the missing type
 					else if (problemMethod == null)
 						problemMethod = compatibleMethod;
 				}
@@ -4667,6 +4675,10 @@ public abstract class Scope {
 		int compatibleCount = 0;
 		for (int i = 0; i < visibleSize; i++)
 			if ((compatibilityLevels[i] = parameterCompatibilityLevel(visible[i], argumentTypes, invocationSite)) != NOT_COMPATIBLE) {
+				if (compatibilityLevels[i] == COMPATIBLE_IGNORING_MISSING_TYPE) {
+					// cannot conclusively select any candidate, use the method with missing types in the error message
+					return new ProblemMethodBinding(visible[i], visible[i].selector, visible[i].parameters, ProblemReasons.Ambiguous);
+				}
 				if (i != compatibleCount) {
 					visible[compatibleCount] = visible[i];
 					compatibilityLevels[compatibleCount] = compatibilityLevels[i];
@@ -5163,13 +5175,17 @@ public abstract class Scope {
 					TypeBinding param = ((ArrayBinding) parameters[lastIndex]).elementsType();
 					for (int i = lastIndex; i < argLength; i++) {
 						TypeBinding arg = (tiebreakingVarargsMethods && (i == (argLength - 1))) ? ((ArrayBinding)arguments[i]).elementsType() : arguments[i];
-						if (TypeBinding.notEquals(param, arg) && parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods, method) == NOT_COMPATIBLE)
-							return NOT_COMPATIBLE;
+						if (TypeBinding.notEquals(param, arg)) {
+							level = parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods, method);
+							if (level == NOT_COMPATIBLE)
+								return NOT_COMPATIBLE;
+						}
 					}
 				}  else if (lastIndex != argLength) { // can call foo(int i, X ... x) with foo(1) but NOT foo();
 					return NOT_COMPATIBLE;
 				}
-				level = VARARGS_COMPATIBLE; // varargs support needed
+				if (level != COMPATIBLE_IGNORING_MISSING_TYPE) // preserve any COMPATIBLE_IGNORING_MISSING_TYPE
+					level = VARARGS_COMPATIBLE; // varargs support needed
 			}
 		} else if (paramLength != argLength) {
 			return NOT_COMPATIBLE;
@@ -5180,10 +5196,13 @@ public abstract class Scope {
 			TypeBinding arg = (tiebreakingVarargsMethods && (i == (argLength - 1))) ? ((ArrayBinding)arguments[i]).elementsType() : arguments[i];
 			if (TypeBinding.notEquals(arg,param)) {
 				int newLevel = parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods, method);
-				if (newLevel == NOT_COMPATIBLE)
+				if (newLevel == NOT_COMPATIBLE) {
 					return NOT_COMPATIBLE;
-				if (newLevel > level)
+				} else if (newLevel == COMPATIBLE_IGNORING_MISSING_TYPE) {
 					level = newLevel;
+				} else if (newLevel > level && level != COMPATIBLE_IGNORING_MISSING_TYPE) {
+					level = newLevel;
+				}
 			}
 		}
 		return level;
@@ -5212,6 +5231,8 @@ public abstract class Scope {
 		// only called if env.options.sourceLevel >= ClassFileConstants.JDK1_5
 		if (arg == null || param == null)
 			return NOT_COMPATIBLE;
+		if ((param.tagBits & TagBits.HasMissingType) != 0)
+			return COMPATIBLE_IGNORING_MISSING_TYPE;
 		if (arg instanceof PolyTypeBinding && !((PolyTypeBinding) arg).expression.isPertinentToApplicability(param, method)) {
 			if (arg.isPotentiallyCompatibleWith(param, this))
 				return COMPATIBLE;

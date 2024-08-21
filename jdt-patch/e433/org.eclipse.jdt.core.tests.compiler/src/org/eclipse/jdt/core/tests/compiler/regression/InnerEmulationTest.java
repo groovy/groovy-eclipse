@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2018 IBM Corporation and others.
+ * Copyright (c) 2006, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -5365,58 +5365,60 @@ public void test135() {
 			"	}\n" +
 			"}", // =================,
 		},
+		(this.complianceLevel >= ClassFileConstants.JDK9 ? "" :
 		"----------\n" +
 		"1. WARNING in p\\X.java (at line 2)\n" +
 		"	import p.A;\n" +
 		"	       ^^^\n" +
+		"The type A is deprecated\n"
+		) +
+		"----------\n" +
+		"1. WARNING in p\\X.java (at line 6)\n" +
+		"	A.M2.MM1 mm1 = (A.M2.MM1) o;\n" +
+		"	^\n" +
 		"The type A is deprecated\n" +
 		"----------\n" +
 		"2. WARNING in p\\X.java (at line 6)\n" +
 		"	A.M2.MM1 mm1 = (A.M2.MM1) o;\n" +
-		"	^\n" +
-		"The type A is deprecated\n" +
-		"----------\n" +
-		"3. WARNING in p\\X.java (at line 6)\n" +
-		"	A.M2.MM1 mm1 = (A.M2.MM1) o;\n" +
 		"	  ^^\n" +
 		"The type A.M2 is deprecated\n" +
 		"----------\n" +
-		"4. WARNING in p\\X.java (at line 6)\n" +
+		"3. WARNING in p\\X.java (at line 6)\n" +
 		"	A.M2.MM1 mm1 = (A.M2.MM1) o;\n" +
 		"	     ^^^\n" +
 		"The type A.M1.MM1 is deprecated\n" +
 		"----------\n" +
-		"5. WARNING in p\\X.java (at line 6)\n" +
+		"4. WARNING in p\\X.java (at line 6)\n" +
 		"	A.M2.MM1 mm1 = (A.M2.MM1) o;\n" +
 		"	                ^\n" +
 		"The type A is deprecated\n" +
 		"----------\n" +
-		"6. WARNING in p\\X.java (at line 6)\n" +
+		"5. WARNING in p\\X.java (at line 6)\n" +
 		"	A.M2.MM1 mm1 = (A.M2.MM1) o;\n" +
 		"	                  ^^\n" +
 		"The type A.M2 is deprecated\n" +
 		"----------\n" +
-		"7. WARNING in p\\X.java (at line 6)\n" +
+		"6. WARNING in p\\X.java (at line 6)\n" +
 		"	A.M2.MM1 mm1 = (A.M2.MM1) o;\n" +
 		"	                     ^^^\n" +
 		"The type A.M1.MM1 is deprecated\n" +
 		"----------\n" +
-		"8. WARNING in p\\X.java (at line 7)\n" +
+		"7. WARNING in p\\X.java (at line 7)\n" +
 		"	A.M2.MM1[] mm1s = (A.M2.MM1[]) os;\n" +
 		"	^\n" +
 		"The type A is deprecated\n" +
 		"----------\n" +
-		"9. WARNING in p\\X.java (at line 7)\n" +
+		"8. WARNING in p\\X.java (at line 7)\n" +
 		"	A.M2.MM1[] mm1s = (A.M2.MM1[]) os;\n" +
 		"	  ^^\n" +
 		"The type A.M2 is deprecated\n" +
 		"----------\n" +
-		"10. WARNING in p\\X.java (at line 7)\n" +
+		"9. WARNING in p\\X.java (at line 7)\n" +
 		"	A.M2.MM1[] mm1s = (A.M2.MM1[]) os;\n" +
 		"	     ^^^\n" +
 		"The type A.M1.MM1 is deprecated\n" +
 		"----------\n" +
-		"11. WARNING in p\\X.java (at line 7)\n" +
+		"10. WARNING in p\\X.java (at line 7)\n" +
 		"	A.M2.MM1[] mm1s = (A.M2.MM1[]) os;\n" +
 		"	                   ^\n" +
 		"The type A is deprecated\n" +
@@ -5431,7 +5433,7 @@ public void test135() {
 		"	                        ^^^\n" +
 		"The type A.M1.MM1 is deprecated\n" +
 		"----------\n" +
-		"14. ERROR in p\\X.java (at line 16)\n" +
+		"13. ERROR in p\\X.java (at line 16)\n" +
 		"	Zork z;\n" +
 		"	^^^^\n" +
 		"Zork cannot be resolved to a type\n" +

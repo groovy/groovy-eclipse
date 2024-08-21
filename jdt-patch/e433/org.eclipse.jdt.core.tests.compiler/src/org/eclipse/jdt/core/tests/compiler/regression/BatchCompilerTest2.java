@@ -227,7 +227,7 @@ public void testBug540123a() throws Exception {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
 			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
-					+ " -source 1.3 -target 1.2",
+					+ " -source 1.8 -target 1.8",
 					"",
 					"",
 					true);
@@ -260,7 +260,7 @@ public void testBug540123b() throws Exception {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
 			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
-					+ " -source 1.3",
+					+ " -source 1.8",
 					"",
 					"",
 					true);
@@ -293,7 +293,7 @@ public void testBug540123c() throws Exception {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
 			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
-					+ " -target 1.3",
+					+ " -target 1.8",
 					"",
 					"",
 					true);
@@ -326,7 +326,7 @@ public void testBug540123d() throws Exception {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
 			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
-					+ " -1.4",
+					+ " -1.8",
 					"",
 					"",
 					true);
@@ -359,11 +359,11 @@ public void testBug540123e() throws Exception {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
 			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
-					+ " -1.3",
+					+ " -1.8",
 					"",
 					"",
 					true);
-	String expectedOutput = "invokevirtual SecurePrefs.node(java.lang.String) : SecurePrefs [14]";
+	String expectedOutput = "invokevirtual SecurePrefsRoot.node(java.lang.String) : SecurePrefs [14]";
 	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "SecurePrefsRoot.class", "SecurePrefsRoot", expectedOutput);
 }
 public void testBug562473() {

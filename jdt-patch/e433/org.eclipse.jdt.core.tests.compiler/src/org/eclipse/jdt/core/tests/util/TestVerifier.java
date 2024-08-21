@@ -217,7 +217,7 @@ static {
 	// i.e. this huge string can easily be folded away, which minimises scrolling.
 	VERIFY_TEST_CODE_DEFAULT =
 		"/*******************************************************************************\n" +
-		" * Copyright (c) 2000, 2021 IBM Corporation and others.\n" +
+		" * Copyright (c) 2000, 2024 IBM Corporation and others.\n" +
 		" *\n" +
 		" * This program and the accompanying materials\n" +
 		" * are made available under the terms of the Eclipse Public License 2.0\n" +
@@ -257,7 +257,6 @@ static {
 		" * because {@link TestVerifier#getVerifyTestsCode()} can filter them out dynamically. You should however avoid things\n" +
 		" * like diamonds, multi-catch, catch-with-resources and more recent Java features.\n" +
 		" */\n" +
-		"@SuppressWarnings({ \"unchecked\", \"rawtypes\" })\n" +
 		"public class VerifyTests {\n" +
 		"	int portNumber;\n" +
 		"	Socket socket;\n" +
@@ -274,10 +273,10 @@ static {
 		"	URLClassLoader urlClassLoader = new URLClassLoader(classPathToURLs(classPath));\n" +
 		"	try {\n" +
 		"		//System.out.println(\"Loading \" + className + \"...\");\n" +
-		"		Class testClass = urlClassLoader.loadClass(className);\n" +
+		"		Class<?> testClass = urlClassLoader.loadClass(className);\n" +
 		"		//System.out.println(\"Loaded \" + className);\n" +
 		"		try {\n" +
-		"			Method main = testClass.getMethod(\"main\", new Class[] {String[].class});\n" +
+		"			Method main = testClass.getMethod(\"main\", String[].class);\n" +
 		"			//System.out.println(\"Running \" + className);\n" +
 		"			main.invoke(null, new Object[] {new String[] {}});\n" +
 		"			//System.out.println(\"Finished running \" + className);\n" +

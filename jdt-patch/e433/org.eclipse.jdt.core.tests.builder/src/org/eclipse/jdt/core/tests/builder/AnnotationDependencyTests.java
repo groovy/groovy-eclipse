@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.osgi.framework.Bundle;
 
 /**
@@ -52,7 +53,7 @@ public class AnnotationDependencyTests extends BuilderTests {
 	public void setUp() throws Exception {
 		super.setUp();
 
-		this.projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+		this.projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 		env.addExternalJars(this.projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide

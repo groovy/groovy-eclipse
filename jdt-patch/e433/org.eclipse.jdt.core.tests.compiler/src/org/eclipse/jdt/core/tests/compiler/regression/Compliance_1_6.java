@@ -26,7 +26,7 @@ public Compliance_1_6(String name) {
 	super(name);
 }
 public static Test suite() {
-	return buildMinimalComplianceTestSuite(testClass(), F_1_6);
+	return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 }
 // Use this static initializer to specify subset for tests
 // All specified tests which does not belong to the class are skipped...
@@ -41,9 +41,9 @@ static {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=283225
 public void test1() {
 	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_6);
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
 	this.runConformTest(
 			new String[] {
 					"Test.java",

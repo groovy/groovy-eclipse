@@ -20,14 +20,13 @@ import java.util.Map;
 import junit.framework.Test;
 
 import org.eclipse.jdt.internal.compiler.ast.FakedTrackingVariable;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class ConcurrentBatchCompilerTest extends BatchCompilerTest {
 
 	public static Test suite() {
-		return buildUniqueComplianceTestSuite(testClass(), ClassFileConstants.JDK1_6);
+		return buildUniqueComplianceTestSuite(testClass(), CompilerOptions.getFirstSupportedJdkLevel());
 	}
 	public static Class testClass() {
 		return ConcurrentBatchCompilerTest.class;
@@ -81,6 +80,7 @@ public class ConcurrentBatchCompilerTest extends BatchCompilerTest {
 			// collect exceptions indicating a failure:
 			final Throwable[] thrown = new Throwable[2];
 
+			final String firstSupportedVersion = CompilerOptions.getFirstSupportedJavaVersion();
 			this.runner1 = new Thread(new Runnable() {
 					@Override
 					public void run() {
@@ -147,7 +147,7 @@ public class ConcurrentBatchCompilerTest extends BatchCompilerTest {
 								""
 							},
 					        "\"" + OUTPUT_DIR +  File.separator + "org/eclipse/jdt/internal/launching/CompositeId.java\""
-				            + " -1.5 -g -preserveAllLocals"
+				            + " -" + firstSupportedVersion + " -g -preserveAllLocals"
 				            + " -proceedOnError -d \"" + OUTPUT_DIR + "\"",
 							"",
 							"",
@@ -189,7 +189,7 @@ public class ConcurrentBatchCompilerTest extends BatchCompilerTest {
 								"}\n"
 							},
 					        "\"" + OUTPUT_DIR +  File.separator + "test01/X.java\""
-				            + " -1.5 -g -preserveAllLocals -err:+resource"
+				            + " -" + firstSupportedVersion + " -g -preserveAllLocals -err:+resource"
 				            + " -proceedOnError -d \"" + OUTPUT_DIR + "\"",
 				            "",
 							errorOutput.toString(),

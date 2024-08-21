@@ -66,7 +66,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 			for (int i = 0; i < length; i++) { // copy original type variable to relocate
 				TypeVariableBinding originalVariable = originalVariables[i];
 				substitutedVariables[i] = new TypeVariableBinding(originalVariable.sourceName, this, originalVariable.rank, parameterizedDeclaringClass.environment);
-				substitutedVariables[i].tagBits |= (originalVariable.tagBits & (TagBits.AnnotationNullMASK|TagBits.HasNullTypeAnnotation));
+				substitutedVariables[i].tagBits |= (originalVariable.tagBits & (TagBits.AnnotationNullMASK|TagBits.HasNullTypeAnnotation|TagBits.HasMissingType));
 			}
 			this.typeVariables = substitutedVariables;
 
@@ -209,7 +209,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 							this,
 							originalVariable.rank,
 							environment);
-				substitutedVariables[i].tagBits |= (originalVariable.tagBits & (TagBits.AnnotationNullMASK|TagBits.HasNullTypeAnnotation));
+				substitutedVariables[i].tagBits |= (originalVariable.tagBits & (TagBits.AnnotationNullMASK|TagBits.HasNullTypeAnnotation|TagBits.HasMissingType));
 			}
 			this.typeVariables = substitutedVariables;
 

@@ -25,7 +25,6 @@ import junit.framework.*;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IRegion;
@@ -37,6 +36,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.IClassFileReader;
 import org.eclipse.jdt.core.util.IMethodInfo;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class AbstractMethodTests extends BuilderTests {
@@ -163,7 +163,7 @@ public class AbstractMethodTests extends BuilderTests {
 			//----------------------------
 		IPath project1Path = env.addProject("Project1"); //$NON-NLS-1$
 		env.addExternalJars(project1Path, Util.getJavaClassLibs());
-		env.getJavaProject(project1Path).setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_1); // need default abstract method
+		env.getJavaProject(project1Path).setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion()); // need default abstract method
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(project1Path, ""); //$NON-NLS-1$
 
@@ -241,7 +241,7 @@ public class AbstractMethodTests extends BuilderTests {
 	/**
 	 * Check behavior in 1.1 target mode (generated default abstract method)
 	 */
-	public void test003() throws JavaModelException {
+	public void test003() throws Exception {
 		//----------------------------
 		//           Step 1
 		//----------------------------
@@ -250,7 +250,7 @@ public class AbstractMethodTests extends BuilderTests {
 			//----------------------------
 		IPath project1Path = env.addProject("Project1"); //$NON-NLS-1$
 		env.addExternalJars(project1Path, Util.getJavaClassLibs());
-		env.getJavaProject(project1Path).setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_1); // need default abstract method
+		env.getJavaProject(project1Path).setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion()); // need default abstract method
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(project1Path, ""); //$NON-NLS-1$
 
@@ -292,8 +292,6 @@ public class AbstractMethodTests extends BuilderTests {
 		try {
 			stream = classFile.getContents();
 			classFileReader = ToolFactory.createDefaultClassFileReader(stream, IClassFileReader.ALL);
-		} catch (CoreException e) {
-			e.printStackTrace();
 		} finally {
 			if (stream != null) {
 				try {
@@ -313,8 +311,7 @@ public class AbstractMethodTests extends BuilderTests {
 				break loop;
 			}
 		}
-		assertNotNull("No method found", found);
-		assertTrue("Not a synthetic method", found.isSynthetic());
+		assertNull("Should not find a 'foo' method", found);
 	}
 
 	private String getResourceOuput(IResource[] resources) {

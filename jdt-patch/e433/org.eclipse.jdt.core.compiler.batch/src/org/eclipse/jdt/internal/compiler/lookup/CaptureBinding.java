@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -63,13 +63,10 @@ public class CaptureBinding extends TypeVariableBinding {
 			this.environment.typeSystem.cacheDerivedType(this, unannotated, this);
 			// propagate from wildcard to capture - use super version, because our own method propagates type annotations in the opposite direction:
 			super.setTypeAnnotations(wildcard.getTypeAnnotations(), wildcard.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled);
-			if (wildcard.hasNullTypeAnnotations())
-				this.tagBits |= TagBits.HasNullTypeAnnotation;
+			this.tagBits |= wildcard.tagBits & (TagBits.HasNullTypeAnnotation|TagBits.HasMissingType);
 		} else {
 			computeId(this.environment);
-			if(wildcard.hasNullTypeAnnotations()) {
-				this.tagBits |= (wildcard.tagBits & TagBits.AnnotationNullMASK) | TagBits.HasNullTypeAnnotation;
-			}
+			this.tagBits |= wildcard.tagBits & (TagBits.AnnotationNullMASK|TagBits.HasNullTypeAnnotation|TagBits.HasMissingType);
 		}
 	}
 

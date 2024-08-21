@@ -22,13 +22,13 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.ArrayList;
 
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.batch.ClasspathLocation;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.batch.Main;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public abstract class AbstractBatchCompilerTest extends AbstractRegressionTest {
 
@@ -160,280 +160,277 @@ public abstract class AbstractBatchCompilerTest extends AbstractRegressionTest {
 		CASCADED_JARS_CREATED = false; // initialization needed for each subclass individually
 	}
 
-	protected void createCascadedJars() {
-		if (!CASCADED_JARS_CREATED) {
-			File libDir = new File(LIB_DIR);
-			Util.delete(libDir); // make sure we recycle the libs
-	 		libDir.mkdirs();
-			try {
-				Util.createJar(
-					new String[] {
-						"p/A.java",
-						"package p;\n" +
-						"public class A {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: lib2.jar\n",
-						"p/S1.java",
-						"package p;\n" +
-						"public class S1 {\n" +
-						"}",
-					},
-					LIB_DIR + "/lib1.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/B.java",
-						"package p;\n" +
-						"public class B {\n" +
-						"}",
-						"p/R.java",
-						"package p;\n" +
-						"public class R {\n" +
-						"  public static final int R2 = 2;\n" +
-						"}",
-					},
-					new String[] {
-						"p/S2.java",
-						"package p;\n" +
-						"public class S2 {\n" +
-						"}",
-					},
-					LIB_DIR + "/lib2.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/C.java",
-						"package p;\n" +
-						"public class C {\n" +
-						"}",
-						"p/R.java",
-						"package p;\n" +
-						"public class R {\n" +
-						"  public static final int R3 = 3;\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: lib4.jar\n",
-					},
-					LIB_DIR + "/lib3.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/D.java",
-						"package p;\n" +
-						"public class D {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: lib1.jar lib3.jar\n",
-					},
-					LIB_DIR + "/lib4.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/C.java",
-						"package p;\n" +
-						"public class C {\n" +
-						"}",
-						"p/R.java",
-						"package p;\n" +
-						"public class R {\n" +
-						"  public static final int R3 = 3;\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: s/lib6.jar\n",
-					},
-					LIB_DIR + "/lib5.jar",
-					JavaCore.VERSION_1_4);
-				new File(LIB_DIR + "/s").mkdir();
-				Util.createJar(
-					new String[] {
-						"p/D.java",
-						"package p;\n" +
-						"public class D {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: ../lib7.jar\n",
-					},
-					LIB_DIR + "/s/lib6.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/A.java",
-						"package p;\n" +
-						"public class A {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: lib2.jar\n",
-					},
-					LIB_DIR + "/lib7.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/F.java",
-						"package p;\n" +
-						"public class F {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: " + LIB_DIR + "/lib3.jar lib1.jar\n",
-					},
-					LIB_DIR + "/lib8.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/G.java",
-						"package p;\n" +
-						"public class G {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: lib1.jar\n" +
-						"Class-Path: lib3.jar\n",
-					},
-					LIB_DIR + "/lib9.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/A.java",
-						"package p;\n" +
-						"public class A {\n" +
-						"}",
-					},
-					// spoiled jar: MANIFEST.MF is a directory
-					new String[] {
-						"META-INF/MANIFEST.MF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: lib2.jar\n",
-					},
-					LIB_DIR + "/lib10.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/A.java",
-						"package p;\n" +
-						"public class A {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path:\n",
-					},
-					LIB_DIR + "/lib11.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					null,
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path:lib1.jar\n", // missing space
-					},
-					LIB_DIR + "/lib12.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					null,
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path:lib1.jar lib1.jar\n", // missing space
-					},
-					LIB_DIR + "/lib13.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					null,
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						" Class-Path: lib1.jar\n", // extra space at line start
-					},
-					LIB_DIR + "/lib14.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					null,
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: lib1.jar", // missing newline at end
-					},
-					LIB_DIR + "/lib15.jar",
-					JavaCore.VERSION_1_4);
-				Util.createJar(
-					new String[] {
-						"p/A.java",
-						"package p;\n" +
-						"public class A {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: \n" +
-						" lib2.jar\n",
-						"p/S1.java",
-						"package p;\n" +
-						"public class S1 {\n" +
-						"}",
-					},
-					LIB_DIR + "/lib16.jar",
-					JavaCore.VERSION_1_4);
-				new File(LIB_DIR + "/dir").mkdir();
-				Util.createJar(
-					new String[] {
-						"p/A.java",
-						"package p;\n" +
-						"public class A {\n" +
-						"}",
-					},
-					new String[] {
-						"META-INF/MANIFEST.MF",
-						"Manifest-Version: 1.0\n" +
-						"Created-By: Eclipse JDT Test Harness\n" +
-						"Class-Path: ../lib2.jar\n",
-					},
-					LIB_DIR + "/dir/lib17.jar",
-					JavaCore.VERSION_1_4);
-				CASCADED_JARS_CREATED = true;
-			} catch (IOException e) {
-				// ignore
-			}
+	protected void createCascadedJars() throws IOException {
+		if (CASCADED_JARS_CREATED) {
+			return;
 		}
+		File libDir = new File(LIB_DIR);
+		Util.delete(libDir); // make sure we recycle the libs
+ 		libDir.mkdirs();
+		Util.createJar(
+			new String[] {
+				"p/A.java",
+				"package p;\n" +
+				"public class A {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: lib2.jar\n",
+				"p/S1.java",
+				"package p;\n" +
+				"public class S1 {\n" +
+				"}",
+			},
+			LIB_DIR + "/lib1.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/B.java",
+				"package p;\n" +
+				"public class B {\n" +
+				"}",
+				"p/R.java",
+				"package p;\n" +
+				"public class R {\n" +
+				"  public static final int R2 = 2;\n" +
+				"}",
+			},
+			new String[] {
+				"p/S2.java",
+				"package p;\n" +
+				"public class S2 {\n" +
+				"}",
+			},
+			LIB_DIR + "/lib2.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/C.java",
+				"package p;\n" +
+				"public class C {\n" +
+				"}",
+				"p/R.java",
+				"package p;\n" +
+				"public class R {\n" +
+				"  public static final int R3 = 3;\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: lib4.jar\n",
+			},
+			LIB_DIR + "/lib3.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/D.java",
+				"package p;\n" +
+				"public class D {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: lib1.jar lib3.jar\n",
+			},
+			LIB_DIR + "/lib4.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/C.java",
+				"package p;\n" +
+				"public class C {\n" +
+				"}",
+				"p/R.java",
+				"package p;\n" +
+				"public class R {\n" +
+				"  public static final int R3 = 3;\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: s/lib6.jar\n",
+			},
+			LIB_DIR + "/lib5.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		new File(LIB_DIR + "/s").mkdir();
+		Util.createJar(
+			new String[] {
+				"p/D.java",
+				"package p;\n" +
+				"public class D {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: ../lib7.jar\n",
+			},
+			LIB_DIR + "/s/lib6.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/A.java",
+				"package p;\n" +
+				"public class A {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: lib2.jar\n",
+			},
+			LIB_DIR + "/lib7.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/F.java",
+				"package p;\n" +
+				"public class F {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: " + LIB_DIR + "/lib3.jar lib1.jar\n",
+			},
+			LIB_DIR + "/lib8.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/G.java",
+				"package p;\n" +
+				"public class G {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: lib1.jar\n" +
+				"Class-Path: lib3.jar\n",
+			},
+			LIB_DIR + "/lib9.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/A.java",
+				"package p;\n" +
+				"public class A {\n" +
+				"}",
+			},
+			// spoiled jar: MANIFEST.MF is a directory
+			new String[] {
+				"META-INF/MANIFEST.MF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: lib2.jar\n",
+			},
+			LIB_DIR + "/lib10.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/A.java",
+				"package p;\n" +
+				"public class A {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path:\n",
+			},
+			LIB_DIR + "/lib11.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			null,
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path:lib1.jar\n", // missing space
+			},
+			LIB_DIR + "/lib12.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			null,
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path:lib1.jar lib1.jar\n", // missing space
+			},
+			LIB_DIR + "/lib13.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			null,
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				" Class-Path: lib1.jar\n", // extra space at line start
+			},
+			LIB_DIR + "/lib14.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			null,
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: lib1.jar", // missing newline at end
+			},
+			LIB_DIR + "/lib15.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		Util.createJar(
+			new String[] {
+				"p/A.java",
+				"package p;\n" +
+				"public class A {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: \n" +
+				" lib2.jar\n",
+				"p/S1.java",
+				"package p;\n" +
+				"public class S1 {\n" +
+				"}",
+			},
+			LIB_DIR + "/lib16.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		new File(LIB_DIR + "/dir").mkdir();
+		Util.createJar(
+			new String[] {
+				"p/A.java",
+				"package p;\n" +
+				"public class A {\n" +
+				"}",
+			},
+			new String[] {
+				"META-INF/MANIFEST.MF",
+				"Manifest-Version: 1.0\n" +
+				"Created-By: Eclipse JDT Test Harness\n" +
+				"Class-Path: ../lib2.jar\n",
+			},
+			LIB_DIR + "/dir/lib17.jar",
+			CompilerOptions.getFirstSupportedJavaVersion());
+		CASCADED_JARS_CREATED = true;
 	}
 
 	protected String getLibraryClassesAsQuotedString() {

@@ -188,7 +188,7 @@ public class SpacePreparator extends ASTVisitor {
 		if (node.getSuperclassType() != null)
 			handleTokenAfter(node.getName(), TokenNameextends, true, true);
 		if (!node.permittedTypes().isEmpty())
-			handleTokenAfter(node.getName(), TokenNamepermits, true, true);
+			handleTokenAfter(node.getName(), TokenNameRestrictedIdentifierpermits, true, true);
 
 		handleToken(node.getName(), TokenNameLBRACE,
 				this.options.insert_space_before_opening_brace_in_type_declaration, false);

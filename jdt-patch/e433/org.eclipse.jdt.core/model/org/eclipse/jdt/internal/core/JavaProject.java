@@ -1806,15 +1806,14 @@ public class JavaProject
 	public IClasspathEntry getClasspathEntryFor(IPath path) throws JavaModelException {
 		getResolvedClasspath(); // force resolution
 		PerProjectInfo perProjectInfo = getPerProjectInfo();
-		if (perProjectInfo == null)
+		if (perProjectInfo == null) {
 			return null;
-		Map rootPathToResolvedEntries = perProjectInfo.rootPathToResolvedEntries;
-		if (rootPathToResolvedEntries == null)
-			return null;
-		IClasspathEntry classpathEntry = (IClasspathEntry) rootPathToResolvedEntries.get(path);
+		}
+		Map<IPath, IClasspathEntry> rootPathToResolvedEntries = perProjectInfo.getRootPathToResolvedEntries();
+		IClasspathEntry classpathEntry = rootPathToResolvedEntries.get(path);
 		if (classpathEntry == null) {
 			path = getProject().getWorkspace().getRoot().getLocation().append(path);
-			classpathEntry = (IClasspathEntry) rootPathToResolvedEntries.get(path);
+			classpathEntry = rootPathToResolvedEntries.get(path);
 		}
 		return classpathEntry;
 	}

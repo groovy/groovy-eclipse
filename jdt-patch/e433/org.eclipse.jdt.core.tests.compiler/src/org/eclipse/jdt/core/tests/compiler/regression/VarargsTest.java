@@ -2238,9 +2238,9 @@ public class VarargsTest extends AbstractComparableTest {
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=186181
 	public void test060() {
 		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-		options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
+		options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
+		options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
 		this.runConformTest(
 				new String[] {
 					"X.java",
@@ -2270,16 +2270,15 @@ public class VarargsTest extends AbstractComparableTest {
 		} else if (CharOperation.equals(methodInfos[1].getName(), "varargMethod".toCharArray())) {
 			methodInfo = methodInfos[1];
 		}
-		assertTrue("ACC_VARARGS is not set", (methodInfo.getAccessFlags() & ClassFileConstants.AccVarargs) == 0);
+		assertTrue("ACC_VARARGS is set", (methodInfo.getAccessFlags() & ClassFileConstants.AccVarargs) == ClassFileConstants.AccVarargs);
 		assertNotNull("Method varargMethodshould be there", methodInfo);
-		assertEquals("2", 2, methodInfo.getAttributeCount());
+		assertEquals("1", 1, methodInfo.getAttributeCount());
 		IClassFileAttribute[] attributes = methodInfo.getAttributes();
-		assertTrue("varargs attribute not found", CharOperation.equals(attributes[0].getAttributeName(), "Varargs".toCharArray())
-				|| CharOperation.equals(attributes[1].getAttributeName(), "Varargs".toCharArray()));
+		assertTrue("Code attribute not found", CharOperation.equals(attributes[0].getAttributeName(), "Code".toCharArray()));
 
-		options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-		options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
+		options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
+		options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
 		this.runConformTest(
 				new String[] {
 					"UseVararg.java",

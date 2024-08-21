@@ -938,12 +938,7 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}\n"
 			},
 			"----------\n" +
-			"1. WARNING in p1\\C1.java (at line 3)\n" +
-			"	import pdep.Dep1;\n" +
-			"	       ^^^^^^^^^\n" +
-			"The type Dep1 is deprecated since version 13\n" +
-			"----------\n" +
-			"2. WARNING in p1\\C1.java (at line 6)\n" +
+			"1. WARNING in p1\\C1.java (at line 6)\n" +
 			"	Dep1 f;\n" +
 			"	^^^^\n" +
 			"The type Dep1 is deprecated since version 13\n" +
@@ -1059,6 +1054,77 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"""
 		};
 		runner.runConformTest();
+	}
+	public void testJEP211_2() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"p1/C1.java",
+				"""
+				package p1;
+				public class C1 {
+					@Deprecated public class CInner {}
+					@Deprecated(forRemoval=true) public static int ZERO = 0;
+				}
+				""",
+				"Test.java",
+				"""
+				import p1.C1.CInner;
+				import static p1.C1.ZERO;
+				public class Test {
+					CInner c;
+					int z = ZERO;
+				}
+				"""
+			};
+		runner.expectedCompilerLog = """
+				----------
+				1. WARNING in Test.java (at line 4)
+					CInner c;
+					^^^^^^
+				The type C1.CInner is deprecated
+				----------
+				2. WARNING in Test.java (at line 5)
+					int z = ZERO;
+					        ^^^^
+				The field C1.ZERO has been deprecated and marked for removal
+				----------
+				""";
+		runner.runWarningTest();
+	}
+	public void testJEP211_3() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"p1/C1.java",
+				"""
+				package p1;
+				public class C1 {
+					@Deprecated public static int ZERO = 0;
+					@Deprecated public static int nothing() { return 0; };
+				}
+				""",
+				"Test.java",
+				"""
+				import static p1.C1.*;
+				public class Test {
+					int z = ZERO;
+					int zz = nothing();
+				}
+				"""
+			};
+		runner.expectedCompilerLog = """
+				----------
+				1. WARNING in Test.java (at line 3)
+					int z = ZERO;
+					        ^^^^
+				The field C1.ZERO is deprecated
+				----------
+				2. WARNING in Test.java (at line 4)
+					int zz = nothing();
+					         ^^^^^^^^^
+				The method nothing() from the type C1 is deprecated
+				----------
+				""";
+		runner.runWarningTest();
 	}
 	public static Class<?> testClass() {
 		return Deprecated9Test.class;

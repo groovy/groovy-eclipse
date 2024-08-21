@@ -40,16 +40,6 @@ public class BuilderTests11 extends BuilderTests {
 		runTest(compliance);
 	}
 
-	public void testBuildWithRelease_1_7() throws JavaModelException, Exception {
-		String compliance = "1.7";
-		runTest(compliance);
-	}
-
-	public void testBuildWithRelease_1_6() throws JavaModelException, Exception {
-		String compliance = "1.6";
-		runTest(compliance);
-	}
-
 	// TODO: this test fails in 4.25 M1, probably also before.
 	// Cannot find the class file for java.lang.Object
 	public void XtestBuilderWithRelease_9() throws JavaModelException, Exception {

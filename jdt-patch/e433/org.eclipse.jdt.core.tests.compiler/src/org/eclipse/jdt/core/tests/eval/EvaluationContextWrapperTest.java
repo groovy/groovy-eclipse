@@ -43,7 +43,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.eclipse.jdt.core.eval.ICodeSnippetRequestor;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.JavaProject;
@@ -93,9 +92,6 @@ public class EvaluationContextWrapperTest extends EvaluationTest {
 	}
 
 	public void testBug573589_StaticImport() throws JavaModelException, InstallException {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-			return;
-		}
 		try {
 			StringBuilder source = new StringBuilder();
 			source.append("import static java.lang.Math.max;\n");
@@ -121,9 +117,6 @@ public class EvaluationContextWrapperTest extends EvaluationTest {
 	}
 
 	public void testBug573589_StaticImport_AttachedSource() throws JavaModelException, InstallException {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-			return;
-		}
 		try {
 			StringBuilder source = new StringBuilder();
 			source.append("import static java.lang.Math.max;\n");
@@ -185,7 +178,7 @@ public class EvaluationContextWrapperTest extends EvaluationTest {
 			.append(fileName)
 			.append("\" -d \"")
 			.append(binDir)
-			.append("\" -nowarn -1.5 -g -classpath \"")
+			.append("\" -nowarn -" + CompilerOptions.getFirstSupportedJavaVersion() + " -g -classpath \"")
 			.append(Util.getJavaClassLibsAsString())
 			.append(srcDir)
 			.append("\"");
@@ -258,7 +251,7 @@ public class EvaluationContextWrapperTest extends EvaluationTest {
 		Map<String, String> options = super.getCompilerOptions();
 		options.put(CompilerOptions.OPTION_LocalVariableAttribute, CompilerOptions.GENERATE);
 		options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.PRESERVE);
-		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
+		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
 		options.put(CompilerOptions.OPTION_ReportRawTypeReference, CompilerOptions.IGNORE);
 		options.put(CompilerOptions.OPTION_ReportUnusedImport, CompilerOptions.IGNORE);
 		return options;
@@ -294,9 +287,9 @@ public class EvaluationContextWrapperTest extends EvaluationTest {
 		jproject.setOutputLocation(outputLocation, null);
 
 		Map<String, String> map = JavaCore.getOptions();
-		map.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-		map.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
-		map.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
+		map.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getFirstSupportedJavaVersion());
+		map.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getFirstSupportedJavaVersion());
+		map.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getFirstSupportedJavaVersion());
 		jproject.setOptions(map);
 
 

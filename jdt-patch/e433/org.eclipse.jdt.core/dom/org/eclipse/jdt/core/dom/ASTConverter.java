@@ -3706,14 +3706,30 @@ class ASTConverter {
 	}
 
 	public Pattern convert(org.eclipse.jdt.internal.compiler.ast.TypePattern pattern) {
-		TypePattern typePattern = new TypePattern(this.ast);
-		if (this.resolveBindings) {
-			recordNodes(typePattern, pattern);
-		}
+		TypePattern typePattern;
 		if (pattern.local == null) {
 			return createFakeNullPattern(pattern);
 		}
-		typePattern.setPatternVariable(convertToSingleVariableDeclaration(pattern.local));
+		if(this.ast.apiLevel < AST.JLS22_INTERNAL) {
+			typePattern = new TypePattern(this.ast);
+		} else {
+			//If there is a type then SingleVariableDeclaration | No type then VariableDeclarationFragment
+			typePattern = new TypePattern(this.ast, pattern.local.type != null);
+		}
+
+		if (this.resolveBindings) {
+			recordNodes(typePattern, pattern);
+		}
+
+		if(this.ast.apiLevel < AST.JLS22_INTERNAL) {
+			typePattern.setPatternVariable(convertToSingleVariableDeclaration(pattern.local));
+		} else {
+			if(pattern.local != null && pattern.local.type != null) {
+				typePattern.setPatternVariable((VariableDeclaration)convertToSingleVariableDeclaration(pattern.local));
+			} else {
+				typePattern.setPatternVariable(convertToVariableDeclarationFragment(pattern.local));
+			}
+		}
 		int startPosition = pattern.local.declarationSourceStart;
 		int sourceEnd= pattern.sourceEnd;
 		typePattern.setSourceRange(startPosition, sourceEnd - startPosition + 1);
@@ -4244,8 +4260,16 @@ class ASTConverter {
 		variableDeclarationFragment.setName(name);
 		int start = localDeclaration.sourceEnd;
 		org.eclipse.jdt.internal.compiler.ast.Expression initialization = localDeclaration.initialization;
-		TypeReference typeReference = localDeclaration.type;
-		int extraDimension = typeReference.extraDimensions();
+		TypeReference typeReference;
+		int extraDimension;
+		if(localDeclaration.type != null) {
+			typeReference = localDeclaration.type;
+			extraDimension = typeReference.extraDimensions();
+		} else {
+			typeReference = null;
+			extraDimension = 0;
+		}
+
 		if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 			setExtraAnnotatedDimensions(localDeclaration.sourceEnd + 1, this.compilationUnitSourceLength,
 					typeReference, variableDeclarationFragment.extraDimensions(), extraDimension);

@@ -619,4 +619,44 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 				},
 				"Success");
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2677
+	// JDT Core throws ClassCastException: NullTypeBinding cannot be cast to class ArrayBinding
+	public void testIssue2677() {
+		if (this.complianceLevel < ClassFileConstants.JDK14)
+			return;
+		this.runConformTest(
+				new String[] {
+						"Test.java",
+						"public class Test {\n" +
+						"    public static int test(int[] arr) {\n" +
+						"        return (arr == null ? null : arr)[0];\n" +
+						"    }\n" +
+						"	public static void main(String[] args) {\n" +
+						"		System.out.println(test(new int[] { 42 }));\n" +
+						"	}\n" +
+						"}\n"
+				},
+				"42");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2677
+	// JDT Core throws ClassCastException: NullTypeBinding cannot be cast to class ArrayBinding
+	public void testIssue2677_2() {
+		if (this.complianceLevel < ClassFileConstants.JDK14)
+			return;
+		this.runConformTest(
+				new String[] {
+						"Test.java",
+						"public class Test {\n" +
+						"    public static int test(int[] arr) {\n" +
+						"        return (arr != null ? arr : null)[0];\n" +
+						"    }\n" +
+						"	public static void main(String[] args) {\n" +
+						"		System.out.println(test(new int[] { 42 }));\n" +
+						"	}\n" +
+						"}\n"
+				},
+				"42");
+	}
 }

@@ -18,7 +18,6 @@ import java.util.Map;
 
 import junit.framework.Test;
 
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -34,13 +33,13 @@ public Compliance_CLDC(String name) {
 @Override
 protected Map getCompilerOptions() {
 	Map options = super.getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_3);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_CLDC1_1);
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_3);
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
 	return options;
 }
 public static Test suite() {
-		return buildUniqueComplianceTestSuite(testClass(), ClassFileConstants.JDK1_3);
+		return buildUniqueComplianceTestSuite(testClass(), CompilerOptions.getFirstSupportedJdkLevel());
 }
 public static Class testClass() {
 	return Compliance_CLDC.class;
@@ -80,7 +79,7 @@ public void test001() {
 		},
 		"OK");
 }
-public void test002() throws Exception {
+public void _2551_test002() throws Exception {
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -231,7 +230,7 @@ public void test003() throws Exception {
 		"true");
 
 	String expectedOutput =
-		"// Compiled from X.java (version 1.1 : 45.3, super bit)\n" +
+		"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" +
 		"public class X {\n" +
 		"  \n" +
 		"  // Method descriptor #6 ()V\n" +
@@ -261,8 +260,8 @@ public void test003() throws Exception {
 		"        [pc: 17, line: 5]\n" +
 		"      Local variable table:\n" +
 		"        [pc: 0, pc: 18] local: args index: 0 type: java.lang.String[]\n" +
-		"      Stack map : number of frames 2\n" +
-		"        [pc: 13, full, stack: {java.io.PrintStream}, locals: {java.lang.String[]}]\n" +
+		"      Stack map table: number of frames 2\n" +
+		"        [pc: 13, same_locals_1_stack_item, stack: {java.io.PrintStream}]\n" +
 		"        [pc: 14, full, stack: {java.io.PrintStream, int}, locals: {java.lang.String[]}]\n" +
 		"}";
 	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);

@@ -44,6 +44,10 @@ public class ConstraintExceptionFormula extends ConstraintFormula {
 
 	@Override
 	public Object reduce(InferenceContext18 inferenceContext) {
+		if ((this.right.tagBits & TagBits.HasMissingType) != 0) {
+			inferenceContext.hasIgnoredMissingType = true;
+			return TRUE;
+		}
 		// JLS 18.2.5
 		Scope scope = inferenceContext.scope;
 		if (!this.right.isFunctionalInterface(scope))

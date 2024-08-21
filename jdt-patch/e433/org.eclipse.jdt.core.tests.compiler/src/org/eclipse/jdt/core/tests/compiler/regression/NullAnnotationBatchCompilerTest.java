@@ -114,7 +114,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 	 * @see TestAll
 	 */
 	public static Test suite() {
-		return buildMinimalComplianceTestSuite(testClass(), F_1_5);
+		return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 	}
 
 	public static Class<?> testClass() {
@@ -165,7 +165,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
 			+ " -sourcepath \"" + OUTPUT_DIR + "\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -err:+nullAnnot -warn:-null -err:+nonnullNotRepeated -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
 			"----------\n" +
@@ -190,7 +190,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 
 	// -warn option - regression tests to check option nullAnnot and missingNullDefault
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=372012
-	public void test315_warn_options() {
+	public void _2551_test315_warn_options() {
 		this.runConformTest(
 			new String[] {
 					"p/package-info.java",
@@ -220,7 +220,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
 			+ " -sourcepath \"" + OUTPUT_DIR + "\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -warn:+nullAnnot -warn:+null -missingNullDefault -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
 			"",
@@ -246,7 +246,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p1" + File.separator + "X1.java\""
 			+ " -sourcepath \"" + OUTPUT_DIR + "\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -warn:+nullAnnot -warn:+null -missingNullDefault -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
 			"----------\n" +
@@ -277,7 +277,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "X1.java\""
 			+ " -sourcepath \"" + OUTPUT_DIR + "\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -warn:+nullAnnot -warn:+null -missingNullDefault -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
 			"----------\n" +
@@ -315,7 +315,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
 			+ " -sourcepath \"" + OUTPUT_DIR + "\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -warn:+nullAnnot(foo|bar) -warn:+null -nonNullByDefault -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
 			"Token nullAnnot(foo|bar) is not in the expected format \"nullAnnot(<nullable annotation name> | <non null annotation name> | <non-null by default annotation name>)\"\n",
@@ -348,7 +348,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
 			+ " -sourcepath \"" + OUTPUT_DIR + "\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -warn:+nullAnnot -warn:+null,syntacticAnalysis -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
 			"",
@@ -381,7 +381,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
 			+ " -sourcepath \"" + OUTPUT_DIR + "\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -warn:+nullAnnot -warn:-null -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
 			"----------\n" +
@@ -432,7 +432,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "Sub.java\""
 			+ " -sourcepath \"" + OUTPUT_DIR + "\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -err:+nullAnnot,+null,+inheritNullAnnot -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
 			"----------\n" +
@@ -479,7 +479,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 					"}"
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -warn:+nullAnnot(p.Nullable|p.NonNull|p.NonNullByDefault) -warn:+null -warn:-nullUncheckedConversion "
 			+ "-proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
@@ -509,7 +509,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 					"\"" + OUTPUT_DIR +  File.separator + "p2" + File.separator + "X2.java\""
 					+ " -sourcepath \"" + OUTPUT_DIR + "\""
 					+ " -classpath \"" + OUTPUT_DIR + "\""
-					+ " -1.5"
+					+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 					+ " -warn:+nullAnnot(org.eclipse.jdt.annotation.Nullable|org.eclipse.jdt.annotation.NonNull|org.eclipse.jdt.annotation.NonNullByDefault)"
 					+ " -warn:+nullAnnot(p.Nullable||p.NonNullByDefault) -warn+null -proc:none -d \"" + OUTPUT_DIR + "\"", // nonnull remains unset for secondaries
 					"",
@@ -561,7 +561,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 					"}"
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
-			+ " -1.5"
+			+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 			+ " -warn:+nullAnnot(p.Nullable|p.NonNull|p.NonNullByDefault) -warn:+null -warn:-nullUncheckedConversion "
 			+ "-proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
@@ -593,7 +593,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 				"\"" + OUTPUT_DIR +  File.separator + "p2" + File.separator + "X2.java\""
 				+ " -sourcepath \"" + OUTPUT_DIR + "\""
 				+ " -classpath \"" + OUTPUT_DIR + "\""
-				+ " -1.5"
+				+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 				+ " -warn:+nullAnnot(org.eclipse.jdt.annotation.Nullable|org.eclipse.jdt.annotation.NonNull|org.eclipse.jdt.annotation.NonNullByDefault)"
 				+ " -warn:+nullAnnot(|x.AbsentNonNull|) "
 				+ " -warn:+nullAnnot(p.Nullable||p.NonNullByDefault) "
@@ -641,7 +641,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 				},
 				"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
 				+ " -sourcepath \"" + OUTPUT_DIR + "\""
-				+ " -1.5"
+				+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 				+ " -properties " + OUTPUT_DIR + File.separator +".settings" + File.separator + "org.eclipse.jdt.core.prefs "
 				+ " -d \"" + OUTPUT_DIR + "\"",
 				"",
@@ -695,7 +695,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 				},
 				"\"" + OUTPUT_DIR +  File.separator + "p" + File.separator + "X.java\""
 				+ " -sourcepath \"" + OUTPUT_DIR + "\""
-				+ " -1.5"
+				+ " -" + CompilerOptions.getFirstSupportedJavaVersion()
 				+ " -properties " + OUTPUT_DIR + File.separator +".settings" + File.separator + "org.eclipse.jdt.core.prefs "
 				+ " -d \"" + OUTPUT_DIR + "\"",
 				"",

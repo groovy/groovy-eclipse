@@ -802,7 +802,7 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 			case -1 :
 			case TokenNameextends :
 			case TokenNameimplements :
-			case TokenNamepermits:
+			case TokenNameRestrictedIdentifierpermits:
 			case TokenNameGREATER :
 			case TokenNameRIGHT_SHIFT :
 			case TokenNameUNSIGNED_RIGHT_SHIFT :

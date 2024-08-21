@@ -22,7 +22,10 @@ import java.util.*;
 import java.util.zip.*;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
@@ -48,6 +51,7 @@ import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class Util {
@@ -217,6 +221,7 @@ private static IModule extractModuleDesc(String contents, String compliance,
 								IErrorHandlingPolicy errorHandlingPolicy, IProblemFactory problemFactory)
 {
 	Map<String,String> opts = new HashMap<>();
+	compliance = fixCompliance(compliance);
 	opts.put(CompilerOptions.OPTION_Source, compliance);
 	Parser parser = new Parser(new ProblemReporter(errorHandlingPolicy, new CompilerOptions(opts), problemFactory), false);
 	ICompilationUnit cu = new CompilationUnit(contents.toCharArray(), "module-info.java", null);
@@ -800,6 +805,7 @@ public static boolean flushDirectoryContent(File dir) {
 }
 private static Map getCompileOptions(String compliance) {
     Map options = new HashMap();
+    compliance = fixCompliance(compliance);
     options.put(CompilerOptions.OPTION_Compliance, compliance);
     options.put(CompilerOptions.OPTION_Source, compliance);
     options.put(CompilerOptions.OPTION_TargetPlatform, compliance);
@@ -812,6 +818,13 @@ private static Map getCompileOptions(String compliance) {
     options.put(CompilerOptions.OPTION_LocalVariableAttribute, CompilerOptions.GENERATE);
     options.put(CompilerOptions.OPTION_ReportRawTypeReference, CompilerOptions.IGNORE);
     return options;
+}
+
+private static String fixCompliance(String compliance) {
+	if(compliance == null || compliance.isBlank() || (compliance.startsWith("1.") && !compliance.equals("1.8") && !compliance.equals("1.9"))) {
+		throw new IllegalStateException("Unsupported compliance: '" + compliance + "'");
+    }
+	return compliance;
 }
 /**
  * Returns the next available port number on the local host.
@@ -1293,12 +1306,17 @@ private static boolean waitUntilFileDeleted(File file) {
         System.out.print("	- wait for ("+DELETE_MAX_WAIT+"ms max): ");
     }
     int count = 0;
-    int delay = 10; // ms
+    int delay = 1; // ms
     int maxRetry = DELETE_MAX_WAIT / delay;
     int time = 0;
     while (count < maxRetry) {
         try {
             count++;
+
+            // manually trigger GC to invoke Cleaner for ZipFile that is forgotten to be closed
+            // see https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2766
+            System.gc(); // workaround
+
             Thread.sleep(delay);
             time += delay;
             if (time > DELETE_MAX_TIME) DELETE_MAX_TIME = time;
@@ -1594,5 +1612,43 @@ public static long getMajorMinorVMVersion() {
 		}
 	}
 	return -1;
+}
+
+/**
+ * Discards all classpath variables and containers
+ */
+public static void cleanupClassPathVariablesAndContainers() {
+	// TODO the following code is not the correct way to remove CP containers
+	// but it was used since years...
+	JavaModelManager manager = JavaModelManager.getJavaModelManager();
+	manager.containers = new HashMap<>(5);
+	manager.variables = new HashMap<>(5);
+}
+
+/**
+ * Deletes every single project in the workspace
+ */
+public static void cleanupWorkspace(String testName) throws CoreException {
+	IWorkspace workspace = ResourcesPlugin.getWorkspace();
+	// Remove whatever left from previous tests
+	IProject[] projects = workspace.getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
+	if(projects.length > 0) {
+		System.out.println("\n\nWorkspace cleanup before " + testName);
+		System.out.println("Found following projects: " + Arrays.toString(projects));
+		for (IProject project : projects) {
+			System.out.println("Deleting project: " + project);
+			try {
+				project.delete(true, null);
+			} catch (Exception e) {
+				e.printStackTrace(System.out);
+			}
+		}
+	}
+	projects = workspace.getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
+	if(projects.length > 0) {
+		System.out.println("Still found projects: " + Arrays.toString(projects));
+	} else {
+		System.out.println("Workspace cleanup done for " + testName + "\n\n");
+	}
 }
 }

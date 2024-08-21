@@ -413,9 +413,11 @@ public final boolean canBeSeenBy(TypeBinding receiverType, InvocationSite invoca
 	return false;
 }
 
-public List<TypeBinding> collectMissingTypes(List<TypeBinding> missingTypes) {
+public List<TypeBinding> collectMissingTypes(List<TypeBinding> missingTypes, boolean considerReturnType) {
 	if ((this.tagBits & TagBits.HasMissingType) != 0) {
-		missingTypes = this.returnType.collectMissingTypes(missingTypes);
+		if (considerReturnType) {
+			missingTypes = this.returnType.collectMissingTypes(missingTypes);
+		}
 		for (TypeBinding parameter : this.parameters) {
 			missingTypes = parameter.collectMissingTypes(missingTypes);
 		}

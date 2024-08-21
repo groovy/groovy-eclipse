@@ -248,4 +248,9 @@ public class EclipseCompiler implements JavaCompiler {
 				null/* progress */).compile(arguments);
 		return succeed ? 0 : -1;
 	}
+
+	@Override
+	public String name() {
+		return "ecj"; //$NON-NLS-1$
+	}
 }

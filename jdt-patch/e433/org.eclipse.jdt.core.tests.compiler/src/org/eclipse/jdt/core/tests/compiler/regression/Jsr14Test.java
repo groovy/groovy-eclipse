@@ -29,9 +29,9 @@ public Jsr14Test(String name) {
 @Override
 protected Map getCompilerOptions() {
 	Map options = super.getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
 	return options;
 }
 // Static initializer to specify tests subset using TESTS_* static variables
@@ -42,7 +42,7 @@ static {
 //	TESTS_RANGE = new int[] { 11, -1 };
 }
 public static Test suite() {
-	return buildMinimalComplianceTestSuite(testClass(), F_1_4);
+	return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=277450
 public void test1() throws Exception {
@@ -57,27 +57,34 @@ public void test1() throws Exception {
 		},
 		"class X");
 	String expectedOutput =
-		"  // Method descriptor #18 ([Ljava/lang/String;)V\n" +
-		"  // Stack: 3, Locals: 1\n" +
-		"  public static void main(java.lang.String[] args);\n" +
-		"     0  getstatic java.lang.System.out : java.io.PrintStream [19]\n" +
-		"     3  getstatic X.class$0 : java.lang.Class [25]\n" +
-		"     6  dup\n" +
-		"     7  ifnonnull 35\n" +
-		"    10  pop\n" +
-		"    11  ldc <String \"X\"> [27]\n" +
-		"    13  invokestatic java.lang.Class.forName(java.lang.String) : java.lang.Class [28]\n" +
-		"    16  dup\n" +
-		"    17  putstatic X.class$0 : java.lang.Class [25]\n" +
-		"    20  goto 35\n" +
-		"    23  new java.lang.NoClassDefFoundError [34]\n" +
-		"    26  dup_x1\n" +
-		"    27  swap\n" +
-		"    28  invokevirtual java.lang.Throwable.getMessage() : java.lang.String [36]\n" +
-		"    31  invokespecial java.lang.NoClassDefFoundError(java.lang.String) [42]\n" +
-		"    34  athrow\n" +
-		"    35  invokevirtual java.io.PrintStream.println(java.lang.Object) : void [45]\n" +
-		"    38  return\n";
+		"""
+		// Compiled from X.java (version 1.8 : 52.0, super bit)
+		public class X {
+		 \s
+		  // Method descriptor #6 ()V
+		  // Stack: 1, Locals: 1
+		  public X();
+		    0  aload_0 [this]
+		    1  invokespecial java.lang.Object() [8]
+		    4  return
+		      Line numbers:
+		        [pc: 0, line: 1]
+		      Local variable table:
+		        [pc: 0, pc: 5] local: this index: 0 type: X
+		 \s
+		  // Method descriptor #15 ([Ljava/lang/String;)V
+		  // Stack: 2, Locals: 1
+		  public static void main(java.lang.String[] args);
+		    0  getstatic java.lang.System.out : java.io.PrintStream [16]
+		    3  ldc <Class X> [1]
+		    5  invokevirtual java.io.PrintStream.println(java.lang.Object) : void [22]
+		    8  return
+		      Line numbers:
+		        [pc: 0, line: 3]
+		        [pc: 8, line: 4]
+		      Local variable table:
+		        [pc: 0, pc: 9] local: args index: 0 type: java.lang.String[]
+		}""";
 	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 }
 public static Class testClass() {

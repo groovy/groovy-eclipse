@@ -35,7 +35,7 @@ public class ClassFileReaderTest_1_5 extends AbstractRegressionTest {
 	}
 
 	public static Test suite() {
-		return buildMinimalComplianceTestSuite(testClass(), F_1_5);
+		return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 	}
 	public static Class testClass() {
 		return ClassFileReaderTest_1_5.class;

@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class Java50Tests extends BuilderTests {
 
@@ -31,7 +32,7 @@ public class Java50Tests extends BuilderTests {
 	}
 
 	public void testAnnotation() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5");
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.setOutputFolder(projectPath, "");
 
@@ -66,7 +67,7 @@ public class Java50Tests extends BuilderTests {
 	}
 
 	public void testHierarchyCycle() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5");
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.setOutputFolder(projectPath, "");
 
@@ -86,7 +87,7 @@ public class Java50Tests extends BuilderTests {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=214237, dupe of
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=205235
 	public void testHierarchyCycleInstanceof() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5");
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.setOutputFolder(projectPath, "");
 
@@ -112,9 +113,9 @@ public class Java50Tests extends BuilderTests {
 	}
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=231293
-	public void testMissingRequiredBinaries() throws JavaModelException {
+	public void _2551_testMissingRequiredBinaries() throws JavaModelException {
 
-		IPath p1 = env.addProject("P1", "1.5"); //$NON-NLS-1$
+		IPath p1 = env.addProject("P1", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 		IPath p2 = env.addProject("P2"); //$NON-NLS-1$
 
 		env.addExternalJars(p1, Util.getJavaClassLibs());
@@ -169,7 +170,7 @@ public class Java50Tests extends BuilderTests {
 	}
 
 	public void testParameterizedMemberType() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5");
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.setOutputFolder(projectPath, "");
 
@@ -234,7 +235,7 @@ public class Java50Tests extends BuilderTests {
 	}
 
 	public void testParameterizedType1() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5");
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.setOutputFolder(projectPath, "");
 
@@ -275,7 +276,7 @@ public class Java50Tests extends BuilderTests {
 	}
 
 	public void testParameterizedType2() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5");
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.setOutputFolder(projectPath, "");
 
@@ -316,7 +317,7 @@ public class Java50Tests extends BuilderTests {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=294057
 	public void testHierarchyNonCycle() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5");
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.setOutputFolder(projectPath, "");
 
@@ -350,7 +351,7 @@ public class Java50Tests extends BuilderTests {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=294057 (variation)
 	public void testHierarchyNonCycle2() throws JavaModelException {
-		IPath projectPath = env.addProject("Project", "1.5");
+		IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.setOutputFolder(projectPath, "");
 

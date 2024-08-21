@@ -995,7 +995,7 @@ public TypeBinding resolveType(BlockScope scope) {
 			this.binding = scope.environment().updatePolymorphicMethodReturnType((PolymorphicMethodBinding) this.binding, TypeBinding.VOID);
 		}
 	}
-	if ((this.binding.tagBits & TagBits.HasMissingType) != 0) {
+	if ((this.binding.tagBits & TagBits.HasMissingType) != 0 && isMissingTypeRelevant()) {
 		scope.problemReporter().missingTypeInMethod(this, this.binding);
 	}
 	if (!this.binding.isStatic()) {
@@ -1110,6 +1110,25 @@ protected boolean isUnnecessaryReceiverCast(BlockScope scope, TypeBinding uncast
 	return otherMethod == this.binding
 			|| MethodVerifier.doesMethodOverride(this.binding, otherMethod, scope.environment())
 			|| MethodVerifier.doesMethodOverride(otherMethod, this.binding, scope.environment());
+}
+
+protected boolean isMissingTypeRelevant() {
+	if ((this.bits & ASTNode.InsideExpressionStatement) != 0) {
+		if (this.binding.collectMissingTypes(null, false) == null)
+			return false; // only irrelevant return type is missing
+	}
+	if ((this.binding.returnType.tagBits & TagBits.HasMissingType) == 0
+			&& this.binding.isVarargs()) {
+		if (this.arguments.length < this.binding.parameters.length) {
+			// are all but the irrelevant varargs type present?
+			for (int i = 0; i < this.arguments.length; i++) {
+				if ((this.binding.parameters[i].tagBits & TagBits.HasMissingType) != 0)
+					return true; // this one *is* relevant - actually this case is already detected during findMethodBinding()
+			}
+			return false;
+		}
+	}
+	return true;
 }
 
 protected TypeBinding handleNullnessCodePatterns(BlockScope scope, TypeBinding returnType) {

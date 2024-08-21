@@ -26,7 +26,6 @@ import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -36,7 +35,6 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class GenericDietRecoveryTest extends AbstractCompilerTest {
 	public static boolean optimizeStringLiterals = false;
-	public static long sourceLevel = ClassFileConstants.JDK1_3; //$NON-NLS-1$
 
 public GenericDietRecoveryTest(String testName){
 	super(testName);
@@ -44,15 +42,13 @@ public GenericDietRecoveryTest(String testName){
 static {
 //	TESTS_NAMES = new String[] { "test0025" };
 }
-/*
- * Toggle compiler in mode -1.5
- */
+
 @Override
 protected Map getCompilerOptions() {
 	Map options = super.getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
 	return options;
 }
 

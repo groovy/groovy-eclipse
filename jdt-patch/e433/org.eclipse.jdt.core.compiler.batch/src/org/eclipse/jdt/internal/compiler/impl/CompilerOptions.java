@@ -126,6 +126,7 @@ public class CompilerOptions {
 	public static final String OPTION_TaskTags = "org.eclipse.jdt.core.compiler.taskTags"; //$NON-NLS-1$
 	public static final String OPTION_TaskPriorities = "org.eclipse.jdt.core.compiler.taskPriorities"; //$NON-NLS-1$
 	public static final String OPTION_TaskCaseSensitive = "org.eclipse.jdt.core.compiler.taskCaseSensitive"; //$NON-NLS-1$
+	@Deprecated(forRemoval = true)
 	public static final String OPTION_InlineJsr = "org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode"; //$NON-NLS-1$
 	public static final String OPTION_ShareCommonFinallyBlocks = "org.eclipse.jdt.core.compiler.codegen.shareCommonFinallyBlocks"; //$NON-NLS-1$
 	public static final String OPTION_ReportNullReference = "org.eclipse.jdt.core.compiler.problem.nullReference"; //$NON-NLS-1$
@@ -516,6 +517,7 @@ public class CompilerOptions {
 	public int reportMissingJavadocCommentsVisibility;
 	/** Specify if need to flag missing javadoc comment for overriding method */
 	public boolean reportMissingJavadocCommentsOverriding;
+	@Deprecated
 	/** Indicate whether the JSR bytecode should be inlined to avoid its presence in classfile */
 	public boolean inlineJsrBytecode;
 	/** Indicate whether common escaping finally blocks should be shared */
@@ -1029,7 +1031,6 @@ public class CompilerOptions {
 	public static String[] warningOptionNames() {
 		String[] result = {
 			OPTION_ReportAnnotationSuperInterface,
-			OPTION_ReportAssertIdentifier,
 			OPTION_ReportAutoboxing,
 			OPTION_ReportComparingIdentical,
 			OPTION_ReportDeadCode,
@@ -1039,7 +1040,6 @@ public class CompilerOptions {
 			OPTION_ReportDeprecationWhenOverridingDeprecatedMethod,
 			OPTION_ReportDiscouragedReference,
 			OPTION_ReportEmptyStatement,
-			OPTION_ReportEnumIdentifier,
 			OPTION_ReportFallthroughCase,
 			OPTION_ReportFieldHiding,
 			OPTION_ReportFinallyBlockNotCompletingNormally,
@@ -1389,8 +1389,8 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportTypeParameterHiding, getSeverityString(TypeHiding));
 		optionsMap.put(OPTION_ReportPossibleAccidentalBooleanAssignment, getSeverityString(AccidentalBooleanAssign));
 		optionsMap.put(OPTION_ReportEmptyStatement, getSeverityString(EmptyStatement));
-		optionsMap.put(OPTION_ReportAssertIdentifier, getSeverityString(AssertUsedAsAnIdentifier));
-		optionsMap.put(OPTION_ReportEnumIdentifier, getSeverityString(EnumUsedAsAnIdentifier));
+		optionsMap.put(OPTION_ReportAssertIdentifier, ERROR);
+		optionsMap.put(OPTION_ReportEnumIdentifier, ERROR);
 		optionsMap.put(OPTION_ReportUndocumentedEmptyBlock, getSeverityString(UndocumentedEmptyBlock));
 		optionsMap.put(OPTION_ReportUnnecessaryTypeCheck, getSeverityString(UnnecessaryTypeCheck));
 		optionsMap.put(OPTION_ReportUnnecessaryElse, getSeverityString(UnnecessaryElse));
@@ -1447,7 +1447,6 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportUnusedParameterIncludeDocCommentReference, this.reportUnusedParameterIncludeDocCommentReference ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportSpecialParameterHidingField, this.reportSpecialParameterHidingField ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_MaxProblemPerUnit, String.valueOf(this.maxProblemsPerUnit));
-		optionsMap.put(OPTION_InlineJsr, this.inlineJsrBytecode ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ShareCommonFinallyBlocks, this.shareCommonFinallyBlocks ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportNullReference, getSeverityString(NullReference));
 		optionsMap.put(OPTION_ReportPotentialNullReference, getSeverityString(PotentialNullReference));
@@ -1596,9 +1595,12 @@ public class CompilerOptions {
 
 		// by default only lines and source attributes are generated.
 		this.produceDebugAttributes = ClassFileConstants.ATTR_SOURCE | ClassFileConstants.ATTR_LINES;
-		this.complianceLevel = this.originalComplianceLevel = ClassFileConstants.JDK1_4; // by default be compliant with 1.4
-		this.sourceLevel = this.originalSourceLevel = ClassFileConstants.JDK1_3; //1.3 source behavior by default
-		this.targetJDK = ClassFileConstants.JDK1_2; // default generates for JVM1.2
+
+		// by default be compliant with first supported version
+		final long firstSupportedJdkLevel = getFirstSupportedJdkLevel();
+		this.complianceLevel = this.originalComplianceLevel = firstSupportedJdkLevel;
+		this.sourceLevel = this.originalSourceLevel = firstSupportedJdkLevel;
+		this.targetJDK = firstSupportedJdkLevel;
 
 		this.defaultEncoding = null; // will use the platform default encoding
 
@@ -1659,7 +1661,7 @@ public class CompilerOptions {
 		this.reportMissingJavadocCommentsOverriding = false;
 
 		// JSR bytecode inlining and sharing
-		this.inlineJsrBytecode = false;
+		this.inlineJsrBytecode = true;
 		this.shareCommonFinallyBlocks = false;
 
 		// javadoc comment support
@@ -1808,7 +1810,7 @@ public class CompilerOptions {
 				}
 				this.targetJDK = level;
 			}
-			if (this.targetJDK >= ClassFileConstants.JDK1_5) this.inlineJsrBytecode = true; // forced from 1.5 mode on
+			this.inlineJsrBytecode = true; // forced from 1.5 mode on
 		}
 		if ((optionValue = optionsMap.get(OPTION_Encoding)) != null) {
 			this.defaultEncoding = null;
@@ -1896,15 +1898,6 @@ public class CompilerOptions {
 				this.isTaskCaseSensitive = false;
 			}
 		}
-		if ((optionValue = optionsMap.get(OPTION_InlineJsr)) != null) {
-			if (this.targetJDK < ClassFileConstants.JDK1_5) { // only optional if target < 1.5 (inlining on from 1.5 on)
-				if (ENABLED.equals(optionValue)) {
-					this.inlineJsrBytecode = true;
-				} else if (DISABLED.equals(optionValue)) {
-					this.inlineJsrBytecode = false;
-				}
-			}
-		}
 		if ((optionValue = optionsMap.get(OPTION_ShareCommonFinallyBlocks)) != null) {
 			if (ENABLED.equals(optionValue)) {
 				this.shareCommonFinallyBlocks = true;
@@ -1980,8 +1973,8 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_ReportPossibleAccidentalBooleanAssignment)) != null) updateSeverity(AccidentalBooleanAssign, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportEmptyStatement)) != null) updateSeverity(EmptyStatement, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportNonExternalizedStringLiteral)) != null) updateSeverity(NonExternalizedString, optionValue);
-		if ((optionValue = optionsMap.get(OPTION_ReportAssertIdentifier)) != null) updateSeverity(AssertUsedAsAnIdentifier, optionValue);
-		if ((optionValue = optionsMap.get(OPTION_ReportEnumIdentifier)) != null) updateSeverity(EnumUsedAsAnIdentifier, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportAssertIdentifier)) != null) updateSeverity(AssertUsedAsAnIdentifier, ERROR);
+		if ((optionValue = optionsMap.get(OPTION_ReportEnumIdentifier)) != null) updateSeverity(EnumUsedAsAnIdentifier, ERROR);
 		if ((optionValue = optionsMap.get(OPTION_ReportNonStaticAccessToStatic)) != null) updateSeverity(NonStaticAccessToStatic, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportIndirectStaticAccess)) != null) updateSeverity(IndirectStaticAccess, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportIncompatibleNonInheritedInterfaceMethod)) != null) updateSeverity(IncompatibleNonInheritedInterfaceMethod, optionValue);
@@ -2408,7 +2401,6 @@ public class CompilerOptions {
 		buf.append("\n\t- report unused parameter when overriding concrete method : ").append(this.reportUnusedParameterWhenOverridingConcrete ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report unused parameter include doc comment reference : ").append(this.reportUnusedParameterIncludeDocCommentReference ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report constructor/setter parameter hiding existing field : ").append(this.reportSpecialParameterHidingField ? ENABLED : DISABLED); //$NON-NLS-1$
-		buf.append("\n\t- inline JSR bytecode : ").append(this.inlineJsrBytecode ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- share common finally blocks : ").append(this.shareCommonFinallyBlocks ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report unavoidable generic type problems : ").append(this.reportUnavoidableGenericTypeProblems ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- unsafe type operation: ").append(getSeverityString(UncheckedTypeOperation)); //$NON-NLS-1$

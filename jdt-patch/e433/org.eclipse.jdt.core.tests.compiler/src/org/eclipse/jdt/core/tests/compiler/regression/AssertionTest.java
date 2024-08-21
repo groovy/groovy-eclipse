@@ -31,7 +31,7 @@ public class AssertionTest extends AbstractRegressionTest {
 	}
 
 	public static Test suite() {
-		return buildMinimalComplianceTestSuite(testClass(), F_1_4);
+		return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 	}
 
 	public static Class testClass() {

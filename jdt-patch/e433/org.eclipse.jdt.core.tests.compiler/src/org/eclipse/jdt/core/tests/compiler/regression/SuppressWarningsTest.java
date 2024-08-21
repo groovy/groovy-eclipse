@@ -25,7 +25,7 @@ public class SuppressWarningsTest extends AbstractBatchCompilerTest {
 	}
 
 	public static Test suite() {
-		return buildMinimalComplianceTestSuite(testClass(), F_1_5);
+		return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 	}
 
 	public static Class testClass() {
@@ -43,6 +43,7 @@ public class SuppressWarningsTest extends AbstractBatchCompilerTest {
 	}
 
 	public void testSimpleSuppressWarnings() {
+		String firstSupportedVersion = CompilerOptions.getFirstSupportedJavaVersion();
 		this.runTest(true,
 			new String[] {
 				"p/SuppressTest.java",
@@ -56,12 +57,13 @@ public class SuppressWarningsTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p/SuppressTest.java\""
 			+ " -warn:+unused -warn:+boxing "
-			+ " -1.5 -g -preserveAllLocals"
+			+ " -" + firstSupportedVersion + " -g -preserveAllLocals"
 			+ " -d \"" + OUTPUT_DIR + "\" ",
 			"", "", true, null);
 	}
 
 	public void testNestedSuppressWarnings() {
+		String firstSupportedVersion = CompilerOptions.getFirstSupportedJavaVersion();
 		this.runTest(true,
 			new String[] {
 				"p/SuppressTest.java",
@@ -77,12 +79,13 @@ public class SuppressWarningsTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p/SuppressTest.java\""
 			+ " -warn:+unused -warn:+boxing "
-			+ " -1.5 -g -preserveAllLocals"
+			+ " -" + firstSupportedVersion + " -g -preserveAllLocals"
 			+ " -d \"" + OUTPUT_DIR + "\" ",
 			"", "", true, null);
 	}
 
 	public void testUnrelatedSuppressWarnings() {
+		String firstSupportedVersion = CompilerOptions.getFirstSupportedJavaVersion();
 		this.runTest(true,
 			new String[] {
 				"p/SuppressTest.java",
@@ -97,7 +100,7 @@ public class SuppressWarningsTest extends AbstractBatchCompilerTest {
 			},
 			"\"" + OUTPUT_DIR +  File.separator + "p/SuppressTest.java\""
 			+ " -warn:+unused -warn:+boxing "
-			+ " -1.5 -g -preserveAllLocals"
+			+ " -" + firstSupportedVersion + " -g -preserveAllLocals"
 			+ " -d \"" + OUTPUT_DIR + "\" ",
 			"",
 			"----------\n" +

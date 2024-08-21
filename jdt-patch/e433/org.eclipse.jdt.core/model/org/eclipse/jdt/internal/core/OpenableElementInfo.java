@@ -42,20 +42,43 @@ public class OpenableElementInfo extends JavaElementInfo {
 	 */
 	protected Object[] nonJavaResources;
 
-	public void addChild(IJavaElement child) {
+	public void addChild(final IJavaElement child) {
 		IJavaElement[] oldChildren = this.children;
 		int length = oldChildren.length;
 		if (length == 0) {
-			this.children = new IJavaElement[] {child};
+			synchronized (this) {
+				if (oldChildren == this.children) {
+					this.children = new IJavaElement[] {child};
+				} else {
+					// try again, holding a lock
+					addChild(child);
+				}
+			}
 		} else {
 			for (int i = 0; i < length; i++) {
-				if (oldChildren[i].equals(child))
-					return; // already included
+				if (oldChildren[i].equals(child)) {
+					synchronized (this) {
+						if (oldChildren == this.children){
+							return; // already included
+						} else {
+							// try again, holding a lock
+							addChild(child);
+							return;
+						}
+					}
+				}
 			}
 			IJavaElement[] newChildren = new IJavaElement[length+1];
 			System.arraycopy(oldChildren, 0, newChildren, 0, length);
 			newChildren[length] = child;
-			this.children = newChildren;
+			synchronized (this) {
+				if (oldChildren == this.children) {
+					this.children = newChildren;
+				} else {
+					// try again, holding a lock
+					addChild(child);
+				}
+			}
 		}
 	}
 
@@ -71,18 +94,34 @@ public class OpenableElementInfo extends JavaElementInfo {
 		return this.isStructureKnown;
 	}
 
-	public void removeChild(IJavaElement child) {
+	public void removeChild(final IJavaElement child) {
 		IJavaElement[] oldChildren = this.children;
 		for (int i = 0, length = oldChildren.length; i < length; i++) {
 			if (oldChildren[i].equals(child)) {
 				if (length == 1) {
-					this.children = JavaElement.NO_ELEMENTS;
+					synchronized (this) {
+						if (oldChildren == this.children) {
+							this.children = JavaElement.NO_ELEMENTS;
+						} else {
+							// try again, holding a lock
+							removeChild(child);
+							return;
+						}
+					}
 				} else {
 					IJavaElement[] newChildren = new IJavaElement[length-1];
 					System.arraycopy(oldChildren, 0, newChildren , 0, i);
 					if (i < length-1)
 						System.arraycopy(oldChildren, i+1, newChildren, i, length-1-i);
-					this.children = newChildren;
+					synchronized (this) {
+						if (oldChildren == this.children) {
+							this.children = newChildren;
+						} else {
+							// try again, holding a lock
+							removeChild(child);
+							return;
+						}
+					}
 				}
 				break;
 			}
@@ -90,7 +129,9 @@ public class OpenableElementInfo extends JavaElementInfo {
 	}
 
 	public void setChildren(IJavaElement[] children) {
-		this.children= (children.length > 0) ? children : JavaElement.NO_ELEMENTS;
+		synchronized (this) {
+			this.children= (children.length > 0) ? children : JavaElement.NO_ELEMENTS;
+		}
 	}
 
 	public void setModule(IModuleDescription module) {

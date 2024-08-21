@@ -64,6 +64,14 @@
 	schema="schema/compilationParticipant.exsd"/>
 
 <!-- =================================================================================== -->
+<!-- Extension Point: Compilation Unit Resolver                                            -->
+<!-- =================================================================================== -->
+
+<extension-point name="%compilationUnitResolverName" 
+	id="compilationUnitResolver"
+	schema="schema/compilationUnitResolver.exsd"/>
+
+<!-- =================================================================================== -->
 <!-- Extension Point: Java 6 Annotation Processor Manager                                -->
 <!-- =================================================================================== -->
 

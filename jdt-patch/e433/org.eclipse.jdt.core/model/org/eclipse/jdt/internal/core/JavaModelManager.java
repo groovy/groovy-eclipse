@@ -466,7 +466,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		@Override
 		public boolean belongsTo(Object family) {
-			return ResourcesPlugin.FAMILY_MANUAL_REFRESH == family;
+			return ResourcesPlugin.FAMILY_MANUAL_REFRESH == family || JavaModelManager.class == family;
 		}
 	}
 
@@ -1359,34 +1359,31 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		static final IJavaModelStatus NEED_RESOLUTION = new JavaModelStatus();
 
-		public IProject project;
-		public Object savedState;
-		public boolean triedRead;
-		public IClasspathEntry[] rawClasspath;
-		public IClasspathEntry[] referencedEntries;
-		public IJavaModelStatus rawClasspathStatus;
-		public int rawTimeStamp = 0;
-		public boolean writtingRawClasspath = false;
-		public IClasspathEntry[] resolvedClasspath;
-		public IJavaModelStatus unresolvedEntryStatus;
-		public Map<IPath, IClasspathEntry> rootPathToRawEntries; // reverse map from a package fragment root's path to the raw entry
-		public Map<IPath, IClasspathEntry> rootPathToResolvedEntries; // map from a package fragment root's path to the resolved entry
-		public IPath outputLocation;
-		public Map<IPath, ObjectVector> jrtRoots; // A map between a JRT file system (as a string) and the package fragment roots found in it.
+		public final IProject project;
+		public volatile Object savedState;
+		public volatile boolean triedRead;
+		public volatile IClasspathEntry[] rawClasspath;
+		public volatile IClasspathEntry[] referencedEntries;
+		public volatile IJavaModelStatus rawClasspathStatus;
+		public volatile int rawTimeStamp;
+		public volatile boolean writtingRawClasspath;
+		public volatile IClasspathEntry[] resolvedClasspath;
+		public volatile IJavaModelStatus unresolvedEntryStatus;
+		public volatile Map<IPath, IClasspathEntry> rootPathToRawEntries; // reverse map from a package fragment root's path to the raw entry
+		private Map<IPath, IClasspathEntry> rootPathToResolvedEntries; // map from a package fragment root's path to the resolved entry
+		public volatile IPath outputLocation;
+		public volatile Map<IPath, ObjectVector> jrtRoots; // A map between a JRT file system (as a string) and the package fragment roots found in it.
 
-		public IEclipsePreferences preferences;
-		public Hashtable<String, String> options;
+		public volatile IEclipsePreferences preferences;
+		public volatile Hashtable<String, String> options;
 
 		private final SecondaryTypes secondaryTypes;
 
 		// NB: PackageFragment#getAttachedJavadoc uses this map differently
 		// and stores String data, not JavadocContents as values
-		public LRUCache<IJavaElement, Object> javadocCache;
+		public volatile LRUCache<IJavaElement, Object> javadocCache;
 
 		public PerProjectInfo(IProject project) {
-
-			this.triedRead = false;
-			this.savedState = null;
 			this.project = project;
 			this.javadocCache = new LRUCache<>(JAVADOC_CACHE_INITIAL_SIZE);
 			this.secondaryTypes = new SecondaryTypes();
@@ -1396,6 +1393,14 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			if (this.unresolvedEntryStatus == NEED_RESOLUTION)
 				return null;
 			return this.resolvedClasspath;
+		}
+
+		public synchronized Map<IPath, IClasspathEntry> getRootPathToResolvedEntries() {
+			Map<IPath, IClasspathEntry> entries = this.rootPathToResolvedEntries;
+			if (entries == null) {
+				return Map.of();
+			}
+			return entries;
 		}
 
 		public void forgetExternalTimestampsAndIndexes() {
@@ -1455,16 +1460,18 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			}
 			ClasspathChange classpathChange = addClasspathChange ? addClasspathChange() : null;
 
-			if (referencedEntries != null)	this.referencedEntries = referencedEntries;
-			if (this.referencedEntries == null) this.referencedEntries = ClasspathEntry.NO_ENTRIES;
-			this.rawClasspath = newRawClasspath;
-			this.outputLocation = newOutputLocation;
-			this.rawClasspathStatus = newRawClasspathStatus;
-			this.resolvedClasspath = newResolvedClasspath;
-			this.rootPathToRawEntries = newRootPathToRawEntries;
-			this.rootPathToResolvedEntries = newRootPathToResolvedEntries;
-			this.unresolvedEntryStatus = newUnresolvedEntryStatus;
-			this.javadocCache = new LRUCache<>(JAVADOC_CACHE_INITIAL_SIZE);
+			synchronized (this) {
+				if (referencedEntries != null)	this.referencedEntries = referencedEntries;
+				if (this.referencedEntries == null) this.referencedEntries = ClasspathEntry.NO_ENTRIES;
+				this.rawClasspath = newRawClasspath;
+				this.outputLocation = newOutputLocation;
+				this.rawClasspathStatus = newRawClasspathStatus;
+				this.resolvedClasspath = newResolvedClasspath;
+				this.rootPathToRawEntries = newRootPathToRawEntries;
+				this.rootPathToResolvedEntries = newRootPathToResolvedEntries;
+				this.unresolvedEntryStatus = newUnresolvedEntryStatus;
+				this.javadocCache = new LRUCache<>(JAVADOC_CACHE_INITIAL_SIZE);
+			}
 
 			return classpathChange;
 		}
@@ -2231,7 +2238,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				continue;
 
 			IClasspathEntry persistedEntry = null;
-			if ((persistedEntry = perProjectInfo.rootPathToResolvedEntries.get(referencedEntries[index].getPath())) != null) {
+			Map<IPath, IClasspathEntry> rootPathToResolvedEntries = perProjectInfo.getRootPathToResolvedEntries();
+			if ((persistedEntry = rootPathToResolvedEntries.get(referencedEntries[index].getPath())) != null) {
 				// TODO: reconsider this - may want to copy the values instead of reference assignment?
 				referencedEntries[index] = persistedEntry;
 			}

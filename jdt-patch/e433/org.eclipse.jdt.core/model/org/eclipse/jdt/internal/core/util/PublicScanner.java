@@ -197,7 +197,7 @@ public class PublicScanner implements IScanner, ITerminalSymbols {
 			case TerminalTokens.TokenNameRIGHT_SHIFT_EQUAL : nextToken = ITerminalSymbols.TokenNameRIGHT_SHIFT_EQUAL; break;
 			case TerminalTokens.TokenNameRPAREN : nextToken = ITerminalSymbols.TokenNameRPAREN; break;
 			case TerminalTokens.TokenNameRestrictedIdentifierYield : nextToken = ITerminalSymbols.TokenNameRestrictedIdentifierYield; break;
-			case TerminalTokens.TokenNamepermits : nextToken = ITerminalSymbols.TokenNameRestrictedIdentifierpermits; break;
+			case TerminalTokens.TokenNameRestrictedIdentifierpermits : nextToken = ITerminalSymbols.TokenNameRestrictedIdentifierpermits; break;
 			case TerminalTokens.TokenNameRestrictedIdentifierrecord : nextToken = ITerminalSymbols.TokenNameRestrictedIdentifierrecord; break;
 			case TerminalTokens.TokenNameRestrictedIdentifiersealed : nextToken = ITerminalSymbols.TokenNameRestrictedIdentifiersealed; break;
 			case TerminalTokens.TokenNameSEMICOLON : nextToken = ITerminalSymbols.TokenNameSEMICOLON; break;

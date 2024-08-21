@@ -42,7 +42,7 @@ static {
 //	TESTS_RANGE = new int[] { 11, -1 };
 }
 public static Test suite() {
-	return buildMinimalComplianceTestSuite(testClass(), F_1_5);
+	return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=277450
 public void test1() {

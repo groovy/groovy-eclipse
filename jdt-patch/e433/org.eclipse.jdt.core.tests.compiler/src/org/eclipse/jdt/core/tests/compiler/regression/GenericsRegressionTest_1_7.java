@@ -38,7 +38,7 @@ public GenericsRegressionTest_1_7(String name) {
 	super(name);
 }
 public static Test suite() {
-	return buildMinimalComplianceTestSuite(testClass(), F_1_7);
+	return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 }
 public void test001() {
 	this.runConformTest(
@@ -2597,66 +2597,7 @@ public void test0059() {
 		false,
 		customOptions);
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=351965
-public void test0060() {
-	Map customOptions = getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
-	this.runNegativeTest(
-		new String[] {
-			"X.java",
-			"import java.util.ArrayList;\n" +
-			"import java.util.List;\n" +
-			"\n" +
-			"public class X {\n" +
-			"	 public void foo() {\n" +
-			"    	new ArrayList<>();\n" +
-			"	 }\n" +
-			"}\n"
-		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 6)\n" +
-		"	new ArrayList<>();\n" +
-		"	    ^^^^^^^^^\n" +
-		"\'<>\' operator is not allowed for source level below 1.7\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 6)\n" +
-		"	new ArrayList<>();\n" +
-		"	    ^^^^^^^^^\n" +
-		"Incorrect number of arguments for type ArrayList<E>; it cannot be parameterized with arguments <>\n" +
-		"----------\n",
-		null,
-		false,
-		customOptions);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=351965
-public void test0060a() {
-	Map customOptions = getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
-	this.runNegativeTest(
-		new String[] {
-			"X.java",
-			"\n" +
-			"public class X {\n" +
-			"	 public void foo() {\n" +
-			"    	new java.util.ArrayList<>();\n" +
-			"	 }\n" +
-			"}\n"
-		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 4)\n" +
-		"	new java.util.ArrayList<>();\n" +
-		"	    ^^^^^^^^^^^^^^^^^^^\n" +
-		"\'<>\' operator is not allowed for source level below 1.7\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 4)\n" +
-		"	new java.util.ArrayList<>();\n" +
-		"	    ^^^^^^^^^^^^^^^^^^^\n" +
-		"Incorrect number of arguments for type ArrayList<E>; it cannot be parameterized with arguments <>\n" +
-		"----------\n",
-		null,
-		false,
-		customOptions);
-}
+
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=361441
 public void test0061() {
 	this.runNegativeTest(

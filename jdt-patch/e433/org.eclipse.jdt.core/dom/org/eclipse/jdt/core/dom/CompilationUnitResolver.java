@@ -50,7 +50,6 @@ import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
@@ -79,13 +78,60 @@ import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.SourceRefElement;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
+import org.eclipse.jdt.internal.core.dom.ICompilationUnitResolver;
 import org.eclipse.jdt.internal.core.util.BindingKeyResolver;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.DOMFinder;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-// GROOVY package->public
-public class CompilationUnitResolver extends Compiler {
+public // GROOVY add
+class CompilationUnitResolver extends Compiler {
+
+	private static final class ECJCompilationUnitResolver implements ICompilationUnitResolver {
+
+		@Override
+		public void resolve(String[] sourceFilePaths, String[] encodings, String[] bindingKeys,
+				FileASTRequestor requestor, int apiLevel, Map<String, String> compilerOptions, List<Classpath> classpath,
+				int flags, IProgressMonitor monitor) {
+			CompilationUnitResolver.resolve(sourceFilePaths, encodings, bindingKeys, requestor, apiLevel, compilerOptions, classpath, flags, monitor);
+		}
+
+		@Override
+		public void parse(ICompilationUnit[] compilationUnits, ASTRequestor requestor, int apiLevel,
+				Map<String, String> compilerOptions, int flags, IProgressMonitor monitor) {
+			CompilationUnitResolver.parse(compilationUnits, requestor, apiLevel, compilerOptions, flags, monitor);
+		}
+
+		@Override
+		public void parse(String[] sourceFilePaths, String[] encodings, FileASTRequestor requestor, int apiLevel,
+				Map<String, String> compilerOptions, int flags, IProgressMonitor monitor) {
+			CompilationUnitResolver.parse(sourceFilePaths, encodings, requestor, apiLevel, compilerOptions, flags, monitor);
+		}
+
+		@Override
+		public void resolve(ICompilationUnit[] compilationUnits, String[] bindingKeys, ASTRequestor requestor,
+				int apiLevel, Map<String, String> compilerOptions, IJavaProject project,
+				WorkingCopyOwner workingCopyOwner, int flags, IProgressMonitor monitor) {
+			CompilationUnitResolver.resolve(compilationUnits, bindingKeys, requestor, apiLevel, compilerOptions, project, workingCopyOwner, flags, monitor);
+		}
+
+		@Override
+		public CompilationUnit toCompilationUnit(org.eclipse.jdt.internal.compiler.env.ICompilationUnit sourceUnit, final boolean initialNeedsToResolveBinding, IJavaProject project, List<Classpath> classpaths, int focalPosition,
+			int apiLevel, Map<String, String> compilerOptions, WorkingCopyOwner parsedUnitWorkingCopyOwner, WorkingCopyOwner typeRootWorkingCopyOwner, int flags, IProgressMonitor monitor) {
+			return CompilationUnitResolver.toCompilationUnit(sourceUnit, initialNeedsToResolveBinding, project,
+					classpaths, focalPosition == -1 ? null : new NodeSearcher(focalPosition), apiLevel, compilerOptions, parsedUnitWorkingCopyOwner, typeRootWorkingCopyOwner, flags, monitor);
+		}
+	}
+
+	private static ECJCompilationUnitResolver FACADE;
+	public static synchronized ICompilationUnitResolver getInstance() {
+		if (FACADE == null) {
+			FACADE = new ECJCompilationUnitResolver();
+		}
+		return FACADE;
+	}
+
+
 	public static final int RESOLVE_BINDING = 0x1;
 	public static final int PARTIAL = 0x2;
 	public static final int STATEMENT_RECOVERY = 0x4;
@@ -344,7 +390,7 @@ public class CompilationUnitResolver extends Compiler {
 		long sourceLevel = CompilerOptions.versionToJdkLevel(sourceModeSetting);
 		if (sourceLevel == 0) {
 			// unknown sourceModeSetting
-			sourceLevel = ClassFileConstants.JDK1_3;
+			sourceLevel = CompilerOptions.getFirstSupportedJdkLevel();
 		}
 		ast.scanner.sourceLevel = sourceLevel;
 		String compliance = (String) options.get(JavaCore.COMPILER_COMPLIANCE);
@@ -1447,6 +1493,62 @@ public class CompilationUnitResolver extends Compiler {
 			verifyMethods,
 			analyzeCode,
 			generateCode);
+	}
+
+	public static CompilationUnit toCompilationUnit(org.eclipse.jdt.internal.compiler.env.ICompilationUnit sourceUnit, final boolean initialNeedsToResolveBinding, IJavaProject project, List<Classpath> classpaths, NodeSearcher nodeSearcher,
+			int apiLevel, Map<String, String> compilerOptions, WorkingCopyOwner parsedUnitWorkingCopyOwner, WorkingCopyOwner typeRootWorkingCopyOwner, int flags, IProgressMonitor monitor) {
+		// this -> astParser, pass as args
+		CompilationUnitDeclaration compilationUnitDeclaration = null;
+		boolean needsToResolveBindingsState = initialNeedsToResolveBinding;
+		try {
+			if (initialNeedsToResolveBinding) {
+				try {
+					// parse and resolve
+					compilationUnitDeclaration =
+						CompilationUnitResolver.resolve(
+							sourceUnit,
+							project,
+							classpaths,
+							nodeSearcher,
+							compilerOptions,
+							parsedUnitWorkingCopyOwner,
+							flags,
+							monitor);
+				} catch (JavaModelException e) {
+					flags &= ~ICompilationUnit.ENABLE_BINDINGS_RECOVERY;
+					compilationUnitDeclaration = CompilationUnitResolver.parse(
+							sourceUnit,
+							nodeSearcher,
+							compilerOptions,
+							flags);
+					needsToResolveBindingsState = false;
+				}
+			} else {
+				compilationUnitDeclaration = CompilationUnitResolver.parse(
+						sourceUnit,
+						nodeSearcher,
+						compilerOptions,
+						flags,
+						project);
+				needsToResolveBindingsState = false;
+			}
+			return CompilationUnitResolver.convert(
+				compilationUnitDeclaration,
+				sourceUnit.getContents(),
+				apiLevel,
+				compilerOptions,
+				needsToResolveBindingsState,
+				typeRootWorkingCopyOwner,
+				needsToResolveBindingsState ? new DefaultBindingResolver.BindingTables() : null,
+				flags,
+				monitor,
+				project != null,
+				project);
+		} finally {
+			if (compilationUnitDeclaration != null && initialNeedsToResolveBinding) {
+				compilationUnitDeclaration.cleanUp();
+			}
+		}
 	}
 
 	private void worked(int work) {

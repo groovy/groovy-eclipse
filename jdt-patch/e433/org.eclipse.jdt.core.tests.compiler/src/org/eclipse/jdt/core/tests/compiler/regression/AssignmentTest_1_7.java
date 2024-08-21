@@ -42,7 +42,7 @@ static {
 //	TESTS_RANGE = new int[] { 11, -1 };
 }
 public static Test suite() {
-	return buildMinimalComplianceTestSuite(testClass(), F_1_7);
+	return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 }
 /*
  * no effect assignment bug

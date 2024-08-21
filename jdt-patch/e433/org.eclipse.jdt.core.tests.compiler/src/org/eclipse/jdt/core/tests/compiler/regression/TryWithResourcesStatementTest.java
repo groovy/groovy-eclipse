@@ -36,7 +36,7 @@ public TryWithResourcesStatementTest(String name) {
 	super(name);
 }
 public static Test suite() {
-	return buildMinimalComplianceTestSuite(testClass(), F_1_7);
+	return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 }
 // Test resource type related errors
 public void test001() {
@@ -3149,45 +3149,7 @@ public void test048() {
 		"Suppressed: java.lang.Exception: A::~A\n" +
 		"All done");
 }
-//ensure that it doesn't completely fail when using TWR and 1.5 mode
-public void test049() {
-	Runner runner = new Runner();
-	runner.customOptions = getCompilerOptions();
-	runner.customOptions.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-	runner.customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	runner.customOptions.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
-	runner.testFiles =
-		new String[] {
-			"X.java",
-			"import java.io.File;\n" +
-			"import java.io.FileReader;\n" +
-			"import java.io.IOException;\n" +
-			"public class X {\n" +
-			"    void foo() {\n" +
-			"        File file = new File(\"somefile\");\n" +
-			"        try(FileReader fileReader = new FileReader(file);) {\n" +
-			"            char[] in = new char[50];\n" +
-			"            fileReader.read(in);\n" +
-			"        } catch (IOException e) {\n" +
-			"            System.out.println(\"Got IO exception\");\n" +
-			"        } finally{\n" +
-			"        }\n" +
-			"    }\n" +
-			"    public static void main(String[] args) {\n" +
-			"        new X().foo();\n" +
-			"    }\n" +
-			"}\n"
-		};
-	runner.expectedCompilerLog =
-		"----------\n" +
-		"1. ERROR in X.java (at line 7)\n" +
-		"	try(FileReader fileReader = new FileReader(file);) {\n" +
-		"	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Resource specification not allowed here for source level below 1.7\n" +
-		"----------\n";
-	runner.javacTestOptions = JavacTestOptions.forRelease("5");
-	runner.runNegativeTest();
-}
+
 public void test050() {
 	this.runConformTest(
 		new String[] {
@@ -3256,37 +3218,7 @@ public void test051() {
 		},
 		"File = X.java line = 8");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=348406
-public void test052() {
-	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
-	this.runNegativeTest(
-		new String[] {
-			"X.java",
-			"public class X {\n" +
-					"    public static void main(String[] args) throws Throwable {\n" +
-					"        try (Test t = new Test()) {\n" +
-					"        } \n" +
-					"    }\n" +
-					"}\n" +
-					"class Test {\n" +
-					"    public void close() throws Exception {\n" +
-					"        throw new Exception();\n" +
-					"    }\n" +
-					"}\n"
-		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 3)\n" +
-		"	try (Test t = new Test()) {\n" +
-		"	     ^^^^^^^^^^^^^^^^^^^\n" +
-		"Resource specification not allowed here for source level below 1.7\n" +
-		"----------\n",
-		null,
-		true,
-		options);
-}
+
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=348705
 // Unhandled exception due to autoclose should be reported separately
 public void test053() {

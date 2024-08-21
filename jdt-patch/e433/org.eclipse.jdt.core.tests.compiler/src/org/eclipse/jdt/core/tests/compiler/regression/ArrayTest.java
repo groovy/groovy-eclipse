@@ -23,8 +23,6 @@ import junit.framework.Test;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class ArrayTest extends AbstractRegressionTest {
@@ -247,10 +245,6 @@ public void test010() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=148807 - variation
 public void test011() throws Exception {
-	if (new CompilerOptions(getCompilerOptions()).complianceLevel < ClassFileConstants.JDK1_5) {
-		// there is a bug on 1.4 VMs which make them fail verification (see 148807)
-		return;
-	}
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -311,10 +305,6 @@ public void test011() throws Exception {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=148807 - variation
 public void test012() throws Exception {
-	if (new CompilerOptions(getCompilerOptions()).complianceLevel < ClassFileConstants.JDK1_5) {
-		// there is a bug on 1.4 VMs which make them fail verification (see 148807)
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -403,16 +393,10 @@ public void test013() {
 		"argument cannot be resolved to a variable\n" +
 		"----------\n");
 }
-//https://bugs.eclipse.org/bugs/show_bug.cgi?id=247307
 // Check return type of array#clone()
 public void test014() throws Exception {
 	Map optionsMap = getCompilerOptions();
-	CompilerOptions options = new CompilerOptions(optionsMap);
-	if (options.complianceLevel > ClassFileConstants.JDK1_4) {
-		// check that #clone() return type is changed ONLY from -source 1.5 only (independant from compliance level)
-		optionsMap.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
-	}
-	this.runNegativeTest(
+	this.runConformTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -421,22 +405,12 @@ public void test014() throws Exception {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	long[] other = longs.clone();\n" +
-			"	               ^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from Object to long[]\n" +
-			"----------\n",
-			null,
-			true,
+			"",
 			optionsMap);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=247307 - variation
 //Check return type of array#clone()
 public void test015() throws Exception {
-	if ( new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -469,18 +443,8 @@ public void test016() throws Exception {
 			"\n",
 			ClassFileBytesDisassembler.DETAILED);
 
-	String expectedOutput =	new CompilerOptions(getCompilerOptions()).sourceLevel <= ClassFileConstants.JDK1_4
-		?	"  // Method descriptor #15 ([J)V\n" +
-			"  // Stack: 1, Locals: 3\n" +
-			"  void foo(long[] longs) throws java.lang.Exception;\n" +
-			"    0  aload_1 [longs]\n" +
-			"    1  invokevirtual java.lang.Object.clone() : java.lang.Object [19]\n" +
-			"    4  astore_2 [other]\n" +
-			"    5  return\n" +
-			"      Line numbers:\n" +
-			"        [pc: 0, line: 3]\n" +
-			"        [pc: 5, line: 4]\n"
-		:	"  // Method descriptor #15 ([J)V\n" +
+	String expectedOutput =
+			"  // Method descriptor #15 ([J)V\n" +
 			"  // Stack: 1, Locals: 3\n" +
 			"  void foo(long[] longs) throws java.lang.Exception;\n" +
 			"    0  aload_1 [longs]\n" +
@@ -501,15 +465,9 @@ public void test016() throws Exception {
 	return;
 }
 
-//https://bugs.eclipse.org/bugs/show_bug.cgi?id=247307 - variation
 //Check constant pool declaring class of array#clone()
 public void test017() throws Exception {
 	Map optionsMap = getCompilerOptions();
-	CompilerOptions options = new CompilerOptions(optionsMap);
-	if (options.complianceLevel > ClassFileConstants.JDK1_4) {
-		// check that #clone() return type is changed ONLY from -source 1.5 only (independant from compliance level)
-		optionsMap.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
-	}
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -538,7 +496,7 @@ public void test017() throws Exception {
 		"  // Stack: 1, Locals: 3\n" +
 		"  void foo(long[] longs) throws java.lang.Exception;\n" +
 		"    0  aload_1 [longs]\n" +
-		"    1  invokevirtual java.lang.Object.clone() : java.lang.Object [19]\n" +
+		"    1  invokevirtual long[].clone() : java.lang.Object [19]\n" +
 		"    4  astore_2 [other]\n" +
 		"    5  return\n" +
 		"      Line numbers:\n" +
@@ -556,8 +514,6 @@ public void test017() throws Exception {
 
 // https://bugs.eclipse.org/331872 -  [compiler] NPE in Scope.createArrayType when attempting qualified access from type parameter
 public void test018() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	this.runNegativeTest(
 		new String[] {
 			"X.java",

@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings("rawtypes")
 public class PackageInfoTest extends BuilderTests {
@@ -52,7 +53,7 @@ public static Test suite() {
 	return buildTestSuite(PackageInfoTest.class);
 }
 public void test001() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -95,7 +96,7 @@ public void test001() throws JavaModelException {
 	assertSourceEquals("Different messages", expectedOutput, stringWriter.toString());
 }
 public void test002() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -147,7 +148,7 @@ public void test002() throws JavaModelException {
 	executeClass(projectPath, "testcase.Main", "@testcase.TestAnnotation()@testcase.TestAnnotation()", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 }
 public void test003() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -170,7 +171,7 @@ public void test003() throws JavaModelException {
 // test for bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=252555 : NPE
 // on duplicate package-info
 public void test004() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -209,7 +210,7 @@ public void test004() throws JavaModelException {
 // test for bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=258145 : JME
 // on duplicate package-info
 public void test258145() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion()); //$NON-NLS-1$
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -251,7 +252,7 @@ public void test258145() throws JavaModelException {
 // (NPE upon creation/deletion of package-info.java in default package)
 public void test323785 () throws JavaModelException {
 
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -273,7 +274,7 @@ public void test323785 () throws JavaModelException {
 // verify that changes to package info containing secondary types do trigger incremental build.
 public void test323785a () throws JavaModelException {
 
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -301,7 +302,7 @@ public void test323785a () throws JavaModelException {
 // test when the package-info is added with the default annotation, the problem disappears
 public void testBug372012() throws JavaModelException {
 
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -358,7 +359,7 @@ public void testBug372012() throws JavaModelException {
 // test when the the default annotations are added to all top level types, the problem stays
 public void testBug372012a() throws JavaModelException {
 
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -417,7 +418,7 @@ public void testBug372012a() throws JavaModelException {
 // test when the the default annotations is added to only 1 top level type, the problem stays
 public void testBug372012b() throws JavaModelException {
 
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -475,7 +476,7 @@ public void testBug372012b() throws JavaModelException {
 // test when the the default annotation is removed from package-info, the problem comes back
 public void testBug372012c() throws JavaModelException {
 
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -551,7 +552,7 @@ public void testBug367836() throws JavaModelException {
 // verify that markers are created on the correct resource
 public void testBug374063() throws JavaModelException {
 
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -595,7 +596,7 @@ public void testBug374063() throws JavaModelException {
 }
 // 382960
 public void testBug382960() throws JavaModelException, CoreException {
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -647,7 +648,7 @@ public void testBug382960() throws JavaModelException, CoreException {
 // package fragments in all source folders are removed.
 public void testBug525469() throws JavaModelException {
 
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
@@ -710,7 +711,7 @@ public void testBug525469() throws JavaModelException {
 // [BUG] Syntax error, modifiers are not allowed here on a @deprecated javadoc tag in package-info.java
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=569780
 public void testIssue803() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 	IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
@@ -736,7 +737,7 @@ public void testIssue803() throws JavaModelException {
 // [BUG] Syntax error, modifiers are not allowed here on a @deprecated javadoc tag in package-info.java
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=569780
 public void testIssue803_2() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 	IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
@@ -761,7 +762,7 @@ public void testIssue803_2() throws JavaModelException {
 // [BUG] Syntax error, modifiers are not allowed here on a @deprecated javadoc tag in package-info.java
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=569780
 public void testIssue803_3() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 	IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
@@ -784,7 +785,7 @@ public void testIssue803_3() throws JavaModelException {
 // [BUG] Syntax error, modifiers are not allowed here on a @deprecated javadoc tag in package-info.java
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=569780
 public void testIssue803_4() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 	IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
@@ -810,7 +811,7 @@ public void testIssue803_4() throws JavaModelException {
 // [BUG] Syntax error, modifiers are not allowed here on a @deprecated javadoc tag in package-info.java
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=569780
 public void testIssue803_5() throws JavaModelException {
-	IPath projectPath = env.addProject("Project", "1.5");
+	IPath projectPath = env.addProject("Project", CompilerOptions.getFirstSupportedJavaVersion());
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 	IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$

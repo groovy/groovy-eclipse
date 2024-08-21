@@ -1620,7 +1620,12 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	@Override
 	public boolean visit(TypePattern node) {
 		if (DOMASTUtil.isPatternSupported(node.getAST())) {
-			node.getPatternVariable().accept(this);
+			if(node.getAST().apiLevel() < AST.JLS22) {
+				node.getPatternVariable().accept(this);
+			} else {
+				node.getPatternVariable2().accept(this);
+			}
+
 		}
 		return false;
 	}

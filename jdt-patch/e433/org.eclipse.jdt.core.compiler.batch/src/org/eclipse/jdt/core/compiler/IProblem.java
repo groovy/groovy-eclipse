@@ -2183,6 +2183,8 @@ void setSourceStart(int sourceStart);
 	int FeatureNotSupported = Compliance + 1107;
 	/** @since 3.26*/
 	int PreviewAPIUsed = Compliance + 1108;
+	/** @since 3.39*/
+	int JavaVersionNotSupported = Compliance + 1109;
 
 	/** @since 3.13 */
 	int UnlikelyCollectionMethodArgumentType = 1200;

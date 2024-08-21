@@ -63,6 +63,10 @@ class ConstraintTypeFormula extends ConstraintFormula {
 	// return: ReductionResult or ConstraintFormula[]
 	@Override
 	public Object reduce(InferenceContext18 inferenceContext) {
+		if ((this.left.tagBits & TagBits.HasMissingType) != 0 || (this.right.tagBits & TagBits.HasMissingType) != 0) {
+			inferenceContext.hasIgnoredMissingType = true;
+			return TRUE;
+		}
 		switch (this.relation) {
 		case COMPATIBLE:
 			// 18.2.2:

@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.compiler.IScanner;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 
@@ -171,7 +172,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test008() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x11aa.aap-3333f".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -190,7 +191,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test009() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_4);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x11aa.aap-3333f".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -205,7 +206,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test010() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x11aa.aap-3333f".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -224,7 +225,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test011() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x.aap-3333f".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -243,7 +244,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test012() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0xaap3f".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -262,7 +263,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test013() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0xaapaf".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -281,7 +282,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test014() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0xaap.1f".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -300,7 +301,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test015() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0xaa.p1f".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -319,7 +320,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test016() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0xaa.p1F".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -338,7 +339,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test017() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0xaa.p1D".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -357,7 +358,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
 	public void test018() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0xaa.p1d".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -376,7 +377,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74934
 	 */
 	public void test019() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_4);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -395,7 +396,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74934
 	 */
 	public void test020() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -414,7 +415,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74934
 	 */
 	public void test021() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_4);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x1".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -433,7 +434,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74934
 	 */
 	public void test022() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x1".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -452,7 +453,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=78905
 	 */
 	public void test023() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x.p-2".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -469,7 +470,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=84398
 	 */
 	public void test024() {
-		IScanner scanner = ToolFactory.createScanner(false, false, true, JavaCore.VERSION_1_5);
+		IScanner scanner = ToolFactory.createScanner(false, false, true, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "public class X {\n\n}".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		int counter = 0;
@@ -527,7 +528,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=86611
 	 */
 	public void test026() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_4);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "0x.p-2".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -743,7 +744,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=106403
 	public void test036() {
 		try {
-			IScanner s = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+			IScanner s = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 			char[] source = { ';', ' ' };
 			s.setSource(source);
 			s.resetTo(0, 0);
@@ -762,7 +763,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=106403
 	public void test037() {
 		try {
-			IScanner s = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+			IScanner s = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 			char[] source = { ';', ' ' };
 			s.setSource(source);
 			int token = s.getNextToken();
@@ -785,7 +786,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=106403
 	public void test038() {
 		try {
-			IScanner s = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+			IScanner s = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 			char[] source = { ';', ' ' };
 			s.setSource(source);
 			s.resetTo(0, 1);
@@ -809,7 +810,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=106403
 	public void test039() {
 		try {
-			IScanner s = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+			IScanner s = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 			char[] source = { ';', ' ' };
 			s.setSource(source);
 			s.resetTo(1, 1);
@@ -828,7 +829,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=106403
 	public void test040() {
 		try {
-			IScanner s = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+			IScanner s = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 			char[] source = { ';', ' ' };
 			s.setSource(source);
 			s.resetTo(2, 1);
@@ -842,7 +843,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=106403
 	public void test041() {
 		try {
-			IScanner s = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+			IScanner s = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 			char[] source = "\\u003B\\u0020".toCharArray();
 			assertEquals("wrong size", 12, source.length);
 			s.setSource(source);
@@ -861,7 +862,7 @@ public class ScannerTest extends AbstractRegressionTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=112223
 	public void test042() {
-		IScanner scanner = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+		IScanner scanner = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 		final char[] source = "\"a\\u000D\"".toCharArray();
 		scanner.setSource(source);
 		final StringBuilder buffer = new StringBuilder();
@@ -890,7 +891,7 @@ public class ScannerTest extends AbstractRegressionTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=112223
 	public void test043() {
-		IScanner scanner = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+		IScanner scanner = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 		final char[] source = "\"\\u004Ca\\u000D\"".toCharArray();
 		scanner.setSource(source);
 		final StringBuilder buffer = new StringBuilder();
@@ -918,7 +919,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=112223
 	public void test044() {
-		IScanner scanner = ToolFactory.createScanner(true, true, true, "1.5", "1.5");
+		IScanner scanner = ToolFactory.createScanner(true, true, true, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 		final char[] source = "\"\\u004Ca\\u000D\\u0022".toCharArray();
 		scanner.setSource(source);
 		final StringBuilder buffer = new StringBuilder();
@@ -1129,8 +1130,8 @@ public class ScannerTest extends AbstractRegressionTest {
 				true,
 				true,
 				true,
-				JavaCore.VERSION_1_4,
-				JavaCore.VERSION_1_4);
+				CompilerOptions.getFirstSupportedJavaVersion(),
+				CompilerOptions.getFirstSupportedJavaVersion());
 		final char[] source = "elnu".toCharArray();
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -1140,36 +1141,12 @@ public class ScannerTest extends AbstractRegressionTest {
 			assertTrue("Should not fail with InvalidInputException", false);
 		}
 	}
-	/*
-	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=340513
-	 */
-	public void test054() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_6, JavaCore.VERSION_1_6);
-		char[] source =
-				("class X {\n" +
-				"	public static void main(String[] args) {\n" +
-				"		String \ud804\udc09 = \"Brahmi\";\n" +
-				"		System.out.println(\ud804\udc09);\n" +
-				"	}\n" +
-				"}").toCharArray();
-		scanner.setSource(source);
-		scanner.resetTo(0, source.length - 1);
-		try {
-			int token;
-			boolean foundError = false;
-			while ((token = scanner.getNextToken()) != ITerminalSymbols.TokenNameEOF) {
-				foundError |= token == ITerminalSymbols.TokenNameERROR;
-			}
-			assertTrue("Did not find error token", foundError);
-		} catch (InvalidInputException e) {
-			assertTrue(false);
-		}
-	}
+
 	/*
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=340513
 	 */
 	public void test055() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_7, JavaCore.VERSION_1_7);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source =
 				("class X {\n" +
 				"	public static void main(String[] args) {\n" +
@@ -1217,7 +1194,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=340513
 	 */
 	public void test057() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_7, JavaCore.VERSION_1_7);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion(), CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source =
 				("class X {\n" +
 				"	public static void main(String[] args) {\n" +
@@ -1317,8 +1294,8 @@ public class ScannerTest extends AbstractRegressionTest {
 				true,
 				true,
 				true,
-				JavaCore.VERSION_1_4,
-				JavaCore.VERSION_1_4);
+				CompilerOptions.getFirstSupportedJavaVersion(),
+				CompilerOptions.getFirstSupportedJavaVersion());
 		final char[] source = "case 1:\nsynchronized (someLock){}\n//$FALL-THROUGH$\ncase 2:".toCharArray();
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -1347,7 +1324,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383062
 	public void test062() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_4);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "->".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -1361,7 +1338,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383062
 	public void test063() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_4);
+		IScanner scanner = ToolFactory.createScanner(false, false, false, CompilerOptions.getFirstSupportedJavaVersion());
 		char[] source = "::".toCharArray(); //$NON-NLS-1$
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
@@ -1632,7 +1609,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	}
 
 	@SuppressWarnings("deprecation")
-	public void _testPermits() {
+	public void testPermits() {
 		char[] source = ("sealed class X permits Y { }").toCharArray();
 		IScanner scanner = ToolFactory.createScanner(false, true, false, "17", "17", false);
 		scanner.setSource(source);
@@ -1878,7 +1855,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		int [] reskw = { TerminalTokens.TokenNameRestrictedIdentifierWhen,
 							TerminalTokens.TokenNameRestrictedIdentifierrecord,
 							TerminalTokens.TokenNameRestrictedIdentifiersealed,
-							TerminalTokens.TokenNamepermits,
+							TerminalTokens.TokenNameRestrictedIdentifierpermits,
 							TerminalTokens.TokenNameRestrictedIdentifierYield,};
 		int i = -1;
 		for (char [] id : ids) {

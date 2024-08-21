@@ -29,7 +29,7 @@ static {
 	//TESTS_NAMES = new String[] {"testBug520874"};
 }
 public static Test suite() {
-	return buildMinimalComplianceTestSuite(testClass(), F_1_5);
+	return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 }
 @Override
 protected Map<String, String> getCompilerOptions() {

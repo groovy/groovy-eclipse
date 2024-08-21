@@ -17,6 +17,8 @@ package org.eclipse.jdt.core.dom;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
@@ -49,6 +50,7 @@ import org.eclipse.jdt.internal.core.ClassFileWorkingCopy;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.PackageFragment;
+import org.eclipse.jdt.internal.core.dom.ICompilationUnitResolver;
 import org.eclipse.jdt.internal.core.dom.util.DOMASTUtil;
 import org.eclipse.jdt.internal.core.util.CodeSnippetParsingUtil;
 import org.eclipse.jdt.internal.core.util.RecordedParsingInformation;
@@ -221,6 +223,8 @@ public class ASTParser {
 	 */
 	private int bits;
 
+	private final ICompilationUnitResolver unitResolver;
+
 	/**
 	 * Creates a new AST parser for the given API level.
 	 * <p>
@@ -233,6 +237,7 @@ public class ASTParser {
 	ASTParser(int level) {
 		DOMASTUtil.checkASTLevel(level);
 		this.apiLevel = level;
+		this.unitResolver = CompilationUnitResolverDiscovery.getInstance();
 		initializeDefaults();
 	}
 
@@ -245,10 +250,13 @@ public class ASTParser {
 			}
 			if (this.sourcepaths != null) {
 				for (int i = 0, max = this.sourcepaths.length; i < max; i++) {
-					String encoding = this.sourcepathsEncodings == null ? null : this.sourcepathsEncodings[i];
-					main.processPathEntries(
-							Main.DEFAULT_SIZE_CLASSPATH,
-							allClasspaths, this.sourcepaths[i], encoding, true, false);
+					String sourcePath = this.sourcepaths[i];
+					if (sourcePath != null) {
+						String encoding = this.sourcepathsEncodings == null ? null : this.sourcepathsEncodings[i];
+						main.processPathEntries(
+								Main.DEFAULT_SIZE_CLASSPATH,
+								allClasspaths, sourcePath, encoding, true, false);
+					}
 				}
 			}
 			if (this.classpaths != null) {
@@ -957,14 +965,22 @@ public class ASTParser {
 				if ((this.bits & CompilationUnitResolver.BINDING_RECOVERY) != 0) {
 					flags |= ICompilationUnit.ENABLE_BINDINGS_RECOVERY;
 				}
-				CompilationUnitResolver.resolve(compilationUnits, bindingKeys, requestor, this.apiLevel, this.compilerOptions, this.project, this.workingCopyOwner, flags, monitor);
+				this.unitResolver.resolve(safeCopyOf(compilationUnits), safeCopyOf(bindingKeys), requestor, this.apiLevel, safeUnmodifiableMap(this.compilerOptions), this.project, this.workingCopyOwner, flags, monitor);
 			} else {
-				CompilationUnitResolver.parse(compilationUnits, requestor, this.apiLevel, this.compilerOptions, flags, monitor);
+				this.unitResolver.parse(safeCopyOf(compilationUnits), requestor, this.apiLevel, safeUnmodifiableMap(this.compilerOptions), flags, monitor);
 			}
 		} finally {
 			// reset to defaults to allow reuse (and avoid leaking)
 			initializeDefaults();
 		}
+	}
+
+	private static <T> T[] safeCopyOf(T[] original) {
+		return original == null ? null : Arrays.copyOf(original, original.length);
+	}
+
+	private static <K,V> Map<K,V> safeUnmodifiableMap(Map<? extends K, ? extends V> m) {
+		return m == null ? null : Collections.unmodifiableMap(m);
 	}
 
 	/**
@@ -1052,9 +1068,9 @@ public class ASTParser {
 				if ((this.bits & CompilationUnitResolver.BINDING_RECOVERY) != 0) {
 					flags |= ICompilationUnit.ENABLE_BINDINGS_RECOVERY;
 				}
-				CompilationUnitResolver.resolve(sourceFilePaths, encodings, bindingKeys, requestor, this.apiLevel, this.compilerOptions, getClasspath(), flags, monitor);
+				this.unitResolver.resolve(safeCopyOf(sourceFilePaths), safeCopyOf(encodings), safeCopyOf(bindingKeys), requestor, this.apiLevel, safeUnmodifiableMap(this.compilerOptions), getClasspath(), flags, monitor);
 			} else {
-				CompilationUnitResolver.parse(sourceFilePaths, encodings, requestor, this.apiLevel, this.compilerOptions, flags, monitor);
+				this.unitResolver.parse(safeCopyOf(sourceFilePaths), safeCopyOf(encodings), requestor, this.apiLevel, safeUnmodifiableMap(this.compilerOptions), flags, monitor);
 			}
 		} finally {
 			// reset to defaults to allow reuse (and avoid leaking)
@@ -1159,9 +1175,8 @@ public class ASTParser {
 				}
 				break;
 			case K_COMPILATION_UNIT :
-				CompilationUnitDeclaration compilationUnitDeclaration = null;
 				try {
-					NodeSearcher searcher = null;
+					boolean useSearcher = false;
 					org.eclipse.jdt.internal.compiler.env.ICompilationUnit sourceUnit = null;
 					WorkingCopyOwner wcOwner = this.workingCopyOwner;
 					if (this.typeRoot instanceof ClassFileWorkingCopy) {
@@ -1229,68 +1244,28 @@ public class ASTParser {
 						throw new IllegalStateException();
 					}
 					if ((this.bits & CompilationUnitResolver.PARTIAL) != 0) {
-						searcher = new NodeSearcher(this.focalPointPosition);
+						useSearcher = true;
 					}
 					int flags = 0;
 					if ((this.bits & CompilationUnitResolver.STATEMENT_RECOVERY) != 0) {
 						flags |= ICompilationUnit.ENABLE_STATEMENTS_RECOVERY;
 					}
-					if (searcher == null && ((this.bits & CompilationUnitResolver.IGNORE_METHOD_BODIES) != 0)) {
+					if (!useSearcher && ((this.bits & CompilationUnitResolver.IGNORE_METHOD_BODIES) != 0)) {
 						flags |= ICompilationUnit.IGNORE_METHOD_BODIES;
 					}
+
 					if (needToResolveBindings) {
 						if ((this.bits & CompilationUnitResolver.BINDING_RECOVERY) != 0) {
 							flags |= ICompilationUnit.ENABLE_BINDINGS_RECOVERY;
 						}
-						try {
-							// parse and resolve
-							compilationUnitDeclaration =
-								CompilationUnitResolver.resolve(
-									sourceUnit,
-									this.project,
-									getClasspath(),
-									searcher,
-									this.compilerOptions,
-									this.workingCopyOwner,
-									flags,
-									monitor);
-						} catch (JavaModelException e) {
-							flags &= ~ICompilationUnit.ENABLE_BINDINGS_RECOVERY;
-							compilationUnitDeclaration = CompilationUnitResolver.parse(
-									sourceUnit,
-									searcher,
-									this.compilerOptions,
-									flags);
-							needToResolveBindings = false;
-						}
-					} else {
-						compilationUnitDeclaration = CompilationUnitResolver.parse(
-								sourceUnit,
-								searcher,
-								this.compilerOptions,
-								flags,
-								this.project);
-						needToResolveBindings = false;
 					}
-					CompilationUnit result = CompilationUnitResolver.convert(
-						compilationUnitDeclaration,
-						sourceUnit.getContents(),
-						this.apiLevel,
-						this.compilerOptions,
-						needToResolveBindings,
-						wcOwner,
-						needToResolveBindings ? new DefaultBindingResolver.BindingTables() : null,
-						flags,
-						monitor,
-						this.project != null,
-						this.project);
+
+					CompilationUnit result = this.unitResolver.toCompilationUnit(sourceUnit, needToResolveBindings, this.project, getClasspath(), useSearcher ? this.focalPointPosition : -1, this.apiLevel, safeUnmodifiableMap(this.compilerOptions), this.workingCopyOwner, wcOwner, flags, monitor);
 					result.setTypeRoot(this.typeRoot);
 					return result;
 				} finally {
-					if (compilationUnitDeclaration != null
-							&& ((this.bits & CompilationUnitResolver.RESOLVE_BINDING) != 0)) {
-						compilationUnitDeclaration.cleanUp();
-					}
+					// unitResolver should already handle this.
+					// Leaving this finally in place to avoid changing indentation
 				}
 		}
 		throw new IllegalStateException();
