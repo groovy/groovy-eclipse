@@ -2104,6 +2104,30 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked8133() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static org.codehaus.groovy.ast.ClassHelper.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(java.util.stream.Stream<String> strings) {\n" +
+            "  @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "    def type = node.getNodeMetaData(INFERRED_TYPE)\n" +
+            "    assert type == LIST_TYPE\n" +
+            "    assert type.genericsTypes[0].type == void_WRAPPER_TYPE\n" +
+            "  })\n" +
+            "  def nulls = strings*.getBytes(0, 0, new byte[0], 0)\n" +
+            "  assert nulls.isEmpty()\n" +
+            "}\n" +
+            "test([].stream())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testTypeChecked8136() {
         //@formatter:off
         String[] sources = {

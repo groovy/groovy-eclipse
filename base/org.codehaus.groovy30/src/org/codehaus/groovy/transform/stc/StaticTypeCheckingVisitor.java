@@ -3620,7 +3620,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 visitMethodCallExpression(subcall);
                 // inferred type should be a list of what sub-call returns
                 storeTargetMethod(call, subcall.getNodeMetaData(DIRECT_METHOD_CALL_TARGET));
-                storeType(call, GenericsUtils.makeClassSafe0(LIST_TYPE, getType(subcall).asGenericsType()));
+                storeType(call, GenericsUtils.makeClassSafe0(LIST_TYPE, wrapTypeIfNecessary(getType(subcall)).asGenericsType()));
             }
             typeCheckingContext.popEnclosingMethodCall();
             return;

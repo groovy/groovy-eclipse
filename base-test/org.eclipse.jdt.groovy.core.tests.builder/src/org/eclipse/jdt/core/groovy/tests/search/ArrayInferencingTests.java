@@ -165,11 +165,19 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/763
     public void testArrayGenerics3() {
         String contents = "class C {\n int x\n}\n" + "Collection<List<C> >[] array = []; array*.x";
+        assertType("@groovy.transform.TypeChecked " + contents, "x", "java.lang.Integer");
         assertType(contents, "x", "java.lang.Integer");
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1594
     public void testArrayGenerics4() {
+        String contents = "class C {\n int x\n}\n" + "Collection<List<C> >[] array = []; array*.getX()";
+        assertType("@groovy.transform.TypeChecked " + contents, "getX", "java.lang.Integer");
+        assertType(contents, "getX", "java.lang.Integer");
+    }
+
+    @Test
+    public void testArrayGenerics5() {
         String contents = "Map<String, ?>[] array = [[val:1]]; array*.val";
         assertType(contents, "val", "java.lang.Object");
     }

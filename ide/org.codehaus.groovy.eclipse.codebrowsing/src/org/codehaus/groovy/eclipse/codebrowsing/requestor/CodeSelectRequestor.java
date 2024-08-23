@@ -662,6 +662,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             appendUniqueKeyForResolvedType(sb, result.type);
         } else {
             ClassNode owner = declaration.getDeclaringClass();
+            if ( owner == null ) owner = result.declaringType;
             // TODO: for reference, include any type arguments
             sb.append(GroovyUtils.getTypeSignatureWithoutGenerics(owner, true, true).replace('.', '/'));
 

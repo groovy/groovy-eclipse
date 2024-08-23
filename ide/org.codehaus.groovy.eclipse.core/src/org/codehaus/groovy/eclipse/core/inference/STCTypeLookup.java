@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -58,6 +59,7 @@ public class STCTypeLookup implements ITypeLookup {
     public TypeLookupResult lookupType(final Expression expr, final VariableScope scope, final ClassNode objectExpressionType) {
         if (isEnabled) {
             boolean isGroovy = false;
+            boolean isSpread = false;
             ASTNode declaration = expr;
             ClassNode declaringType = objectExpressionType;
             TypeConfidence confidence = TypeConfidence.INFERRED;
@@ -110,7 +112,7 @@ public class STCTypeLookup implements ITypeLookup {
                         }
                     }
                 } else if (expr instanceof MethodCall) {
-                    Object methodTarget = declaration.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                    var methodTarget = declaration.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                     if (methodTarget instanceof MethodNode) {
                         declaration = (MethodNode) methodTarget;
                         declaringType = ((MethodNode) methodTarget).getDeclaringClass();
@@ -119,14 +121,19 @@ public class STCTypeLookup implements ITypeLookup {
             } else if (expr instanceof ConstantExpression) {
                 ASTNode enclosingNode = scope.getEnclosingNode(), methodTarget = null;
                 if (enclosingNode instanceof PropertyExpression && ((PropertyExpression) enclosingNode).getProperty() == expr) {
+                    isSpread = ((PropertyExpression) enclosingNode).isSpreadSafe();
                     methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                     if (methodTarget instanceof MethodNode && ((MethodNode) methodTarget).isSynthetic()) {
                         declaringType = ((MethodNode) methodTarget).getOriginal().getDeclaringClass();
                         inferredType = enclosingNode.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
                         declaration  = declaringType.getProperty(expr.getText());
-                        if (declaration != null) methodTarget = null;
+                        if (declaration != null) {
+                            methodTarget = null; // return property semantics
+                            if (isSpread) inferredType = ((PropertyNode) declaration).getType();
+                        }
                     }
                 } else if (enclosingNode instanceof MethodCallExpression && ((MethodCallExpression) enclosingNode).getMethod() == expr) {
+                    isSpread = ((MethodCallExpression) enclosingNode).isSpreadSafe();
                     methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                     if (methodTarget == null) methodTarget = getMopMethodTarget((MethodCallExpression) enclosingNode);
                     if (methodTarget == null) methodTarget = ((MethodCallExpression) enclosingNode).getMethodTarget();
@@ -147,7 +154,7 @@ public class STCTypeLookup implements ITypeLookup {
                 if (methodTarget instanceof MethodNode) {
                     declaration = ((MethodNode) methodTarget).getOriginal();
                     declaringType = ((MethodNode) declaration).getDeclaringClass();
-                    if (!(enclosingNode instanceof MethodPointerExpression)) // ignore Closure<Type>
+                    if (!isSpread && !(enclosingNode instanceof MethodPointerExpression))
                         inferredType = enclosingNode.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
                     if (inferredType == null) inferredType = ((MethodNode) methodTarget).getReturnType();
                 }
