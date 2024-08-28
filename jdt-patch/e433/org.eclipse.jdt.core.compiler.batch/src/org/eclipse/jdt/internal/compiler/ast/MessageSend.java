@@ -1119,9 +1119,10 @@ protected boolean isMissingTypeRelevant() {
 	}
 	if ((this.binding.returnType.tagBits & TagBits.HasMissingType) == 0
 			&& this.binding.isVarargs()) {
-		if (this.arguments.length < this.binding.parameters.length) {
+		int argLen = this.arguments != null ? this.arguments.length : 0;
+		if (argLen < this.binding.parameters.length) {
 			// are all but the irrelevant varargs type present?
-			for (int i = 0; i < this.arguments.length; i++) {
+			for (int i = 0; i < argLen; i++) {
 				if ((this.binding.parameters[i].tagBits & TagBits.HasMissingType) != 0)
 					return true; // this one *is* relevant - actually this case is already detected during findMethodBinding()
 			}

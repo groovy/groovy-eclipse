@@ -9702,6 +9702,46 @@ public void testMissingClassNeededForOverloadResolution_varargs3_ctor() {
 			""";
 	runner.runNegativeTest();
 }
+public void testMissingClass_varargs4_noArg() {
+	// missing type in non-varargs position
+	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"p1/A.java",
+			"""
+			package p1;
+			public class A {}
+			""",
+			"p1/B.java",
+			"""
+			package p1;
+			public class B {
+				public B(A... a) {}
+				public void m(A... a) {}
+			}
+			"""
+		};
+	runner.runConformTest();
+
+	// delete binary file A (i.e. simulate removing it from classpath for subsequent compile)
+	Util.delete(new File(OUTPUT_DIR, "p1" + File.separator + "A.class"));
+	runner.shouldFlushOutputDirectory = false;
+
+	runner.testFiles = new String[] {
+			"p2/C.java",
+			"""
+			package p2;
+			import p1.B;
+			public class C {
+				void test(B b) {
+					new B();
+					b.m();
+				}
+			}
+			"""
+		};
+	runner.runConformTest();
+}
 public void testMissingClass_returnType_OK() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();

@@ -351,7 +351,7 @@ public void test007() {
  * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=123096"
  */
 public void test008() {
-	this.sourceLevel = CompilerOptions.VERSION_1_3;
+	this.sourceLevel = CompilerOptions.getFirstSupportedJavaVersion();
 	String source = "package javadoc;\n" +
 		"/**\n" +
 		" * Completion on empty tag name:\n" +
