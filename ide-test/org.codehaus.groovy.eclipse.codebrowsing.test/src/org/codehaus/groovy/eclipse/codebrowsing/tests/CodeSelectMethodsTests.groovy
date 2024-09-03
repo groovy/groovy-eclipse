@@ -510,19 +510,34 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectStaticMethod3() {
-        String contents = 'class Foo { def m() { java.util.Collections.<Object>emptyList() } }'
+        String contents = 'def list = java.util.Collections.<Object>emptyList()'
         assertCodeSelect([contents], 'Collections')
+        IJavaElement element = assertCodeSelect([contents], 'emptyList')
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.Object>'
+        assert element.key == 'Ljava/util/Collections;.emptyList<T:Ljava/lang/Object;>()Ljava/util/List<Ljava/lang/Object;>;%<TT;>'
     }
 
     @Test
     void testCodeSelectStaticMethod4() {
-        String contents = 'List<String> empty = Collections.&emptyList'
+        String contents = 'java.util.function.Supplier<String> getter = Collections.&emptyList'
         IJavaElement element = assertCodeSelect([contents], 'emptyList')
-        assert element.inferredElement.returnType.toString(false) == 'java.util.List<T>' // TODO: want T to be java.lang.String
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.String>'
+        assert element.key == 'Ljava/util/Collections;.emptyList<T:Ljava/lang/Object;>()Ljava/util/List<Ljava/lang/String;>;%<TT;>'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1595
+    void testCodeSelectStaticMethod5() {
+        String contents = '''\
+            |@groovy.transform.TypeChecked test() {
+            |  def list = Collections.emptyList()
+            |}'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents], 'emptyList')
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<T>' // TODO: want T to be java.lang.Object
+        assert element.key == 'Ljava/util/Collections;.emptyList<T:Ljava/lang/Object;>()Ljava/util/List<Ljava/lang/Object;>;%<TT;>'
     }
 
     @Test
-    void testCodeSelectStaticMethod5() {
+    void testCodeSelectStaticMethod6() {
         String contents = '''\
             |import static java.util.Collections.singletonList
             |@groovy.transform.TypeChecked
@@ -533,10 +548,11 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |}'''.stripMargin()
         IJavaElement element = assertCodeSelect([contents], 'singletonList')
         assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.String>'
+        assert element.key == 'Ljava/util/Collections;.singletonList<T:Ljava/lang/Object;>(Ljava/lang/String;)Ljava/util/List<Ljava/lang/String;>;%<Ljava/lang/String;>'
     }
 
     @Test
-    void testCodeSelectStaticMethod6() {
+    void testCodeSelectStaticMethod7() {
         String contents = '''\
             |@groovy.transform.Sortable
             |class Foo {
@@ -549,7 +565,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectStaticMethod7() {
+    void testCodeSelectStaticMethod8() {
         String contents = '''\
             |@Singleton(property='foo')
             |class Foo {

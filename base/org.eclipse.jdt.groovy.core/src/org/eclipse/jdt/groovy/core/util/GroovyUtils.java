@@ -285,7 +285,7 @@ public class GroovyUtils {
         String name;
         if (node.isGenericsPlaceHolder()) {
             // use "T" instead of "Object"
-            name = node.getUnresolvedName();
+            name = node.getUnresolvedName().replace('#', '!');
         } else if (resolved || node.getOuterClass() == null) {
             name = qualified ? node.getName() : node.getNameWithoutPackage();
         } else {
