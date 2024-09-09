@@ -3420,7 +3420,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testTypeChecked9873() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(CompilerOptions.InvokeDynamic));
