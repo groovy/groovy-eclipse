@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getWrapperTypeIfPrimitive;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -260,7 +262,7 @@ public class GroovyDSLDContext {
             targetType = targetType.getGenericsTypes()[0].getType();
             this.isStatic = true; // not a Class instance anymore
         }
-        this.targetType = targetType;
+        this.targetType = getWrapperTypeIfPrimitive(targetType);
         cachedHierarchy = null;
     }
 

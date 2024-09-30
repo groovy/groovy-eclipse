@@ -427,6 +427,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def xxx = ['item'].collectEntries {str -> /*...*/}\n";
 
+        assertType(contents, "str", "java.lang.String");
         assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
 

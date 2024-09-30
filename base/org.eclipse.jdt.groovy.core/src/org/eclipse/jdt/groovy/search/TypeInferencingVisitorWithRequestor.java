@@ -1994,7 +1994,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             ClassNode operandType = primaryTypeStack.removeLast();
             // infer the type of the (possibly overloaded) operator
             String associatedMethod = findUnaryOperatorName(operation);
-            if (associatedMethod != null && !operandType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
+            if (associatedMethod != null && !ClassHelper.getWrapper(operandType).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
                 scope.setMethodCallArgumentTypes(Collections.emptyList());
                 TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(associatedMethod), operandType, false, scope);
 
@@ -2442,7 +2442,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     } else if (expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression()) {
                         types.add(VariableScope.NULL_TYPE); // sentinel for wildcard matching
                     } else if (ClassHelper.isNumberType(exprType) || VariableScope.BIG_DECIMAL_CLASS.equals(exprType) || VariableScope.BIG_INTEGER_CLASS.equals(exprType)) {
-                        types.add(GroovyUtils.getWrapperTypeIfPrimitive(exprType));
+                        types.add(exprType);
                     } else if (expression instanceof GStringExpression || (expression instanceof ConstantExpression && ((ConstantExpression) expression).isEmptyStringExpression())) {
                         types.add(VariableScope.STRING_CLASS_NODE);
                     } else if (expression instanceof BooleanExpression || (expression instanceof ConstantExpression && (((ConstantExpression) expression).isTrueExpression() || ((ConstantExpression) expression).isFalseExpression()))) {
@@ -3219,7 +3219,7 @@ out:    if (inferredTypes[0] == null) {
     }
 
     /**
-     * @return the method name associated with this unary operator
+     * @return the method name associated with the unary operator
      */
     private static String findUnaryOperatorName(final String text) {
         switch (text.charAt(0)) {
@@ -3235,8 +3235,6 @@ out:    if (inferredTypes[0] == null) {
             return "negative";
         case '~':
             return "bitwiseNegate";
-        case ']':
-            return "putAt";
         }
         return null;
     }
@@ -3561,10 +3559,10 @@ out:    if (inferredTypes[0] == null) {
         return members;
     }
 
-    private static void resetType(final GenericsType gt, final ClassNode t) {
-        ClassNode type = ClassHelper.isPrimitiveType(t) ? ClassHelper.getWrapper(t) : t;
-        gt.setName(type.getName());
-        gt.setType(type);
+    private static void resetType(final GenericsType g, final ClassNode c) {
+        ClassNode type = GroovyUtils.getWrapperTypeIfPrimitive(c);
+        g.setName(type.getName());
+        g.setType(type);
     }
 
     //--------------------------------------------------------------------------

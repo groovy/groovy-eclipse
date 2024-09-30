@@ -70,10 +70,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
-import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
-import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
@@ -698,7 +696,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             GroovyUtils.getTypeSignature(type, true, true).replace('.', '/').replaceAll("L[/\\w]+;:(T\\w+;)", "$1");
             // omit type parameter qualifiers                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        // type parameters
+        /* type parameters
         GenericsType[] generics = GroovyUtils.getGenericsTypes(node);
         if (generics.length > 0) {
             sb.append(Signature.C_GENERIC_START);
@@ -717,7 +715,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 }
             }
             sb.append(Signature.C_GENERIC_END);
-        }
+        }*/
 
         // call parameters
         sb.append(Signature.C_PARAM_START);
@@ -730,20 +728,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
         // return type
         sb.append(signer.apply(returnType));
 
-        // type parameter resolution
+        /* type parameter resolution
         if (generics.length > 0) {
-            // generics have been resolved for returnType, declaringType and parameterTypes; mappings can be recovered using original method reference
-            GenericsMapper mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(parameters), declaringType, node.getOriginal());
-
-            sb.append('%');
-            sb.append(Signature.C_GENERIC_START);
-            for (GenericsType gt : generics) {
-                gt = VariableScope.clone(gt, 0);
-                ClassNode rt = VariableScope.resolveTypeParameterization(mapper, gt, gt.getType());
-                sb.append(GroovyUtils.getTypeSignatureWithoutGenerics(rt, true, true).replace('.', '/'));
+            sb.append('%').append(Signature.C_GENERIC_START);
+            for (TODO : TODO) {
+                sb.append(GroovyUtils.getTypeSignature(TODO, true, true).replace('.', '/'));
             }
             sb.append(Signature.C_GENERIC_END);
-        }
+        }*/
 
         // exceptions
         if (node.getExceptions() != null) {

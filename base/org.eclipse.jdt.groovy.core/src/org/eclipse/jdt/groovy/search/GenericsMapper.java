@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -226,30 +225,10 @@ public class GenericsMapper {
     //--------------------------------------------------------------------------
 
     /** Keeps track of all type parameterization up the type hierarchy. */
-    private final Deque<Map<String, ClassNode>> allGenerics = new LinkedList<>();
+    final Deque<Map<String, ClassNode>> allGenerics = new LinkedList<>();
 
     protected boolean hasGenerics() {
         return !allGenerics.isEmpty() && !allGenerics.getLast().isEmpty();
-    }
-
-    protected GenericsMapper fillPlaceholders(final GenericsType[] typeParameters) {
-        for (Map.Entry<String, ClassNode> name2Type : allGenerics.getLast().entrySet()) {
-            ClassNode type = name2Type.getValue(); if (type.isGenericsPlaceHolder()) {
-                for (GenericsType tp : typeParameters) {
-                    if (type.getUnresolvedName().equals(tp.getName())) { // unresolved
-                        // replace type parameter "T" with type "Number" or "Object" or whatever its erasure type is
-                        type = type.hasMultiRedirect() ? type.asGenericsType().getUpperBounds()[0] : type.redirect();
-                        if (type.isGenericsPlaceHolder()) type = type.getSuperClass();
-                        // remove nested references to this or other type parameters
-                        if (GenericsUtils.hasUnresolvedGenerics(type))
-                            type = type.getPlainNodeReference();
-                        name2Type.setValue(type);
-                        break;
-                    }
-                }
-            }
-        }
-        return this;
     }
 
     /**
@@ -357,7 +336,7 @@ public class GenericsMapper {
         if (old != null && !old.equals(val) && !old.equals(VariableScope.OBJECT_CLASS_NODE) && weak) {
             val = /*WideningCategories.lowestUpperBound(*/old/*, val)*/;
         }
-        map.put(key, val);
+        map.put(key, GroovyUtils.getWrapperTypeIfPrimitive(val));
     }
 
     protected static void tryResolveMethodT(final GenericsType unresolved, final Map<String, ClassNode> resolved, final Parameter[] parameters, final List<ClassNode> argumentTypes) {

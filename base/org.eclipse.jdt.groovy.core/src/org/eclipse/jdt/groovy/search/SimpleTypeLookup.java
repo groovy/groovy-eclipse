@@ -251,7 +251,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             } else if (cexp.isEmptyStringExpression() || VariableScope.STRING_CLASS_NODE.equals(nodeType)) {
                 return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, node, confidence, scope);
             } else if (ClassHelper.isNumberType(nodeType) || VariableScope.BIG_DECIMAL_CLASS.equals(nodeType) || VariableScope.BIG_INTEGER_CLASS.equals(nodeType)) {
-                return new TypeLookupResult(GroovyUtils.getWrapperTypeIfPrimitive(nodeType), null, null, confidence, scope);
+                return new TypeLookupResult(nodeType, null, null, confidence, scope);
             } else {
                 return new TypeLookupResult(nodeType, null, null, TypeConfidence.UNKNOWN, scope);
             }

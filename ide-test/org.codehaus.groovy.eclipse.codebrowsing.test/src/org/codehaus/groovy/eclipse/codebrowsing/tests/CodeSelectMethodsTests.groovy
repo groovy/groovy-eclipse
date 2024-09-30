@@ -214,7 +214,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assert element.key == 'Ljava/util/Set;.add(TBar;)Z'
 
         element = assertCodeSelect([contents], 'findAll')
-        assert element.key == 'Lorg/codehaus/groovy/runtime/DefaultGroovyMethods;.findAll<T:Ljava/lang/Object;>(Ljava/util/Set<TBar;>;)Ljava/util/Set<TBar;>;%<LFoo;:TBar;>'
+        assert element.key == 'Lorg/codehaus/groovy/runtime/DefaultGroovyMethods;.findAll(Ljava/util/Set<TBar;>;)Ljava/util/Set<TBar;>;'
     }
 
     @Test
@@ -514,7 +514,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'Collections')
         IJavaElement element = assertCodeSelect([contents], 'emptyList')
         assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.Object>'
-        assert element.key == 'Ljava/util/Collections;.emptyList<T:Ljava/lang/Object;>()Ljava/util/List<Ljava/lang/Object;>;%<TT;>'
+        assert element.key == 'Ljava/util/Collections;.emptyList()Ljava/util/List<Ljava/lang/Object;>;'
     }
 
     @Test
@@ -522,7 +522,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         String contents = 'java.util.function.Supplier<String> getter = Collections.&emptyList'
         IJavaElement element = assertCodeSelect([contents], 'emptyList')
         assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.String>'
-        assert element.key == 'Ljava/util/Collections;.emptyList<T:Ljava/lang/Object;>()Ljava/util/List<Ljava/lang/String;>;%<TT;>'
+        assert element.key == 'Ljava/util/Collections;.emptyList()Ljava/util/List<Ljava/lang/String;>;'
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1595
@@ -532,8 +532,8 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  def list = Collections.emptyList()
             |}'''.stripMargin()
         IJavaElement element = assertCodeSelect([contents], 'emptyList')
-        assert element.inferredElement.returnType.toString(false) == 'java.util.List<T>' // TODO: want T to be java.lang.Object
-        assert element.key == 'Ljava/util/Collections;.emptyList<T:Ljava/lang/Object;>()Ljava/util/List<Ljava/lang/Object;>;%<TT;>'
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.Object>'
+        assert element.key == 'Ljava/util/Collections;.emptyList()Ljava/util/List<Ljava/lang/Object;>;'
     }
 
     @Test
@@ -548,7 +548,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |}'''.stripMargin()
         IJavaElement element = assertCodeSelect([contents], 'singletonList')
         assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.String>'
-        assert element.key == 'Ljava/util/Collections;.singletonList<T:Ljava/lang/Object;>(Ljava/lang/String;)Ljava/util/List<Ljava/lang/String;>;%<Ljava/lang/String;>'
+        assert element.key == 'Ljava/util/Collections;.singletonList(Ljava/lang/String;)Ljava/util/List<Ljava/lang/String;>;'
     }
 
     @Test
