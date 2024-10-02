@@ -71,7 +71,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     @AfterClass
     static final void tearDownCompletionTestSuite() {
         GroovyContentAssist.getDefault().preferenceStore.with {
-            storePreferences.@properties.keys().each { k ->
+            storePreferences.keys().each { k ->
                 if (!isDefault(k)) {
                     println "Resetting '$k' to its default"
                     setToDefault(k)

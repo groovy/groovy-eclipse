@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
     @After
     void tearDown() {
         new ScopedPreferenceStore(new ProjectScope(gunit.javaProject.project), JavaCore.PLUGIN_ID).with {
-            storePreferences.@properties.keys().each { k ->
+            storePreferences.keys().each { k ->
                 if (!isDefault(k) && k =~ /^org.eclipse.jdt.core.formatter./) {
                     println "Resetting '$k' to its default"
                     setToDefault(k)
