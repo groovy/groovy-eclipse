@@ -626,9 +626,9 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         List<PropertyNode> nodes = super.getProperties();
 
                         for (PropertyNode node : groovyTypeDecl.getClassNode().getProperties()) {
-                            FieldNode field = getField(node.getName());
+                            FieldNode field = getDeclaredField(node.getName());
                             if (field == null) {
-                                field = new FieldNode(node.getName(), Flags.AccPrivate | (node.getModifiers() & Flags.AccStatic + Flags.AccFinal), resolver.resolve(node.getType().getName()), this, null);
+                                field = new FieldNode(node.getName(), Flags.AccPrivate | (node.getModifiers() & Flags.AccStatic + Flags.AccFinal), resolveType(node.getType()), this, null);
                                 field.setDeclaringClass(this);
                                 field.setSourcePosition(node.getField());
                                 field.setSynthetic(true);
@@ -639,6 +639,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                             PropertyNode clone = new PropertyNode(field, node.getModifiers(), null, null);
                             clone.setDeclaringClass(this);
                             clone.setSourcePosition(node);
+                            // TODO: propagate annotations
 
                             nodes.add(clone);
                         }
@@ -665,6 +666,53 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
 
         return Collections.unmodifiableList(super.getProperties());
+    }
+
+    private ClassNode resolveType(ClassNode cn) {
+        int dims = 0;
+        while (cn.isArray()) { dims += 1;
+            cn = cn.getComponentType();
+        }
+        String name = cn.getName();
+        if (groovyTypeDecl != null) {
+            String[] tokens = name.split("\\.");
+            ClassNode known = groovyTypeDecl.getClassNode().getModule().getImportType(tokens[0]);
+            if (known != null) {
+                tokens[0] = known.getName();
+                name = String.join(".", tokens);
+            }
+        }
+        ClassNode type = resolver.resolve(name);
+
+        type = type.getPlainNodeReference(); // "Map<K,V>" to "Map --> Map<K,V>"
+
+        GenericsType[] gt = cn.getGenericsTypes();
+        if (gt != null) {
+            GenericsType[] types = new GenericsType[gt.length];
+            for (int i = 0; i < gt.length; i += 1) {
+                if (!gt[i].isWildcard()) {
+                    types[i] = new GenericsType(resolveType(gt[i].getType()));
+                } else {
+                    ClassNode lowerBound = gt[i].getLowerBound();
+                    if (lowerBound != null) lowerBound = resolveType(lowerBound);
+                    ClassNode[] upperBounds = gt[i].getUpperBounds();
+                    if (upperBounds != null) {
+                        upperBounds = upperBounds.clone();
+                        Arrays.asList(upperBounds).replaceAll(this::resolveType);
+                    }
+                    types[i] = new GenericsType(ClassHelper.makeWithoutCaching("?"), upperBounds, lowerBound);
+                    types[i].setWildcard(true);
+                }
+                types[i].setResolved(true);
+            }
+            type.setGenericsTypes(types);
+        }
+
+        while (dims-- > 0) {
+            type = type.makeArray();
+        }
+
+        return type;
     }
 
     private static boolean isGenerated(MethodNode mn) {

@@ -440,17 +440,40 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         String source =
             "class C implements T {\n" +
             "  void meth() {\n" +
-            "    def arr = numbers\n" +
+            "    def anArray = numbers\n" +
             "  }\n" +
             "}\n";
         //@formatter:on
 
         assertDeclType(source, "numbers", "T");
         assertExprType(source, "numbers", "java.lang.Number[]");
+        assertExprType(source, "anArray", "java.lang.Number[]");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1599
+    public void testProperty24() {
+        createUnit("T",
+            "import java.beans.BeanInfo\n" +
+            "trait T {\n" +
+            "  Map<BeanInfo,Number[]> numbers\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    def anArray = numbers['k']\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "numbers", "T");
+        assertExprType(source, "numbers", "java.util.Map<java.beans.BeanInfo,java.lang.Number[]>");
+        assertExprType(source, "anArray", "java.lang.Number[]");
     }
 
     @Test
-    public void testProperty24() {
+    public void testProperty25() {
         createUnit("T",
             "trait T {\n" +
             "  static Number number\n" +
@@ -483,7 +506,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty25() {
+    public void testProperty26() {
         createUnit("T",
             "trait T {\n" +
             "  static final Number number = 1\n" +

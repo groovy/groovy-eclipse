@@ -307,7 +307,7 @@ public class JDTResolver extends ResolveVisitor {
                     synchronized (this) {
                         ClassNode previousClass = currentClass;
                         try {
-                            currentClass = compilationUnit.getFirstClassNode().getPlainNodeReference();
+                            currentClass = modules.get(0).getClasses().get(0);
 
                             ClassNode type = ClassHelper.makeWithoutCaching(name);
                             if (super.resolve(type, true, true, true)) {
