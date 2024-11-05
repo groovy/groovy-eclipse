@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -239,6 +239,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
         config.setParameters(compilerOptions.produceMethodParameters);
         config.setPreviewFeatures(compilerOptions.enablePreviewFeatures);
         config.setTargetBytecode(CompilerOptions.versionFromJdkLevel(compilerOptions.targetJDK));
+        config.setWarningLevel(org.codehaus.groovy.control.messages.WarningMessage.POSSIBLE_ERRORS);
 
         if (compilerOptions.defaultEncoding != null && !compilerOptions.defaultEncoding.isEmpty()) {
             config.setSourceEncoding(compilerOptions.defaultEncoding);

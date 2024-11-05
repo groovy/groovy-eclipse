@@ -5582,7 +5582,10 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 10)\n" +
             "\tbaz(this::foo)\n" +
             "\t    ^^^^^^^^^\n" +
-            "Groovy:The argument is a method reference, but the parameter type is not a functional interface\n" +
+            (isAtLeastGroovy(50)
+            ? "Groovy:[Static type checking] - Argument is a method reference, but parameter type 'java.lang.Object' is not a functional interface\n"
+            : "Groovy:The argument is a method reference, but the parameter type is not a functional interface\n"
+            ) +
             "----------\n");
     }
 
@@ -6101,7 +6104,10 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 9)\n" +
             "\tinner(new Object(), new C()::m)\n" +
             "\t                    ^^^^^^^^^^\n" +
-            "Groovy:The argument is a method reference, but the parameter type is not a functional interface\n" +
+            (isAtLeastGroovy(50)
+            ? "Groovy:[Static type checking] - Argument is a method reference, but parameter type 'java.lang.Object' is not a functional interface\n"
+            : "Groovy:The argument is a method reference, but the parameter type is not a functional interface\n"
+            ) +
             "----------\n");
     }
 

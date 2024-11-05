@@ -359,7 +359,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                                     try {
                                         if (!service.toURI().equals(transformNames.get(className).toURI())) {
                                             compilationUnit.getErrorCollector().addWarning(
-                                                    WarningMessage.POSSIBLE_ERRORS,
+                                                    WarningMessage.PARANOIA, // GRECLIPSE edit
                                                     "The global transform for class " + className + " is defined in both "
                                                             + transformNames.get(className).toExternalForm()
                                                             + " and "

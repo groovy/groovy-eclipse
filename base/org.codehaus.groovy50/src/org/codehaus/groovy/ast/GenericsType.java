@@ -176,6 +176,12 @@ public class GenericsType extends ASTNode {
         this.placeholder = placeholder;
         this.resolved = resolved || placeholder;
         this.wildcard = wildcard && !placeholder;
+        // GRECLIPSE add
+        if (placeholder) {
+            assert lowerBound  == null                                                             : "type param cannot have lower bound";
+            assert upperBounds == null || Arrays.stream(upperBounds).noneMatch(ClassNode::isArray) : "type param cannot have array bound";
+        }
+        // GRECLIPSE end
         getType().setGenericsPlaceHolder(placeholder);
     }
 

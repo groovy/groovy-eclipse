@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -134,9 +135,11 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.getField;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.getNestHost;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
 import static org.codehaus.groovy.ast.ClassHelper.isClassType;
+import static org.codehaus.groovy.ast.ClassHelper.isFunctionalInterface;
 import static org.codehaus.groovy.ast.ClassHelper.isObjectType;
 import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveBoolean;
 import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveByte;
@@ -329,7 +332,7 @@ public class AsmClassGenerator extends ClassGenerator {
             if (classNode instanceof InnerClassNode && !(classNode instanceof InterfaceHelperClassNode)) {
                 makeInnerClassEntry(classNode); // GROOVY-4649, et al.
 
-                ClassNode nestHost = controller.getOutermostClass(); // GROOVY-10687
+                ClassNode nestHost = getNestHost(classNode); // GROOVY-10687
                 classVisitor.visitNestHost(BytecodeHelper.getClassInternalName(nestHost));
 
                 MethodNode enclosingMethod = classNode.getEnclosingMethod();
@@ -379,7 +382,8 @@ public class AsmClassGenerator extends ClassGenerator {
             }
             // GROOVY-10687
             if (classNode.getOuterClass() == null && classNode.getInnerClasses().hasNext()) {
-                makeNestMatesEntries(classNode);
+                makeNestmateEntries(classNode);
+                moreNestmateEntries(classNode);
             }
             // GROOVY-4649, GROOVY-6750, GROOVY-6808
             for (Iterator<InnerClassNode> it = classNode.getInnerClasses(); it.hasNext(); ) {
@@ -468,11 +472,43 @@ public class AsmClassGenerator extends ClassGenerator {
         classVisitor.visitInnerClass(innerClassInternalName, outerClassInternalName, innerClassName, modifiers);
     }
 
-    private void makeNestMatesEntries(final ClassNode classNode) {
+    private void makeNestmateEntries(final ClassNode classNode) {
         for (Iterator<InnerClassNode> it = classNode.getInnerClasses(); it.hasNext(); ) {
             ClassNode innerClass = it.next();
             classVisitor.visitNestMember(BytecodeHelper.getClassInternalName(innerClass));
-            makeNestMatesEntries(innerClass);
+            makeNestmateEntries(innerClass);
+        }
+    }
+
+    private void moreNestmateEntries(final ClassNode classNode) {
+        // edge case: nest host closures-within-closures
+        int[] n = {this.context.getClosureClassIndex()};
+        for (ClassNode innerClass : getInnerClasses()) {
+            if (innerClass instanceof InterfaceHelperClassNode) continue;
+            var doCall = innerClass.getMethods().get(0);
+            doCall.getCode().visit(new CodeVisitorSupport() {
+                private String name = BytecodeHelper.getClassInternalName(innerClass);
+                private void visitNested(final String kind, final ClosureExpression expr) {
+                    String save = name;
+                    name += "$_" + kind + n[0]++;
+                    classVisitor.visitNestMember(name);
+                    super.visitClosureExpression(expr);
+                    name = save;
+                }
+                @Override
+                public  void visitClosureExpression(final ClosureExpression expression) {
+                    visitNested("closure", expression);
+                }
+                @Override
+                public  void visitLambdaExpression(final LambdaExpression expression) {
+                    if (Boolean.TRUE.equals(innerClass.getNodeMetaData(org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.STATIC_COMPILE_NODE))
+                            && isFunctionalInterface(expression.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.PARAMETER_TYPE))) {
+                        visitNested("lambda", expression);
+                    } else {
+                        super.visitLambdaExpression(expression);
+                    }
+                }
+            });
         }
     }
 
@@ -660,7 +696,7 @@ public class AsmClassGenerator extends ClassGenerator {
             } else {
                 ClassNode type = node.getReturnType();
                 if (isPrimitiveType(type)) {
-                    mv.visitLdcInsn(Integer.valueOf(0));
+                    mv.visitLdcInsn(0);
                     OperandStack operandStack = controller.getOperandStack();
                     operandStack.push(ClassHelper.int_TYPE);
                     operandStack.doGroovyCast(type);
@@ -914,18 +950,6 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     /**
-     * Loads either this object or if we're inside a closure then load the top level owner
-     */
-    protected void loadThisOrOwner() {
-        ClassNode classNode = controller.getClassNode();
-        if (classNode.getOuterClass() == null) {
-            loadThis(VariableExpression.THIS_EXPRESSION);
-        } else {
-            fieldX(classNode.getDeclaredField("owner")).visit(this);
-        }
-    }
-
-    /**
      * Generates byte code for constants.
      *
      * @see <a href="http://java.sun.com/docs/books/vmspec/2nd-edition/html/ClassFile.doc.html#14152">Class field types</a>
@@ -1077,8 +1101,8 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     /**
-     * Determines if the given class can directly access the given field (via
-     * {@code GETFIELD}, {@code GETSTATIC}, etc. bytecode instructions).
+     * Determines if the given field can be directly accessed by the given class
+     * (via {@code GETFIELD}, {@code GETSTATIC}, etc. bytecode instructions).
      */
     public static boolean isFieldDirectlyAccessible(final FieldNode field, final ClassNode accessingClass) {
         return field != null && isMemberDirectlyAccessible(field.getModifiers(), field.getDeclaringClass(), accessingClass);
@@ -1091,8 +1115,9 @@ public class AsmClassGenerator extends ClassGenerator {
         // any member is accessible from the declaring class
         if (accessingClass.equals(declaringClass)) return true;
 
-        // a private member isn't accessible beyond the declaring class
-        if (Modifier.isPrivate(modifiers)) return false;
+        // a private member is accessible from any nestmates
+        if (Modifier.isPrivate(modifiers))
+            return getNestHost(accessingClass).equals(getNestHost(declaringClass));
 
         // a protected member is accessible from any subclass of the declaring class
         if (Modifier.isProtected(modifiers) && accessingClass.isDerivedFrom(declaringClass)) return true;
@@ -1213,7 +1238,7 @@ public class AsmClassGenerator extends ClassGenerator {
                 if (isThisExpression(objectExpression)) {
                     if (controller.isInGeneratedFunction()) { // params/variables are stored as fields
                         if (expression.isImplicitThis()) fieldNode = classNode.getDeclaredField(name);
-                    } else {
+                    } else if (!expression.isSpreadSafe()) {
                         fieldNode = classNode.getDeclaredField(name);
                         // GROOVY-8448: "this.name" from anon. inner class
                         if (fieldNode != null && !expression.isImplicitThis()
@@ -1364,8 +1389,9 @@ public class AsmClassGenerator extends ClassGenerator {
             operandStack.doGroovyCast(field.getOriginType());
             operandStack.box();
             mv.visitVarInsn(ALOAD, 0);
+            operandStack.push(controller.getClassNode());
             mv.visitFieldInsn(GETFIELD, getFieldOwnerName(field), field.getName(), BytecodeHelper.getTypeDescription(type));
-            mv.visitInsn(SWAP);
+            operandStack.swap();
             mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Reference", "set", "(Ljava/lang/Object;)V", false);
         } else {
             // rhs is normal value, set normal value
@@ -1375,23 +1401,23 @@ public class AsmClassGenerator extends ClassGenerator {
             operandStack.swap();
             mv.visitFieldInsn(PUTFIELD, getFieldOwnerName(field), field.getName(), BytecodeHelper.getTypeDescription(type));
         }
+        operandStack.remove(2);
     }
 
     private void storeStaticField(final FieldExpression expression) {
         MethodVisitor mv = controller.getMethodVisitor();
         FieldNode field = expression.getField();
-        ClassNode type = field.getType();
 
         OperandStack operandStack = controller.getOperandStack();
         operandStack.doGroovyCast(field);
 
         if (field.isHolder() && !controller.isInGeneratedFunctionConstructor()) {
             operandStack.box();
-            mv.visitFieldInsn(GETSTATIC, getFieldOwnerName(field), field.getName(), BytecodeHelper.getTypeDescription(type));
+            mv.visitFieldInsn(GETSTATIC, getFieldOwnerName(field), field.getName(), BytecodeHelper.getTypeDescription(field.getType()));
             mv.visitInsn(SWAP);
             mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Reference", "set", "(Ljava/lang/Object;)V", false);
         } else {
-            mv.visitFieldInsn(PUTSTATIC, getFieldOwnerName(field), field.getName(), BytecodeHelper.getTypeDescription(type));
+            mv.visitFieldInsn(PUTSTATIC, getFieldOwnerName(field), field.getName(), BytecodeHelper.getTypeDescription(field.getType()));
         }
 
         operandStack.remove(1);
@@ -1434,11 +1460,17 @@ public class AsmClassGenerator extends ClassGenerator {
         if (variable != null) {
             controller.getOperandStack().loadOrStoreVariable(variable, expression.isUseReferenceDirectly());
         } else {
-            PropertyExpression pexp = thisPropX(true, expression.getName());
+            PropertyExpression pexp = thisPropX(/*implicit-this*/true, expression.getName());
             pexp.getProperty().setSourcePosition(expression);
             pexp.setType(expression.getType());
             pexp.copyNodeMetaData(expression);
             pexp.visit(this);
+
+            if (!compileStack.isLHS() && !expression.isDynamicTyped()) {
+                ClassNode variableType = controller.getTypeChooser()
+                    .resolveType(expression, controller.getClassNode());
+                controller.getOperandStack().doGroovyCast(variableType);
+            }
         }
 
         if (!compileStack.isLHS()) {
@@ -2392,7 +2424,7 @@ public class AsmClassGenerator extends ClassGenerator {
         OperandStack operandStack = controller.getOperandStack();
         if (controller.isInGeneratedFunction() && !controller.getCompileStack().isImplicitThis()) {
             mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Closure", "getThisObject", "()Ljava/lang/Object;", false);
-            ClassNode expectedType = controller.getTypeChooser().resolveType(thisOrSuper, controller.getOutermostClass());
+            ClassNode expectedType = controller.getTypeChooser().resolveType(thisOrSuper, controller.getThisType() );
             if (!isObjectType(expectedType) && !isPrimitiveType(expectedType)) {
                 BytecodeHelper.doCast(mv, expectedType);
                 operandStack.push(expectedType);

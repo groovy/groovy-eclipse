@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.groovy.ast.tools.ClassNodeUtils.getNestHost;
 import static org.codehaus.groovy.ast.ClassHelper.isGeneratedFunction;
 
 public class WriterController {
@@ -56,7 +57,6 @@ public class WriterController {
     private UnaryExpressionHelper unaryExpressionHelper, fastPathUnaryExpressionHelper;
     private AssertionWriter assertionWriter;
     private String internalBaseClassName;
-    private ClassNode outermostClass;
     private MethodNode methodNode;
     private ConstructorNode constructorNode;
     private GeneratorContext context;
@@ -90,7 +90,6 @@ public class WriterController {
         if (invokedynamic) this.optimizeForInt = false;
 
         this.classNode = cn;
-        this.outermostClass = null;
         this.internalClassName = BytecodeHelper.getClassInternalName(cn);
 
         this.bytecodeVersion = config.getBytecodeVersion();
@@ -289,11 +288,7 @@ public class WriterController {
     }
 
     public ClassNode getOutermostClass() {
-        if (outermostClass == null) {
-            List<ClassNode> outers = classNode.getOuterClasses();
-            outermostClass = !outers.isEmpty() ? outers.get(outers.size() - 1) : classNode;
-        }
-        return outermostClass;
+        return getNestHost(classNode);
     }
 
     public String getInternalClassName() {
@@ -319,12 +314,13 @@ public class WriterController {
     //
 
     public boolean isStaticContext() {
-        if (compileStack != null && compileStack.getScope() != null) {
+        if (isConstructor()) { // GROOVY-11483
+            return compileStack.isInSpecialConstructorCall();
+        }
+        if (compileStack.getScope() != null) {
             return compileStack.getScope().isInStaticContext();
         }
-        if (!isInGeneratedFunction()) return false;
-        if (isConstructor()) return false;
-        return classNode.isStaticClass() || isStaticMethod();
+        throw new IllegalStateException("out-of-scope static check");
     }
 
     public boolean isStaticMethod() {

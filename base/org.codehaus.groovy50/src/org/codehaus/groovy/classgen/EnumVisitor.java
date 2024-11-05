@@ -127,8 +127,8 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         boolean hasNext = false;
         boolean hasPrevious = false;
         for (MethodNode m : enumClass.getMethods()) {
-            if (m.getName().equals("next") && m.getParameters().length == 0) hasNext = true;
-            if (m.getName().equals("previous") && m.getParameters().length == 0) hasPrevious = true;
+            if ("next".equals(m.getName()) && m.getParameters().length == 0) hasNext = true;
+            if ("previous".equals(m.getName()) && m.getParameters().length == 0) hasPrevious = true;
             if (hasNext && hasPrevious) break;
         }
         boolean empty = true;

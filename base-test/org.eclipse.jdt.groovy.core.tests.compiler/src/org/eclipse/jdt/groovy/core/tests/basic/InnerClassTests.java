@@ -2438,7 +2438,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "}\n" +
             "\n" +
             "abstract class Outer {\n" +
-            "    private static volatile boolean flag\n" +
+            "    private static volatile flag\n" +
             "\n" +
             "    void newThread() {\n" +
             "        Thread thread = new Inner()\n" +
@@ -2452,13 +2452,14 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "        void run() {\n" +
             "            try {\n" +
             "                if (!flag) {\n" +
-            "                    print 'works'\n" +
+            "                    System.out.print('works')\n" +
+            "                    System.out.flush()\n" +
             "                }\n" +
-            "            } catch (e) {\n" +
-            "                error = e\n" +
+            "            } catch (Throwable t) {\n" +
+            "                error = t\n" +
             "            }\n" +
             "        }\n" +
-            "        public static error\n" +
+            "        public static volatile error\n" +
             "    }\n" +
             "}\n",
         };

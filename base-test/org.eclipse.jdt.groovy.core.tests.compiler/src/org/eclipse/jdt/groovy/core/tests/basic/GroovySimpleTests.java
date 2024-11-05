@@ -1909,7 +1909,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 1)\n" +
             "\tstatic class A {\n" +
             "\t             ^\n" +
-            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
+            "Groovy:The class \'A\' has " + (isAtLeastGroovy(50) ? "invalid" : "an incorrect") + " modifier static.\n" +
             "----------\n");
     }
 
@@ -1930,7 +1930,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 1)\n" +
             "\tstatic class A {\n" +
             "\t             ^\n" +
-            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
+            "Groovy:The class \'A\' has " + (isAtLeastGroovy(50) ? "invalid" : "an incorrect") + " modifier static.\n" +
             "----------\n");
     }
 
@@ -3690,7 +3690,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
                 "1. ERROR in Foo.groovy (at line 2)\n" +
                 "\tpublic transient void foo() {}\n" +
                 "\t                      ^^^^^\n" +
-                "Groovy:The method 'void foo()' has an incorrect modifier transient.\n" +
+                "Groovy:The method 'void foo()' has " + (isAtLeastGroovy(50) ? "invalid" : "an incorrect") + " modifier transient.\n" +
                 "----------\n");
         } else {
             runNegativeTest(sources, "");

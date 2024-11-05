@@ -613,12 +613,6 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	Result visitVariableInitializer(@NotNull GroovyParser.VariableInitializerContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#variableInitializers}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitVariableInitializers(@NotNull GroovyParser.VariableInitializersContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link GroovyParser#emptyDims}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -1201,11 +1195,17 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	Result visitCreator(@NotNull GroovyParser.CreatorContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#dim}.
+	 * Visit a parse tree produced by {@link GroovyParser#dim0}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	Result visitDim(@NotNull GroovyParser.DimContext ctx);
+	Result visitDim0(@NotNull GroovyParser.Dim0Context ctx);
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#dim1}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitDim1(@NotNull GroovyParser.Dim1Context ctx);
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#arrayInitializer}.
 	 * @param ctx the parse tree

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,10 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeFalse;
 
 import java.util.List;
 
@@ -216,7 +218,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[Landscape, Portrait]");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9301
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7773, 8507, 9301 and 9306
     public void testEnum3b() {
         //@formatter:off
         String[] sources = {
@@ -226,7 +228,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "Orientation.groovy",
             "enum Orientation {\n" +
             "  LANDSCAPE, PORTRAIT,\n" + // trailing comma
-            "  \n" +
+            "  ;\n" +
             "  @Override\n" +
             "  String toString() {\n" +
             "    name().toLowerCase().capitalize()\n" +
@@ -302,7 +304,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "Orientation.groovy",
             "enum Orientation {\n" +
             "  LANDSCAPE('Landscape'), PORTRAIT('Portrait'),\n" + // trailing comma
-            "  \n" +
+            "  ;\n" +
             "  Orientation(String string) {\n" +
             "    this.string = string\n" +
             "  }\n" +
@@ -385,7 +387,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "Orientation.groovy",
             "enum Orientation {\n" +
             "  LANDSCAPE('Landscape'), PORTRAIT('Portrait'),\n" + // trailing comma
-            "  \n" +
+            "  ;\n" +
             "  private String string\n" +
             "  \n" +
             "  Orientation(String string) {\n" +
@@ -454,7 +456,8 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
 
             "NonFinal.groovy",
             "enum NonFinal {\n" +
-            "  One(1), Two(2),\n" +
+            "  One(1), Two(2),\n" + // trailing comma
+            "  ;\n" +
             "  Object value\n" +
             "  NonFinal(value) {\n" +
             "    this.value = value\n" +
@@ -479,7 +482,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "  CLUBS(Color.BLACK),\n" +
             "  DIAMONDS(Color.RED),\n" +
             "  HEARTS(Color.RED),\n" +
-            "  SPADES(Color.BLACK),\n" +
+            "  SPADES(Color.BLACK);\n" +
             "  \n" +
             "  final Color color\n" +
             "  Suit(Color color) {\n" +
@@ -841,13 +844,15 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
 
     @Test(timeout = 1500)
     public void testEnum8507() {
+        assumeFalse(isParrotParser());
+
         //@formatter:off
         String[] sources = {
             "Outer.groovy",
             "enum Outer {\n" +
-            "  A,\n" +
+            "  X,\n" +
             "  enum Inner {\n" +
-            "    X,\n" +
+            "    Y,\n" +
             "  }\n" +
             "}\n",
         };
