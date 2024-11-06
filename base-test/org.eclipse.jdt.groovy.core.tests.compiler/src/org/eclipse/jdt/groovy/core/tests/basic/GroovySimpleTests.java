@@ -4326,10 +4326,11 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in X.groovy (at line 1)\n" +
+            "1. " + (isAtLeastGroovy(40) ? "ERROR" : "WARNING") + " in X.groovy (at line 1)\n" +
             "\tclass X implements I<String>, J<Number> {\n" +
             "\t^\n" +
-            "Groovy:The interface I cannot be implemented more than once with different arguments: I<java.lang.String> and I<java.lang.Number>\n" +
+            "Groovy:The interface I " + (isAtLeastGroovy(40) ? "cannot be" : "is") +
+            " implemented more than once with different arguments: I<java.lang.String> and I<java.lang.Number>\n" +
             "----------\n");
     }
 
@@ -4353,10 +4354,11 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Y.groovy (at line 1)\n" +
+            "1. " + (isAtLeastGroovy(40) ? "ERROR" : "WARNING") + " in Y.groovy (at line 1)\n" +
             "\tclass Y extends X implements I<Number> {\n" +
             "\t^\n" +
-            "Groovy:The interface I cannot be implemented more than once with different arguments: I<java.lang.Number> and I<java.lang.String>\n" +
+            "Groovy:The interface I " + (isAtLeastGroovy(40) ? "cannot be" : "is") +
+            " implemented more than once with different arguments: I<java.lang.Number> and I<java.lang.String>\n" +
             "----------\n");
     }
 
@@ -6336,7 +6338,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         if (isAtLeastGroovy(40)) {
             runConformTest(sources, "abcbar");
         } else {
-            var descriptor = "public void <init>(java.lang.Integer i)  { ... }"; // TODO
+            var descriptor = "public void <init>(java.lang.Integer i)  { ... " + "}"; // TODO
             runNegativeTest(sources,
                 "----------\n" +
                 "1. ERROR in p\\G.groovy (at line 2)\n" +

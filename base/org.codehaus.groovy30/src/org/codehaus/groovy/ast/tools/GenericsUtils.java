@@ -301,12 +301,7 @@ public class GenericsUtils {
         }
         if (temp instanceof DecompiledClassNode // GROOVY-10461: check without resolving supers
                         ? ((DecompiledClassNode) temp).isParameterized() : temp.isUsingGenerics()) {
-            /* GRECLIPSE edit -- GROOVY-5482
-            ClassNode result = ClassHelper.makeWithoutCaching(temp.getName());
-            result.setRedirect(temp);
-            */
             ClassNode result = temp.getPlainNodeReference();
-            // GRECLIPSE end
             result.setGenericsTypes(null);
             result.setUsingGenerics(false);
             while (dims > 0) { dims -= 1;

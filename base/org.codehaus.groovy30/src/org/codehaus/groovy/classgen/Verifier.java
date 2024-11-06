@@ -299,6 +299,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         };
     }
 
+    private static Set<ClassNode> getAllInterfaces(final ClassNode cn) {
+        return getInterfacesAndSuperInterfaces(cn);
+    }
+
     private static void checkForDuplicateInterfaces(final ClassNode cn) {
         ClassNode[] interfaces = cn.getInterfaces();
         int nInterfaces = interfaces.length;
@@ -328,9 +332,13 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                             for (ClassNode t : set) { // find match and check generics
                                 if (t.equals(in)) {
                                     String one = in.toString(false), two = t.toString(false);
-                                    if (!one.equals(two))
-                                        throw new RuntimeParserException("The interface " + in.getNameWithoutPackage() +
-                                            " cannot be implemented more than once with different arguments: " + one + " and " + two, cn);
+                                    if (!one.equals(two)) {
+                                        String warning = String.format(
+                                                "The %s %s is implemented more than once with different arguments: %s and %s",
+                                                (Traits.isTrait(in) ? "trait" : "interface"), in.getNameWithoutPackage(), one, two);
+                                        Token token = new Token(0, "", cn.getLineNumber(), cn.getColumnNumber()); // ASTNode to CSTNode
+                                        cn.getModule().getContext().getErrorCollector().addWarning(1, warning, token, cn.getModule().getContext());
+                                    }
                                     break;
                                 }
                             }
@@ -340,11 +348,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             }
         }
     }
-
-    private static Set<ClassNode> getAllInterfaces(final ClassNode cn) {
-        return getInterfacesAndSuperInterfaces(cn);
-    }
-    // GRECLIPSE end
 
     private static void checkForDuplicateMethods(final ClassNode cn) {
         Set<String> descriptors = new HashSet<>();
