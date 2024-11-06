@@ -3808,12 +3808,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (i >= nthParameter && paramType.isArray())
                     paramType = paramType.getComponentType();
 
-                if (!isFunctionalInterface(paramType.redirect())) {
-                    addError("The argument is a method reference, but the parameter type is not a functional interface", argumentExpression);
-                    newArgumentExpressions.add(argumentExpression);
-                } else {
+                if (isFunctionalInterface(paramType)) {
                     methodReferencePositions.add(i);
                     newArgumentExpressions.add(constructLambdaExpressionForMethodReference(paramType, (MethodReferenceExpression) argumentExpression));
+                } else {
+                    newArgumentExpressions.add(argumentExpression);
+                    addStaticTypeError("Argument is a method reference, but parameter type '" + prettyPrintTypeName(paramType) + "' is not a functional interface", argumentExpression);
                 }
             }
         }
@@ -4102,7 +4102,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         } else {
             // saving type of variables to restoring them after returning from block
             Map<VariableExpression, List<ClassNode>> oldTracker = pushAssignmentTracking();
-            getTypeCheckingContext().pushTemporaryTypeInfo();
+            typeCheckingContext.pushTemporaryTypeInfo();
             typeCheckingContext.blockStatements2Types.put(currentBlock, oldTracker);
         }
         pushInstanceOfTypeInfo(be.getLeftExpression(), be.getRightExpression());
@@ -4122,11 +4122,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Deprecated
     public void visitClosingBlock(final BlockStatement block) {
-        BlockStatement peekBlock = typeCheckingContext.enclosingBlocks.removeFirst();
-        boolean found = typeCheckingContext.blockStatements2Types.containsKey(peekBlock);
+        BlockStatement theBlock = typeCheckingContext.enclosingBlocks.pop();
+        boolean found = typeCheckingContext.blockStatements2Types.containsKey(theBlock);
         if (found) {
-            Map<VariableExpression, List<ClassNode>> oldTracker = typeCheckingContext.blockStatements2Types.remove(peekBlock);
-            getTypeCheckingContext().popTemporaryTypeInfo();
+            Map<VariableExpression, List<ClassNode>> oldTracker = typeCheckingContext.blockStatements2Types.remove(theBlock);
+            typeCheckingContext.popTemporaryTypeInfo();
             popAssignmentTracking(oldTracker);
         }
     }
@@ -4270,13 +4270,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected Map<VariableExpression, ClassNode> popAssignmentTracking(final Map<VariableExpression, List<ClassNode>> oldTracker) {
         Map<VariableExpression, ClassNode> assignments = new HashMap<>();
-        typeCheckingContext.ifElseForWhileAssignmentTracker.forEach((var, types) -> {
-            types.stream().filter(t -> t != null && t != UNKNOWN_PARAMETER_TYPE) // GROOVY-6099, GROOVY-10294
-                    .reduce(WideningCategories::lowestUpperBound).ifPresent(type -> {
-                assignments.put(var, type);
-                storeType(var, type);
+        if (typeCheckingContext.ifElseForWhileAssignmentTracker != null){ // GROOVY-11488
+            typeCheckingContext.ifElseForWhileAssignmentTracker.forEach((var, types) -> {
+                types.stream().filter(t -> t != null && t != UNKNOWN_PARAMETER_TYPE) // GROOVY-6099, GROOVY-10294
+                        .reduce(WideningCategories::lowestUpperBound).ifPresent(type -> {
+                    assignments.put(var, type);
+                    storeType(var, type);
+                });
             });
-        });
+        }
         typeCheckingContext.ifElseForWhileAssignmentTracker = oldTracker;
         // GROOVY-9786, GROOVY-11450: nested conditional assignments
         if (oldTracker != null) {

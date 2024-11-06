@@ -140,6 +140,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getInterfacesAndSuperInterfaces;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.addMethodGenerics;
@@ -389,9 +390,15 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                             for (ClassNode t : set) { // find match and check generics
                                 if (t.equals(in)) {
                                     String one = in.toString(false), two = t.toString(false);
-                                    if (!one.equals(two))
-                                        throw new RuntimeParserException("The interface " + in.getNameWithoutPackage() +
-                                            " cannot be implemented more than once with different arguments: " + one + " and " + two, cn);
+                                    if (!one.equals(two)) {
+                                        if (Traits.isTrait(in)) { // GROOVY-11508
+                                            cn.getModule().getContext().addWarning("The trait " + in.getNameWithoutPackage() +
+                                                " is implemented more than once with different arguments: " + one + " and " + two, cn);
+                                        } else {
+                                            throw new RuntimeParserException("The interface " + in.getNameWithoutPackage() +
+                                                " cannot be implemented more than once with different arguments: " + one + " and " + two, cn);
+                                        }
+                                    }
                                     break;
                                 }
                             }
@@ -1047,48 +1054,35 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
         String setterName = node.getSetterNameOrDefault();
 
-        int accessorModifiers = adjustPropertyModifiersForMethod(node);
-
         Statement getterBlock = node.getGetterBlock();
-        if (getterBlock == null) {
+        if (getterBlock == null && !node.isPrivate()) {
             MethodNode getter = classNode.getGetterMethod(getterName, !node.isStatic());
             if (getter == null && isPrimitiveBoolean(node.getType())) {
-                getter = classNode.getGetterMethod("is" + capitalize(name));
+                getter = classNode.getGetterMethod("is" + capitalize(name), !node.isStatic());
             }
-            if (!node.isPrivate() && methodNeedsReplacement(getter)) {
+            if (methodNeedsReplacement(getter)) {
                 getterBlock = createGetterBlock(node, field);
             }
         }
         Statement setterBlock = node.getSetterBlock();
-        if (setterBlock == null) {
-            MethodNode setter = classNode.getSetterMethod(setterName,
-                    false); // atypical: allow setter with non-void return type
-            if ((accessorModifiers & (ACC_FINAL | ACC_PRIVATE)) == 0 && methodNeedsReplacement(setter)) {
+        if (setterBlock == null && !node.isPrivate() && !isFinal(node.getModifiers())) {
+            MethodNode setter = classNode.getSetterMethod(setterName, false); // atypical: allow setter with non-void return type
+            if (methodNeedsReplacement(setter)) {
                 setterBlock = createSetterBlock(node, field);
             }
         }
 
-        int getterModifiers = accessorModifiers;
-        // don't make static accessors final
-        if (node.isStatic()) {
-            getterModifiers &= ~ACC_FINAL;
-        }
+        int accessorModifiers = adjustPropertyModifiersForMethod(node);
 
         if (getterBlock != null) {
-            visitGetter(node, field, getterBlock, getterModifiers, getterName);
-
-            if (node.getGetterName() == null && getterName.startsWith("get") && isPrimitiveBoolean(node.getType())) {
-                String altGetterName = "is" + capitalize(name);
-                MethodNode altGetter = classNode.getGetterMethod(altGetterName, !node.isStatic());
-                if (methodNeedsReplacement(altGetter)) {
-                    visitGetter(node, field, getterBlock, getterModifiers, altGetterName);
-                }
+            visitGetter(node, field, getterBlock, accessorModifiers, getterName);
+            if (node.getGetterName() == null && isPrimitiveBoolean(node.getType())) {
+                visitGetter(node, field, getterBlock, accessorModifiers, "is" + capitalize(name));
             }
         }
 
         if (setterBlock != null) {
-            Parameter[] setterParameterTypes = {new Parameter(node.getType(), "value")};
-            MethodNode setter = new MethodNode(setterName, accessorModifiers, ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);
+            MethodNode setter = new MethodNode(setterName, accessorModifiers, ClassHelper.VOID_TYPE, params(param(node.getType(),"value")), ClassNode.EMPTY_ARRAY, setterBlock);
             // GRECLIPSE add
             field.getAnnotations().stream().filter(a -> a.getClassNode().equals(ClassHelper.DEPRECATED_TYPE)).forEach(setter::addAnnotation);
             // GRECLIPSE end
